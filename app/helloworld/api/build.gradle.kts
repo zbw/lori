@@ -14,9 +14,10 @@ repositories {
 }
 
 dependencies {
+    val grpcVersion by System.getProperties()
     implementation("com.google.protobuf:protobuf-java:3.15.8")
-    implementation("io.grpc:grpc-stub:1.37.0")
-    implementation("io.grpc:grpc-protobuf:1.37.0")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 }
 
