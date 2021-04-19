@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option java_package = "de.zbw.api.helloworld";
+option java_multiple_files = true;
+
+message SayHelloRequest {
+  string name = 1;
+}
+
+message SayHelloResponse {
+  string message = 1;
+}

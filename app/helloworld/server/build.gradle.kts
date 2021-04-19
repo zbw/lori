@@ -25,5 +25,5 @@ tasks.withType<KotlinCompile>() {
 }
 
 application {
-    mainClass.set("de.zbw.helloworld.server.Main")
+    mainClass.set("de.zbw.server.helloworld.Main")
 }

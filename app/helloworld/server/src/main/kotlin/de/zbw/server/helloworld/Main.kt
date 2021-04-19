@@ -1,4 +1,4 @@
-package de.zbw.helloworld.server;
+package de.zbw.server.helloworld;
 
 class Main {
     companion object {
