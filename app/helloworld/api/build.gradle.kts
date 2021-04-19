@@ -2,21 +2,22 @@ import com.google.protobuf.gradle.*
 import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 plugins {
-    kotlin("jvm") version "1.4.32"
+    val kotlinVersion by System.getProperties()
+    kotlin("jvm") version "$kotlinVersion"
     id("com.google.protobuf") version "0.8.15"
     idea
     id("com.parmet.buf") version "0.1.0"
 }
 
 repositories {
-    maven("https://plugins.gradle.org/m2/")
+    mavenCentral()
 }
 
 dependencies {
-    implementation("com.google.protobuf:protobuf-java:3.6.1")
-    implementation("io.grpc:grpc-stub:1.15.1")
-    implementation("io.grpc:grpc-protobuf:1.15.1")
-    implementation("javax.annotation:javax.annotation-api:1.3.1")
+    implementation("com.google.protobuf:protobuf-java:3.15.8")
+    implementation("io.grpc:grpc-stub:1.37.0")
+    implementation("io.grpc:grpc-protobuf:1.37.0")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
 }
 
 protobuf {

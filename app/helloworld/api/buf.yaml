@@ -2,7 +2,7 @@
 version: v1beta1
 build:
   roots:
-    - src/main/proto
+    - src/main/proto/
 
     # The protobuf-gradle-plugin extracts and merges protobuf dependencies to
     # `build/extracted-include-protos`, so tell Buf where to find them.

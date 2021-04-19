@@ -1,12 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.4.32"
+    val kotlinVersion by System.getProperties()
+    kotlin("jvm") version "$kotlinVersion"
     id("application")
 }
-
-group = "zbwcloud"
-version = "0.0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
