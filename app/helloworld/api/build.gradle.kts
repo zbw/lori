@@ -5,6 +5,7 @@ plugins {
     kotlin("jvm") version "1.4.32"
     id("com.google.protobuf") version "0.8.15"
     idea
+    id("com.parmet.buf") version "0.1.0"
 }
 
 repositories {
