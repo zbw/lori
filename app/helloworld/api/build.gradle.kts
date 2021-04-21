@@ -1,5 +1,4 @@
 import com.google.protobuf.gradle.*
-import org.gradle.kotlin.dsl.provider.gradleKotlinDslOf
 
 plugins {
     val kotlinVersion by System.getProperties()
@@ -11,14 +10,6 @@ plugins {
 
 repositories {
     mavenCentral()
-}
-
-dependencies {
-    val grpcVersion by System.getProperties()
-    implementation("com.google.protobuf:protobuf-java:3.15.8")
-    implementation("io.grpc:grpc-stub:$grpcVersion")
-    implementation("io.grpc:grpc-protobuf:$grpcVersion")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
 }
 
 protobuf {
@@ -33,13 +24,30 @@ protobuf {
         id("grpc") {
             artifact = "io.grpc:protoc-gen-grpc-java:1.15.1"
         }
+        id("grpckt") {
+            val kotlinVersion by System.getProperties()
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.0.0:jdk7@jar"
+        }
     }
     generateProtoTasks {
-        ofSourceSet("main").forEach {
+        all().forEach {
             it.plugins {
-                // Apply the "grpc" plugin whose spec is defined above, without options.
                 id("grpc")
+                id("grpckt")
             }
         }
     }
+}
+
+dependencies {
+    val grpcVersion by System.getProperties()
+    val kotlinVersion by System.getProperties()
+    implementation("com.google.protobuf:protobuf-java:3.15.8")
+    implementation("io.grpc:grpc-stub:$grpcVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("javax.annotation:javax.annotation-api:1.3.2")
+    api("com.google.protobuf:protobuf-java-util:3.15.8")
+    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
+    api("io.grpc:grpc-kotlin-stub:1.0.0")
 }

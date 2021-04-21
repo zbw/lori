@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package de.zbw.api.helloworld.v1;
+package de.zbw.helloworld.api.v1;
 
-option java_package = "de.zbw.api.helloworld";
+option java_package = "de.zbw.helloworld.api";
 option java_multiple_files = true;
 
 message SayHelloRequest {
