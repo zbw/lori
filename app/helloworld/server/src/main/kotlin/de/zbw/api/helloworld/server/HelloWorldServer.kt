@@ -6,7 +6,11 @@ object HelloWorldServer {
     @JvmStatic
     fun main(args: Array<String>) {
         LOG.info("Starting the HelloWorldServer :)")
-        ServicePoolWithProbes(listOf()).start()
+        ServicePoolWithProbes(
+            listOf(GrpcServer(services = listOf(HelloWorldGrpcServer())))
+        ).apply {
+            start()
+        }
     }
 
     private val LOG = LoggerFactory.getLogger(HelloWorldServer::class.java)
