@@ -18,7 +18,11 @@ This will generate client code from the protobuf files. Both, Java and Kotlin co
 ./gradlew :app:helloworld:server:run
 ```
 
-Test the grpc endpoint:
+## Grpc Endpoint
+
+For interacting with grpc endpoints the following tool is recommended:
+https://github.com/fullstorydev/grpcurl
+
 ```shell
 grpcurl -plaintext -d '{"name":"foo"}' localhost:9092 de.zbw.helloworld.api.v1.HelloWorldService.SayHello
 ```
