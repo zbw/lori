@@ -32,9 +32,11 @@ class GrpcServer(
         LOG.info("Start GRPC Server on port $port")
         server.start()
         isReady = true
-        Runtime.getRuntime().addShutdownHook(Thread {
-            server.shutdown()
-        })
+        Runtime.getRuntime().addShutdownHook(
+            Thread {
+                server.shutdown()
+            }
+        )
     }
 
     override fun stop() {

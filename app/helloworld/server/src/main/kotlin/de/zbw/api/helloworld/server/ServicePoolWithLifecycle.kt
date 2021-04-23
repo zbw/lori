@@ -35,24 +35,24 @@ class ServicePoolWithProbes(private val services: List<ServiceLifecycle>) : Serv
     }
 
     override fun isReady(): Boolean =
-        services.map{
+        services.map {
             it.isReady()
         }.all { it }
 
     override fun isHealthy(): Boolean =
-        services.map{
+        services.map {
             it.isHealthy()
         }.all { it }
 
     override fun start() {
-        services.forEach{
+        services.forEach {
             it.start()
         }
         server.start(wait = true)
     }
 
     override fun stop() {
-        services.forEach{
+        services.forEach {
             it.stop()
         }
     }
