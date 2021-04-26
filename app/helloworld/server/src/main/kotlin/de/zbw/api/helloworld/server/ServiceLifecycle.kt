@@ -11,13 +11,13 @@ abstract class ServiceLifecycle {
     /**
      * Returns if the service is ready.
      */
-    abstract fun isReady() : Boolean
+    abstract fun isReady(): Boolean
 
     /**
      * Returns if the service is healthy.
      * If not, it usually has no way of coming back to a healthy state.
      */
-    abstract fun isHealthy() : Boolean
+    abstract fun isHealthy(): Boolean
 
     /**
      * Start the service.

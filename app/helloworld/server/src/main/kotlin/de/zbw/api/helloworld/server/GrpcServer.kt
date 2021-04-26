@@ -22,16 +22,18 @@ class GrpcServer(
         .build()
 ) : ServiceLifecycle() {
 
-    private var isReady = false
+    private var ready = false
+    private var healthy = false
 
-    override fun isReady(): Boolean = isReady
+    override fun isReady(): Boolean = ready
 
-    override fun isHealthy(): Boolean = true
+    override fun isHealthy(): Boolean = healthy
 
     override fun start() {
         LOG.info("Start GRPC Server on port $port")
         server.start()
-        isReady = true
+        ready = true
+        healthy = true
         Runtime.getRuntime().addShutdownHook(
             Thread {
                 server.shutdown()
@@ -40,7 +42,8 @@ class GrpcServer(
     }
 
     override fun stop() {
-        isReady = false
+        ready = false
+        healthy = false
         server.shutdown()
     }
 

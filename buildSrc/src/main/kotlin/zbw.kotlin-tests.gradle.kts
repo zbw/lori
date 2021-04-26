@@ -25,4 +25,5 @@ repositories {
 dependencies {
     testImplementation(kotlin("test-testng"))
     testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation("io.mockk:mockk:1.11.0")
 }
