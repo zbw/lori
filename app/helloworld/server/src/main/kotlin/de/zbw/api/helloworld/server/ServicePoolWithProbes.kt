@@ -1,11 +1,14 @@
 package de.zbw.api.helloworld.server
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
-import io.ktor.server.engine.*
-import io.ktor.server.netty.*
+import io.ktor.application.Application
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.routing.get
+import io.ktor.routing.routing
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
+import io.ktor.server.netty.NettyApplicationEngine
 
 /**
  * A pool for services.
@@ -13,9 +16,21 @@ import io.ktor.server.netty.*
  * Created on 04-20-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class ServicePoolWithProbes(private val services: List<ServiceLifecycle>) : ServiceLifecycle() {
+class ServicePoolWithProbes(
+    private val services: List<ServiceLifecycle>,
+) : ServiceLifecycle() {
 
-    val server: NettyApplicationEngine = embeddedServer(Netty, port = 8080) {
+    private var server: NettyApplicationEngine = embeddedServer(
+        Netty,
+        port = 8080,
+        module = application()
+    )
+
+    // This method is a hack due to ktors extension based design. It makes
+    // testing a lot easier here.
+    internal fun getHttpServer(): NettyApplicationEngine = server
+
+    internal fun application(): Application.() -> Unit = {
         routing {
             get("/ready") {
                 if (isReady()) {
@@ -48,12 +63,13 @@ class ServicePoolWithProbes(private val services: List<ServiceLifecycle>) : Serv
         services.forEach {
             it.start()
         }
-        server.start(wait = true)
+        getHttpServer().start(wait = true)
     }
 
     override fun stop() {
         services.forEach {
             it.stop()
         }
+        getHttpServer().stop(1000, 2000)
     }
 }
