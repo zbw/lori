@@ -13,6 +13,12 @@ import org.testng.Assert.assertEquals
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+/**
+ * Testing [ServicePoolWithProbes].
+ *
+ * Created on 04-26-2021.
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
 class ServicePoolWithProbesTest {
 
     @DataProvider(name = DATA_FOR_TEST_APPLICATION)

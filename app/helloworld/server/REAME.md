@@ -38,3 +38,25 @@ Healthyness:
 ```shell
  curl -vvv 127.0.0.1:8080/healthz
 ```
+
+## Code coverage
+
+Code coverage is done via the jacoco plugin. To run all tests and check for a coverage violation
+afterwards, run:
+```shell
+./gradlew :app:helloworld:server:check
+```
+
+To generate a jacoco test report run:
+
+```shell
+./gradlew :app:helloworld:server:jacocoTestReport
+```
+Reports can be found under `./build/reports/jacoco/test/html`
+
+## Ktlint
+
+To check for ktlint errors run
+```shell
+./gradlew :app:helloworld:server:ktlintCheck
+```
