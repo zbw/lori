@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class GrpcServer(
-    private val port: Int = 9092,
+    private val port: Int,
     private val services: List<BindableService>,
     private val server: Server = ServerBuilder
         .forPort(port)

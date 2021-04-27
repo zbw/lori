@@ -2,6 +2,7 @@ package de.zbw.api.helloworld.server
 
 import io.grpc.BindableService
 import io.grpc.Server
+import io.mockk.every
 import io.mockk.mockk
 import org.testng.Assert.assertFalse
 import org.testng.annotations.Test
@@ -18,8 +19,9 @@ class GrpcServerTest() {
     fun testReadyness() {
         // given
         val grpcServer = GrpcServer(
+            port = 9000,
             services = listOf<BindableService>(),
-            server = mockk<Server>(relaxed = true)
+            server = mockk<Server>(relaxed = true),
         )
 
         // when

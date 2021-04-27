@@ -48,7 +48,7 @@ class ServicePoolWithProbesTest {
         healthy: Boolean,
     ) {
         val servicePool = ServicePoolWithProbes(
-            listOf(
+            services = listOf(
                 // One service is always healthy and ready
                 mockk {
                     every { isReady() } returns true
@@ -58,7 +58,8 @@ class ServicePoolWithProbesTest {
                     every { isReady() } returns ready
                     every { isHealthy() } returns healthy
                 }
-            )
+            ),
+            port = 8082,
         )
         withTestApplication(servicePool.application()) {
             with(handleRequest(HttpMethod.Get, "/ready")) {
@@ -93,7 +94,10 @@ class ServicePoolWithProbesTest {
         )
         val serverMock: NettyApplicationEngine = mockk(relaxed = true)
         val servicePool = spyk(
-            ServicePoolWithProbes(services)
+            ServicePoolWithProbes(
+                services = services,
+                port = 8082,
+            )
         ) {
             every { getHttpServer() } returns serverMock
         }
