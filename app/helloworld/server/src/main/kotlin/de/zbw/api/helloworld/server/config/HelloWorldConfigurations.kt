@@ -19,5 +19,5 @@ object HelloWorldConfigurations {
             PropertiesFileKonfiguration("$SERVICE_NAME.properties")
         )
     )
-    val serverConfig by lazy { HelloWorldConfiguration.load(SERVICE_NAME, configSources)}
+    val serverConfig by lazy { HelloWorldConfiguration.load(SERVICE_NAME, configSources) }
 }

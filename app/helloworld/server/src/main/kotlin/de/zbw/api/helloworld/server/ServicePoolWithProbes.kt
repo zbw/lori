@@ -1,6 +1,5 @@
 package de.zbw.api.helloworld.server
 
-import de.zbw.api.helloworld.server.config.HelloWorldConfigurations
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -19,7 +18,7 @@ import io.ktor.server.netty.NettyApplicationEngine
  */
 class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
-    private val port : Int,
+    private val port: Int,
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(

@@ -2,7 +2,6 @@ package de.zbw.api.helloworld.server
 
 import io.grpc.BindableService
 import io.grpc.Server
-import io.mockk.every
 import io.mockk.mockk
 import org.testng.Assert.assertFalse
 import org.testng.annotations.Test
