@@ -11,6 +11,12 @@ repositories {
     gradlePluginPortal()
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
+
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.32")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:10.0.0")
