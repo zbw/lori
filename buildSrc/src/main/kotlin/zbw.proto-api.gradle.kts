@@ -4,7 +4,6 @@ plugins {
     kotlin("jvm")
     id("com.google.protobuf")
     idea
-    id("com.parmet.buf")
 }
 
 repositories {
@@ -47,4 +46,8 @@ dependencies {
     api("io.grpc:grpc-kotlin-stub:1.0.0")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
+}
+
+task<Exec>("myBuf") {
+    commandLine("${project.rootDir}/scripts/buf", "lint")
 }
