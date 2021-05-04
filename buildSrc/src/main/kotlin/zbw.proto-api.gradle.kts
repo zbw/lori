@@ -48,6 +48,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.8")
 }
 
-task<Exec>("myBuf") {
+val bufLint = task<Exec>("bufLint") {
     commandLine("${project.rootDir}/scripts/buf", "lint")
+}
+
+tasks.check {
+    dependsOn(bufLint)
 }
