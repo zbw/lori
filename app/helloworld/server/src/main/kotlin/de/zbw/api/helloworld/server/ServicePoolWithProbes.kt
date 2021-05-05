@@ -1,7 +1,13 @@
 package de.zbw.api.helloworld.server
 
+import de.zbw.api.helloworld.server.route.apiRoutes
+import de.zbw.api.helloworld.server.route.staticRoutes
 import io.ktor.application.Application
 import io.ktor.application.call
+import io.ktor.application.install
+import io.ktor.features.CallLogging
+import io.ktor.features.ContentNegotiation
+import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.get
@@ -32,6 +38,8 @@ class ServicePoolWithProbes(
     internal fun getHttpServer(): NettyApplicationEngine = server
 
     internal fun application(): Application.() -> Unit = {
+        install(ContentNegotiation) { gson { } }
+        install(CallLogging)
         routing {
             get("/ready") {
                 if (isReady()) {
@@ -47,6 +55,8 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
+            apiRoutes()
+            staticRoutes()
         }
     }
 

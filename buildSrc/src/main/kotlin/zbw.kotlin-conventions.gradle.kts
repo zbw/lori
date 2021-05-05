@@ -6,5 +6,6 @@ plugins {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     kotlinOptions {
         jvmTarget = "11"
+        languageVersion = "1.4"
     }
 }

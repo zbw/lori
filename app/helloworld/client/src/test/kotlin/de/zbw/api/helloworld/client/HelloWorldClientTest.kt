@@ -12,6 +12,12 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
 
+/**
+ * Testing [HelloWorldClient].
+ *
+ * Created on 04-28-2021.
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
 class HelloWorldClientTest() {
     @Test
     fun testClientSayHello() {
