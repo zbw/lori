@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("zbw.kotlin-application")
     id("zbw.kotlin-conventions")
@@ -36,4 +34,3 @@ tasks.jacocoTestCoverageVerification {
         }
     }
 }
-val compileKotlin: KotlinCompile by tasks
