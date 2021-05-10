@@ -1,38 +1,12 @@
 import com.github.gradle.node.npm.task.NpmTask
 
-buildscript {
-    repositories {
-        mavenCentral()
-        maven(url = "https://plugins.gradle.org/m2/")
-    }
-
-    dependencies {
-        classpath("com.github.node-gradle:gradle-node-plugin:3.0.1")
-    }
-}
-
 plugins {
-    base
-    id("com.github.node-gradle.node") version "3.0.1"
-    //id("com.moowork.node") version "1.3.1" // gradle-node-plugin
+    id("de.zbw.nodeplugin")
+    id("com.github.node-gradle.node")
 }
 
 node {
-    /* gradle-node-plugin configuration
-       https://github.com/srs/gradle-node-plugin/blob/master/docs/node.md
-       Task name pattern:
-       ./gradlew npm_<command> Executes an NPM command.
-    */
-
-    // Version of node to use.
-    version.set("10.19.0")
-
-    // Version of npm to use.
-    npmVersion.set("6.14.4")
-
-    // If true, it will download node using above parameters.
-    // If false, it will try to use globally installed node.
-    download.set(true)
+   
 }
 
 tasks.named<NpmTask>("npm_run_build") {
@@ -51,7 +25,7 @@ tasks.named<NpmTask>("npm_run_build") {
 // pack output of the build into JAR file
 val packageNpmApp by tasks.registering(Jar::class) {
     dependsOn("npm_run_build")
-    archiveBaseName.set("npm-app")
+    archiveBaseName.set("helloworld-ui")
     archiveExtension.set("jar")
     destinationDirectory.set(file("${projectDir}/build_packageNpmApp"))
     from("dist") {
