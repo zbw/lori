@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package de.zbw.handle.api.v1;
+
+option java_package = "de.zbw.handle.api";
+option java_multiple_files = true;
+
+message AddHandleRequest {
+  string handle_suffix = 1;
+  repeated HandleValue handle_values = 2;
+
+  message HandleValue {
+    HandleType type = 1;
+    int32 index = 2;
+    string value = 3;
+  }
+
+  enum HandleType {
+    HANDLE_TYPE_UNSPECIFIED = 0;
+    HANDLE_TYPE_ADMIN = 1;
+    HANDLE_TYPE_ALIAS = 2;
+    HANDLE_TYPE_EMAIL = 3;
+    HANDLE_TYPE_PUBKEY = 4;
+    HANDLE_TYPE_SECKEY = 5;
+    HANDLE_TYPE_URN = 6;
+    HANDLE_TYPE_URL = 7;
+    HANDLE_TYPE_VLIST = 8;
+  }
+}
+
+message AddHandleResponse {
+  string created_handle = 1;
+}
