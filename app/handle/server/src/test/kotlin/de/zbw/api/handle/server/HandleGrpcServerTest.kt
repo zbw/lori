@@ -3,12 +3,16 @@ package de.zbw.api.handle.server
 import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.business.handle.server.HandleCommunicator
 import de.zbw.handle.api.AddHandleRequest
+import de.zbw.handle.api.DeleteHandleRequest
+import de.zbw.handle.api.DeleteHandleResponse
 import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
+import net.handle.hdllib.AbstractMessage
 import net.handle.hdllib.CreateHandleResponse
 import net.handle.hdllib.ErrorResponse
+import net.handle.hdllib.GenericResponse
 import net.handle.hdllib.HandleException
 import net.handle.hdllib.Util
 import org.hamcrest.CoreMatchers.`is`
@@ -43,6 +47,29 @@ class HandleGrpcServerTest {
 
             // then
             assertThat(response.createdHandle, `is`(expectedHandle))
+        }
+    }
+
+    @Test
+    fun testDeleteHandle() {
+        runBlocking {
+            // given
+            val communicator = mockk<HandleCommunicator>() {
+                every {
+                    deleteHandle(any())
+                } returns GenericResponse(101, AbstractMessage.RC_SUCCESS)
+            }
+
+            val handleServer = HandleGrpcServer(
+                EXAMPLE_CONFIG,
+                communicator,
+            )
+
+            // when
+            val response = handleServer.deleteHandle(DeleteHandleRequest.getDefaultInstance())
+
+            // then
+            assertThat(response, `is`(DeleteHandleResponse.getDefaultInstance()))
         }
     }
 

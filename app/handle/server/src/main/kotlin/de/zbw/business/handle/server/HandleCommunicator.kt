@@ -2,6 +2,7 @@ package de.zbw.business.handle.server
 
 import com.benasher44.uuid.uuid4
 import de.zbw.handle.api.AddHandleRequest
+import de.zbw.handle.api.DeleteHandleRequest
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import net.handle.hdllib.AbstractResponse
@@ -23,11 +24,9 @@ class HandleCommunicator(
     val resolver: HandleResolver = createResolver(),
     private val authenticationInfo: SecretKeyAuthenticationInfo = createAuthInfo(password)
 ) {
-
     fun addHandle(
         request: AddHandleRequest,
     ): AbstractResponse {
-
         val handle = if (request.generateHandleSuffix) {
             "$PREFIX/${uuid4()}"
         } else {
@@ -42,6 +41,16 @@ class HandleCommunicator(
                     Util.encodeString(it.value),
                 )
             }.toTypedArray(),
+            authenticationInfo,
+        )
+        return resolver.processRequest(preparedRequest)
+    }
+
+    fun deleteHandle(request: DeleteHandleRequest): AbstractResponse {
+        val preparedRequest = net.handle.hdllib.DeleteHandleRequest(
+            Util.encodeString(
+                "$PREFIX/${request.handleSuffix}"
+            ),
             authenticationInfo,
         )
         return resolver.processRequest(preparedRequest)

@@ -32,3 +32,10 @@ message AddHandleRequest {
 message AddHandleResponse {
   string created_handle = 1;
 }
+
+message DeleteHandleRequest {
+  string handle_suffix = 1;
+}
+
+message DeleteHandleResponse {
+}
