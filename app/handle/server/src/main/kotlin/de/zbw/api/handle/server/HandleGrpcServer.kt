@@ -41,7 +41,12 @@ class HandleGrpcServer(
                     )
             }
         } catch (hexc: HandleException) {
-            throw StatusRuntimeException(Status.INTERNAL.withCause(hexc))
+            throw StatusRuntimeException(
+                Status
+                    .INTERNAL
+                    .withCause(hexc)
+                    .withDescription(hexc.message)
+            )
         }
     }
 }

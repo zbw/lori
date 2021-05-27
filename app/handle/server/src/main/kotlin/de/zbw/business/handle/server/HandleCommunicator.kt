@@ -1,5 +1,6 @@
 package de.zbw.business.handle.server
 
+import com.benasher44.uuid.uuid4
 import de.zbw.handle.api.AddHandleRequest
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -26,9 +27,14 @@ class HandleCommunicator(
     fun addHandle(
         request: AddHandleRequest,
     ): AbstractResponse {
+
+        val handle = if (request.generateHandleSuffix) {
+            "$PREFIX/${uuid4()}"
+        } else {
+            "$PREFIX/${request.customHandleSuffix}"
+        }
         val preparedRequest = CreateHandleRequest(
-            // TODO: The suffix needs to be determined differently and not through a received value.
-            Util.encodeString("$PREFIX/${request.handleSuffix}"),
+            Util.encodeString(handle),
             request.handleValuesList.map {
                 HandleValue(
                     it.index,
@@ -44,7 +50,12 @@ class HandleCommunicator(
     companion object {
         const val PREFIX = "5678"
         private const val ADMIN_HANDLE = "$PREFIX/ADMIN"
+
+        // The index of the secret key at the admin handle.
         private const val SECRET_KEY_IDX = 301
+
+        // The handle client library reads the configurations either from ~/.handle
+        // or this property.
         const val HANDLE_CONFIG_DIR_PROP = "net.handle.configDir"
 
         fun createResolver(): HandleResolver {

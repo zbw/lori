@@ -20,6 +20,7 @@ dependencies {
     val ktorVersion by System.getProperties()
     implementation("io.ktor:ktor-gson:$ktorVersion")
     implementation("net.handle:handle-client:9.3.0")
+    implementation("com.benasher44:uuid:0.2.4")
 }
 
 application {

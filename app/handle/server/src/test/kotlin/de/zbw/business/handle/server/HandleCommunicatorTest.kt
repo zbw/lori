@@ -1,11 +1,15 @@
 package de.zbw.business.handle.server
 
+import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuid4
 import de.zbw.handle.api.AddHandleRequest
 import de.zbw.handle.api.AddHandleRequest.HandleType
 import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
+import io.mockk.unmockkAll
 import io.mockk.verify
 import net.handle.hdllib.CreateHandleRequest
 import net.handle.hdllib.CreateHandleResponse
@@ -56,54 +60,87 @@ class HandleCommunicatorTest {
         )
     }
 
-    @Test
-    fun testAddHandle() {
-        // given
-        val suffix = "9999"
-        val handleValueIdx = 1
-        val expectedHandle = "${HandleCommunicator.PREFIX}/$suffix"
-        val handleValueEmail = "mail@exampl.com"
-
-        val slot = slot<CreateHandleRequest>()
-        val resolver = mockk<HandleResolver>() {
-            every {
-                processRequest(capture(slot))
-            } returns CreateHandleResponse(Util.encodeString(expectedHandle))
-        }
-        val communicator = HandleCommunicator(
-            "my_password",
-            resolver,
+    @DataProvider(name = DATA_FOR_CREATING_HANDLES)
+    private fun createDataForCreatingHandles() =
+        arrayOf(
+            arrayOf(
+                true,
+                "07b67cea-2fab-4528-b651-ecbf7aac3d31",
+                "2000",
+                "07b67cea-2fab-4528-b651-ecbf7aac3d31",
+            ),
+            arrayOf(
+                false,
+                "07b67cea-2fab-4528-b651-ecbf7aac3d31",
+                "2000",
+                "2000",
+            ),
         )
 
-        val request = AddHandleRequest.newBuilder()
-            .setHandleSuffix(suffix)
-            .addAllHandleValues(
-                listOf(
-                    AddHandleRequest.HandleValue.newBuilder()
-                        .setIndex(handleValueIdx)
-                        .setType(HandleType.HANDLE_TYPE_EMAIL)
-                        .setValue(handleValueEmail)
-                        .build()
-                )
+    @Test(dataProvider = DATA_FOR_CREATING_HANDLES)
+    fun testAddHandle(
+        generateHandle: Boolean,
+        generatedHandleSuffix: String,
+        customHandleSuffix: String,
+        expected: String,
+    ) {
+        // given
+        mockkStatic(Uuid::class) {
+            every {
+                uuid4()
+            } returns Uuid.fromString(generatedHandleSuffix)
+            val handleValueIdx = 1
+            val expectedHandle =
+                if (generateHandle) {
+                    "${HandleCommunicator.PREFIX}/$generatedHandleSuffix"
+                } else {
+                    "${HandleCommunicator.PREFIX}/$customHandleSuffix"
+                }
+            val handleValueEmail = "mail@exampl.com"
+
+            val slot = slot<CreateHandleRequest>()
+            val resolver = mockk<HandleResolver>() {
+                every {
+                    processRequest(capture(slot))
+                } returns CreateHandleResponse(Util.encodeString(expectedHandle))
+            }
+            val communicator = HandleCommunicator(
+                "my_password",
+                resolver,
             )
-            .build()
 
-        // when
-        val received = communicator.addHandle(request)
+            val request = AddHandleRequest.newBuilder()
+                .setCustomHandleSuffix(customHandleSuffix)
+                .setGenerateHandleSuffix(generateHandle)
+                .addAllHandleValues(
+                    listOf(
+                        AddHandleRequest.HandleValue.newBuilder()
+                            .setIndex(handleValueIdx)
+                            .setType(HandleType.HANDLE_TYPE_EMAIL)
+                            .setValue(handleValueEmail)
+                            .build()
+                    )
+                )
+                .build()
 
-        // then
-        val capturedRequest = slot.captured
-        val handleValue: HandleValue = capturedRequest.values.first()
+            // when
+            val received = communicator.addHandle(request)
 
-        assertThat(Util.decodeString(capturedRequest.handle), `is`(expectedHandle))
-        assertThat(handleValue.index, `is`(handleValueIdx))
-        assertThat(handleValue.dataAsString, `is`(handleValueEmail))
-        assertThat(handleValue.typeAsString, `is`(HandleType.HANDLE_TYPE_EMAIL.convertToHandleValue()))
+            // then
+            val capturedRequest = slot.captured
+            val handleValue: HandleValue = capturedRequest.values.first()
 
-        verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+            assertThat(Util.decodeString(capturedRequest.handle), `is`(expectedHandle))
+            assertThat(handleValue.index, `is`(handleValueIdx))
+            assertThat(handleValue.dataAsString, `is`(handleValueEmail))
+            assertThat(handleValue.typeAsString, `is`(HandleType.HANDLE_TYPE_EMAIL.convertToHandleValue()))
 
-        assertTrue(received is CreateHandleResponse)
-        assertThat(Util.decodeString((received as CreateHandleResponse).handle), `is`(expectedHandle))
+            verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+
+            assertTrue(received is CreateHandleResponse)
+            assertThat(Util.decodeString((received as CreateHandleResponse).handle), `is`(expectedHandle))
+        }
+        unmockkAll()
     }
 
     @DataProvider(name = DATA_FOR_CONVERSION)
@@ -161,5 +198,6 @@ class HandleCommunicatorTest {
 
     companion object {
         const val DATA_FOR_CONVERSION = "DATA_FOR_CONVERSION"
+        const val DATA_FOR_CREATING_HANDLES = "DATA_FOR_CREATING_HANDLES"
     }
 }
