@@ -6,8 +6,9 @@ option java_package = "de.zbw.handle.api";
 option java_multiple_files = true;
 
 message AddHandleRequest {
-  string handle_suffix = 1;
-  repeated HandleValue handle_values = 2;
+  bool generate_handle_suffix = 1;
+  string custom_handle_suffix = 2;
+  repeated HandleValue handle_values = 3;
 
   message HandleValue {
     HandleType type = 1;
@@ -30,4 +31,11 @@ message AddHandleRequest {
 
 message AddHandleResponse {
   string created_handle = 1;
+}
+
+message DeleteHandleRequest {
+  string handle_suffix = 1;
+}
+
+message DeleteHandleResponse {
 }
