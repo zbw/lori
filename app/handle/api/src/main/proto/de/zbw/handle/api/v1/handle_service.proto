@@ -10,5 +10,6 @@ option java_multiple_files = true;
 
 service HandleService {
   rpc AddHandle (AddHandleRequest) returns (AddHandleResponse);
+  rpc AddHandleValues (AddHandleValuesRequest) returns (AddHandleValuesResponse);
   rpc DeleteHandle (DeleteHandleRequest) returns (DeleteHandleResponse);
 }

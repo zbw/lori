@@ -4,6 +4,8 @@ import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.business.handle.server.HandleCommunicator
 import de.zbw.handle.api.AddHandleRequest
 import de.zbw.handle.api.AddHandleResponse
+import de.zbw.handle.api.AddHandleValuesRequest
+import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
@@ -23,7 +25,7 @@ import net.handle.hdllib.Util
  */
 class HandleGrpcServer(
     private val config: HandleConfiguration,
-    private val communicator: HandleCommunicator = HandleCommunicator(config.password),
+    private val communicator: HandleCommunicator = HandleCommunicator(config),
 ) : HandleServiceGrpcKt.HandleServiceCoroutineImplBase() {
 
     override suspend fun addHandle(request: AddHandleRequest): AddHandleResponse =
@@ -40,6 +42,11 @@ class HandleGrpcServer(
     override suspend fun deleteHandle(request: DeleteHandleRequest): DeleteHandleResponse =
         processRequestWithErrorHandling(communicator::deleteHandle, request) {
             DeleteHandleResponse.getDefaultInstance()
+        }
+
+    override suspend fun addHandleValues(request: AddHandleValuesRequest): AddHandleValuesResponse =
+        processRequestWithErrorHandling(communicator::addHandleValues, request) {
+            AddHandleValuesResponse.getDefaultInstance()
         }
 
     companion object {

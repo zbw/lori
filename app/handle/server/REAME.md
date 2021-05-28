@@ -17,13 +17,31 @@ This will generate client code from the protobuf files. Both, Java and Kotlin co
 ./gradlew :app:handle:server:run
 ```
 
-## Grpc Endpoint
+## Existing grpc endpoints
 
 For interacting with grpc endpoints the following tool is recommended:
 https://github.com/fullstorydev/grpcurl
 
-For creating a new handle, use:
+### Create new handle
 
 ```shell
-grpcurl -plaintext -d '{"handle_suffix":"1005", "handle_values":[{"type":"HANDLE_TYPE_URL", "index": "1", "value":"www.example.com"}]}' localhost:9092 de.zbw.handle.api.v1.HandleService.AddHandle
+grpcurl -plaintext -d '{"custom_handle_suffix":"1007", "handle_values":[{"type":"HANDLE_TYPE_URL", "index": "1", "value":"www.example.com"}]}' localhost:9092 de.zbw.handle.api.v1.HandleService.AddHandle
 ```
+
+### Delete a handle
+
+```shell
+grpcurl -plaintext -d '{"handle_suffix":"1007"}' localhost:9092 de.zbw.handle.api.v1.HandleService.DeleteHandle
+```
+
+### Add HandleValues
+
+```shell
+grpcurl -plaintext -d '{"handle_suffix":"1007"}' localhost:9092 de.zbw.handle.api.v1.HandleService.DeleteHandle }' localhost:9092 de.zbw.handle.api.v1.HandleService.AddHandleValues
+```
+
+TODOs:
+
+- Delete HandleValue
+- Modify HandleValue
+- implement client interfaces

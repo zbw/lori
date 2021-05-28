@@ -17,5 +17,6 @@ class HandleConfigurationsTest {
         assertThat(config.grpcPort, `is`(9092))
         assertThat(config.httpPort, `is`(8082))
         assertThat(config.password, `is`("password"))
+        assertThat(config.handlePrefix, `is`("5678"))
     }
 }
