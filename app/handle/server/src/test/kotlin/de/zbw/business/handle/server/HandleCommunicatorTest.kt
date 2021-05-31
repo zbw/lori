@@ -2,8 +2,9 @@ package de.zbw.business.handle.server
 
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
+import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.handle.api.AddHandleRequest
-import de.zbw.handle.api.AddHandleRequest.HandleType
+import de.zbw.handle.api.HandleType
 import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
@@ -53,7 +54,7 @@ class HandleCommunicatorTest {
 
     @Test
     fun testCreatingResolver() {
-        HandleCommunicator("my_password").resolver
+        HandleCommunicator(EXAMPLE_CONFIG).resolver
         assertThat(
             System.getProperty(HandleCommunicator.HANDLE_CONFIG_DIR_PROP),
             `is`(HandleCommunicator.getConfigURI()?.path!!)
@@ -67,12 +68,10 @@ class HandleCommunicatorTest {
                 true,
                 "07b67cea-2fab-4528-b651-ecbf7aac3d31",
                 "2000",
-                "07b67cea-2fab-4528-b651-ecbf7aac3d31",
             ),
             arrayOf(
                 false,
                 "07b67cea-2fab-4528-b651-ecbf7aac3d31",
-                "2000",
                 "2000",
             ),
         )
@@ -82,7 +81,6 @@ class HandleCommunicatorTest {
         generateHandle: Boolean,
         generatedHandleSuffix: String,
         customHandleSuffix: String,
-        expected: String,
     ) {
         // given
         mockkStatic(Uuid::class) {
@@ -92,20 +90,20 @@ class HandleCommunicatorTest {
             val handleValueIdx = 1
             val expectedHandle =
                 if (generateHandle) {
-                    "${HandleCommunicator.PREFIX}/$generatedHandleSuffix"
+                    "${EXAMPLE_CONFIG.handlePrefix}/$generatedHandleSuffix"
                 } else {
-                    "${HandleCommunicator.PREFIX}/$customHandleSuffix"
+                    "${EXAMPLE_CONFIG.handlePrefix}/$customHandleSuffix"
                 }
             val handleValueEmail = "mail@exampl.com"
 
             val slot = slot<CreateHandleRequest>()
-            val resolver = mockk<HandleResolver>() {
+            val resolver = mockk<HandleResolver> {
                 every {
                     processRequest(capture(slot))
                 } returns CreateHandleResponse(Util.encodeString(expectedHandle))
             }
             val communicator = HandleCommunicator(
-                "my_password",
+                EXAMPLE_CONFIG,
                 resolver,
             )
 
@@ -114,7 +112,7 @@ class HandleCommunicatorTest {
                 .setGenerateHandleSuffix(generateHandle)
                 .addAllHandleValues(
                     listOf(
-                        AddHandleRequest.HandleValue.newBuilder()
+                        de.zbw.handle.api.HandleValue.newBuilder()
                             .setIndex(handleValueIdx)
                             .setType(HandleType.HANDLE_TYPE_EMAIL)
                             .setValue(handleValueEmail)
@@ -199,5 +197,7 @@ class HandleCommunicatorTest {
     companion object {
         const val DATA_FOR_CONVERSION = "DATA_FOR_CONVERSION"
         const val DATA_FOR_CREATING_HANDLES = "DATA_FOR_CREATING_HANDLES"
+
+        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(9092, 8082, "password", "5678")
     }
 }

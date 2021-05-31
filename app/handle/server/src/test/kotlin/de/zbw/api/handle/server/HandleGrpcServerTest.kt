@@ -3,6 +3,8 @@ package de.zbw.api.handle.server
 import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.business.handle.server.HandleCommunicator
 import de.zbw.handle.api.AddHandleRequest
+import de.zbw.handle.api.AddHandleValuesRequest
+import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import io.grpc.StatusRuntimeException
@@ -47,6 +49,28 @@ class HandleGrpcServerTest {
 
             // then
             assertThat(response.createdHandle, `is`(expectedHandle))
+        }
+    }
+
+    @Test
+    fun testAddHandleValue() {
+        runBlocking {
+            // given
+            val communicator = mockk<HandleCommunicator>() {
+                every {
+                    addHandleValues(any())
+                } returns GenericResponse(101, AbstractMessage.RC_SUCCESS)
+            }
+            val handleServer = HandleGrpcServer(
+                EXAMPLE_CONFIG,
+                communicator,
+            )
+
+            // when
+            val response = handleServer.addHandleValues(AddHandleValuesRequest.getDefaultInstance())
+
+            // then
+            assertThat(response, `is`(AddHandleValuesResponse.getDefaultInstance()))
         }
     }
 
@@ -112,6 +136,6 @@ class HandleGrpcServerTest {
     }
 
     companion object {
-        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(9092, 8082, "password")
+        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(9092, 8082, "password", "5678")
     }
 }

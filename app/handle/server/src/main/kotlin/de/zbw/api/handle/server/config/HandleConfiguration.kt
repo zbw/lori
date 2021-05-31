@@ -17,6 +17,7 @@ data class HandleConfiguration(
     val grpcPort: Int,
     val httpPort: Int,
     val password: String,
+    val handlePrefix: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -29,10 +30,12 @@ data class HandleConfiguration(
             val grpcPort = int(prefix, "grpc", "port").default(DEFAULT_GRPC_PORT)
             val httpPort = int(prefix, "http", "port").default(DEFAULT_HTTP_PORT)
             val password = string(prefix, "server", "password").secret().required()
+            val handlePrefix = string(prefix, "server", "prefix").required()
             return HandleConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
                 password = source[password],
+                handlePrefix = source[handlePrefix],
             )
         }
     }

@@ -3,6 +3,10 @@ package de.zbw.api.handle.client
 import de.zbw.api.handle.client.config.HandleClientConfiguration
 import de.zbw.handle.api.AddHandleRequest
 import de.zbw.handle.api.AddHandleResponse
+import de.zbw.handle.api.AddHandleValuesRequest
+import de.zbw.handle.api.AddHandleValuesResponse
+import de.zbw.handle.api.DeleteHandleRequest
+import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
 import io.grpc.Channel
 import io.grpc.ManagedChannelBuilder
@@ -24,6 +28,16 @@ class HandleClient(
     suspend fun addHandle(request: AddHandleRequest): AddHandleResponse =
         runWithTracing("client_addHandle") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
             s.addHandle(request)
+        }
+
+    suspend fun addHandleValues(request: AddHandleValuesRequest): AddHandleValuesResponse =
+        runWithTracing("client_addHandle") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
+            s.addHandleValues(request)
+        }
+
+    suspend fun deleteHandle(request: DeleteHandleRequest): DeleteHandleResponse =
+        runWithTracing("client_deleteHandle") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
+            s.deleteHandle(request)
         }
 
     private suspend fun <T> runWithTracing(
