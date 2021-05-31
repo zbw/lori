@@ -47,3 +47,11 @@ message DeleteHandleRequest {
 
 message DeleteHandleResponse {
 }
+
+message ModifyHandleValuesRequest {
+  string handle_suffix = 1;
+  repeated HandleValue handle_value = 2;
+}
+
+message ModifyHandleValuesResponse {
+}
