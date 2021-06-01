@@ -8,6 +8,8 @@ import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
+import de.zbw.handle.api.ModifyHandleValuesRequest
+import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.grpc.Channel
 import io.grpc.ManagedChannelBuilder
 import org.slf4j.LoggerFactory
@@ -38,6 +40,11 @@ class HandleClient(
     suspend fun deleteHandle(request: DeleteHandleRequest): DeleteHandleResponse =
         runWithTracing("client_deleteHandle") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
             s.deleteHandle(request)
+        }
+
+    suspend fun modifyHandleValue(request: ModifyHandleValuesRequest): ModifyHandleValuesResponse =
+        runWithTracing("client_modifyHandles") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
+            s.modifyHandleValues(request)
         }
 
     private suspend fun <T> runWithTracing(

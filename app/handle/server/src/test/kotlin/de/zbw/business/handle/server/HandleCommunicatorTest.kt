@@ -4,7 +4,9 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.handle.api.AddHandleRequest
+import de.zbw.handle.api.AddHandleValuesRequest
 import de.zbw.handle.api.HandleType
+import de.zbw.handle.api.ModifyHandleValuesRequest
 import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
@@ -12,10 +14,15 @@ import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.unmockkAll
 import io.mockk.verify
+import net.handle.hdllib.AbstractMessage
+import net.handle.hdllib.AddValueRequest
 import net.handle.hdllib.CreateHandleRequest
 import net.handle.hdllib.CreateHandleResponse
+import net.handle.hdllib.DeleteHandleRequest
+import net.handle.hdllib.GenericResponse
 import net.handle.hdllib.HandleResolver
 import net.handle.hdllib.HandleValue
+import net.handle.hdllib.ModifyValueRequest
 import net.handle.hdllib.Util
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -139,6 +146,137 @@ class HandleCommunicatorTest {
             assertThat(Util.decodeString((received as CreateHandleResponse).handle), `is`(expectedHandle))
         }
         unmockkAll()
+    }
+
+    @Test
+    fun testAddHandleValues() {
+        // given
+        val handleValueEmail = "mail@exampl.com"
+        val handleSuffix = "anysuffix"
+        val handleValueIdx = 1
+        val expectedResponse = GenericResponse(100, AbstractMessage.RC_SUCCESS)
+
+        val slot = slot<AddValueRequest>()
+        val resolver = mockk<HandleResolver> {
+            every {
+                processRequest(capture(slot))
+            } returns expectedResponse
+        }
+        val communicator = HandleCommunicator(
+            EXAMPLE_CONFIG,
+            resolver,
+        )
+
+        val request = AddHandleValuesRequest.newBuilder()
+            .setHandleSuffix(handleSuffix)
+            .addAllHandleValues(
+                listOf(
+                    de.zbw.handle.api.HandleValue.newBuilder()
+                        .setIndex(handleValueIdx)
+                        .setType(HandleType.HANDLE_TYPE_EMAIL)
+                        .setValue(handleValueEmail)
+                        .build()
+                )
+            )
+            .build()
+
+        // when
+        val received = communicator.addHandleValues(request)
+
+        // then
+        val capturedRequest = slot.captured
+        val handleValue: HandleValue = capturedRequest.values.first()
+
+        assertThat(Util.decodeString(capturedRequest.handle), `is`("${EXAMPLE_CONFIG.handlePrefix}/$handleSuffix"))
+        assertThat(handleValue.index, `is`(handleValueIdx))
+        assertThat(handleValue.dataAsString, `is`(handleValueEmail))
+        assertThat(handleValue.typeAsString, `is`(HandleType.HANDLE_TYPE_EMAIL.convertToHandleValue()))
+
+        verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+
+        assertThat(received, `is`(expectedResponse))
+    }
+
+    @Test
+    fun testModifyHandle() {
+        // given
+        val handleValueEmail = "mail@exampl.com"
+        val handleSuffix = "anysuffix"
+        val handleValueIdx = 1
+        val expectedResponse = GenericResponse(100, AbstractMessage.RC_SUCCESS)
+
+        val slot = slot<ModifyValueRequest>()
+        val resolver = mockk<HandleResolver> {
+            every {
+                processRequest(capture(slot))
+            } returns expectedResponse
+        }
+        val communicator = HandleCommunicator(
+            EXAMPLE_CONFIG,
+            resolver,
+        )
+
+        val request = ModifyHandleValuesRequest.newBuilder()
+            .setHandleSuffix(handleSuffix)
+            .addAllHandleValue(
+                listOf(
+                    de.zbw.handle.api.HandleValue.newBuilder()
+                        .setIndex(handleValueIdx)
+                        .setType(HandleType.HANDLE_TYPE_EMAIL)
+                        .setValue(handleValueEmail)
+                        .build()
+                )
+            )
+            .build()
+
+        // when
+        val received = communicator.modifyHandleValues(request)
+
+        // then
+        val capturedRequest: ModifyValueRequest = slot.captured
+        val handleValue: HandleValue = capturedRequest.values.first()
+
+        assertThat(Util.decodeString(capturedRequest.handle), `is`("${EXAMPLE_CONFIG.handlePrefix}/$handleSuffix"))
+        assertThat(handleValue.index, `is`(handleValueIdx))
+        assertThat(handleValue.dataAsString, `is`(handleValueEmail))
+        assertThat(handleValue.typeAsString, `is`(HandleType.HANDLE_TYPE_EMAIL.convertToHandleValue()))
+
+        verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+
+        assertThat(received, `is`(expectedResponse))
+    }
+
+    @Test
+    fun testDeleteHandle() {
+        // given
+        val handleSuffix = "anysuffix"
+        val expectedResponse = GenericResponse(100, AbstractMessage.RC_SUCCESS)
+
+        val slot = slot<DeleteHandleRequest>()
+        val resolver = mockk<HandleResolver> {
+            every {
+                processRequest(capture(slot))
+            } returns expectedResponse
+        }
+        val communicator = HandleCommunicator(
+            EXAMPLE_CONFIG,
+            resolver,
+        )
+
+        val request = de.zbw.handle.api.DeleteHandleRequest.newBuilder()
+            .setHandleSuffix(handleSuffix)
+            .build()
+
+        // when
+        val received = communicator.deleteHandle(request)
+
+        // then
+        val capturedRequest = slot.captured
+
+        assertThat(Util.decodeString(capturedRequest.handle), `is`("${EXAMPLE_CONFIG.handlePrefix}/$handleSuffix"))
+
+        verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+        assertThat(received, `is`(expectedResponse))
     }
 
     @DataProvider(name = DATA_FOR_CONVERSION)

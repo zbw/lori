@@ -8,6 +8,8 @@ import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
+import de.zbw.handle.api.ModifyHandleValuesRequest
+import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -54,7 +56,7 @@ class HandleClientTest {
             val client = HandleClient(
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
-                stub = mockk() {
+                stub = mockk {
                     coEvery { addHandleValues(any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
@@ -72,12 +74,30 @@ class HandleClientTest {
             val client = HandleClient(
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
-                stub = mockk() {
+                stub = mockk {
                     coEvery { deleteHandle(any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )
             val received = client.deleteHandle(DeleteHandleRequest.getDefaultInstance())
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testClientModifyHandleValue() {
+        runBlocking {
+
+            val expected = ModifyHandleValuesResponse.getDefaultInstance()
+            val client = HandleClient(
+                configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
+                channel = mockk(),
+                stub = mockk {
+                    coEvery { modifyHandleValues(any()) } returns expected
+                    every { withDeadlineAfter(any(), any()) } returns this
+                }
+            )
+            val received = client.modifyHandleValue(ModifyHandleValuesRequest.getDefaultInstance())
             assertThat(received, `is`(expected))
         }
     }

@@ -9,6 +9,8 @@ import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
+import de.zbw.handle.api.ModifyHandleValuesRequest
+import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import net.handle.hdllib.AbstractMessage
@@ -47,6 +49,11 @@ class HandleGrpcServer(
     override suspend fun addHandleValues(request: AddHandleValuesRequest): AddHandleValuesResponse =
         processRequestWithErrorHandling(communicator::addHandleValues, request) {
             AddHandleValuesResponse.getDefaultInstance()
+        }
+
+    override suspend fun modifyHandleValues(request: ModifyHandleValuesRequest): ModifyHandleValuesResponse =
+        processRequestWithErrorHandling(communicator::modifyHandleValues, request) {
+            ModifyHandleValuesResponse.getDefaultInstance()
         }
 
     companion object {
