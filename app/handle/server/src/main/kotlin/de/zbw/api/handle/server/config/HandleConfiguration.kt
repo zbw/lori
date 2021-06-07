@@ -18,6 +18,9 @@ data class HandleConfiguration(
     val httpPort: Int,
     val password: String,
     val handlePrefix: String,
+    val sqlUrl: String,
+    val sqlUser: String,
+    val sqlPassword: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -31,11 +34,17 @@ data class HandleConfiguration(
             val httpPort = int(prefix, "http", "port").default(DEFAULT_HTTP_PORT)
             val password = string(prefix, "server", "password").secret().required()
             val handlePrefix = string(prefix, "server", "prefix").required()
+            val sqlUrl = string(prefix, "sql", "url").required()
+            val sqlUser = string(prefix, "sql", "user").required()
+            val sqlPassword = string(prefix, "sql", "password").secret().required()
             return HandleConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
                 password = source[password],
                 handlePrefix = source[handlePrefix],
+                sqlUrl = source[sqlUrl],
+                sqlUser = source[sqlUser],
+                sqlPassword = source[sqlPassword],
             )
         }
     }

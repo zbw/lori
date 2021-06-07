@@ -8,6 +8,8 @@ import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
+import de.zbw.handle.api.ListHandleValuesRequest
+import de.zbw.handle.api.ListHandleValuesResponse
 import de.zbw.handle.api.ModifyHandleValuesRequest
 import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.grpc.Channel
@@ -45,6 +47,11 @@ class HandleClient(
     suspend fun modifyHandleValue(request: ModifyHandleValuesRequest): ModifyHandleValuesResponse =
         runWithTracing("client_modifyHandles") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
             s.modifyHandleValues(request)
+        }
+
+    suspend fun listHandleValues(): ListHandleValuesResponse =
+        runWithTracing("client_listHandleValues") { s: HandleServiceGrpcKt.HandleServiceCoroutineStub ->
+            s.listHandleValues(ListHandleValuesRequest.getDefaultInstance())
         }
 
     private suspend fun <T> runWithTracing(

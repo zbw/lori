@@ -1,6 +1,7 @@
 package de.zbw.api.handle.server
 
 import de.zbw.api.handle.server.config.HandleConfigurations
+import de.zbw.business.handle.server.HandleCommunicator
 import org.slf4j.LoggerFactory
 
 /**
@@ -17,17 +18,24 @@ object HandleServer {
     fun main(args: Array<String>) {
         LOG.info("Starting the HandleServer :)")
 
-        val configs = HandleConfigurations.serverConfig
+        val config = HandleConfigurations.serverConfig
+        val communicator = HandleCommunicator(config)
 
         ServicePoolWithProbes(
-            port = configs.httpPort,
+            port = config.httpPort,
             services = listOf(
                 GrpcServer(
-                    port = configs.grpcPort,
+                    port = config.grpcPort,
                     services = listOf(
-                        HandleGrpcServer(configs),
+                        HandleGrpcServer(
+                            communicator = communicator,
+                        ),
                     ),
-                )
+                ),
+                HandleServiceLifecycle(
+                    config,
+                    communicator
+                ),
             ),
         ).apply {
             start()

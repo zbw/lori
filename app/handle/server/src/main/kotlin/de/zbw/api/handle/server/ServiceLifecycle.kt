@@ -17,7 +17,7 @@ abstract class ServiceLifecycle {
      * Returns if the service is healthy.
      * If not, it usually has no way of coming back to a healthy state.
      */
-    abstract fun isHealthy(): Boolean
+    open fun isHealthy(): Boolean = true
 
     /**
      * Start the service.
@@ -27,5 +27,5 @@ abstract class ServiceLifecycle {
     /**
      * Stop the service.
      */
-    abstract fun stop()
+    open fun stop() {}
 }

@@ -21,6 +21,8 @@ dependencies {
     implementation("io.ktor:ktor-gson:$ktorVersion")
     implementation("net.handle:handle-client:9.3.0")
     implementation("com.benasher44:uuid:0.2.4")
+    implementation("org.postgresql:postgresql:42.2.20")
+    implementation("org.flywaydb:flyway-core:7.9.1")
 }
 
 application {
@@ -31,7 +33,7 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = "0.874".toBigDecimal()
+                minimum = "0.846".toBigDecimal()
             }
         }
     }

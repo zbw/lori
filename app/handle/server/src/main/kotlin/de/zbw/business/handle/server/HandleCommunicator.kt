@@ -6,6 +6,7 @@ import de.zbw.handle.api.AddHandleRequest
 import de.zbw.handle.api.AddHandleValuesRequest
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.HandleType
+import de.zbw.handle.api.ListHandleValuesRequest
 import de.zbw.handle.api.ModifyHandleValuesRequest
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -14,6 +15,7 @@ import net.handle.hdllib.AddValueRequest
 import net.handle.hdllib.CreateHandleRequest
 import net.handle.hdllib.HandleResolver
 import net.handle.hdllib.HandleValue
+import net.handle.hdllib.ListHandlesRequest
 import net.handle.hdllib.ModifyValueRequest
 import net.handle.hdllib.SecretKeyAuthenticationInfo
 import net.handle.hdllib.Util
@@ -32,6 +34,17 @@ class HandleCommunicator(
     private val adminHandle: String = "$prefix/ADMIN",
     private val authenticationInfo: SecretKeyAuthenticationInfo = createAuthInfo(config.password, adminHandle)
 ) {
+
+    @Suppress("UNUSED_PARAMETER")
+    fun listHandleValues(
+        request: ListHandleValuesRequest = ListHandleValuesRequest.getDefaultInstance()
+    ): AbstractResponse {
+        val preparedRequest = ListHandlesRequest(
+            Util.encodeString(prefix),
+            authenticationInfo,
+        )
+        return resolver.processRequest(preparedRequest)
+    }
 
     fun addHandle(
         request: AddHandleRequest,
@@ -73,7 +86,7 @@ class HandleCommunicator(
     fun modifyHandleValues(request: ModifyHandleValuesRequest): AbstractResponse {
         val preparedRequest = ModifyValueRequest(
             Util.encodeString("$prefix/${request.handleSuffix}"),
-            request.handleValueList.map {
+            request.handleValuesList.map {
                 HandleValue(
                     it.index,
                     Util.encodeString(it.type.convertToHandleValue()),

@@ -1,12 +1,12 @@
 package de.zbw.api.handle.server
 
-import de.zbw.api.handle.server.config.HandleConfiguration
 import de.zbw.business.handle.server.HandleCommunicator
 import de.zbw.handle.api.AddHandleRequest
 import de.zbw.handle.api.AddHandleValuesRequest
 import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
+import de.zbw.handle.api.ListHandleValuesRequest
 import de.zbw.handle.api.ModifyHandleValuesRequest
 import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.grpc.StatusRuntimeException
@@ -14,10 +14,13 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import net.handle.hdllib.AbstractMessage
+import net.handle.hdllib.AuthenticationInfo
 import net.handle.hdllib.CreateHandleResponse
 import net.handle.hdllib.ErrorResponse
 import net.handle.hdllib.GenericResponse
 import net.handle.hdllib.HandleException
+import net.handle.hdllib.ListHandlesRequest
+import net.handle.hdllib.ListHandlesResponse
 import net.handle.hdllib.Util
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -42,7 +45,6 @@ class HandleGrpcServerTest {
                 } returns CreateHandleResponse(Util.encodeString(expectedHandle))
             }
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
                 communicator,
             )
 
@@ -58,14 +60,13 @@ class HandleGrpcServerTest {
     fun testAddHandleValue() {
         runBlocking {
             // given
-            val communicator = mockk<HandleCommunicator> {
+            val handleClient = mockk<HandleCommunicator> {
                 every {
                     addHandleValues(any())
                 } returns GenericResponse(101, AbstractMessage.RC_SUCCESS)
             }
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
-                communicator,
+                handleClient,
             )
 
             // when
@@ -80,15 +81,14 @@ class HandleGrpcServerTest {
     fun testDeleteHandle() {
         runBlocking {
             // given
-            val communicator = mockk<HandleCommunicator> {
+            val handleClient = mockk<HandleCommunicator> {
                 every {
                     deleteHandle(any())
                 } returns GenericResponse(101, AbstractMessage.RC_SUCCESS)
             }
 
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
-                communicator,
+                handleClient,
             )
 
             // when
@@ -103,15 +103,14 @@ class HandleGrpcServerTest {
     fun testModifyHandle() {
         runBlocking {
             // given
-            val communicator = mockk<HandleCommunicator> {
+            val handleClient = mockk<HandleCommunicator> {
                 every {
                     modifyHandleValues(any())
                 } returns GenericResponse(101, AbstractMessage.RC_SUCCESS)
             }
 
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
-                communicator,
+                handleClient,
             )
 
             // when
@@ -122,18 +121,51 @@ class HandleGrpcServerTest {
         }
     }
 
+    @Test
+    fun testListHandle() {
+        runBlocking {
+            // given
+            val expectedHandles = listOf(
+                "5678/1",
+                "5678/2",
+            )
+            val handleClient = mockk<HandleCommunicator> {
+                every {
+                    listHandleValues(any())
+                } returns ListHandlesResponse(
+                    ListHandlesRequest(
+                        Util.encodeString("5678"),
+                        mockk<AuthenticationInfo>(relaxed = true)
+                    ),
+                    expectedHandles.map {
+                        Util.encodeString(it)
+                    }.toTypedArray()
+                )
+            }
+
+            val handleServer = HandleGrpcServer(
+                handleClient,
+            )
+
+            // when
+            val response = handleServer.listHandleValues(ListHandleValuesRequest.getDefaultInstance())
+
+            // then
+            assertThat(response.handlesList.toSet(), `is`(expectedHandles.toSet()))
+        }
+    }
+
     @Test(expectedExceptions = [StatusRuntimeException::class])
     fun testHandleErrorResponse() {
         runBlocking {
             // given
-            val communicator = mockk<HandleCommunicator> {
+            val handleClient = mockk<HandleCommunicator> {
                 every {
                     addHandle(any())
                 } returns ErrorResponse(1, 101, Util.encodeString("Error"))
             }
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
-                communicator,
+                handleClient,
             )
             // when
             handleServer.addHandle(AddHandleRequest.getDefaultInstance())
@@ -145,22 +177,17 @@ class HandleGrpcServerTest {
     fun testHandleInternalError() {
         runBlocking {
             // given
-            val communicator = mockk<HandleCommunicator> {
+            val handleClient = mockk<HandleCommunicator> {
                 every {
                     addHandle(any())
                 } throws HandleException(1)
             }
             val handleServer = HandleGrpcServer(
-                EXAMPLE_CONFIG,
-                communicator,
+                handleClient,
             )
             // when
             handleServer.addHandle(AddHandleRequest.getDefaultInstance())
             // then boom
         }
-    }
-
-    companion object {
-        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(9092, 8082, "password", "5678")
     }
 }
