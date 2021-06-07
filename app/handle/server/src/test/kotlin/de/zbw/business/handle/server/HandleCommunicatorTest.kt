@@ -22,6 +22,8 @@ import net.handle.hdllib.DeleteHandleRequest
 import net.handle.hdllib.GenericResponse
 import net.handle.hdllib.HandleResolver
 import net.handle.hdllib.HandleValue
+import net.handle.hdllib.ListHandlesRequest
+import net.handle.hdllib.ListHandlesResponse
 import net.handle.hdllib.ModifyValueRequest
 import net.handle.hdllib.Util
 import org.hamcrest.CoreMatchers.`is`
@@ -218,7 +220,7 @@ class HandleCommunicatorTest {
 
         val request = ModifyHandleValuesRequest.newBuilder()
             .setHandleSuffix(handleSuffix)
-            .addAllHandleValue(
+            .addAllHandleValues(
                 listOf(
                     de.zbw.handle.api.HandleValue.newBuilder()
                         .setIndex(handleValueIdx)
@@ -274,6 +276,34 @@ class HandleCommunicatorTest {
         val capturedRequest = slot.captured
 
         assertThat(Util.decodeString(capturedRequest.handle), `is`("${EXAMPLE_CONFIG.handlePrefix}/$handleSuffix"))
+
+        verify(exactly = 1) { resolver.processRequest(capturedRequest) }
+        assertThat(received, `is`(expectedResponse))
+    }
+
+    @Test
+    fun testListHandle() {
+        // given
+        val expectedResponse = ListHandlesResponse()
+
+        val slot = slot<ListHandlesRequest>()
+        val resolver = mockk<HandleResolver> {
+            every {
+                processRequest(capture(slot))
+            } returns expectedResponse
+        }
+        val communicator = HandleCommunicator(
+            EXAMPLE_CONFIG,
+            resolver,
+        )
+
+        // when
+        val received = communicator.listHandleValues()
+
+        // then
+        val capturedRequest = slot.captured
+
+        assertThat(Util.decodeString(capturedRequest.handle), `is`(EXAMPLE_CONFIG.handlePrefix))
 
         verify(exactly = 1) { resolver.processRequest(capturedRequest) }
         assertThat(received, `is`(expectedResponse))
@@ -336,6 +366,14 @@ class HandleCommunicatorTest {
         const val DATA_FOR_CONVERSION = "DATA_FOR_CONVERSION"
         const val DATA_FOR_CREATING_HANDLES = "DATA_FOR_CREATING_HANDLES"
 
-        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(9092, 8082, "password", "5678")
+        val EXAMPLE_CONFIG: HandleConfiguration = HandleConfiguration(
+            9092,
+            8082,
+            "password",
+            "5678",
+            "jdbc",
+            "postgres",
+            "postgres",
+        )
     }
 }

@@ -13,4 +13,5 @@ service HandleService {
   rpc AddHandleValues (AddHandleValuesRequest) returns (AddHandleValuesResponse);
   rpc DeleteHandle (DeleteHandleRequest) returns (DeleteHandleResponse);
   rpc ModifyHandleValues (ModifyHandleValuesRequest) returns (ModifyHandleValuesResponse);
+  rpc ListHandleValues (ListHandleValuesRequest) returns (ListHandleValuesResponse);
 }

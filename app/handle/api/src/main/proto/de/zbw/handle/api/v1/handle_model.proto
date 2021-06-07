@@ -50,8 +50,16 @@ message DeleteHandleResponse {
 
 message ModifyHandleValuesRequest {
   string handle_suffix = 1;
-  repeated HandleValue handle_value = 2;
+  repeated HandleValue handle_values = 2;
 }
 
 message ModifyHandleValuesResponse {
 }
+
+message ListHandleValuesRequest {
+}
+
+message ListHandleValuesResponse {
+  repeated string handles = 1;
+}
+

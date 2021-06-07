@@ -8,6 +8,7 @@ import de.zbw.handle.api.AddHandleValuesResponse
 import de.zbw.handle.api.DeleteHandleRequest
 import de.zbw.handle.api.DeleteHandleResponse
 import de.zbw.handle.api.HandleServiceGrpcKt
+import de.zbw.handle.api.ListHandleValuesResponse
 import de.zbw.handle.api.ModifyHandleValuesRequest
 import de.zbw.handle.api.ModifyHandleValuesResponse
 import io.mockk.coEvery
@@ -98,6 +99,24 @@ class HandleClientTest {
                 }
             )
             val received = client.modifyHandleValue(ModifyHandleValuesRequest.getDefaultInstance())
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testClientListHandleValues() {
+        runBlocking {
+
+            val expected = ListHandleValuesResponse.getDefaultInstance()
+            val client = HandleClient(
+                configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
+                channel = mockk(),
+                stub = mockk {
+                    coEvery { listHandleValues(any()) } returns expected
+                    every { withDeadlineAfter(any(), any()) } returns this
+                }
+            )
+            val received = client.listHandleValues()
             assertThat(received, `is`(expected))
         }
     }
