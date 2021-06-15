@@ -25,6 +25,7 @@ dependencies {
     implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.15")
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.4.0")
     implementation("com.github.node-gradle:gradle-node-plugin:3.0.1")
+    implementation("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.1")
     implementation(gradleApi())
     implementation(localGroovy())
 }
