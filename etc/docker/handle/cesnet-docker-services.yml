@@ -1,0 +1,26 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2020 CESNET.
+#
+# Handle-docker is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+#
+# Handle.net CESNET services spec
+#
+version: '2.3'
+services:
+  handle-srv:
+    build:
+      context: .
+      args:
+        - SERVICE_IP=78.128.211.191
+        - SITE_DESCRIPTION=CESNET Handle.net Registry Service
+        - SITE_ORG=CESNET a.l.e.
+        - SITE_CONTACT=du-support@cesnet.cz
+        - SITE_CONTACT_NAME=DU Support
+    image: cesnet-handle:1.0.0
+    restart: always
+    ports:
+      - "2641:2641/udp"
+      - "2641:2641/tcp"
+      - "8000:8000/tcp"

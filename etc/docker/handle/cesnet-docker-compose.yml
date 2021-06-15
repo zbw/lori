@@ -1,0 +1,21 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2020 CESNET.
+#
+# Handle-docker is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+#
+# Handle.net server deployment for development
+#
+# Usage::
+#
+#   $ docker-compose up -d
+
+version: '2.3'
+services:
+  cesnet-handle:
+    environment:
+      AUTO_HOMED_PREFIXES: ""
+    extends:
+      file: cesnet-docker-services.yml
+      service: handle-srv
