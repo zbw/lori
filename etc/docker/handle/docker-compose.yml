@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (C) 2020 CESNET.
+#
+# Handle-docker is free software; you can redistribute it and/or modify it
+# under the terms of the MIT License; see LICENSE file for more details.
+#
+# Handle.net server deployment for development
+#
+# Usage::
+#
+#   $ docker-compose up -d
+
+version: '2.3'
+services:
+  handle-srv:
+    depends_on:
+      - db
+    extends:
+      file: docker-services.yml
+      service: handle-srv
+  db:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=handleserver
+      - POSTGRES_PASSWORD=1qay2wsx
+      - POSTGRES_DB=handlesystem
+    volumes:
+      - ./db-data/:/var/lib/postgresql/data
+  app:
+    image: server:latest
+    depends_on:
+      - db
+      - handle-srv
+    environment:
+      - HANDLE_SQL_URL=jdbc:postgresql://db:5432/handlesystem
+
+
