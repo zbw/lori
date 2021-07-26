@@ -1,0 +1,102 @@
+syntax = "proto3";
+
+package de.zbw.access.api.v1;
+
+option java_package = "de.zbw.access.api";
+option java_multiple_files = true;
+
+message AddAccessInformationRequest {
+  repeated AccessRightProto items = 1;
+}
+
+message AddAccessInformationResponse {
+}
+
+message GetAccessInformationRequest {
+  repeated string ids = 1;
+}
+
+message GetAccessInformationResponse {
+  repeated AccessRightProto access_rights = 1;
+}
+
+message AccessRightProto {
+  string id = 1;
+  string tenant = 2;
+  string usage_guide = 3;
+  string template = 4;
+  bool mention = 5;
+  bool sharealike = 6;
+  bool commercialuse = 7;
+  bool copyright = 8;
+  repeated ActionProto actions = 9;
+}
+
+message ActionProto {
+  ActionTypeProto type = 1;
+  bool permission = 2;
+  repeated RestrictionProto restrictions = 3;
+}
+
+enum ActionTypeProto {
+  ACTION_TYPE_PROTO_UNSPECIFIED = 0;
+  ACTION_TYPE_PROTO_READ = 1;
+  ACTION_TYPE_PROTO_RUN = 2;
+  ACTION_TYPE_PROTO_LEND = 3;
+  ACTION_TYPE_PROTO_DOWNLOAD = 4;
+  ACTION_TYPE_PROTO_PRINT = 5;
+  ACTION_TYPE_PROTO_REPRODUCE = 6;
+  ACTION_TYPE_PROTO_MODIFY = 7;
+  ACTION_TYPE_PROTO_REUSE = 8;
+  ACTION_TYPE_PROTO_DISTRIBUTE = 9;
+  ACTION_TYPE_PROTO_PUBLISH = 10;
+  ACTION_TYPE_PROTO_ARCHIVE = 11;
+  ACTION_TYPE_PROTO_INDEX = 12;
+  ACTION_TYPE_PROTO_MOVE = 13;
+  ACTION_TYPE_PROTO_DISPLAY_METADATA = 14;
+}
+
+message RestrictionProto {
+  RestrictionTypeProto type = 1;
+  AttributeProto attribute = 2;
+}
+
+enum RestrictionTypeProto {
+  RESTRICTION_TYPE_PROTO_UNSPECIFIED = 0;
+  RESTRICTION_TYPE_PROTO_GROUP = 1;
+  RESTRICTION_TYPE_PROTO_AGE = 2;
+  RESTRICTION_TYPE_PROTO_LOCATION = 3;
+  RESTRICTION_TYPE_PROTO_DATE = 4;
+  RESTRICTION_TYPE_PROTO_DURATION = 5;
+  RESTRICTION_TYPE_PROTO_COUNT = 6;
+  RESTRICTION_TYPE_PROTO_CONCURRENT = 7;
+  RESTRICTION_TYPE_PROTO_WATERMARK = 8;
+  RESTRICTION_TYPE_PROTO_QUALITY = 9;
+  RESTRICTION_TYPE_PROTO_AGREEMENT = 10;
+  RESTRICTION_TYPE_PROTO_PARTS = 11;
+}
+
+message AttributeProto {
+  AttributeTypeProto type = 1;
+  repeated string values = 2;
+}
+
+enum AttributeTypeProto {
+  ATTRIBUTE_TYPE_PROTO_UNSPECIFIED = 0;
+  ATTRIBUTE_TYPE_PROTO_FROM_DATE = 1;
+  ATTRIBUTE_TYPE_PROTO_TO_DATE = 2;
+  ATTRIBUTE_TYPE_PROTO_MAX_RESOLUTION = 3;
+  ATTRIBUTE_TYPE_PROTO_MAX_BITRATE = 4;
+  ATTRIBUTE_TYPE_PROTO_COUNT = 5;
+  ATTRIBUTE_TYPE_PROTO_INSIDE = 6;
+  ATTRIBUTE_TYPE_PROTO_SUBNET = 7;
+  ATTRIBUTE_TYPE_PROTO_OUTSIDE = 8;
+  ATTRIBUTE_TYPE_PROTO_WATERMARK = 9;
+  ATTRIBUTE_TYPE_PROTO_DURATION = 10;
+  ATTRIBUTE_TYPE_PROTO_MIN_AGE = 11;
+  ATTRIBUTE_TYPE_PROTO_MAX_AGE = 12;
+  ATTRIBUTE_TYPE_PROTO_REQUIRED = 13;
+  ATTRIBUTE_TYPE_PROTO_GROUPS = 14;
+  ATTRIBUTE_TYPE_PROTO_PARTS = 15;
+  ATTRIBUTE_TYPE_PROTO_SESSIONS = 16;
+}
