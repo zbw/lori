@@ -1,4 +1,4 @@
-package de.zbw.api.access.server.proto
+package de.zbw.api.access.server.type
 
 import de.zbw.access.api.AccessRightProto
 import de.zbw.access.api.ActionProto
@@ -30,7 +30,7 @@ import org.testng.annotations.Test
 class ProtoConverterTest {
 
     @Test
-    fun testAccessRightToBusiness() {
+    fun testAccessRightConversion() {
         // given
         val expected = AccessRight(
             header = Header(
@@ -96,7 +96,7 @@ class ProtoConverterTest {
     }
 
     @Test
-    fun testActionTypeProtoToBusiness() {
+    fun testActionTypeConversionRoundtrip() {
         ActionTypeProto.values().toList().forEach {
             when (it) {
                 ActionTypeProto.ACTION_TYPE_PROTO_UNSPECIFIED, ActionTypeProto.UNRECOGNIZED -> try {
@@ -110,7 +110,7 @@ class ProtoConverterTest {
     }
 
     @Test
-    fun testAttributeTypeProtoToBusiness() {
+    fun testAttributeTypeConversionRoundtrip() {
         AttributeTypeProto.values().toList().forEach {
             when (it) {
                 AttributeTypeProto.ATTRIBUTE_TYPE_PROTO_UNSPECIFIED, AttributeTypeProto.UNRECOGNIZED -> try {
@@ -127,7 +127,7 @@ class ProtoConverterTest {
     }
 
     @Test
-    fun testRestrictionTypeProtoConversion() {
+    fun testRestrictionTypeConversionRoundtrip() {
         RestrictionTypeProto.values().toList().forEach {
             when (it) {
                 RestrictionTypeProto.RESTRICTION_TYPE_PROTO_UNSPECIFIED, RestrictionTypeProto.UNRECOGNIZED ->

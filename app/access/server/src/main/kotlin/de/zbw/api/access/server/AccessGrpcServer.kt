@@ -10,9 +10,12 @@ import de.zbw.access.api.GetAccessInformationRequest
 import de.zbw.access.api.GetAccessInformationResponse
 import de.zbw.access.api.RestrictionProto
 import de.zbw.api.access.server.config.AccessConfiguration
-import de.zbw.api.access.server.proto.toBusiness
-import de.zbw.api.access.server.proto.toProto
+import de.zbw.api.access.server.type.toBusiness
+import de.zbw.api.access.server.type.toProto
 import de.zbw.business.access.server.AccessServerBackend
+import io.grpc.Status
+import io.grpc.StatusRuntimeException
+import java.sql.SQLException
 
 /**
  * Access GRPC-server.
@@ -26,7 +29,14 @@ class AccessGrpcServer(
 ) : AccessServiceGrpcKt.AccessServiceCoroutineImplBase() {
 
     override suspend fun addAccessInformation(request: AddAccessInformationRequest): AddAccessInformationResponse {
-        request.itemsList.map { it.toBusiness() }.map { backend.insertAccessRightEntry(it) }
+        try {
+            request.itemsList.map { it.toBusiness() }.map { backend.insertAccessRightEntry(it) }
+        } catch (e: Exception) {
+            throw StatusRuntimeException(
+                Status.INTERNAL.withCause(e.cause)
+                    .withDescription("Error while inserting an access right item: ${e.message}")
+            )
+        }
 
         return AddAccessInformationResponse
             .newBuilder()
@@ -34,46 +44,54 @@ class AccessGrpcServer(
     }
 
     override suspend fun getAccessInformation(request: GetAccessInformationRequest): GetAccessInformationResponse {
-        val accessRights = backend.getAccessRightEntries(request.idsList)
-        return GetAccessInformationResponse.newBuilder()
-            .addAllAccessRights(
-                accessRights.map {
-                    AccessRightProto.newBuilder()
-                        .setIfNotNull(it.header.id) { b, value -> b.setId(value) }
-                        .setIfNotNull(it.header.tenant) { b, value -> b.setTenant(value) }
-                        .setIfNotNull(it.header.usageGuide) { b, value -> b.setUsageGuide(value) }
-                        .setIfNotNull(it.header.template) { b, value -> b.setTemplate(value) }
-                        .setIfNotNull(it.header.mention) { b, value -> b.setMention(value) }
-                        .setIfNotNull(it.header.shareAlike) { b, value -> b.setSharealike(value) }
-                        .setIfNotNull(it.header.commercialUse) { b, value -> b.setCommercialuse(value) }
-                        .setIfNotNull(it.header.copyright) { b, value -> b.setCopyright(value) }
-                        .addAllActions(
-                            it.actions.map { action ->
-                                ActionProto
-                                    .newBuilder()
-                                    .setPermission(action.permission)
-                                    .setType(action.type.toProto())
-                                    .addAllRestrictions(
-                                        action.restrictions.map { restriction ->
-                                            RestrictionProto.newBuilder()
-                                                .setType(restriction.type.toProto())
-                                                .setAttribute(
-                                                    AttributeProto.newBuilder()
-                                                        .setType(restriction.attribute.type.toProto())
-                                                        .addAllValues(restriction.attribute.values)
-                                                        .build()
-                                                )
-                                                .build()
-                                        }
-                                    )
-                                    .build()
-                            }
+        try {
+            val accessRights = backend.getAccessRightEntries(request.idsList)
 
-                        )
-                        .build()
-                }
+            return GetAccessInformationResponse.newBuilder()
+                .addAllAccessRights(
+                    accessRights.map {
+                        AccessRightProto.newBuilder()
+                            .setIfNotNull(it.header.id) { b, value -> b.setId(value) }
+                            .setIfNotNull(it.header.tenant) { b, value -> b.setTenant(value) }
+                            .setIfNotNull(it.header.usageGuide) { b, value -> b.setUsageGuide(value) }
+                            .setIfNotNull(it.header.template) { b, value -> b.setTemplate(value) }
+                            .setIfNotNull(it.header.mention) { b, value -> b.setMention(value) }
+                            .setIfNotNull(it.header.shareAlike) { b, value -> b.setSharealike(value) }
+                            .setIfNotNull(it.header.commercialUse) { b, value -> b.setCommercialuse(value) }
+                            .setIfNotNull(it.header.copyright) { b, value -> b.setCopyright(value) }
+                            .addAllActions(
+                                it.actions.map { action ->
+                                    ActionProto
+                                        .newBuilder()
+                                        .setPermission(action.permission)
+                                        .setType(action.type.toProto())
+                                        .addAllRestrictions(
+                                            action.restrictions.map { restriction ->
+                                                RestrictionProto.newBuilder()
+                                                    .setType(restriction.type.toProto())
+                                                    .setAttribute(
+                                                        AttributeProto.newBuilder()
+                                                            .setType(restriction.attribute.type.toProto())
+                                                            .addAllValues(restriction.attribute.values)
+                                                            .build()
+                                                    )
+                                                    .build()
+                                            }
+                                        )
+                                        .build()
+                                }
+
+                            )
+                            .build()
+                    }
+                )
+                .build()
+        } catch (e: SQLException) {
+            throw StatusRuntimeException(
+                Status.INTERNAL.withCause(e.cause)
+                    .withDescription("Error while querying header information: ${e.message}")
             )
-            .build()
+        }
     }
 }
 

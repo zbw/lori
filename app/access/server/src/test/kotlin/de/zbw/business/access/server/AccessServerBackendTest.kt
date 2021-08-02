@@ -2,7 +2,6 @@ package de.zbw.business.access.server
 
 import de.zbw.persistence.access.server.DatabaseConnector
 import de.zbw.persistence.access.server.DatabaseTest
-import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.BeforeClass
@@ -18,7 +17,6 @@ import org.testng.annotations.Test
 class AccessServerBackendTest : DatabaseTest() {
 
     private val backend = AccessServerBackend(
-        mockk(),
         DatabaseConnector(
             connection = dataSource.connection,
         )

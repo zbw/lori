@@ -10,14 +10,18 @@ import de.zbw.persistence.access.server.DatabaseConnector
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class AccessServerBackend(
-    config: AccessConfiguration,
-    private val dbConnector: DatabaseConnector = DatabaseConnector(config),
+    private val dbConnector: DatabaseConnector,
 ) {
+    constructor(
+        config: AccessConfiguration,
+    ) : this(
+        DatabaseConnector(config),
+    )
 
-    fun insertAccessRightEntries(accessRights: List<AccessRight>) =
-        accessRights.forEach { insertAccessRightEntry(it) }
+    fun insertAccessRightEntries(accessRights: List<AccessRight>): List<String> =
+        accessRights.map { insertAccessRightEntry(it) }
 
-    fun insertAccessRightEntry(accessRight: AccessRight) {
+    fun insertAccessRightEntry(accessRight: AccessRight): String {
         val fkAccessRight: String = dbConnector.insertHeader(accessRight.header)
         accessRight.actions.forEach { act ->
             val fkAction = dbConnector.insertAction(act, fkAccessRight)
@@ -25,6 +29,7 @@ class AccessServerBackend(
                 fkAction.let { dbConnector.insertRestriction(r, fkAction) }
             }
         }
+        return fkAccessRight
     }
 
     fun getAccessRightEntries(ids: List<String>): List<AccessRight> {

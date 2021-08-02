@@ -20,12 +20,14 @@ import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Header
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
+import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
+import java.sql.SQLException
 
 /**
  * Test [AccessGrpcServer].
@@ -42,12 +44,35 @@ class AccessGrpcServerTest {
                 .newBuilder()
                 .build()
 
-            val backendMockk = mockk<AccessServerBackend>() {
-                every { insertAccessRightEntry(any()) } returns Unit
+            val backendMockk = mockk<AccessServerBackend> {
+                every { insertAccessRightEntry(any()) } returns "foo"
             }
 
             val response = AccessGrpcServer(mockk(), backendMockk).addAccessInformation(request)
             assertThat(response, `is`(AddAccessInformationResponse.getDefaultInstance()))
+        }
+    }
+
+    @Test(expectedExceptions = [StatusRuntimeException::class])
+    fun testAddAccessInformationError() {
+        runBlocking {
+            val request = AddAccessInformationRequest
+                .newBuilder()
+                .addAllItems(
+                    listOf(
+                        AccessRightProto
+                            .newBuilder()
+                            .setId("foo")
+                            .build()
+                    )
+                )
+                .build()
+
+            val backendMockk = mockk<AccessServerBackend> {
+                every { insertAccessRightEntry(any()) } throws SQLException()
+            }
+
+            AccessGrpcServer(mockk(), backendMockk).addAccessInformation(request)
         }
     }
 
@@ -59,7 +84,7 @@ class AccessGrpcServerTest {
                 .addAllIds(listOf("foo"))
                 .build()
 
-            val backendMockk = mockk<AccessServerBackend>() {
+            val backendMockk = mockk<AccessServerBackend> {
                 every { getAccessRightEntries(any()) } returns listOf(
                     AccessRight(
                         header = Header(
@@ -134,6 +159,22 @@ class AccessGrpcServerTest {
                         .build()
                 )
             )
+        }
+    }
+
+    @Test(expectedExceptions = [StatusRuntimeException::class])
+    fun testGetAccessInformationError() {
+        runBlocking {
+            val request = GetAccessInformationRequest
+                .newBuilder()
+                .addAllIds(listOf("foo"))
+                .build()
+
+            val backendMockk = mockk<AccessServerBackend> {
+                every { getAccessRightEntries(any()) } throws SQLException()
+            }
+
+            AccessGrpcServer(mockk(), backendMockk).getAccessInformation(request)
         }
     }
 }
