@@ -167,6 +167,31 @@ class DatabaseConnector(
         }.toMap()
     }
 
+    fun containsHeader(headerId: String): Boolean {
+        val stmt = "SELECT EXISTS(SELECT 1 from $TABLE_NAME_HEADER WHERE header_id=?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setString(1, headerId)
+        }
+        val rs = prepStmt.executeQuery()
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun getAccessRightIds(limit: Int, offset: Int): List<String> {
+        val stmt = "SELECT header_id from $TABLE_NAME_HEADER ORDER BY header_id ASC LIMIT ? OFFSET ?"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+        val rs = prepStmt.executeQuery()
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getString(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         element: T?,
         idx: Int,
