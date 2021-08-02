@@ -15,7 +15,7 @@ import javax.sql.DataSource
  */
 class FlywayMigrator(
     dataSource: DataSource,
-    val flyway: Flyway = Flyway
+    private val flyway: Flyway = Flyway
         .configure()
         .validateMigrationNaming(true)
         .locations("db/migration")

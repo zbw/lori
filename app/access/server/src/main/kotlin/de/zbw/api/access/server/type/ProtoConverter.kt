@@ -1,4 +1,4 @@
-package de.zbw.api.access.server.proto
+package de.zbw.api.access.server.type
 
 import de.zbw.access.api.AccessRightProto
 import de.zbw.access.api.ActionProto

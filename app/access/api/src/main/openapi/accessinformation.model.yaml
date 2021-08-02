@@ -1,0 +1,101 @@
+AccessInformation:
+  required:
+    - id
+    - actions
+  type: object
+  properties:
+    id:
+      type: string
+    tenant:
+      type: string
+    usageGuide:
+      type: string
+    template:
+      type: string
+    mention:
+      type: boolean
+    sharealike:
+      type: boolean
+    commercialuse:
+      type: boolean
+    copyright:
+      type: boolean
+    actions:
+      type: array
+      items:
+        $ref: '#/Action'
+
+Action:
+  required:
+    - permission
+    - actiontype
+  type: object
+  properties:
+    permission:
+      type: boolean
+    actiontype:
+      type: string
+      enum:
+        - read
+        - run
+        - lend
+        - download
+        - print
+        - reproduce
+        - modify
+        - reuse
+        - distribute
+        - publish
+        - archive
+        - index
+        - move
+        - displaymetadata
+    restrictions:
+      type: array
+      items:
+        $ref: '#/Restriction'
+
+Restriction:
+  required:
+    - restrictiontype
+    - attributetype
+    - attributevalues
+  type: object
+  properties:
+    restrictiontype:
+      type: string
+      enum:
+        - group
+        - age
+        - location
+        - date
+        - duration
+        - count
+        - concurrent
+        - watermark
+        - quality
+        - agreement
+        - parts
+    attributetype:
+      type: string
+      enum:
+        - fromdate
+        - todate
+        - maxresolution
+        - maxbitrate
+        - count
+        - inside
+        - subnet
+        - outside
+        - watermark
+        - duration
+        - minage
+        - maxage
+        - required
+        - groups
+        - parts
+        - sessions
+    attributevalues:
+      type: array
+      items:
+        type: string

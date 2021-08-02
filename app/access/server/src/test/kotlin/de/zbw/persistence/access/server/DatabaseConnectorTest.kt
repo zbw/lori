@@ -7,7 +7,6 @@ import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Header
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
-import io.grpc.StatusRuntimeException
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -26,12 +25,11 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnectorTest : DatabaseTest() {
-
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
     )
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [SQLException::class])
     fun testInsertHeaderException() {
 
         // given
@@ -45,7 +43,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         dbConnector.insertHeader(testHeader)
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertHeaderNoInsertError() {
         // given
         val stmntAccIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_HEADER}" +
@@ -92,7 +90,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [SQLException::class])
     fun testInsertActionError() {
         // when
         dbConnector.insertAction(TEST_ACTION, "invalid_foreign_key")
@@ -100,7 +98,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // exception
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertActionNoInsertError() {
         // given
         val stmntActIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ACTION}" +
@@ -164,7 +162,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(receivedActions[givenHeaderId]!!.first(), `is`(givenAction))
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [SQLException::class])
     fun testInsertRestrictionError() {
         // when
         val dbConnector = DatabaseConnector(
@@ -177,7 +175,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // exception
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertRestrictionNoInsertError() {
         // given
         val stmntRestIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_RESTRICTION}" +
@@ -197,7 +195,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // then exception
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [SQLException::class])
     fun testGetHeadersException() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
@@ -207,7 +205,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         dbConnector.getHeaders(listOf("foo"))
     }
 
-    @Test(expectedExceptions = [StatusRuntimeException::class])
+    @Test(expectedExceptions = [SQLException::class])
     fun testGetActionException() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {

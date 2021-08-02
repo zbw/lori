@@ -1,0 +1,19 @@
+accessinformation:
+  post:
+    tags:
+      - accessinformation
+    summary: Add a new access information for a bibliographic item
+    operationId: addAccessInformation
+    requestBody:
+      description: AccessInformation object
+      content:
+        application/json:
+          schema:
+            $ref: 'accessinformation.model.yaml#/AccessInformation'
+      required: true
+    responses:
+      405:
+        description: Invalid input
+        content: {}
+    x-codegen-request-body-name: body
+

@@ -1,6 +1,7 @@
 package de.zbw.api.access.server
 
 import de.zbw.api.access.server.config.AccessConfigurations
+import de.zbw.business.access.server.AccessServerBackend
 import de.zbw.persistence.access.server.FlywayMigrator
 import org.slf4j.LoggerFactory
 
@@ -18,21 +19,23 @@ object AccessServer {
     fun main(args: Array<String>) {
         LOG.info("Starting the AccessServer :)")
 
-        val configs = AccessConfigurations.serverConfig
+        val config = AccessConfigurations.serverConfig
+        val backend = AccessServerBackend(config)
 
         // Migrate DB
-        FlywayMigrator(configs).migrate()
+        FlywayMigrator(config).migrate()
 
         ServicePoolWithProbes(
-            port = configs.httpPort,
+            config = config,
             services = listOf(
                 GrpcServer(
-                    port = configs.grpcPort,
+                    port = config.grpcPort,
                     services = listOf(
-                        AccessGrpcServer(configs),
+                        AccessGrpcServer(config, backend),
                     ),
                 )
             ),
+            backend = backend,
         ).apply {
             start()
         }

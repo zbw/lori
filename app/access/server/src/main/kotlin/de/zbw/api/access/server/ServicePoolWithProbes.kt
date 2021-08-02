@@ -1,5 +1,8 @@
 package de.zbw.api.access.server
 
+import de.zbw.api.access.server.config.AccessConfiguration
+import de.zbw.api.access.server.route.apiRoutes
+import de.zbw.business.access.server.AccessServerBackend
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -22,12 +25,13 @@ import io.ktor.server.netty.NettyApplicationEngine
  */
 class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
-    private val port: Int,
+    config: AccessConfiguration,
+    private val backend: AccessServerBackend,
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(
         Netty,
-        port = port,
+        port = config.httpPort,
         module = application()
     )
 
@@ -53,6 +57,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
+            apiRoutes(backend)
         }
     }
 

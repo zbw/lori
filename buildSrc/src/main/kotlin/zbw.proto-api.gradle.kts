@@ -10,6 +10,13 @@ repositories {
     mavenCentral()
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
+    kotlinOptions {
+        jvmTarget = "11"
+        languageVersion = "1.4"
+    }
+}
+
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler

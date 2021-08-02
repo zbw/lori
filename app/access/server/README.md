@@ -3,23 +3,23 @@ Access-Service
 
 ## About
 
-This service manages access rights for all kind of items. It provides a (g)rpc interface to change any information. A
-REST interface will follow soon.
+This service manages access rights for all kind of items. It provides a (g)rpc interface to change any information and
+REST interface.
 
 The [LIBRML](https://librml.org/index.html) standard (currently in beta version) is used as baseline for the interface.
 
 ## Local setup
 
-Prerequisite: A postgres database needs to be set up.
+Prerequisite: Setting up a local postgres.
 
-First create a docker container and start it.
+First create a postgres docker container and start it.
 
 ```shell
 docker run --name postgres_access -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres
 docker start postgres_access
 ```
 
-Then the database and role needs to be created. Via `psql`:
+Then create a role, and a new database as follows with `psql`:
 
 ```shell
 docker exec -it postgres_access psql -U postgres
@@ -28,7 +28,7 @@ CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
 \q
 ```
 
-Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for the setup as well.
+Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database.
 
 Finally, start the service:
 
@@ -36,9 +36,9 @@ Finally, start the service:
 ./gradlew :app:access:server:run
 ```
 
-## Example
+## (G)RPC
 
-This example uses the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl).
+In order to send messages grpc it the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl) is recommended.
 
 1. Add an items access right for _read_ rights with a restriction via grpc.
 
@@ -51,3 +51,20 @@ grpcurl -plaintext -d '{"items":[{"id":"test_id", "tenant": "www.zbw.eu", "usage
 ```shell
 grpcurl -plaintext -d '{"ids":["test_no_rest"]}' localhost:9092 de.zbw.access.api.v1.AccessService.GetAccessInformation
 ```
+
+
+## REST
+
+We use OpenApi v3.0.1 to represent all REST endpoints. The definition of the endpoints
+can be found under `api/src/main/openapi`.
+
+1. Send a POST request to add a new item:
+
+```shell
+ curl -H "Content-Type: application/json" \
+--request POST \
+--data '{"id":"testId", "tenant": "www.zbw.eu", "usage_guide":"www.zbw.eu/licence", "mention":"true", "actions":[{"permission":"true", "actiontype":"read", "restrictions":[{"restrictiontype":"age", "attributetype":"fromdate", "attributevalues":["18"]}]}]}' \
+http://localhost:8082/api/v1/accessinformation
+```
+
+2. TODO Get request
