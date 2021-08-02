@@ -7,6 +7,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import kotlin.test.assertTrue
 
 /**
  * Test [AccessServerBackend].
@@ -22,11 +23,16 @@ class AccessServerBackendTest : DatabaseTest() {
         )
     )
 
+    private val orderedList = arrayOf(
+        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "aaaa")),
+        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "aaaa2")),
+    )
+
     private val entries = arrayOf(
         TEST_ACCESS_RIGHT,
         TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2a")),
-        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2b"))
-    )
+        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2b")),
+    ).plus(orderedList)
 
     @BeforeClass
     fun fillDatabase() {
@@ -65,6 +71,20 @@ class AccessServerBackendTest : DatabaseTest() {
         assertThat(received.toSet(), `is`(expectedAccessRights))
     }
 
+    @Test
+    fun testGetList() {
+        // when
+        val received = backend.getAccessRightList(limit = 2, offset = 0)
+        // then
+        assertThat(received, `is`(orderedList.toList()))
+
+        // no limit
+        val noLimit = backend.getAccessRightList(limit = 0, offset = 0)
+        assertThat(noLimit, `is`(emptyList()))
+
+        assertTrue(backend.containsAccessRightId(orderedList.first().header.id))
+    }
+
     companion object {
         const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
 
@@ -79,7 +99,7 @@ class AccessServerBackendTest : DatabaseTest() {
             copyright = false,
         )
 
-        val TEST_RESTRICTION = Restriction(
+        private val TEST_RESTRICTION = Restriction(
             type = RestrictionType.DATE,
             attribute = Attribute(
                 type = AttributeType.FROM_DATE,
@@ -87,7 +107,7 @@ class AccessServerBackendTest : DatabaseTest() {
             )
         )
 
-        val TEST_ACTION = Action(
+        private val TEST_ACTION = Action(
             type = ActionType.READ,
             permission = true,
             restrictions = listOf(TEST_RESTRICTION),

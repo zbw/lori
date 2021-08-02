@@ -92,6 +92,40 @@ class ApiRoutingTest {
         }
     }
 
+    @Test
+    fun testAccessInformationPostConflictId() {
+
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { containsAccessRightId(ACCESS_INFORMATION_REST.id) } returns true
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ACCESS_INFORMATION_REST))
+                }
+            ) {
+                assertThat(
+                    "Should return 409 due to a conflict",
+                    response.status(),
+                    `is`(HttpStatusCode.Conflict)
+                )
+            }
+        }
+    }
+
     @Test(expectedExceptions = [SQLException::class])
     fun testAccessInformationPostInternalError() {
         val backend = mockk<AccessServerBackend>(relaxed = true) {
@@ -196,6 +230,71 @@ class ApiRoutingTest {
     }
 
     @Test
+    fun testGetList() {
+        // given
+        val offset = 2
+        val limit = 5
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { getAccessRightList(limit, offset) } returns listOf(ACCESS_INFORMATION_REST.toBusiness())
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+                val content: String = response.content!!
+                val groupListType: Type = object : TypeToken<ArrayList<AccessInformation>>() {}.type
+                val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
+                assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
+            }
+        }
+        verify(exactly = 1) { backend.getAccessRightList(limit, offset) }
+    }
+
+    @Test
+    fun testGetListDefault() {
+        // given
+        val defaultLimit = 25
+        val defaultOffset = 0
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every {
+                getAccessRightList(
+                    defaultLimit,
+                    defaultOffset
+                )
+            } returns listOf(ACCESS_INFORMATION_REST.toBusiness())
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list")) {
+                val content: String = response.content!!
+                val groupListType: Type = object : TypeToken<ArrayList<AccessInformation>>() {}.type
+                val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
+                assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
+            }
+        }
+        verify(exactly = 1) { backend.getAccessRightList(defaultLimit, defaultOffset) }
+    }
+
+    @Test
     fun testAccessInformationGetMissingParameter() {
         // given
         val backend = mockk<AccessServerBackend>(relaxed = true)
@@ -234,7 +333,7 @@ class ApiRoutingTest {
             Restriction(
                 restrictiontype = Restriction.Restrictiontype.date,
                 attributetype = Restriction.Attributetype.fromdate,
-                attributevalues = listOf("2022-01-01"),
+                attributevalues = listOf("2022-01-0sav1"),
             )
         val ACCESS_INFORMATION_REST = AccessInformation(
             id = "foo",

@@ -16,6 +16,7 @@ import org.testng.annotations.Test
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -213,6 +214,42 @@ class DatabaseConnectorTest : DatabaseTest() {
             }
         )
         dbConnector.getActions(listOf("foo"))
+    }
+
+    @Test
+    fun testContainsHeader() {
+
+        // given
+        val testHeaderId = "headerIdContainCheck"
+        val testHeader = TEST_HEADER.copy(id = testHeaderId)
+
+        // when
+        val containedBefore = dbConnector.containsHeader(testHeaderId)
+        assertFalse(containedBefore, "Header should not exist yet")
+
+        // when
+        dbConnector.insertHeader(testHeader)
+        val containedAfter = dbConnector.containsHeader(testHeaderId)
+        assertTrue(containedAfter, "Header should exist now")
+    }
+
+    @Test
+    fun testAccessRightIds() {
+
+        // when
+        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaa"))
+        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaab"))
+        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaac"))
+
+        // then
+        assertThat(
+            dbConnector.getAccessRightIds(limit = 3, offset = 0),
+            `is`(listOf("aaaa", "aaaab", "aaaac"))
+        )
+        assertThat(
+            dbConnector.getAccessRightIds(limit = 2, offset = 1),
+            `is`(listOf("aaaab", "aaaac"))
+        )
     }
 
     companion object {

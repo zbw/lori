@@ -41,4 +41,14 @@ class AccessServerBackend(
             )
         }
     }
+
+    fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
+
+    fun getAccessRightList(limit: Int, offset: Int): List<AccessRight> {
+        return dbConnector.getAccessRightIds(limit, offset).takeIf {
+            it.isNotEmpty()
+        }?.let { headerIds ->
+            getAccessRightEntries(headerIds).sortedBy { it.header.id }
+        } ?: emptyList()
+    }
 }

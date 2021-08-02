@@ -27,20 +27,21 @@ fun Routing.apiRoutes(backend: AccessServerBackend) {
         route("/accessinformation") {
             post {
                 try {
-                    val receive: AccessInformation = call.receive(AccessInformation::class)
-                    // TODO: check if id already exist.
-                    backend.insertAccessRightEntry(receive.toBusiness())
+                    val newAccessInformation: AccessInformation = call.receive(AccessInformation::class)
+                    if (backend.containsAccessRightId(newAccessInformation.id)) {
+                        call.respond(HttpStatusCode.Conflict, "ResoulistOf(testId)rce with this id already exists.")
+                    } else {
+                        backend.insertAccessRightEntry(newAccessInformation.toBusiness())
+                        call.respond(HttpStatusCode.Created)
+                    }
                 } catch (e: ContentTransformationException) {
                     call.respond(HttpStatusCode.BadRequest, "Payload had an unexpected format: ${e.message}")
-                    throw(e)
                 } catch (e: BadRequestException) {
                     call.respond(HttpStatusCode.BadRequest, "Bad request: ${e.message}")
-                    throw(e)
                 } catch (e: SQLException) {
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occured.")
+                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
                     throw(e)
                 }
-                call.respond(HttpStatusCode.Created)
             }
             get("{ids}") {
                 val headerIds = call.parameters["ids"]
@@ -50,6 +51,13 @@ fun Routing.apiRoutes(backend: AccessServerBackend) {
                     val accessRights = backend.getAccessRightEntries(headerIds.split(","))
                     call.respond(accessRights.map { it.toRest() })
                 }
+            }
+            get("/list") {
+                val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
+                val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+
+                val accessRights = backend.getAccessRightList(limit, offset)
+                call.respond(accessRights.map { it.toRest() })
             }
         }
     }
