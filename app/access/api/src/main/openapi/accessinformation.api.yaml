@@ -14,6 +14,82 @@ accessinformation:
     responses:
       405:
         description: Invalid input
-        content: {}
+        content: { }
     x-codegen-request-body-name: body
+
+accessinformation-ids:
+  get:
+    tags:
+      - accessinformation
+    summary: Find access information by ID
+    description: Return a list of access information
+    operationId: getAccessInformationByIds
+    parameters:
+      - name: ids
+        in: path
+        description: IDs of access information to return
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'accessinformation.model.yaml#/AccessInformation'
+      404:
+        description: Id not found
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+
+accessinformation-list:
+  get:
+    tags:
+      - accessinformation
+    summary: Return a list of accessinformation items
+    description: Return a list of items with offset and limit
+    operationId: getAccessInformationList
+    parameters:
+      - name: offset
+        in: query
+        description: The number of items to skup befor collect
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: The number of items to return.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        required: false
+    responses:
+      200:
+        description: successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'accessinformation.model.yaml#/AccessInformation'
+      400:
+        description: Bad input
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+
+
+
+
+
 

@@ -1,5 +1,5 @@
-
 plugins {
+    kotlin("jvm")
     id("zbw.proto-api")
     id("zbw.openapi")
 }
@@ -16,8 +16,11 @@ openApiGenerate {
     modelPackage.set("de.zbw.access.model")
     configOptions.set(mapOf(
         Pair("dataLibrary", "java8")
-        //Pair("sourceFolder", "source/openapi/main/kotlin")
     ).toMutableMap())
+}
+
+tasks.compileKotlin {
+    dependsOn(tasks.openApiGenerate)
 }
 
 sourceSets {

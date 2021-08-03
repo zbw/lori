@@ -48,6 +48,7 @@ fun Routing.apiRoutes(backend: AccessServerBackend) {
                 if (headerIds == null) {
                     call.respond(HttpStatusCode.NotFound)
                 } else {
+                    // TODO: Invalid Id should result in 400
                     val accessRights = backend.getAccessRightEntries(headerIds.split(","))
                     call.respond(accessRights.map { it.toRest() })
                 }
@@ -55,6 +56,8 @@ fun Routing.apiRoutes(backend: AccessServerBackend) {
             get("/list") {
                 val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                 val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+
+                // TODO: Check for 100 >= limit >= 1 and offset >= 0 -> otherwise return 400
 
                 val accessRights = backend.getAccessRightList(limit, offset)
                 call.respond(accessRights.map { it.toRest() })
