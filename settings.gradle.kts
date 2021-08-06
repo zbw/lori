@@ -2,6 +2,7 @@ rootProject.name = "zbwcloud"
 include("app:access:api")
 include("app:access:client")
 include("app:access:server")
+include("app:access:server:ui")
 include("app:handle:api")
 include("app:handle:client")
 include("app:handle:server")
