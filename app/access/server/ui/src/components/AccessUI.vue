@@ -1,22 +1,45 @@
 <template>
   <v-app>
     <v-toolbar class="cyan darken-4" dark>
-      <v-toolbar-title> To Do with Hello</v-toolbar-title>
+      <v-toolbar-title>AccessUI</v-toolbar-title>
     </v-toolbar>
     <v-main>
-      {{ items }}
+      <v-data-table
+        v-model="selected"
+        :headers="headers"
+        :items="items"
+        class="elevation-1"
+        item-key="id"
+        show-select
+      >
+      </v-data-table>
     </v-main>
   </v-app>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import Component from "../../node_modules/vue-class-component/lib"
+import Component from "../../node_modules/vue-class-component/lib";
 import api from "../api/api";
 import { AccessInformation } from "@/generated-sources/openapi";
 
 @Component
 export default class AccessUi extends Vue {
+  private headers = [
+    {
+      text: "Id",
+      align: "start",
+      value: "id",
+    },
+    { text: "Tenant", value: "tenant" },
+    { text: "Usage guide", value: "usageGuide" },
+    { text: "Template", value: "template" },
+    { text: "Mention", value: "mention" },
+    { text: "Sharealike", value: "sharealike" },
+    { text: "Commercial Use", value: "commercial" },
+    { text: "Copyright", value: "copyright" },
+    { text: "Actions", value: "actions" },
+  ];
   private items: Array<AccessInformation> = [];
 
   public fetchListPart(offset: number, limit: number): void {
