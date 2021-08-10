@@ -67,7 +67,7 @@ val testsExecutedMarkerName: String = "${projectDir}/.tests.executed"
 
 val testNpm by tasks.registering(NpmTask::class) {
   dependsOn("assemble")
-  args.set(listOf("run", "test"))
+  args.set(listOf("run", "test:unit"))
   environment.set(mapOf("CI" to "true"))
 
   inputs.files(fileTree("src"))
