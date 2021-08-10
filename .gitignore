@@ -1,6 +1,7 @@
 # generated files
 bin/**
 gen/**
+node_modules/
 # project based files
 .idea/
 *.iml
