@@ -20,8 +20,8 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "../../node_modules/vue-class-component/lib";
-import api from "../api/api";
 import { AccessInformation } from "@/generated-sources/openapi";
+import api from "@/api/api";
 
 @Component
 export default class AccessUi extends Vue {
