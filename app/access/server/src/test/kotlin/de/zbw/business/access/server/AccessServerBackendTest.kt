@@ -28,10 +28,15 @@ class AccessServerBackendTest : DatabaseTest() {
         TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "aaaa2")),
     )
 
+    private val deletedEntry = TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "to_be_deleted"))
+    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(header = TEST_HEADER.copy(id = "no_action"))
+
     private val entries = arrayOf(
         TEST_ACCESS_RIGHT,
         TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2a")),
         TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2b")),
+        noAction,
+        deletedEntry,
     ).plus(orderedList)
 
     @BeforeClass
@@ -45,6 +50,10 @@ class AccessServerBackendTest : DatabaseTest() {
             arrayOf(
                 listOf(entries[0].header.id),
                 setOf(entries[0]),
+            ),
+            arrayOf(
+                listOf(noAction.header.id),
+                setOf(noAction),
             ),
             arrayOf(
                 listOf(entries[1].header.id, entries[2].header.id),
@@ -85,6 +94,14 @@ class AccessServerBackendTest : DatabaseTest() {
         assertTrue(backend.containsAccessRightId(orderedList.first().header.id))
     }
 
+    @Test
+    fun testDeleteEntry() {
+        // when
+        val deleted = backend.deleteAccessRightEntries(listOf(deletedEntry.header.id))
+        // then
+        assertThat("One entry should have been deleted", deleted, `is`(1))
+    }
+
     companion object {
         const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
 
@@ -116,6 +133,11 @@ class AccessServerBackendTest : DatabaseTest() {
         val TEST_ACCESS_RIGHT = AccessRight(
             header = TEST_HEADER,
             actions = listOf(TEST_ACTION),
+        )
+
+        val TEST_ACCESS_RIGHT_NO_ACTION = AccessRight(
+            header = TEST_HEADER,
+            actions = emptyList(),
         )
     }
 }

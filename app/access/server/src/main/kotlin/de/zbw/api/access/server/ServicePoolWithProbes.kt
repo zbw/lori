@@ -1,7 +1,7 @@
 package de.zbw.api.access.server
 
 import de.zbw.api.access.server.config.AccessConfiguration
-import de.zbw.api.access.server.route.apiRoutes
+import de.zbw.api.access.server.route.accessInformationRoutes
 import de.zbw.api.access.server.route.staticRoutes
 import de.zbw.business.access.server.AccessServerBackend
 import io.ktor.application.Application
@@ -58,7 +58,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            apiRoutes(backend)
+            accessInformationRoutes(backend)
             staticRoutes()
         }
     }
