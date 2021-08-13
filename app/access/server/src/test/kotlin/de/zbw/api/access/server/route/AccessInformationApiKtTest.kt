@@ -21,11 +21,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
 
-class ApiRoutingTest {
+class AccessInformationApiKtTest {
 
     @Test
     fun testAccessInformationPostCreated() {
@@ -165,7 +166,7 @@ class ApiRoutingTest {
     }
 
     @Test
-    fun testAccessInformationPostBadJSON() {
+    fun testPostAccessInformationBadJSON() {
         val backend = mockk<AccessServerBackend>(relaxed = true) {
             every { insertAccessRightEntry(any()) } returns "foo"
         }
@@ -184,7 +185,7 @@ class ApiRoutingTest {
             with(
                 handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
                         jsonAsString(
                             RESTRICTION_REST
@@ -202,7 +203,7 @@ class ApiRoutingTest {
     }
 
     @Test
-    fun testAccessInformationGet() {
+    fun testGetAccessInformation() {
         // given
         val testId = "someId"
         val backend = mockk<AccessServerBackend>(relaxed = true) {
@@ -226,6 +227,30 @@ class ApiRoutingTest {
                 val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
                 assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
             }
+        }
+    }
+
+    @Test(expectedExceptions = [SQLException::class])
+    fun testGetAccessInformationInternalError() {
+        // given
+        val testId = "someId"
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { getAccessRightEntries(listOf(testId)) } throws SQLException()
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+        // when + then
+        withTestApplication(servicePool.application()) {
+            handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")
+            // exception
         }
     }
 
@@ -294,8 +319,62 @@ class ApiRoutingTest {
         verify(exactly = 1) { backend.getAccessRightList(defaultLimit, defaultOffset) }
     }
 
+    @DataProvider(name = DATA_FOR_INVALID_LIST_PARAM)
+    fun createInvalidListParams() = arrayOf(
+        arrayOf(
+            "201",
+            "50",
+            "Limit: Out of range",
+        ),
+        arrayOf(
+            "0",
+            "50",
+            "Limit: Out of range",
+        ),
+        arrayOf(
+            "100",
+            "-1000",
+            "Offset: Out of range",
+        ),
+        arrayOf(
+            "foobar",
+            "50",
+            "Limit: Invalid value",
+        ),
+        arrayOf(
+            "201",
+            "foobar",
+            "Offset: Invalid value",
+        ),
+    )
+
+    @Test(dataProvider = DATA_FOR_INVALID_LIST_PARAM)
+    fun testGetListInvalidParameter(
+        limit: String,
+        offset: String,
+        msg: String,
+    ) {
+        // given
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = mockk()
+        )
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+                assertThat(msg, response.status(), `is`(HttpStatusCode.BadRequest))
+            }
+        }
+    }
+
     @Test
-    fun testAccessInformationGetMissingParameter() {
+    fun testGETAccessInformationMissingParameter() {
         // given
         val backend = mockk<AccessServerBackend>(relaxed = true)
         val servicePool = ServicePoolWithProbes(
@@ -320,7 +399,102 @@ class ApiRoutingTest {
         }
     }
 
+    @Test
+    fun testDELETEAccessInformationHappyPath() {
+        // given
+        val givenDeleteId = "toBeDeleted"
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { containsAccessRightId(givenDeleteId) } returns true
+            every { deleteAccessRightEntries(listOf(givenDeleteId)) } returns 1
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+                assertThat(
+                    "Should return 200 indicating a successful operation",
+                    response.status(),
+                    `is`(HttpStatusCode.OK)
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testDELETEAccessInformationNotFound() {
+        // given
+        val givenDeleteId = "toBeDeleted"
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { containsAccessRightId(givenDeleteId) } returns false
+            every { deleteAccessRightEntries(listOf(givenDeleteId)) } returns 1
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+                assertThat(
+                    "Should return 404 indicating that the resource was not found",
+                    response.status(),
+                    `is`(HttpStatusCode.NotFound)
+                )
+            }
+        }
+    }
+
+    @Test(expectedExceptions = [SQLException::class])
+    fun testDELETEAccessInformationInternalError() {
+        // given
+        val givenDeleteId = "toBeDeleted"
+        val backend = mockk<AccessServerBackend>(relaxed = true) {
+            every { containsAccessRightId(givenDeleteId) } returns true
+            every { deleteAccessRightEntries(listOf(givenDeleteId)) } throws SQLException()
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+                assertThat(
+                    "Should return 500 indicating that an internal error has occured",
+                    response.status(),
+                    `is`(HttpStatusCode.InternalServerError)
+                )
+            }
+        }
+    }
+
     companion object {
+        const val DATA_FOR_INVALID_LIST_PARAM = "DATA_FOR_INVALID_LIST_PARAM"
+
         val CONFIG = AccessConfiguration(
             grpcPort = 9092,
             httpPort = 8080,

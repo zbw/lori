@@ -152,6 +152,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // when
         dbConnector.insertHeader(givenHeader)
         val actionResponse = dbConnector.insertAction(givenAction, givenHeaderId)
+
         // then
         assertTrue(actionResponse > 0, "Inserting an action with a header was not successful")
 
@@ -249,6 +250,86 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(
             dbConnector.getAccessRightIds(limit = 2, offset = 1),
             `is`(listOf("aaaab", "aaaac"))
+        )
+    }
+
+    @Test
+    fun testGetPrimaryKeys() {
+        // given
+        val givenHeaderId = "test_primkey"
+        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenAction = TEST_ACTION
+
+        // when
+        dbConnector.insertHeader(givenHeader)
+        val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
+        val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
+        val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
+
+        // then
+        assertThat(
+            "The primary keys do not match",
+            listOf(
+                JoinHeaderActionRestrictionIdTransient(
+                    headerId = givenHeaderId,
+                    actionId = actionId.toInt(),
+                    restrictionId = restrictionId.toInt(),
+                )
+            ),
+            `is`(receivedAccessInformationKeys)
+        )
+    }
+
+    @Test
+    fun testDeleteAccessRight() {
+        // given
+        val givenHeaderId = "test_primkey_to_be_deleted"
+        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenAction = TEST_ACTION
+
+        // when
+        dbConnector.insertHeader(givenHeader)
+        val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
+        val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
+        val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
+
+        // then
+        assertThat(
+            "The primary keys do not match",
+            listOf(
+                JoinHeaderActionRestrictionIdTransient(
+                    headerId = givenHeaderId,
+                    actionId = actionId.toInt(),
+                    restrictionId = restrictionId.toInt(),
+                )
+            ),
+            `is`(receivedAccessInformationKeys)
+        )
+
+        // when
+        val deletedItems = dbConnector.deleteAccessRights(listOf(givenHeaderId))
+
+        // then
+        assertThat(
+            "One item should have been deleted",
+            deletedItems,
+            `is`(1)
+        )
+
+        // when
+        val receivedHeader = dbConnector.getHeaders(listOf(givenHeaderId))
+        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenHeaderId))
+
+        // then
+        assertThat(
+            "No header of the id $givenHeaderId should exist anymore",
+            receivedHeader,
+            `is`(emptyList())
+        )
+        assertThat(
+            "No actions for the gvien header id $givenHeaderId should exist anymore",
+            receivedActions,
+            `is`(emptyMap())
         )
     }
 

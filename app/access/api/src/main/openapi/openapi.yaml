@@ -13,8 +13,8 @@ tags:
 paths:
   /accessinformation:
     $ref: 'accessinformation.api.yaml#/accessinformation'
-  /accessinformation/{ids}:
-    $ref: 'accessinformation.api.yaml#/accessinformation-ids'
+  /accessinformation/{id}:
+    $ref: 'accessinformation.api.yaml#/accessinformation-id'
   /accessinformation/list:
     $ref: 'accessinformation.api.yaml#/accessinformation-list'
 

@@ -17,7 +17,7 @@ accessinformation:
         content: { }
     x-codegen-request-body-name: body
 
-accessinformation-ids:
+accessinformation-id:
   get:
     tags:
       - accessinformation
@@ -25,9 +25,9 @@ accessinformation-ids:
     description: Return a list of access information
     operationId: getAccessInformationByIds
     parameters:
-      - name: ids
+      - name: id
         in: path
-        description: IDs of access information to return
+        description: ID of access information to return
         required: true
         schema:
           type: string
@@ -37,15 +37,32 @@ accessinformation-ids:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'accessinformation.model.yaml#/AccessInformation'
+              $ref: 'accessinformation.model.yaml#/AccessInformation'
       404:
         description: Id not found
         content: { }
       500:
         description: Internal error
         content: { }
+  delete:
+    tags:
+      - accessinformation
+    summary: Delete an access information
+    operationId: deleteAccessInformationById
+    parameters:
+      - name: id
+        in: path
+        description: Access information id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successfull
+        content: {}
+      404:
+        description: Id not found
+        content: {}
 
 accessinformation-list:
   get:

@@ -121,6 +121,72 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
+    fun deleteAccessRights(headerIds: List<String>): Int {
+        val keys = getAccessInformationKeys(headerIds)
+        val existingHeaderIds = keys.map { it.headerId }
+        val actionIds = keys.map { it.actionId }
+        val restrictionIds = keys.map { it.restrictionId }
+
+        deleteRestrictions(restrictionIds)
+        deleteActions(actionIds)
+        return deleteHeader(existingHeaderIds)
+    }
+
+    internal fun getAccessInformationKeys(headerIds: List<String>): List<JoinHeaderActionRestrictionIdTransient> {
+        // First, receive the required primary keys.
+        val stmt =
+            "SELECT a.header_id, a.action_id, r.restriction_id " +
+                "FROM $TABLE_NAME_ACTION a " +
+                "LEFT JOIN $TABLE_NAME_RESTRICTION r ON a.action_id = r.action_id " +
+                "WHERE a.header_id = ANY(?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
+        }
+        val rs = prepStmt.executeQuery()
+        return generateSequence {
+            if (rs.next()) {
+                JoinHeaderActionRestrictionIdTransient(
+                    headerId = rs.getString(1),
+                    actionId = rs.getInt(2),
+                    restrictionId = rs.getInt(3)
+                )
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    private fun deleteRestrictions(restrictionIds: List<Int>): Int {
+        val stmt =
+            "DELETE " +
+                "FROM $TABLE_NAME_RESTRICTION r " +
+                "WHERE r.restriction_id = ANY(?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setArray(1, connection.createArrayOf("integer", restrictionIds.toTypedArray()))
+        }
+        return prepStmt.run { this.executeUpdate() }
+    }
+
+    private fun deleteActions(actionIds: List<Int>): Int {
+        val stmt =
+            "DELETE " +
+                "FROM $TABLE_NAME_ACTION a " +
+                "WHERE a.action_id = ANY(?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setArray(1, connection.createArrayOf("integer", actionIds.toTypedArray()))
+        }
+        return prepStmt.run { this.executeUpdate() }
+    }
+
+    private fun deleteHeader(headerIds: List<String>): Int {
+        val stmt =
+            "DELETE " +
+                "FROM $TABLE_NAME_HEADER h " +
+                "WHERE h.header_id = ANY(?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
+        }
+        return prepStmt.run { this.executeUpdate() }
+    }
+
     fun getActions(headerIds: List<String>): Map<String, List<Action>> {
         val stmt =
             "SELECT a.header_id, a.type, a.permission, r.type, r.attribute_type, r.attribute_values " +

@@ -15,3 +15,9 @@ data class JoinActionRestrictionTransient(
     val attributeType: String?,
     val attributeValues: String?,
 )
+
+data class JoinHeaderActionRestrictionIdTransient(
+    val headerId: String,
+    val actionId: Int,
+    val restrictionId: Int,
+)

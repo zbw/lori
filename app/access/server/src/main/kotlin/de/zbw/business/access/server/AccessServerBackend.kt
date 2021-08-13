@@ -37,10 +37,12 @@ class AccessServerBackend(
         return dbConnector.getHeaders(ids).map {
             AccessRight(
                 header = it,
-                actions = headerToActions[it.id] ?: listOf()
+                actions = headerToActions[it.id] ?: emptyList()
             )
         }
     }
+
+    fun deleteAccessRightEntries(ids: List<String>): Int = dbConnector.deleteAccessRights(ids)
 
     fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
 
