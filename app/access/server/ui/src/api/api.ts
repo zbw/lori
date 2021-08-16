@@ -17,4 +17,7 @@ export default {
       limit: limit,
     });
   },
+  deleteAccessInformation(itemId: string) {
+    return accessInformationApi.deleteAccessInformationById({ id: itemId } )
+  },
 };
