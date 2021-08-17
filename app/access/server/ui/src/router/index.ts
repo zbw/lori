@@ -19,6 +19,11 @@ const routes: Array<RouteConfig> = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
   },
+  {
+    path: "/delete/:id",
+    name: "Delete",
+    component: () => import("../components/DeleteOperation.vue"),
+  },
 ];
 
 const router = new VueRouter({

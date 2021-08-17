@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-dialog v-model="dialogDelete" max-width="500px">
+    <v-dialog max-width="500px">
       <v-card>
         <v-card-title class="text-h5">
           Are you sure you want to delete item {{ id }}?</v-card-title
@@ -36,19 +36,16 @@
 <script lang="ts">
 import Component from "../../node_modules/vue-class-component/lib";
 import Vue from "vue";
-import {AccessInformation} from "@/generated-sources/openapi";
 
 @Component
 export default class DeleteOperation extends Vue {
-  @Prop({required})
   private id = "";
-  private dialogDelete = false;
   private deleteLoading = false;
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
 
-  mounted() {
+  mounted(): void {
     this.id = this.$route.params.id;
   }
 }

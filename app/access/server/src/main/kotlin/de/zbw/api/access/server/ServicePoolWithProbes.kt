@@ -1,5 +1,6 @@
 package de.zbw.api.access.server
 
+import com.github.lamba92.ktor.features.SinglePageApplication
 import de.zbw.api.access.server.config.AccessConfiguration
 import de.zbw.api.access.server.route.accessInformationRoutes
 import de.zbw.api.access.server.route.staticRoutes
@@ -43,6 +44,9 @@ class ServicePoolWithProbes(
     internal fun application(): Application.() -> Unit = {
         install(ContentNegotiation) { gson { } }
         install(CallLogging)
+        install(SinglePageApplication) {
+            folderPath = "dist/"
+        }
         routing {
             get("/ready") {
                 if (isReady()) {
