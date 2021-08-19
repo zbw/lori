@@ -1,12 +1,14 @@
 <template>
   <v-container>
-    <v-text-field label="Suche nach einem Titel" outlined></v-text-field>
-    <v-btn outlined @click="searchTitle">
-      <v-icon left>mdi-magnify</v-icon> Suche
-    </v-btn>
+    <v-layout align-center row>
+      <v-text-field label="Suche nach einem Titel"></v-text-field>
+      <v-btn outlined x-large @click="searchTitle">
+        <v-icon left>mdi-magnify</v-icon> Suche
+      </v-btn>
+    </v-layout>
     <v-row>
       <v-col>
-        <v-card class="mx-auto" max-width="300" tile>
+        <v-card class="mx-auto" tile>
           <v-list rounded>
             <v-subheader>Items</v-subheader>
             <v-list-item-group color="primary">
@@ -22,11 +24,59 @@
         </v-card>
       </v-col>
       <v-col>
-        <v-card class="mx-auto" max-width="300" tile>
+        <v-card v-if="currentAccInf.id" class="mx-auto" tile>
+          <v-card-title class="subheading font-weight-bold">
+            Eintrag
+          </v-card-title>
+          <v-divider></v-divider>
+          <v-list dense>
+            <v-list-item>
+              <v-list-item-content>Id:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.id }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Titel:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>HandleUrl:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Template:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.template }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Tenant:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.tenant }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>UsageGuide:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.usageGuide }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Access Status:</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">
-                Are you sure you want to delete this item?</v-card-title
+                Soll dieser Eintrag gelöscht werden?</v-card-title
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -41,7 +91,7 @@
                   color="error"
                   @click="approveDeleteDialog"
                 >
-                  Delete
+                  Löschen
                 </v-btn>
                 <v-spacer></v-spacer>
               </v-card-actions>
@@ -53,41 +103,23 @@
             text
             type="success"
           >
-            Delete operation was successful.
+            Löschen war erfolgreich.
           </v-alert>
           <v-alert v-model="deleteAlertError" dismissible text type="error">
-            Delete operation was not successful: {{ deleteErrorMessage }}
+            Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
           </v-alert>
-          <div v-if="currentAccInf.id">
-            <h4>Eintrag:</h4>
-            <div>
-              <label><strong>Titel:</strong></label> {{ currentAccInf.id }}
-            </div>
-            <div>
-              <label><strong>Handle URL:</strong></label>
-              12345/67890
-            </div>
-            <div>
-              <label><strong>Status:</strong></label>
-              {{ currentAccInf.commercialuse ? "Restricted" : "Open Access" }}
-            </div>
-            <v-btn
-              :href="'/accessinformation/' + currentAccInf.id"
-              class="ma-2"
-              color="success"
-              outlined
-              tile
-            >
-              <v-icon left>mdi-pencil</v-icon> Bearbeiten
-            </v-btn>
-            <v-btn color="error" @click="openDeleteItemDialog()">
-              <v-icon left>mdi-delete</v-icon> Delete
-            </v-btn>
-          </div>
-          <div v-else>
-            <br />
-            <p>Bitte einen Eintrag auswählen ...</p>
-          </div>
+          <v-btn
+            :href="'/accessinformation/' + currentAccInf.id"
+            class="ma-2"
+            color="success"
+            outlined
+            tile
+          >
+            <v-icon left>mdi-pencil</v-icon> Bearbeiten
+          </v-btn>
+          <v-btn color="error" @click="openDeleteItemDialog()">
+            <v-icon left>mdi-delete</v-icon> Delete
+          </v-btn>
         </v-card>
       </v-col>
     </v-row>
