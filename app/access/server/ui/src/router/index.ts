@@ -20,9 +20,14 @@ const routes: Array<RouteConfig> = [
       import(/* webpackChunkName: "about" */ "../views/About.vue"),
   },
   {
-    path: "/delete/:id",
-    name: "Delete",
-    component: () => import("../components/DeleteOperation.vue"),
+    path: "/accessinformation",
+    name: "accessinformation",
+    component: () => import("../components/AccessInformationList.vue"),
+  },
+  {
+    path: "/accessinformation/:id",
+    name: "accessinformation-details",
+    component: () => import("../components/AccessInformationDetail.vue"),
   },
 ];
 

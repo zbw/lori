@@ -223,9 +223,9 @@ class AccessInformationApiKtTest {
         withTestApplication(servicePool.application()) {
             with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")) {
                 val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<AccessInformation>>() {}.type
-                val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
+                val groupListType: Type = object : TypeToken<AccessInformation>() {}.type
+                val received: AccessInformation = Gson().fromJson(content, groupListType)
+                assertThat(received, `is`(ACCESS_INFORMATION_REST))
             }
         }
     }

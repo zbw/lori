@@ -51,7 +51,7 @@ fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
                     call.respond(HttpStatusCode.BadRequest, "No id has been provided in the url.")
                 } else {
                     val accessRights = backend.getAccessRightEntries(listOf(headerId))
-                    call.respond(accessRights.map { it.toRest() })
+                    call.respond(accessRights.first().toRest())
                 }
             } catch (e: SQLException) {
                 call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")

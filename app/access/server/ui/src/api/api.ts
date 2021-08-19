@@ -17,7 +17,17 @@ export default {
       limit: limit,
     });
   },
-  deleteAccessInformation(itemId: string) {
-    return accessInformationApi.deleteAccessInformationById({ id: itemId } )
+  getItemById(id: string): Promise<AccessInformation> {
+    return accessInformationApi.getAccessInformationByIds({
+      id: id,
+    });
+  },
+  getItemByIds(ids: Array<string>): Promise<AccessInformation> {
+    return accessInformationApi.getAccessInformationByIds({
+      id: ids.join(","),
+    });
+  },
+  deleteAccessInformation(itemId: string): Promise<void> {
+    return accessInformationApi.deleteAccessInformationById({ id: itemId });
   },
 };

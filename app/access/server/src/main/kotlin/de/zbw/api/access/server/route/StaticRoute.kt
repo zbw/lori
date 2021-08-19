@@ -1,8 +1,6 @@
 package de.zbw.api.access.server.route
 
-import io.ktor.http.content.default
 import io.ktor.http.content.defaultResource
-import io.ktor.http.content.files
 import io.ktor.http.content.resources
 import io.ktor.http.content.static
 import io.ktor.routing.Route
