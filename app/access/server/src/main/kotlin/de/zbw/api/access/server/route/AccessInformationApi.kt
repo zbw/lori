@@ -26,8 +26,10 @@ fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
     route("/api/v1/accessinformation") {
         post {
             try {
+                // receive() may return an object where non-null fields are null.
+                @Suppress("SENSELESS_COMPARISON")
                 val accessInformation: AccessInformation =
-                    call.receive(AccessInformation::class)?.takeIf { it.id != null }
+                    call.receive(AccessInformation::class).takeIf { it.id != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                 if (backend.containsAccessRightId(accessInformation.id)) {
                     call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")

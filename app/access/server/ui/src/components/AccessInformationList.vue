@@ -84,7 +84,7 @@
                   :disabled="deleteConfirmationLoading"
                   color="blue darken-1"
                   @click="cancelDeleteDialog"
-                  >Cancel</v-btn
+                  >Abbrechen</v-btn
                 >
                 <v-btn
                   :loading="deleteConfirmationLoading"
@@ -118,7 +118,7 @@
             <v-icon left>mdi-pencil</v-icon> Bearbeiten
           </v-btn>
           <v-btn color="error" @click="openDeleteItemDialog()">
-            <v-icon left>mdi-delete</v-icon> Delete
+            <v-icon left>mdi-delete</v-icon> Löschen
           </v-btn>
         </v-card>
       </v-col>
