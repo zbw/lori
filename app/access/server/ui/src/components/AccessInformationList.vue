@@ -108,6 +108,38 @@
           <v-alert v-model="deleteAlertError" dismissible text type="error">
             Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
           </v-alert>
+
+          <v-dialog max-width="500px">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                v-bind="attrs"
+                v-on="on"
+                class="ma-2"
+                color="success"
+                outlined
+                tile
+              >
+                <v-icon left>mdi-pencil</v-icon> Bearbeiten
+              </v-btn>
+            </template>
+            <v-card>
+              <v-card-title>
+                <span class="text-h5">Editiere Eintrag</span>
+                <v-card-text>
+                  <v-container>
+                    <v-row>
+                      <v-col cols="12" md="4" sm="6">
+                        <v-text-field
+                          v-model="currentAccInf.id"
+                          label="id"
+                        ></v-text-field>
+                      </v-col>
+                    </v-row>
+                  </v-container>
+                </v-card-text>
+              </v-card-title>
+            </v-card>
+          </v-dialog>
           <v-btn
             :href="'/accessinformation/' + currentAccInf.id"
             class="ma-2"
@@ -117,6 +149,7 @@
           >
             <v-icon left>mdi-pencil</v-icon> Bearbeiten
           </v-btn>
+
           <v-btn color="error" @click="openDeleteItemDialog()">
             <v-icon left>mdi-delete</v-icon> Löschen
           </v-btn>
