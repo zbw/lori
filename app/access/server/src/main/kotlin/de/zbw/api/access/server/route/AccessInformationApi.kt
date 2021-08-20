@@ -26,8 +26,10 @@ fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
     route("/api/v1/accessinformation") {
         post {
             try {
+                // receive() may return an object where non-null fields are null.
+                @Suppress("SENSELESS_COMPARISON")
                 val accessInformation: AccessInformation =
-                    call.receive(AccessInformation::class)?.takeIf { it.id != null }
+                    call.receive(AccessInformation::class).takeIf { it.id != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                 if (backend.containsAccessRightId(accessInformation.id)) {
                     call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")
@@ -51,7 +53,7 @@ fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
                     call.respond(HttpStatusCode.BadRequest, "No id has been provided in the url.")
                 } else {
                     val accessRights = backend.getAccessRightEntries(listOf(headerId))
-                    call.respond(accessRights.map { it.toRest() })
+                    call.respond(accessRights.first().toRest())
                 }
             } catch (e: SQLException) {
                 call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
