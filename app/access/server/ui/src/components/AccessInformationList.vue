@@ -149,10 +149,11 @@
               <v-card-text>
                 <v-container>
                   <v-row>
-                    <v-col cols="12" md="4" sm="6">
+                    <v-col cols="12" md="6" sm="6">
                       <v-text-field
                         v-model="currentAccInf.id"
-                        label="titel"
+                        disabled
+                        label="Id"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="12" md="4" sm="6">
@@ -163,21 +164,21 @@
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col cols="12" md="4" sm="6">
-                      <v-text-field
+                    <v-col cols="12" md="6" sm="6">
+                      <v-checkbox
                         v-model="currentAccInf.commercialuse"
                         label="Kommerzielle Nutzung erlaubt"
-                      ></v-text-field>
+                      ></v-checkbox>
                     </v-col>
-                    <v-col cols="12" md="4" sm="6">
-                      <v-text-field
+                    <v-col>
+                      <v-checkbox
                         v-model="currentAccInf.copyright"
                         label="Urheberrechtsschutz vorhanden"
-                      ></v-text-field>
+                      ></v-checkbox>
                     </v-col>
                   </v-row>
                   <v-row>
-                    <v-col cols="12" md="4" sm="6">
+                    <v-col cols="12" md="6" sm="6">
                       <v-select
                         :items="publicationType"
                         label="Publikationstyp"
