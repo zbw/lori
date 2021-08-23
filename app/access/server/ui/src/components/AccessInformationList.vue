@@ -128,7 +128,6 @@
           <v-alert v-model="deleteAlertError" dismissible text type="error">
             Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
           </v-alert>
-
           <v-dialog v-model="dialogEdit" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
@@ -142,59 +141,10 @@
                 <v-icon left>mdi-pencil</v-icon> Bearbeiten
               </v-btn>
             </template>
-            <v-card>
-              <v-card-title>
-                <span class="text-h5">Editiere Eintrag</span>
-              </v-card-title>
-              <v-card-text>
-                <v-container>
-                  <v-row>
-                    <v-col cols="12" md="6" sm="6">
-                      <v-text-field
-                        v-model="currentAccInf.id"
-                        disabled
-                        label="Id"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="4" sm="6">
-                      <v-text-field
-                        v-model="currentAccInf.tenant"
-                        label="Zustände Einrichtung"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12" md="6" sm="6">
-                      <v-checkbox
-                        v-model="currentAccInf.commercialuse"
-                        label="Kommerzielle Nutzung erlaubt"
-                      ></v-checkbox>
-                    </v-col>
-                    <v-col>
-                      <v-checkbox
-                        v-model="currentAccInf.copyright"
-                        label="Urheberrechtsschutz vorhanden"
-                      ></v-checkbox>
-                    </v-col>
-                  </v-row>
-                  <v-row>
-                    <v-col cols="12" md="6" sm="6">
-                      <v-select
-                        :items="publicationType"
-                        label="Publikationstyp"
-                      ></v-select>
-                    </v-col>
-                  </v-row>
-                </v-container>
-              </v-card-text>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="closeEditItemDialog">
-                  Abbrechen
-                </v-btn>
-                <v-btn color="blue darken-1" text> Speichern </v-btn>
-              </v-card-actions>
-            </v-card>
+            <AccessEdit
+              :edit-item="currentAccInf"
+              v-on:closeDialog="closeEditItemDialog"
+            />
           </v-dialog>
           <v-btn color="error" @click="openDeleteItemDialog()">
             <v-icon left>mdi-delete</v-icon> Löschen
@@ -206,13 +156,16 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "../../node_modules/vue-class-component/lib";
+import { Vue } from "vue-property-decorator";
 import { AccessInformation } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { Result } from "neverthrow";
+import AccessEdit from "./AccessEdit.vue";
+import Component from "vue-class-component";
 
-@Component
+@Component({
+  components: { AccessEdit },
+})
 export default class AccessInformationList extends Vue {
   private items: Array<AccessInformation> = [];
   private currentAccInf = {} as AccessInformation;
@@ -223,12 +176,6 @@ export default class AccessInformationList extends Vue {
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
-  private publicationType = [
-    "Nationallizens",
-    "Konsortiallizens",
-    "Publish-Komponente",
-    "ZBW-Nutzungsvereinbarungen",
-  ];
 
   public retrieveAccessInformation(): void {
     api

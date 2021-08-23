@@ -3,6 +3,7 @@
     "git-commit-msg-linter": "^3.2.6"
   },
   "dependencies": {
-    "neverthrow": "^4.2.2"
+    "neverthrow": "^4.2.2",
+    "vue-property-decorator": "^9.1.2"
   }
 }
