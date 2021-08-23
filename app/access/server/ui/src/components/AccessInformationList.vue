@@ -55,13 +55,13 @@
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Tenant:</v-list-item-content>
+              <v-list-item-content>Zuständige Einrichtung:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.tenant }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>UsageGuide:</v-list-item-content>
+              <v-list-item-content>Richtlinien der Lizens:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.usageGuide }}
               </v-list-item-content>
@@ -70,6 +70,24 @@
               <v-list-item-content>Access Status:</v-list-item-content>
               <v-list-item-content class="align-end">
                 TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Zuständige Einrichtung</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.tenant }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Kommerzielle Nutzung</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.commercialuse }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Urheberrechtsschutz vorhanden</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.copyright }}
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -109,7 +127,7 @@
             Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
           </v-alert>
 
-          <v-dialog max-width="500px">
+          <v-dialog v-model="dialogEdit" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
                 v-bind="attrs"
@@ -125,31 +143,56 @@
             <v-card>
               <v-card-title>
                 <span class="text-h5">Editiere Eintrag</span>
-                <v-card-text>
-                  <v-container>
-                    <v-row>
-                      <v-col cols="12" md="4" sm="6">
-                        <v-text-field
-                          v-model="currentAccInf.id"
-                          label="id"
-                        ></v-text-field>
-                      </v-col>
-                    </v-row>
-                  </v-container>
-                </v-card-text>
               </v-card-title>
+              <v-card-text>
+                <v-container>
+                  <v-row>
+                    <v-col cols="12" md="4" sm="6">
+                      <v-text-field
+                        v-model="currentAccInf.id"
+                        label="titel"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="4" sm="6">
+                      <v-text-field
+                        v-model="currentAccInf.tenant"
+                        label="Zustände Einrichtung"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" md="4" sm="6">
+                      <v-text-field
+                        v-model="currentAccInf.commercialuse"
+                        label="Kommerzielle Nutzung erlaubt"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" md="4" sm="6">
+                      <v-text-field
+                        v-model="currentAccInf.copyright"
+                        label="Urheberrechtsschutz vorhanden"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="12" md="4" sm="6">
+                      <v-select
+                        :items="publicationType"
+                        label="Publikationstyp"
+                      ></v-select>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="blue darken-1" text @click="closeEditItemDialog">
+                  Abbrechen
+                </v-btn>
+                <v-btn color="blue darken-1" text> Speichern </v-btn>
+              </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-btn
-            :href="'/accessinformation/' + currentAccInf.id"
-            class="ma-2"
-            color="success"
-            outlined
-            tile
-          >
-            <v-icon left>mdi-pencil</v-icon> Bearbeiten
-          </v-btn>
-
           <v-btn color="error" @click="openDeleteItemDialog()">
             <v-icon left>mdi-delete</v-icon> Löschen
           </v-btn>
@@ -170,11 +213,18 @@ export default class AccessInformationList extends Vue {
   private items: Array<AccessInformation> = [];
   private currentAccInf = {} as AccessInformation;
   private currentIndex = -1;
+  private dialogEdit = false;
   private dialogDelete = false;
   private deleteConfirmationLoading = false;
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
+  private publicationType = [
+    "Nationallizens",
+    "Konsortiallizens",
+    "Publish-Komponente",
+    "ZBW-Nutzungsvereinbarungen",
+  ];
 
   public retrieveAccessInformation(): void {
     api
@@ -195,6 +245,10 @@ export default class AccessInformationList extends Vue {
 
   public searchTitle(): void {
     this.currentIndex = -1;
+  }
+
+  public closeEditItemDialog(): void {
+    this.dialogEdit = false;
   }
 
   public openDeleteItemDialog(): void {
