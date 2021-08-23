@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "git-commit-msg-linter": "^3.2.6"
+  },
+  "dependencies": {
+    "neverthrow": "^4.2.2"
   }
 }
