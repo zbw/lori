@@ -46,12 +46,7 @@
             >
               Delete operation was successful.
             </v-alert>
-            <v-alert
-              v-model="deleteAlertError"
-              dismissible
-              text
-              type="error"
-            >
+            <v-alert v-model="deleteAlertError" dismissible text type="error">
               Delete operation was not successful: {{ deleteErrorMessage }}
             </v-alert>
           </v-toolbar>
@@ -71,6 +66,7 @@ import Vue from "vue";
 import Component from "../../node_modules/vue-class-component/lib";
 import { AccessInformation } from "@/generated-sources/openapi";
 import api from "@/api/api";
+import { Result } from "neverthrow";
 
 @Component
 export default class AccessUi extends Vue {
@@ -117,18 +113,17 @@ export default class AccessUi extends Vue {
     this.deleteLoading = true;
     api
       .deleteAccessInformation(this.itemToDelete.id)
-      .then(() => {
-        this.deleteAlertSuccessful = true;
-        this.items.splice(this.indexToDelete, 1);
-      })
-      .catch((e) => {
-        this.deleteAlertError = true;
-        this.deleteErrorMessage = e.status + " - " + e.statusText;
-      })
-      .finally(() => {
-        this.dialogDelete = false;
-        this.deleteLoading = false;
+      .then((response: Result<void, Error>) => {
+        if (response.isOk()) {
+          this.deleteAlertSuccessful = true;
+          this.items.splice(this.indexToDelete, 1);
+        } else {
+          this.deleteAlertError = true;
+          this.deleteErrorMessage = response.error.message;
+        }
       });
+    this.dialogDelete = false;
+    this.deleteLoading = false;
   }
 
   public cancelDeleteDialog(): void {

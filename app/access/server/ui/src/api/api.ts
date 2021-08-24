@@ -4,6 +4,8 @@ import {
   Configuration,
 } from "@/generated-sources/openapi";
 
+import { ResultAsync } from "neverthrow";
+
 const configuration = new Configuration({
   basePath: window.location.origin + "/api/v1",
 });
@@ -17,17 +19,34 @@ export default {
       limit: limit,
     });
   },
-  getItemById(id: string): Promise<AccessInformation> {
-    return accessInformationApi.getAccessInformationByIds({
-      id: id,
-    });
+  getItemById(id: string): ResultAsync<AccessInformation, Error> {
+    return ResultAsync.fromPromise(
+      accessInformationApi.getAccessInformationByIds({
+        id: id,
+      }),
+      (e: unknown) => {
+        const errResponse = e as Response;
+        return new Error(
+          "Getting an entry resulted in following error:\n" +
+            errResponse.status +
+            ": " +
+            errResponse.statusText
+        );
+      }
+    );
   },
-  getItemByIds(ids: Array<string>): Promise<AccessInformation> {
-    return accessInformationApi.getAccessInformationByIds({
-      id: ids.join(","),
-    });
-  },
-  deleteAccessInformation(itemId: string): Promise<void> {
-    return accessInformationApi.deleteAccessInformationById({ id: itemId });
+  deleteAccessInformation(itemId: string): ResultAsync<void, Error> {
+    return ResultAsync.fromPromise(
+      accessInformationApi.deleteAccessInformationById({ id: itemId }),
+      (e: unknown) => {
+        const errResponse = e as Response;
+        return new Error(
+          "Deleting an entry resulted in following error:\n" +
+            errResponse.status +
+            ": " +
+            errResponse.statusText
+        );
+      }
+    );
   },
 };

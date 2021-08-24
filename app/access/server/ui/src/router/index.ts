@@ -24,11 +24,6 @@ const routes: Array<RouteConfig> = [
     name: "accessinformation",
     component: () => import("../components/AccessInformationList.vue"),
   },
-  {
-    path: "/accessinformation/:id",
-    name: "accessinformation-details",
-    component: () => import("../components/AccessInformationDetail.vue"),
-  },
 ];
 
 const router = new VueRouter({

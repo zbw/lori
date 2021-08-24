@@ -55,13 +55,13 @@
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Tenant:</v-list-item-content>
+              <v-list-item-content>Zuständige Einrichtung:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.tenant }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>UsageGuide:</v-list-item-content>
+              <v-list-item-content>Richtlinien der Lizens:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.usageGuide }}
               </v-list-item-content>
@@ -70,6 +70,26 @@
               <v-list-item-content>Access Status:</v-list-item-content>
               <v-list-item-content class="align-end">
                 TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Zuständige Einrichtung</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.tenant }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Kommerzielle Nutzung</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.commercialuse }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content
+                >Urheberrechtsschutz vorhanden</v-list-item-content
+              >
+              <v-list-item-content class="align-end">
+                {{ currentAccInf.copyright }}
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -108,15 +128,24 @@
           <v-alert v-model="deleteAlertError" dismissible text type="error">
             Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
           </v-alert>
-          <v-btn
-            :href="'/accessinformation/' + currentAccInf.id"
-            class="ma-2"
-            color="success"
-            outlined
-            tile
-          >
-            <v-icon left>mdi-pencil</v-icon> Bearbeiten
-          </v-btn>
+          <v-dialog v-model="dialogEdit" max-width="500px">
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn
+                v-bind="attrs"
+                v-on="on"
+                class="ma-2"
+                color="success"
+                outlined
+                tile
+              >
+                <v-icon left>mdi-pencil</v-icon> Bearbeiten
+              </v-btn>
+            </template>
+            <AccessEdit
+              :edit-item="currentAccInf"
+              v-on:closeDialog="closeEditItemDialog"
+            />
+          </v-dialog>
           <v-btn color="error" @click="openDeleteItemDialog()">
             <v-icon left>mdi-delete</v-icon> Löschen
           </v-btn>
@@ -127,16 +156,21 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-import Component from "../../node_modules/vue-class-component/lib";
+import { Vue } from "vue-property-decorator";
 import { AccessInformation } from "@/generated-sources/openapi";
 import api from "@/api/api";
+import { Result } from "neverthrow";
+import AccessEdit from "./AccessEdit.vue";
+import Component from "vue-class-component";
 
-@Component
+@Component({
+  components: { AccessEdit },
+})
 export default class AccessInformationList extends Vue {
   private items: Array<AccessInformation> = [];
   private currentAccInf = {} as AccessInformation;
   private currentIndex = -1;
+  private dialogEdit = false;
   private dialogDelete = false;
   private deleteConfirmationLoading = false;
   private deleteAlertSuccessful = false;
@@ -164,6 +198,10 @@ export default class AccessInformationList extends Vue {
     this.currentIndex = -1;
   }
 
+  public closeEditItemDialog(): void {
+    this.dialogEdit = false;
+  }
+
   public openDeleteItemDialog(): void {
     this.dialogDelete = true;
   }
@@ -172,15 +210,14 @@ export default class AccessInformationList extends Vue {
     this.deleteConfirmationLoading = true;
     api
       .deleteAccessInformation(this.currentAccInf.id)
-      .then(() => {
-        this.deleteAlertSuccessful = true;
-        this.retrieveAccessInformation();
-      })
-      .catch((e) => {
-        this.deleteAlertError = true;
-        this.deleteErrorMessage = e.status + " - " + e.statusText;
-      })
-      .finally(() => {
+      .then((response: Result<void, Error>) => {
+        if (response.isOk()) {
+          this.deleteAlertSuccessful = true;
+          this.retrieveAccessInformation();
+        } else {
+          this.deleteAlertError = true;
+          this.deleteErrorMessage = response.error.message;
+        }
         this.dialogDelete = false;
         this.deleteConfirmationLoading = false;
       });

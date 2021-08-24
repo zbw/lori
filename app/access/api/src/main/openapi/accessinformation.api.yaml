@@ -22,7 +22,7 @@ accessinformation-id:
     tags:
       - accessinformation
     summary: Find access information by ID
-    description: Return a list of access information
+    description: Return an access information entry
     operationId: getAccessInformationByIds
     parameters:
       - name: id
