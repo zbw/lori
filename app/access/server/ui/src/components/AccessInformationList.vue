@@ -49,12 +49,6 @@
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Template:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.template }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
               <v-list-item-content>Zuständige Einrichtung:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.tenant }}
@@ -102,6 +96,12 @@
             </v-list-item>
             <v-list-item>
               <v-list-item-content>Publikationstyp</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Repository</v-list-item-content>
               <v-list-item-content class="align-end">
                 TODO
               </v-list-item-content>
