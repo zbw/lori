@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package de.zbw.auth.api.v1;
+
+import "de/zbw/auth/api/v1/auth_model.proto";
+
+option java_package = "de.zbw.auth.api";
+option java_multiple_files = true;
+
+service AuthService {
+  rpc SayHello (SayHelloRequest) returns (SayHelloResponse);
+}

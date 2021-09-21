@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package de.zbw.auth.api.v1;
+
+option java_package = "de.zbw.auth.api";
+option java_multiple_files = true;
+
+message SayHelloRequest {
+  string name = 1;
+}
+
+message SayHelloResponse {
+  string message = 1;
+}
