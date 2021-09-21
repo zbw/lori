@@ -41,6 +41,9 @@
               label="Publikationstyp"
             ></v-select>
           </v-col>
+          <v-col cols="12" md="6" sm="6">
+            <v-select :items="licenseType" label="Lizenstyp"></v-select>
+          </v-col>
         </v-row>
       </v-container>
     </v-card-text>
@@ -56,18 +59,16 @@
 import { AccessInformation } from "@/generated-sources/openapi";
 import { Prop, Vue } from "vue-property-decorator";
 import Component from "vue-class-component";
+import { License, Publication } from "@/types/types";
+import { $enum } from "ts-enum-util";
 
 @Component
 export default class AccessEdit extends Vue {
   @Prop({ required: true })
   editItem!: AccessInformation;
 
-  private publicationType = [
-    "Nationallizens",
-    "Konsortiallizens",
-    "Publish-Komponente",
-    "ZBW-Nutzungsvereinbarungen",
-  ];
+  private licenseType = $enum(License).getValues();
+  private publicationType = $enum(Publication).getValues();
   public closeDialog(): void {
     this.$emit("closeDialog");
   }

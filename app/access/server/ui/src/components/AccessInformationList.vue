@@ -49,12 +49,6 @@
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Template:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.template }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
               <v-list-item-content>Zuständige Einrichtung:</v-list-item-content>
               <v-list-item-content class="align-end">
                 {{ currentAccInf.tenant }}
@@ -81,7 +75,8 @@
             <v-list-item>
               <v-list-item-content>Kommerzielle Nutzung</v-list-item-content>
               <v-list-item-content class="align-end">
-                {{ currentAccInf.commercialuse }}
+                <v-icon v-if="currentAccInf.commercialuse" left>mdi-check</v-icon>
+                <v-icon v-else>mdi-close</v-icon>
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
@@ -89,7 +84,26 @@
                 >Urheberrechtsschutz vorhanden</v-list-item-content
               >
               <v-list-item-content class="align-end">
-                {{ currentAccInf.copyright }}
+                <v-icon v-if="currentAccInf.copyright" left>mdi-check</v-icon>
+                <v-icon v-else>mdi-close</v-icon>
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Lizenstyp</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Publikationstyp</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Repository</v-list-item-content>
+              <v-list-item-content class="align-end">
+                TODO
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -142,7 +156,7 @@
               </v-btn>
             </template>
             <AccessEdit
-              :edit-item="currentAccInf"
+              :edit-item="Object.assign({}, currentAccInf)"
               v-on:closeDialog="closeEditItemDialog"
             />
           </v-dialog>
