@@ -1,7 +1,7 @@
 package de.zbw.api.auth.server.route
 
 import de.zbw.api.auth.server.ServicePoolWithProbes
-import de.zbw.business.auth.server.ApiBackend
+import de.zbw.business.auth.server.AuthBackend
 import de.zbw.business.auth.server.UserInformation
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -39,7 +39,7 @@ class ApiRoutingKtTest() {
             with(handleRequest(HttpMethod.Get, "/api/v1/userinfo/users/2")) {
                 val rec: String = response.content!!
                 val obj = Json.decodeFromString<UserInformation>(rec)
-                assertThat(UserInformation(ApiBackend.EXAMPLE_USER, 2L), `is`(obj))
+                assertThat(UserInformation(AuthBackend.EXAMPLE_USER, 2L), `is`(obj))
             }
         }
     }

@@ -1,0 +1,22 @@
+openapi: 3.0.1
+info:
+  title: Auth Service API
+  version: 0.0.1
+  contact:
+    email: c.bay@zbw.eu
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: Auth
+    description: Authenticate users for services.
+paths:
+  /auth/signup:
+    $ref: 'auth.api.yaml#/auth-signup'
+
+components:
+  schemas:
+    SignUp:
+      $ref: 'auth.model.yaml#/SignUp'
+    ApiResponse:
+      $ref: 'auth.model.yaml#/ApiResponse'

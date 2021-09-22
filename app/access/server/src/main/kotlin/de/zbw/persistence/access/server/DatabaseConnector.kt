@@ -18,7 +18,7 @@ import java.sql.Types
 /**
  * Connector for interacting with the postgres database.
  *
- * Created on 07-14-2021.
+ * Created on 09-21-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnector(

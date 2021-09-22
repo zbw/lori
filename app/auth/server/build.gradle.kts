@@ -21,6 +21,7 @@ dependencies {
     implementation("org.postgresql:postgresql:42.2.20")
     implementation("io.zonky.test:embedded-postgres:1.3.0")
     implementation("org.flywaydb:flyway-core:7.9.1")
+    implementation("de.mkammerer:argon2-jvm:2.10.1")
 }
 
 application {

@@ -1,0 +1,26 @@
+auth-signup:
+  post:
+    tags:
+      - signup
+    summary: Signup a new user
+    operationId: signUp
+    requestBody:
+      description: Signup object
+      content:
+        application/json:
+          schema:
+            $ref: 'auth.model.yaml#/SignUp'
+      required: true
+    responses:
+      500:
+        description: Registration of new user failed
+        content:
+          application/json:
+            schema:
+              $ref: 'auth.model.yaml#/ApiResponse'
+      200:
+        description: User registered successfully
+        content:
+          application/json:
+            schema:
+              $ref: 'auth.model.yaml#/ApiResponse'
