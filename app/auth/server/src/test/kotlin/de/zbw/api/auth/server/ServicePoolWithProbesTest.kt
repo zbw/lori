@@ -1,5 +1,6 @@
 package de.zbw.api.auth.server
 
+import de.zbw.api.auth.server.config.AuthConfiguration
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.netty.NettyApplicationEngine
@@ -59,7 +60,8 @@ class ServicePoolWithProbesTest {
                     every { isHealthy() } returns healthy
                 }
             ),
-            port = 8082,
+            config = AUTH_CONFIG,
+            backend = mockk(),
         )
         withTestApplication(servicePool.application()) {
             with(handleRequest(HttpMethod.Get, "/ready")) {
@@ -96,7 +98,8 @@ class ServicePoolWithProbesTest {
         val servicePool = spyk(
             ServicePoolWithProbes(
                 services = services,
-                port = 8082,
+                config = AUTH_CONFIG,
+                backend = mockk(),
             )
         ) {
             every { getHttpServer() } returns serverMock
@@ -117,5 +120,13 @@ class ServicePoolWithProbesTest {
 
     companion object {
         const val DATA_FOR_TEST_APPLICATION = "DATA_FOR_TEST_APPLICATION"
+
+        val AUTH_CONFIG = AuthConfiguration(
+            grpcPort = 9092,
+            httpPort = 8082,
+            sqlUrl = "jdbc:postgresql://127.0.0.1:5433/authdb",
+            sqlUser = "user",
+            sqlPassword = "pw",
+        )
     }
 }

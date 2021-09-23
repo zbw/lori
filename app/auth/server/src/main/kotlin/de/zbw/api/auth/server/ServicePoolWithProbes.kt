@@ -1,7 +1,8 @@
 package de.zbw.api.auth.server
 
-import de.zbw.api.auth.server.route.apiRoutes
-import de.zbw.api.auth.server.route.staticRoutes
+import de.zbw.api.auth.server.config.AuthConfiguration
+import de.zbw.api.auth.server.route.authInformationRoutes
+import de.zbw.business.auth.server.AuthBackend
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -24,12 +25,13 @@ import io.ktor.server.netty.NettyApplicationEngine
  */
 class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
-    private val port: Int,
+    private val config: AuthConfiguration,
+    private val backend: AuthBackend = AuthBackend(config),
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(
         Netty,
-        port = port,
+        port = config.httpPort,
         module = application()
     )
 
@@ -55,8 +57,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            apiRoutes()
-            staticRoutes()
+            authInformationRoutes(backend)
         }
     }
 

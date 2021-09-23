@@ -9,18 +9,18 @@ auth-signup:
       content:
         application/json:
           schema:
-            $ref: 'auth.model.yaml#/SignUp'
+            $ref: 'auth.model.yaml#/SignUpUserData'
       required: true
     responses:
-      500:
-        description: Registration of new user failed
-        content:
-          application/json:
-            schema:
-              $ref: 'auth.model.yaml#/ApiResponse'
       200:
         description: User registered successfully
         content:
           application/json:
             schema:
               $ref: 'auth.model.yaml#/ApiResponse'
+      400:
+        description: Registration of new user failed
+        content: { }
+      500:
+        description: An internal error occured
+        content: { }

@@ -1,8 +1,7 @@
-SignUp:
+SignUpUserData:
   required:
     - name
     - password
-    - email
   type: object
   properties:
     name:

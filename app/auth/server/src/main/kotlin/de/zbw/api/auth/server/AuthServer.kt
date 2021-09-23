@@ -19,7 +19,7 @@ object AuthServer {
         FlywayMigrator(config).migrate()
 
         ServicePoolWithProbes(
-            port = config.httpPort,
+            config = config,
             services = listOf(
                 GrpcServer(
                     port = config.grpcPort,

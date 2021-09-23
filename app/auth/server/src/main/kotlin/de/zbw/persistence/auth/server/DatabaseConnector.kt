@@ -1,7 +1,6 @@
 package de.zbw.persistence.auth.server
 
 import de.zbw.api.auth.server.config.AuthConfiguration
-import de.zbw.auth.model.SignUp
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -12,7 +11,7 @@ import java.sql.Types
 /**
  * Connector for interacting with the postgres database.
  *
- * Created on 07-14-2021.
+ * Created on 09-22-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnector(
@@ -22,19 +21,33 @@ class DatabaseConnector(
         config: AuthConfiguration,
     ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
 
+    fun findUserByName(
+        name: String
+    ): Boolean {
+        val stmt = "SELECT EXISTS(SELECT 1 from $TABLE_NAME_USERS WHERE name=?)"
+        val prepStmt = connection.prepareStatement(stmt).apply {
+            this.setString(1, name)
+        }
+        val rs = prepStmt.executeQuery()
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
     fun insertUser(
         name: String,
         password: String,
-        email: String,
+        email: String?,
     ): String {
         val statement =
             "INSERT INTO $TABLE_NAME_USERS" +
-                "(name,password,id) " +
+                "(name,password,email) " +
                 "VALUES(?,?,?)"
         val prepStmt = connection.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, name)
             this.setString(2, password)
-            this.setString(3, email)
+            this.setIfNotNull(3, email) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
 
         val affectedRows = prepStmt.run { this.executeUpdate() }
@@ -47,8 +60,8 @@ class DatabaseConnector(
     }
 
     private fun <T> PreparedStatement.setIfNotNull(
-        element: T?,
         idx: Int,
+        element: T?,
         setter: (T, Int, PreparedStatement) -> Unit,
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 

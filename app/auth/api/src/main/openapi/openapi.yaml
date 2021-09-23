@@ -16,7 +16,7 @@ paths:
 
 components:
   schemas:
-    SignUp:
-      $ref: 'auth.model.yaml#/SignUp'
+    SignUpUserData:
+      $ref: 'auth.model.yaml#/SignUpUserData'
     ApiResponse:
       $ref: 'auth.model.yaml#/ApiResponse'
