@@ -9,7 +9,7 @@ import org.flywaydb.core.api.FlywayException
 import org.flywaydb.core.api.exception.FlywayValidateException
 import org.testng.annotations.Test
 
-class FlywayMigratorTest{
+class FlywayMigratorTest {
     @Test(expectedExceptions = [FlywayException::class])
     fun flywayMigrationException() {
 
