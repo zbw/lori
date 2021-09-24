@@ -12,8 +12,8 @@ openApiGenerate {
     inputSpec.set("$projectDir/src/main/openapi/openapi.yaml")
     outputDir.set("$buildDir/generated")
     generatorName.set("kotlin")
-    apiPackage.set("de.zbw.access.api.v1")
-    modelPackage.set("de.zbw.access.model")
+    apiPackage.set("de.zbw.auth.api.v1")
+    modelPackage.set("de.zbw.auth.model")
     configOptions.set(mapOf(
         Pair("dataLibrary", "java8")
     ).toMutableMap())
@@ -30,3 +30,4 @@ sourceSets {
         }
     }
 }
+

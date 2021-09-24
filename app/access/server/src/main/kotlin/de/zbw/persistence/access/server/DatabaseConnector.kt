@@ -18,7 +18,7 @@ import java.sql.Types
 /**
  * Connector for interacting with the postgres database.
  *
- * Created on 07-14-2021.
+ * Created on 09-21-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnector(
@@ -37,13 +37,13 @@ class DatabaseConnector(
 
         val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, header.id)
-            this.setIfNotNull(header.tenant, 2) { value, idx, prepStmt ->
+            this.setIfNotNull(2, header.tenant) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(header.usageGuide, 3) { value, idx, prepStmt ->
+            this.setIfNotNull(3, header.usageGuide) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(header.template, 4) { value, idx, prepStmt ->
+            this.setIfNotNull(4, header.template) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setBoolean(5, header.mention)
@@ -259,8 +259,8 @@ class DatabaseConnector(
     }
 
     private fun <T> PreparedStatement.setIfNotNull(
-        element: T?,
         idx: Int,
+        element: T?,
         setter: (T, Int, PreparedStatement) -> Unit,
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 

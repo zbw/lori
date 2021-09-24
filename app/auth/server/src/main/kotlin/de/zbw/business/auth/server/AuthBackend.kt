@@ -1,0 +1,49 @@
+package de.zbw.business.auth.server
+
+import de.mkammerer.argon2.Argon2
+import de.mkammerer.argon2.Argon2Factory
+import de.zbw.api.auth.server.config.AuthConfiguration
+import de.zbw.auth.model.SignUpUserData
+import de.zbw.persistence.auth.server.DatabaseConnector
+
+/**
+ * Backend implementation of REST-API.
+ *
+ * Created on 09-21-2021.
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
+class AuthBackend(
+    private val dbConnector: DatabaseConnector,
+) {
+    constructor(config: AuthConfiguration) : this(
+        DatabaseConnector(config),
+    )
+
+    fun isUsernameAvailable(
+        name: String
+    ) = !dbConnector.findUserByName(name)
+
+    fun registerNewUser(
+        userData: SignUpUserData,
+    ) {
+        dbConnector.insertUser(
+            userData.name,
+            hashPassword(userData.password),
+            userData.email,
+        )
+    }
+
+    companion object {
+        private const val ARGON2_ITERATIONS: Int = 10
+        private const val ARGON2_MEMORY: Int = 65536 // 2^16
+        private const val ARGON2_PARALLELISM: Int = 1
+
+        private val argon: Argon2 = Argon2Factory.create()
+
+        fun hashPassword(password: String): String =
+            argon.hash(ARGON2_ITERATIONS, ARGON2_MEMORY, ARGON2_PARALLELISM, password.toCharArray())
+
+        fun verifyPassword(password: String, hash: String) =
+            argon.verify(hash, password.toCharArray())
+    }
+}
