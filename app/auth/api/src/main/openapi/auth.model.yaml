@@ -21,3 +21,13 @@ ApiResponse:
       type: string
     message:
       type: string
+
+UserRole:
+  type: object
+  properties:
+    role:
+      type: string
+      enum:
+        - access_admin
+        - access_user_read
+        - access_user_write

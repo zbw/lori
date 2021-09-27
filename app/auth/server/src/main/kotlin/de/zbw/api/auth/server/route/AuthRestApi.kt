@@ -24,9 +24,12 @@ fun Routing.authInformationRoutes(backend: AuthBackend) {
                 val signUpData: SignUpUserData = call.receive(SignUpUserData::class)
                 if (!backend.isUsernameAvailable(signUpData.name)) {
                     call.respond(HttpStatusCode.BadRequest)
-                } else {
-                    backend.registerNewUser(signUpData)
+                    return@post
+                }
+                backend.registerNewUser(signUpData)?.let{
                     call.respond(HttpStatusCode.OK)
+                }?:let{
+                    call.respond(HttpStatusCode.InternalServerError)
                 }
             } catch (e: SQLException) {
                 call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")

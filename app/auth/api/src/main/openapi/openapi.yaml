@@ -20,3 +20,5 @@ components:
       $ref: 'auth.model.yaml#/SignUpUserData'
     ApiResponse:
       $ref: 'auth.model.yaml#/ApiResponse'
+    UserRole:
+      $ref: 'auth.model.yaml#/UserRole'

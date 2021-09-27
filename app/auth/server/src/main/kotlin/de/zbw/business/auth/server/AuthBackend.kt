@@ -4,6 +4,7 @@ import de.mkammerer.argon2.Argon2
 import de.mkammerer.argon2.Argon2Factory
 import de.zbw.api.auth.server.config.AuthConfiguration
 import de.zbw.auth.model.SignUpUserData
+import de.zbw.auth.model.UserRole
 import de.zbw.persistence.auth.server.DatabaseConnector
 
 /**
@@ -19,18 +20,33 @@ class AuthBackend(
         DatabaseConnector(config),
     )
 
+    init {
+        UserRole.Role.values().forEach { role ->
+            val roleId = dbConnector.getRoleIdByName(role)
+            if (roleId == null) {
+                dbConnector.insertRole(role)
+            }
+        }
+    }
+
     fun isUsernameAvailable(
         name: String
-    ) = !dbConnector.findUserByName(name)
+    ) = !dbConnector.usernameExists(name)
 
     fun registerNewUser(
         userData: SignUpUserData,
-    ) {
-        dbConnector.insertUser(
+    ): Int? {
+        val userId = dbConnector.insertUser(
             userData.name,
             hashPassword(userData.password),
             userData.email,
         )
+        val readOnlyRoleId = dbConnector.getRoleIdByName(UserRole.Role.userRead)
+        return if (userId != null && readOnlyRoleId != null) {
+            dbConnector.insertUserRole(userId, readOnlyRoleId)
+        } else {
+            null
+        }
     }
 
     companion object {
