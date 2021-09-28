@@ -22,7 +22,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     )
 
     @BeforeClass
-    fun fillDB(){
+    fun fillDB() {
         UserRole.Role.values().forEach {
             dbConnector.insertRole(it)
         }
@@ -61,7 +61,6 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertTrue(dbConnector.usernameExists(userData.name), "This username should not exist")
     }
 
-
     @Test
     fun testFindRoleIdByName() {
         // given
@@ -72,7 +71,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testInsertUserRole(){
+    fun testInsertUserRole() {
         // given
         val userData = UserData(
             name = "TestUserRT",

@@ -41,12 +41,11 @@ class AuthBackend(
             hashPassword(userData.password),
             userData.email,
         )
-        val readOnlyRoleId = dbConnector.getRoleIdByName(UserRole.Role.userRead)
-        return if (userId != null && readOnlyRoleId != null) {
-            dbConnector.insertUserRole(userId, readOnlyRoleId)
-        } else {
-            null
-        }
+        return userId
+            ?.let { dbConnector.getRoleIdByName(UserRole.Role.userRead) }
+            ?.let { roleId ->
+                dbConnector.insertUserRole(userId, roleId)
+            }
     }
 
     companion object {

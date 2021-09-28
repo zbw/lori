@@ -26,9 +26,9 @@ fun Routing.authInformationRoutes(backend: AuthBackend) {
                     call.respond(HttpStatusCode.BadRequest)
                     return@post
                 }
-                backend.registerNewUser(signUpData)?.let{
+                backend.registerNewUser(signUpData)?.let {
                     call.respond(HttpStatusCode.OK)
-                }?:let{
+                } ?: let {
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             } catch (e: SQLException) {
