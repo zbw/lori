@@ -1,7 +1,11 @@
 package de.zbw.persistence.auth.server
 
+import de.zbw.auth.model.UserRole
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.core.Is.`is`
 import org.testng.Assert.assertFalse
 import org.testng.Assert.assertTrue
+import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import kotlin.test.assertNotNull
@@ -16,6 +20,13 @@ class DatabaseConnectorTest : DatabaseTest() {
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
     )
+
+    @BeforeClass
+    fun fillDB() {
+        UserRole.Role.values().forEach {
+            dbConnector.insertRole(it)
+        }
+    }
 
     @DataProvider(name = DATA_FOR_INSERT_USER)
     fun createInsertUserData() = arrayOf(
@@ -36,16 +47,63 @@ class DatabaseConnectorTest : DatabaseTest() {
     )
 
     @Test(dataProvider = DATA_FOR_INSERT_USER)
-    fun testInsertUserRoundtrip(userData: UserData) {
+    fun testInsertUser(userData: UserData) {
         // given
-        assertFalse(dbConnector.findUserByName(userData.name), "This username should not exist")
-        val insertUserId = dbConnector.insertUser(
+        assertFalse(dbConnector.usernameExists(userData.name), "This username should not exist")
+        // when
+        val userId = dbConnector.insertUser(
             userData.name,
             userData.password,
             userData.email,
         )
-        assertNotNull(insertUserId, "Insertion was not successful")
-        assertTrue(dbConnector.findUserByName(userData.name), "This username should not exist")
+        // then
+        assertNotNull(userId, "Insertion was not successful")
+        assertTrue(dbConnector.usernameExists(userData.name), "This username should not exist")
+    }
+
+    @Test
+    fun testFindRoleIdByName() {
+        // given
+        UserRole.Role.values().forEach {
+            val roleId = dbConnector.getRoleIdByName(it)
+            assertNotNull(roleId)
+        }
+    }
+
+    @Test
+    fun testInsertUserRole() {
+        // given
+        val userData = UserData(
+            name = "TestUserRT",
+            password = "testPasswordRT",
+            email = "email@domain.com",
+        )
+
+        val userRights = listOf(
+            UserRole.Role.userWrite,
+            UserRole.Role.admin,
+        )
+
+        // when
+        // Insert new user
+        val userId: Int = dbConnector.insertUser(
+            userData.name,
+            userData.password,
+            userData.email,
+        )!!
+
+        val roleIds = userRights.map {
+            dbConnector.getRoleIdByName(it)
+        }
+
+        // Give new user write+admin rights
+        roleIds.forEach { roleId ->
+            dbConnector.insertUserRole(userId, roleId!!)
+        }
+
+        // then
+        val receivedRoles = dbConnector.getRolesByUserId(userId)
+        assertThat(receivedRoles.toSet(), `is`(userRights.toSet()))
     }
 
     companion object {

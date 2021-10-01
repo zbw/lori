@@ -53,7 +53,7 @@ class AccessInformationApiKtTest {
                     setBody(jsonAsString(ACCESS_INFORMATION_REST))
                 }
             ) {
-                assertThat("Should return Accecpted", response.status(), `is`(HttpStatusCode.Created))
+                assertThat("Should return Accepted", response.status(), `is`(HttpStatusCode.Created))
                 verify(exactly = 1) { backend.insertAccessRightEntry(ACCESS_INFORMATION_REST.toBusiness()) }
             }
         }
@@ -451,13 +451,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
-                assertThat(
-                    "Should return 404 indicating that the resource was not found",
-                    response.status(),
-                    `is`(HttpStatusCode.NotFound)
-                )
-            }
+            handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")
         }
     }
 
@@ -484,7 +478,7 @@ class AccessInformationApiKtTest {
         withTestApplication(servicePool.application()) {
             with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
                 assertThat(
-                    "Should return 500 indicating that an internal error has occured",
+                    "Should return 500 indicating that an internal error has occurred",
                     response.status(),
                     `is`(HttpStatusCode.InternalServerError)
                 )

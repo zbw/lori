@@ -3,8 +3,11 @@ package de.zbw.business.auth.server
 import de.mkammerer.argon2.Argon2
 import de.mkammerer.argon2.Argon2Factory
 import de.zbw.api.auth.server.config.AuthConfiguration
+import de.zbw.auth.model.SignInUserData
 import de.zbw.auth.model.SignUpUserData
+import de.zbw.auth.model.UserRole
 import de.zbw.persistence.auth.server.DatabaseConnector
+import de.zbw.persistence.auth.server.transient.UserTableEntry
 
 /**
  * Backend implementation of REST-API.
@@ -15,23 +18,41 @@ import de.zbw.persistence.auth.server.DatabaseConnector
 class AuthBackend(
     private val dbConnector: DatabaseConnector,
 ) {
+
     constructor(config: AuthConfiguration) : this(
         DatabaseConnector(config),
     )
+    init {
+        UserRole.Role.values().forEach { role ->
+            val roleId = dbConnector.getRoleIdByName(role)
+            if (roleId == null) {
+                dbConnector.insertRole(role)
+            }
+        }
+    }
 
     fun isUsernameAvailable(
         name: String
-    ) = !dbConnector.findUserByName(name)
+    ) = !dbConnector.usernameExists(name)
 
     fun registerNewUser(
         userData: SignUpUserData,
-    ) {
-        dbConnector.insertUser(
+    ): Int? {
+        val userId = dbConnector.insertUser(
             userData.name,
             hashPassword(userData.password),
             userData.email,
         )
+        return userId
+            ?.let { dbConnector.getRoleIdByName(UserRole.Role.userRead) }
+            ?.let { roleId ->
+                dbConnector.insertUserRole(userId, roleId)
+            }
     }
+
+    fun getUserEntry(signInUserData: SignInUserData): UserTableEntry? = dbConnector.getUserByName(signInUserData.name)
+
+    fun getUserRolesById(userId: Int): List<UserRole.Role> = dbConnector.getRolesByUserId(userId)
 
     companion object {
         private const val ARGON2_ITERATIONS: Int = 10

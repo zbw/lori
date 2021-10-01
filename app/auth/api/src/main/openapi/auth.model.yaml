@@ -11,6 +11,41 @@ SignUpUserData:
     email:
       type: string
 
+SignInUserData:
+  required:
+    - name
+    - password
+  type: object
+  properties:
+    name:
+      type: string
+    password:
+      type: string
+
+SignInAnswer:
+  type: object
+  properties:
+    username:
+      type: string
+    email:
+      type: string
+    roles:
+      type: array
+      items:
+        $ref: '#/UserRole'
+    accessToken:
+      type: string
+
+UserRole:
+  type: object
+  properties:
+    role:
+      type: string
+      enum:
+        - access_admin
+        - access_user_read
+        - access_user_write
+
 ApiResponse:
   type: object
   properties:

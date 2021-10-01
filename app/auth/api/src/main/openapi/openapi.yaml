@@ -13,10 +13,18 @@ tags:
 paths:
   /auth/signup:
     $ref: 'auth.api.yaml#/auth-signup'
+  /auth/signin:
+    $ref: 'auth.api.yaml#/auth-signin'
 
 components:
   schemas:
     SignUpUserData:
       $ref: 'auth.model.yaml#/SignUpUserData'
+    SignInUserData:
+      $ref: 'auth.model.yaml#/SignInUserData'
+    SignInAnswer:
+      $ref: 'auth.model.yaml#/SignInAnswer'
+    UserRole:
+      $ref: 'auth.model.yaml#/UserRole'
     ApiResponse:
       $ref: 'auth.model.yaml#/ApiResponse'

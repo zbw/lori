@@ -124,6 +124,10 @@ class ServicePoolWithProbesTest {
         val AUTH_CONFIG = AuthConfiguration(
             grpcPort = 9092,
             httpPort = 8082,
+            jwtAudience = "",
+            jwtIssuer = "",
+            jwtRealm = "",
+            jwtSecret = "",
             sqlUrl = "jdbc:postgresql://127.0.0.1:5433/authdb",
             sqlUser = "user",
             sqlPassword = "pw",

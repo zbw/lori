@@ -6,6 +6,8 @@ import de.zbw.business.auth.server.AuthBackend
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.auth.Authentication
+import io.ktor.auth.jwt.jwt
 import io.ktor.features.CallLogging
 import io.ktor.features.ContentNegotiation
 import io.ktor.gson.gson
@@ -42,6 +44,11 @@ class ServicePoolWithProbes(
     internal fun application(): Application.() -> Unit = {
         install(ContentNegotiation) { gson { } }
         install(CallLogging)
+        install(Authentication) {
+            jwt {
+                this.realm = config.jwtRealm
+            }
+        }
         routing {
             get("/ready") {
                 if (isReady()) {
@@ -57,7 +64,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            authInformationRoutes(backend)
+            authInformationRoutes(backend, config)
         }
     }
 
