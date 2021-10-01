@@ -11,15 +11,29 @@ SignUpUserData:
     email:
       type: string
 
-ApiResponse:
+SignInUserData:
+  required:
+    - name
+    - password
   type: object
   properties:
-    code:
-      type: integer
-      format: int32
-    type:
+    name:
       type: string
-    message:
+    password:
+      type: string
+
+SignInAnswer:
+  type: object
+  properties:
+    username:
+      type: string
+    email:
+      type: string
+    roles:
+      type: array
+      items:
+        $ref: '#/UserRole'
+    accessToken:
       type: string
 
 UserRole:
@@ -31,3 +45,14 @@ UserRole:
         - access_admin
         - access_user_read
         - access_user_write
+
+ApiResponse:
+  type: object
+  properties:
+    code:
+      type: integer
+      format: int32
+    type:
+      type: string
+    message:
+      type: string

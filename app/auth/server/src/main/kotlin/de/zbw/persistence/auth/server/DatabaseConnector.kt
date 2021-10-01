@@ -2,6 +2,7 @@ package de.zbw.persistence.auth.server
 
 import de.zbw.api.auth.server.config.AuthConfiguration
 import de.zbw.auth.model.UserRole
+import de.zbw.persistence.auth.server.transient.UserTableEntry
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -51,6 +52,28 @@ class DatabaseConnector(
             }
         }
         return insertElement(prepStmt)
+    }
+
+    fun getUserByName(
+        name: String,
+    ): UserTableEntry? {
+        val statement =
+            "SELECT id, name, password, email " +
+                "FROM $TABLE_NAME_USERS " +
+                "WHERE name=?"
+        val prepStmt = connection.prepareStatement(statement).apply {
+            this.setString(1, name)
+        }
+        val rs = prepStmt.executeQuery()
+        return rs.next().takeIf { it }
+            ?.let {
+                UserTableEntry(
+                    id = rs.getInt(1),
+                    name = rs.getString(2),
+                    hash = rs.getString(3),
+                    email = rs.getString(4),
+                )
+            }
     }
 
     fun getRoleIdByName(
