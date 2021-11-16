@@ -1,4 +1,4 @@
-# About
+[#](#) About
 TODO
 
 # Docker Login
@@ -14,7 +14,7 @@ export SECRET_KEY=<YOUR-SECRET-KEYS>
 export LONGTERM_TOKEN=$(printf $ACCESS_KEY | openssl dgst -binary -sha256 -hmac $SECRET_KEY | od -An -vtx1 | sed 's/[ \n]//g' | sed 'N;s/\n//')
 
 # Login
-echo $LONGTERM-TOKEN | docker login -u eu-de_dev@$ACCESS_KEY --password-stdin swr.eu-de.otc.t-systems.com
+docker login -u eu-de_dev@$ACCESS_KEY -p $LONGTERM_TOKEN swr.eu-de.otc.t-systems.com
 ```
 
 ## Build image and push it to registry
