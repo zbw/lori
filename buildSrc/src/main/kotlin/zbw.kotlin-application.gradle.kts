@@ -4,7 +4,7 @@ plugins {
 }
 
 fun getCheckedOutGitCommitHash(): String {
-    val gitFolder = "$projectDir/.git/"
+    val gitFolder = "${project.rootDir}/.git/"
     val takeFromHash = 12
     /*
      * '.git/HEAD' contains either
