@@ -7,6 +7,8 @@ node_modules/
 *.iml
 *.ipr
 *.iws
+*.swp
+*.swo
 .gradletasknamecache
 .gradle/
 build/

@@ -24,6 +24,7 @@ Then create a role, and a new database as follows with `psql`:
 ```shell
 docker exec -it postgres_access psql -U postgres
 CREATE USER access WITH PASSWORD '1qay2wsx' CREATEDB;
+GRANT access TO root; # at least to Postgres of the OTC requires that command
 CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
 \q
 ```
