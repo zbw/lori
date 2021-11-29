@@ -3,6 +3,7 @@ package de.zbw.persistence.access.server
 import de.zbw.api.access.server.config.AccessConfiguration
 import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.FlywayException
+import org.flywaydb.core.api.MigrationVersion
 import org.flywaydb.core.internal.jdbc.DriverDataSource
 import org.slf4j.LoggerFactory
 import javax.sql.DataSource
@@ -17,6 +18,8 @@ class FlywayMigrator(
     dataSource: DataSource,
     private val flyway: Flyway = Flyway
         .configure()
+        .baselineOnMigrate(true)
+        .baselineVersion(MigrationVersion.fromVersion("0"))
         .validateMigrationNaming(true)
         .locations("db/migration")
         .dataSource(dataSource)
