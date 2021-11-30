@@ -24,7 +24,6 @@ Then create a role, and a new database as follows with `psql`:
 ```shell
 docker exec -it postgres_access psql -U postgres
 CREATE USER access WITH PASSWORD '1qay2wsx' CREATEDB;
-GRANT access TO root; # at least to Postgres of the OTC requires that command
 CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
 \q
 ```
@@ -35,6 +34,31 @@ Finally, start the service:
 
 ```shell
 ./gradlew :app:access:server:run
+```
+
+## Setup in Cloud environment
+
+Due to OTC restrictions to configure databases via terraform (for more details see
+[here](https://github.com/opentelekomcloud/terraform-provider-opentelekomcloud/issues/1513))
+the initial commands need to be applied manually.
+There exist two possible ways to accomplish this right now:
+1. Run a postgres image in the k8s cluster (recommenend):
+    - `kubectl run -n apps -i --tty --rm debug3 --image=library/postgres --restart=Never -- sh`
+2. Remote Login via the jumphost:
+    - Login into OTC console, select **Elastic Cloud Server**
+    - Search for **jumphost** and press the **Remote Login** button
+
+Either way, from their you are able to connect to the database for the first time (password
+should be saved in vault):
+```
+psql --no-readline -U access -h 192.168.179.203 -p 5432 -d root -W
+```
+Create user with a save password and the database:
+
+```sql
+CREATE USER access WITH PASSWORD '1qay2wsx' CREATEDB;
+GRANT access TO root;
+CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
 ```
 
 ## (G)RPC
