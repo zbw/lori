@@ -5,9 +5,8 @@
 ##              that have been changed in this branch.
 set -x
 regex="app\/(\w*)\/(server|api)\/\S*"
-changedFiles=$(git diff-tree --no-commit-id --name-only -r origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME -r $CI_COMMIT_SHA)
+changedFiles=$(git diff-tree --no-commit-id --name-only -r origin/master -r $CI_COMMIT_SHA)
 changedServices=()
-echo CI_MERGE_REQUEST_TARGET_BRANCH_NAME=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
 for f in $changedFiles    # unquoted in order to allow the glob to expand
 do
     if [[ $f =~ $regex ]]
