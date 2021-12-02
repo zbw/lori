@@ -1,13 +1,15 @@
+variables:
+  VAULT_OPENJDK_IMAGE: "swr.eu-de.otc.t-systems.com/zbw-tools/vault-openjdk11:latest"
+
 default:
   image: openjdk:11.0.11-jdk
 
 stages:
   - build
   - test
+  - push
 
 before_script:
-  #  - echo `pwd` # debug
-  #  - echo "$CI_BUILD_NAME, $CI_BUILD_REF_NAME $CI_BUILD_STAGE" # debug
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
 cache:
@@ -26,12 +28,31 @@ build:
 
 test:
   stage: test
+  dependencies:
+    - build
   script:
     - ./gradlew check
   artifacts:
     when: always
     reports:
       junit: app/*/**/TEST-*.xml
+
+pushServiceImages:
+  stage: push
+  image: $VAULT_OPENJDK_IMAGE
+  variables:
+    VAULT_ROLE_ID: ci-zbw-dev
+  dependencies:
+    - test
+  only:
+    - master
+  script:
+    - export VAULT_ADDR=https://vault.zbw.eu
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - mkdir -p ~/.docker
+    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
+    - ./scripts/pushServiceImages.sh
+    - rm -rf ~/.docker/config.json
 
 after_script:
   - echo "End CI"
