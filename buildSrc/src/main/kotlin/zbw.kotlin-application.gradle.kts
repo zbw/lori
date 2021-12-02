@@ -31,6 +31,6 @@ jib {
     to {
         val imageName = project.path.substringAfter(':').replace(':', '-')
         image = "swr.eu-de.otc.t-systems.com/zbw-dev/${imageName}"
-        tags = setOf(tag) as MutableSet<String>
+        tags = setOf(tag, "latest") as MutableSet<String>
     }
 }
