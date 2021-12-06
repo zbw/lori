@@ -6,7 +6,7 @@
 set -x
 regex="app\/(\w*)\/(server|api)\/\S*"
 
-GITLAB_API_DATA=$(curl -s --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA")
+GITLAB_API_DATA=$(curl -s --header "PRIVATE-TOKEN:$GITLAB_API_ACCESS_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA")
 MR_BRANCH_LAST_COMMIT_SHA=$(echo $GITLAB_API_DATA | jq -r '.parent_ids | del(.[] | select(. == "'$CI_COMMIT_BEFORE_SHA'")) | .[-1]')
 
 echo $GITLAB_API_DATA
