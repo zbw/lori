@@ -5,10 +5,13 @@
 ##              that have been changed in this branch.
 set -x
 regex="app\/(\w*)\/(server|api)\/\S*"
-MR_BRANCH_LAST_COMMIT_SHA=$(
-      curl -s \
-                  --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA" | jq -r '.parent_ids | del(.[] | select(. == "'$CI_COMMIT_BEFORE_SHA'")) | .[-1]')
+
+GITLAB_API_DATA=$(curl -s --header "PRIVATE-TOKEN:$CI_JOB_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA")
+MR_BRANCH_LAST_COMMIT_SHA=$(echo $GITLAB_API_DATA | jq -r '.parent_ids | del(.[] | select(. == "'$CI_COMMIT_BEFORE_SHA'")) | .[-1]')
+
+echo $GITLAB_API_DATA
 echo "MR_BRANCH_LAST_COMMIT_SHA: $MR_BRANCH_LAST_COMMIT_SHA"
+
 changedFiles=$(git diff-tree --no-commit-id --name-only -r "$MR_BRANCH_LAST_COMMIT_SHA")
 changedServices=()
 for f in $changedFiles    # unquoted in order to allow the glob to expand
