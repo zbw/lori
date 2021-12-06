@@ -6,6 +6,7 @@ RUN apt update && \
     wget \
     git \
     bash \
+    jq \
     unzip
 
 FROM tools as openjdk11
