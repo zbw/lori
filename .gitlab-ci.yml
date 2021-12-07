@@ -45,7 +45,7 @@ pushServiceImages:
   dependencies:
     - test
   only:
-    - master
+    - main
   script:
     - export VAULT_ADDR=https://vault.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
