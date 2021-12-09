@@ -20,10 +20,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.0")
-    implementation("org.jlleitschuh.gradle:ktlint-gradle:10.0.0")
-    implementation("com.parmet:buf-gradle-plugin:0.1.0")
+    implementation("org.jlleitschuh.gradle:ktlint-gradle:10.2.0")
+    implementation("com.parmet:buf-gradle-plugin:0.3.1")
     implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.15")
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.4.0")
+    implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.32")
     implementation("com.github.node-gradle:gradle-node-plugin:3.0.1")
     implementation("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.1.4")
     implementation("org.openapitools:openapi-generator-gradle-plugin:5.3.0")
