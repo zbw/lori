@@ -8,7 +8,7 @@ tasks.test {
 }
 
 jacoco {
-    toolVersion = "0.8.6"
+    toolVersion = "0.8.7"
 }
 
 tasks.check {
