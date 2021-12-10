@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim AS tools
+FROM openjdk:17.0.1-slim-bullseye AS tools
 
 RUN apt update && \
     apt install -y \
@@ -9,10 +9,7 @@ RUN apt update && \
     jq \
     unzip
 
-FROM tools as openjdk11
-RUN apt update && apt install -y openjdk-17-jre
-
-FROM openjdk11 as vault
+FROM tools as vault
 ARG VAULT_VERSION=1.8.5
 
 # install vault
