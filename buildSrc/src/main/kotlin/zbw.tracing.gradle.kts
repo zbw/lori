@@ -13,6 +13,5 @@ dependencies {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     google()
 }
