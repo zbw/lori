@@ -1,4 +1,4 @@
-FROM debian:buster-slim AS tools
+FROM debian:bullseye-slim AS tools
 
 RUN apt update && \
     apt install -y \
@@ -10,7 +10,7 @@ RUN apt update && \
     unzip
 
 FROM tools as openjdk11
-RUN apt update && apt install -y openjdk-11-jre
+RUN apt update && apt install -y openjdk-17-jre
 
 FROM openjdk11 as vault
 ARG VAULT_VERSION=1.8.5
