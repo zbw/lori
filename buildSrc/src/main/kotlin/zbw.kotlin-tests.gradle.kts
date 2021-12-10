@@ -18,7 +18,6 @@ tasks.check {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     google()
 }
 
