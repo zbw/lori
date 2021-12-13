@@ -14,10 +14,6 @@ before_script:
   - ./gradlew --version
   - cat gradle/wrapper/gradle-wrapper.properties
 
-cache:
-  paths:
-    - .gradle/caches
-
 build:
   stage: build
   script:
