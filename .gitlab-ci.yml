@@ -11,8 +11,7 @@ stages:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
-  - ./gradlew --version
-  - cat gradle/wrapper/gradle-wrapper.properties
+  - rm -rf .gradle/wrapper
 
 cache:
   paths:
