@@ -12,10 +12,6 @@ stages:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
-cache:
-  paths:
-    - .gradle/caches
-
 build:
   stage: build
   script:
