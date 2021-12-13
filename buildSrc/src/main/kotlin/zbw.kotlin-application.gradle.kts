@@ -26,7 +26,7 @@ fun getCheckedOutGitCommitHash(): String {
 jib {
     val tag = getCheckedOutGitCommitHash()
     from {
-        image = "gcr.io/distroless/java:11"
+        image = "gcr.io/distroless/java17:latest"
     }
     to {
         val imageName = project.path.substringAfter(':').replace(':', '-')
