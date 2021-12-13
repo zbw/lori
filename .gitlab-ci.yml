@@ -1,8 +1,8 @@
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-de.otc.t-systems.com/zbw-tools/vault-openjdk11:latest"
+  VAULT_OPENJDK_IMAGE: "swr.eu-de.otc.t-systems.com/zbw-tools/vault-openjdk17:latest"
 
 default:
-  image: openjdk:11.0.11-jdk
+  image: openjdk:17.0.1-slim
 
 stages:
   - build
@@ -11,11 +11,6 @@ stages:
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
-
-cache:
-  paths:
-    - gradle/wrapper
-    - .gradle/caches
 
 build:
   stage: build
