@@ -15,7 +15,7 @@ before_script:
 build:
   stage: build
   script:
-    - ./gradlew assemble
+    - ./gradlew assemble --parallel
   artifacts:
     paths:
       - build/libs/*.jar
@@ -26,7 +26,7 @@ test:
   dependencies:
     - build
   script:
-    - ./gradlew check
+    - ./gradlew check --parallel
   artifacts:
     when: always
     reports:
