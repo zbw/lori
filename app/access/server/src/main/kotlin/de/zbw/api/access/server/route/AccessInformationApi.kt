@@ -1,6 +1,6 @@
 package de.zbw.api.access.server.route
 
-import de.zbw.access.model.AccessInformation
+import de.zbw.access.model.ItemRest
 import de.zbw.api.access.server.type.toBusiness
 import de.zbw.api.access.server.type.toRest
 import de.zbw.business.access.server.AccessServerBackend
@@ -28,8 +28,8 @@ fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
             try {
                 // receive() may return an object where non-null fields are null.
                 @Suppress("SENSELESS_COMPARISON")
-                val accessInformation: AccessInformation =
-                    call.receive(AccessInformation::class).takeIf { it.id != null }
+                val accessInformation: ItemRest =
+                    call.receive(ItemRest::class).takeIf { it.id != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                 if (backend.containsAccessRightId(accessInformation.id)) {
                     call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")

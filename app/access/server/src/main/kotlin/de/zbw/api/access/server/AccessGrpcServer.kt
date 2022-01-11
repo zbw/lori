@@ -1,13 +1,13 @@
 package de.zbw.api.access.server
 
-import de.zbw.access.api.AccessRightProto
-import de.zbw.access.api.AccessServiceGrpcKt
 import de.zbw.access.api.ActionProto
-import de.zbw.access.api.AddAccessInformationRequest
-import de.zbw.access.api.AddAccessInformationResponse
+import de.zbw.access.api.AddItemRequest
+import de.zbw.access.api.AddItemResponse
 import de.zbw.access.api.AttributeProto
-import de.zbw.access.api.GetAccessInformationRequest
-import de.zbw.access.api.GetAccessInformationResponse
+import de.zbw.access.api.GetItemRequest
+import de.zbw.access.api.GetItemResponse
+import de.zbw.access.api.ItemProto
+import de.zbw.access.api.LoriServiceGrpcKt
 import de.zbw.access.api.RestrictionProto
 import de.zbw.api.access.server.config.AccessConfiguration
 import de.zbw.api.access.server.type.toBusiness
@@ -26,9 +26,9 @@ import java.sql.SQLException
 class AccessGrpcServer(
     config: AccessConfiguration,
     private val backend: AccessServerBackend = AccessServerBackend(config),
-) : AccessServiceGrpcKt.AccessServiceCoroutineImplBase() {
+) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
 
-    override suspend fun addAccessInformation(request: AddAccessInformationRequest): AddAccessInformationResponse {
+    override suspend fun addItem(request: AddItemRequest): AddItemResponse {
         try {
             request.itemsList.map { it.toBusiness() }.map { backend.insertAccessRightEntry(it) }
         } catch (e: Exception) {
@@ -38,27 +38,37 @@ class AccessGrpcServer(
             )
         }
 
-        return AddAccessInformationResponse
+        return AddItemResponse
             .newBuilder()
             .build()
     }
 
-    override suspend fun getAccessInformation(request: GetAccessInformationRequest): GetAccessInformationResponse {
+    override suspend fun getItem(request: GetItemRequest): GetItemResponse {
         try {
             val accessRights = backend.getAccessRightEntries(request.idsList)
 
-            return GetAccessInformationResponse.newBuilder()
+            return GetItemResponse.newBuilder()
                 .addAllAccessRights(
                     accessRights.map {
-                        AccessRightProto.newBuilder()
-                            .setIfNotNull(it.header.id) { b, value -> b.setId(value) }
-                            .setIfNotNull(it.header.tenant) { b, value -> b.setTenant(value) }
-                            .setIfNotNull(it.header.usageGuide) { b, value -> b.setUsageGuide(value) }
-                            .setIfNotNull(it.header.template) { b, value -> b.setTemplate(value) }
-                            .setIfNotNull(it.header.mention) { b, value -> b.setMention(value) }
-                            .setIfNotNull(it.header.shareAlike) { b, value -> b.setSharealike(value) }
-                            .setIfNotNull(it.header.commercialUse) { b, value -> b.setCommercialuse(value) }
-                            .setIfNotNull(it.header.copyright) { b, value -> b.setCopyright(value) }
+                        ItemProto.newBuilder()
+                            .setIfNotNull(it.metadata.id) { b, value -> b.setId(value) }
+                            .setIfNotNull(it.metadata.access_state) { b, value -> b.setAccessState(value) }
+                            .setIfNotNull(it.metadata.band) { b, value -> b.setBand(value) }
+                            .setIfNotNull(it.metadata.doi) { b, value -> b.setDoi(value) }
+                            .setIfNotNull(it.metadata.handle) { b, value -> b.setHandle(value) }
+                            .setIfNotNull(it.metadata.isbn) { b, value -> b.setIsbn(value) }
+                            .setIfNotNull(it.metadata.issn) { b, value -> b.setIssn(value) }
+                            .setIfNotNull(it.metadata.paket_sigel) { b, value -> b.setPaketSigel(value) }
+                            .setIfNotNull(it.metadata.ppn) { b, value -> b.setPpn(value) }
+                            .setIfNotNull(it.metadata.ppn_ebook) { b, value -> b.setPpnEbook(value) }
+                            .setIfNotNull(it.metadata.publicationType) { b, value -> b.setPublicationType(value) }
+                            .setIfNotNull(it.metadata.publicationYear) { b, value -> b.setPublicationYear(value) }
+                            .setIfNotNull(it.metadata.rights_k10plus) { b, value -> b.setRightsK10Plus(value) }
+                            .setIfNotNull(it.metadata.serialNumber) { b, value -> b.setSerialNumber(value) }
+                            .setIfNotNull(it.metadata.title) { b, value -> b.setTitle(value) }
+                            .setIfNotNull(it.metadata.title_journal) { b, value -> b.setTitleJournal(value) }
+                            .setIfNotNull(it.metadata.title_series) { b, value -> b.setTitleSeries(value) }
+                            .setIfNotNull(it.metadata.zbd_id) { b, value -> b.setZbdId(value) }
                             .addAllActions(
                                 it.actions.map { action ->
                                     ActionProto
@@ -95,10 +105,10 @@ class AccessGrpcServer(
     }
 }
 
-private fun <T> AccessRightProto.Builder.setIfNotNull(
+private fun <T> ItemProto.Builder.setIfNotNull(
     value: T?,
-    setter: (AccessRightProto.Builder, T) -> AccessRightProto.Builder,
-): AccessRightProto.Builder {
+    setter: (ItemProto.Builder, T) -> ItemProto.Builder,
+): ItemProto.Builder {
     return if (value != null) {
         setter(this, value)
     } else this

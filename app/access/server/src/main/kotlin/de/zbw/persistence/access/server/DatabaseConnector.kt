@@ -5,7 +5,7 @@ import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Metadata
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import java.sql.Connection
@@ -29,27 +29,69 @@ class DatabaseConnector(
         config: AccessConfiguration,
     ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
 
-    fun insertHeader(header: Header): String {
+    fun insertMetadata(metadata: Metadata): String {
         val stmntAccIns =
             "INSERT INTO $TABLE_NAME_HEADER" +
-                "(header_id,tenant,usage_guide,template,mention,sharealike,commercial_use,copyright) " +
-                "VALUES(?,?,?,?,?,?,?,?)"
+                "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+                "title_series,access_state,publishedYear,band,publicationtype,doi," +
+                "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+                "VALUES(?,?,?,?,?,?," +
+                "?,?,?,?,?,?," +
+                "?,?,?,?,?,?)"
 
         val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
-            this.setString(1, header.id)
-            this.setIfNotNull(2, header.tenant) { value, idx, prepStmt ->
+            this.setString(1, metadata.id)
+            this.setIfNotNull(2, metadata.handle) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(3, header.usageGuide) { value, idx, prepStmt ->
+            this.setIfNotNull(3, metadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(4, header.template) { value, idx, prepStmt ->
+            this.setIfNotNull(4, metadata.ppn_ebook) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(5, header.mention)
-            this.setBoolean(6, header.shareAlike)
-            this.setBoolean(7, header.commercialUse)
-            this.setBoolean(8, header.copyright)
+            this.setIfNotNull(5, metadata.title) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(6, metadata.title_journal) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(7, metadata.title_series) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(8, metadata.access_state) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(9, metadata.publicationYear) { value, idx, prepStmt ->
+                prepStmt.setInt(idx, value)
+            }
+            this.setIfNotNull(10, metadata.band) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(11, metadata.publicationType) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(12, metadata.doi) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(13, metadata.serialNumber) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(14, metadata.isbn) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(15, metadata.rights_k10plus) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(16, metadata.paket_sigel) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(17, metadata.zbd_id) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(18, metadata.issn) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
         val affectedRows = prepStmt.run { this.executeUpdate() }
 
@@ -95,7 +137,7 @@ class DatabaseConnector(
         } else throw IllegalStateException("No row has been inserted.")
     }
 
-    fun getHeaders(headerIds: List<String>): List<Header> {
+    fun getHeaders(headerIds: List<String>): List<Metadata> {
         val stmt =
             "SELECT header_id, tenant, usage_guide, template, mention, sharealike, commercial_use, copyright " +
                 "FROM $TABLE_NAME_HEADER " +
@@ -107,15 +149,25 @@ class DatabaseConnector(
         val rs = prepStmt.executeQuery()
         return generateSequence {
             if (rs.next()) {
-                Header(
-                    rs.getString(1),
-                    rs.getString(2),
-                    rs.getString(3),
-                    rs.getString(4),
-                    rs.getBoolean(5),
-                    rs.getBoolean(6),
-                    rs.getBoolean(7),
-                    rs.getBoolean(8),
+                Metadata(
+                    id = rs.getString(1),
+                    handle = rs.getString(2),
+                    ppn = rs.getString(3),
+                    ppn_ebook = rs.getString(4),
+                    title = rs.getString(5),
+                    title_journal = rs.getString(6),
+                    title_series = rs.getString(7),
+                    access_state = rs.getString(8),
+                    publicationYear = rs.getInt(9),
+                    band = rs.getString(10),
+                    publicationType = rs.getString(11),
+                    doi = rs.getString(12),
+                    serialNumber = rs.getString(13),
+                    isbn = rs.getString(14),
+                    rights_k10plus = rs.getString(15),
+                    paket_sigel = rs.getString(16),
+                    zbd_id = rs.getString(17),
+                    issn = rs.getString(18),
                 )
             } else null
         }.takeWhile { true }.toList()

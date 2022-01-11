@@ -4,7 +4,7 @@ import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Metadata
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.mockk.every
@@ -35,13 +35,13 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val testHeaderId = "double_entry"
-        val testHeader = TEST_HEADER.copy(id = testHeaderId)
+        val testHeader = TEST_Metadata.copy(id = testHeaderId)
 
         // when
-        dbConnector.insertHeader(testHeader)
+        dbConnector.insertMetadata(testHeader)
 
         // exception
-        dbConnector.insertHeader(testHeader)
+        dbConnector.insertMetadata(testHeader)
     }
 
     @Test(expectedExceptions = [IllegalStateException::class])
@@ -60,7 +60,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             }
         )
         // when
-        dbConnectorMockked.insertHeader(TEST_HEADER)
+        dbConnectorMockked.insertMetadata(TEST_Metadata)
         // then exception
     }
 
@@ -69,16 +69,16 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val testHeaderId = "header_test"
-        val testHeader = TEST_HEADER.copy(id = testHeaderId, template = "foo")
+        val testHeader = TEST_Metadata.copy(id = testHeaderId, template = "foo")
 
         // when
-        val headerResponse = dbConnector.insertHeader(testHeader)
+        val headerResponse = dbConnector.insertMetadata(testHeader)
 
         // then
         assertThat(headerResponse, `is`(testHeaderId))
 
         // when
-        val receivedHeader: List<Header> = dbConnector.getHeaders(listOf(testHeaderId))
+        val receivedHeader: List<Metadata> = dbConnector.getHeaders(listOf(testHeaderId))
 
         // then
         assertThat(
@@ -122,7 +122,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testInsertActionWithoutRestriction() {
         // given
         val givenHeaderId = "action_test"
-        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
         val givenAction = Action(
             type = ActionType.READ,
             permission = true,
@@ -130,7 +130,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
         // when
-        dbConnector.insertHeader(givenHeader)
+        dbConnector.insertMetadata(givenHeader)
         val actionResponse = dbConnector.insertAction(givenAction, givenHeaderId)
         // then
         assertTrue(actionResponse > 0, "Inserting an action with a header was not successful")
@@ -146,11 +146,11 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testInsertWithRestriction() {
         // given
         val givenHeaderId = "action_test_with_restriction"
-        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
         val givenAction = TEST_ACTION
 
         // when
-        dbConnector.insertHeader(givenHeader)
+        dbConnector.insertMetadata(givenHeader)
         val actionResponse = dbConnector.insertAction(givenAction, givenHeaderId)
 
         // then
@@ -222,14 +222,14 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val testHeaderId = "headerIdContainCheck"
-        val testHeader = TEST_HEADER.copy(id = testHeaderId)
+        val testHeader = TEST_Metadata.copy(id = testHeaderId)
 
         // when
         val containedBefore = dbConnector.containsHeader(testHeaderId)
         assertFalse(containedBefore, "Header should not exist yet")
 
         // when
-        dbConnector.insertHeader(testHeader)
+        dbConnector.insertMetadata(testHeader)
         val containedAfter = dbConnector.containsHeader(testHeaderId)
         assertTrue(containedAfter, "Header should exist now")
     }
@@ -238,9 +238,9 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testAccessRightIds() {
 
         // when
-        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaa"))
-        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaab"))
-        dbConnector.insertHeader(TEST_HEADER.copy(id = "aaaac"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaa"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaab"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaac"))
 
         // then
         assertThat(
@@ -257,11 +257,11 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testGetPrimaryKeys() {
         // given
         val givenHeaderId = "test_primkey"
-        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
         val givenAction = TEST_ACTION
 
         // when
-        dbConnector.insertHeader(givenHeader)
+        dbConnector.insertMetadata(givenHeader)
         val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
         val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
         val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
@@ -284,11 +284,11 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testDeleteAccessRight() {
         // given
         val givenHeaderId = "test_primkey_to_be_deleted"
-        val givenHeader = TEST_HEADER.copy(id = givenHeaderId)
+        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
         val givenAction = TEST_ACTION
 
         // when
-        dbConnector.insertHeader(givenHeader)
+        dbConnector.insertMetadata(givenHeader)
         val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
         val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
         val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
@@ -335,7 +335,7 @@ class DatabaseConnectorTest : DatabaseTest() {
 
     companion object {
 
-        val TEST_HEADER = Header(
+        val TEST_Metadata = de.zbw.business.access.server.Metadata(
             id = "that-test",
             tenant = "www.zbw.eu",
             usageGuide = "www.zbw.eu/license",

@@ -7,12 +7,11 @@ import de.zbw.access.api.AttributeProto
 import de.zbw.access.api.AttributeTypeProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
-import de.zbw.business.access.server.AccessRight
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -32,8 +31,8 @@ class ProtoConverterTest {
     @Test
     fun testAccessRightConversion() {
         // given
-        val expected = AccessRight(
-            header = Header(
+        val expected = Item(
+            metadata = de.zbw.business.access.server.Metadata(
                 id = "foo",
                 tenant = "bla",
                 usageGuide = "guide",
@@ -61,9 +60,9 @@ class ProtoConverterTest {
         )
 
         val protoObject = AccessRightProto.newBuilder()
-            .setId(expected.header.id)
-            .setTenant(expected.header.tenant)
-            .setUsageGuide(expected.header.usageGuide)
+            .setId(expected.metadata.id)
+            .setTenant(expected.metadata.tenant)
+            .setUsageGuide(expected.metadata.usageGuide)
             .setMention(true)
             .setSharealike(false)
             .setCommercialuse(true)

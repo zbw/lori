@@ -1,31 +1,53 @@
-AccessInformation:
+ItemRest:
   required:
     - id
+    - title
+    - accessState
     - actions
   type: object
   properties:
     id:
       type: string
-    tenant:
+    accessState:
       type: string
-    usageGuide:
+    band:
       type: string
-    template:
+    doi:
       type: string
-    mention:
-      type: boolean
-    sharealike:
-      type: boolean
-    commercialuse:
-      type: boolean
-    copyright:
-      type: boolean
+    handle:
+      type: string
+    isbn:
+      type: string
+    issn:
+      type: string
+    paketSigel:
+      type: string
+    ppn:
+      type: string
+    ppnEbook:
+      type: string
+    publicationType:
+      type: string
+    publicationYear:
+      type: integer
+    rightsK10plus:
+      type: string
+    serialNumber:
+      type: string
+    title:
+      type: string
+    titleJournal:
+      type: string
+    titleSeries:
+      type: string
+    zbdId:
+      type: string
     actions:
       type: array
       items:
-        $ref: '#/Action'
+        $ref: '#/ActionRest'
 
-Action:
+ActionRest:
   required:
     - permission
     - actiontype
@@ -53,9 +75,9 @@ Action:
     restrictions:
       type: array
       items:
-        $ref: '#/Restriction'
+        $ref: '#/RestrictionRest'
 
-Restriction:
+RestrictionRest:
   required:
     - restrictiontype
     - attributetype

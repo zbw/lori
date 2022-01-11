@@ -11,13 +11,12 @@ import de.zbw.access.api.GetAccessInformationRequest
 import de.zbw.access.api.GetAccessInformationResponse
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
-import de.zbw.business.access.server.AccessRight
 import de.zbw.business.access.server.AccessServerBackend
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -86,8 +85,8 @@ class AccessGrpcServerTest {
 
             val backendMockk = mockk<AccessServerBackend> {
                 every { getAccessRightEntries(any()) } returns listOf(
-                    AccessRight(
-                        header = Header(
+                    Item(
+                        metadata = de.zbw.business.access.server.Metadata(
                             id = "foo",
                             tenant = "www.zbw.eu",
                             usageGuide = "usageGuide",

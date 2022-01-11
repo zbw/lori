@@ -5,32 +5,34 @@
     </v-toolbar>
     <v-main>
       <v-data-table
-        v-model="selected"
-        :headers="headers"
-        :items="items"
-        class="elevation-1"
-        item-key="id"
-        show-select
+          v-model="selected"
+          :headers="headers"
+          :items="items"
+          class="elevation-1"
+          item-key="id"
+          show-select
       >
         <template v-slot:top>
           <v-toolbar flat>
             <v-dialog v-model="dialogDelete" max-width="500px">
               <v-card>
                 <v-card-title class="text-h5">
-                  Are you sure you want to delete this item?</v-card-title
+                  Are you sure you want to delete this item?
+                </v-card-title
                 >
                 <v-card-actions>
                   <v-spacer></v-spacer>
                   <v-btn
-                    :disabled="deleteLoading"
-                    color="blue darken-1"
-                    @click="cancelDeleteDialog"
-                    >Cancel</v-btn
+                      :disabled="deleteLoading"
+                      color="blue darken-1"
+                      @click="cancelDeleteDialog"
+                  >Cancel
+                  </v-btn
                   >
                   <v-btn
-                    :loading="deleteLoading"
-                    color="error"
-                    @click="approveDeleteDialog"
+                      :loading="deleteLoading"
+                      color="error"
+                      @click="approveDeleteDialog"
                   >
                     Delete
                   </v-btn>
@@ -39,10 +41,10 @@
               </v-card>
             </v-dialog>
             <v-alert
-              v-model="deleteAlertSuccessful"
-              dismissible
-              text
-              type="success"
+                v-model="deleteAlertSuccessful"
+                dismissible
+                text
+                type="success"
             >
               Delete operation was successful.
             </v-alert>
@@ -64,9 +66,9 @@
 <script lang="ts">
 import Vue from "vue";
 import Component from "../../node_modules/vue-class-component/lib";
-import { AccessInformation } from "@/generated-sources/openapi";
 import api from "@/api/api";
-import { Result } from "neverthrow";
+import {Result} from "neverthrow";
+import {ItemRest} from "@/generated-sources/openapi";
 
 @Component
 export default class AccessUi extends Vue {
@@ -77,33 +79,35 @@ export default class AccessUi extends Vue {
       align: "start",
       value: "id",
     },
-    { text: "Tenant", value: "tenant" },
-    { text: "Usage guide", value: "usageGuide" },
-    { text: "Template", value: "template" },
-    { text: "Mention", value: "mention" },
-    { text: "Sharealike", value: "sharealike" },
-    { text: "Commercial Use", value: "commercial" },
-    { text: "Copyright", value: "copyright" },
-    { text: "Actions", value: "actions" },
-    { text: "Aktion", value: "action", sortable: false },
+    {text: "Tenant", value: "tenant"},
+    {text: "Usage guide", value: "usageGuide"},
+    {text: "Template", value: "template"},
+    {text: "Mention", value: "mention"},
+    {text: "Sharealike", value: "sharealike"},
+    {text: "Commercial Use", value: "commercial"},
+    {text: "Copyright", value: "copyright"},
+    {text: "Actions", value: "actions"},
+    {text: "Aktion", value: "action", sortable: false},
   ];
   private indexToDelete = -1;
-  private items: Array<AccessInformation> = [];
-  private defaultItem: AccessInformation = {
+  private items: Array<ItemRest> = [];
+  private defaultItem: ItemRest = {
     id: "",
+    title: "",
+    accessState: "",
     actions: [],
   };
   private deleteLoading = false;
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
-  private itemToDelete: AccessInformation = this.defaultItem;
+  private itemToDelete: ItemRest = this.defaultItem;
 
   public fetchListPart(offset: number, limit: number): void {
     api.getList(offset, limit).then((response) => (this.items = response));
   }
 
-  public openDeleteItemDialog(item: AccessInformation): void {
+  public openDeleteItemDialog(item: ItemRest): void {
     this.dialogDelete = true;
     this.itemToDelete = item;
     this.indexToDelete = this.items.indexOf(item);
@@ -112,16 +116,16 @@ export default class AccessUi extends Vue {
   public approveDeleteDialog(): void {
     this.deleteLoading = true;
     api
-      .deleteAccessInformation(this.itemToDelete.id)
-      .then((response: Result<void, Error>) => {
-        if (response.isOk()) {
-          this.deleteAlertSuccessful = true;
-          this.items.splice(this.indexToDelete, 1);
-        } else {
-          this.deleteAlertError = true;
-          this.deleteErrorMessage = response.error.message;
-        }
-      });
+        .deleteAccessInformation(this.itemToDelete.id)
+        .then((response: Result<void, Error>) => {
+          if (response.isOk()) {
+            this.deleteAlertSuccessful = true;
+            this.items.splice(this.indexToDelete, 1);
+          } else {
+            this.deleteAlertError = true;
+            this.deleteErrorMessage = response.error.message;
+          }
+        });
     this.dialogDelete = false;
     this.deleteLoading = false;
   }

@@ -1,12 +1,11 @@
 package de.zbw.api.access.server.type
 
 import de.zbw.access.model.AccessInformation
-import de.zbw.business.access.server.AccessRight
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import org.hamcrest.CoreMatchers.`is`
@@ -18,8 +17,8 @@ class RestConverterTest {
     @Test
     fun testAccessRightConversion() {
         // given
-        val expected = AccessRight(
-            header = Header(
+        val expected = Item(
+            metadata = de.zbw.business.access.server.Metadata(
                 id = "foo",
                 tenant = "bla",
                 usageGuide = "guide",

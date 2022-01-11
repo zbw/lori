@@ -1,12 +1,13 @@
 package de.zbw.api.access.server.type
 
-import de.zbw.access.model.AccessInformation
-import de.zbw.business.access.server.AccessRight
+import de.zbw.access.model.ActionRest
+import de.zbw.access.model.ItemRest
+import de.zbw.access.model.RestrictionRest
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 
@@ -16,17 +17,27 @@ import de.zbw.business.access.server.RestrictionType
  * Created on 07-28-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-fun AccessInformation.toBusiness() =
-    AccessRight(
-        header = Header(
-            id = this.id,
-            tenant = this.tenant,
-            usageGuide = this.usageGuide,
-            template = this.template,
-            mention = this.mention ?: false,
-            shareAlike = this.sharealike ?: false,
-            commercialUse = this.commercialuse ?: false,
-            copyright = this.copyright ?: false,
+fun ItemRest.toBusiness() =
+    Item(
+        metadata = de.zbw.business.access.server.Metadata(
+            id = id,
+            handle = handle,
+            ppn = ppn,
+            ppn_ebook = ppnEbook,
+            title = title,
+            title_journal = titleJournal,
+            title_series = titleSeries,
+            access_state = accessState,
+            publicationYear = publicationYear,
+            band = band,
+            publicationType = publicationType,
+            doi = doi,
+            serialNumber = serialNumber,
+            isbn = isbn,
+            rights_k10plus = rightsK10plus,
+            paket_sigel = paketSigel,
+            zbd_id = zbdId,
+            issn = issn,
         ),
         actions = this.actions.map { action ->
             Action(
@@ -37,7 +48,7 @@ fun AccessInformation.toBusiness() =
         }
     )
 
-internal fun de.zbw.access.model.Restriction.toBusiness(): Restriction =
+internal fun RestrictionRest.toBusiness(): Restriction =
     Restriction(
         type = this.restrictiontype.toBusiness(),
         attribute = Attribute(
@@ -47,75 +58,85 @@ internal fun de.zbw.access.model.Restriction.toBusiness(): Restriction =
 
     )
 
-internal fun de.zbw.access.model.Restriction.Attributetype.toBusiness(): AttributeType =
+internal fun RestrictionRest.Attributetype.toBusiness(): AttributeType =
     when (this) {
-        de.zbw.access.model.Restriction.Attributetype.fromdate -> AttributeType.FROM_DATE
-        de.zbw.access.model.Restriction.Attributetype.todate -> AttributeType.TO_DATE
-        de.zbw.access.model.Restriction.Attributetype.maxresolution -> AttributeType.MAX_RESOLUTION
-        de.zbw.access.model.Restriction.Attributetype.maxbitrate -> AttributeType.MAX_BITRATE
-        de.zbw.access.model.Restriction.Attributetype.count -> AttributeType.COUNT
-        de.zbw.access.model.Restriction.Attributetype.inside -> AttributeType.INSIDE
-        de.zbw.access.model.Restriction.Attributetype.subnet -> AttributeType.SUBNET
-        de.zbw.access.model.Restriction.Attributetype.outside -> AttributeType.OUTSIDE
-        de.zbw.access.model.Restriction.Attributetype.watermark -> AttributeType.WATERMARK
-        de.zbw.access.model.Restriction.Attributetype.duration -> AttributeType.DURATION
-        de.zbw.access.model.Restriction.Attributetype.minage -> AttributeType.MIN_AGE
-        de.zbw.access.model.Restriction.Attributetype.maxage -> AttributeType.MAX_AGE
-        de.zbw.access.model.Restriction.Attributetype.required -> AttributeType.REQUIRED
-        de.zbw.access.model.Restriction.Attributetype.groups -> AttributeType.GROUPS
-        de.zbw.access.model.Restriction.Attributetype.parts -> AttributeType.PARTS
-        de.zbw.access.model.Restriction.Attributetype.sessions -> AttributeType.SESSIONS
+        RestrictionRest.Attributetype.fromdate -> AttributeType.FROM_DATE
+        RestrictionRest.Attributetype.todate -> AttributeType.TO_DATE
+        RestrictionRest.Attributetype.maxresolution -> AttributeType.MAX_RESOLUTION
+        RestrictionRest.Attributetype.maxbitrate -> AttributeType.MAX_BITRATE
+        RestrictionRest.Attributetype.count -> AttributeType.COUNT
+        RestrictionRest.Attributetype.inside -> AttributeType.INSIDE
+        RestrictionRest.Attributetype.subnet -> AttributeType.SUBNET
+        RestrictionRest.Attributetype.outside -> AttributeType.OUTSIDE
+        RestrictionRest.Attributetype.watermark -> AttributeType.WATERMARK
+        RestrictionRest.Attributetype.duration -> AttributeType.DURATION
+        RestrictionRest.Attributetype.minage -> AttributeType.MIN_AGE
+        RestrictionRest.Attributetype.maxage -> AttributeType.MAX_AGE
+        RestrictionRest.Attributetype.required -> AttributeType.REQUIRED
+        RestrictionRest.Attributetype.groups -> AttributeType.GROUPS
+        RestrictionRest.Attributetype.parts -> AttributeType.PARTS
+        RestrictionRest.Attributetype.sessions -> AttributeType.SESSIONS
     }
 
-internal fun de.zbw.access.model.Restriction.Restrictiontype.toBusiness(): RestrictionType =
+internal fun RestrictionRest.Restrictiontype.toBusiness(): RestrictionType =
     when (this) {
-        de.zbw.access.model.Restriction.Restrictiontype.group -> RestrictionType.GROUP
-        de.zbw.access.model.Restriction.Restrictiontype.age -> RestrictionType.AGE
-        de.zbw.access.model.Restriction.Restrictiontype.location -> RestrictionType.LOCATION
-        de.zbw.access.model.Restriction.Restrictiontype.date -> RestrictionType.DATE
-        de.zbw.access.model.Restriction.Restrictiontype.duration -> RestrictionType.DURATION
-        de.zbw.access.model.Restriction.Restrictiontype.count -> RestrictionType.COUNT
-        de.zbw.access.model.Restriction.Restrictiontype.concurrent -> RestrictionType.CONCURRENT
-        de.zbw.access.model.Restriction.Restrictiontype.watermark -> RestrictionType.WATERMARK
-        de.zbw.access.model.Restriction.Restrictiontype.quality -> RestrictionType.QUALITY
-        de.zbw.access.model.Restriction.Restrictiontype.agreement -> RestrictionType.AGREEMENT
-        de.zbw.access.model.Restriction.Restrictiontype.parts -> RestrictionType.PARTS
+        RestrictionRest.Restrictiontype.group -> RestrictionType.GROUP
+        RestrictionRest.Restrictiontype.age -> RestrictionType.AGE
+        RestrictionRest.Restrictiontype.location -> RestrictionType.LOCATION
+        RestrictionRest.Restrictiontype.date -> RestrictionType.DATE
+        RestrictionRest.Restrictiontype.duration -> RestrictionType.DURATION
+        RestrictionRest.Restrictiontype.count -> RestrictionType.COUNT
+        RestrictionRest.Restrictiontype.concurrent -> RestrictionType.CONCURRENT
+        RestrictionRest.Restrictiontype.watermark -> RestrictionType.WATERMARK
+        RestrictionRest.Restrictiontype.quality -> RestrictionType.QUALITY
+        RestrictionRest.Restrictiontype.agreement -> RestrictionType.AGREEMENT
+        RestrictionRest.Restrictiontype.parts -> RestrictionType.PARTS
     }
 
-internal fun de.zbw.access.model.Action.Actiontype.toBusiness(): ActionType =
+internal fun ActionRest.Actiontype.toBusiness(): ActionType =
     when (this) {
-        de.zbw.access.model.Action.Actiontype.read -> ActionType.READ
-        de.zbw.access.model.Action.Actiontype.run -> ActionType.RUN
-        de.zbw.access.model.Action.Actiontype.lend -> ActionType.LEND
-        de.zbw.access.model.Action.Actiontype.download -> ActionType.DOWNLOAD
-        de.zbw.access.model.Action.Actiontype.print -> ActionType.PRINT
-        de.zbw.access.model.Action.Actiontype.reproduce -> ActionType.REPRODUCE
-        de.zbw.access.model.Action.Actiontype.modify -> ActionType.MODIFY
-        de.zbw.access.model.Action.Actiontype.reuse -> ActionType.REUSE
-        de.zbw.access.model.Action.Actiontype.distribute -> ActionType.DISTRIBUTE
-        de.zbw.access.model.Action.Actiontype.publish -> ActionType.PUBLISH
-        de.zbw.access.model.Action.Actiontype.archive -> ActionType.ARCHIVE
-        de.zbw.access.model.Action.Actiontype.index -> ActionType.INDEX
-        de.zbw.access.model.Action.Actiontype.move -> ActionType.MOVE
-        de.zbw.access.model.Action.Actiontype.displaymetadata -> ActionType.DISPLAY_METADATA
+        ActionRest.Actiontype.read -> ActionType.READ
+        ActionRest.Actiontype.run -> ActionType.RUN
+        ActionRest.Actiontype.lend -> ActionType.LEND
+        ActionRest.Actiontype.download -> ActionType.DOWNLOAD
+        ActionRest.Actiontype.print -> ActionType.PRINT
+        ActionRest.Actiontype.reproduce -> ActionType.REPRODUCE
+        ActionRest.Actiontype.modify -> ActionType.MODIFY
+        ActionRest.Actiontype.reuse -> ActionType.REUSE
+        ActionRest.Actiontype.distribute -> ActionType.DISTRIBUTE
+        ActionRest.Actiontype.publish -> ActionType.PUBLISH
+        ActionRest.Actiontype.archive -> ActionType.ARCHIVE
+        ActionRest.Actiontype.index -> ActionType.INDEX
+        ActionRest.Actiontype.move -> ActionType.MOVE
+        ActionRest.Actiontype.displaymetadata -> ActionType.DISPLAY_METADATA
     }
 
-fun AccessRight.toRest(): AccessInformation =
-    AccessInformation(
-        id = this.header.id,
-        tenant = this.header.tenant,
-        usageGuide = this.header.usageGuide,
-        template = this.header.template,
-        mention = this.header.mention,
-        sharealike = this.header.shareAlike,
-        commercialuse = this.header.commercialUse,
-        copyright = this.header.copyright,
+fun Item.toRest(): ItemRest =
+    ItemRest(
+        id = this.metadata.id,
+        accessState = this.metadata.access_state,
+        band = this.metadata.band,
+        doi = this.metadata.doi,
+        handle = this.metadata.handle,
+        isbn = this.metadata.isbn,
+        issn = this.metadata.issn,
+        paketSigel = this.metadata.paket_sigel,
+        ppn = this.metadata.ppn,
+        ppnEbook = this.metadata.ppn_ebook,
+        publicationType = this.metadata.publicationType,
+        publicationYear = this.metadata.publicationYear,
+        rightsK10plus = this.metadata.rights_k10plus,
+        serialNumber = this.metadata.serialNumber,
+        title = this.metadata.title,
+        titleJournal = this.metadata.title_journal,
+        titleSeries = this.metadata.title_series,
+        zbdId = this.metadata.zbd_id,
         actions = this.actions.map { a ->
-            de.zbw.access.model.Action(
+            ActionRest(
                 actiontype = a.type.toRest(),
                 permission = a.permission,
                 restrictions = a.restrictions.map { r ->
-                    de.zbw.access.model.Restriction(
+                    RestrictionRest(
                         restrictiontype = r.type.toRest(),
                         attributetype = r.attribute.type.toRest(),
                         attributevalues = r.attribute.values,
@@ -125,55 +146,55 @@ fun AccessRight.toRest(): AccessInformation =
         }
     )
 
-internal fun AttributeType.toRest(): de.zbw.access.model.Restriction.Attributetype =
+internal fun AttributeType.toRest(): RestrictionRest.Attributetype =
     when (this) {
-        AttributeType.FROM_DATE -> de.zbw.access.model.Restriction.Attributetype.fromdate
-        AttributeType.TO_DATE -> de.zbw.access.model.Restriction.Attributetype.todate
-        AttributeType.MAX_RESOLUTION -> de.zbw.access.model.Restriction.Attributetype.maxresolution
-        AttributeType.MAX_BITRATE -> de.zbw.access.model.Restriction.Attributetype.maxbitrate
-        AttributeType.COUNT -> de.zbw.access.model.Restriction.Attributetype.count
-        AttributeType.INSIDE -> de.zbw.access.model.Restriction.Attributetype.inside
-        AttributeType.SUBNET -> de.zbw.access.model.Restriction.Attributetype.subnet
-        AttributeType.OUTSIDE -> de.zbw.access.model.Restriction.Attributetype.outside
-        AttributeType.WATERMARK -> de.zbw.access.model.Restriction.Attributetype.watermark
-        AttributeType.DURATION -> de.zbw.access.model.Restriction.Attributetype.duration
-        AttributeType.MIN_AGE -> de.zbw.access.model.Restriction.Attributetype.minage
-        AttributeType.MAX_AGE -> de.zbw.access.model.Restriction.Attributetype.maxage
-        AttributeType.REQUIRED -> de.zbw.access.model.Restriction.Attributetype.required
-        AttributeType.GROUPS -> de.zbw.access.model.Restriction.Attributetype.groups
-        AttributeType.PARTS -> de.zbw.access.model.Restriction.Attributetype.parts
-        AttributeType.SESSIONS -> de.zbw.access.model.Restriction.Attributetype.sessions
+        AttributeType.FROM_DATE -> RestrictionRest.Attributetype.fromdate
+        AttributeType.TO_DATE -> RestrictionRest.Attributetype.todate
+        AttributeType.MAX_RESOLUTION -> RestrictionRest.Attributetype.maxresolution
+        AttributeType.MAX_BITRATE -> RestrictionRest.Attributetype.maxbitrate
+        AttributeType.COUNT -> RestrictionRest.Attributetype.count
+        AttributeType.INSIDE -> RestrictionRest.Attributetype.inside
+        AttributeType.SUBNET -> RestrictionRest.Attributetype.subnet
+        AttributeType.OUTSIDE -> RestrictionRest.Attributetype.outside
+        AttributeType.WATERMARK -> RestrictionRest.Attributetype.watermark
+        AttributeType.DURATION -> RestrictionRest.Attributetype.duration
+        AttributeType.MIN_AGE -> RestrictionRest.Attributetype.minage
+        AttributeType.MAX_AGE -> RestrictionRest.Attributetype.maxage
+        AttributeType.REQUIRED -> RestrictionRest.Attributetype.required
+        AttributeType.GROUPS -> RestrictionRest.Attributetype.groups
+        AttributeType.PARTS -> RestrictionRest.Attributetype.parts
+        AttributeType.SESSIONS -> RestrictionRest.Attributetype.sessions
     }
 
-internal fun RestrictionType.toRest(): de.zbw.access.model.Restriction.Restrictiontype =
+internal fun RestrictionType.toRest(): RestrictionRest.Restrictiontype =
     when (this) {
-        RestrictionType.GROUP -> de.zbw.access.model.Restriction.Restrictiontype.group
-        RestrictionType.AGE -> de.zbw.access.model.Restriction.Restrictiontype.age
-        RestrictionType.LOCATION -> de.zbw.access.model.Restriction.Restrictiontype.location
-        RestrictionType.DATE -> de.zbw.access.model.Restriction.Restrictiontype.date
-        RestrictionType.DURATION -> de.zbw.access.model.Restriction.Restrictiontype.duration
-        RestrictionType.COUNT -> de.zbw.access.model.Restriction.Restrictiontype.count
-        RestrictionType.CONCURRENT -> de.zbw.access.model.Restriction.Restrictiontype.concurrent
-        RestrictionType.WATERMARK -> de.zbw.access.model.Restriction.Restrictiontype.watermark
-        RestrictionType.QUALITY -> de.zbw.access.model.Restriction.Restrictiontype.quality
-        RestrictionType.AGREEMENT -> de.zbw.access.model.Restriction.Restrictiontype.agreement
-        RestrictionType.PARTS -> de.zbw.access.model.Restriction.Restrictiontype.parts
+        RestrictionType.GROUP -> RestrictionRest.Restrictiontype.group
+        RestrictionType.AGE -> RestrictionRest.Restrictiontype.age
+        RestrictionType.LOCATION -> RestrictionRest.Restrictiontype.location
+        RestrictionType.DATE -> RestrictionRest.Restrictiontype.date
+        RestrictionType.DURATION -> RestrictionRest.Restrictiontype.duration
+        RestrictionType.COUNT -> RestrictionRest.Restrictiontype.count
+        RestrictionType.CONCURRENT -> RestrictionRest.Restrictiontype.concurrent
+        RestrictionType.WATERMARK -> RestrictionRest.Restrictiontype.watermark
+        RestrictionType.QUALITY -> RestrictionRest.Restrictiontype.quality
+        RestrictionType.AGREEMENT -> RestrictionRest.Restrictiontype.agreement
+        RestrictionType.PARTS -> RestrictionRest.Restrictiontype.parts
     }
 
 fun ActionType.toRest() =
     when (this) {
-        ActionType.READ -> de.zbw.access.model.Action.Actiontype.read
-        ActionType.RUN -> de.zbw.access.model.Action.Actiontype.run
-        ActionType.LEND -> de.zbw.access.model.Action.Actiontype.lend
-        ActionType.DOWNLOAD -> de.zbw.access.model.Action.Actiontype.download
-        ActionType.PRINT -> de.zbw.access.model.Action.Actiontype.print
-        ActionType.REPRODUCE -> de.zbw.access.model.Action.Actiontype.reproduce
-        ActionType.MODIFY -> de.zbw.access.model.Action.Actiontype.modify
-        ActionType.REUSE -> de.zbw.access.model.Action.Actiontype.reuse
-        ActionType.DISTRIBUTE -> de.zbw.access.model.Action.Actiontype.distribute
-        ActionType.PUBLISH -> de.zbw.access.model.Action.Actiontype.publish
-        ActionType.ARCHIVE -> de.zbw.access.model.Action.Actiontype.archive
-        ActionType.INDEX -> de.zbw.access.model.Action.Actiontype.index
-        ActionType.MOVE -> de.zbw.access.model.Action.Actiontype.move
-        ActionType.DISPLAY_METADATA -> de.zbw.access.model.Action.Actiontype.displaymetadata
+        ActionType.READ -> ActionRest.Actiontype.read
+        ActionType.RUN -> ActionRest.Actiontype.run
+        ActionType.LEND -> ActionRest.Actiontype.lend
+        ActionType.DOWNLOAD -> ActionRest.Actiontype.download
+        ActionType.PRINT -> ActionRest.Actiontype.print
+        ActionType.REPRODUCE -> ActionRest.Actiontype.reproduce
+        ActionType.MODIFY -> ActionRest.Actiontype.modify
+        ActionType.REUSE -> ActionRest.Actiontype.reuse
+        ActionType.DISTRIBUTE -> ActionRest.Actiontype.distribute
+        ActionType.PUBLISH -> ActionRest.Actiontype.publish
+        ActionType.ARCHIVE -> ActionRest.Actiontype.archive
+        ActionType.INDEX -> ActionRest.Actiontype.index
+        ActionType.MOVE -> ActionRest.Actiontype.move
+        ActionType.DISPLAY_METADATA -> ActionRest.Actiontype.displaymetadata
     }

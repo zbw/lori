@@ -24,17 +24,17 @@ class AccessServerBackendTest : DatabaseTest() {
     )
 
     private val orderedList = arrayOf(
-        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "aaaa")),
-        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "aaaa2")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "aaaa")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "aaaa2")),
     )
 
-    private val deletedEntry = TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "to_be_deleted"))
-    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(header = TEST_HEADER.copy(id = "no_action"))
+    private val deletedEntry = TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "to_be_deleted"))
+    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(metadata = TEST_HEADER.copy(id = "no_action"))
 
     private val entries = arrayOf(
         TEST_ACCESS_RIGHT,
-        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2a")),
-        TEST_ACCESS_RIGHT.copy(header = TEST_HEADER.copy(id = "test_2b")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "test_2a")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "test_2b")),
         noAction,
         deletedEntry,
     ).plus(orderedList)
@@ -48,36 +48,36 @@ class AccessServerBackendTest : DatabaseTest() {
     fun createDataForRoundtrip() =
         arrayOf(
             arrayOf(
-                listOf(entries[0].header.id),
+                listOf(entries[0].metadata.id),
                 setOf(entries[0]),
             ),
             arrayOf(
-                listOf(noAction.header.id),
+                listOf(noAction.metadata.id),
                 setOf(noAction),
             ),
             arrayOf(
-                listOf(entries[1].header.id, entries[2].header.id),
+                listOf(entries[1].metadata.id, entries[2].metadata.id),
                 setOf(entries[1], entries[2]),
             ),
             arrayOf(
-                listOf(entries[0].header.id, "invalidId"),
+                listOf(entries[0].metadata.id, "invalidId"),
                 setOf(entries[0]),
             ),
             arrayOf(
                 listOf("invalidId"),
-                setOf<AccessRight>(),
+                setOf<Item>(),
             ),
         )
 
     @Test(dataProvider = DATA_FOR_ROUNDTRIP)
     fun testRoundtrip(
         queryIds: List<String>,
-        expectedAccessRights: Set<AccessRight>
+        expectedItems: Set<Item>
     ) {
         // when
         val received = backend.getAccessRightEntries(queryIds)
         // then
-        assertThat(received.toSet(), `is`(expectedAccessRights))
+        assertThat(received.toSet(), `is`(expectedItems))
     }
 
     @Test
@@ -91,13 +91,13 @@ class AccessServerBackendTest : DatabaseTest() {
         val noLimit = backend.getAccessRightList(limit = 0, offset = 0)
         assertThat(noLimit, `is`(emptyList()))
 
-        assertTrue(backend.containsAccessRightId(orderedList.first().header.id))
+        assertTrue(backend.containsAccessRightId(orderedList.first().metadata.id))
     }
 
     @Test
     fun testDeleteEntry() {
         // when
-        val deleted = backend.deleteAccessRightEntries(listOf(deletedEntry.header.id))
+        val deleted = backend.deleteAccessRightEntries(listOf(deletedEntry.metadata.id))
         // then
         assertThat("One entry should have been deleted", deleted, `is`(1))
     }
@@ -105,7 +105,7 @@ class AccessServerBackendTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
 
-        val TEST_HEADER = Header(
+        val TEST_HEADER = de.zbw.business.access.server.Metadata(
             id = "test",
             tenant = "www.zbw.eu",
             usageGuide = "usageGuie",
@@ -130,13 +130,13 @@ class AccessServerBackendTest : DatabaseTest() {
             restrictions = listOf(TEST_RESTRICTION),
         )
 
-        val TEST_ACCESS_RIGHT = AccessRight(
-            header = TEST_HEADER,
+        val TEST_ACCESS_RIGHT = Item(
+            metadata = TEST_HEADER,
             actions = listOf(TEST_ACTION),
         )
 
-        val TEST_ACCESS_RIGHT_NO_ACTION = AccessRight(
-            header = TEST_HEADER,
+        val TEST_ACCESS_RIGHT_NO_ACTION = Item(
+            metadata = TEST_HEADER,
             actions = emptyList(),
         )
     }

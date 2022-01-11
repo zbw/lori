@@ -3,7 +3,8 @@
     <v-layout align-center row>
       <v-text-field label="Suche nach einem Titel"></v-text-field>
       <v-btn outlined x-large @click="searchTitle">
-        <v-icon left>mdi-magnify</v-icon> Suche
+        <v-icon left>mdi-magnify</v-icon>
+        Suche
       </v-btn>
     </v-layout>
     <v-row>
@@ -13,9 +14,9 @@
             <v-subheader>Items</v-subheader>
             <v-list-item-group color="primary">
               <v-list-item
-                v-for="(item, index) in items"
-                :key="index"
-                @click="setActiveAccessInformation(item, index)"
+                  v-for="(item, index) in items"
+                  :key="index"
+                  @click="setActiveAccessInformation(item, index)"
               >
                 {{ item.id }}
               </v-list-item>
@@ -81,7 +82,8 @@
             </v-list-item>
             <v-list-item>
               <v-list-item-content
-                >Urheberrechtsschutz vorhanden</v-list-item-content
+              >Urheberrechtsschutz vorhanden
+              </v-list-item-content
               >
               <v-list-item-content class="align-end">
                 <v-icon v-if="currentAccInf.copyright" left>mdi-check</v-icon>
@@ -110,20 +112,22 @@
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">
-                Soll dieser Eintrag gelöscht werden?</v-card-title
+                Soll dieser Eintrag gelöscht werden?
+              </v-card-title
               >
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn
-                  :disabled="deleteConfirmationLoading"
-                  color="blue darken-1"
-                  @click="cancelDeleteDialog"
-                  >Abbrechen</v-btn
+                    :disabled="deleteConfirmationLoading"
+                    color="blue darken-1"
+                    @click="cancelDeleteDialog"
+                >Abbrechen
+                </v-btn
                 >
                 <v-btn
-                  :loading="deleteConfirmationLoading"
-                  color="error"
-                  @click="approveDeleteDialog"
+                    :loading="deleteConfirmationLoading"
+                    color="error"
+                    @click="approveDeleteDialog"
                 >
                   Löschen
                 </v-btn>
@@ -132,10 +136,10 @@
             </v-card>
           </v-dialog>
           <v-alert
-            v-model="deleteAlertSuccessful"
-            dismissible
-            text
-            type="success"
+              v-model="deleteAlertSuccessful"
+              dismissible
+              text
+              type="success"
           >
             Löschen war erfolgreich.
           </v-alert>
@@ -145,23 +149,25 @@
           <v-dialog v-model="dialogEdit" max-width="500px">
             <template v-slot:activator="{ on, attrs }">
               <v-btn
-                v-bind="attrs"
-                v-on="on"
-                class="ma-2"
-                color="success"
-                outlined
-                tile
+                  v-bind="attrs"
+                  v-on="on"
+                  class="ma-2"
+                  color="success"
+                  outlined
+                  tile
               >
-                <v-icon left>mdi-pencil</v-icon> Bearbeiten
+                <v-icon left>mdi-pencil</v-icon>
+                Bearbeiten
               </v-btn>
             </template>
             <AccessEdit
-              :edit-item="Object.assign({}, currentAccInf)"
-              v-on:closeDialog="closeEditItemDialog"
+                :edit-item="Object.assign({}, currentAccInf)"
+                v-on:closeDialog="closeEditItemDialog"
             />
           </v-dialog>
           <v-btn color="error" @click="openDeleteItemDialog()">
-            <v-icon left>mdi-delete</v-icon> Löschen
+            <v-icon left>mdi-delete</v-icon>
+            Löschen
           </v-btn>
         </v-card>
       </v-col>
@@ -170,19 +176,19 @@
 </template>
 
 <script lang="ts">
-import { Vue } from "vue-property-decorator";
-import { AccessInformation } from "@/generated-sources/openapi";
+import {Vue} from "vue-property-decorator";
+import {ItemRest} from "@/generated-sources/openapi";
 import api from "@/api/api";
-import { Result } from "neverthrow";
+import {Result} from "neverthrow";
 import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
 
 @Component({
-  components: { AccessEdit },
+  components: {AccessEdit},
 })
 export default class AccessInformationList extends Vue {
-  private items: Array<AccessInformation> = [];
-  private currentAccInf = {} as AccessInformation;
+  private items: Array<ItemRest> = [];
+  private currentAccInf = {} as ItemRest;
   private currentIndex = -1;
   private dialogEdit = false;
   private dialogDelete = false;
@@ -193,16 +199,16 @@ export default class AccessInformationList extends Vue {
 
   public retrieveAccessInformation(): void {
     api
-      .getList(0, 25)
-      .then((response) => (this.items = response))
-      .catch((e) => {
-        console.log(e);
-      });
+        .getList(0, 25)
+        .then((response) => (this.items = response))
+        .catch((e) => {
+          console.log(e);
+        });
   }
 
   public setActiveAccessInformation(
-    accessInformation: AccessInformation,
-    index: number
+      accessInformation: ItemRest,
+      index: number
   ): void {
     this.currentAccInf = accessInformation;
     this.currentIndex = index;
@@ -223,18 +229,18 @@ export default class AccessInformationList extends Vue {
   public approveDeleteDialog(): void {
     this.deleteConfirmationLoading = true;
     api
-      .deleteAccessInformation(this.currentAccInf.id)
-      .then((response: Result<void, Error>) => {
-        if (response.isOk()) {
-          this.deleteAlertSuccessful = true;
-          this.retrieveAccessInformation();
-        } else {
-          this.deleteAlertError = true;
-          this.deleteErrorMessage = response.error.message;
-        }
-        this.dialogDelete = false;
-        this.deleteConfirmationLoading = false;
-      });
+        .deleteAccessInformation(this.currentAccInf.id)
+        .then((response: Result<void, Error>) => {
+          if (response.isOk()) {
+            this.deleteAlertSuccessful = true;
+            this.retrieveAccessInformation();
+          } else {
+            this.deleteAlertError = true;
+            this.deleteErrorMessage = response.error.message;
+          }
+          this.dialogDelete = false;
+          this.deleteConfirmationLoading = false;
+        });
   }
 
   public cancelDeleteDialog(): void {
