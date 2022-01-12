@@ -34,7 +34,7 @@ class AccessServerBackend(
 
     fun getAccessRightEntries(ids: List<String>): List<Item> {
         val headerToActions: Map<String, List<Action>> = dbConnector.getActions(ids)
-        return dbConnector.getHeaders(ids).map {
+        return dbConnector.getMetadata(ids).map {
             Item(
                 metadata = it,
                 actions = headerToActions[it.id] ?: emptyList()

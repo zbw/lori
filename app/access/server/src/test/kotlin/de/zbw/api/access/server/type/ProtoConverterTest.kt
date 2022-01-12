@@ -1,10 +1,10 @@
 package de.zbw.api.access.server.type
 
-import de.zbw.access.api.AccessRightProto
 import de.zbw.access.api.ActionProto
 import de.zbw.access.api.ActionTypeProto
 import de.zbw.access.api.AttributeProto
 import de.zbw.access.api.AttributeTypeProto
+import de.zbw.access.api.ItemProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
 import de.zbw.business.access.server.Action
@@ -12,6 +12,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.Metadata
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -32,16 +33,7 @@ class ProtoConverterTest {
     fun testAccessRightConversion() {
         // given
         val expected = Item(
-            metadata = de.zbw.business.access.server.Metadata(
-                id = "foo",
-                tenant = "bla",
-                usageGuide = "guide",
-                template = null,
-                mention = true,
-                shareAlike = false,
-                commercialUse = true,
-                copyright = true,
-            ),
+            metadata = TEST_Metadata,
             actions = listOf(
                 Action(
                     type = ActionType.READ,
@@ -59,14 +51,26 @@ class ProtoConverterTest {
             ),
         )
 
-        val protoObject = AccessRightProto.newBuilder()
+        val protoObject = ItemProto.newBuilder()
             .setId(expected.metadata.id)
-            .setTenant(expected.metadata.tenant)
-            .setUsageGuide(expected.metadata.usageGuide)
-            .setMention(true)
-            .setSharealike(false)
-            .setCommercialuse(true)
-            .setCopyright(true)
+            .setAccessState(expected.metadata.access_state)
+            .setBand(expected.metadata.band)
+            .setDoi(expected.metadata.doi)
+            .setHandle(expected.metadata.handle)
+            .setIsbn(expected.metadata.isbn)
+            .setIssn(expected.metadata.issn)
+            .setPaketSigel(expected.metadata.paket_sigel)
+            .setPpn(expected.metadata.ppn)
+            .setPpnEbook(expected.metadata.ppn_ebook)
+            .setPublicationType(expected.metadata.publicationType)
+            .setPublicationYear(expected.metadata.publicationYear!!)
+            .setRightsK10Plus(expected.metadata.rights_k10plus)
+            .setSerialNumber(expected.metadata.serialNumber)
+            .setTitle(expected.metadata.title)
+            .setTitleJournal(expected.metadata.title_journal)
+            .setTitleSeries(expected.metadata.title_series)
+            .setZbdId(expected.metadata.zbd_id)
+            .setId(expected.metadata.id)
             .addAllActions(
                 listOf(
                     ActionProto.newBuilder()
@@ -141,5 +145,28 @@ class ProtoConverterTest {
                 )
             }
         }
+    }
+
+    companion object {
+        val TEST_Metadata = Metadata(
+            id = "that-test",
+            access_state = "open",
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paket_sigel = "sigel",
+            ppn = "ppn",
+            ppn_ebook = "ppn ebook",
+            publicationType = "publicationType",
+            publicationYear = 2000,
+            rights_k10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            title_journal = "Journal title",
+            title_series = "Title series",
+            zbd_id = "zbd id",
+        )
     }
 }

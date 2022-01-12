@@ -45,11 +45,15 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test(expectedExceptions = [IllegalStateException::class])
-    fun testInsertHeaderNoInsertError() {
+    fun testInsertMetadataNoInsertError() {
         // given
-        val stmntAccIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_HEADER}" +
-            "(header_id,tenant,usage_guide,template,mention,sharealike,commercial_use,copyright) " +
-            "VALUES(?,?,?,?,?,?,?,?)"
+        val stmntAccIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_METADATA}" +
+            "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+            "title_series,access_state,publishedYear,band,publicationtype,doi," +
+            "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+            "VALUES(?,?,?,?,?,?," +
+            "?,?,?,?,?,?," +
+            "?,?,?,?,?,?)"
 
         val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntAccIns)) {
             every { executeUpdate() } returns 0
@@ -65,29 +69,29 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testInsertAndReceiveHeader() {
+    fun testInsertAndReceiveMetadata() {
 
         // given
-        val testHeaderId = "header_test"
-        val testHeader = TEST_Metadata.copy(id = testHeaderId, template = "foo")
+        val testId = "id_test"
+        val testMetadata = TEST_Metadata.copy(id = testId, title = "foo")
 
         // when
-        val headerResponse = dbConnector.insertMetadata(testHeader)
+        val responseInsert = dbConnector.insertMetadata(testMetadata)
 
         // then
-        assertThat(headerResponse, `is`(testHeaderId))
+        assertThat(responseInsert, `is`(testId))
 
         // when
-        val receivedHeader: List<Metadata> = dbConnector.getHeaders(listOf(testHeaderId))
+        val receivedMetadata: List<Metadata> = dbConnector.getMetadata(listOf(testId))
 
         // then
         assertThat(
-            receivedHeader.first(), `is`(testHeader)
+            receivedMetadata.first(), `is`(testMetadata)
         )
 
         // when
         assertThat(
-            dbConnector.getHeaders(listOf("not_in_db")), `is`(listOf())
+            dbConnector.getMetadata(listOf("not_in_db")), `is`(listOf())
         )
     }
 
@@ -102,7 +106,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertActionNoInsertError() {
         // given
-        val stmntActIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ACTION}" +
+        val stmntActIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_ACTION}" +
             "(type, permission, header_id) " +
             "VALUES(?,?,?)"
         val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntActIns)) {
@@ -180,7 +184,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertRestrictionNoInsertError() {
         // given
-        val stmntRestIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_RESTRICTION}" +
+        val stmntRestIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_RESTRICTION}" +
             "(type, attribute_type, attribute_values, action_id) " +
             "VALUES(?,?,?,?)"
 
@@ -204,7 +208,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 every { prepareStatement(any()) } throws SQLException()
             }
         )
-        dbConnector.getHeaders(listOf("foo"))
+        dbConnector.getMetadata(listOf("foo"))
     }
 
     @Test(expectedExceptions = [SQLException::class])
@@ -317,7 +321,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
         // when
-        val receivedHeader = dbConnector.getHeaders(listOf(givenHeaderId))
+        val receivedHeader = dbConnector.getMetadata(listOf(givenHeaderId))
         val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenHeaderId))
 
         // then
@@ -335,15 +339,25 @@ class DatabaseConnectorTest : DatabaseTest() {
 
     companion object {
 
-        val TEST_Metadata = de.zbw.business.access.server.Metadata(
+        val TEST_Metadata = Metadata(
             id = "that-test",
-            tenant = "www.zbw.eu",
-            usageGuide = "www.zbw.eu/license",
-            template = null,
-            copyright = true,
-            mention = true,
-            commercialUse = false,
-            shareAlike = true,
+            access_state = "open",
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paket_sigel = "sigel",
+            ppn = "ppn",
+            ppn_ebook = "ppn ebook",
+            publicationType = "publicationType",
+            publicationYear = 2000,
+            rights_k10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            title_journal = null,
+            title_series = null,
+            zbd_id = null,
         )
 
         private val TEST_ACTION = Action(

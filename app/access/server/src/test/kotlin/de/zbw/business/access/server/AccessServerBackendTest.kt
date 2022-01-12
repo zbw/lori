@@ -24,17 +24,17 @@ class AccessServerBackendTest : DatabaseTest() {
     )
 
     private val orderedList = arrayOf(
-        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "aaaa")),
-        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "aaaa2")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_Metadata.copy(id = "aaaa")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_Metadata.copy(id = "aaaa2")),
     )
 
-    private val deletedEntry = TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "to_be_deleted"))
-    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(metadata = TEST_HEADER.copy(id = "no_action"))
+    private val deletedEntry = TEST_ACCESS_RIGHT.copy(metadata = TEST_Metadata.copy(id = "to_be_deleted"))
+    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(metadata = TEST_Metadata.copy(id = "no_action"))
 
     private val entries = arrayOf(
         TEST_ACCESS_RIGHT,
-        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "test_2a")),
-        TEST_ACCESS_RIGHT.copy(metadata = TEST_HEADER.copy(id = "test_2b")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_Metadata.copy(id = "test_2a")),
+        TEST_ACCESS_RIGHT.copy(metadata = TEST_Metadata.copy(id = "test_2b")),
         noAction,
         deletedEntry,
     ).plus(orderedList)
@@ -105,15 +105,25 @@ class AccessServerBackendTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
 
-        val TEST_HEADER = de.zbw.business.access.server.Metadata(
-            id = "test",
-            tenant = "www.zbw.eu",
-            usageGuide = "usageGuie",
-            template = "CC",
-            mention = true,
-            shareAlike = true,
-            commercialUse = true,
-            copyright = false,
+        val TEST_Metadata = Metadata(
+            id = "that-test",
+            access_state = "open",
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paket_sigel = "sigel",
+            ppn = "ppn",
+            ppn_ebook = "ppn ebook",
+            publicationType = "publicationType",
+            publicationYear = 2000,
+            rights_k10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            title_journal = null,
+            title_series = null,
+            zbd_id = null,
         )
 
         private val TEST_RESTRICTION = Restriction(
@@ -131,12 +141,12 @@ class AccessServerBackendTest : DatabaseTest() {
         )
 
         val TEST_ACCESS_RIGHT = Item(
-            metadata = TEST_HEADER,
+            metadata = TEST_Metadata,
             actions = listOf(TEST_ACTION),
         )
 
         val TEST_ACCESS_RIGHT_NO_ACTION = Item(
-            metadata = TEST_HEADER,
+            metadata = TEST_Metadata,
             actions = emptyList(),
         )
     }
