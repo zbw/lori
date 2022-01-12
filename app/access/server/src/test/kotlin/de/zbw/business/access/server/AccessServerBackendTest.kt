@@ -107,7 +107,7 @@ class AccessServerBackendTest : DatabaseTest() {
 
         val TEST_Metadata = Metadata(
             id = "that-test",
-            access_state = "open",
+            access_state = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",

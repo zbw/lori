@@ -1,5 +1,6 @@
 package de.zbw.api.access.server.type
 
+import de.zbw.access.api.AccessStateProto
 import de.zbw.access.api.ActionProto
 import de.zbw.access.api.ActionTypeProto
 import de.zbw.access.api.AttributeProto
@@ -7,6 +8,7 @@ import de.zbw.access.api.AttributeTypeProto
 import de.zbw.access.api.ItemProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -27,17 +29,17 @@ fun ItemProto.toBusiness(): Item =
     Item(
         metadata = de.zbw.business.access.server.Metadata(
             id = id,
-            access_state = accessState,
+            access_state = this.returnIfFieldIsSet(ItemProto.ACCESS_STATE_FIELD_NUMBER)?.accessState?.toBusiness(),
             band = this.returnIfFieldIsSet(ItemProto.BAND_FIELD_NUMBER)?.band,
             doi = this.returnIfFieldIsSet(ItemProto.DOI_FIELD_NUMBER)?.doi,
-            handle = this.returnIfFieldIsSet(ItemProto.HANDLE_FIELD_NUMBER)?.handle,
+            handle = this.handle,
             isbn = this.returnIfFieldIsSet(ItemProto.ISBN_FIELD_NUMBER)?.isbn,
             issn = this.returnIfFieldIsSet(ItemProto.ISSN_FIELD_NUMBER)?.issn,
             paket_sigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
             ppn = this.returnIfFieldIsSet(ItemProto.PPN_FIELD_NUMBER)?.ppn,
             ppn_ebook = this.returnIfFieldIsSet(ItemProto.PPN_EBOOK_FIELD_NUMBER)?.ppnEbook,
-            publicationType = this.returnIfFieldIsSet(ItemProto.PUBLICATION_TYPE_FIELD_NUMBER)?.publicationType,
-            publicationYear = this.returnIfFieldIsSet(ItemProto.PUBLICATION_YEAR_FIELD_NUMBER)?.publicationYear,
+            publicationType = this.publicationType,
+            publicationYear = this.publicationYear,
             rights_k10plus = this.returnIfFieldIsSet(ItemProto.RIGHTS_K10PLUS_FIELD_NUMBER)?.rightsK10Plus,
             serialNumber = this.returnIfFieldIsSet(ItemProto.SERIAL_NUMBER_FIELD_NUMBER)?.serialNumber,
             title = title,
@@ -48,12 +50,26 @@ fun ItemProto.toBusiness(): Item =
         this.actionsList.map { it.toBusiness() },
     )
 
-fun ItemProto.returnIfFieldIsSet(fieldNumber: Int) = this.takeIf {
+private fun ItemProto.returnIfFieldIsSet(fieldNumber: Int) = this.takeIf {
     it.hasField(
         ItemProto.getDescriptor().findFieldByNumber(fieldNumber)
     )
 }
 
+fun AccessState.toProto(): AccessStateProto =
+    when (this) {
+        AccessState.CLOSED -> AccessStateProto.ACCESS_STATE_PROTO_CLOSED
+        AccessState.OPEN -> AccessStateProto.ACCESS_STATE_PROTO_OPEN
+        AccessState.RESTRICTED -> AccessStateProto.ACCESS_STATE_PROTO_RESTRICTED
+    }
+
+fun AccessStateProto.toBusiness(): AccessState? =
+    when (this) {
+        AccessStateProto.ACCESS_STATE_PROTO_CLOSED -> AccessState.CLOSED
+        AccessStateProto.ACCESS_STATE_PROTO_OPEN -> AccessState.OPEN
+        AccessStateProto.ACCESS_STATE_PROTO_RESTRICTED -> AccessState.RESTRICTED
+        else -> null
+    }
 
 private fun ActionProto.toBusiness(): Action =
     Action(

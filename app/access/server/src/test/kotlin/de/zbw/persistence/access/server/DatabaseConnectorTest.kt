@@ -1,5 +1,6 @@
 package de.zbw.persistence.access.server
 
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -341,7 +342,7 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         val TEST_Metadata = Metadata(
             id = "that-test",
-            access_state = "open",
+            access_state = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",

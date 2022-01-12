@@ -47,7 +47,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(jsonAsString(ITEM_REST))
@@ -78,7 +78,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.contentType)
                     setBody(jsonAsString(ITEM_REST))
@@ -112,7 +112,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(jsonAsString(ITEM_REST))
@@ -145,7 +145,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -183,7 +183,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -221,7 +221,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/$testId")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ItemRest>() {}.type
                 val received: ItemRest = Gson().fromJson(content, groupListType)
@@ -249,7 +249,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")
+            handleRequest(HttpMethod.Get, "/api/v1/item/$testId")
             // exception
         }
     }
@@ -274,7 +274,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
                 val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
@@ -309,7 +309,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
                 val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
@@ -367,7 +367,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
                 assertThat(msg, response.status(), `is`(HttpStatusCode.BadRequest))
             }
         }
@@ -389,7 +389,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/")) {
                 assertThat(
                     "Should return 404 because of missing get parameter",
                     response.status(),
@@ -420,7 +420,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
                 assertThat(
                     "Should return 200 indicating a successful operation",
                     response.status(),
@@ -451,7 +451,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")
+            handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")
         }
     }
 
@@ -476,7 +476,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
                 assertThat(
                     "Should return 500 indicating that an internal error has occurred",
                     response.status(),
@@ -505,7 +505,7 @@ class AccessInformationApiKtTest {
             )
         val ITEM_REST = ItemRest(
             id = "foo",
-            accessState = "open",
+            accessState = ItemRest.AccessState.open,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",

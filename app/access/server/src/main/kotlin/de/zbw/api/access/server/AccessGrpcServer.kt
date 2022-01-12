@@ -52,7 +52,7 @@ class AccessGrpcServer(
                     accessRights.map {
                         ItemProto.newBuilder()
                             .setIfNotNull(it.metadata.id) { b, value -> b.setId(value) }
-                            .setIfNotNull(it.metadata.access_state) { b, value -> b.setAccessState(value) }
+                            .setIfNotNull(it.metadata.access_state) { b, value -> b.setAccessState(value.toProto()) }
                             .setIfNotNull(it.metadata.band) { b, value -> b.setBand(value) }
                             .setIfNotNull(it.metadata.doi) { b, value -> b.setDoi(value) }
                             .setIfNotNull(it.metadata.handle) { b, value -> b.setHandle(value) }

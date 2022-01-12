@@ -3,6 +3,7 @@ package de.zbw.api.access.server.type
 import de.zbw.access.model.ActionRest
 import de.zbw.access.model.ItemRest
 import de.zbw.access.model.RestrictionRest
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -27,7 +28,7 @@ fun ItemRest.toBusiness() =
             title = title,
             title_journal = titleJournal,
             title_series = titleSeries,
-            access_state = accessState,
+            access_state = accessState?.toBusiness(),
             publicationYear = publicationYear,
             band = band,
             publicationType = publicationType,
@@ -114,7 +115,7 @@ internal fun ActionRest.Actiontype.toBusiness(): ActionType =
 fun Item.toRest(): ItemRest =
     ItemRest(
         id = this.metadata.id,
-        accessState = this.metadata.access_state,
+        accessState = this.metadata.access_state?.toRest(),
         band = this.metadata.band,
         doi = this.metadata.doi,
         handle = this.metadata.handle,
@@ -145,6 +146,20 @@ fun Item.toRest(): ItemRest =
             )
         }
     )
+
+internal fun ItemRest.AccessState.toBusiness(): AccessState =
+    when (this) {
+        ItemRest.AccessState.closed -> AccessState.CLOSED
+        ItemRest.AccessState.open -> AccessState.OPEN
+        ItemRest.AccessState.restricted -> AccessState.RESTRICTED
+    }
+
+internal fun AccessState.toRest(): ItemRest.AccessState =
+    when (this) {
+        AccessState.CLOSED -> ItemRest.AccessState.closed
+        AccessState.OPEN -> ItemRest.AccessState.open
+        AccessState.RESTRICTED -> ItemRest.AccessState.restricted
+    }
 
 internal fun AttributeType.toRest(): RestrictionRest.Attributetype =
     when (this) {

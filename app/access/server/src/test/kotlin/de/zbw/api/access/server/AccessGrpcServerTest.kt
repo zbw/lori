@@ -11,7 +11,9 @@ import de.zbw.access.api.GetItemResponse
 import de.zbw.access.api.ItemProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
+import de.zbw.api.access.server.type.toProto
 import de.zbw.business.access.server.AccessServerBackend
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -116,7 +118,7 @@ class AccessGrpcServerTest {
                             listOf(
                                 ItemProto.newBuilder()
                                     .setId(TEST_Metadata.id)
-                                    .setAccessState(TEST_Metadata.access_state)
+                                    .setAccessState(TEST_Metadata.access_state!!.toProto())
                                     .setBand(TEST_Metadata.band)
                                     .setDoi(TEST_Metadata.doi)
                                     .setHandle(TEST_Metadata.handle)
@@ -179,7 +181,7 @@ class AccessGrpcServerTest {
     companion object {
         val TEST_Metadata = Metadata(
             id = "that-test",
-            access_state = "open",
+            access_state = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",

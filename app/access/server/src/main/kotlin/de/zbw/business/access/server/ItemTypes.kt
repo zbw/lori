@@ -7,17 +7,17 @@ data class Item(
 
 data class Metadata(
     val id: String,
-    val access_state: String,
+    val access_state: AccessState?,
     val band: String?,
     val doi: String?,
-    val handle: String?,
+    val handle: String,
     val isbn: String?,
     val issn: String?,
     val paket_sigel: String?,
     val ppn: String?,
     val ppn_ebook: String?,
-    val publicationType: String?,
-    val publicationYear: Int?,
+    val publicationType: String,
+    val publicationYear: Int,
     val rights_k10plus: String?,
     val serialNumber: String?,
     val title: String,
@@ -25,6 +25,12 @@ data class Metadata(
     val title_series: String?,
     val zbd_id: String?,
 )
+
+enum class AccessState {
+    CLOSED,
+    OPEN,
+    RESTRICTED,
+}
 
 data class Action(
     val type: ActionType,

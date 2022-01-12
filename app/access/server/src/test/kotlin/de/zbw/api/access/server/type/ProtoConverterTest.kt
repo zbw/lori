@@ -7,6 +7,7 @@ import de.zbw.access.api.AttributeTypeProto
 import de.zbw.access.api.ItemProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -53,7 +54,7 @@ class ProtoConverterTest {
 
         val protoObject = ItemProto.newBuilder()
             .setId(expected.metadata.id)
-            .setAccessState(expected.metadata.access_state)
+            .setAccessState(expected.metadata.access_state?.toProto())
             .setBand(expected.metadata.band)
             .setDoi(expected.metadata.doi)
             .setHandle(expected.metadata.handle)
@@ -63,7 +64,7 @@ class ProtoConverterTest {
             .setPpn(expected.metadata.ppn)
             .setPpnEbook(expected.metadata.ppn_ebook)
             .setPublicationType(expected.metadata.publicationType)
-            .setPublicationYear(expected.metadata.publicationYear!!)
+            .setPublicationYear(expected.metadata.publicationYear)
             .setRightsK10Plus(expected.metadata.rights_k10plus)
             .setSerialNumber(expected.metadata.serialNumber)
             .setTitle(expected.metadata.title)
@@ -150,7 +151,7 @@ class ProtoConverterTest {
     companion object {
         val TEST_Metadata = Metadata(
             id = "that-test",
-            access_state = "open",
+            access_state = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
@@ -168,5 +169,6 @@ class ProtoConverterTest {
             title_series = "Title series",
             zbd_id = "zbd id",
         )
+        // TODO(CB): Test case for not set values
     }
 }

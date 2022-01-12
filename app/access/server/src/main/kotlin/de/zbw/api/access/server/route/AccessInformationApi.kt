@@ -23,7 +23,7 @@ import java.sql.SQLException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 fun Routing.accessInformationRoutes(backend: AccessServerBackend) {
-    route("/api/v1/accessinformation") {
+    route("/api/v1/item") {
         post {
             try {
                 // receive() may return an object where non-null fields are null.

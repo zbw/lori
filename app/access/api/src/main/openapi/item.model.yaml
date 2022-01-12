@@ -1,15 +1,21 @@
 ItemRest:
   required:
-    - id
-    - title
-    - accessState
     - actions
+    - handle
+    - id
+    - publicationType
+    - publicationYear
+    - title
   type: object
   properties:
     id:
       type: string
     accessState:
       type: string
+      enum:
+        - open
+        - closed
+        - restricted
     band:
       type: string
     doi:

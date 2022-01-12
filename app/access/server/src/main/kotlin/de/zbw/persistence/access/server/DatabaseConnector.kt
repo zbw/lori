@@ -1,6 +1,7 @@
 package de.zbw.persistence.access.server
 
 import de.zbw.api.access.server.config.AccessConfiguration
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
@@ -33,26 +34,22 @@ class DatabaseConnector(
         val stmntAccIns =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,access_state,publishedYear,band,publicationtype,doi," +
-                "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+                "title_series,access_state,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
                 "VALUES(?,?,?,?,?,?," +
                 "?,?,?,?,?,?," +
                 "?,?,?,?,?,?)"
 
         val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, metadata.id)
-            this.setIfNotNull(2, metadata.handle) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
+            this.setString(2, metadata.handle)
             this.setIfNotNull(3, metadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setIfNotNull(4, metadata.ppn_ebook) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(5, metadata.title) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
+            this.setString(5, metadata.title)
             this.setIfNotNull(6, metadata.title_journal) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -60,17 +57,13 @@ class DatabaseConnector(
                 prepStmt.setString(idx, value)
             }
             this.setIfNotNull(8, metadata.access_state) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
+                prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(9, metadata.publicationYear) { value, idx, prepStmt ->
-                prepStmt.setInt(idx, value)
-            }
+            this.setInt(9, metadata.publicationYear)
             this.setIfNotNull(10, metadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(11, metadata.publicationType) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
+            this.setString(11, metadata.publicationType)
             this.setIfNotNull(12, metadata.doi) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -141,8 +134,8 @@ class DatabaseConnector(
         val stmt =
             "SELECT" +
                 " header_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,access_state,publishedYear,band,publicationtype,doi," +
-                "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn " +
+                "title_series,access_state,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn " +
                 "FROM $TABLE_NAME_ITEM_METADATA " +
                 "WHERE header_id = ANY(?)"
 
@@ -160,7 +153,7 @@ class DatabaseConnector(
                     title = rs.getString(5),
                     title_journal = rs.getString(6),
                     title_series = rs.getString(7),
-                    access_state = rs.getString(8),
+                    access_state = AccessState.valueOf(rs.getString(8)),
                     publicationYear = rs.getInt(9),
                     band = rs.getString(10),
                     publicationType = rs.getString(11),
@@ -320,7 +313,7 @@ class DatabaseConnector(
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
     companion object {
-        const val TABLE_NAME_ITEM_METADATA = "item"
+        const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         const val TABLE_NAME_ITEM_ACTION = "item_action"
         const val TABLE_NAME_ITEM_RESTRICTION = "item_restriction"
     }
