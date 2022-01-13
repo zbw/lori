@@ -29,6 +29,10 @@ CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
 ```
 
 Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database.
+You can connect yourself then via pgadmin or `psql`:
+```
+docker exec -it postgres_access_9.6 psql -U access -d accessinformation
+```
 
 Finally, start the service:
 
