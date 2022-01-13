@@ -1,11 +1,13 @@
 package de.zbw.persistence.access.server
 
 import de.zbw.api.access.server.config.AccessConfiguration
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import java.sql.Connection
@@ -29,27 +31,61 @@ class DatabaseConnector(
         config: AccessConfiguration,
     ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
 
-    fun insertHeader(header: Header): String {
+    fun insertMetadata(metadata: Metadata): String {
         val stmntAccIns =
-            "INSERT INTO $TABLE_NAME_HEADER" +
-                "(header_id,tenant,usage_guide,template,mention,sharealike,commercial_use,copyright) " +
-                "VALUES(?,?,?,?,?,?,?,?)"
+            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+                "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+                "title_series,access_state,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+                "VALUES(?,?,?,?,?,?," +
+                "?,?,?,?,?,?," +
+                "?,?,?,?,?,?)"
 
         val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
-            this.setString(1, header.id)
-            this.setIfNotNull(2, header.tenant) { value, idx, prepStmt ->
+            this.setString(1, metadata.id)
+            this.setString(2, metadata.handle)
+            this.setIfNotNull(3, metadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(3, header.usageGuide) { value, idx, prepStmt ->
+            this.setIfNotNull(4, metadata.ppn_ebook) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(4, header.template) { value, idx, prepStmt ->
+            this.setString(5, metadata.title)
+            this.setIfNotNull(6, metadata.title_journal) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(5, header.mention)
-            this.setBoolean(6, header.shareAlike)
-            this.setBoolean(7, header.commercialUse)
-            this.setBoolean(8, header.copyright)
+            this.setIfNotNull(7, metadata.title_series) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(8, metadata.access_state) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setInt(9, metadata.publicationYear)
+            this.setIfNotNull(10, metadata.band) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setString(11, metadata.publicationType.toString())
+            this.setIfNotNull(12, metadata.doi) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(13, metadata.serialNumber) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(14, metadata.isbn) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(15, metadata.rights_k10plus) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(16, metadata.paket_sigel) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(17, metadata.zbd_id) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(18, metadata.issn) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
         val affectedRows = prepStmt.run { this.executeUpdate() }
 
@@ -61,7 +97,7 @@ class DatabaseConnector(
     }
 
     fun insertAction(action: Action, fkAccessRight: String): Long {
-        val stmntActIns = "INSERT INTO $TABLE_NAME_ACTION" +
+        val stmntActIns = "INSERT INTO $TABLE_NAME_ITEM_ACTION" +
             "(type, permission, header_id) " +
             "VALUES(?,?,?)"
         val prepStmt = connection.prepareStatement(stmntActIns, Statement.RETURN_GENERATED_KEYS).apply {
@@ -78,7 +114,7 @@ class DatabaseConnector(
     }
 
     fun insertRestriction(restriction: Restriction, fkActionId: Long): Long {
-        val stmntRestIns = "INSERT INTO $TABLE_NAME_RESTRICTION" +
+        val stmntRestIns = "INSERT INTO $TABLE_NAME_ITEM_RESTRICTION" +
             "(type, attribute_type, attribute_values, action_id) " +
             "VALUES(?,?,?,?)"
         val prepStmt = connection.prepareStatement(stmntRestIns, Statement.RETURN_GENERATED_KEYS).apply {
@@ -95,10 +131,13 @@ class DatabaseConnector(
         } else throw IllegalStateException("No row has been inserted.")
     }
 
-    fun getHeaders(headerIds: List<String>): List<Header> {
+    fun getMetadata(headerIds: List<String>): List<Metadata> {
         val stmt =
-            "SELECT header_id, tenant, usage_guide, template, mention, sharealike, commercial_use, copyright " +
-                "FROM $TABLE_NAME_HEADER " +
+            "SELECT" +
+                " header_id,handle,ppn,ppn_ebook,title,title_journal," +
+                "title_series,access_state,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn " +
+                "FROM $TABLE_NAME_ITEM_METADATA " +
                 "WHERE header_id = ANY(?)"
 
         val prepStmt = connection.prepareStatement(stmt).apply {
@@ -107,15 +146,25 @@ class DatabaseConnector(
         val rs = prepStmt.executeQuery()
         return generateSequence {
             if (rs.next()) {
-                Header(
-                    rs.getString(1),
-                    rs.getString(2),
-                    rs.getString(3),
-                    rs.getString(4),
-                    rs.getBoolean(5),
-                    rs.getBoolean(6),
-                    rs.getBoolean(7),
-                    rs.getBoolean(8),
+                Metadata(
+                    id = rs.getString(1),
+                    handle = rs.getString(2),
+                    ppn = rs.getString(3),
+                    ppn_ebook = rs.getString(4),
+                    title = rs.getString(5),
+                    title_journal = rs.getString(6),
+                    title_series = rs.getString(7),
+                    access_state = rs.getString(8)?.let { AccessState.valueOf(it) },
+                    publicationYear = rs.getInt(9),
+                    band = rs.getString(10),
+                    publicationType = PublicationType.valueOf(rs.getString(11)),
+                    doi = rs.getString(12),
+                    serialNumber = rs.getString(13),
+                    isbn = rs.getString(14),
+                    rights_k10plus = rs.getString(15),
+                    paket_sigel = rs.getString(16),
+                    zbd_id = rs.getString(17),
+                    issn = rs.getString(18),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -136,8 +185,8 @@ class DatabaseConnector(
         // First, receive the required primary keys.
         val stmt =
             "SELECT a.header_id, a.action_id, r.restriction_id " +
-                "FROM $TABLE_NAME_ACTION a " +
-                "LEFT JOIN $TABLE_NAME_RESTRICTION r ON a.action_id = r.action_id " +
+                "FROM $TABLE_NAME_ITEM_ACTION a " +
+                "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
                 "WHERE a.header_id = ANY(?)"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
@@ -157,7 +206,7 @@ class DatabaseConnector(
     private fun deleteRestrictions(restrictionIds: List<Int>): Int {
         val stmt =
             "DELETE " +
-                "FROM $TABLE_NAME_RESTRICTION r " +
+                "FROM $TABLE_NAME_ITEM_RESTRICTION r " +
                 "WHERE r.restriction_id = ANY(?)"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("integer", restrictionIds.toTypedArray()))
@@ -168,7 +217,7 @@ class DatabaseConnector(
     private fun deleteActions(actionIds: List<Int>): Int {
         val stmt =
             "DELETE " +
-                "FROM $TABLE_NAME_ACTION a " +
+                "FROM $TABLE_NAME_ITEM_ACTION a " +
                 "WHERE a.action_id = ANY(?)"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("integer", actionIds.toTypedArray()))
@@ -179,7 +228,7 @@ class DatabaseConnector(
     private fun deleteHeader(headerIds: List<String>): Int {
         val stmt =
             "DELETE " +
-                "FROM $TABLE_NAME_HEADER h " +
+                "FROM $TABLE_NAME_ITEM_METADATA h " +
                 "WHERE h.header_id = ANY(?)"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
@@ -190,8 +239,8 @@ class DatabaseConnector(
     fun getActions(headerIds: List<String>): Map<String, List<Action>> {
         val stmt =
             "SELECT a.header_id, a.type, a.permission, r.type, r.attribute_type, r.attribute_values " +
-                "FROM $TABLE_NAME_ACTION a " +
-                "LEFT JOIN $TABLE_NAME_RESTRICTION r ON a.action_id = r.action_id " +
+                "FROM $TABLE_NAME_ITEM_ACTION a " +
+                "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
                 "WHERE a.header_id = ANY(?)"
 
         val prepStmt = connection.prepareStatement(stmt).apply {
@@ -234,7 +283,7 @@ class DatabaseConnector(
     }
 
     fun containsHeader(headerId: String): Boolean {
-        val stmt = "SELECT EXISTS(SELECT 1 from $TABLE_NAME_HEADER WHERE header_id=?)"
+        val stmt = "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE header_id=?)"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setString(1, headerId)
         }
@@ -244,7 +293,7 @@ class DatabaseConnector(
     }
 
     fun getAccessRightIds(limit: Int, offset: Int): List<String> {
-        val stmt = "SELECT header_id from $TABLE_NAME_HEADER ORDER BY header_id ASC LIMIT ? OFFSET ?"
+        val stmt = "SELECT header_id from $TABLE_NAME_ITEM_METADATA ORDER BY header_id ASC LIMIT ? OFFSET ?"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setInt(1, limit)
             this.setInt(2, offset)
@@ -265,8 +314,8 @@ class DatabaseConnector(
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
     companion object {
-        const val TABLE_NAME_HEADER = "access_right_header"
-        const val TABLE_NAME_ACTION = "access_right_action"
-        const val TABLE_NAME_RESTRICTION = "access_right_restriction"
+        const val TABLE_NAME_ITEM_METADATA = "item_metadata"
+        const val TABLE_NAME_ITEM_ACTION = "item_action"
+        const val TABLE_NAME_ITEM_RESTRICTION = "item_restriction"
     }
 }

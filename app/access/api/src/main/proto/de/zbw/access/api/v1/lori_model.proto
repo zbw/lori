@@ -5,31 +5,54 @@ package de.zbw.access.api.v1;
 option java_package = "de.zbw.access.api";
 option java_multiple_files = true;
 
-message AddAccessInformationRequest {
-  repeated AccessRightProto items = 1;
+message AddItemRequest {
+  repeated ItemProto items = 1;
 }
 
-message AddAccessInformationResponse {
+message AddItemResponse {
 }
 
-message GetAccessInformationRequest {
+message GetItemRequest {
   repeated string ids = 1;
 }
 
-message GetAccessInformationResponse {
-  repeated AccessRightProto access_rights = 1;
+message GetItemResponse {
+  repeated ItemProto access_rights = 1;
 }
 
-message AccessRightProto {
+message ItemProto {
   string id = 1;
-  string tenant = 2;
-  string usage_guide = 3;
-  string template = 4;
-  bool mention = 5;
-  bool sharealike = 6;
-  bool commercialuse = 7;
-  bool copyright = 8;
-  repeated ActionProto actions = 9;
+  optional AccessStateProto access_state = 2;
+  optional string band = 3;
+  optional string doi = 4;
+  string handle = 5;
+  optional string isbn = 6;
+  optional string issn = 7;
+  optional string paket_sigel = 8;
+  optional string ppn = 9;
+  optional string ppn_ebook = 10;
+  PublicationTypeProto publication_type = 11;
+  int32  publication_year = 12;
+  optional string rights_k10plus = 13;
+  optional string serial_number = 14;
+  string title = 15;
+  optional string title_journal = 16;
+  optional string title_series = 17;
+  optional string zbd_id = 18;
+  repeated ActionProto actions = 19;
+}
+
+enum AccessStateProto {
+  ACCESS_STATE_PROTO_UNSPECIFIED = 0;
+  ACCESS_STATE_PROTO_CLOSED = 1;
+  ACCESS_STATE_PROTO_OPEN = 2;
+  ACCESS_STATE_PROTO_RESTRICTED = 3;
+}
+
+enum PublicationTypeProto {
+  PUBLICATION_TYPE_PROTO_UNSPECIFIED = 0;
+  PUBLICATION_TYPE_PROTO_MONO = 1;
+  PUBLICATION_TYPE_PROTO_PERIODICAL = 2;
 }
 
 message ActionProto {

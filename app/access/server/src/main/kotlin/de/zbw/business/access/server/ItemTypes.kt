@@ -1,20 +1,41 @@
 package de.zbw.business.access.server
 
-data class AccessRight(
-    val header: Header,
+data class Item(
+    val metadata: Metadata,
     val actions: List<Action>,
 )
 
-data class Header(
+data class Metadata(
     val id: String,
-    val tenant: String?,
-    val usageGuide: String?,
-    val template: String?,
-    val mention: Boolean,
-    val shareAlike: Boolean,
-    val commercialUse: Boolean,
-    val copyright: Boolean,
+    val access_state: AccessState?,
+    val band: String?,
+    val doi: String?,
+    val handle: String,
+    val isbn: String?,
+    val issn: String?,
+    val paket_sigel: String?,
+    val ppn: String?,
+    val ppn_ebook: String?,
+    val publicationType: PublicationType,
+    val publicationYear: Int,
+    val rights_k10plus: String?,
+    val serialNumber: String?,
+    val title: String,
+    val title_journal: String?,
+    val title_series: String?,
+    val zbd_id: String?,
 )
+
+enum class AccessState {
+    CLOSED,
+    OPEN,
+    RESTRICTED,
+}
+
+enum class PublicationType {
+    MONO,
+    PERIODICAL,
+}
 
 data class Action(
     val type: ActionType,
@@ -24,7 +45,7 @@ data class Action(
 
 data class Restriction(
     val type: RestrictionType,
-    val attribute: Attribute,
+    val attribute: Attribute, // TODO(CB): Should be a list.
 )
 
 data class Attribute(

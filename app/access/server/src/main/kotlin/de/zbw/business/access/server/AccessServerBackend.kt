@@ -18,12 +18,12 @@ class AccessServerBackend(
         DatabaseConnector(config),
     )
 
-    fun insertAccessRightEntries(accessRights: List<AccessRight>): List<String> =
-        accessRights.map { insertAccessRightEntry(it) }
+    fun insertAccessRightEntries(items: List<Item>): List<String> =
+        items.map { insertAccessRightEntry(it) }
 
-    fun insertAccessRightEntry(accessRight: AccessRight): String {
-        val fkAccessRight: String = dbConnector.insertHeader(accessRight.header)
-        accessRight.actions.forEach { act ->
+    fun insertAccessRightEntry(item: Item): String {
+        val fkAccessRight: String = dbConnector.insertMetadata(item.metadata)
+        item.actions.forEach { act ->
             val fkAction = dbConnector.insertAction(act, fkAccessRight)
             act.restrictions.forEach { r ->
                 fkAction.let { dbConnector.insertRestriction(r, fkAction) }
@@ -32,11 +32,11 @@ class AccessServerBackend(
         return fkAccessRight
     }
 
-    fun getAccessRightEntries(ids: List<String>): List<AccessRight> {
+    fun getAccessRightEntries(ids: List<String>): List<Item> {
         val headerToActions: Map<String, List<Action>> = dbConnector.getActions(ids)
-        return dbConnector.getHeaders(ids).map {
-            AccessRight(
-                header = it,
+        return dbConnector.getMetadata(ids).map {
+            Item(
+                metadata = it,
                 actions = headerToActions[it.id] ?: emptyList()
             )
         }
@@ -46,11 +46,11 @@ class AccessServerBackend(
 
     fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
 
-    fun getAccessRightList(limit: Int, offset: Int): List<AccessRight> {
+    fun getAccessRightList(limit: Int, offset: Int): List<Item> {
         return dbConnector.getAccessRightIds(limit, offset).takeIf {
             it.isNotEmpty()
         }?.let { headerIds ->
-            getAccessRightEntries(headerIds).sortedBy { it.header.id }
+            getAccessRightEntries(headerIds).sortedBy { it.metadata.id }
         } ?: emptyList()
     }
 }

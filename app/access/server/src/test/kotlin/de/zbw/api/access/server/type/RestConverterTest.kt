@@ -1,12 +1,14 @@
 package de.zbw.api.access.server.type
 
-import de.zbw.access.model.AccessInformation
-import de.zbw.business.access.server.AccessRight
+import de.zbw.access.model.ItemRest
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import org.hamcrest.CoreMatchers.`is`
@@ -18,17 +20,8 @@ class RestConverterTest {
     @Test
     fun testAccessRightConversion() {
         // given
-        val expected = AccessRight(
-            header = Header(
-                id = "foo",
-                tenant = "bla",
-                usageGuide = "guide",
-                template = null,
-                mention = true,
-                shareAlike = false,
-                commercialUse = true,
-                copyright = true,
-            ),
+        val expected = Item(
+            metadata = TEST_Metadata,
             actions = listOf(
                 Action(
                     type = ActionType.READ,
@@ -46,23 +39,33 @@ class RestConverterTest {
             ),
         )
 
-        val restObject = AccessInformation(
-            id = "foo",
-            tenant = "bla",
-            usageGuide = "guide",
-            template = null,
-            mention = true,
-            sharealike = false,
-            commercialuse = true,
-            copyright = true,
+        val restObject = ItemRest(
+            id = TEST_Metadata.id,
+            accessState = TEST_Metadata.access_state?.toRest(),
+            band = TEST_Metadata.band,
+            doi = TEST_Metadata.doi,
+            handle = TEST_Metadata.handle,
+            isbn = TEST_Metadata.isbn,
+            issn = TEST_Metadata.issn,
+            paketSigel = TEST_Metadata.paket_sigel,
+            ppn = TEST_Metadata.ppn,
+            ppnEbook = TEST_Metadata.ppn_ebook,
+            publicationType = TEST_Metadata.publicationType.toRest(),
+            publicationYear = TEST_Metadata.publicationYear,
+            rightsK10plus = TEST_Metadata.rights_k10plus,
+            serialNumber = TEST_Metadata.serialNumber,
+            title = TEST_Metadata.title,
+            titleJournal = TEST_Metadata.title_journal,
+            titleSeries = TEST_Metadata.title_series,
+            zbdId = TEST_Metadata.zbd_id,
             actions = listOf(
-                de.zbw.access.model.Action(
+                de.zbw.access.model.ActionRest(
                     permission = true,
-                    actiontype = de.zbw.access.model.Action.Actiontype.read,
+                    actiontype = de.zbw.access.model.ActionRest.Actiontype.read,
                     restrictions = listOf(
-                        de.zbw.access.model.Restriction(
-                            restrictiontype = de.zbw.access.model.Restriction.Restrictiontype.date,
-                            attributetype = de.zbw.access.model.Restriction.Attributetype.fromdate,
+                        de.zbw.access.model.RestrictionRest(
+                            restrictiontype = de.zbw.access.model.RestrictionRest.Restrictiontype.date,
+                            attributetype = de.zbw.access.model.RestrictionRest.Attributetype.fromdate,
                             attributevalues = listOf("2022-01-01"),
                         )
                     )
@@ -76,14 +79,14 @@ class RestConverterTest {
 
     @Test
     fun testActionTypeConversionRoundtrip() {
-        de.zbw.access.model.Action.Actiontype.values().toList().forEach {
+        de.zbw.access.model.ActionRest.Actiontype.values().toList().forEach {
             assertThat(it.toBusiness().toRest(), `is`(it))
         }
     }
 
     @Test
     fun testAttributeTypeConversionRoundtrip() {
-        de.zbw.access.model.Restriction.Attributetype.values().toList().forEach {
+        de.zbw.access.model.RestrictionRest.Attributetype.values().toList().forEach {
             assertThat(
                 it.toBusiness().toRest(),
                 `is`(it)
@@ -93,11 +96,34 @@ class RestConverterTest {
 
     @Test
     fun testRestrictionTypeConversionRoundtrip() {
-        de.zbw.access.model.Restriction.Restrictiontype.values().toList().forEach {
+        de.zbw.access.model.RestrictionRest.Restrictiontype.values().toList().forEach {
             assertThat(
                 it.toBusiness().toRest(),
                 `is`(it)
             )
         }
+    }
+
+    companion object {
+        val TEST_Metadata = Metadata(
+            id = "that-test",
+            access_state = AccessState.OPEN,
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paket_sigel = "sigel",
+            ppn = "ppn",
+            ppn_ebook = "ppn ebook",
+            publicationType = PublicationType.PERIODICAL,
+            publicationYear = 2000,
+            rights_k10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            title_journal = null,
+            title_series = null,
+            zbd_id = null,
+        )
     }
 }

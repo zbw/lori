@@ -1,15 +1,15 @@
-accessinformation:
+item:
   post:
     tags:
-      - accessinformation
-    summary: Add a new access information for a bibliographic item
-    operationId: addAccessInformation
+      - item
+    summary: Add a new item for a bibliographic item
+    operationId: addItem
     requestBody:
-      description: AccessInformation object
+      description: Item object
       content:
         application/json:
           schema:
-            $ref: 'accessinformation.model.yaml#/AccessInformation'
+            $ref: 'item.model.yaml#/ItemRest'
       required: true
     responses:
       405:
@@ -17,17 +17,17 @@ accessinformation:
         content: { }
     x-codegen-request-body-name: body
 
-accessinformation-id:
+item-id:
   get:
     tags:
-      - accessinformation
-    summary: Find access information by ID
-    description: Return an access information entry
-    operationId: getAccessInformationByIds
+      - item
+    summary: Find item by ID
+    description: Return an item entry
+    operationId: getItemByIds
     parameters:
       - name: id
         in: path
-        description: ID of access information to return
+        description: ID of item to return
         required: true
         schema:
           type: string
@@ -37,7 +37,7 @@ accessinformation-id:
         content:
           application/json:
             schema:
-              $ref: 'accessinformation.model.yaml#/AccessInformation'
+              $ref: 'item.model.yaml#/ItemRest'
       404:
         description: Id not found
         content: { }
@@ -46,35 +46,35 @@ accessinformation-id:
         content: { }
   delete:
     tags:
-      - accessinformation
-    summary: Delete an access information
-    operationId: deleteAccessInformationById
+      - item
+    summary: Delete an item
+    operationId: deleteItemById
     parameters:
       - name: id
         in: path
-        description: Access information id to delete
+        description: Item id to delete
         required: true
         schema:
           type: string
     responses:
       200:
         description: Deletion was successfull
-        content: {}
+        content: { }
       404:
         description: Id not found
-        content: {}
+        content: { }
 
-accessinformation-list:
+item-list:
   get:
     tags:
-      - accessinformation
-    summary: Return a list of accessinformation items
+      - item
+    summary: Return a list of item items
     description: Return a list of items with offset and limit
-    operationId: getAccessInformationList
+    operationId: getItemList
     parameters:
       - name: offset
         in: query
-        description: The number of items to skup befor collect
+        description: An offset.
         required: false
         schema:
           type: integer
@@ -97,7 +97,7 @@ accessinformation-list:
             schema:
               type: array
               items:
-                $ref: 'accessinformation.model.yaml#/AccessInformation'
+                $ref: 'item.model.yaml#/ItemRest'
       400:
         description: Bad input
         content: { }

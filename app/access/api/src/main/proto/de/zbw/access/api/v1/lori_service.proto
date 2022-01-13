@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package de.zbw.access.api.v1;
+
+import "de/zbw/access/api/v1/lori_model.proto";
+
+option java_package = "de.zbw.access.api";
+option java_multiple_files = true;
+
+service LoriService {
+  rpc AddItem (AddItemRequest) returns (AddItemResponse);
+  rpc GetItem (GetItemRequest) returns (GetItemResponse);
+}

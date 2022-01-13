@@ -29,14 +29,15 @@ java {
 protobuf {
     protoc {
         // The artifact spec for the Protobuf Compiler
-        artifact = "com.google.protobuf:protoc:3.6.1"
+        val protobufVersion by System.getProperties()
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
     plugins {
         // Optional: an artifact spec for a protoc plugin, with "grpc" as
         // the identifier, which can be referred to in the "plugins"
         // container of the "generateProtoTasks" closure.
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.15.1"
+            artifact = "io.grpc:protoc-gen-grpc-java:1.43.2"
         }
         id("grpckt") {
             val grpcKotlinVersion by System.getProperties()
@@ -55,8 +56,9 @@ protobuf {
 
 dependencies {
     val grpcVersion by System.getProperties()
-    api("com.google.protobuf:protobuf-java-util:3.15.8")
-    implementation("com.google.protobuf:protobuf-java:3.15.8")
+    val protobufVersion by System.getProperties()
+    api("com.google.protobuf:protobuf-java-util:$protobufVersion")
+    implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     api("io.grpc:grpc-kotlin-stub:1.0.0")

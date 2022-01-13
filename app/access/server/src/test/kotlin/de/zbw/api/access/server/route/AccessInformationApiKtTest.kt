@@ -2,9 +2,9 @@ package de.zbw.api.access.server.route
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import de.zbw.access.model.AccessInformation
-import de.zbw.access.model.Action
-import de.zbw.access.model.Restriction
+import de.zbw.access.model.ActionRest
+import de.zbw.access.model.ItemRest
+import de.zbw.access.model.RestrictionRest
 import de.zbw.api.access.server.ServicePoolWithProbes
 import de.zbw.api.access.server.config.AccessConfiguration
 import de.zbw.api.access.server.type.toBusiness
@@ -47,14 +47,14 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ACCESS_INFORMATION_REST))
+                    setBody(jsonAsString(ITEM_REST))
                 }
             ) {
                 assertThat("Should return Accepted", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertAccessRightEntry(ACCESS_INFORMATION_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertAccessRightEntry(ITEM_REST.toBusiness()) }
             }
         }
     }
@@ -78,10 +78,10 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.contentType)
-                    setBody(jsonAsString(ACCESS_INFORMATION_REST))
+                    setBody(jsonAsString(ITEM_REST))
                 }
             ) {
                 assertThat(
@@ -97,7 +97,7 @@ class AccessInformationApiKtTest {
     fun testAccessInformationPostConflictId() {
 
         val backend = mockk<AccessServerBackend>(relaxed = true) {
-            every { containsAccessRightId(ACCESS_INFORMATION_REST.id) } returns true
+            every { containsAccessRightId(ITEM_REST.id) } returns true
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -112,10 +112,10 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ACCESS_INFORMATION_REST))
+                    setBody(jsonAsString(ITEM_REST))
                 }
             ) {
                 assertThat(
@@ -145,12 +145,12 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
                         jsonAsString(
-                            ACCESS_INFORMATION_REST
+                            ITEM_REST
                         )
                     )
                 }
@@ -160,7 +160,7 @@ class AccessInformationApiKtTest {
                     response.status(),
                     `is`(HttpStatusCode.InternalServerError)
                 )
-                verify(exactly = 1) { backend.insertAccessRightEntry(ACCESS_INFORMATION_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertAccessRightEntry(ITEM_REST.toBusiness()) }
             }
         }
     }
@@ -183,7 +183,7 @@ class AccessInformationApiKtTest {
 
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Post, "/api/v1/accessinformation") {
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -207,7 +207,7 @@ class AccessInformationApiKtTest {
         // given
         val testId = "someId"
         val backend = mockk<AccessServerBackend>(relaxed = true) {
-            every { getAccessRightEntries(listOf(testId)) } returns listOf(ACCESS_INFORMATION_REST.toBusiness())
+            every { getAccessRightEntries(listOf(testId)) } returns listOf(ITEM_REST.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -221,11 +221,11 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/$testId")) {
                 val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<AccessInformation>() {}.type
-                val received: AccessInformation = Gson().fromJson(content, groupListType)
-                assertThat(received, `is`(ACCESS_INFORMATION_REST))
+                val groupListType: Type = object : TypeToken<ItemRest>() {}.type
+                val received: ItemRest = Gson().fromJson(content, groupListType)
+                assertThat(received, `is`(ITEM_REST))
             }
         }
     }
@@ -249,7 +249,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Get, "/api/v1/accessinformation/$testId")
+            handleRequest(HttpMethod.Get, "/api/v1/item/$testId")
             // exception
         }
     }
@@ -260,7 +260,7 @@ class AccessInformationApiKtTest {
         val offset = 2
         val limit = 5
         val backend = mockk<AccessServerBackend>(relaxed = true) {
-            every { getAccessRightList(limit, offset) } returns listOf(ACCESS_INFORMATION_REST.toBusiness())
+            every { getAccessRightList(limit, offset) } returns listOf(ITEM_REST.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -274,11 +274,11 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
                 val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<AccessInformation>>() {}.type
-                val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
+                val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
+                val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
+                assertThat(received.toList(), `is`(listOf(ITEM_REST)))
             }
         }
         verify(exactly = 1) { backend.getAccessRightList(limit, offset) }
@@ -295,7 +295,7 @@ class AccessInformationApiKtTest {
                     defaultLimit,
                     defaultOffset
                 )
-            } returns listOf(ACCESS_INFORMATION_REST.toBusiness())
+            } returns listOf(ITEM_REST.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -309,11 +309,11 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list")) {
                 val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<AccessInformation>>() {}.type
-                val received: ArrayList<AccessInformation> = Gson().fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(ACCESS_INFORMATION_REST)))
+                val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
+                val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
+                assertThat(received.toList(), `is`(listOf(ITEM_REST)))
             }
         }
         verify(exactly = 1) { backend.getAccessRightList(defaultLimit, defaultOffset) }
@@ -367,7 +367,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/list?limit=$limit&offset=$offset")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
                 assertThat(msg, response.status(), `is`(HttpStatusCode.BadRequest))
             }
         }
@@ -389,7 +389,7 @@ class AccessInformationApiKtTest {
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/accessinformation/")) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/")) {
                 assertThat(
                     "Should return 404 because of missing get parameter",
                     response.status(),
@@ -420,7 +420,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
                 assertThat(
                     "Should return 200 indicating a successful operation",
                     response.status(),
@@ -451,7 +451,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")
+            handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")
         }
     }
 
@@ -476,7 +476,7 @@ class AccessInformationApiKtTest {
 
         // when + then
         withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/accessinformation/$givenDeleteId")) {
+            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
                 assertThat(
                     "Should return 500 indicating that an internal error has occurred",
                     response.status(),
@@ -498,24 +498,34 @@ class AccessInformationApiKtTest {
         )
 
         val RESTRICTION_REST =
-            Restriction(
-                restrictiontype = Restriction.Restrictiontype.date,
-                attributetype = Restriction.Attributetype.fromdate,
+            RestrictionRest(
+                restrictiontype = RestrictionRest.Restrictiontype.date,
+                attributetype = RestrictionRest.Attributetype.fromdate,
                 attributevalues = listOf("2022-01-0sav1"),
             )
-        val ACCESS_INFORMATION_REST = AccessInformation(
+        val ITEM_REST = ItemRest(
             id = "foo",
-            tenant = "bla",
-            usageGuide = "guide",
-            template = null,
-            mention = true,
-            sharealike = false,
-            commercialuse = true,
-            copyright = true,
+            accessState = ItemRest.AccessState.open,
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paketSigel = "sigel",
+            ppn = "ppn",
+            ppnEbook = "ppn ebook",
+            publicationType = ItemRest.PublicationType.periodical,
+            publicationYear = 2000,
+            rightsK10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            titleJournal = null,
+            titleSeries = null,
+            zbdId = null,
             actions = listOf(
-                Action(
+                ActionRest(
                     permission = true,
-                    actiontype = Action.Actiontype.read,
+                    actiontype = ActionRest.Actiontype.read,
                     restrictions = listOf(
                         RESTRICTION_REST
                     )

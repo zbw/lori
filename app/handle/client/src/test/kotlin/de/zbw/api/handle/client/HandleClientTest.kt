@@ -33,7 +33,7 @@ class HandleClientTest {
             // given
             val expected = AddHandleResponse.getDefaultInstance()
             val stub = mockk<HandleServiceGrpcKt.HandleServiceCoroutineStub> {
-                coEvery { addHandle(any()) } returns expected
+                coEvery { addHandle(any(), any()) } returns expected
                 every { withDeadlineAfter(any(), any()) } returns this
             }
             val client = HandleClient(
@@ -45,7 +45,7 @@ class HandleClientTest {
             val received = client.addHandle(AddHandleRequest.getDefaultInstance())
             // then
             assertThat(received, `is`(expected))
-            coVerify(exactly = 1) { stub.addHandle(AddHandleRequest.getDefaultInstance()) }
+            coVerify(exactly = 1) { stub.addHandle(AddHandleRequest.getDefaultInstance(), any()) }
         }
     }
 
@@ -58,7 +58,7 @@ class HandleClientTest {
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
                 stub = mockk {
-                    coEvery { addHandleValues(any()) } returns expected
+                    coEvery { addHandleValues(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )
@@ -76,7 +76,7 @@ class HandleClientTest {
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
                 stub = mockk {
-                    coEvery { deleteHandle(any()) } returns expected
+                    coEvery { deleteHandle(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )
@@ -94,7 +94,7 @@ class HandleClientTest {
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
                 stub = mockk {
-                    coEvery { modifyHandleValues(any()) } returns expected
+                    coEvery { modifyHandleValues(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )
@@ -112,7 +112,7 @@ class HandleClientTest {
                 configuration = HandleClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk(),
                 stub = mockk {
-                    coEvery { listHandleValues(any()) } returns expected
+                    coEvery { listHandleValues(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )

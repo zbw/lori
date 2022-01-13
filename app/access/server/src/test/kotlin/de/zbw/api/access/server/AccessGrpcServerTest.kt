@@ -1,23 +1,26 @@
 package de.zbw.api.access.server
 
-import de.zbw.access.api.AccessRightProto
 import de.zbw.access.api.ActionProto
 import de.zbw.access.api.ActionTypeProto
-import de.zbw.access.api.AddAccessInformationRequest
-import de.zbw.access.api.AddAccessInformationResponse
+import de.zbw.access.api.AddItemRequest
+import de.zbw.access.api.AddItemResponse
 import de.zbw.access.api.AttributeProto
 import de.zbw.access.api.AttributeTypeProto
-import de.zbw.access.api.GetAccessInformationRequest
-import de.zbw.access.api.GetAccessInformationResponse
+import de.zbw.access.api.GetItemRequest
+import de.zbw.access.api.GetItemResponse
+import de.zbw.access.api.ItemProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
-import de.zbw.business.access.server.AccessRight
+import de.zbw.api.access.server.type.toProto
 import de.zbw.business.access.server.AccessServerBackend
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -38,9 +41,9 @@ import java.sql.SQLException
 class AccessGrpcServerTest {
 
     @Test
-    fun testAddAccessInformation() {
+    fun testAddItem() {
         runBlocking {
-            val request = AddAccessInformationRequest
+            val request = AddItemRequest
                 .newBuilder()
                 .build()
 
@@ -48,19 +51,19 @@ class AccessGrpcServerTest {
                 every { insertAccessRightEntry(any()) } returns "foo"
             }
 
-            val response = AccessGrpcServer(mockk(), backendMockk).addAccessInformation(request)
-            assertThat(response, `is`(AddAccessInformationResponse.getDefaultInstance()))
+            val response = AccessGrpcServer(mockk(), backendMockk).addItem(request)
+            assertThat(response, `is`(AddItemResponse.getDefaultInstance()))
         }
     }
 
     @Test(expectedExceptions = [StatusRuntimeException::class])
-    fun testAddAccessInformationError() {
+    fun testAddItemError() {
         runBlocking {
-            val request = AddAccessInformationRequest
+            val request = AddItemRequest
                 .newBuilder()
                 .addAllItems(
                     listOf(
-                        AccessRightProto
+                        ItemProto
                             .newBuilder()
                             .setId("foo")
                             .build()
@@ -72,31 +75,22 @@ class AccessGrpcServerTest {
                 every { insertAccessRightEntry(any()) } throws SQLException()
             }
 
-            AccessGrpcServer(mockk(), backendMockk).addAccessInformation(request)
+            AccessGrpcServer(mockk(), backendMockk).addItem(request)
         }
     }
 
     @Test
-    fun testGetAccessInformation() {
+    fun testGetItem() {
         runBlocking {
-            val request = GetAccessInformationRequest
+            val request = GetItemRequest
                 .newBuilder()
                 .addAllIds(listOf("foo"))
                 .build()
 
             val backendMockk = mockk<AccessServerBackend> {
                 every { getAccessRightEntries(any()) } returns listOf(
-                    AccessRight(
-                        header = Header(
-                            id = "foo",
-                            tenant = "www.zbw.eu",
-                            usageGuide = "usageGuide",
-                            template = "CC",
-                            mention = true,
-                            shareAlike = true,
-                            commercialUse = false,
-                            copyright = true,
-                        ),
+                    Item(
+                        metadata = TEST_Metadata,
                         actions = listOf(
                             Action(
                                 type = ActionType.READ,
@@ -116,22 +110,29 @@ class AccessGrpcServerTest {
                 )
             }
 
-            val response = AccessGrpcServer(mockk(), backendMockk).getAccessInformation(request)
+            val response = AccessGrpcServer(mockk(), backendMockk).getItem(request)
             assertThat(
                 response,
                 `is`(
-                    GetAccessInformationResponse.newBuilder()
+                    GetItemResponse.newBuilder()
                         .addAllAccessRights(
                             listOf(
-                                AccessRightProto.newBuilder()
-                                    .setId("foo")
-                                    .setTenant("www.zbw.eu")
-                                    .setUsageGuide("usageGuide")
-                                    .setTemplate("CC")
-                                    .setMention(true)
-                                    .setSharealike(true)
-                                    .setCommercialuse(false)
-                                    .setCopyright(true)
+                                ItemProto.newBuilder()
+                                    .setId(TEST_Metadata.id)
+                                    .setAccessState(TEST_Metadata.access_state!!.toProto())
+                                    .setBand(TEST_Metadata.band)
+                                    .setDoi(TEST_Metadata.doi)
+                                    .setHandle(TEST_Metadata.handle)
+                                    .setIsbn(TEST_Metadata.isbn)
+                                    .setIssn(TEST_Metadata.issn)
+                                    .setPaketSigel(TEST_Metadata.paket_sigel)
+                                    .setPpn(TEST_Metadata.ppn)
+                                    .setPpnEbook(TEST_Metadata.ppn_ebook)
+                                    .setPublicationType(TEST_Metadata.publicationType.toProto())
+                                    .setPublicationYear(TEST_Metadata.publicationYear)
+                                    .setRightsK10Plus(TEST_Metadata.rights_k10plus)
+                                    .setSerialNumber(TEST_Metadata.serialNumber)
+                                    .setTitle(TEST_Metadata.title)
                                     .addAllActions(
                                         listOf(
                                             ActionProto.newBuilder()
@@ -163,9 +164,9 @@ class AccessGrpcServerTest {
     }
 
     @Test(expectedExceptions = [StatusRuntimeException::class])
-    fun testGetAccessInformationError() {
+    fun testGetItemError() {
         runBlocking {
-            val request = GetAccessInformationRequest
+            val request = GetItemRequest
                 .newBuilder()
                 .addAllIds(listOf("foo"))
                 .build()
@@ -174,7 +175,30 @@ class AccessGrpcServerTest {
                 every { getAccessRightEntries(any()) } throws SQLException()
             }
 
-            AccessGrpcServer(mockk(), backendMockk).getAccessInformation(request)
+            AccessGrpcServer(mockk(), backendMockk).getItem(request)
         }
+    }
+
+    companion object {
+        val TEST_Metadata = Metadata(
+            id = "that-test",
+            access_state = AccessState.OPEN,
+            band = "band",
+            doi = "doi:example.org",
+            handle = "hdl:example.handle.net",
+            isbn = "1234567890123",
+            issn = "123456",
+            paket_sigel = "sigel",
+            ppn = "ppn",
+            ppn_ebook = "ppn ebook",
+            publicationType = PublicationType.MONO,
+            publicationYear = 2000,
+            rights_k10plus = "some rights",
+            serialNumber = "12354566",
+            title = "Important title",
+            title_journal = null,
+            title_series = null,
+            zbd_id = null,
+        )
     }
 }

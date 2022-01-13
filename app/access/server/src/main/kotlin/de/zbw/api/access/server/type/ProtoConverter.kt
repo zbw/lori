@@ -1,18 +1,21 @@
 package de.zbw.api.access.server.type
 
-import de.zbw.access.api.AccessRightProto
+import de.zbw.access.api.AccessStateProto
 import de.zbw.access.api.ActionProto
 import de.zbw.access.api.ActionTypeProto
 import de.zbw.access.api.AttributeProto
 import de.zbw.access.api.AttributeTypeProto
+import de.zbw.access.api.ItemProto
+import de.zbw.access.api.PublicationTypeProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
-import de.zbw.business.access.server.AccessRight
+import de.zbw.business.access.server.AccessState
 import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Header
+import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.Status
@@ -24,20 +27,64 @@ import io.grpc.StatusRuntimeException
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-fun AccessRightProto.toBusiness(): AccessRight =
-    AccessRight(
-        header = Header(
-            this.id,
-            this.tenant.ifEmpty { null },
-            this.usageGuide.ifEmpty { null },
-            this.template.ifEmpty { null },
-            this.mention,
-            this.sharealike,
-            this.commercialuse,
-            this.copyright,
+fun ItemProto.toBusiness(): Item =
+    Item(
+        metadata = de.zbw.business.access.server.Metadata(
+            id = id,
+            access_state = this.returnIfFieldIsSet(ItemProto.ACCESS_STATE_FIELD_NUMBER)?.accessState?.toBusiness(),
+            band = this.returnIfFieldIsSet(ItemProto.BAND_FIELD_NUMBER)?.band,
+            doi = this.returnIfFieldIsSet(ItemProto.DOI_FIELD_NUMBER)?.doi,
+            handle = this.handle,
+            isbn = this.returnIfFieldIsSet(ItemProto.ISBN_FIELD_NUMBER)?.isbn,
+            issn = this.returnIfFieldIsSet(ItemProto.ISSN_FIELD_NUMBER)?.issn,
+            paket_sigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
+            ppn = this.returnIfFieldIsSet(ItemProto.PPN_FIELD_NUMBER)?.ppn,
+            ppn_ebook = this.returnIfFieldIsSet(ItemProto.PPN_EBOOK_FIELD_NUMBER)?.ppnEbook,
+            publicationType = this.publicationType.toBusiness(),
+            publicationYear = this.publicationYear,
+            rights_k10plus = this.returnIfFieldIsSet(ItemProto.RIGHTS_K10PLUS_FIELD_NUMBER)?.rightsK10Plus,
+            serialNumber = this.returnIfFieldIsSet(ItemProto.SERIAL_NUMBER_FIELD_NUMBER)?.serialNumber,
+            title = title,
+            title_journal = this.returnIfFieldIsSet(ItemProto.TITLE_JOURNAL_FIELD_NUMBER)?.titleJournal,
+            title_series = this.returnIfFieldIsSet(ItemProto.TITLE_SERIES_FIELD_NUMBER)?.titleSeries,
+            zbd_id = this.returnIfFieldIsSet(ItemProto.ZBD_ID_FIELD_NUMBER)?.zbdId,
         ),
         this.actionsList.map { it.toBusiness() },
     )
+
+private fun ItemProto.returnIfFieldIsSet(fieldNumber: Int) = this.takeIf {
+    it.hasField(
+        ItemProto.getDescriptor().findFieldByNumber(fieldNumber)
+    )
+}
+
+fun AccessState.toProto(): AccessStateProto =
+    when (this) {
+        AccessState.CLOSED -> AccessStateProto.ACCESS_STATE_PROTO_CLOSED
+        AccessState.OPEN -> AccessStateProto.ACCESS_STATE_PROTO_OPEN
+        AccessState.RESTRICTED -> AccessStateProto.ACCESS_STATE_PROTO_RESTRICTED
+    }
+
+fun AccessStateProto.toBusiness(): AccessState? =
+    when (this) {
+        AccessStateProto.ACCESS_STATE_PROTO_CLOSED -> AccessState.CLOSED
+        AccessStateProto.ACCESS_STATE_PROTO_OPEN -> AccessState.OPEN
+        AccessStateProto.ACCESS_STATE_PROTO_RESTRICTED -> AccessState.RESTRICTED
+        else -> null
+    }
+
+fun PublicationType.toProto(): PublicationTypeProto =
+    when (this) {
+        PublicationType.MONO -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO
+        PublicationType.PERIODICAL -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL
+    }
+
+fun PublicationTypeProto.toBusiness(): PublicationType =
+    when (this) {
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO -> PublicationType.MONO
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL -> PublicationType.PERIODICAL
+        else -> throw IllegalArgumentException("PublicationType has to be set.")
+    }
 
 private fun ActionProto.toBusiness(): Action =
     Action(

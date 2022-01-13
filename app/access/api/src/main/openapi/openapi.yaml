@@ -1,25 +1,25 @@
 openapi: 3.0.1
 info:
   title: Access Service API
-  version: 0.0.1
+  version: 0.0.2
   contact:
     email: c.bay@zbw.eu
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 tags:
-  - name: AccessInformation
-    description: Access information of an bibliographic item
+  - name: ItemRest
+    description: A bibliographic item
 paths:
-  /accessinformation:
-    $ref: 'accessinformation.api.yaml#/accessinformation'
-  /accessinformation/{id}:
-    $ref: 'accessinformation.api.yaml#/accessinformation-id'
-  /accessinformation/list:
-    $ref: 'accessinformation.api.yaml#/accessinformation-list'
+  /item:
+    $ref: 'item.api.yaml#/item'
+  /item/{id}:
+    $ref: 'item.api.yaml#/item-id'
+  /item/list:
+    $ref: 'item.api.yaml#/item-list'
 
 
 components:
   schemas:
-    AccessInformation:
-      $ref: 'accessinformation.model.yaml#/AccessInformation'
+    ItemRest:
+      $ref: 'item.model.yaml#/ItemRest'
