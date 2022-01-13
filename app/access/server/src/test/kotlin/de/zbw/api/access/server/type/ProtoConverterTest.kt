@@ -14,6 +14,7 @@ import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -31,10 +32,10 @@ import org.testng.annotations.Test
 class ProtoConverterTest {
 
     @Test
-    fun testAccessRightConversion() {
+    fun testToBusinessConversion() {
         // given
         val expected = Item(
-            metadata = TEST_Metadata,
+            metadata = TEST_Metadata.copy(zbd_id = null),
             actions = listOf(
                 Action(
                     type = ActionType.READ,
@@ -63,14 +64,13 @@ class ProtoConverterTest {
             .setPaketSigel(expected.metadata.paket_sigel)
             .setPpn(expected.metadata.ppn)
             .setPpnEbook(expected.metadata.ppn_ebook)
-            .setPublicationType(expected.metadata.publicationType)
+            .setPublicationType(expected.metadata.publicationType.toProto())
             .setPublicationYear(expected.metadata.publicationYear)
             .setRightsK10Plus(expected.metadata.rights_k10plus)
             .setSerialNumber(expected.metadata.serialNumber)
             .setTitle(expected.metadata.title)
             .setTitleJournal(expected.metadata.title_journal)
             .setTitleSeries(expected.metadata.title_series)
-            .setZbdId(expected.metadata.zbd_id)
             .setId(expected.metadata.id)
             .addAllActions(
                 listOf(
@@ -160,7 +160,7 @@ class ProtoConverterTest {
             paket_sigel = "sigel",
             ppn = "ppn",
             ppn_ebook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = PublicationType.MONO,
             publicationYear = 2000,
             rights_k10plus = "some rights",
             serialNumber = "12354566",
@@ -169,6 +169,5 @@ class ProtoConverterTest {
             title_series = "Title series",
             zbd_id = "zbd id",
         )
-        // TODO(CB): Test case for not set values
     }
 }

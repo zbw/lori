@@ -6,6 +6,7 @@ import de.zbw.access.api.ActionTypeProto
 import de.zbw.access.api.AttributeProto
 import de.zbw.access.api.AttributeTypeProto
 import de.zbw.access.api.ItemProto
+import de.zbw.access.api.PublicationTypeProto
 import de.zbw.access.api.RestrictionProto
 import de.zbw.access.api.RestrictionTypeProto
 import de.zbw.business.access.server.AccessState
@@ -14,6 +15,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.Status
@@ -38,7 +40,7 @@ fun ItemProto.toBusiness(): Item =
             paket_sigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
             ppn = this.returnIfFieldIsSet(ItemProto.PPN_FIELD_NUMBER)?.ppn,
             ppn_ebook = this.returnIfFieldIsSet(ItemProto.PPN_EBOOK_FIELD_NUMBER)?.ppnEbook,
-            publicationType = this.publicationType,
+            publicationType = this.publicationType.toBusiness(),
             publicationYear = this.publicationYear,
             rights_k10plus = this.returnIfFieldIsSet(ItemProto.RIGHTS_K10PLUS_FIELD_NUMBER)?.rightsK10Plus,
             serialNumber = this.returnIfFieldIsSet(ItemProto.SERIAL_NUMBER_FIELD_NUMBER)?.serialNumber,
@@ -69,6 +71,19 @@ fun AccessStateProto.toBusiness(): AccessState? =
         AccessStateProto.ACCESS_STATE_PROTO_OPEN -> AccessState.OPEN
         AccessStateProto.ACCESS_STATE_PROTO_RESTRICTED -> AccessState.RESTRICTED
         else -> null
+    }
+
+fun PublicationType.toProto(): PublicationTypeProto =
+    when (this) {
+        PublicationType.MONO -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO
+        PublicationType.PERIODICAL -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL
+    }
+
+fun PublicationTypeProto.toBusiness(): PublicationType =
+    when (this) {
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO -> PublicationType.MONO
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL -> PublicationType.PERIODICAL
+        else -> throw IllegalArgumentException("PublicationType has to be set.")
     }
 
 private fun ActionProto.toBusiness(): Action =

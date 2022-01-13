@@ -20,6 +20,7 @@ import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.grpc.StatusRuntimeException
@@ -127,8 +128,8 @@ class AccessGrpcServerTest {
                                     .setPaketSigel(TEST_Metadata.paket_sigel)
                                     .setPpn(TEST_Metadata.ppn)
                                     .setPpnEbook(TEST_Metadata.ppn_ebook)
-                                    .setPublicationType(TEST_Metadata.publicationType)
-                                    .setPublicationYear(TEST_Metadata.publicationYear!!)
+                                    .setPublicationType(TEST_Metadata.publicationType.toProto())
+                                    .setPublicationYear(TEST_Metadata.publicationYear)
                                     .setRightsK10Plus(TEST_Metadata.rights_k10plus)
                                     .setSerialNumber(TEST_Metadata.serialNumber)
                                     .setTitle(TEST_Metadata.title)
@@ -190,7 +191,7 @@ class AccessGrpcServerTest {
             paket_sigel = "sigel",
             ppn = "ppn",
             ppn_ebook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = PublicationType.MONO,
             publicationYear = 2000,
             rights_k10plus = "some rights",
             serialNumber = "12354566",

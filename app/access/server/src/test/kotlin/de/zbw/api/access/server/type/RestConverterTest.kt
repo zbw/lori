@@ -8,6 +8,7 @@ import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
 import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import org.hamcrest.CoreMatchers.`is`
@@ -49,7 +50,7 @@ class RestConverterTest {
             paketSigel = TEST_Metadata.paket_sigel,
             ppn = TEST_Metadata.ppn,
             ppnEbook = TEST_Metadata.ppn_ebook,
-            publicationType = TEST_Metadata.publicationType,
+            publicationType = TEST_Metadata.publicationType.toRest(),
             publicationYear = TEST_Metadata.publicationYear,
             rightsK10plus = TEST_Metadata.rights_k10plus,
             serialNumber = TEST_Metadata.serialNumber,
@@ -115,7 +116,7 @@ class RestConverterTest {
             paket_sigel = "sigel",
             ppn = "ppn",
             ppn_ebook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = PublicationType.PERIODICAL,
             publicationYear = 2000,
             rights_k10plus = "some rights",
             serialNumber = "12354566",

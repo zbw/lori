@@ -514,7 +514,7 @@ class AccessInformationApiKtTest {
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = ItemRest.PublicationType.periodical,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",

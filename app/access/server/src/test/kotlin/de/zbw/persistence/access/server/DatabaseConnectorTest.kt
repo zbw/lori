@@ -6,6 +6,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import io.mockk.every
@@ -351,7 +352,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             paket_sigel = "sigel",
             ppn = "ppn",
             ppn_ebook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = PublicationType.PERIODICAL,
             publicationYear = 2000,
             rights_k10plus = "some rights",
             serialNumber = "12354566",

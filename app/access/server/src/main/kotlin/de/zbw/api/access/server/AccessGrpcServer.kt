@@ -13,6 +13,7 @@ import de.zbw.api.access.server.config.AccessConfiguration
 import de.zbw.api.access.server.type.toBusiness
 import de.zbw.api.access.server.type.toProto
 import de.zbw.business.access.server.AccessServerBackend
+import de.zbw.business.access.server.Item
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import java.sql.SQLException
@@ -45,7 +46,7 @@ class AccessGrpcServer(
 
     override suspend fun getItem(request: GetItemRequest): GetItemResponse {
         try {
-            val accessRights = backend.getAccessRightEntries(request.idsList)
+            val accessRights: List<Item> = backend.getAccessRightEntries(request.idsList)
 
             return GetItemResponse.newBuilder()
                 .addAllAccessRights(
@@ -55,17 +56,17 @@ class AccessGrpcServer(
                             .setIfNotNull(it.metadata.access_state) { b, value -> b.setAccessState(value.toProto()) }
                             .setIfNotNull(it.metadata.band) { b, value -> b.setBand(value) }
                             .setIfNotNull(it.metadata.doi) { b, value -> b.setDoi(value) }
-                            .setIfNotNull(it.metadata.handle) { b, value -> b.setHandle(value) }
+                            .setHandle(it.metadata.handle)
                             .setIfNotNull(it.metadata.isbn) { b, value -> b.setIsbn(value) }
                             .setIfNotNull(it.metadata.issn) { b, value -> b.setIssn(value) }
                             .setIfNotNull(it.metadata.paket_sigel) { b, value -> b.setPaketSigel(value) }
                             .setIfNotNull(it.metadata.ppn) { b, value -> b.setPpn(value) }
                             .setIfNotNull(it.metadata.ppn_ebook) { b, value -> b.setPpnEbook(value) }
-                            .setIfNotNull(it.metadata.publicationType) { b, value -> b.setPublicationType(value) }
-                            .setIfNotNull(it.metadata.publicationYear) { b, value -> b.setPublicationYear(value) }
+                            .setPublicationType(it.metadata.publicationType.toProto())
+                            .setPublicationYear(it.metadata.publicationYear)
                             .setIfNotNull(it.metadata.rights_k10plus) { b, value -> b.setRightsK10Plus(value) }
                             .setIfNotNull(it.metadata.serialNumber) { b, value -> b.setSerialNumber(value) }
-                            .setIfNotNull(it.metadata.title) { b, value -> b.setTitle(value) }
+                            .setTitle(it.metadata.title)
                             .setIfNotNull(it.metadata.title_journal) { b, value -> b.setTitleJournal(value) }
                             .setIfNotNull(it.metadata.title_series) { b, value -> b.setTitleSeries(value) }
                             .setIfNotNull(it.metadata.zbd_id) { b, value -> b.setZbdId(value) }

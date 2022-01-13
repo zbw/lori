@@ -16,7 +16,7 @@ data class Metadata(
     val paket_sigel: String?,
     val ppn: String?,
     val ppn_ebook: String?,
-    val publicationType: String,
+    val publicationType: PublicationType,
     val publicationYear: Int,
     val rights_k10plus: String?,
     val serialNumber: String?,
@@ -30,6 +30,11 @@ enum class AccessState {
     CLOSED,
     OPEN,
     RESTRICTED,
+}
+
+enum class PublicationType {
+    MONO,
+    PERIODICAL,
 }
 
 data class Action(

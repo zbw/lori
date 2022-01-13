@@ -9,6 +9,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 
@@ -31,7 +32,7 @@ fun ItemRest.toBusiness() =
             access_state = accessState?.toBusiness(),
             publicationYear = publicationYear,
             band = band,
-            publicationType = publicationType,
+            publicationType = publicationType.toBusiness(),
             doi = doi,
             serialNumber = serialNumber,
             isbn = isbn,
@@ -124,7 +125,7 @@ fun Item.toRest(): ItemRest =
         paketSigel = this.metadata.paket_sigel,
         ppn = this.metadata.ppn,
         ppnEbook = this.metadata.ppn_ebook,
-        publicationType = this.metadata.publicationType,
+        publicationType = this.metadata.publicationType.toRest(),
         publicationYear = this.metadata.publicationYear,
         rightsK10plus = this.metadata.rights_k10plus,
         serialNumber = this.metadata.serialNumber,
@@ -159,6 +160,18 @@ internal fun AccessState.toRest(): ItemRest.AccessState =
         AccessState.CLOSED -> ItemRest.AccessState.closed
         AccessState.OPEN -> ItemRest.AccessState.open
         AccessState.RESTRICTED -> ItemRest.AccessState.restricted
+    }
+
+internal fun ItemRest.PublicationType.toBusiness(): PublicationType =
+    when (this) {
+        ItemRest.PublicationType.mono -> PublicationType.MONO
+        ItemRest.PublicationType.periodical -> PublicationType.PERIODICAL
+    }
+
+internal fun PublicationType.toRest(): ItemRest.PublicationType =
+    when (this) {
+        PublicationType.MONO -> ItemRest.PublicationType.mono
+        PublicationType.PERIODICAL -> ItemRest.PublicationType.periodical
     }
 
 internal fun AttributeType.toRest(): RestrictionRest.Attributetype =

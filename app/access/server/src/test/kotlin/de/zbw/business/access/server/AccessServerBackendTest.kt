@@ -116,7 +116,7 @@ class AccessServerBackendTest : DatabaseTest() {
             paket_sigel = "sigel",
             ppn = "ppn",
             ppn_ebook = "ppn ebook",
-            publicationType = "publicationType",
+            publicationType = PublicationType.MONO,
             publicationYear = 2000,
             rights_k10plus = "some rights",
             serialNumber = "12354566",

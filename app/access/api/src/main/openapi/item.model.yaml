@@ -34,6 +34,9 @@ ItemRest:
       type: string
     publicationType:
       type: string
+      enum:
+        - mono
+        - periodical
     publicationYear:
       type: integer
     rightsK10plus:

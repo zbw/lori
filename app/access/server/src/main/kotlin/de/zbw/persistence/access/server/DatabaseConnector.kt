@@ -7,6 +7,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
 import java.sql.Connection
@@ -63,7 +64,7 @@ class DatabaseConnector(
             this.setIfNotNull(10, metadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(11, metadata.publicationType)
+            this.setString(11, metadata.publicationType.toString())
             this.setIfNotNull(12, metadata.doi) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -153,10 +154,10 @@ class DatabaseConnector(
                     title = rs.getString(5),
                     title_journal = rs.getString(6),
                     title_series = rs.getString(7),
-                    access_state = AccessState.valueOf(rs.getString(8)),
+                    access_state = rs.getString(8)?.let { AccessState.valueOf(it) },
                     publicationYear = rs.getInt(9),
                     band = rs.getString(10),
-                    publicationType = rs.getString(11),
+                    publicationType = PublicationType.valueOf(rs.getString(11)),
                     doi = rs.getString(12),
                     serialNumber = rs.getString(13),
                     isbn = rs.getString(14),
