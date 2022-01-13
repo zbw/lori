@@ -28,7 +28,7 @@ class HelloWorldClientTest() {
                 configuration = HelloWorldClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
                 channel = mockk<Channel>(),
                 stub = mockk() {
-                    coEvery { sayHello(any()) } returns expected
+                    coEvery { sayHello(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
                 }
             )

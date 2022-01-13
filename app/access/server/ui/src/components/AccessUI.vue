@@ -68,7 +68,7 @@ import Vue from "vue";
 import Component from "../../node_modules/vue-class-component/lib";
 import api from "@/api/api";
 import {Result} from "neverthrow";
-import {ItemRest} from "@/generated-sources/openapi";
+import {ItemRest, ItemRestPublicationTypeEnum} from "@/generated-sources/openapi";
 
 @Component
 export default class AccessUi extends Vue {
@@ -94,7 +94,9 @@ export default class AccessUi extends Vue {
   private defaultItem: ItemRest = {
     id: "",
     title: "",
-    accessState: "",
+    handle: "",
+    publicationYear: 2022,
+    publicationType: ItemRestPublicationTypeEnum.Mono,
     actions: [],
   };
   private deleteLoading = false;
