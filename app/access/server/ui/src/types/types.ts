@@ -1,3 +1,5 @@
+import { ItemRestPublicationTypeEnum } from "@/generated-sources/openapi";
+
 export enum License {
   national = "Nationallizens",
   konsortial = "Konsortiallizens",

@@ -1,29 +1,49 @@
 <template>
   <v-container>
-    <v-layout align-center row>
-      <v-text-field label="Suche nach einem Titel"></v-text-field>
-      <v-btn outlined x-large @click="searchTitle">
-        <v-icon left>mdi-magnify</v-icon>
-        Suche
-      </v-btn>
-    </v-layout>
     <v-row>
-      <v-col>
-        <v-card class="mx-auto" tile>
-          <v-list rounded>
-            <v-subheader>Items</v-subheader>
-            <v-list-item-group color="primary">
-              <v-list-item
-                v-for="(item, index) in items"
-                :key="index"
-                @click="setActiveAccessInformation(item, index)"
-              >
-                {{ item.id }}
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-card>
-      </v-col>
+      <v-card>
+        <v-card-title>
+          <v-text-field
+            v-model="search"
+            append-icon="mdi-magnify"
+            label="Suche"
+            single-line
+            hide-details
+          ></v-text-field>
+        </v-card-title>
+        <v-select
+          v-model="headersValueVSelect"
+          :items="headers"
+          label="Select Item"
+          multiple
+          return-object
+        >
+          <template v-slot:selection="{ item, index }">
+            <v-chip v-if="index === 0">
+              <span>{{ item.text }}</span>
+            </v-chip>
+            <span v-if="index === 1" class="grey--text caption"
+              >(+{{ headersValueVSelect.length - 1 }} others)</span
+            >
+          </template>
+        </v-select>
+        <v-data-table
+          :headers="selectedHeaders"
+          :items="items"
+          :search="search"
+          @click:row="setActiveAccessInformation"
+        >
+          <template v-slot:item.actions="{ item }">
+            <v-icon
+              small
+              class="mr-2"
+              @click="setActiveAccessInformation(item, 0)"
+            >
+              mdi-pencil
+            </v-icon>
+          </template>
+        </v-data-table>
+      </v-card>
       <v-col>
         <v-card v-if="currentAccInf.id" class="mx-auto" tile>
           <v-card-title class="subheading font-weight-bold">
@@ -40,73 +60,103 @@
             <v-list-item>
               <v-list-item-content>Titel:</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ prettyPrint(currentAccInf.title) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>HandleUrl:</v-list-item-content>
+              <v-list-item-content>Band:</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ prettyPrint(currentAccInf.band) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Zuständige Einrichtung:</v-list-item-content>
+              <v-list-item-content>Zugriffstatus:</v-list-item-content>
               <v-list-item-content class="align-end">
-                {{ currentAccInf.tenant }}
+                {{ prettyPrint(currentAccInf.accessState) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Richtlinien der Lizens:</v-list-item-content>
+              <v-list-item-content>Publikationstyp:</v-list-item-content>
               <v-list-item-content class="align-end">
-                {{ currentAccInf.usageGuide }}
+                {{ currentAccInf.publicationType }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Access Status:</v-list-item-content>
+              <v-list-item-content>Publikationsjahr:</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ currentAccInf.publicationYear }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Zuständige Einrichtung</v-list-item-content>
+              <v-list-item-content>DOI:</v-list-item-content>
               <v-list-item-content class="align-end">
-                {{ currentAccInf.tenant }}
+                {{ prettyPrint(currentAccInf.doi) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Kommerzielle Nutzung</v-list-item-content>
+              <v-list-item-content>Handle</v-list-item-content>
               <v-list-item-content class="align-end">
-                <v-icon v-if="currentAccInf.commercialuse" left
-                  >mdi-check
-                </v-icon>
-                <v-icon v-else>mdi-close</v-icon>
+                {{ currentAccInf.handle }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content
-                >Urheberrechtsschutz vorhanden
-              </v-list-item-content>
+              <v-list-item-content>ISBN</v-list-item-content>
               <v-list-item-content class="align-end">
-                <v-icon v-if="currentAccInf.copyright" left>mdi-check</v-icon>
-                <v-icon v-else>mdi-close</v-icon>
+                {{ prettyPrint(currentAccInf.isbn) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Lizenstyp</v-list-item-content>
+              <v-list-item-content>ISSN</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ prettyPrint(currentAccInf.issn) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Publikationstyp</v-list-item-content>
+              <v-list-item-content>Paket-Sigel</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ prettyPrint(currentAccInf.paketSigel) }}
               </v-list-item-content>
             </v-list-item>
             <v-list-item>
-              <v-list-item-content>Repository</v-list-item-content>
+              <v-list-item-content>PPN</v-list-item-content>
               <v-list-item-content class="align-end">
-                TODO
+                {{ prettyPrint(currentAccInf.ppn) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>PPN-Ebook</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.ppnEbook) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Zugriffsrecht K10Plus</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.rightsK10plus) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Seriennummer</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.serialNumber) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Titel Journal</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.titleJournal) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>Titel Serie</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.titleSeries) }}
+              </v-list-item-content>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-content>ZBD-ID</v-list-item-content>
+              <v-list-item-content class="align-end">
+                {{ prettyPrint(currentAccInf.zbdId) }}
               </v-list-item-content>
             </v-list-item>
           </v-list>
@@ -175,12 +225,13 @@
 </template>
 
 <script lang="ts">
-import { Vue } from "vue-property-decorator";
+import { Vue, Watch } from "vue-property-decorator";
 import { ItemRest } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { Result } from "neverthrow";
 import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
+import { DataTableHeader } from "vuetify";
 
 @Component({
   components: { AccessEdit },
@@ -195,6 +246,90 @@ export default class AccessInformationList extends Vue {
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
+  private search = "";
+  private selectedHeaders: Array<DataTableHeader> = [];
+  private headersValueVSelect = [];
+
+  private headers = [
+    {
+      text: "Id",
+      align: "start",
+      sortable: false,
+      value: "id",
+    },
+    {
+      text: "Title",
+      sortable: true,
+      value: "title",
+    },
+    {
+      text: "Access State",
+      value: "accessState",
+    },
+    {
+      text: "Handle",
+      sortable: true,
+      value: "handle",
+    },
+    {
+      text: "Publication Type",
+      sortable: true,
+      value: "pubtype",
+    },
+    {
+      text: "Actions",
+      sortable: true,
+      value: "actions",
+    },
+    {
+      text: "Band",
+      value: "band",
+    },
+    {
+      text: "DOI",
+      value: "doi",
+    },
+    {
+      text: "ISBN",
+      value: "isbn",
+    },
+    {
+      text: "ISSN",
+      value: "issn",
+    },
+    {
+      text: "Paket-Sigel",
+      value: "paketSigel",
+    },
+    {
+      text: "PPN",
+      value: "ppn",
+    },
+    {
+      text: "PPN-Ebook",
+      value: "ppnEbook",
+    },
+    {
+      text: "Rechte-K10Plus",
+      value: "rightsK10plus",
+    },
+    {
+      text: "Serial Number",
+      value: "serialNumber",
+    },
+    {
+      text: "Titel Journal",
+      value: "titleJournal",
+    },
+    {
+      text: "Titel Serie",
+      value: "titleSeries",
+    },
+    {
+      text: "ZBD-Id",
+      value: "zbdId",
+    },
+  ] as Array<DataTableHeader>;
 
   public retrieveAccessInformation(): void {
     api
@@ -207,10 +342,9 @@ export default class AccessInformationList extends Vue {
 
   public setActiveAccessInformation(
     accessInformation: ItemRest,
-    index: number
+    itemSlotData: any,
   ): void {
     this.currentAccInf = accessInformation;
-    this.currentIndex = index;
   }
 
   public searchTitle(): void {
@@ -246,8 +380,25 @@ export default class AccessInformationList extends Vue {
     this.dialogDelete = false;
   }
 
+  public prettyPrint(value: string): string {
+    if (value) {
+      return value;
+    } else {
+      return "Kein Wert vorhanden";
+    }
+  }
+
   mounted(): void {
     this.retrieveAccessInformation();
+  }
+
+  created(): void {
+    this.selectedHeaders = this.headers.slice(0, 6);
+  }
+
+  @Watch("headersValueVSelect")
+  onValueChanged(val: Array<DataTableHeader>): void {
+    this.selectedHeaders = val;
   }
 }
 </script>
