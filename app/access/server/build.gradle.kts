@@ -10,8 +10,8 @@ plugins {
 repositories {
     mavenLocal()
     mavenCentral()
-    jcenter()
     google()
+    maven { setUrl("https://jitpack.io") }
 }
 
 dependencies {
@@ -22,7 +22,7 @@ dependencies {
     implementation("io.zonky.test:embedded-postgres:1.3.1")
     implementation("org.flywaydb:flyway-core:7.15.0")
     implementation("com.mchange:c3p0:0.9.5.5")
-    implementation("com.github.lamba92", "ktor-spa", "1.2.1")
+    implementation("com.github.lamba92.ktor-spa:ktor-spa:1.2.1")
     runtimeOnly(project(path = ":app:access:server:ui", configuration = "npmResources"))
 }
 
