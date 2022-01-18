@@ -11,6 +11,12 @@ repositories {
     gradlePluginPortal()
 }
 
+allprojects {
+    repositories {
+        maven { setUrl("https://jitpack.io") }
+    }
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
