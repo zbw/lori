@@ -388,6 +388,10 @@ export default class AccessInformationList extends Vue {
     }
   }
 
+  public getAlertLoad(): boolean {
+    return this.loadAlertError;
+  }
+
   mounted(): void {
     this.retrieveAccessInformation();
   }
