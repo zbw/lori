@@ -14,7 +14,7 @@
         <v-select
           v-model="headersValueVSelect"
           :items="headers"
-          label="Select Item"
+          label="Spaltenauswahl"
           multiple
           return-object
         >
@@ -31,18 +31,16 @@
           :headers="selectedHeaders"
           :items="items"
           :search="search"
+          show-select
           @click:row="setActiveAccessInformation"
+          loading="tableContentLoading"
+          loading-text="Daten werden geladen... Bitte warten."
         >
-          <template v-slot:item.actions="{ item }">
-            <v-icon
-              small
-              class="mr-2"
-              @click="setActiveAccessInformation(item, 0)"
-            >
-              mdi-pencil
-            </v-icon>
-          </template>
         </v-data-table>
+        <v-alert v-model="loadAlertError" dismissible text type="error">
+          Laden der bibliographischen Daten war nicht erfolgreich:
+          {{ loadAlertErrorMessage }}
+        </v-alert>
       </v-card>
       <v-col>
         <v-card v-if="currentAccInf.id" class="mx-auto" tile>
@@ -246,9 +244,12 @@ export default class AccessInformationList extends Vue {
   private deleteAlertSuccessful = false;
   private deleteAlertError = false;
   private deleteErrorMessage = "";
+  private headersValueVSelect = [];
+  private loadAlertError = false;
+  private loadAlertErrorMessage = "";
   private search = "";
   private selectedHeaders: Array<DataTableHeader> = [];
-  private headersValueVSelect = [];
+  private tableContentLoading = true;
 
   private headers = [
     {
@@ -275,11 +276,6 @@ export default class AccessInformationList extends Vue {
       text: "Publication Type",
       sortable: true,
       value: "pubtype",
-    },
-    {
-      text: "Actions",
-      sortable: true,
-      value: "actions",
     },
     {
       text: "Band",
@@ -334,16 +330,20 @@ export default class AccessInformationList extends Vue {
   public retrieveAccessInformation(): void {
     api
       .getList(0, 25)
-      .then((response) => (this.items = response))
+      .then((response) => {
+        this.items = response;
+        this.tableContentLoading = false;
+      })
       .catch((e) => {
         console.log(e);
+        this.tableContentLoading = false;
+        this.loadAlertErrorMessage =
+          e.statusText + " (Statuscode: " + e.status + ")";
+        this.loadAlertError = true;
       });
   }
 
-  public setActiveAccessInformation(
-    accessInformation: ItemRest,
-    itemSlotData: any,
-  ): void {
+  public setActiveAccessInformation(accessInformation: ItemRest): void {
     this.currentAccInf = accessInformation;
   }
 
