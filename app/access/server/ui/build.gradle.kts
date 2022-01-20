@@ -7,17 +7,17 @@ plugins {
 }
 
 node {
-
 }
 
 openApiGenerate {
     inputSpec.set("${project(":app:access:api").projectDir.path}/src/main/openapi/openapi.yaml")
     outputDir.set("$projectDir/src/generated-sources/openapi")
     generatorName.set("typescript-fetch")
+    val npmVersion by System.getProperties()
     additionalProperties.set(
         mapOf(
             Pair("supportsES6", "true"),
-            Pair("npmVersion", "7.20.3"),
+            Pair("npmVersion", "$npmVersion"),
             Pair("typescriptThreePlus", "true")
         ).toMutableMap()
     )
@@ -26,6 +26,7 @@ openApiGenerate {
 tasks.named<NpmTask>("npm_run_build") {
     // make sure the build task is executed only when appropriate files change
     dependsOn(tasks.openApiGenerate)
+    environment.set(mapOf("NODE_OPTIONS" to "--openssl-legacy-provider"))
     inputs.files(fileTree("public"))
     inputs.files(fileTree("src"))
 
