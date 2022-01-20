@@ -14,10 +14,11 @@ openApiGenerate {
     inputSpec.set("${project(":app:access:api").projectDir.path}/src/main/openapi/openapi.yaml")
     outputDir.set("$projectDir/src/generated-sources/openapi")
     generatorName.set("typescript-fetch")
+    val npmVersion by System.getProperties()
     additionalProperties.set(
         mapOf(
             Pair("supportsES6", "true"),
-            Pair("npmVersion", "7.20.3"),
+            Pair("npmVersion", "$npmVersion"),
             Pair("typescriptThreePlus", "true")
         ).toMutableMap()
     )
