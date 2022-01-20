@@ -47,6 +47,9 @@
           <MetadataView
             :displayed-item="Object.assign({}, currentAccInf)"
           ></MetadataView>
+          <RightsView
+            :actions="Object.assign({}, currentAccInf.actions)"
+          ></RightsView>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">
@@ -120,9 +123,10 @@ import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
 import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
+import RightsView from "@/components/RightsView.vue";
 
 @Component({
-  components: { MetadataView, AccessEdit },
+  components: { RightsView, MetadataView, AccessEdit },
 })
 export default class AccessInformationList extends Vue {
   private items: Array<ItemRest> = [];
