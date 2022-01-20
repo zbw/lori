@@ -10,6 +10,7 @@ node {
 }
 
 tasks.named<NpmTask>("npm_run_build") {
+    environment.set(mapOf("NODE_OPTIONS" to "--openssl-legacy-provider"))
     // make sure the build task is executed only when appropriate files change
     inputs.files(fileTree("public"))
     inputs.files(fileTree("src"))
