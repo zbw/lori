@@ -44,120 +44,13 @@
       </v-card>
       <v-col>
         <v-card v-if="currentAccInf.id" class="mx-auto" tile>
-          <v-card-title class="subheading font-weight-bold">
-            Eintrag
-          </v-card-title>
-          <v-divider></v-divider>
-          <v-list dense>
-            <v-list-item>
-              <v-list-item-content>Id:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.id }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Titel:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.title) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Band:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.band) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Zugriffstatus:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.accessState) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Publikationstyp:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.publicationType }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Publikationsjahr:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.publicationYear }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>DOI:</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.doi) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Handle</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ currentAccInf.handle }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>ISBN</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.isbn) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>ISSN</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.issn) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Paket-Sigel</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.paketSigel) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>PPN</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.ppn) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>PPN-Ebook</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.ppnEbook) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Zugriffsrecht K10Plus</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.rightsK10plus) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Seriennummer</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.serialNumber) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Titel Journal</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.titleJournal) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>Titel Serie</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.titleSeries) }}
-              </v-list-item-content>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-content>ZBD-ID</v-list-item-content>
-              <v-list-item-content class="align-end">
-                {{ prettyPrint(currentAccInf.zbdId) }}
-              </v-list-item-content>
-            </v-list-item>
-          </v-list>
+          <MetadataView
+            :displayed-item="Object.assign({}, currentAccInf)"
+          ></MetadataView>
+          <RightsView
+            :actions="Object.assign({}, currentAccInf.actions)"
+            :access-state="currentAccInf.accessState"
+          ></RightsView>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
               <v-card-title class="text-h5">
@@ -230,9 +123,11 @@ import { Result } from "neverthrow";
 import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
 import { DataTableHeader } from "vuetify";
+import MetadataView from "@/components/MetadataView.vue";
+import RightsView from "@/components/RightsView.vue";
 
 @Component({
-  components: { AccessEdit },
+  components: { RightsView, MetadataView, AccessEdit },
 })
 export default class AccessInformationList extends Vue {
   private items: Array<ItemRest> = [];
