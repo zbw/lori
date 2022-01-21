@@ -1,4 +1,20 @@
 {
-  "message": "Hallo i18n !!",
-  "read"   : "Lesezugriff"
+  "age"        : "Alter",
+  "agreement"  : "Einwilligung",
+  "concurrent" : "Gleichzeitig",
+  "count"      : "Anzahl",
+  "date"       : "Beschränkter Zugriff",
+  "duration"   : "Dauer",
+  "group"      : "Beschränkte Nutzergruppen",
+  "location"   : "Ort",
+  "parts"      : "Beschränkte Teile",
+  "quality"    : "Qualität",
+  "read"       : "Lesezugriff",
+  "watermark"  : "Wasserzeichen",
+  "fromdate"   : "von",
+  "todate"     : "bis",
+  "sessions"   : "Anzahl parallel Zugriffe",
+  "subnet"     : "Subnetz",
+  "minage"     : "Mindestalter",
+  "maxage"     : "Maximalalter"
 }

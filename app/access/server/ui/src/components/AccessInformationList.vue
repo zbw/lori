@@ -49,6 +49,7 @@
           ></MetadataView>
           <RightsView
             :actions="Object.assign({}, currentAccInf.actions)"
+            :access-state="currentAccInf.accessState"
           ></RightsView>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
