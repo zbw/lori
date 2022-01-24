@@ -13,7 +13,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
-import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.ItemMetadata
 import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
@@ -35,7 +35,7 @@ class ProtoConverterTest {
     fun testToBusinessConversion() {
         // given
         val expected = Item(
-            metadata = TEST_Metadata.copy(zbd_id = null),
+            itemMetadata = TEST_Metadata.copy(zbdId = null),
             actions = listOf(
                 Action(
                     type = ActionType.READ,
@@ -54,24 +54,26 @@ class ProtoConverterTest {
         )
 
         val protoObject = ItemProto.newBuilder()
-            .setId(expected.metadata.id)
-            .setAccessState(expected.metadata.access_state?.toProto())
-            .setBand(expected.metadata.band)
-            .setDoi(expected.metadata.doi)
-            .setHandle(expected.metadata.handle)
-            .setIsbn(expected.metadata.isbn)
-            .setIssn(expected.metadata.issn)
-            .setPaketSigel(expected.metadata.paket_sigel)
-            .setPpn(expected.metadata.ppn)
-            .setPpnEbook(expected.metadata.ppn_ebook)
-            .setPublicationType(expected.metadata.publicationType.toProto())
-            .setPublicationYear(expected.metadata.publicationYear)
-            .setRightsK10Plus(expected.metadata.rights_k10plus)
-            .setSerialNumber(expected.metadata.serialNumber)
-            .setTitle(expected.metadata.title)
-            .setTitleJournal(expected.metadata.title_journal)
-            .setTitleSeries(expected.metadata.title_series)
-            .setId(expected.metadata.id)
+            .setId(expected.itemMetadata.id)
+            .setAccessState(expected.itemMetadata.accessState?.toProto())
+            .setBand(expected.itemMetadata.band)
+            .setDoi(expected.itemMetadata.doi)
+            .setHandle(expected.itemMetadata.handle)
+            .setIsbn(expected.itemMetadata.isbn)
+            .setIssn(expected.itemMetadata.issn)
+            .setLicenseConditions(expected.itemMetadata.licenseConditions)
+            .setPaketSigel(expected.itemMetadata.paketSigel)
+            .setPpn(expected.itemMetadata.ppn)
+            .setPpnEbook(expected.itemMetadata.ppnEbook)
+            .setProvenanceLicense(expected.itemMetadata.provenanceLicense)
+            .setPublicationType(expected.itemMetadata.publicationType.toProto())
+            .setPublicationYear(expected.itemMetadata.publicationYear)
+            .setRightsK10Plus(expected.itemMetadata.rightsK10plus)
+            .setSerialNumber(expected.itemMetadata.serialNumber)
+            .setTitle(expected.itemMetadata.title)
+            .setTitleJournal(expected.itemMetadata.titleJournal)
+            .setTitleSeries(expected.itemMetadata.titleSeries)
+            .setId(expected.itemMetadata.id)
             .addAllActions(
                 listOf(
                     ActionProto.newBuilder()
@@ -149,25 +151,27 @@ class ProtoConverterTest {
     }
 
     companion object {
-        val TEST_Metadata = Metadata(
+        val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            access_state = AccessState.OPEN,
+            accessState = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
-            paket_sigel = "sigel",
+            licenseConditions = "some conditions",
+            paketSigel = "sigel",
             ppn = "ppn",
-            ppn_ebook = "ppn ebook",
+            ppnEbook = "ppn ebook",
+            provenanceLicense = "provenance license",
             publicationType = PublicationType.MONO,
             publicationYear = 2000,
-            rights_k10plus = "some rights",
+            rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            title_journal = "Journal title",
-            title_series = "Title series",
-            zbd_id = "zbd id",
+            titleJournal = "Journal title",
+            titleSeries = "Title series",
+            zbdId = "zbd id",
         )
     }
 }

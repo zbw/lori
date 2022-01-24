@@ -52,24 +52,24 @@ class AccessGrpcServer(
                 .addAllAccessRights(
                     accessRights.map {
                         ItemProto.newBuilder()
-                            .setIfNotNull(it.metadata.id) { b, value -> b.setId(value) }
-                            .setIfNotNull(it.metadata.access_state) { b, value -> b.setAccessState(value.toProto()) }
-                            .setIfNotNull(it.metadata.band) { b, value -> b.setBand(value) }
-                            .setIfNotNull(it.metadata.doi) { b, value -> b.setDoi(value) }
-                            .setHandle(it.metadata.handle)
-                            .setIfNotNull(it.metadata.isbn) { b, value -> b.setIsbn(value) }
-                            .setIfNotNull(it.metadata.issn) { b, value -> b.setIssn(value) }
-                            .setIfNotNull(it.metadata.paket_sigel) { b, value -> b.setPaketSigel(value) }
-                            .setIfNotNull(it.metadata.ppn) { b, value -> b.setPpn(value) }
-                            .setIfNotNull(it.metadata.ppn_ebook) { b, value -> b.setPpnEbook(value) }
-                            .setPublicationType(it.metadata.publicationType.toProto())
-                            .setPublicationYear(it.metadata.publicationYear)
-                            .setIfNotNull(it.metadata.rights_k10plus) { b, value -> b.setRightsK10Plus(value) }
-                            .setIfNotNull(it.metadata.serialNumber) { b, value -> b.setSerialNumber(value) }
-                            .setTitle(it.metadata.title)
-                            .setIfNotNull(it.metadata.title_journal) { b, value -> b.setTitleJournal(value) }
-                            .setIfNotNull(it.metadata.title_series) { b, value -> b.setTitleSeries(value) }
-                            .setIfNotNull(it.metadata.zbd_id) { b, value -> b.setZbdId(value) }
+                            .setIfNotNull(it.itemMetadata.id) { b, value -> b.setId(value) }
+                            .setIfNotNull(it.itemMetadata.accessState) { b, value -> b.setAccessState(value.toProto()) }
+                            .setIfNotNull(it.itemMetadata.band) { b, value -> b.setBand(value) }
+                            .setIfNotNull(it.itemMetadata.doi) { b, value -> b.setDoi(value) }
+                            .setHandle(it.itemMetadata.handle)
+                            .setIfNotNull(it.itemMetadata.isbn) { b, value -> b.setIsbn(value) }
+                            .setIfNotNull(it.itemMetadata.issn) { b, value -> b.setIssn(value) }
+                            .setIfNotNull(it.itemMetadata.paketSigel) { b, value -> b.setPaketSigel(value) }
+                            .setIfNotNull(it.itemMetadata.ppn) { b, value -> b.setPpn(value) }
+                            .setIfNotNull(it.itemMetadata.ppnEbook) { b, value -> b.setPpnEbook(value) }
+                            .setPublicationType(it.itemMetadata.publicationType.toProto())
+                            .setPublicationYear(it.itemMetadata.publicationYear)
+                            .setIfNotNull(it.itemMetadata.rightsK10plus) { b, value -> b.setRightsK10Plus(value) }
+                            .setIfNotNull(it.itemMetadata.serialNumber) { b, value -> b.setSerialNumber(value) }
+                            .setTitle(it.itemMetadata.title)
+                            .setIfNotNull(it.itemMetadata.titleJournal) { b, value -> b.setTitleJournal(value) }
+                            .setIfNotNull(it.itemMetadata.titleSeries) { b, value -> b.setTitleSeries(value) }
+                            .setIfNotNull(it.itemMetadata.zbdId) { b, value -> b.setZbdId(value) }
                             .addAllActions(
                                 it.actions.map { action ->
                                     ActionProto

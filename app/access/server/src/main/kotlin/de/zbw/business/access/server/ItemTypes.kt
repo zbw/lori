@@ -1,29 +1,31 @@
 package de.zbw.business.access.server
 
 data class Item(
-    val metadata: Metadata,
+    val itemMetadata: ItemMetadata,
     val actions: List<Action>,
 )
 
-data class Metadata(
+data class ItemMetadata(
     val id: String,
-    val access_state: AccessState?,
+    val accessState: AccessState?,
     val band: String?,
     val doi: String?,
     val handle: String,
     val isbn: String?,
     val issn: String?,
-    val paket_sigel: String?,
+    val licenseConditions: String?,
+    val paketSigel: String?,
     val ppn: String?,
-    val ppn_ebook: String?,
+    val ppnEbook: String?,
+    val provenanceLicense: String?,
     val publicationType: PublicationType,
     val publicationYear: Int,
-    val rights_k10plus: String?,
+    val rightsK10plus: String?,
     val serialNumber: String?,
     val title: String,
-    val title_journal: String?,
-    val title_series: String?,
-    val zbd_id: String?,
+    val titleJournal: String?,
+    val titleSeries: String?,
+    val zbdId: String?,
 )
 
 enum class AccessState {

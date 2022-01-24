@@ -5,7 +5,7 @@ import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.ItemMetadata
 import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
@@ -52,10 +52,12 @@ class DatabaseConnectorTest : DatabaseTest() {
         val stmntAccIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_METADATA}" +
             "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,access_state,publishedYear,band,publicationtype,doi," +
-            "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+            "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "license_conditions,provenance_license)" +
             "VALUES(?,?,?,?,?,?," +
             "?,?,?,?,?,?," +
-            "?,?,?,?,?,?)"
+            "?,?,?,?,?,?," +
+            "?,?)"
 
         val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntAccIns)) {
             every { executeUpdate() } returns 0
@@ -84,7 +86,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(responseInsert, `is`(testId))
 
         // when
-        val receivedMetadata: List<Metadata> = dbConnector.getMetadata(listOf(testId))
+        val receivedMetadata: List<ItemMetadata> = dbConnector.getMetadata(listOf(testId))
 
         // then
         assertThat(
@@ -341,25 +343,27 @@ class DatabaseConnectorTest : DatabaseTest() {
 
     companion object {
 
-        val TEST_Metadata = Metadata(
+        val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            access_state = AccessState.OPEN,
+            accessState = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
-            paket_sigel = "sigel",
+            licenseConditions = "some conditions",
+            paketSigel = "sigel",
             ppn = "ppn",
-            ppn_ebook = "ppn ebook",
+            ppnEbook = "ppn ebook",
+            provenanceLicense = "provenance license",
             publicationType = PublicationType.PERIODICAL,
             publicationYear = 2000,
-            rights_k10plus = "some rights",
+            rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            title_journal = null,
-            title_series = null,
-            zbd_id = null,
+            titleJournal = null,
+            titleSeries = null,
+            zbdId = null,
         )
 
         private val TEST_ACTION = Action(
