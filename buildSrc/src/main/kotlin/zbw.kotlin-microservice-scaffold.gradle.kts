@@ -12,7 +12,7 @@ dependencies {
     implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation( files("$rootDir/libs/konfig-core.jar"))
+    implementation("io.github.gfelbing:konfig-core:0.4.0")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
 }
 
