@@ -5,6 +5,26 @@
     </v-card-title>
     <v-divider></v-divider>
     <v-expansion-panels focusable>
+      <v-expansion-panel>
+        <v-expansion-panel-header>Allgemeines</v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <v-container>
+            <v-row>
+              <v-col>Lizensbedingungen</v-col>
+              <v-col>{{ prettyPrint(licenseConditions) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row>
+              <v-col
+                >Provenienz-Lizenzinformation/Dokumentation
+                Rechteänderungen</v-col
+              >
+              <v-col>{{ prettyPrint(provenanceLicense) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
       <v-expansion-panel v-for="(action, i) in actions" :key="i">
         <v-expansion-panel-header>{{
           $t(action.actiontype)
@@ -59,6 +79,10 @@ export default class RightsView extends Vue {
   actions!: Array<ActionRest>;
   @Prop({ required: false })
   accessState!: ItemRestAccessStateEnum;
+  @Prop({ required: false })
+  licenseConditions!: string;
+  @Prop({ required: false })
+  provenanceLicense!: string;
 
   public prettyPrint(value: string): string {
     if (value) {

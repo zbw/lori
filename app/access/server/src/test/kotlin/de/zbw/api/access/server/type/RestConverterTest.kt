@@ -7,7 +7,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
-import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.ItemMetadata
 import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
@@ -21,7 +21,7 @@ class RestConverterTest {
     fun testAccessRightConversion() {
         // given
         val expected = Item(
-            metadata = TEST_Metadata,
+            itemMetadata = TEST_Metadata,
             actions = listOf(
                 Action(
                     type = ActionType.READ,
@@ -41,23 +41,25 @@ class RestConverterTest {
 
         val restObject = ItemRest(
             id = TEST_Metadata.id,
-            accessState = TEST_Metadata.access_state?.toRest(),
+            accessState = TEST_Metadata.accessState?.toRest(),
             band = TEST_Metadata.band,
             doi = TEST_Metadata.doi,
             handle = TEST_Metadata.handle,
             isbn = TEST_Metadata.isbn,
             issn = TEST_Metadata.issn,
-            paketSigel = TEST_Metadata.paket_sigel,
+            licenseConditions = TEST_Metadata.licenseConditions,
+            paketSigel = TEST_Metadata.paketSigel,
+            provenanceLicense = TEST_Metadata.provenanceLicense,
             ppn = TEST_Metadata.ppn,
-            ppnEbook = TEST_Metadata.ppn_ebook,
+            ppnEbook = TEST_Metadata.ppnEbook,
             publicationType = TEST_Metadata.publicationType.toRest(),
             publicationYear = TEST_Metadata.publicationYear,
-            rightsK10plus = TEST_Metadata.rights_k10plus,
+            rightsK10plus = TEST_Metadata.rightsK10plus,
             serialNumber = TEST_Metadata.serialNumber,
             title = TEST_Metadata.title,
-            titleJournal = TEST_Metadata.title_journal,
-            titleSeries = TEST_Metadata.title_series,
-            zbdId = TEST_Metadata.zbd_id,
+            titleJournal = TEST_Metadata.titleJournal,
+            titleSeries = TEST_Metadata.titleSeries,
+            zbdId = TEST_Metadata.zbdId,
             actions = listOf(
                 de.zbw.access.model.ActionRest(
                     permission = true,
@@ -105,25 +107,27 @@ class RestConverterTest {
     }
 
     companion object {
-        val TEST_Metadata = Metadata(
+        val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            access_state = AccessState.OPEN,
+            accessState = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
-            paket_sigel = "sigel",
+            licenseConditions = "some conditions",
+            paketSigel = "sigel",
             ppn = "ppn",
-            ppn_ebook = "ppn ebook",
+            ppnEbook = "ppn ebook",
+            provenanceLicense = "provenance license",
             publicationType = PublicationType.PERIODICAL,
             publicationYear = 2000,
-            rights_k10plus = "some rights",
+            rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            title_journal = null,
-            title_series = null,
-            zbd_id = null,
+            titleJournal = null,
+            titleSeries = null,
+            zbdId = null,
         )
     }
 }

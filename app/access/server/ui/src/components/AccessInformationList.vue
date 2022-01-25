@@ -50,6 +50,8 @@
           <RightsView
             :actions="Object.assign({}, currentAccInf.actions)"
             :access-state="currentAccInf.accessState"
+            :lisence-conditions="currentAccInf.licenseConditions"
+            :provenance-license="currentAccInf.provenanceLicense"
           ></RightsView>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
@@ -189,6 +191,10 @@ export default class AccessInformationList extends Vue {
       value: "issn",
     },
     {
+      text: "Lizensbedingungen",
+      value: "licenseConditions",
+    },
+    {
       text: "Paket-Sigel",
       value: "paketSigel",
     },
@@ -199,6 +205,10 @@ export default class AccessInformationList extends Vue {
     {
       text: "PPN-Ebook",
       value: "ppnEbook",
+    },
+    {
+      text: "Provienz Lizensinformationen",
+      value: "provenanceLicense",
     },
     {
       text: "Rechte-K10Plus",

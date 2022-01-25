@@ -19,7 +19,7 @@ import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
 import de.zbw.business.access.server.Item
-import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.ItemMetadata
 import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
@@ -90,7 +90,7 @@ class AccessGrpcServerTest {
             val backendMockk = mockk<AccessServerBackend> {
                 every { getAccessRightEntries(any()) } returns listOf(
                     Item(
-                        metadata = TEST_Metadata,
+                        itemMetadata = TEST_Metadata,
                         actions = listOf(
                             Action(
                                 type = ActionType.READ,
@@ -119,18 +119,18 @@ class AccessGrpcServerTest {
                             listOf(
                                 ItemProto.newBuilder()
                                     .setId(TEST_Metadata.id)
-                                    .setAccessState(TEST_Metadata.access_state!!.toProto())
+                                    .setAccessState(TEST_Metadata.accessState!!.toProto())
                                     .setBand(TEST_Metadata.band)
                                     .setDoi(TEST_Metadata.doi)
                                     .setHandle(TEST_Metadata.handle)
                                     .setIsbn(TEST_Metadata.isbn)
                                     .setIssn(TEST_Metadata.issn)
-                                    .setPaketSigel(TEST_Metadata.paket_sigel)
+                                    .setPaketSigel(TEST_Metadata.paketSigel)
                                     .setPpn(TEST_Metadata.ppn)
-                                    .setPpnEbook(TEST_Metadata.ppn_ebook)
+                                    .setPpnEbook(TEST_Metadata.ppnEbook)
                                     .setPublicationType(TEST_Metadata.publicationType.toProto())
                                     .setPublicationYear(TEST_Metadata.publicationYear)
-                                    .setRightsK10Plus(TEST_Metadata.rights_k10plus)
+                                    .setRightsK10Plus(TEST_Metadata.rightsK10plus)
                                     .setSerialNumber(TEST_Metadata.serialNumber)
                                     .setTitle(TEST_Metadata.title)
                                     .addAllActions(
@@ -180,25 +180,27 @@ class AccessGrpcServerTest {
     }
 
     companion object {
-        val TEST_Metadata = Metadata(
+        val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            access_state = AccessState.OPEN,
+            accessState = AccessState.OPEN,
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
-            paket_sigel = "sigel",
+            licenseConditions = "some conditions",
+            paketSigel = "sigel",
             ppn = "ppn",
-            ppn_ebook = "ppn ebook",
+            ppnEbook = "ppn ebook",
+            provenanceLicense = "provenance license",
             publicationType = PublicationType.MONO,
             publicationYear = 2000,
-            rights_k10plus = "some rights",
+            rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            title_journal = null,
-            title_series = null,
-            zbd_id = null,
+            titleJournal = null,
+            titleSeries = null,
+            zbdId = null,
         )
     }
 }

@@ -22,7 +22,7 @@ class AccessServerBackend(
         items.map { insertAccessRightEntry(it) }
 
     fun insertAccessRightEntry(item: Item): String {
-        val fkAccessRight: String = dbConnector.insertMetadata(item.metadata)
+        val fkAccessRight: String = dbConnector.insertMetadata(item.itemMetadata)
         item.actions.forEach { act ->
             val fkAction = dbConnector.insertAction(act, fkAccessRight)
             act.restrictions.forEach { r ->
@@ -36,7 +36,7 @@ class AccessServerBackend(
         val headerToActions: Map<String, List<Action>> = dbConnector.getActions(ids)
         return dbConnector.getMetadata(ids).map {
             Item(
-                metadata = it,
+                itemMetadata = it,
                 actions = headerToActions[it.id] ?: emptyList()
             )
         }
@@ -50,7 +50,7 @@ class AccessServerBackend(
         return dbConnector.getAccessRightIds(limit, offset).takeIf {
             it.isNotEmpty()
         }?.let { headerIds ->
-            getAccessRightEntries(headerIds).sortedBy { it.metadata.id }
+            getAccessRightEntries(headerIds).sortedBy { it.itemMetadata.id }
         } ?: emptyList()
     }
 }

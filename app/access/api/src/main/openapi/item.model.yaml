@@ -26,11 +26,15 @@ ItemRest:
       type: string
     issn:
       type: string
+    licenseConditions:
+      type: string
     paketSigel:
       type: string
     ppn:
       type: string
     ppnEbook:
+      type: string
+    provenanceLicense:
       type: string
     publicationType:
       type: string

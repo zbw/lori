@@ -6,7 +6,7 @@ import de.zbw.business.access.server.Action
 import de.zbw.business.access.server.ActionType
 import de.zbw.business.access.server.Attribute
 import de.zbw.business.access.server.AttributeType
-import de.zbw.business.access.server.Metadata
+import de.zbw.business.access.server.ItemMetadata
 import de.zbw.business.access.server.PublicationType
 import de.zbw.business.access.server.Restriction
 import de.zbw.business.access.server.RestrictionType
@@ -31,59 +31,67 @@ class DatabaseConnector(
         config: AccessConfiguration,
     ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
 
-    fun insertMetadata(metadata: Metadata): String {
+    fun insertMetadata(itemMetadata: ItemMetadata): String {
         val stmntAccIns =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
                 "title_series,access_state,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn) " +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "license_conditions,provenance_license) " +
                 "VALUES(?,?,?,?,?,?," +
                 "?,?,?,?,?,?," +
-                "?,?,?,?,?,?)"
+                "?,?,?,?,?,?," +
+                "?,?)"
 
         val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
-            this.setString(1, metadata.id)
-            this.setString(2, metadata.handle)
-            this.setIfNotNull(3, metadata.ppn) { value, idx, prepStmt ->
+            this.setString(1, itemMetadata.id)
+            this.setString(2, itemMetadata.handle)
+            this.setIfNotNull(3, itemMetadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(4, metadata.ppn_ebook) { value, idx, prepStmt ->
+            this.setIfNotNull(4, itemMetadata.ppnEbook) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(5, metadata.title)
-            this.setIfNotNull(6, metadata.title_journal) { value, idx, prepStmt ->
+            this.setString(5, itemMetadata.title)
+            this.setIfNotNull(6, itemMetadata.titleJournal) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(7, metadata.title_series) { value, idx, prepStmt ->
+            this.setIfNotNull(7, itemMetadata.titleSeries) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(8, metadata.access_state) { value, idx, prepStmt ->
+            this.setIfNotNull(8, itemMetadata.accessState) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setInt(9, metadata.publicationYear)
-            this.setIfNotNull(10, metadata.band) { value, idx, prepStmt ->
+            this.setInt(9, itemMetadata.publicationYear)
+            this.setIfNotNull(10, itemMetadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(11, metadata.publicationType.toString())
-            this.setIfNotNull(12, metadata.doi) { value, idx, prepStmt ->
+            this.setString(11, itemMetadata.publicationType.toString())
+            this.setIfNotNull(12, itemMetadata.doi) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(13, metadata.serialNumber) { value, idx, prepStmt ->
+            this.setIfNotNull(13, itemMetadata.serialNumber) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(14, metadata.isbn) { value, idx, prepStmt ->
+            this.setIfNotNull(14, itemMetadata.isbn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(15, metadata.rights_k10plus) { value, idx, prepStmt ->
+            this.setIfNotNull(15, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(16, metadata.paket_sigel) { value, idx, prepStmt ->
+            this.setIfNotNull(16, itemMetadata.paketSigel) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(17, metadata.zbd_id) { value, idx, prepStmt ->
+            this.setIfNotNull(17, itemMetadata.zbdId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(18, metadata.issn) { value, idx, prepStmt ->
+            this.setIfNotNull(18, itemMetadata.issn) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(19, itemMetadata.licenseConditions) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(20, itemMetadata.provenanceLicense) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -131,12 +139,13 @@ class DatabaseConnector(
         } else throw IllegalStateException("No row has been inserted.")
     }
 
-    fun getMetadata(headerIds: List<String>): List<Metadata> {
+    fun getMetadata(headerIds: List<String>): List<ItemMetadata> {
         val stmt =
             "SELECT" +
                 " header_id,handle,ppn,ppn_ebook,title,title_journal," +
                 "title_series,access_state,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn " +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "license_conditions,provenance_license " +
                 "FROM $TABLE_NAME_ITEM_METADATA " +
                 "WHERE header_id = ANY(?)"
 
@@ -146,25 +155,27 @@ class DatabaseConnector(
         val rs = prepStmt.executeQuery()
         return generateSequence {
             if (rs.next()) {
-                Metadata(
+                ItemMetadata(
                     id = rs.getString(1),
                     handle = rs.getString(2),
                     ppn = rs.getString(3),
-                    ppn_ebook = rs.getString(4),
+                    ppnEbook = rs.getString(4),
                     title = rs.getString(5),
-                    title_journal = rs.getString(6),
-                    title_series = rs.getString(7),
-                    access_state = rs.getString(8)?.let { AccessState.valueOf(it) },
+                    titleJournal = rs.getString(6),
+                    titleSeries = rs.getString(7),
+                    accessState = rs.getString(8)?.let { AccessState.valueOf(it) },
                     publicationYear = rs.getInt(9),
                     band = rs.getString(10),
                     publicationType = PublicationType.valueOf(rs.getString(11)),
                     doi = rs.getString(12),
                     serialNumber = rs.getString(13),
                     isbn = rs.getString(14),
-                    rights_k10plus = rs.getString(15),
-                    paket_sigel = rs.getString(16),
-                    zbd_id = rs.getString(17),
+                    rightsK10plus = rs.getString(15),
+                    paketSigel = rs.getString(16),
+                    zbdId = rs.getString(17),
                     issn = rs.getString(18),
+                    licenseConditions = rs.getString(19),
+                    provenanceLicense = rs.getString(20),
                 )
             } else null
         }.takeWhile { true }.toList()

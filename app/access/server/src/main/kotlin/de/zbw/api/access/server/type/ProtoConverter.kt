@@ -29,25 +29,27 @@ import io.grpc.StatusRuntimeException
  */
 fun ItemProto.toBusiness(): Item =
     Item(
-        metadata = de.zbw.business.access.server.Metadata(
+        itemMetadata = de.zbw.business.access.server.ItemMetadata(
             id = id,
-            access_state = this.returnIfFieldIsSet(ItemProto.ACCESS_STATE_FIELD_NUMBER)?.accessState?.toBusiness(),
+            accessState = this.returnIfFieldIsSet(ItemProto.ACCESS_STATE_FIELD_NUMBER)?.accessState?.toBusiness(),
             band = this.returnIfFieldIsSet(ItemProto.BAND_FIELD_NUMBER)?.band,
             doi = this.returnIfFieldIsSet(ItemProto.DOI_FIELD_NUMBER)?.doi,
             handle = this.handle,
             isbn = this.returnIfFieldIsSet(ItemProto.ISBN_FIELD_NUMBER)?.isbn,
             issn = this.returnIfFieldIsSet(ItemProto.ISSN_FIELD_NUMBER)?.issn,
-            paket_sigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
+            licenseConditions = this.returnIfFieldIsSet(ItemProto.LICENSE_CONDITIONS_FIELD_NUMBER)?.licenseConditions,
+            paketSigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
             ppn = this.returnIfFieldIsSet(ItemProto.PPN_FIELD_NUMBER)?.ppn,
-            ppn_ebook = this.returnIfFieldIsSet(ItemProto.PPN_EBOOK_FIELD_NUMBER)?.ppnEbook,
+            ppnEbook = this.returnIfFieldIsSet(ItemProto.PPN_EBOOK_FIELD_NUMBER)?.ppnEbook,
+            provenanceLicense = this.returnIfFieldIsSet(ItemProto.PROVENANCE_LICENSE_FIELD_NUMBER)?.provenanceLicense,
             publicationType = this.publicationType.toBusiness(),
             publicationYear = this.publicationYear,
-            rights_k10plus = this.returnIfFieldIsSet(ItemProto.RIGHTS_K10PLUS_FIELD_NUMBER)?.rightsK10Plus,
+            rightsK10plus = this.returnIfFieldIsSet(ItemProto.RIGHTS_K10PLUS_FIELD_NUMBER)?.rightsK10Plus,
             serialNumber = this.returnIfFieldIsSet(ItemProto.SERIAL_NUMBER_FIELD_NUMBER)?.serialNumber,
             title = title,
-            title_journal = this.returnIfFieldIsSet(ItemProto.TITLE_JOURNAL_FIELD_NUMBER)?.titleJournal,
-            title_series = this.returnIfFieldIsSet(ItemProto.TITLE_SERIES_FIELD_NUMBER)?.titleSeries,
-            zbd_id = this.returnIfFieldIsSet(ItemProto.ZBD_ID_FIELD_NUMBER)?.zbdId,
+            titleJournal = this.returnIfFieldIsSet(ItemProto.TITLE_JOURNAL_FIELD_NUMBER)?.titleJournal,
+            titleSeries = this.returnIfFieldIsSet(ItemProto.TITLE_SERIES_FIELD_NUMBER)?.titleSeries,
+            zbdId = this.returnIfFieldIsSet(ItemProto.ZBD_ID_FIELD_NUMBER)?.zbdId,
         ),
         this.actionsList.map { it.toBusiness() },
     )
