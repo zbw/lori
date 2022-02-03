@@ -5,8 +5,13 @@
 ##              that have been changed in this branch.
 regex="app\/(\w*)\/(server|api)\/\S*"
 
+# Production
 GITLAB_API_DATA=$(curl -s --header "PRIVATE-TOKEN:$GITLAB_API_ACCESS_TOKEN" "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/commits/$CI_COMMIT_SHA")
-MR_BRANCH_LAST_COMMIT_SHA=$(echo $GITLAB_API_DATA | jq -r '.parent_ids | del(.[] | select(. == "'$CI_COMMIT_BEFORE_SHA'")) | .[-1]')
+MR_BRANCH_LAST_COMMIT_SHA=$(echo "$GITLAB_API_DATA" | jq -r '.parent_ids | del(.[] | select(. == "'"$CI_COMMIT_BEFORE_SHA"'")) | .[-1]')
+
+# Test: Use a local commithash and comment the 'Production' section
+# MR_BRANCH_LAST_COMMIT_SHA=b7180e350fc839bf29df1cd81a983a95aa38b609
+
 changedFiles=$(git diff-tree --no-commit-id --name-only -r "$MR_BRANCH_LAST_COMMIT_SHA")
 changedServices=()
 for f in $changedFiles    # unquoted in order to allow the glob to expand
@@ -18,11 +23,15 @@ do
 done
 
 mapfile -t uniques < <(for v in "${changedServices[@]}"; do echo "$v";done| sort -u)
-echo "Deploy following microservices: ${uniques[@]}"
+printf "Deploy following microservices: %s\n" "${uniques[@]}"
 
 for service in "${uniques[@]}";
 do
-    if ! ./gradlew :app:"$service":server:jib
-    then exit 1
+    if ./gradlew -q projects | grep ":app:$service:server" > /dev/null
+    then
+        printf "Pushing image for service %s.\n" "$service"
+        ./gradlew :app:"$service":server:jib
+    else
+        printf "The service %s no longer does exist.\n" "$service"
     fi
 done

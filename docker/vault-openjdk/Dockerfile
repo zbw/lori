@@ -7,10 +7,11 @@ RUN apt update && \
     git \
     bash \
     jq \
+    grep \
     unzip
 
 FROM tools as vault
-ARG VAULT_VERSION=1.8.5
+ARG VAULT_VERSION=1.9.3
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
