@@ -46,6 +46,7 @@ class LoriServerBackend(
 
     fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
 
+
     fun getAccessRightList(limit: Int, offset: Int): List<Item> {
         return dbConnector.getAccessRightIds(limit, offset).takeIf {
             it.isNotEmpty()
