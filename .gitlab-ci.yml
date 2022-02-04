@@ -32,7 +32,7 @@ test:
     reports:
       junit: app/*/**/TEST-*.xml
 
-pushServiceImages:
+pushImages:
   stage: push
   image: $VAULT_OPENJDK_IMAGE
   variables:
@@ -48,6 +48,7 @@ pushServiceImages:
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
     - export GITLAB_API_ACCESS_TOKEN="$(vault kv get --field=token secret/gitlab/api_access)"
     - ./scripts/pushServiceImages.sh
+    - ./scripts/pushJobImages.sh
     - rm -rf ~/.docker/config.json
 
 after_script:

@@ -3,6 +3,8 @@ package de.zbw.api.lori.client
 import de.zbw.api.lori.client.config.LoriClientConfiguration
 import de.zbw.lori.api.AddItemRequest
 import de.zbw.lori.api.AddItemResponse
+import de.zbw.lori.api.FullImportRequest
+import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
@@ -31,6 +33,11 @@ class LoriClient(
     suspend fun getItem(request: GetItemRequest): GetItemResponse =
         runWithTracing("client_getAccessInformation") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
             s.getItem(request)
+        }
+
+    suspend fun fullImport(request: FullImportRequest): FullImportResponse =
+        runWithTracing("client_fullImport") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
+            s.fullImport(request)
         }
 
     private suspend fun <T> runWithTracing(

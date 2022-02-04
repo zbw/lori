@@ -15,6 +15,8 @@ import de.zbw.lori.api.AddItemRequest
 import de.zbw.lori.api.AddItemResponse
 import de.zbw.lori.api.AttributeProto
 import de.zbw.lori.api.AttributeTypeProto
+import de.zbw.lori.api.FullImportRequest
+import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
 import de.zbw.lori.api.ItemProto
@@ -36,6 +38,17 @@ import java.sql.SQLException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriGrpcServerTest {
+
+    @Test
+    fun testFullImport() {
+        runBlocking {
+            val request = FullImportRequest.getDefaultInstance()
+
+            val backendMockk = mockk<LoriServerBackend>()
+            val response = LoriGrpcServer(mockk(), backendMockk).fullImport(request)
+            assertThat(response, `is`(FullImportResponse.newBuilder().setMsg("hello from lori!").build()))
+        }
+    }
 
     @Test
     fun testAddItem() {
