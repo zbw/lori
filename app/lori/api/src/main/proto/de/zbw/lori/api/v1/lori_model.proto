@@ -24,6 +24,7 @@ message FullImportRequest {
 }
 
 message FullImportResponse {
+  string msg = 1;
 }
 
 message ItemProto {

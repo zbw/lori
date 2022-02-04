@@ -3,6 +3,8 @@ package de.zbw.api.lori.client
 import de.zbw.api.lori.client.config.LoriClientConfiguration
 import de.zbw.lori.api.AddItemRequest
 import de.zbw.lori.api.AddItemResponse
+import de.zbw.lori.api.FullImportRequest
+import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
 import io.grpc.Channel
@@ -51,6 +53,23 @@ class LoriClientTest() {
                 }
             )
             val received = client.getItem((GetItemRequest.getDefaultInstance()))
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testFullImport() {
+        runBlocking {
+            val expected = FullImportResponse.getDefaultInstance()
+            val client = LoriClient(
+                configuration = LoriClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
+                channel = mockk<Channel>(),
+                stub = mockk() {
+                    coEvery { fullImport(any(), any()) } returns expected
+                    every { withDeadlineAfter(any(), any()) } returns this
+                }
+            )
+            val received = client.fullImport((FullImportRequest.getDefaultInstance()))
             assertThat(received, `is`(expected))
         }
     }

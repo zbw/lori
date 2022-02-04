@@ -9,6 +9,8 @@ import de.zbw.lori.api.ActionProto
 import de.zbw.lori.api.AddItemRequest
 import de.zbw.lori.api.AddItemResponse
 import de.zbw.lori.api.AttributeProto
+import de.zbw.lori.api.FullImportRequest
+import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
 import de.zbw.lori.api.ItemProto
@@ -28,6 +30,10 @@ class LoriGrpcServer(
     config: LoriConfiguration,
     private val backend: LoriServerBackend = LoriServerBackend(config),
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
+
+    override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
+        return FullImportResponse.newBuilder().setMsg("hello from lori!").build()
+    }
 
     override suspend fun addItem(request: AddItemRequest): AddItemResponse {
         try {
