@@ -17,13 +17,13 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         val loriClient = LoriClient(
-            configuration = LoriClientConfiguration(9092, "http://lori", 5000)
+            configuration = LoriClientConfiguration(9092, "lori", 5000)
         )
 
         val response: FullImportResponse = runBlocking {
             loriClient.fullImport(FullImportRequest.getDefaultInstance())
         }
-        LOG.info(response.msg)
+        LOG.info("Lori Server returned: ${response.msg}")
     }
 
     private val LOG = LoggerFactory.getLogger(Main::class.java)

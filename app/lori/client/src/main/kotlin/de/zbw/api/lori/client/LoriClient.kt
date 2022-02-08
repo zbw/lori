@@ -21,7 +21,10 @@ import java.util.concurrent.TimeUnit
  */
 class LoriClient(
     val configuration: LoriClientConfiguration,
-    val channel: Channel = ManagedChannelBuilder.forAddress(configuration.address, configuration.port).build(),
+    val channel: Channel = ManagedChannelBuilder.forTarget("${configuration.address}:${configuration.port}")
+        .defaultLoadBalancingPolicy("round_robin")
+        .usePlaintext()
+        .build(),
     val stub: LoriServiceGrpcKt.LoriServiceCoroutineStub = LoriServiceGrpcKt.LoriServiceCoroutineStub(channel)
 ) {
 
