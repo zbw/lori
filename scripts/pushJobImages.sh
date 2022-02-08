@@ -30,7 +30,7 @@ do
     if ./gradlew -q projects | grep ":job:$job" > /dev/null
     then
         printf "Pushing image for job %s.\n" "$job"
-        ./gradlew :app:"$job":server:jib
+        ./gradlew :job:"$job":jib
     else
         printf "The job %s no longer does exist.\n" "$job"
     fi
