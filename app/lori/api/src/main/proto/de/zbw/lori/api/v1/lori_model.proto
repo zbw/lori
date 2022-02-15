@@ -24,7 +24,13 @@ message FullImportRequest {
 }
 
 message FullImportResponse {
-  string msg = 1;
+  repeated ImportedItem items = 1;
+  int32 items_imported = 2;
+}
+
+message ImportedItem {
+  int32 id = 1;
+  string name = 2;
 }
 
 message ItemProto {

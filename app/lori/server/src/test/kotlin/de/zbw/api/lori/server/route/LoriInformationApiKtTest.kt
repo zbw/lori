@@ -495,6 +495,11 @@ class LoriInformationApiKtTest {
             sqlUser = "postgres",
             sqlPassword = "postgres",
             sqlUrl = "jdbc:someurl",
+            digitalArchiveAddress = "https://archiveaddress",
+            digitalArchiveCollection = "1234",
+            digitalArchiveCommunity = "5678",
+            digitalArchiveUsername = "testuser",
+            digitalArchivePassword = "password"
         )
 
         val RESTRICTION_REST =

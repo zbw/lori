@@ -1,5 +1,9 @@
 package de.zbw.api.lori.server
 
+import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.type.DACollection
+import de.zbw.api.lori.server.type.DACommunity
+import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.Action
@@ -19,16 +23,19 @@ import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
+import de.zbw.lori.api.ImportedItem
 import de.zbw.lori.api.ItemProto
 import de.zbw.lori.api.RestrictionProto
 import de.zbw.lori.api.RestrictionTypeProto
 import io.grpc.StatusRuntimeException
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
+import java.nio.channels.UnresolvedAddressException
 import java.sql.SQLException
 
 /**
@@ -42,11 +49,96 @@ class LoriGrpcServerTest {
     @Test
     fun testFullImport() {
         runBlocking {
-            val request = FullImportRequest.getDefaultInstance()
+            // given
+            val token = "SOME_TOKEN"
+            val item = DAItem(
+                id = 12345,
+                name = "Some name",
+                handle = null,
+                type = null,
+                link = "some link",
+                expand = emptyList(),
+                lastModified = null,
+                parentCollection = null,
+                parentCollectionList = emptyList(),
+                parentCommunityList = emptyList(),
+                metadata = emptyList(),
+                bitstreams = emptyList(),
+                archived = null,
+                withdrawn = null,
+            )
 
-            val backendMockk = mockk<LoriServerBackend>()
-            val response = LoriGrpcServer(mockk(), backendMockk).fullImport(request)
-            assertThat(response, `is`(FullImportResponse.newBuilder().setMsg("hello from lori!").build()))
+            val community = DACommunity(
+                id = 5,
+                name = "Some name",
+                handle = null,
+                type = null,
+                link = "some link",
+                expand = emptyList(),
+                logo = null,
+                parentCommunity = null,
+                copyrightText = null,
+                introductoryText = null,
+                shortDescription = null,
+                sidebarText = null,
+                subcommunities = emptyList(),
+                collections = listOf(
+                    mockk<DACollection>() {
+                        every { id } returns 101
+                    }
+                ),
+                countItems = 1,
+            )
+
+            val importer = mockk<DAConnector> {
+                coEvery { login() } returns token
+                coEvery { getCommunity(token) } returns community
+                coEvery { startFullImport(token, listOf(101)) } returns listOf(
+                    item
+                )
+            }
+
+            val expected = FullImportResponse.newBuilder()
+                .setItemsImported(1)
+                .addAllItems(
+                    listOf(
+                        ImportedItem
+                            .newBuilder()
+                            .setId(item.id)
+                            .setName(item.name)
+                            .build()
+                    )
+                )
+                .build()
+
+            val request = FullImportRequest.getDefaultInstance()
+            // when
+            val response = LoriGrpcServer(
+                mockk(),
+                mockk(),
+                importer
+            ).fullImport(request)
+
+            // then
+            assertThat(response, `is`(expected))
+        }
+    }
+
+    @Test(expectedExceptions = [StatusRuntimeException::class])
+    fun testFullImportLoginError() {
+        runBlocking {
+            // given
+            val importer = mockk<DAConnector> {
+                coEvery { login() } throws UnresolvedAddressException()
+            }
+
+            val request = FullImportRequest.getDefaultInstance()
+            // when
+            LoriGrpcServer(
+                mockk(),
+                mockk(),
+                importer
+            ).fullImport(request)
         }
     }
 
@@ -61,7 +153,7 @@ class LoriGrpcServerTest {
                 every { insertAccessRightEntry(any()) } returns "foo"
             }
 
-            val response = LoriGrpcServer(mockk(), backendMockk).addItem(request)
+            val response = LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
             assertThat(response, `is`(AddItemResponse.getDefaultInstance()))
         }
     }
@@ -85,7 +177,7 @@ class LoriGrpcServerTest {
                 every { insertAccessRightEntry(any()) } throws SQLException()
             }
 
-            LoriGrpcServer(mockk(), backendMockk).addItem(request)
+            LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
         }
     }
 
@@ -120,7 +212,7 @@ class LoriGrpcServerTest {
                 )
             }
 
-            val response = LoriGrpcServer(mockk(), backendMockk).getItem(request)
+            val response = LoriGrpcServer(mockk(), backendMockk, mockk()).getItem(request)
             assertThat(
                 response,
                 `is`(
@@ -185,7 +277,7 @@ class LoriGrpcServerTest {
                 every { getAccessRightEntries(any()) } throws SQLException()
             }
 
-            LoriGrpcServer(mockk(), backendMockk).getItem(request)
+            LoriGrpcServer(mockk(), backendMockk, mockk()).getItem(request)
         }
     }
 
