@@ -127,6 +127,12 @@ class ServicePoolWithProbesTest {
             sqlUrl = "jdbc:localhost",
             sqlUser = "postgres",
             sqlPassword = "postgres",
+            digitalArchiveAddress = "https://archiveaddress",
+            digitalArchiveCollection = "1234",
+            digitalArchiveCommunity = "5678",
+            digitalArchiveUsername = "testuser",
+            digitalArchivePassword = "password"
+
         )
     }
 }

@@ -1,6 +1,9 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.type.DACommunity
+import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.Item
@@ -13,6 +16,7 @@ import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
+import de.zbw.lori.api.ImportedItem
 import de.zbw.lori.api.ItemProto
 import de.zbw.lori.api.LoriServiceGrpcKt
 import de.zbw.lori.api.RestrictionProto
@@ -29,10 +33,33 @@ import java.sql.SQLException
 class LoriGrpcServer(
     config: LoriConfiguration,
     private val backend: LoriServerBackend = LoriServerBackend(config),
+    private val importer: DAConnector = DAConnector(config),
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
 
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
-        return FullImportResponse.newBuilder().setMsg("hello from lori!").build()
+        try {
+            val token = importer.login()
+            val community: DACommunity = importer.getCommunity(token)
+            val importedItems: List<DAItem> = importer.startFullImport(token, community.collections.map { it.id })
+            return FullImportResponse
+                .newBuilder()
+                .setItemsImported(importedItems.size)
+                .addAllItems(
+                    importedItems.map {
+                        ImportedItem
+                            .newBuilder()
+                            .setId(it.id)
+                            .setName(it.name)
+                            .build()
+                    }
+                )
+                .build()
+        } catch (e: Exception) {
+            throw StatusRuntimeException(
+                Status.INTERNAL.withCause(e.cause)
+                    .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+            )
+        }
     }
 
     override suspend fun addItem(request: AddItemRequest): AddItemResponse {
@@ -41,7 +68,7 @@ class LoriGrpcServer(
         } catch (e: Exception) {
             throw StatusRuntimeException(
                 Status.INTERNAL.withCause(e.cause)
-                    .withDescription("Error while inserting an access right item: ${e.message}")
+                    .withDescription("Error while inserting an access right item: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
             )
         }
 
@@ -106,7 +133,7 @@ class LoriGrpcServer(
         } catch (e: SQLException) {
             throw StatusRuntimeException(
                 Status.INTERNAL.withCause(e.cause)
-                    .withDescription("Error while querying header information: ${e.message}")
+                    .withDescription("Error while querying header information: ${e.message}\\nStacktrace: ${e.stackTraceToString()}")
             )
         }
     }
