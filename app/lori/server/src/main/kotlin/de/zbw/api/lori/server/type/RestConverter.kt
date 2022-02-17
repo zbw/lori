@@ -167,14 +167,14 @@ internal fun AccessState.toRest(): ItemRest.AccessState =
 
 internal fun ItemRest.PublicationType.toBusiness(): PublicationType =
     when (this) {
-        ItemRest.PublicationType.mono -> PublicationType.MONO
-        ItemRest.PublicationType.periodical -> PublicationType.PERIODICAL
+        ItemRest.PublicationType.article -> PublicationType.ARTICLE
+        ItemRest.PublicationType.book -> PublicationType.BOOK
     }
 
 internal fun PublicationType.toRest(): ItemRest.PublicationType =
     when (this) {
-        PublicationType.MONO -> ItemRest.PublicationType.mono
-        PublicationType.PERIODICAL -> ItemRest.PublicationType.periodical
+        PublicationType.ARTICLE -> ItemRest.PublicationType.article
+        PublicationType.BOOK -> ItemRest.PublicationType.book
     }
 
 internal fun AttributeType.toRest(): RestrictionRest.Attributetype =
@@ -229,3 +229,53 @@ fun ActionType.toRest() =
         ActionType.MOVE -> ActionRest.Actiontype.move
         ActionType.DISPLAY_METADATA -> ActionRest.Actiontype.displaymetadata
     }
+
+fun DAItem.toBusiness(): ItemMetadata? {
+    val metadata = this.metadata
+    val handle = extractMetadata("dc.identifier.uri", metadata)
+    val publicationType = extractMetadata("dc.type", metadata)?.let {
+        PublicationType.valueOf(it.uppercase())
+    }
+    val publicationYear = extractMetadata("dc.date.issued", metadata)?.toInt()
+    val title = extractMetadata("dc.title", metadata)
+
+    return if (
+        handle == null ||
+        publicationYear == null ||
+        publicationType == null ||
+        title == null
+    ) {
+        null
+    } else {
+        ItemMetadata(
+            id = this.id.toString(),
+            accessState = null,
+            band = null, // Not in DA yet
+            doi = extractMetadata("dc.identifier.pi", metadata),
+            handle = handle,
+            isbn = extractMetadata("dc.identifier.isbn", metadata),
+            issn = extractMetadata("dc.identifier.issn", metadata),
+            licenseConditions = null,
+            paketSigel = null, // Not in DA yet
+            ppn = extractMetadata("dc.identifier.ppn", metadata),
+            ppnEbook = null, // Not in DA yet
+            provenanceLicense = null,
+            publicationType = publicationType,
+            publicationYear = publicationYear,
+            rightsK10plus = extractMetadata("dc.rights", metadata),
+            serialNumber = null, // Not in DA yet
+            title = title,
+            titleJournal = extractMetadata("dc.journalname", metadata),
+            titleSeries = extractMetadata("dc.seriesName", metadata),
+            zbdId = null, // Not in DA yet
+        )
+    }
+}
+
+private fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
+    metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
+
+/**
+ * DAMetadata(value, key, lang)
+ * if (value == dc.type) then ItemMetadata.publicationType
+ */

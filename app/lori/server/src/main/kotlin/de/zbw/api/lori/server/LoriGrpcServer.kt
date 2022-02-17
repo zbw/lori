@@ -3,7 +3,6 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
-import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.Item
@@ -16,7 +15,6 @@ import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
-import de.zbw.lori.api.ImportedItem
 import de.zbw.lori.api.ItemProto
 import de.zbw.lori.api.LoriServiceGrpcKt
 import de.zbw.lori.api.RestrictionProto
@@ -33,26 +31,17 @@ import java.sql.SQLException
 class LoriGrpcServer(
     config: LoriConfiguration,
     private val backend: LoriServerBackend = LoriServerBackend(config),
-    private val importer: DAConnector = DAConnector(config),
+    private val daConnector: DAConnector = DAConnector(config, backend),
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
 
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
         try {
-            val token = importer.login()
-            val community: DACommunity = importer.getCommunity(token)
-            val importedItems: List<DAItem> = importer.startFullImport(token, community.collections.map { it.id })
+            val token = daConnector.login()
+            val community: DACommunity = daConnector.getCommunity(token)
+            val imports = daConnector.startFullImport(token, community.collections.map { it.id })
             return FullImportResponse
                 .newBuilder()
-                .setItemsImported(importedItems.size)
-                .addAllItems(
-                    importedItems.map {
-                        ImportedItem
-                            .newBuilder()
-                            .setId(it.id)
-                            .setName(it.name)
-                            .build()
-                    }
-                )
+                .setItemsImported(imports.sum())
                 .build()
         } catch (e: Exception) {
             throw StatusRuntimeException(

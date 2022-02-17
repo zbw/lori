@@ -39,8 +39,8 @@ ItemRest:
     publicationType:
       type: string
       enum:
-        - mono
-        - periodical
+        - article
+        - book
     publicationYear:
       type: integer
     rightsK10plus:

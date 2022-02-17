@@ -122,7 +122,7 @@ class RestConverterTest {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             provenanceLicense = "provenance license",
-            publicationType = PublicationType.PERIODICAL,
+            publicationType = PublicationType.BOOK,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",

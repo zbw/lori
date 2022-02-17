@@ -78,14 +78,14 @@ fun AccessStateProto.toBusiness(): AccessState? =
 
 fun PublicationType.toProto(): PublicationTypeProto =
     when (this) {
-        PublicationType.MONO -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO
-        PublicationType.PERIODICAL -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL
+        PublicationType.ARTICLE -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_ARTICLE
+        PublicationType.BOOK -> PublicationTypeProto.PUBLICATION_TYPE_PROTO_BOOK
     }
 
 fun PublicationTypeProto.toBusiness(): PublicationType =
     when (this) {
-        PublicationTypeProto.PUBLICATION_TYPE_PROTO_MONO -> PublicationType.MONO
-        PublicationTypeProto.PUBLICATION_TYPE_PROTO_PERIODICAL -> PublicationType.PERIODICAL
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_ARTICLE -> PublicationType.ARTICLE
+        PublicationTypeProto.PUBLICATION_TYPE_PROTO_BOOK -> PublicationType.BOOK
         else -> throw IllegalArgumentException("PublicationType has to be set.")
     }
 

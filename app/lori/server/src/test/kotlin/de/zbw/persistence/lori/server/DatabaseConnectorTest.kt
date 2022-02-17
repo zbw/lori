@@ -74,7 +74,6 @@ class DatabaseConnectorTest : DatabaseTest() {
 
     @Test
     fun testInsertAndReceiveMetadata() {
-
         // given
         val testId = "id_test"
         val testMetadata = TEST_Metadata.copy(id = testId, title = "foo")
@@ -96,6 +95,60 @@ class DatabaseConnectorTest : DatabaseTest() {
         // when
         assertThat(
             dbConnector.getMetadata(listOf("not_in_db")), `is`(listOf())
+        )
+    }
+
+    @Test
+    fun testBatchUpsert() {
+        // given
+        val id1 = "upsert1"
+        val id2 = "upsert2"
+        val m1 = TEST_Metadata.copy(id = id1, title = "foo")
+        val m2 = TEST_Metadata.copy(id = id2, title = "bar")
+
+        // when
+        val responseUpsert = dbConnector.upsertMetadataBatch(listOf(m1, m2))
+
+        // then
+        assertThat(responseUpsert, `is`(IntArray(2) { 1 }))
+
+        // when
+        val receivedM1: List<ItemMetadata> = dbConnector.getMetadata(listOf(id1))
+
+        // then
+        assertThat(
+            receivedM1.first(), `is`(m1)
+        )
+
+        val receivedM2: List<ItemMetadata> = dbConnector.getMetadata(listOf(id2))
+
+        // then
+        assertThat(
+            receivedM2.first(), `is`(m2)
+        )
+
+        // when
+        val m1Changed = m1.copy(title = "foo2")
+        val m2Changed = m2.copy(title = "bar2")
+
+        val responseUpsert2 = dbConnector.upsertMetadataBatch(listOf(m1Changed, m2Changed))
+
+        // then
+        assertThat(responseUpsert2, `is`(IntArray(2) { 1 }))
+
+        // when
+        val receivedM1Changed: List<ItemMetadata> = dbConnector.getMetadata(listOf(id1))
+
+        // then
+        assertThat(
+            receivedM1Changed.first(), `is`(m1Changed)
+        )
+
+        val receivedM2Changed: List<ItemMetadata> = dbConnector.getMetadata(listOf(id2))
+
+        // then
+        assertThat(
+            receivedM2Changed.first(), `is`(m2Changed)
         )
     }
 
@@ -356,14 +409,14 @@ class DatabaseConnectorTest : DatabaseTest() {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             provenanceLicense = "provenance license",
-            publicationType = PublicationType.PERIODICAL,
+            publicationType = PublicationType.ARTICLE,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zbdId = null,
+            zbdId = "some id",
         )
 
         private val TEST_ACTION = Action(

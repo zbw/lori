@@ -118,7 +118,7 @@ class LoriServerBackendTest : DatabaseTest() {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             provenanceLicense = "provenance license",
-            publicationType = PublicationType.MONO,
+            publicationType = PublicationType.ARTICLE,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",

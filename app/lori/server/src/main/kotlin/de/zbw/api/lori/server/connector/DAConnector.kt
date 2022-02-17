@@ -4,6 +4,9 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.api.lori.server.type.DACredentials
 import de.zbw.api.lori.server.type.DAItem
+import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.business.lori.server.ItemMetadata
+import de.zbw.business.lori.server.LoriServerBackend
 import io.ktor.client.HttpClient
 import io.ktor.client.call.receive
 import io.ktor.client.engine.HttpClientEngine
@@ -20,6 +23,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 
 /**
  * Connector for the Digital Archive (DA).
@@ -29,6 +33,7 @@ import kotlinx.serialization.json.Json
  */
 class DAConnector(
     val config: LoriConfiguration,
+    val backend: LoriServerBackend,
     engine: HttpClientEngine = CIO.create(),
     private val client: HttpClient = HttpClient(engine) {
         install(JsonFeature) {
@@ -71,11 +76,13 @@ class DAConnector(
         return r.receive()
     }
 
-    suspend fun startFullImport(loginToken: String, collectionIds: List<Int>): List<DAItem> =
+    suspend fun startFullImport(loginToken: String, collectionIds: List<Int>): List<Int> =
         coroutineScope {
             collectionIds.map { cId ->
-                importCollection(loginToken, cId)
-            }.flatten()
+                val daItemList: List<DAItem> = importCollection(loginToken, cId)
+                val metadataList: List<ItemMetadata?> = daItemList.map { it.toBusiness() }
+                backend.upsertMetaData(metadataList.filterNotNull()).filter { it == 1 }.size
+            }
         }
 
     suspend fun importCollection(loginToken: String, cId: Int): List<DAItem> {
@@ -97,5 +104,6 @@ class DAConnector(
 
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
+        private val LOG = LoggerFactory.getLogger(DAConnector::class.java)
     }
 }

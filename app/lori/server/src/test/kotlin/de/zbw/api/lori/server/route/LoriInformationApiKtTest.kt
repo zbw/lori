@@ -519,7 +519,7 @@ class LoriInformationApiKtTest {
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            publicationType = ItemRest.PublicationType.periodical,
+            publicationType = ItemRest.PublicationType.book,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",

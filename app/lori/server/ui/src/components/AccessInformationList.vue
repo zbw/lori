@@ -172,7 +172,7 @@ export default class AccessInformationList extends Vue {
     {
       text: "Publication Type",
       sortable: true,
-      value: "pubtype",
+      value: "publicationType",
     },
     {
       text: "Band",

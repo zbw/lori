@@ -32,6 +32,8 @@ class LoriServerBackend(
         return fkAccessRight
     }
 
+    fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.upsertMetadataBatch(metadata)
+
     fun getAccessRightEntries(ids: List<String>): List<Item> {
         val headerToActions: Map<String, List<Action>> = dbConnector.getActions(ids)
         return dbConnector.getMetadata(ids).map {

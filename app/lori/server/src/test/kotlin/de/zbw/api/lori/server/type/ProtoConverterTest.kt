@@ -164,7 +164,7 @@ class ProtoConverterTest {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             provenanceLicense = "provenance license",
-            publicationType = PublicationType.MONO,
+            publicationType = PublicationType.BOOK,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
