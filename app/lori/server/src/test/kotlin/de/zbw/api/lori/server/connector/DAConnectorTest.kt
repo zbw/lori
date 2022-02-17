@@ -55,6 +55,7 @@ class DAConnectorTest {
                     every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
                     every { digitalArchiveUsername } returns "some-user"
                     every { digitalArchivePassword } returns "some-password"
+                    every { digitalArchiveBasicAuth } returns "pw"
                 },
                 engine = mockEngine,
                 backend = mockk(),
@@ -84,6 +85,7 @@ class DAConnectorTest {
                 config = mockk() {
                     every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
                     every { digitalArchiveCommunity } returns "240"
+                    every { digitalArchiveBasicAuth } returns "pw"
                 },
                 engine = mockEngine,
                 backend = mockk(),
@@ -176,6 +178,7 @@ class DAConnectorTest {
             val daConnector = DAConnector(
                 config = mockk() {
                     every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
+                    every { digitalArchiveBasicAuth } returns "pw"
                 },
                 engine = mockEngine,
                 backend = mockk(),
