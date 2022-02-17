@@ -8,7 +8,7 @@ else
 fi
 
 JSON_DATA='{"id":"'"$1"'", "handle":"somehandle", "title":"some fancy title",'\
-'"publicationYear":"2020", "publicationType": "mono", "accessState": "open",'\
+'"publicationYear":"2020", "publicationType": "article", "accessState": "open",'\
 '"actions":[{"permission":"true", "actiontype":"read",'\
 '"restrictions":['\
 '{"restrictiontype":"date", "attributetype":"todate", "attributevalues":["2022"]},'\

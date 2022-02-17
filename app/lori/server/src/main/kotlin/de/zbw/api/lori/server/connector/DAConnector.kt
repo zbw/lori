@@ -52,6 +52,9 @@ class DAConnector(
         val statement: HttpStatement =
             client.post("$restURL/login") {
                 contentType(ContentType.Application.Json)
+                headers {
+                    append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
+                }
                 body = DACredentials(
                     email = config.digitalArchiveUsername,
                     password = config.digitalArchivePassword,
@@ -66,6 +69,7 @@ class DAConnector(
             client.get("$restURL/communities/${config.digitalArchiveCommunity}") {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
+                    append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
                 }
                 headers {
                     append(DSPACE_TOKEN, loginToken)
@@ -90,6 +94,7 @@ class DAConnector(
             client.get("$restURL/collections/$cId/items") {
                 headers {
                     append(HttpHeaders.Accept, "application/json")
+                    append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
                 }
                 headers {
                     append(DSPACE_TOKEN, loginToken)

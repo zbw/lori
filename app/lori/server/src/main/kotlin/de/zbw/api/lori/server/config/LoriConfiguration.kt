@@ -20,7 +20,7 @@ data class LoriConfiguration(
     val sqlUser: String,
     val sqlPassword: String,
     val digitalArchiveAddress: String,
-    val digitalArchiveCollection: String,
+    val digitalArchiveBasicAuth: String,
     val digitalArchiveCommunity: String,
     val digitalArchiveUsername: String,
     val digitalArchivePassword: String,
@@ -39,8 +39,8 @@ data class LoriConfiguration(
             val sqlUser = KonfigDeclaration.string(prefix, "sql", "user").required()
             val sqlPassword = KonfigDeclaration.string(prefix, "sql", "password").secret().required()
             val digitalArchiveAddress = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "address").required()
-            val digitalArchiveCollection = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "collection").required()
             val digitalArchiveCommunity = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "community").required()
+            val digitalArchiveBasicAuth = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "basicauth").required()
             val digitalArchiveUsername = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "user").required()
             val digitalArchivePassword = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "password").secret().required()
             return LoriConfiguration(
@@ -50,10 +50,10 @@ data class LoriConfiguration(
                 sqlUser = source[sqlUser],
                 sqlPassword = source[sqlPassword],
                 digitalArchiveAddress = source[digitalArchiveAddress],
-                digitalArchiveCollection = source[digitalArchiveCollection],
                 digitalArchiveCommunity = source[digitalArchiveCommunity],
                 digitalArchiveUsername = source[digitalArchiveUsername],
                 digitalArchivePassword = source[digitalArchivePassword],
+                digitalArchiveBasicAuth = source[digitalArchiveBasicAuth],
             )
         }
     }
