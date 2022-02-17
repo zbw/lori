@@ -8,6 +8,8 @@ import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.DAMetadata
 import de.zbw.api.lori.server.type.DAObject
 import de.zbw.api.lori.server.type.DAResourcePolicy
+import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.persistence.lori.server.DatabaseConnector
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -55,6 +57,7 @@ class DAConnectorTest {
                     every { digitalArchivePassword } returns "some-password"
                 },
                 engine = mockEngine,
+                backend = mockk(),
             )
 
             // when + then
@@ -83,6 +86,7 @@ class DAConnectorTest {
                     every { digitalArchiveCommunity } returns "240"
                 },
                 engine = mockEngine,
+                backend = mockk(),
             )
             val expected = TEST_COMMUNITY
 
@@ -98,11 +102,19 @@ class DAConnectorTest {
     fun testStartFullImport() {
         runBlocking {
             // given
+            val backend = spyk(
+                LoriServerBackend(
+                    mockk<DatabaseConnector>() {
+                        every { upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
+                    }
+                )
+            )
             val daConnector = spyk(
                 DAConnector(
                     config = mockk() {
                         every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
                     },
+                    backend = backend,
                 )
             ) {
                 coEvery { importCollection(any(), any()) } returns listOf(TEST_ITEM)
@@ -111,8 +123,9 @@ class DAConnectorTest {
             val receivedItems = daConnector.startFullImport("token", listOf(1, 2, 3))
 
             // then
-            assertThat(receivedItems, `is`(listOf(TEST_ITEM, TEST_ITEM, TEST_ITEM)))
+            assertThat(receivedItems, `is`(listOf(1, 1, 1)))
             coVerify(exactly = 3) { daConnector.importCollection("token", any()) }
+            coVerify(exactly = 3) { backend.upsertMetaData(any()) }
         }
     }
 
@@ -165,6 +178,7 @@ class DAConnectorTest {
                     every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
                 },
                 engine = mockEngine,
+                backend = mockk(),
             )
             val expected = listOf(TEST_ITEM)
 

@@ -35,8 +35,8 @@ enum class AccessState {
 }
 
 enum class PublicationType {
-    MONO,
-    PERIODICAL,
+    ARTICLE,
+    BOOK,
 }
 
 data class Action(

@@ -28,7 +28,7 @@ describe("Test AccessInformationList UI", () => {
           id: "42",
           handle: "foo",
           publicationYear: 2002,
-          publicationType: ItemRestPublicationTypeEnum.Mono,
+          publicationType: ItemRestPublicationTypeEnum.Article,
         } as ItemRest)
       )
     );

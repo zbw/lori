@@ -31,8 +31,53 @@ class DatabaseConnector(
         config: LoriConfiguration,
     ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
 
+    fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
+        val prep = connection.prepareStatement(
+            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+                "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+                "title_series,access_state,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "license_conditions,provenance_license) " +
+                "VALUES(?,?,?,?,?,?," +
+                "?,?,?,?,?,?," +
+                "?,?,?,?,?,?," +
+                "?,?) " +
+                "ON CONFLICT (header_id) " +
+                "DO UPDATE SET " +
+                "handle = EXCLUDED.handle," +
+                "ppn = EXCLUDED.ppn," +
+                "ppn_ebook = EXCLUDED.ppn_ebook," +
+                "title = EXCLUDED.title," +
+                "title_journal = EXCLUDED.title_journal," +
+                "title_series = EXCLUDED.title_series," +
+                "access_state = EXCLUDED.access_state," +
+                "published_year = EXCLUDED.published_year," +
+                "band = EXCLUDED.band," +
+                "publication_type = EXCLUDED.publication_type," +
+                "doi = EXCLUDED.doi," +
+                "serial_number = EXCLUDED.serial_number," +
+                "isbn = EXCLUDED.isbn," +
+                "rights_k10plus = EXCLUDED.rights_k10plus," +
+                "paket_sigel = EXCLUDED.paket_sigel," +
+                "zbd_id = EXCLUDED.zbd_id," +
+                "issn = EXCLUDED.issn," +
+                "license_conditions = EXCLUDED.license_conditions," +
+                "provenance_license = EXCLUDED.provenance_license;",
+            Statement.RETURN_GENERATED_KEYS
+        )
+        connection.autoCommit = false
+        itemMetadatas.map {
+            val p = insertUpsertSetParameters(it, prep)
+            p.addBatch()
+        }
+        val rows: IntArray = prep.executeBatch()
+        connection.commit()
+        connection.autoCommit = true
+        return rows
+    }
+
     fun insertMetadata(itemMetadata: ItemMetadata): String {
-        val stmntAccIns =
+        val stmntAccIns: String =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
                 "title_series,access_state,published_year,band,publication_type,doi," +
@@ -43,7 +88,22 @@ class DatabaseConnector(
                 "?,?,?,?,?,?," +
                 "?,?)"
 
-        val prepStmt = connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS).apply {
+        val prepStmt = insertUpsertSetParameters(
+            itemMetadata,
+            connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS),
+        )
+
+        val affectedRows = prepStmt.run { this.executeUpdate() }
+
+        return if (affectedRows > 0) {
+            val rs: ResultSet = prepStmt.generatedKeys
+            rs.next()
+            rs.getString(1)
+        } else throw IllegalStateException("No row has been inserted.")
+    }
+
+    private fun insertUpsertSetParameters(itemMetadata: ItemMetadata, prep: PreparedStatement): PreparedStatement =
+        prep.apply {
             this.setString(1, itemMetadata.id)
             this.setString(2, itemMetadata.handle)
             this.setIfNotNull(3, itemMetadata.ppn) { value, idx, prepStmt ->
@@ -95,14 +155,6 @@ class DatabaseConnector(
                 prepStmt.setString(idx, value)
             }
         }
-        val affectedRows = prepStmt.run { this.executeUpdate() }
-
-        return if (affectedRows > 0) {
-            val rs: ResultSet = prepStmt.generatedKeys
-            rs.next()
-            rs.getString(1)
-        } else throw IllegalStateException("No row has been inserted.")
-    }
 
     fun insertAction(action: Action, fkAccessRight: String): Long {
         val stmntActIns = "INSERT INTO $TABLE_NAME_ITEM_ACTION" +

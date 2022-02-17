@@ -23,7 +23,7 @@ object Main {
         val response: FullImportResponse = runBlocking {
             loriClient.fullImport(FullImportRequest.getDefaultInstance())
         }
-        LOG.info("Lori Server imported: ${response.itemsCount}")
+        LOG.info("Lori Server imported: ${response.itemsImported}")
     }
 
     private val LOG = LoggerFactory.getLogger(Main::class.java)

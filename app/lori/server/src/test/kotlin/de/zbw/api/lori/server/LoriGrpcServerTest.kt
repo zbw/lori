@@ -1,9 +1,7 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.connector.DAConnector
-import de.zbw.api.lori.server.type.DACollection
 import de.zbw.api.lori.server.type.DACommunity
-import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.Action
@@ -23,7 +21,6 @@ import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.GetItemRequest
 import de.zbw.lori.api.GetItemResponse
-import de.zbw.lori.api.ImportedItem
 import de.zbw.lori.api.ItemProto
 import de.zbw.lori.api.RestrictionProto
 import de.zbw.lori.api.RestrictionTypeProto
@@ -51,22 +48,6 @@ class LoriGrpcServerTest {
         runBlocking {
             // given
             val token = "SOME_TOKEN"
-            val item = DAItem(
-                id = 12345,
-                name = "Some name",
-                handle = null,
-                type = null,
-                link = "some link",
-                expand = emptyList(),
-                lastModified = null,
-                parentCollection = null,
-                parentCollectionList = emptyList(),
-                parentCommunityList = emptyList(),
-                metadata = emptyList(),
-                bitstreams = emptyList(),
-                archived = null,
-                withdrawn = null,
-            )
 
             val community = DACommunity(
                 id = 5,
@@ -83,7 +64,7 @@ class LoriGrpcServerTest {
                 sidebarText = null,
                 subcommunities = emptyList(),
                 collections = listOf(
-                    mockk<DACollection>() {
+                    mockk {
                         every { id } returns 101
                     }
                 ),
@@ -93,22 +74,11 @@ class LoriGrpcServerTest {
             val importer = mockk<DAConnector> {
                 coEvery { login() } returns token
                 coEvery { getCommunity(token) } returns community
-                coEvery { startFullImport(token, listOf(101)) } returns listOf(
-                    item
-                )
+                coEvery { startFullImport(token, listOf(101)) } returns listOf(3)
             }
 
             val expected = FullImportResponse.newBuilder()
-                .setItemsImported(1)
-                .addAllItems(
-                    listOf(
-                        ImportedItem
-                            .newBuilder()
-                            .setId(item.id)
-                            .setName(item.name)
-                            .build()
-                    )
-                )
+                .setItemsImported(3)
                 .build()
 
             val request = FullImportRequest.getDefaultInstance()
@@ -235,6 +205,8 @@ class LoriGrpcServerTest {
                                     .setRightsK10Plus(TEST_Metadata.rightsK10plus)
                                     .setSerialNumber(TEST_Metadata.serialNumber)
                                     .setTitle(TEST_Metadata.title)
+                                    .setTitleJournal(TEST_Metadata.titleJournal)
+                                    .setTitleSeries(TEST_Metadata.titleSeries)
                                     .addAllActions(
                                         listOf(
                                             ActionProto.newBuilder()
@@ -295,13 +267,13 @@ class LoriGrpcServerTest {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             provenanceLicense = "provenance license",
-            publicationType = PublicationType.MONO,
+            publicationType = PublicationType.ARTICLE,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            titleJournal = null,
-            titleSeries = null,
+            titleJournal = "some journal",
+            titleSeries = "some series",
             zbdId = null,
         )
     }

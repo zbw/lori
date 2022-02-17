@@ -24,13 +24,7 @@ message FullImportRequest {
 }
 
 message FullImportResponse {
-  repeated ImportedItem items = 1;
-  int32 items_imported = 2;
-}
-
-message ImportedItem {
-  int32 id = 1;
-  string name = 2;
+  int32 items_imported = 1;
 }
 
 message ItemProto {
@@ -66,8 +60,8 @@ enum AccessStateProto {
 
 enum PublicationTypeProto {
   PUBLICATION_TYPE_PROTO_UNSPECIFIED = 0;
-  PUBLICATION_TYPE_PROTO_MONO = 1;
-  PUBLICATION_TYPE_PROTO_PERIODICAL = 2;
+  PUBLICATION_TYPE_PROTO_ARTICLE = 1;
+  PUBLICATION_TYPE_PROTO_BOOK = 2;
 }
 
 message ActionProto {
