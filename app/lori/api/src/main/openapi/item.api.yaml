@@ -2,7 +2,7 @@ item:
   post:
     tags:
       - item
-    summary: Add a new item for a bibliographic item
+    summary: Add a new item to LoRi
     operationId: addItem
     requestBody:
       description: Item object
@@ -12,6 +12,29 @@ item:
             $ref: 'item.model.yaml#/ItemRest'
       required: true
     responses:
+      201:
+        description: Item was successfully added
+        content: { }
+      405:
+        description: Invalid input
+        content: { }
+    x-codegen-request-body-name: body
+  put:
+    tags:
+      - item
+    summary: Update an existing item in LoRi
+    operationId: updateItem
+    requestBody:
+      description: Item object
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/ItemRest'
+      required: true
+    responses:
+      200:
+        description: Item was successfully updated
+        content: { }
       405:
         description: Invalid input
         content: { }
@@ -33,7 +56,7 @@ item-id:
           type: string
     responses:
       200:
-        description: successful operation
+        description: Successful operation
         content:
           application/json:
             schema:
@@ -58,10 +81,10 @@ item-id:
           type: string
     responses:
       200:
-        description: Deletion was successfull
+        description: Deletion of item was successfull
         content: { }
       404:
-        description: Id not found
+        description: Id does not exist
         content: { }
 
 item-list:
@@ -91,7 +114,7 @@ item-list:
         required: false
     responses:
       200:
-        description: successful operation
+        description: Successful operation
         content:
           application/json:
             schema:

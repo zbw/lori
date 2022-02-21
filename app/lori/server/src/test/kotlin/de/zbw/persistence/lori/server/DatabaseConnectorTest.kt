@@ -325,7 +325,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         dbConnector.insertMetadata(givenHeader)
         val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
         val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
-        val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
+        val receivedAccessInformationKeys = dbConnector.getItemPrimaryKeys(listOf(givenHeaderId))
 
         // then
         assertThat(
@@ -342,33 +342,33 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testDeleteAccessRight() {
+    fun testDeleteItem() {
         // given
-        val givenHeaderId = "test_primkey_to_be_deleted"
-        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
+        val givenId = "test_primkey_to_be_deleted"
+        val givenMetadata = TEST_Metadata.copy(id = givenId)
         val givenAction = TEST_ACTION
 
         // when
-        dbConnector.insertMetadata(givenHeader)
-        val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
+        dbConnector.insertMetadata(givenMetadata)
+        val actionId = dbConnector.insertAction(givenAction, givenId)
         val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
-        val receivedAccessInformationKeys = dbConnector.getAccessInformationKeys(listOf(givenHeaderId))
+        val receivedPrimaryKeys = dbConnector.getItemPrimaryKeys(listOf(givenId))
 
         // then
         assertThat(
             "The primary keys do not match",
             listOf(
                 JoinHeaderActionRestrictionIdTransient(
-                    headerId = givenHeaderId,
+                    headerId = givenId,
                     actionId = actionId.toInt(),
                     restrictionId = restrictionId.toInt(),
                 )
             ),
-            `is`(receivedAccessInformationKeys)
+            `is`(receivedPrimaryKeys)
         )
 
         // when
-        val deletedItems = dbConnector.deleteAccessRights(listOf(givenHeaderId))
+        val deletedItems = dbConnector.deleteItems(listOf(givenId))
 
         // then
         assertThat(
@@ -378,24 +378,60 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
         // when
-        val receivedHeader = dbConnector.getMetadata(listOf(givenHeaderId))
-        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenHeaderId))
+        val receivedHeader = dbConnector.getMetadata(listOf(givenId))
+        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenId))
 
         // then
         assertThat(
-            "No header of the id $givenHeaderId should exist anymore",
+            "No header of the id $givenId should exist anymore",
             receivedHeader,
             `is`(emptyList())
         )
         assertThat(
-            "No actions for the gvien header id $givenHeaderId should exist anymore",
+            "No actions for the gvien header id $givenId should exist anymore",
+            receivedActions,
+            `is`(emptyMap())
+        )
+    }
+
+    @Test
+    fun testDeleteActionsAndRestrictions() {
+        // given
+        val givenId = "test_delete_actions"
+        val givenMetadata = TEST_Metadata.copy(id = givenId)
+        val givenAction = TEST_ACTION
+
+        // when
+        dbConnector.insertMetadata(givenMetadata)
+        val actionId = dbConnector.insertAction(givenAction, givenId)
+        dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
+        val deletedActions = dbConnector.deleteActionAndRestrictedEntries(listOf(givenId))
+
+        // then
+        assertThat(
+            "One item should have been deleted",
+            deletedActions,
+            `is`(1)
+        )
+
+        // when
+        val receivedMetadata: List<ItemMetadata> = dbConnector.getMetadata(listOf(givenId))
+        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenId))
+
+        // then
+        assertThat(
+            "The metadata of the id $givenId should still exist",
+            receivedMetadata,
+            `is`(listOf(givenMetadata))
+        )
+        assertThat(
+            "No actions for the gvien header id $givenId should exist anymore",
             receivedActions,
             `is`(emptyMap())
         )
     }
 
     companion object {
-
         val TEST_Metadata = ItemMetadata(
             id = "that-test",
             accessState = AccessState.OPEN,

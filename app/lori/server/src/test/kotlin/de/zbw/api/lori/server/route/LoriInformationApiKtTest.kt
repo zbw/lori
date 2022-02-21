@@ -29,10 +29,10 @@ import java.sql.SQLException
 class LoriInformationApiKtTest {
 
     @Test
-    fun testAccessInformationPostCreated() {
+    fun testItemPostCreated() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertAccessRightEntry(any()) } returns "foo"
+            every { insertItem(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -54,16 +54,16 @@ class LoriInformationApiKtTest {
                 }
             ) {
                 assertThat("Should return Accepted", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertAccessRightEntry(ITEM_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
             }
         }
     }
 
     @Test
-    fun testAccessInformationPostBadContentType() {
+    fun testItemPostBadContentType() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertAccessRightEntry(any()) } returns "foo"
+            every { insertItem(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -94,7 +94,7 @@ class LoriInformationApiKtTest {
     }
 
     @Test
-    fun testAccessInformationPostConflictId() {
+    fun testItemPostConflictId() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { containsAccessRightId(ITEM_REST.id) } returns true
@@ -128,9 +128,9 @@ class LoriInformationApiKtTest {
     }
 
     @Test(expectedExceptions = [SQLException::class])
-    fun testAccessInformationPostInternalError() {
+    fun testItemPostInternalError() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertAccessRightEntry(any()) } throws SQLException("foo")
+            every { insertItem(any()) } throws SQLException("foo")
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -160,15 +160,15 @@ class LoriInformationApiKtTest {
                     response.status(),
                     `is`(HttpStatusCode.InternalServerError)
                 )
-                verify(exactly = 1) { backend.insertAccessRightEntry(ITEM_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
             }
         }
     }
 
     @Test
-    fun testPostAccessInformationBadJSON() {
+    fun testPostItemBadJSON() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertAccessRightEntry(any()) } returns "foo"
+            every { insertItem(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -203,11 +203,107 @@ class LoriInformationApiKtTest {
     }
 
     @Test
-    fun testGetAccessInformation() {
+    fun testPutItemCreate() {
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { insertItem(any()) } returns "foo"
+            every { containsAccessRightId(any()) } returns false
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Put, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ITEM_REST))
+                }
+            ) {
+                assertThat("Should return CREATED", response.status(), `is`(HttpStatusCode.Created))
+                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
+            }
+        }
+    }
+
+    @Test
+    fun testPutUpdate() {
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { upsertItems(any()) } returns Unit
+            every { containsAccessRightId(any()) } returns true
+        }
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend
+        )
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Put, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ITEM_REST))
+                }
+            ) {
+                assertThat("Should return NO_CONTENT", response.status(), `is`(HttpStatusCode.NoContent))
+                verify(exactly = 1) { backend.upsertItems(listOf(ITEM_REST.toBusiness())) }
+            }
+        }
+    }
+
+    @Test
+    fun testPutItemBadJSON() {
+        val servicePool = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = mockk(),
+        )
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Put, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(
+                        jsonAsString(
+                            RESTRICTION_REST
+                        )
+                    )
+                }
+            ) {
+                assertThat(
+                    "Should return 400 because of json content",
+                    response.status(),
+                    `is`(HttpStatusCode.BadRequest)
+                )
+            }
+        }
+    }
+
+    @Test
+    fun testGetItems() {
         // given
         val testId = "someId"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getAccessRightEntries(listOf(testId)) } returns listOf(ITEM_REST.toBusiness())
+            every { getItems(listOf(testId)) } returns listOf(ITEM_REST.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -231,11 +327,11 @@ class LoriInformationApiKtTest {
     }
 
     @Test(expectedExceptions = [SQLException::class])
-    fun testGetAccessInformationInternalError() {
+    fun testGetItemsInternalError() {
         // given
         val testId = "someId"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getAccessRightEntries(listOf(testId)) } throws SQLException()
+            every { getItems(listOf(testId)) } throws SQLException()
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -374,7 +470,7 @@ class LoriInformationApiKtTest {
     }
 
     @Test
-    fun testGETAccessInformationMissingParameter() {
+    fun testGETItemMissingParameter() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = ServicePoolWithProbes(
@@ -400,7 +496,7 @@ class LoriInformationApiKtTest {
     }
 
     @Test
-    fun testDELETEAccessInformationHappyPath() {
+    fun testDELETEItemHappyPath() {
         // given
         val givenDeleteId = "toBeDeleted"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -431,7 +527,7 @@ class LoriInformationApiKtTest {
     }
 
     @Test
-    fun testDELETEAccessInformationNotFound() {
+    fun testDELETEItemNotFound() {
         // given
         val givenDeleteId = "toBeDeleted"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -456,7 +552,7 @@ class LoriInformationApiKtTest {
     }
 
     @Test(expectedExceptions = [SQLException::class])
-    fun testDELETEAccessInformationInternalError() {
+    fun testDELETEItemInternalError() {
         // given
         val givenDeleteId = "toBeDeleted"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
