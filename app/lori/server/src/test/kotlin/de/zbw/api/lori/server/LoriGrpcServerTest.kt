@@ -120,7 +120,7 @@ class LoriGrpcServerTest {
                 .build()
 
             val backendMockk = mockk<LoriServerBackend> {
-                every { insertAccessRightEntry(any()) } returns "foo"
+                every { insertItem(any()) } returns "foo"
             }
 
             val response = LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
@@ -144,7 +144,7 @@ class LoriGrpcServerTest {
                 .build()
 
             val backendMockk = mockk<LoriServerBackend> {
-                every { insertAccessRightEntry(any()) } throws SQLException()
+                every { insertItem(any()) } throws SQLException()
             }
 
             LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
@@ -160,7 +160,7 @@ class LoriGrpcServerTest {
                 .build()
 
             val backendMockk = mockk<LoriServerBackend> {
-                every { getAccessRightEntries(any()) } returns listOf(
+                every { getItems(any()) } returns listOf(
                     Item(
                         itemMetadata = TEST_Metadata,
                         actions = listOf(
@@ -246,7 +246,7 @@ class LoriGrpcServerTest {
                 .build()
 
             val backendMockk = mockk<LoriServerBackend> {
-                every { getAccessRightEntries(any()) } throws SQLException()
+                every { getItems(any()) } throws SQLException()
             }
 
             LoriGrpcServer(mockk(), backendMockk, mockk()).getItem(request)

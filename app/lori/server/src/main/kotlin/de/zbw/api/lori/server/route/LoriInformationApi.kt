@@ -13,6 +13,7 @@ import io.ktor.routing.Routing
 import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
+import io.ktor.routing.put
 import io.ktor.routing.route
 import java.sql.SQLException
 
@@ -28,13 +29,13 @@ fun Routing.accessInformationRoutes(backend: LoriServerBackend) {
             try {
                 // receive() may return an object where non-null fields are null.
                 @Suppress("SENSELESS_COMPARISON")
-                val accessInformation: ItemRest =
+                val item: ItemRest =
                     call.receive(ItemRest::class).takeIf { it.id != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
-                if (backend.containsAccessRightId(accessInformation.id)) {
+                if (backend.containsAccessRightId(item.id)) {
                     call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")
                 } else {
-                    backend.insertAccessRightEntry(accessInformation.toBusiness())
+                    backend.insertItem(item.toBusiness())
                     call.respond(HttpStatusCode.Created)
                 }
             } catch (e: SQLException) {
@@ -52,14 +53,35 @@ fun Routing.accessInformationRoutes(backend: LoriServerBackend) {
                 if (headerId == null) {
                     call.respond(HttpStatusCode.BadRequest, "No id has been provided in the url.")
                 } else {
-                    val accessRights = backend.getAccessRightEntries(listOf(headerId))
-                    call.respond(accessRights.first().toRest())
+                    val item = backend.getItems(listOf(headerId))
+                    call.respond(item.first().toRest())
                 }
             } catch (e: SQLException) {
                 call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
                 throw(e)
             }
         }
+
+        put {
+            try {
+                // receive() may return an object where non-null fields are null.
+                @Suppress("SENSELESS_COMPARISON")
+                val item: ItemRest =
+                    call.receive(ItemRest::class).takeIf { it.id != null }
+                        ?: throw BadRequestException("Invalid Json has been provided")
+                if (backend.containsAccessRightId(item.id)) {
+                    backend.upsertItems(listOf(item.toBusiness()))
+                    call.respond(HttpStatusCode.NoContent)
+                } else {
+                    backend.insertItem(item.toBusiness())
+                    call.respond(HttpStatusCode.Created)
+                }
+            } catch (e: SQLException) {
+                call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                throw(e)
+            }
+        }
+
         delete("{id}") {
             try {
                 val headerId = call.parameters["id"]

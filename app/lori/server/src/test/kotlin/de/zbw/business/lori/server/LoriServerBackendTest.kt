@@ -29,19 +29,19 @@ class LoriServerBackendTest : DatabaseTest() {
     )
 
     private val deletedEntry = TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "to_be_deleted"))
-    private val noAction = TEST_ACCESS_RIGHT_NO_ACTION.copy(itemMetadata = TEST_Metadata.copy(id = "no_action"))
 
     private val entries = arrayOf(
         TEST_ACCESS_RIGHT,
         TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "test_2a")),
         TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "test_2b")),
-        noAction,
+        ITEM_NO_ACTION,
+        ITEM_UPSERTED,
         deletedEntry,
     ).plus(orderedList)
 
     @BeforeClass
     fun fillDatabase() {
-        backend.insertAccessRightEntries(entries.toList())
+        backend.insertItems(entries.toList())
     }
 
     @DataProvider(name = DATA_FOR_ROUNDTRIP)
@@ -52,8 +52,8 @@ class LoriServerBackendTest : DatabaseTest() {
                 setOf(entries[0]),
             ),
             arrayOf(
-                listOf(noAction.itemMetadata.id),
-                setOf(noAction),
+                listOf(ITEM_NO_ACTION.itemMetadata.id),
+                setOf(ITEM_NO_ACTION),
             ),
             arrayOf(
                 listOf(entries[1].itemMetadata.id, entries[2].itemMetadata.id),
@@ -75,7 +75,7 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedItems: Set<Item>
     ) {
         // when
-        val received = backend.getAccessRightEntries(queryIds)
+        val received = backend.getItems(queryIds)
         // then
         assertThat(received.toSet(), `is`(expectedItems))
     }
@@ -100,6 +100,30 @@ class LoriServerBackendTest : DatabaseTest() {
         val deleted = backend.deleteAccessRightEntries(listOf(deletedEntry.itemMetadata.id))
         // then
         assertThat("One entry should have been deleted", deleted, `is`(1))
+    }
+
+    @Test
+    fun testUpsert() {
+        // given
+        val expectedItemNoAction = ITEM_UPSERTED.copy(
+            actions = emptyList(),
+            itemMetadata = ITEM_UPSERTED.itemMetadata.copy(band = "anotherband")
+        )
+
+        // when
+        backend.upsertItems(listOf(expectedItemNoAction))
+        val received: List<Item> = backend.getItems(listOf(ITEM_UPSERTED.itemMetadata.id))
+
+        // then
+        assertThat(received, `is`(listOf(expectedItemNoAction)))
+
+        // when
+
+        backend.upsertItems(listOf(ITEM_UPSERTED))
+        val received2: List<Item> = backend.getItems(listOf(ITEM_UPSERTED.itemMetadata.id))
+
+        // then
+        assertThat(received2, `is`(listOf(ITEM_UPSERTED)))
     }
 
     companion object {
@@ -147,9 +171,14 @@ class LoriServerBackendTest : DatabaseTest() {
             actions = listOf(TEST_ACTION),
         )
 
-        val TEST_ACCESS_RIGHT_NO_ACTION = Item(
-            itemMetadata = TEST_Metadata,
+        val ITEM_NO_ACTION = Item(
+            itemMetadata = TEST_Metadata.copy(id = "no_action"),
             actions = emptyList(),
+        )
+
+        val ITEM_UPSERTED = Item(
+            itemMetadata = TEST_Metadata.copy(id = "test_upsert"),
+            actions = listOf(TEST_ACTION),
         )
     }
 }

@@ -53,7 +53,7 @@ class LoriGrpcServer(
 
     override suspend fun addItem(request: AddItemRequest): AddItemResponse {
         try {
-            request.itemsList.map { it.toBusiness() }.map { backend.insertAccessRightEntry(it) }
+            request.itemsList.map { it.toBusiness() }.map { backend.insertItem(it) }
         } catch (e: Exception) {
             throw StatusRuntimeException(
                 Status.INTERNAL.withCause(e.cause)
@@ -68,7 +68,7 @@ class LoriGrpcServer(
 
     override suspend fun getItem(request: GetItemRequest): GetItemResponse {
         try {
-            val accessRights: List<Item> = backend.getAccessRightEntries(request.idsList)
+            val accessRights: List<Item> = backend.getItems(request.idsList)
 
             return GetItemResponse.newBuilder()
                 .addAllAccessRights(

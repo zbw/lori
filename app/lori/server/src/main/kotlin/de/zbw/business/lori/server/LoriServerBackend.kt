@@ -18,23 +18,37 @@ class LoriServerBackend(
         DatabaseConnector(config),
     )
 
-    fun insertAccessRightEntries(items: List<Item>): List<String> =
-        items.map { insertAccessRightEntry(it) }
+    fun insertItems(items: List<Item>): List<String> =
+        items.map { insertItem(it) }
 
-    fun insertAccessRightEntry(item: Item): String {
-        val fkAccessRight: String = dbConnector.insertMetadata(item.itemMetadata)
+    fun insertItem(item: Item): String {
+        val fkItem: String = dbConnector.insertMetadata(item.itemMetadata)
         item.actions.forEach { act ->
-            val fkAction = dbConnector.insertAction(act, fkAccessRight)
+            val fkAction = dbConnector.insertAction(act, fkItem)
             act.restrictions.forEach { r ->
                 fkAction.let { dbConnector.insertRestriction(r, fkAction) }
             }
         }
-        return fkAccessRight
+        return fkItem
+    }
+
+    fun upsertItems(items: List<Item>) {
+        dbConnector.upsertMetadataBatch(items.map { it.itemMetadata })
+        // delete
+        dbConnector.deleteActionAndRestrictedEntries(items.map { it.itemMetadata.id })
+        items.forEach { item ->
+            item.actions.forEach { act ->
+                val fkAction = dbConnector.insertAction(act, item.itemMetadata.id)
+                act.restrictions.forEach { r ->
+                    fkAction.let { dbConnector.insertRestriction(r, fkAction) }
+                }
+            }
+        }
     }
 
     fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.upsertMetadataBatch(metadata)
 
-    fun getAccessRightEntries(ids: List<String>): List<Item> {
+    fun getItems(ids: List<String>): List<Item> {
         val headerToActions: Map<String, List<Action>> = dbConnector.getActions(ids)
         return dbConnector.getMetadata(ids).map {
             Item(
@@ -44,15 +58,15 @@ class LoriServerBackend(
         }
     }
 
-    fun deleteAccessRightEntries(ids: List<String>): Int = dbConnector.deleteAccessRights(ids)
+    fun deleteAccessRightEntries(ids: List<String>): Int = dbConnector.deleteItems(ids)
 
     fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
 
     fun getAccessRightList(limit: Int, offset: Int): List<Item> {
         return dbConnector.getAccessRightIds(limit, offset).takeIf {
             it.isNotEmpty()
-        }?.let { headerIds ->
-            getAccessRightEntries(headerIds).sortedBy { it.itemMetadata.id }
+        }?.let { ids ->
+            getItems(ids).sortedBy { it.itemMetadata.id }
         } ?: emptyList()
     }
 }

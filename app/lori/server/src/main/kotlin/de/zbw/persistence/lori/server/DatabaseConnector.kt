@@ -63,7 +63,6 @@ class DatabaseConnector(
                 "issn = EXCLUDED.issn," +
                 "license_conditions = EXCLUDED.license_conditions," +
                 "provenance_license = EXCLUDED.provenance_license;",
-            Statement.RETURN_GENERATED_KEYS
         )
         connection.autoCommit = false
         itemMetadatas.map {
@@ -233,8 +232,8 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
-    fun deleteAccessRights(headerIds: List<String>): Int {
-        val keys = getAccessInformationKeys(headerIds)
+    fun deleteItems(itemIds: List<String>): Int {
+        val keys = getItemPrimaryKeys(itemIds)
         val existingHeaderIds = keys.map { it.headerId }
         val actionIds = keys.map { it.actionId }
         val restrictionIds = keys.map { it.restrictionId }
@@ -244,7 +243,16 @@ class DatabaseConnector(
         return deleteHeader(existingHeaderIds)
     }
 
-    internal fun getAccessInformationKeys(headerIds: List<String>): List<JoinHeaderActionRestrictionIdTransient> {
+    fun deleteActionAndRestrictedEntries(itemIds: List<String>): Int {
+        val keys = getItemPrimaryKeys(itemIds)
+        val actionIds = keys.map { it.actionId }
+        val restrictionIds = keys.map { it.restrictionId }
+
+        deleteRestrictions(restrictionIds)
+        return deleteActions(actionIds)
+    }
+
+    internal fun getItemPrimaryKeys(headerIds: List<String>): List<JoinHeaderActionRestrictionIdTransient> {
         // First, receive the required primary keys.
         val stmt =
             "SELECT a.header_id, a.action_id, r.restriction_id " +
