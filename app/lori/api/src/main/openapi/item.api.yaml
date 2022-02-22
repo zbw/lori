@@ -13,7 +13,7 @@ item:
       required: true
     responses:
       201:
-        description: Item was successfully added
+        description: Item was successfully created
         content: { }
       405:
         description: Invalid input
@@ -32,7 +32,10 @@ item:
             $ref: 'item.model.yaml#/ItemRest'
       required: true
     responses:
-      200:
+      201:
+        description: Item was successfully created
+        content: { }
+      204:
         description: Item was successfully updated
         content: { }
       405:
