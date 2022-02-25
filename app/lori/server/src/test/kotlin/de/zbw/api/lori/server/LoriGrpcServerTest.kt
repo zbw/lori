@@ -28,6 +28,14 @@ import io.grpc.StatusRuntimeException
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -86,7 +94,8 @@ class LoriGrpcServerTest {
             val response = LoriGrpcServer(
                 mockk(),
                 mockk(),
-                importer
+                importer,
+                mockk(),
             ).fullImport(request)
 
             // then
@@ -107,7 +116,8 @@ class LoriGrpcServerTest {
             LoriGrpcServer(
                 mockk(),
                 mockk(),
-                importer
+                importer,
+                mockk(),
             ).fullImport(request)
         }
     }
@@ -123,7 +133,12 @@ class LoriGrpcServerTest {
                 every { insertItem(any()) } returns "foo"
             }
 
-            val response = LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
+            val response = LoriGrpcServer(
+                mockk(),
+                backendMockk,
+                mockk(),
+                mockk(),
+            ).addItem(request)
             assertThat(response, `is`(AddItemResponse.getDefaultInstance()))
         }
     }
@@ -147,7 +162,12 @@ class LoriGrpcServerTest {
                 every { insertItem(any()) } throws SQLException()
             }
 
-            LoriGrpcServer(mockk(), backendMockk, mockk()).addItem(request)
+            LoriGrpcServer(
+                mockk(),
+                backendMockk,
+                mockk(),
+                mockk(),
+            ).addItem(request)
         }
     }
 
@@ -182,7 +202,12 @@ class LoriGrpcServerTest {
                 )
             }
 
-            val response = LoriGrpcServer(mockk(), backendMockk, mockk()).getItem(request)
+            val response = LoriGrpcServer(
+                mockk(),
+                backendMockk,
+                mockk(),
+                tracer,
+            ).getItem(request)
             assertThat(
                 response,
                 `is`(
@@ -249,7 +274,12 @@ class LoriGrpcServerTest {
                 every { getItems(any()) } throws SQLException()
             }
 
-            LoriGrpcServer(mockk(), backendMockk, mockk()).getItem(request)
+            LoriGrpcServer(
+                mockk(),
+                backendMockk,
+                mockk(),
+                tracer,
+            ).getItem(request)
         }
     }
 
@@ -276,5 +306,24 @@ class LoriGrpcServerTest {
             titleSeries = "some series",
             zbdId = null,
         )
+
+        private val sdkTracerProvider: SdkTracerProvider = SdkTracerProvider.builder()
+            .addSpanProcessor(
+                BatchSpanProcessor.builder(
+                    OtlpGrpcSpanExporter
+                        .builder()
+                        .setEndpoint("http://localhost:4317")
+                        .build()
+                )
+                    .build()
+            )
+            .build()
+
+        private val openTelemetry: OpenTelemetry = OpenTelemetrySdk.builder()
+            .setTracerProvider(sdkTracerProvider)
+            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .buildAndRegisterGlobal()
+
+        val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.server.LoriServerTest")
     }
 }
