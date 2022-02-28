@@ -42,7 +42,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -73,7 +73,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -107,7 +107,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -140,7 +140,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -178,7 +178,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -216,7 +216,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -247,7 +247,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         withTestApplication(servicePool.application()) {
@@ -313,7 +313,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -341,7 +341,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -366,7 +366,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -401,7 +401,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -459,7 +459,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = mockk()
+            backend = mockk(),
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -481,7 +481,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -511,7 +511,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         // when + then
@@ -542,7 +542,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         // when + then
@@ -567,7 +567,7 @@ class LoriInformationApiKtTest {
                 }
             ),
             config = CONFIG,
-            backend = backend
+            backend = backend,
         )
 
         // when + then

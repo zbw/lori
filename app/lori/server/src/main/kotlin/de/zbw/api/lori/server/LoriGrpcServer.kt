@@ -20,6 +20,9 @@ import de.zbw.lori.api.LoriServiceGrpcKt
 import de.zbw.lori.api.RestrictionProto
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
 import java.sql.SQLException
 
 /**
@@ -32,6 +35,7 @@ class LoriGrpcServer(
     config: LoriConfiguration,
     private val backend: LoriServerBackend = LoriServerBackend(config),
     private val daConnector: DAConnector = DAConnector(config, backend),
+    private val tracer: Tracer,
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
 
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
@@ -67,7 +71,12 @@ class LoriGrpcServer(
     }
 
     override suspend fun getItem(request: GetItemRequest): GetItemResponse {
+        val span = tracer
+            .spanBuilder("lori.LoriService/GetItem")
+            .setSpanKind(SpanKind.SERVER)
+            .startSpan()
         try {
+            span.setAttribute("ids", request.idsList.toString())
             val accessRights: List<Item> = backend.getItems(request.idsList)
 
             return GetItemResponse.newBuilder()
@@ -120,10 +129,13 @@ class LoriGrpcServer(
                 )
                 .build()
         } catch (e: SQLException) {
+            span.setStatus(StatusCode.ERROR, e.cause.toString())
             throw StatusRuntimeException(
                 Status.INTERNAL.withCause(e.cause)
                     .withDescription("Error while querying header information: ${e.message}\\nStacktrace: ${e.stackTraceToString()}")
             )
+        } finally {
+            span.end()
         }
     }
 }

@@ -3,6 +3,14 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfigurations
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.persistence.lori.server.FlywayMigrator
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
+import io.opentelemetry.context.propagation.ContextPropagators
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import org.slf4j.LoggerFactory
 
 /**
@@ -21,6 +29,24 @@ object LoriServer {
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config)
+        val sdkTracerProvider = SdkTracerProvider.builder()
+            .addSpanProcessor(
+                BatchSpanProcessor.builder(
+                    OtlpGrpcSpanExporter
+                        .builder()
+                        .setEndpoint("http://localhost:4317")
+                        .build()
+                )
+                    .build()
+            )
+            .build()
+
+        val openTelemetry: OpenTelemetry = OpenTelemetrySdk.builder()
+            .setTracerProvider(sdkTracerProvider)
+            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .buildAndRegisterGlobal()
+
+        val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.server.LoriServer")
 
         // Migrate DB
         FlywayMigrator(config).migrate()
@@ -31,7 +57,11 @@ object LoriServer {
                 GrpcServer(
                     port = config.grpcPort,
                     services = listOf(
-                        LoriGrpcServer(config, backend),
+                        LoriGrpcServer(
+                            config = config,
+                            backend = backend,
+                            tracer = tracer
+                        ),
                     ),
                 )
             ),
