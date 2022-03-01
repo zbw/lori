@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     val ktorVersion by System.getProperties()
+    val openTelemetry by System.getProperties()
     implementation(project(":app:lori:api"))
     runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
     implementation("com.mchange:c3p0:0.9.5.5")
@@ -25,6 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-client-serialization:$ktorVersion")
     implementation("io.ktor:ktor-client-gson:$ktorVersion")
     implementation("io.ktor:ktor-gson:$ktorVersion")
+    implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.zonky.test:embedded-postgres:1.3.1")
     implementation("org.postgresql:postgresql:42.3.1")
     implementation("org.flywaydb:flyway-core:7.15.0")

@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.Restriction
 import de.zbw.business.lori.server.RestrictionType
+import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -24,12 +25,17 @@ import java.sql.Types
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnector(
-    internal val connection: Connection,
+    val connection: Connection,
+    private val tracer: Tracer,
 ) {
 
     constructor(
         config: LoriConfiguration,
-    ) : this(DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword))
+        tracer: Tracer,
+    ) : this(
+        DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword),
+        tracer
+    )
 
     fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
         val prep = connection.prepareStatement(
@@ -69,10 +75,16 @@ class DatabaseConnector(
             val p = insertUpsertSetParameters(it, prep)
             p.addBatch()
         }
-        val rows: IntArray = prep.executeBatch()
-        connection.commit()
-        connection.autoCommit = true
-        return rows
+        val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
+        try {
+            span.makeCurrent()
+            val rows: IntArray = prep.executeBatch()
+            connection.commit()
+            connection.autoCommit = true
+            return rows
+        } finally {
+            span.end()
+        }
     }
 
     fun insertMetadata(itemMetadata: ItemMetadata): String {
@@ -92,13 +104,18 @@ class DatabaseConnector(
             connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS),
         )
 
-        val affectedRows = prepStmt.run { this.executeUpdate() }
-
-        return if (affectedRows > 0) {
-            val rs: ResultSet = prepStmt.generatedKeys
-            rs.next()
-            rs.getString(1)
-        } else throw IllegalStateException("No row has been inserted.")
+        val span = tracer.spanBuilder("insertMetadata").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = prepStmt.run { this.executeUpdate() }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getString(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
     }
 
     private fun insertUpsertSetParameters(itemMetadata: ItemMetadata, prep: PreparedStatement): PreparedStatement =
@@ -164,12 +181,18 @@ class DatabaseConnector(
             this.setBoolean(2, action.permission)
             this.setString(3, fkAccessRight)
         }
-        val affectedRows = prepStmt.run { this.executeUpdate() }
-        return if (affectedRows > 0) {
-            val rs: ResultSet = prepStmt.generatedKeys
-            rs.next()
-            rs.getLong(1)
-        } else throw IllegalStateException("No row has been inserted.")
+        val span = tracer.spanBuilder("insertAction").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = prepStmt.run { this.executeUpdate() }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getLong(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
     }
 
     fun insertRestriction(restriction: Restriction, fkActionId: Long): Long {
@@ -182,12 +205,18 @@ class DatabaseConnector(
             this.setString(3, restriction.attribute.values.joinToString(separator = ";"))
             this.setLong(4, fkActionId)
         }
-        val affectedRows = prepStmt.executeUpdate()
-        return if (affectedRows > 0) {
-            val rs: ResultSet = prepStmt.generatedKeys
-            rs.next()
-            rs.getLong(1)
-        } else throw IllegalStateException("No row has been inserted.")
+        val span = tracer.spanBuilder("insertRestriction").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = prepStmt.executeUpdate()
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getLong(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
     }
 
     fun getMetadata(headerIds: List<String>): List<ItemMetadata> {
@@ -203,7 +232,14 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
-        val rs = prepStmt.executeQuery()
+
+        val span = tracer.spanBuilder("getMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
         return generateSequence {
             if (rs.next()) {
                 ItemMetadata(
@@ -262,7 +298,13 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
-        val rs = prepStmt.executeQuery()
+        val span = tracer.spanBuilder("getItemPrimaryKeys").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
         return generateSequence {
             if (rs.next()) {
                 JoinHeaderActionRestrictionIdTransient(
@@ -282,7 +324,13 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("integer", restrictionIds.toTypedArray()))
         }
-        return prepStmt.run { this.executeUpdate() }
+        val span = tracer.spanBuilder("deleteRestrictions").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
     }
 
     private fun deleteActions(actionIds: List<Int>): Int {
@@ -293,7 +341,13 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("integer", actionIds.toTypedArray()))
         }
-        return prepStmt.run { this.executeUpdate() }
+        val span = tracer.spanBuilder("deleteActions").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
     }
 
     private fun deleteHeader(headerIds: List<String>): Int {
@@ -304,7 +358,13 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
-        return prepStmt.run { this.executeUpdate() }
+        val span = tracer.spanBuilder("deleteMetadata").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
     }
 
     fun getActions(headerIds: List<String>): Map<String, List<Action>> {
@@ -317,7 +377,14 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
-        val rs = prepStmt.executeQuery()
+
+        val span = tracer.spanBuilder("getMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
         val joinResult: List<JoinActionRestrictionTransient> = generateSequence {
             if (rs.next()) {
                 JoinActionRestrictionTransient(
@@ -358,18 +425,31 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setString(1, headerId)
         }
-        val rs = prepStmt.executeQuery()
+        val span = tracer.spanBuilder("containsHeader").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
         rs.next()
         return rs.getBoolean(1)
     }
 
-    fun getAccessRightIds(limit: Int, offset: Int): List<String> {
+    fun getItemIds(limit: Int, offset: Int): List<String> {
         val stmt = "SELECT header_id from $TABLE_NAME_ITEM_METADATA ORDER BY header_id ASC LIMIT ? OFFSET ?"
         val prepStmt = connection.prepareStatement(stmt).apply {
             this.setInt(1, limit)
             this.setInt(2, offset)
         }
-        val rs = prepStmt.executeQuery()
+
+        val span = tracer.spanBuilder("getItemIds").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
 
         return generateSequence {
             if (rs.next()) {

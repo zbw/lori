@@ -14,8 +14,10 @@ repositories {
 }
 
 dependencies {
+    val openTelemetry by System.getProperties()
     implementation(project(":app:lori:api"))
     implementation(project(":app:lori:client"))
+    implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
 }
 
 application {

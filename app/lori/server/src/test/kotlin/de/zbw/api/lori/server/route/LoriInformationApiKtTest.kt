@@ -19,6 +19,8 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.DataProvider
@@ -43,6 +45,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -74,6 +77,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -108,6 +112,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -127,7 +132,7 @@ class LoriInformationApiKtTest {
         }
     }
 
-    @Test(expectedExceptions = [SQLException::class])
+    @Test
     fun testItemPostInternalError() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { insertItem(any()) } throws SQLException("foo")
@@ -141,6 +146,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -179,6 +185,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -217,6 +224,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -248,6 +256,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -275,6 +284,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = mockk(),
+            tracer = tracer,
         )
 
         withTestApplication(servicePool.application()) {
@@ -314,6 +324,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -326,7 +337,7 @@ class LoriInformationApiKtTest {
         }
     }
 
-    @Test(expectedExceptions = [SQLException::class])
+    @Test
     fun testGetItemsInternalError() {
         // given
         val testId = "someId"
@@ -342,11 +353,19 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Get, "/api/v1/item/$testId")
-            // exception
+            with(
+                handleRequest(HttpMethod.Get, "/api/v1/item/$testId")
+            ) {
+                assertThat(
+                    "Should return 500 because of internal SQL exception",
+                    response.status(),
+                    `is`(HttpStatusCode.InternalServerError)
+                )
+            }
         }
     }
 
@@ -367,6 +386,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -402,6 +422,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -460,6 +481,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = mockk(),
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -482,6 +504,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
         // when + then
         withTestApplication(servicePool.application()) {
@@ -512,6 +535,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         // when + then
@@ -543,6 +567,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         // when + then
@@ -551,7 +576,7 @@ class LoriInformationApiKtTest {
         }
     }
 
-    @Test(expectedExceptions = [SQLException::class])
+    @Test
     fun testDELETEItemInternalError() {
         // given
         val givenDeleteId = "toBeDeleted"
@@ -568,6 +593,7 @@ class LoriInformationApiKtTest {
             ),
             config = CONFIG,
             backend = backend,
+            tracer = tracer,
         )
 
         // when + then
@@ -635,5 +661,6 @@ class LoriInformationApiKtTest {
         )
 
         fun jsonAsString(any: Any): String = Gson().toJson(any)
+        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
     }
 }

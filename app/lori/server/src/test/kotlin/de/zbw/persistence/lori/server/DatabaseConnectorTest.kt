@@ -12,6 +12,8 @@ import de.zbw.business.lori.server.RestrictionType
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
@@ -30,6 +32,7 @@ import kotlin.test.assertTrue
 class DatabaseConnectorTest : DatabaseTest() {
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
+        tracer = OpenTelemetry.noop().getTracer("foo")
     )
 
     @Test(expectedExceptions = [SQLException::class])
@@ -65,7 +68,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnectorMockked = DatabaseConnector(
             mockk<Connection> {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            }
+            },
+            tracer,
         )
         // when
         dbConnectorMockked.insertMetadata(TEST_Metadata)
@@ -172,7 +176,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnectorMockked = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            }
+            },
+            tracer,
         )
         // when
         dbConnectorMockked.insertAction(TEST_ACTION, "foo")
@@ -231,7 +236,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } throws SQLException()
-            }
+            },
+            tracer,
         )
         // then
         dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), 1)
@@ -251,7 +257,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnectorMockked = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            }
+            },
+            tracer,
         )
         // when
         dbConnectorMockked.insertRestriction(TEST_ACTION.restrictions.first(), 1)
@@ -263,7 +270,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any()) } throws SQLException()
-            }
+            },
+            tracer,
         )
         dbConnector.getMetadata(listOf("foo"))
     }
@@ -273,7 +281,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any()) } throws SQLException()
-            }
+            },
+            tracer,
         )
         dbConnector.getActions(listOf("foo"))
     }
@@ -305,11 +314,11 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // then
         assertThat(
-            dbConnector.getAccessRightIds(limit = 3, offset = 0),
+            dbConnector.getItemIds(limit = 3, offset = 0),
             `is`(listOf("aaaa", "aaaab", "aaaac"))
         )
         assertThat(
-            dbConnector.getAccessRightIds(limit = 2, offset = 1),
+            dbConnector.getItemIds(limit = 2, offset = 1),
             `is`(listOf("aaaab", "aaaac"))
         )
     }
@@ -469,4 +478,6 @@ class DatabaseConnectorTest : DatabaseTest() {
             )
         )
     }
+
+    private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 }

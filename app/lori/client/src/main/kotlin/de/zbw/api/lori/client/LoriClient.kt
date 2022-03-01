@@ -10,7 +10,12 @@ import de.zbw.lori.api.GetItemResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
 import io.grpc.Channel
 import io.grpc.ManagedChannelBuilder
-import org.slf4j.LoggerFactory
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.api.trace.StatusCode
+import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.extension.kotlin.asContextElement
+import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 /**
@@ -25,7 +30,9 @@ class LoriClient(
         .defaultLoadBalancingPolicy("round_robin")
         .usePlaintext()
         .build(),
-    val stub: LoriServiceGrpcKt.LoriServiceCoroutineStub = LoriServiceGrpcKt.LoriServiceCoroutineStub(channel)
+    val stub: LoriServiceGrpcKt.LoriServiceCoroutineStub = LoriServiceGrpcKt.LoriServiceCoroutineStub(channel),
+    private val openTelemetry: OpenTelemetry,
+    private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient")
 ) {
 
     suspend fun addItem(request: AddItemRequest): AddItemResponse =
@@ -44,15 +51,23 @@ class LoriClient(
         }
 
     private suspend fun <T> runWithTracing(
-        msg: String,
+        spanName: String,
         op: suspend (LoriServiceGrpcKt.LoriServiceCoroutineStub) -> T
     ): T {
-        // Add some reasonable tracing framework here...
-        LOG.info(msg)
-        return op.invoke(stub.withDeadlineAfter(configuration.deadlineInMilli, TimeUnit.MILLISECONDS))
-    }
 
-    companion object {
-        private val LOG = LoggerFactory.getLogger(LoriClient::class.java)
+        val span = tracer
+            .spanBuilder(spanName)
+            .setSpanKind(SpanKind.CLIENT)
+            .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                op.invoke(stub.withDeadlineAfter(configuration.deadlineInMilli, TimeUnit.MILLISECONDS))
+            } catch (t: Throwable) {
+                span.setStatus(StatusCode.ERROR, t.message ?: t.cause.toString())
+                throw t
+            } finally {
+                span.end()
+            }
+        }
     }
 }
