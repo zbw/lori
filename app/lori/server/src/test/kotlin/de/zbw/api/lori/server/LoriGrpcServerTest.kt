@@ -30,12 +30,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.trace.SdkTracerProvider
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -95,7 +89,7 @@ class LoriGrpcServerTest {
                 mockk(),
                 mockk(),
                 importer,
-                mockk(),
+                tracer,
             ).fullImport(request)
 
             // then
@@ -117,7 +111,7 @@ class LoriGrpcServerTest {
                 mockk(),
                 mockk(),
                 importer,
-                mockk(),
+                tracer,
             ).fullImport(request)
         }
     }
@@ -137,7 +131,7 @@ class LoriGrpcServerTest {
                 mockk(),
                 backendMockk,
                 mockk(),
-                mockk(),
+                tracer,
             ).addItem(request)
             assertThat(response, `is`(AddItemResponse.getDefaultInstance()))
         }
@@ -166,7 +160,7 @@ class LoriGrpcServerTest {
                 mockk(),
                 backendMockk,
                 mockk(),
-                mockk(),
+                tracer,
             ).addItem(request)
         }
     }
@@ -307,23 +301,6 @@ class LoriGrpcServerTest {
             zbdId = null,
         )
 
-        private val sdkTracerProvider: SdkTracerProvider = SdkTracerProvider.builder()
-            .addSpanProcessor(
-                BatchSpanProcessor.builder(
-                    OtlpGrpcSpanExporter
-                        .builder()
-                        .setEndpoint("http://localhost:4317")
-                        .build()
-                )
-                    .build()
-            )
-            .build()
-
-        private val openTelemetry: OpenTelemetry = OpenTelemetrySdk.builder()
-            .setTracerProvider(sdkTracerProvider)
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-            .buildAndRegisterGlobal()
-
-        val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.server.LoriServerTest")
+        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.LoriGrpcServerTest")
     }
 }

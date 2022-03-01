@@ -23,6 +23,8 @@ import io.grpc.StatusRuntimeException
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.extension.kotlin.asContextElement
+import kotlinx.coroutines.withContext
 import java.sql.SQLException
 
 /**
@@ -33,41 +35,58 @@ import java.sql.SQLException
  */
 class LoriGrpcServer(
     config: LoriConfiguration,
-    private val backend: LoriServerBackend = LoriServerBackend(config),
+    private val backend: LoriServerBackend,
     private val daConnector: DAConnector = DAConnector(config, backend),
     private val tracer: Tracer,
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
 
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
-        try {
-            val token = daConnector.login()
-            val community: DACommunity = daConnector.getCommunity(token)
-            val imports = daConnector.startFullImport(token, community.collections.map { it.id })
-            return FullImportResponse
-                .newBuilder()
-                .setItemsImported(imports.sum())
-                .build()
-        } catch (e: Exception) {
-            throw StatusRuntimeException(
-                Status.INTERNAL.withCause(e.cause)
-                    .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
-            )
+        val span = tracer
+            .spanBuilder("lori.LoriService/FullImport")
+            .setSpanKind(SpanKind.SERVER)
+            .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                val token = daConnector.login()
+                val community: DACommunity = daConnector.getCommunity(token)
+                val imports = daConnector.startFullImport(token, community.collections.map { it.id })
+                FullImportResponse
+                    .newBuilder()
+                    .setItemsImported(imports.sum())
+                    .build()
+            } catch (e: Exception) {
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL.withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+                )
+            }
         }
     }
 
     override suspend fun addItem(request: AddItemRequest): AddItemResponse {
-        try {
-            request.itemsList.map { it.toBusiness() }.map { backend.insertItem(it) }
-        } catch (e: Exception) {
-            throw StatusRuntimeException(
-                Status.INTERNAL.withCause(e.cause)
-                    .withDescription("Error while inserting an access right item: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
-            )
-        }
+        val span = tracer
+            .spanBuilder("lori.LoriService/AddItem")
+            .setSpanKind(SpanKind.SERVER)
+            .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                span.setAttribute("items", request.itemsList.toString())
+                request.itemsList.map { it.toBusiness() }.map { backend.insertItem(it) }
+            } catch (e: Exception) {
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL.withCause(e.cause)
+                        .withDescription("Error while inserting an access right item: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+                )
+            } finally {
+                span.end()
+            }
 
-        return AddItemResponse
-            .newBuilder()
-            .build()
+            AddItemResponse
+                .newBuilder()
+                .build()
+        }
     }
 
     override suspend fun getItem(request: GetItemRequest): GetItemResponse {
@@ -75,67 +94,69 @@ class LoriGrpcServer(
             .spanBuilder("lori.LoriService/GetItem")
             .setSpanKind(SpanKind.SERVER)
             .startSpan()
-        try {
-            span.setAttribute("ids", request.idsList.toString())
-            val accessRights: List<Item> = backend.getItems(request.idsList)
+        return withContext(span.asContextElement()) {
+            try {
+                span.setAttribute("ids", request.idsList.toString())
+                val accessRights: List<Item> = backend.getItems(request.idsList)
 
-            return GetItemResponse.newBuilder()
-                .addAllAccessRights(
-                    accessRights.map {
-                        ItemProto.newBuilder()
-                            .setIfNotNull(it.itemMetadata.id) { b, value -> b.setId(value) }
-                            .setIfNotNull(it.itemMetadata.accessState) { b, value -> b.setAccessState(value.toProto()) }
-                            .setIfNotNull(it.itemMetadata.band) { b, value -> b.setBand(value) }
-                            .setIfNotNull(it.itemMetadata.doi) { b, value -> b.setDoi(value) }
-                            .setHandle(it.itemMetadata.handle)
-                            .setIfNotNull(it.itemMetadata.isbn) { b, value -> b.setIsbn(value) }
-                            .setIfNotNull(it.itemMetadata.issn) { b, value -> b.setIssn(value) }
-                            .setIfNotNull(it.itemMetadata.paketSigel) { b, value -> b.setPaketSigel(value) }
-                            .setIfNotNull(it.itemMetadata.ppn) { b, value -> b.setPpn(value) }
-                            .setIfNotNull(it.itemMetadata.ppnEbook) { b, value -> b.setPpnEbook(value) }
-                            .setPublicationType(it.itemMetadata.publicationType.toProto())
-                            .setPublicationYear(it.itemMetadata.publicationYear)
-                            .setIfNotNull(it.itemMetadata.rightsK10plus) { b, value -> b.setRightsK10Plus(value) }
-                            .setIfNotNull(it.itemMetadata.serialNumber) { b, value -> b.setSerialNumber(value) }
-                            .setTitle(it.itemMetadata.title)
-                            .setIfNotNull(it.itemMetadata.titleJournal) { b, value -> b.setTitleJournal(value) }
-                            .setIfNotNull(it.itemMetadata.titleSeries) { b, value -> b.setTitleSeries(value) }
-                            .setIfNotNull(it.itemMetadata.zbdId) { b, value -> b.setZbdId(value) }
-                            .addAllActions(
-                                it.actions.map { action ->
-                                    ActionProto
-                                        .newBuilder()
-                                        .setPermission(action.permission)
-                                        .setType(action.type.toProto())
-                                        .addAllRestrictions(
-                                            action.restrictions.map { restriction ->
-                                                RestrictionProto.newBuilder()
-                                                    .setType(restriction.type.toProto())
-                                                    .setAttribute(
-                                                        AttributeProto.newBuilder()
-                                                            .setType(restriction.attribute.type.toProto())
-                                                            .addAllValues(restriction.attribute.values)
-                                                            .build()
-                                                    )
-                                                    .build()
-                                            }
-                                        )
-                                        .build()
-                                }
+                GetItemResponse.newBuilder()
+                    .addAllAccessRights(
+                        accessRights.map {
+                            ItemProto.newBuilder()
+                                .setIfNotNull(it.itemMetadata.id) { b, value -> b.setId(value) }
+                                .setIfNotNull(it.itemMetadata.accessState) { b, value -> b.setAccessState(value.toProto()) }
+                                .setIfNotNull(it.itemMetadata.band) { b, value -> b.setBand(value) }
+                                .setIfNotNull(it.itemMetadata.doi) { b, value -> b.setDoi(value) }
+                                .setHandle(it.itemMetadata.handle)
+                                .setIfNotNull(it.itemMetadata.isbn) { b, value -> b.setIsbn(value) }
+                                .setIfNotNull(it.itemMetadata.issn) { b, value -> b.setIssn(value) }
+                                .setIfNotNull(it.itemMetadata.paketSigel) { b, value -> b.setPaketSigel(value) }
+                                .setIfNotNull(it.itemMetadata.ppn) { b, value -> b.setPpn(value) }
+                                .setIfNotNull(it.itemMetadata.ppnEbook) { b, value -> b.setPpnEbook(value) }
+                                .setPublicationType(it.itemMetadata.publicationType.toProto())
+                                .setPublicationYear(it.itemMetadata.publicationYear)
+                                .setIfNotNull(it.itemMetadata.rightsK10plus) { b, value -> b.setRightsK10Plus(value) }
+                                .setIfNotNull(it.itemMetadata.serialNumber) { b, value -> b.setSerialNumber(value) }
+                                .setTitle(it.itemMetadata.title)
+                                .setIfNotNull(it.itemMetadata.titleJournal) { b, value -> b.setTitleJournal(value) }
+                                .setIfNotNull(it.itemMetadata.titleSeries) { b, value -> b.setTitleSeries(value) }
+                                .setIfNotNull(it.itemMetadata.zbdId) { b, value -> b.setZbdId(value) }
+                                .addAllActions(
+                                    it.actions.map { action ->
+                                        ActionProto
+                                            .newBuilder()
+                                            .setPermission(action.permission)
+                                            .setType(action.type.toProto())
+                                            .addAllRestrictions(
+                                                action.restrictions.map { restriction ->
+                                                    RestrictionProto.newBuilder()
+                                                        .setType(restriction.type.toProto())
+                                                        .setAttribute(
+                                                            AttributeProto.newBuilder()
+                                                                .setType(restriction.attribute.type.toProto())
+                                                                .addAllValues(restriction.attribute.values)
+                                                                .build()
+                                                        )
+                                                        .build()
+                                                }
+                                            )
+                                            .build()
+                                    }
 
-                            )
-                            .build()
-                    }
+                                )
+                                .build()
+                        }
+                    )
+                    .build()
+            } catch (e: SQLException) {
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL.withCause(e.cause)
+                        .withDescription("Error while querying header information: ${e.message}\\nStacktrace: ${e.stackTraceToString()}")
                 )
-                .build()
-        } catch (e: SQLException) {
-            span.setStatus(StatusCode.ERROR, e.cause.toString())
-            throw StatusRuntimeException(
-                Status.INTERNAL.withCause(e.cause)
-                    .withDescription("Error while querying header information: ${e.message}\\nStacktrace: ${e.stackTraceToString()}")
-            )
-        } finally {
-            span.end()
+            } finally {
+                span.end()
+            }
         }
     }
 }

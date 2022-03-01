@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
+import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.BeforeClass
@@ -20,6 +21,7 @@ class LoriServerBackendTest : DatabaseTest() {
     private val backend = LoriServerBackend(
         DatabaseConnector(
             connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
         )
     )
 

@@ -11,6 +11,7 @@ import io.grpc.Channel
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -33,7 +34,8 @@ class LoriClientTest() {
                 stub = mockk() {
                     coEvery { addItem(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
-                }
+                },
+                openTelemetry = OpenTelemetry.noop(),
             )
             val received = client.addItem((AddItemRequest.getDefaultInstance()))
             assertThat(received, `is`(expected))
@@ -50,7 +52,8 @@ class LoriClientTest() {
                 stub = mockk() {
                     coEvery { getItem(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
-                }
+                },
+                openTelemetry = OpenTelemetry.noop(),
             )
             val received = client.getItem((GetItemRequest.getDefaultInstance()))
             assertThat(received, `is`(expected))
@@ -67,7 +70,8 @@ class LoriClientTest() {
                 stub = mockk() {
                     coEvery { fullImport(any(), any()) } returns expected
                     every { withDeadlineAfter(any(), any()) } returns this
-                }
+                },
+                openTelemetry = OpenTelemetry.noop(),
             )
             val received = client.fullImport((FullImportRequest.getDefaultInstance()))
             assertThat(received, `is`(expected))

@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.persistence.lori.server.DatabaseConnector
+import io.opentelemetry.api.trace.Tracer
 
 /**
  * Backend for the Access-Server.
@@ -14,8 +15,12 @@ class LoriServerBackend(
 ) {
     constructor(
         config: LoriConfiguration,
+        tracer: Tracer,
     ) : this(
-        DatabaseConnector(config),
+        DatabaseConnector(
+            config,
+            tracer,
+        ),
     )
 
     fun insertItems(items: List<Item>): List<String> =
@@ -63,7 +68,7 @@ class LoriServerBackend(
     fun containsAccessRightId(id: String): Boolean = dbConnector.containsHeader(id)
 
     fun getAccessRightList(limit: Int, offset: Int): List<Item> {
-        return dbConnector.getAccessRightIds(limit, offset).takeIf {
+        return dbConnector.getItemIds(limit, offset).takeIf {
             it.isNotEmpty()
         }?.let { ids ->
             getItems(ids).sortedBy { it.itemMetadata.id }

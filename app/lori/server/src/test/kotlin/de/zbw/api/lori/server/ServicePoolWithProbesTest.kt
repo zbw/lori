@@ -62,6 +62,7 @@ class ServicePoolWithProbesTest {
             ),
             config = TEST_CONFIG,
             backend = mockk(),
+            tracer = mockk(),
         )
         withTestApplication(servicePool.application()) {
             with(handleRequest(HttpMethod.Get, "/ready")) {
@@ -100,6 +101,7 @@ class ServicePoolWithProbesTest {
                 services = services,
                 config = TEST_CONFIG,
                 backend = mockk(),
+                tracer = mockk(),
             )
         ) {
             every { getHttpServer() } returns serverMock

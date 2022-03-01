@@ -18,6 +18,7 @@ import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.opentelemetry.api.trace.Tracer
 
 /**
  * A pool for services.
@@ -29,6 +30,7 @@ class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
     config: LoriConfiguration,
     private val backend: LoriServerBackend,
+    private val tracer: Tracer,
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(
@@ -62,7 +64,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            accessInformationRoutes(backend)
+            accessInformationRoutes(backend, tracer)
             staticRoutes()
         }
     }

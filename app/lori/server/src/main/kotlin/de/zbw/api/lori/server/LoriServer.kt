@@ -27,8 +27,6 @@ object LoriServer {
     fun main(args: Array<String>) {
         LOG.info("Starting the AccessServer :)")
 
-        val config = LoriConfigurations.serverConfig
-        val backend = LoriServerBackend(config)
         val sdkTracerProvider = SdkTracerProvider.builder()
             .addSpanProcessor(
                 BatchSpanProcessor.builder(
@@ -48,6 +46,8 @@ object LoriServer {
 
         val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.server.LoriServer")
 
+        val config = LoriConfigurations.serverConfig
+        val backend = LoriServerBackend(config, tracer)
         // Migrate DB
         FlywayMigrator(config).migrate()
 
@@ -66,6 +66,7 @@ object LoriServer {
                 )
             ),
             backend = backend,
+            tracer = tracer,
         ).apply {
             start()
         }
