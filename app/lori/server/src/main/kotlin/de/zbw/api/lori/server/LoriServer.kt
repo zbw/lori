@@ -21,9 +21,10 @@ object LoriServer {
     fun main(args: Array<String>) {
         LOG.info("Starting the AccessServer :)")
 
-        val autoConfiguredSdk: AutoConfiguredOpenTelemetrySdk = AutoConfiguredOpenTelemetrySdk.initialize()
-        val openTelemetrySdk = autoConfiguredSdk.openTelemetrySdk
-        val tracer: Tracer = openTelemetrySdk.getTracer("de.zbw.api.lori.server.LoriServer")
+        val tracer: Tracer = AutoConfiguredOpenTelemetrySdk
+            .initialize()
+            .openTelemetrySdk
+            .getTracer("de.zbw.api.lori.server.LoriServer")
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)

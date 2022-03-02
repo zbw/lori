@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":app:lori:api"))
     implementation(project(":app:lori:client"))
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
 }
 
 application {
