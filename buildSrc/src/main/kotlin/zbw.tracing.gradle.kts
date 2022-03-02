@@ -12,7 +12,6 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-extension-kotlin:$openTelemetry")
-
 }
 
 repositories {

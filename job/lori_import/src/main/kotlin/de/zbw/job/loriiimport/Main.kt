@@ -4,14 +4,11 @@ import de.zbw.api.lori.client.LoriClient
 import de.zbw.api.lori.client.config.LoriClientConfiguration
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.trace.SdkTracerProvider
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
+import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 
 /**
@@ -23,32 +20,32 @@ import org.slf4j.LoggerFactory
 object Main {
     @JvmStatic
     fun main(args: Array<String>) {
-        val sdkTracerProvider = SdkTracerProvider.builder()
-            .addSpanProcessor(
-                BatchSpanProcessor.builder(
-                    OtlpGrpcSpanExporter
-                        .builder()
-                        .setEndpoint("http://localhost:4317")
-                        .build()
-                )
-                    .build()
-            )
-            .build()
 
-        val openTelemetry: OpenTelemetry = OpenTelemetrySdk.builder()
-            .setTracerProvider(sdkTracerProvider)
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-            .buildAndRegisterGlobal()
+        val openTelemetry = AutoConfiguredOpenTelemetrySdk
+            .initialize()
+            .openTelemetrySdk
+        val tracer = openTelemetry.getTracer("de.zbw.job.loriiimport.Main")
+
+        val span = tracer
+            .spanBuilder("main")
+            .setSpanKind(SpanKind.CLIENT)
+            .startSpan()
 
         val loriClient = LoriClient(
             configuration = LoriClientConfiguration(9092, "lori", 5000),
             openTelemetry = openTelemetry,
         )
 
-        val response: FullImportResponse = runBlocking {
-            loriClient.fullImport(FullImportRequest.getDefaultInstance())
+        runBlocking {
+            try {
+                withContext(span.asContextElement()) {
+                    val response: FullImportResponse = loriClient.fullImport(FullImportRequest.getDefaultInstance())
+                    span.setAttribute("Items Imported", response.itemsImported.toLong())
+                }
+            } finally {
+                span.end()
+            }
         }
-        LOG.info("Lori Server imported: ${response.itemsImported}")
     }
 
     private val LOG = LoggerFactory.getLogger(Main::class.java)
