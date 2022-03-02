@@ -3,17 +3,8 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfigurations
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.persistence.lori.server.FlywayMigrator
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Tracer
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
-import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
-import io.opentelemetry.sdk.OpenTelemetrySdk
-import io.opentelemetry.sdk.resources.Resource
-import io.opentelemetry.sdk.trace.SdkTracerProvider
-import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import org.slf4j.LoggerFactory
 
 /**
@@ -30,26 +21,9 @@ object LoriServer {
     fun main(args: Array<String>) {
         LOG.info("Starting the AccessServer :)")
 
-        val sdkTracerProvider = SdkTracerProvider.builder()
-            .setResource(Resource.create(Attributes.of(AttributeKey.stringKey("service.name"), "lori")))
-            .setResource(Resource.create(Attributes.of(AttributeKey.stringKey("service.namespace"), "apps")))
-            .addSpanProcessor(
-                BatchSpanProcessor.builder(
-                    OtlpGrpcSpanExporter
-                        .builder()
-                        .setEndpoint("http://localhost:4317")
-                        .build()
-                )
-                    .build()
-            )
-            .build()
-
-        val openTelemetry: OpenTelemetry = OpenTelemetrySdk.builder()
-            .setTracerProvider(sdkTracerProvider)
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-            .buildAndRegisterGlobal()
-
-        val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.server.LoriServer")
+        val autoConfiguredSdk: AutoConfiguredOpenTelemetrySdk = AutoConfiguredOpenTelemetrySdk.initialize()
+        val openTelemetrySdk = autoConfiguredSdk.openTelemetrySdk
+        val tracer: Tracer = openTelemetrySdk.getTracer("de.zbw.api.lori.server.LoriServer")
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)

@@ -21,6 +21,7 @@ dependencies {
     runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
     implementation("com.mchange:c3p0:0.9.5.5")
     implementation("com.github.lamba92.ktor-spa:ktor-spa:1.2.1")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.11.0-alpha")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization:$ktorVersion")
