@@ -1,6 +1,6 @@
 import { mount, shallowMount, Wrapper } from "@vue/test-utils";
 import { mocked } from "ts-jest/utils";
-import AccessInformationList from "@/components/AccessInformationList.vue";
+import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
@@ -11,7 +11,7 @@ import {
 
 Vue.use(Vuetify);
 
-let wrapper: Wrapper<AccessInformationList, Element>;
+let wrapper: Wrapper<ItemList, Element>;
 jest.mock("@/api/api");
 
 const mockedApi = mocked(api, true);
@@ -20,7 +20,7 @@ afterEach(() => {
   wrapper.destroy();
 });
 
-describe("Test AccessInformationList UI", () => {
+describe("Test ItemList UI", () => {
   it("initial table load is successful", async () => {
     mockedApi.getList.mockReturnValue(
       Promise.resolve(
@@ -32,7 +32,7 @@ describe("Test AccessInformationList UI", () => {
         } as ItemRest)
       )
     );
-    wrapper = shallowMount(AccessInformationList, {
+    wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
     });
     expect((wrapper.vm as any).getAlertLoad()).toBeFalsy();
@@ -46,7 +46,7 @@ describe("Test AccessInformationList UI", () => {
       status: 500,
       statusText: "Internal Server Error",
     });
-    wrapper = shallowMount(AccessInformationList, {
+    wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
     });
     expect((wrapper.vm as any).getAlertLoad()).toBeFalsy();

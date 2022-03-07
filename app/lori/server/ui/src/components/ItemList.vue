@@ -44,6 +44,9 @@
       </v-card>
       <v-col>
         <v-card v-if="currentAccInf.id" class="mx-auto" tile>
+          <v-card-title class="subheading font-weight-bold">
+            Item Information</v-card-title
+          >
           <MetadataView
             :displayed-item="Object.assign({}, currentAccInf)"
           ></MetadataView>
@@ -159,6 +162,7 @@ export default class AccessInformationList extends Vue {
       text: "Title",
       sortable: true,
       value: "title",
+      width: "300px",
     },
     {
       text: "Access State",
@@ -311,11 +315,3 @@ export default class AccessInformationList extends Vue {
   }
 }
 </script>
-
-<style scoped>
-.list {
-  text-align: left;
-  max-width: 750px;
-  margin: auto;
-}
-</style>
