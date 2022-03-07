@@ -1,14 +1,13 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import Home from "../views/Home.vue";
 
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
   {
-    path: "/accessinformation",
-    name: "accessinformation",
-    component: () => import("../components/AccessInformationList.vue"),
+    path: "/ui",
+    name: "ui",
+    component: () => import("../components/ItemList.vue"),
   },
 ];
 

@@ -4,7 +4,7 @@
       Rechteinformationen
     </v-card-title>
     <v-divider></v-divider>
-    <v-expansion-panels focusable>
+    <v-expansion-panels focusable multiple>
       <v-expansion-panel>
         <v-expansion-panel-header>Allgemeines</v-expansion-panel-header>
         <v-expansion-panel-content>
