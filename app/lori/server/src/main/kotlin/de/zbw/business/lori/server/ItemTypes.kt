@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server
 
+import java.time.OffsetDateTime
+
 data class Item(
     val itemMetadata: ItemMetadata,
     val actions: List<Action>,
@@ -9,10 +11,14 @@ data class ItemMetadata(
     val id: String,
     val accessState: AccessState?,
     val band: String?,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
     val doi: String?,
     val handle: String,
     val isbn: String?,
     val issn: String?,
+    val lastUpdatedBy: String?,
+    val lastUpdatedOn: OffsetDateTime?,
     val licenseConditions: String?,
     val paketSigel: String?,
     val ppn: String?,

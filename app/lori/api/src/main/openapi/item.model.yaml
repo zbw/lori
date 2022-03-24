@@ -18,6 +18,11 @@ ItemRest:
         - restricted
     band:
       type: string
+    createdBy:
+      type: string
+    createdOn:
+      type: string
+      format: date-time
     doi:
       type: string
     handle:
@@ -26,6 +31,11 @@ ItemRest:
       type: string
     issn:
       type: string
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
     licenseConditions:
       type: string
     paketSigel:

@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import com.google.protobuf.Timestamp
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.Action
 import de.zbw.business.lori.server.ActionType
@@ -22,6 +23,8 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.AssertJUnit.fail
 import org.testng.annotations.Test
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Tests for protobuf convertions.
@@ -57,10 +60,24 @@ class ProtoConverterTest {
             .setId(expected.itemMetadata.id)
             .setAccessState(expected.itemMetadata.accessState?.toProto())
             .setBand(expected.itemMetadata.band)
+            .setCreatedBy(expected.itemMetadata.createdBy)
+            .setCreatedOn(
+                Timestamp.newBuilder()
+                    .setSeconds(expected.itemMetadata.createdOn!!.toEpochSecond())
+                    .setNanos(expected.itemMetadata.createdOn!!.nano)
+                    .build()
+            )
             .setDoi(expected.itemMetadata.doi)
             .setHandle(expected.itemMetadata.handle)
             .setIsbn(expected.itemMetadata.isbn)
             .setIssn(expected.itemMetadata.issn)
+            .setLastUpdatedBy(expected.itemMetadata.lastUpdatedBy)
+            .setLastUpdatedOn(
+                Timestamp.newBuilder()
+                    .setSeconds(expected.itemMetadata.lastUpdatedOn!!.toEpochSecond())
+                    .setNanos(expected.itemMetadata.lastUpdatedOn!!.nano)
+                    .build()
+            )
             .setLicenseConditions(expected.itemMetadata.licenseConditions)
             .setPaketSigel(expected.itemMetadata.paketSigel)
             .setPpn(expected.itemMetadata.ppn)
@@ -155,10 +172,32 @@ class ProtoConverterTest {
             id = "that-test",
             accessState = AccessState.OPEN,
             band = "band",
+            createdBy = "user1",
+            createdOn = OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",
