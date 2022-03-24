@@ -38,7 +38,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.32")
     implementation("com.github.node-gradle:gradle-node-plugin:3.0.1")
     implementation("gradle.plugin.com.google.cloud.tools:jib-gradle-plugin:3.2.0")
-    implementation("org.openapitools:openapi-generator-gradle-plugin:5.3.0")
+    implementation("org.openapitools:openapi-generator-gradle-plugin:5.4.0")
     implementation(gradleApi())
     implementation(localGroovy())
 }

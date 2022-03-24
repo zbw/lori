@@ -21,7 +21,8 @@ ItemRest:
     createdBy:
       type: string
     createdOn:
-      type: date-time
+      type: string
+      format: date-time
     doi:
       type: string
     handle:
@@ -33,7 +34,8 @@ ItemRest:
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
-      type: date-time
+      type: string
+      format: date-time
     licenseConditions:
       type: string
     paketSigel:

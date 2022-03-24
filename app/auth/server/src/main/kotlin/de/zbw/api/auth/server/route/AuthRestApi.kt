@@ -3,7 +3,6 @@ package de.zbw.api.auth.server.route
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.auth.server.config.AuthConfiguration
-import de.zbw.auth.model.ApiResponse
 import de.zbw.auth.model.SignInAnswer
 import de.zbw.auth.model.SignInUserData
 import de.zbw.auth.model.SignUpUserData
@@ -71,11 +70,7 @@ fun Routing.authInformationRoutes(backend: AuthBackend, config: AuthConfiguratio
                 } else {
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                        ApiResponse(
-                            HttpStatusCode.Unauthorized.value,
-                            HttpStatusCode.Unauthorized.toString(),
-                            "User or password are wrong."
-                        )
+                        "User or password are wrong.",
                     )
                 }
             } catch (e: Exception) {

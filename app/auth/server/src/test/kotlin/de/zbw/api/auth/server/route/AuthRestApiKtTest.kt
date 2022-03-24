@@ -4,7 +4,6 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.auth.server.ServicePoolWithProbes
 import de.zbw.api.auth.server.config.AuthConfiguration
-import de.zbw.auth.model.ApiResponse
 import de.zbw.auth.model.SignInAnswer
 import de.zbw.auth.model.SignInUserData
 import de.zbw.auth.model.SignUpUserData
@@ -239,18 +238,6 @@ class AuthRestApiKtTest {
                         "Received status code does not match",
                         response.status(),
                         `is`(HttpStatusCode.Unauthorized)
-                    )
-                    val responseType: Type = object : TypeToken<ApiResponse>() {}.type
-                    val receivedJson: ApiResponse = Gson().fromJson(response.content!!, responseType)
-                    assertThat(
-                        "Received status code does not match",
-                        receivedJson.code,
-                        `is`(HttpStatusCode.Unauthorized.value)
-                    )
-                    assertThat(
-                        "Received type does not match",
-                        receivedJson.type,
-                        `is`("401 Unauthorized")
                     )
                 }
             }
