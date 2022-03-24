@@ -11,15 +11,22 @@ import de.zbw.business.lori.server.Restriction
 import de.zbw.business.lori.server.RestrictionType
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -34,6 +41,17 @@ class DatabaseConnectorTest : DatabaseTest() {
         connection = dataSource.connection,
         tracer = OpenTelemetry.noop().getTracer("foo")
     )
+
+    @BeforeMethod
+    fun beforeTest() {
+        mockkStatic(Instant::class)
+        every { Instant.now() } returns NOW.toInstant()
+    }
+
+    @AfterMethod
+    fun afterTest() {
+        unmockkAll()
+    }
 
     @Test(expectedExceptions = [SQLException::class])
     fun testInsertHeaderException() {
@@ -52,17 +70,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertMetadataNoInsertError() {
         // given
-        val stmntAccIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_METADATA}" +
-            "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
-            "title_series,access_state,publishedYear,band,publicationtype,doi," +
-            "serialNumber,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-            "license_conditions,provenance_license)" +
-            "VALUES(?,?,?,?,?,?," +
-            "?,?,?,?,?,?," +
-            "?,?,?,?,?,?," +
-            "?,?)"
-
-        val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntAccIns)) {
+        val prepStmt = spyk(dbConnector.connection.prepareStatement(DatabaseConnector.STATEMENT_INSERT_METADATA)) {
             every { executeUpdate() } returns 0
         }
         val dbConnectorMockked = DatabaseConnector(
@@ -132,8 +140,12 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
         // when
-        val m1Changed = m1.copy(title = "foo2")
-        val m2Changed = m2.copy(title = "bar2")
+        unmockkAll()
+
+        mockkStatic(Instant::class)
+        every { Instant.now() } returns NOW.plusDays(1).toInstant()
+        val m1Changed = m1.copy(title = "foo2", lastUpdatedBy = "user2", lastUpdatedOn = NOW.plusDays(1))
+        val m2Changed = m2.copy(title = "bar2", lastUpdatedBy = "user2", lastUpdatedOn = NOW.plusDays(1))
 
         val responseUpsert2 = dbConnector.upsertMetadataBatch(listOf(m1Changed, m2Changed))
 
@@ -441,14 +453,29 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     companion object {
+        val NOW: OffsetDateTime = OffsetDateTime.of(
+            2022,
+            3,
+            1,
+            1,
+            1,
+            0,
+            0,
+            ZoneOffset.UTC,
+        )!!
+
         val TEST_Metadata = ItemMetadata(
             id = "that-test",
             accessState = AccessState.OPEN,
             band = "band",
+            createdBy = "user1",
+            createdOn = NOW,
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = NOW,
             licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",
@@ -464,7 +491,8 @@ class DatabaseConnectorTest : DatabaseTest() {
             zbdId = "some id",
         )
 
-        private val TEST_ACTION = Action(
+        private
+        val TEST_ACTION = Action(
             type = ActionType.READ,
             permission = true,
             restrictions = listOf(

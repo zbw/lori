@@ -16,6 +16,8 @@ import de.zbw.lori.model.RestrictionRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class RestConverterTest {
 
@@ -45,10 +47,14 @@ class RestConverterTest {
             id = TEST_Metadata.id,
             accessState = TEST_Metadata.accessState?.toRest(),
             band = TEST_Metadata.band,
+            createdBy = TEST_Metadata.createdBy,
+            createdOn = TEST_Metadata.createdOn,
             doi = TEST_Metadata.doi,
             handle = TEST_Metadata.handle,
             isbn = TEST_Metadata.isbn,
             issn = TEST_Metadata.issn,
+            lastUpdatedBy = TEST_Metadata.lastUpdatedBy,
+            lastUpdatedOn = TEST_Metadata.lastUpdatedOn,
             licenseConditions = TEST_Metadata.licenseConditions,
             paketSigel = TEST_Metadata.paketSigel,
             provenanceLicense = TEST_Metadata.provenanceLicense,
@@ -113,10 +119,32 @@ class RestConverterTest {
             id = "that-test",
             accessState = AccessState.OPEN,
             band = "band",
+            createdBy = "user1",
+            createdOn = OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",

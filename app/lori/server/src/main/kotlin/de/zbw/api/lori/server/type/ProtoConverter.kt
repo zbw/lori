@@ -21,6 +21,9 @@ import de.zbw.lori.api.RestrictionProto
 import de.zbw.lori.api.RestrictionTypeProto
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 /**
  * Conversion functions between protobuf and business logic.
@@ -34,10 +37,34 @@ fun ItemProto.toBusiness(): Item =
             id = id,
             accessState = this.returnIfFieldIsSet(ItemProto.ACCESS_STATE_FIELD_NUMBER)?.accessState?.toBusiness(),
             band = this.returnIfFieldIsSet(ItemProto.BAND_FIELD_NUMBER)?.band,
+            createdBy = this.returnIfFieldIsSet(ItemProto.CREATED_BY_FIELD_NUMBER)?.createdBy,
+            createdOn = this.returnIfFieldIsSet(ItemProto.CREATED_ON_FIELD_NUMBER)
+                ?.createdOn
+                ?.let {
+                    OffsetDateTime.ofInstant(
+                        Instant.ofEpochSecond(
+                            it.seconds,
+                            it.nanos.toLong()
+                        ),
+                        ZoneId.of("UTC+00:00"),
+                    )
+                },
             doi = this.returnIfFieldIsSet(ItemProto.DOI_FIELD_NUMBER)?.doi,
             handle = this.handle,
             isbn = this.returnIfFieldIsSet(ItemProto.ISBN_FIELD_NUMBER)?.isbn,
             issn = this.returnIfFieldIsSet(ItemProto.ISSN_FIELD_NUMBER)?.issn,
+            lastUpdatedBy = this.returnIfFieldIsSet(ItemProto.CREATED_BY_FIELD_NUMBER)?.lastUpdatedBy,
+            lastUpdatedOn = this.returnIfFieldIsSet(ItemProto.LAST_UPDATED_ON_FIELD_NUMBER)
+                ?.lastUpdatedOn
+                ?.let {
+                    OffsetDateTime.ofInstant(
+                        Instant.ofEpochSecond(
+                            it.seconds,
+                            it.nanos.toLong()
+                        ),
+                        ZoneId.of("UTC+00:00"),
+                    )
+                },
             licenseConditions = this.returnIfFieldIsSet(ItemProto.LICENSE_CONDITIONS_FIELD_NUMBER)?.licenseConditions,
             paketSigel = this.returnIfFieldIsSet(ItemProto.PAKET_SIGEL_FIELD_NUMBER)?.paketSigel,
             ppn = this.returnIfFieldIsSet(ItemProto.PPN_FIELD_NUMBER)?.ppn,

@@ -2,12 +2,20 @@ package de.zbw.business.lori.server
 
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.time.Instant
+import java.time.Instant.now
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.test.assertTrue
 
 /**
@@ -43,7 +51,15 @@ class LoriServerBackendTest : DatabaseTest() {
 
     @BeforeClass
     fun fillDatabase() {
+        mockkStatic(Instant::class)
+        every { now() } returns NOW.toInstant()
+
         backend.insertItems(entries.toList())
+    }
+
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
     }
 
     @DataProvider(name = DATA_FOR_ROUNDTRIP)
@@ -87,7 +103,7 @@ class LoriServerBackendTest : DatabaseTest() {
         // when
         val received = backend.getAccessRightList(limit = 2, offset = 0)
         // then
-        assertThat(received, `is`(orderedList.toList()))
+        assertThat("Not equal", received, `is`(orderedList.toList()))
 
         // no limit
         val noLimit = backend.getAccessRightList(limit = 0, offset = 0)
@@ -130,15 +146,29 @@ class LoriServerBackendTest : DatabaseTest() {
 
     companion object {
         const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
+        val NOW: OffsetDateTime = OffsetDateTime.of(
+            2022,
+            3,
+            1,
+            1,
+            1,
+            0,
+            0,
+            ZoneOffset.UTC,
+        )!!
 
         val TEST_Metadata = ItemMetadata(
             id = "that-test",
             accessState = AccessState.OPEN,
             band = "band",
+            createdBy = "user1",
+            createdOn = NOW,
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = NOW,
             licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",

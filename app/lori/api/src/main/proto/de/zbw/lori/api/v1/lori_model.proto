@@ -5,6 +5,8 @@ package de.zbw.lori.api.v1;
 option java_package = "de.zbw.lori.api";
 option java_multiple_files = true;
 
+import "google/protobuf/timestamp.proto";
+
 message AddItemRequest {
   repeated ItemProto items = 1;
 }
@@ -31,24 +33,28 @@ message ItemProto {
   string id = 1;
   optional AccessStateProto access_state = 2;
   optional string band = 3;
-  optional string doi = 4;
-  string handle = 5;
-  optional string isbn = 6;
-  optional string issn = 7;
-  optional string license_conditions = 8;
-  optional string paket_sigel = 9;
-  optional string ppn = 10;
-  optional string ppn_ebook = 11;
-  optional string provenance_license = 12;
-  PublicationTypeProto publication_type = 13;
-  int32  publication_year = 14;
-  optional string rights_k10plus = 15;
-  optional string serial_number = 16;
-  string title = 17;
-  optional string title_journal = 18;
-  optional string title_series = 19;
-  optional string zbd_id = 20;
-  repeated ActionProto actions = 21;
+  optional string created_by = 4;
+  optional google.protobuf.Timestamp created_on = 5;
+  optional string doi = 6;
+  string handle = 7;
+  optional string last_updated_by = 8;
+  optional google.protobuf.Timestamp last_updated_on = 9;
+  optional string isbn = 10;
+  optional string issn = 11;
+  optional string license_conditions = 12;
+  optional string paket_sigel = 13;
+  optional string ppn = 14;
+  optional string ppn_ebook = 15;
+  optional string provenance_license = 16;
+  PublicationTypeProto publication_type = 17;
+  int32  publication_year = 18;
+  optional string rights_k10plus = 19;
+  optional string serial_number = 20;
+  string title = 21;
+  optional string title_journal = 22;
+  optional string title_series = 23;
+  optional string zbd_id = 24;
+  repeated ActionProto actions = 25;
 }
 
 enum AccessStateProto {

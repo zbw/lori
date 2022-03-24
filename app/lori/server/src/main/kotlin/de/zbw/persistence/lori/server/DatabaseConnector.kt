@@ -16,7 +16,11 @@ import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.Timestamp
 import java.sql.Types
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 /**
  * Connector for interacting with the postgres database.
@@ -38,38 +42,8 @@ class DatabaseConnector(
     )
 
     fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
-        val prep = connection.prepareStatement(
-            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-                "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,access_state,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-                "license_conditions,provenance_license) " +
-                "VALUES(?,?,?,?,?,?," +
-                "?,?,?,?,?,?," +
-                "?,?,?,?,?,?," +
-                "?,?) " +
-                "ON CONFLICT (header_id) " +
-                "DO UPDATE SET " +
-                "handle = EXCLUDED.handle," +
-                "ppn = EXCLUDED.ppn," +
-                "ppn_ebook = EXCLUDED.ppn_ebook," +
-                "title = EXCLUDED.title," +
-                "title_journal = EXCLUDED.title_journal," +
-                "title_series = EXCLUDED.title_series," +
-                "access_state = EXCLUDED.access_state," +
-                "published_year = EXCLUDED.published_year," +
-                "band = EXCLUDED.band," +
-                "publication_type = EXCLUDED.publication_type," +
-                "doi = EXCLUDED.doi," +
-                "serial_number = EXCLUDED.serial_number," +
-                "isbn = EXCLUDED.isbn," +
-                "rights_k10plus = EXCLUDED.rights_k10plus," +
-                "paket_sigel = EXCLUDED.paket_sigel," +
-                "zbd_id = EXCLUDED.zbd_id," +
-                "issn = EXCLUDED.issn," +
-                "license_conditions = EXCLUDED.license_conditions," +
-                "provenance_license = EXCLUDED.provenance_license;",
-        )
+
+        val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
         connection.autoCommit = false
         itemMetadatas.map {
             val p = insertUpsertSetParameters(it, prep)
@@ -88,20 +62,10 @@ class DatabaseConnector(
     }
 
     fun insertMetadata(itemMetadata: ItemMetadata): String {
-        val stmntAccIns: String =
-            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-                "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,access_state,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-                "license_conditions,provenance_license) " +
-                "VALUES(?,?,?,?,?,?," +
-                "?,?,?,?,?,?," +
-                "?,?,?,?,?,?," +
-                "?,?)"
 
         val prepStmt = insertUpsertSetParameters(
             itemMetadata,
-            connection.prepareStatement(stmntAccIns, Statement.RETURN_GENERATED_KEYS),
+            connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
         )
 
         val span = tracer.spanBuilder("insertMetadata").startSpan()
@@ -118,8 +82,12 @@ class DatabaseConnector(
         }
     }
 
-    private fun insertUpsertSetParameters(itemMetadata: ItemMetadata, prep: PreparedStatement): PreparedStatement =
-        prep.apply {
+    private fun insertUpsertSetParameters(
+        itemMetadata: ItemMetadata,
+        prep: PreparedStatement,
+    ): PreparedStatement {
+        val now = Instant.now()
+        return prep.apply {
             this.setString(1, itemMetadata.id)
             this.setString(2, itemMetadata.handle)
             this.setIfNotNull(3, itemMetadata.ppn) { value, idx, prepStmt ->
@@ -170,7 +138,16 @@ class DatabaseConnector(
             this.setIfNotNull(20, itemMetadata.provenanceLicense) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setTimestamp(21, Timestamp.from(now))
+            this.setTimestamp(22, Timestamp.from(now))
+            this.setIfNotNull(23, itemMetadata.createdBy) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(24, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
+    }
 
     fun insertAction(action: Action, fkAccessRight: String): Long {
         val stmntActIns = "INSERT INTO $TABLE_NAME_ITEM_ACTION" +
@@ -196,15 +173,13 @@ class DatabaseConnector(
     }
 
     fun insertRestriction(restriction: Restriction, fkActionId: Long): Long {
-        val stmntRestIns = "INSERT INTO $TABLE_NAME_ITEM_RESTRICTION" +
-            "(type, attribute_type, attribute_values, action_id) " +
-            "VALUES(?,?,?,?)"
-        val prepStmt = connection.prepareStatement(stmntRestIns, Statement.RETURN_GENERATED_KEYS).apply {
-            this.setString(1, restriction.type.toString())
-            this.setString(2, restriction.attribute.type.name)
-            this.setString(3, restriction.attribute.values.joinToString(separator = ";"))
-            this.setLong(4, fkActionId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_INSERT_RESTRICTION, Statement.RETURN_GENERATED_KEYS).apply {
+                this.setString(1, restriction.type.toString())
+                this.setString(2, restriction.attribute.type.name)
+                this.setString(3, restriction.attribute.values.joinToString(separator = ";"))
+                this.setLong(4, fkActionId)
+            }
         val span = tracer.spanBuilder("insertRestriction").startSpan()
         try {
             span.makeCurrent()
@@ -220,16 +195,7 @@ class DatabaseConnector(
     }
 
     fun getMetadata(headerIds: List<String>): List<ItemMetadata> {
-        val stmt =
-            "SELECT" +
-                " header_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,access_state,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-                "license_conditions,provenance_license " +
-                "FROM $TABLE_NAME_ITEM_METADATA " +
-                "WHERE header_id = ANY(?)"
-
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_METADATA).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
 
@@ -263,6 +229,20 @@ class DatabaseConnector(
                     issn = rs.getString(18),
                     licenseConditions = rs.getString(19),
                     provenanceLicense = rs.getString(20),
+                    createdOn = rs.getTimestamp(21)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
+                    lastUpdatedOn = rs.getTimestamp(22)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
+                    createdBy = rs.getString(23),
+                    lastUpdatedBy = rs.getString(24),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -290,12 +270,7 @@ class DatabaseConnector(
 
     internal fun getItemPrimaryKeys(headerIds: List<String>): List<JoinHeaderActionRestrictionIdTransient> {
         // First, receive the required primary keys.
-        val stmt =
-            "SELECT a.header_id, a.action_id, r.restriction_id " +
-                "FROM $TABLE_NAME_ITEM_ACTION a " +
-                "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
-                "WHERE a.header_id = ANY(?)"
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_PRIMARY_KEYS).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("getItemPrimaryKeys").startSpan()
@@ -317,11 +292,7 @@ class DatabaseConnector(
     }
 
     private fun deleteRestrictions(restrictionIds: List<Int>): Int {
-        val stmt =
-            "DELETE " +
-                "FROM $TABLE_NAME_ITEM_RESTRICTION r " +
-                "WHERE r.restriction_id = ANY(?)"
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_RESTRICTIONS).apply {
             this.setArray(1, connection.createArrayOf("integer", restrictionIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("deleteRestrictions").startSpan()
@@ -334,11 +305,7 @@ class DatabaseConnector(
     }
 
     private fun deleteActions(actionIds: List<Int>): Int {
-        val stmt =
-            "DELETE " +
-                "FROM $TABLE_NAME_ITEM_ACTION a " +
-                "WHERE a.action_id = ANY(?)"
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ACTIONS).apply {
             this.setArray(1, connection.createArrayOf("integer", actionIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("deleteActions").startSpan()
@@ -351,11 +318,7 @@ class DatabaseConnector(
     }
 
     private fun deleteHeader(headerIds: List<String>): Int {
-        val stmt =
-            "DELETE " +
-                "FROM $TABLE_NAME_ITEM_METADATA h " +
-                "WHERE h.header_id = ANY(?)"
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_HEADER).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("deleteMetadata").startSpan()
@@ -368,13 +331,8 @@ class DatabaseConnector(
     }
 
     fun getActions(headerIds: List<String>): Map<String, List<Action>> {
-        val stmt =
-            "SELECT a.header_id, a.type, a.permission, r.type, r.attribute_type, r.attribute_values " +
-                "FROM $TABLE_NAME_ITEM_ACTION a " +
-                "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
-                "WHERE a.header_id = ANY(?)"
 
-        val prepStmt = connection.prepareStatement(stmt).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_ACTIONS).apply {
             this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
         }
 
@@ -468,5 +426,84 @@ class DatabaseConnector(
         const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         const val TABLE_NAME_ITEM_ACTION = "item_action"
         const val TABLE_NAME_ITEM_RESTRICTION = "item_restriction"
+        const val STATEMENT_UPSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+            "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+            "title_series,access_state,published_year,band,publication_type,doi," +
+            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "license_conditions,provenance_license,created_on," +
+            "last_updated_on,created_by,last_updated_by) " +
+            "VALUES(?,?,?,?,?,?," +
+            "?,?,?,?,?,?," +
+            "?,?,?,?,?,?," +
+            "?,?,?,?,?,?) " +
+            "ON CONFLICT (header_id) " +
+            "DO UPDATE SET " +
+            "handle = EXCLUDED.handle," +
+            "ppn = EXCLUDED.ppn," +
+            "ppn_ebook = EXCLUDED.ppn_ebook," +
+            "title = EXCLUDED.title," +
+            "title_journal = EXCLUDED.title_journal," +
+            "title_series = EXCLUDED.title_series," +
+            "access_state = EXCLUDED.access_state," +
+            "published_year = EXCLUDED.published_year," +
+            "band = EXCLUDED.band," +
+            "publication_type = EXCLUDED.publication_type," +
+            "doi = EXCLUDED.doi," +
+            "serial_number = EXCLUDED.serial_number," +
+            "isbn = EXCLUDED.isbn," +
+            "rights_k10plus = EXCLUDED.rights_k10plus," +
+            "paket_sigel = EXCLUDED.paket_sigel," +
+            "zbd_id = EXCLUDED.zbd_id," +
+            "issn = EXCLUDED.issn," +
+            "license_conditions = EXCLUDED.license_conditions," +
+            "provenance_license = EXCLUDED.provenance_license," +
+            "last_updated_on = EXCLUDED.last_updated_on," +
+            "last_updated_by = EXCLUDED.last_updated_by;"
+
+        const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+            "(header_id,handle,ppn,ppn_ebook,title,title_journal," +
+            "title_series,access_state,published_year,band,publication_type,doi," +
+            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "license_conditions,provenance_license,created_on," +
+            "last_updated_on,created_by,last_updated_by) " +
+            "VALUES(?,?,?,?,?,?," +
+            "?,?,?,?,?,?," +
+            "?,?,?,?,?,?," +
+            "?,?,?,?,?,?)"
+
+        const val STATEMENT_INSERT_RESTRICTION = "INSERT INTO $TABLE_NAME_ITEM_RESTRICTION" +
+            "(type, attribute_type, attribute_values, action_id) " +
+            "VALUES(?,?,?,?)"
+
+        const val STATEMENT_GET_METADATA = "SELECT header_id,handle,ppn,ppn_ebook,title,title_journal," +
+            "title_series,access_state,published_year,band,publication_type,doi," +
+            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "license_conditions,provenance_license,created_on,last_updated_on,created_by,last_updated_by " +
+            "FROM $TABLE_NAME_ITEM_METADATA " +
+            "WHERE header_id = ANY(?)"
+
+        const val STATEMENT_GET_PRIMARY_KEYS = "SELECT a.header_id, a.action_id, r.restriction_id " +
+            "FROM $TABLE_NAME_ITEM_ACTION a " +
+            "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
+            "WHERE a.header_id = ANY(?)"
+
+        const val STATEMENT_DELETE_RESTRICTIONS = "DELETE " +
+            "FROM $TABLE_NAME_ITEM_RESTRICTION r " +
+            "WHERE r.restriction_id = ANY(?)"
+
+        const val STATEMENT_DELETE_ACTIONS = "DELETE " +
+            "FROM $TABLE_NAME_ITEM_ACTION a " +
+            "WHERE a.action_id = ANY(?)"
+
+        const val STATEMENT_DELETE_HEADER =
+            "DELETE " +
+                "FROM $TABLE_NAME_ITEM_METADATA h " +
+                "WHERE h.header_id = ANY(?)"
+
+        const val STATEMENT_GET_ACTIONS =
+            "SELECT a.header_id, a.type, a.permission, r.type, r.attribute_type, r.attribute_values " +
+                "FROM $TABLE_NAME_ITEM_ACTION a " +
+                "LEFT JOIN $TABLE_NAME_ITEM_RESTRICTION r ON a.action_id = r.action_id " +
+                "WHERE a.header_id = ANY(?)"
     }
 }

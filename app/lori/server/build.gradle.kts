@@ -47,3 +47,8 @@ tasks.jacocoTestCoverageVerification {
         }
     }
 }
+
+tasks.test {
+    // https://github.com/mockk/mockk/issues/681
+    jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
+}
