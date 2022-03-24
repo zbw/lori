@@ -36,6 +36,7 @@ dependencies {
 
 application {
     mainClass.set("de.zbw.api.lori.server.LoriServer")
+    applicationDefaultJvmArgs = listOf("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
 
 tasks.jacocoTestCoverageVerification {
