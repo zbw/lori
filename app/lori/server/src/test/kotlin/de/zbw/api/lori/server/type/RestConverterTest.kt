@@ -22,7 +22,7 @@ import java.time.ZoneOffset
 class RestConverterTest {
 
     @Test
-    fun testAccessRightConversion() {
+    fun testItemConversion() {
         // given
         val expected = Item(
             itemMetadata = TEST_Metadata,
@@ -85,6 +85,7 @@ class RestConverterTest {
 
         // when + then
         assertThat(restObject.toBusiness(), `is`(expected))
+        assertThat(restObject.toBusiness().toRest(), `is`(restObject))
     }
 
     @Test
