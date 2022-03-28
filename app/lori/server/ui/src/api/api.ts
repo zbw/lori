@@ -31,18 +31,4 @@ export default {
       }
     );
   },
-  deleteAccessInformation(itemId: string): ResultAsync<void, Error> {
-    return ResultAsync.fromPromise(
-      accessInformationApi.deleteItemById({ id: itemId }),
-      (e: unknown) => {
-        const errResponse = e as Response;
-        return new Error(
-          "Deleting an entry resulted in following error:\n" +
-            errResponse.status +
-            ": " +
-            errResponse.statusText
-        );
-      }
-    );
-  },
 };

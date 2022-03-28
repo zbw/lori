@@ -1,15 +1,15 @@
 package de.zbw.business.lori.server
 
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 data class Item(
-    val itemMetadata: ItemMetadata,
-    val actions: List<Action>,
+    val metadata: ItemMetadata,
+    val rights: List<ItemRight>,
 )
 
 data class ItemMetadata(
     val id: String,
-    val accessState: AccessState?,
     val band: String?,
     val createdBy: String?,
     val createdOn: OffsetDateTime?,
@@ -19,11 +19,9 @@ data class ItemMetadata(
     val issn: String?,
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
-    val licenseConditions: String?,
     val paketSigel: String?,
     val ppn: String?,
     val ppnEbook: String?,
-    val provenanceLicense: String?,
     val publicationType: PublicationType,
     val publicationYear: Int,
     val rightsK10plus: String?,
@@ -45,68 +43,15 @@ enum class PublicationType {
     BOOK,
 }
 
-data class Action(
-    val type: ActionType,
-    val permission: Boolean,
-    val restrictions: List<Restriction>,
+data class ItemRight(
+    val rightId: String,
+    val accessState: AccessState?,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
+    val endDate: LocalDate?,
+    val lastUpdatedBy: String?,
+    val lastUpdatedOn: OffsetDateTime?,
+    val licenseConditions: String?,
+    val startDate: LocalDate,
+    val provenanceLicense: String?,
 )
-
-data class Restriction(
-    val type: RestrictionType,
-    val attribute: Attribute, // TODO(CB): Should be a list.
-)
-
-data class Attribute(
-    val type: AttributeType,
-    val values: List<String>,
-)
-
-enum class ActionType {
-    READ,
-    RUN,
-    LEND,
-    DOWNLOAD,
-    PRINT,
-    REPRODUCE,
-    MODIFY,
-    REUSE,
-    DISTRIBUTE,
-    PUBLISH,
-    ARCHIVE,
-    INDEX,
-    MOVE,
-    DISPLAY_METADATA,
-}
-
-enum class RestrictionType {
-    GROUP,
-    AGE,
-    LOCATION,
-    DATE,
-    DURATION,
-    COUNT,
-    CONCURRENT,
-    WATERMARK,
-    QUALITY,
-    AGREEMENT,
-    PARTS,
-}
-
-enum class AttributeType {
-    FROM_DATE,
-    TO_DATE,
-    MAX_RESOLUTION,
-    MAX_BITRATE,
-    COUNT,
-    INSIDE,
-    SUBNET,
-    OUTSIDE,
-    WATERMARK,
-    DURATION,
-    MIN_AGE,
-    MAX_AGE,
-    REQUIRED,
-    GROUPS,
-    PARTS,
-    SESSIONS,
-}

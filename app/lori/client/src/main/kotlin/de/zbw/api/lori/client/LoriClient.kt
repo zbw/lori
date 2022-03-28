@@ -1,12 +1,8 @@
 package de.zbw.api.lori.client
 
 import de.zbw.api.lori.client.config.LoriClientConfiguration
-import de.zbw.lori.api.AddItemRequest
-import de.zbw.lori.api.AddItemResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
-import de.zbw.lori.api.GetItemRequest
-import de.zbw.lori.api.GetItemResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
 import io.grpc.Channel
 import io.grpc.ManagedChannelBuilder
@@ -34,16 +30,6 @@ class LoriClient(
     private val openTelemetry: OpenTelemetry,
     private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient")
 ) {
-
-    suspend fun addItem(request: AddItemRequest): AddItemResponse =
-        runWithTracing("client_addAccessInformation") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
-            s.addItem(request)
-        }
-
-    suspend fun getItem(request: GetItemRequest): GetItemResponse =
-        runWithTracing("client_getAccessInformation") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
-            s.getItem(request)
-        }
 
     suspend fun fullImport(request: FullImportRequest): FullImportResponse =
         runWithTracing("client_fullImport") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->

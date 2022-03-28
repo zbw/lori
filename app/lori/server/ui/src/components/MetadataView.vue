@@ -1,6 +1,6 @@
 <template>
-  <v-card v-if="displayedItem.id" class="mx-auto" tile>
-    <v-card-title class="subheading font-weight-bold"> Metadaten</v-card-title>
+  <v-card v-if="displayedItem.metadataId" class="mx-auto" tile>
+    <v-card-title class="subheading font-weight-bold">Metadaten</v-card-title>
     <v-divider></v-divider>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
@@ -9,17 +9,12 @@
           <v-container>
             <v-row>
               <v-col>Id</v-col>
-              <v-col>{{ prettyPrint(displayedItem.id) }}</v-col>
+              <v-col>{{ prettyPrint(displayedItem.metadataId) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="displayedItem.title">
               <v-col>Titel</v-col>
               <v-col>{{ prettyPrint(displayedItem.title) }}</v-col>
-              <v-col></v-col>
-            </v-row>
-            <v-row v-show="displayedItem.accessState">
-              <v-col>Aktueller Access Status</v-col>
-              <v-col>{{ prettyPrint(displayedItem.accessState) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="displayedItem.band">
@@ -112,14 +107,14 @@
 </template>
 
 <script lang="ts">
-import { Prop, Vue } from "vue-property-decorator";
+import {Prop, Vue} from "vue-property-decorator";
 import Component from "vue-class-component";
-import { ItemRest } from "@/generated-sources/openapi";
+import {MetadataRest} from "@/generated-sources/openapi";
 
 @Component
 export default class MetadataView extends Vue {
-  @Prop({ required: true })
-  displayedItem!: ItemRest;
+  @Prop({required: true})
+  displayedItem!: MetadataRest;
 
   public prettyPrint(value: string): string {
     if (value) {

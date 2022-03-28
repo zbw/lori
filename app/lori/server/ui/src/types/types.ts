@@ -1,4 +1,4 @@
-import { ItemRestPublicationTypeEnum } from "@/generated-sources/openapi";
+import { MetadataRestPublicationTypeEnum } from "@/generated-sources/openapi";
 
 export enum License {
   national = "Nationallizens",

@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 object LoriServer {
     @JvmStatic
     fun main(args: Array<String>) {
-        LOG.info("Starting the AccessServer :)")
+        LOG.info("Starting LoriServer :)")
 
         val tracer: Tracer = AutoConfiguredOpenTelemetrySdk
             .initialize()

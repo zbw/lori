@@ -10,10 +10,10 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
-import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.Instant
 import java.time.Instant.now
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.test.assertTrue
@@ -33,28 +33,10 @@ class LoriServerBackendTest : DatabaseTest() {
         )
     )
 
-    private val orderedList = arrayOf(
-        TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "aaaa")),
-        TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "aaaa2")),
-    )
-
-    private val deletedEntry = TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "to_be_deleted"))
-
-    private val entries = arrayOf(
-        TEST_ACCESS_RIGHT,
-        TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "test_2a")),
-        TEST_ACCESS_RIGHT.copy(itemMetadata = TEST_Metadata.copy(id = "test_2b")),
-        ITEM_NO_ACTION,
-        ITEM_UPSERTED,
-        deletedEntry,
-    ).plus(orderedList)
-
     @BeforeClass
     fun fillDatabase() {
         mockkStatic(Instant::class)
         every { now() } returns NOW.toInstant()
-
-        backend.insertItems(entries.toList())
     }
 
     @AfterClass
@@ -62,90 +44,98 @@ class LoriServerBackendTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @DataProvider(name = DATA_FOR_ROUNDTRIP)
-    fun createDataForRoundtrip() =
-        arrayOf(
-            arrayOf(
-                listOf(entries[0].itemMetadata.id),
-                setOf(entries[0]),
-            ),
-            arrayOf(
-                listOf(ITEM_NO_ACTION.itemMetadata.id),
-                setOf(ITEM_NO_ACTION),
-            ),
-            arrayOf(
-                listOf(entries[1].itemMetadata.id, entries[2].itemMetadata.id),
-                setOf(entries[1], entries[2]),
-            ),
-            arrayOf(
-                listOf(entries[0].itemMetadata.id, "invalidId"),
-                setOf(entries[0]),
-            ),
-            arrayOf(
-                listOf("invalidId"),
-                setOf<Item>(),
-            ),
+    @Test
+    fun testRoundtrip() {
+        // given
+        val givenMetadataEntries = arrayOf(
+            TEST_Metadata,
+            TEST_Metadata.copy(id = "no_rights"),
+        )
+        val rightAssignments = listOf(
+            TEST_RIGHT to listOf(TEST_Metadata.id)
         )
 
-    @Test(dataProvider = DATA_FOR_ROUNDTRIP)
-    fun testRoundtrip(
-        queryIds: List<String>,
-        expectedItems: Set<Item>
-    ) {
         // when
-        val received = backend.getItems(queryIds)
+        backend.insertMetadataElements(givenMetadataEntries.toList())
+        rightAssignments.forEach { backend.insertRightForMetadataIds(it.first, it.second) }
+        val received = backend.getRightsByMetadataId(givenMetadataEntries[0].id)!!
+
         // then
-        assertThat(received.toSet(), `is`(expectedItems))
+        assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT))))
+
+        // when
+        val receivedNoRights = backend.getRightsByMetadataId(givenMetadataEntries[1].id)!!
+        // then
+        assertThat(receivedNoRights, `is`(Item(givenMetadataEntries[1], emptyList())))
     }
 
     @Test
     fun testGetList() {
+        // given
+        val givenMetadata = arrayOf(
+            TEST_Metadata.copy(id = "zzz"),
+            TEST_Metadata.copy(id = "zzz2"),
+            TEST_Metadata.copy(id = "aaa"),
+            TEST_Metadata.copy(id = "abb"),
+            TEST_Metadata.copy(id = "acc"),
+        )
+
+        backend.insertMetadataElements(givenMetadata.toList())
         // when
-        val received = backend.getAccessRightList(limit = 2, offset = 0)
+        val received: List<Item> = backend.getItemList(limit = 3, offset = 0)
         // then
-        assertThat("Not equal", received, `is`(orderedList.toList()))
+        assertThat(
+            "Not equal",
+            received,
+            `is`(
+                listOf(
+                    Item(
+                        givenMetadata[2],
+                        emptyList(),
+                    ),
+                    Item(
+                        givenMetadata[3],
+                        emptyList(),
+                    ),
+                    Item(
+                        givenMetadata[4],
+                        emptyList(),
+                    )
+                )
+            )
+        )
 
         // no limit
-        val noLimit = backend.getAccessRightList(limit = 0, offset = 0)
+        val noLimit = backend.getItemList(
+            limit = 0, offset = 0
+        )
         assertThat(noLimit, `is`(emptyList()))
 
-        assertTrue(backend.containsAccessRightId(orderedList.first().itemMetadata.id))
-    }
-
-    @Test
-    fun testDeleteEntry() {
-        // when
-        val deleted = backend.deleteAccessRightEntries(listOf(deletedEntry.itemMetadata.id))
-        // then
-        assertThat("One entry should have been deleted", deleted, `is`(1))
+        assertTrue(backend.containsMetadataId(givenMetadata[0].id))
     }
 
     @Test
     fun testUpsert() {
         // given
-        val expectedItemNoAction = ITEM_UPSERTED.copy(
-            actions = emptyList(),
-            itemMetadata = ITEM_UPSERTED.itemMetadata.copy(band = "anotherband")
-        )
+        val expectedMetadata = TEST_Metadata.copy(band = "anotherband")
 
         // when
-        backend.upsertItems(listOf(expectedItemNoAction))
-        val received: List<Item> = backend.getItems(listOf(ITEM_UPSERTED.itemMetadata.id))
+        backend.upsertMetadataElements(listOf(expectedMetadata))
+        val received = backend.getMetadataElements(listOf(expectedMetadata.id))
 
         // then
-        assertThat(received, `is`(listOf(expectedItemNoAction)))
+        assertThat(received, `is`(listOf(expectedMetadata)))
 
+        val expectedMetadata2 = TEST_Metadata.copy(band = "anotherband2")
         // when
-
-        backend.upsertItems(listOf(ITEM_UPSERTED))
-        val received2: List<Item> = backend.getItems(listOf(ITEM_UPSERTED.itemMetadata.id))
+        backend.upsertMetadataElements(listOf(expectedMetadata2))
+        val received2 = backend.getMetadataElements(listOf(expectedMetadata2.id))
 
         // then
-        assertThat(received2, `is`(listOf(ITEM_UPSERTED)))
+        assertThat(received2, `is`(listOf(expectedMetadata2)))
     }
 
     companion object {
-        const val DATA_FOR_ROUNDTRIP = "DATA_FOR_ROUNDTRIP"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
             3,
@@ -157,9 +147,9 @@ class LoriServerBackendTest : DatabaseTest() {
             ZoneOffset.UTC,
         )!!
 
+        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            accessState = AccessState.OPEN,
             band = "band",
             createdBy = "user1",
             createdOn = NOW,
@@ -169,11 +159,9 @@ class LoriServerBackendTest : DatabaseTest() {
             issn = "123456",
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
-            licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            provenanceLicense = "provenance license",
             publicationType = PublicationType.ARTICLE,
             publicationYear = 2000,
             rightsK10plus = "some rights",
@@ -184,33 +172,17 @@ class LoriServerBackendTest : DatabaseTest() {
             zbdId = null,
         )
 
-        private val TEST_RESTRICTION = Restriction(
-            type = RestrictionType.DATE,
-            attribute = Attribute(
-                type = AttributeType.FROM_DATE,
-                values = listOf("2022-01-01"),
-            )
-        )
-
-        private val TEST_ACTION = Action(
-            type = ActionType.READ,
-            permission = true,
-            restrictions = listOf(TEST_RESTRICTION),
-        )
-
-        val TEST_ACCESS_RIGHT = Item(
-            itemMetadata = TEST_Metadata,
-            actions = listOf(TEST_ACTION),
-        )
-
-        val ITEM_NO_ACTION = Item(
-            itemMetadata = TEST_Metadata.copy(id = "no_action"),
-            actions = emptyList(),
-        )
-
-        val ITEM_UPSERTED = Item(
-            itemMetadata = TEST_Metadata.copy(id = "test_upsert"),
-            actions = listOf(TEST_ACTION),
+        private val TEST_RIGHT = ItemRight(
+            rightId = "test_right",
+            accessState = AccessState.OPEN,
+            createdBy = "user1",
+            createdOn = NOW,
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = NOW,
+            licenseConditions = "some conditions",
+            provenanceLicense = "provenance license",
+            startDate = TODAY.minusDays(1),
+            endDate = TODAY,
         )
     }
 }

@@ -5,8 +5,8 @@ import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
 import {
-  ItemRest,
-  ItemRestPublicationTypeEnum,
+    ItemRest,
+    MetadataRest, RightRest,
 } from "@/generated-sources/openapi";
 
 Vue.use(Vuetify);
@@ -25,10 +25,8 @@ describe("Test ItemList UI", () => {
     mockedApi.getList.mockReturnValue(
       Promise.resolve(
         Array<ItemRest>({
-          id: "42",
-          handle: "foo",
-          publicationYear: 2002,
-          publicationType: ItemRestPublicationTypeEnum.Article,
+          metadata: {},
+          rights: {},
         } as ItemRest)
       )
     );
