@@ -1,14 +1,9 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.AccessState
-import de.zbw.business.lori.server.Action
-import de.zbw.business.lori.server.ActionType
-import de.zbw.business.lori.server.Attribute
-import de.zbw.business.lori.server.AttributeType
 import de.zbw.business.lori.server.ItemMetadata
+import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
-import de.zbw.business.lori.server.Restriction
-import de.zbw.business.lori.server.RestrictionType
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -25,8 +20,10 @@ import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -168,21 +165,10 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
-    @Test(expectedExceptions = [SQLException::class])
-    fun testInsertActionError() {
-        // when
-        dbConnector.insertAction(TEST_ACTION, "invalid_foreign_key")
-        // then
-        // exception
-    }
-
     @Test(expectedExceptions = [IllegalStateException::class])
-    fun testInsertActionNoInsertError() {
+    fun testInsertRightNoRowInsertedError() {
         // given
-        val stmntActIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_ACTION}" +
-            "(type, permission, header_id) " +
-            "VALUES(?,?,?)"
-        val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntActIns)) {
+        val prepStmt = spyk(dbConnector.connection.prepareStatement(DatabaseConnector.STATEMENT_INSERT_RIGHT)) {
             every { executeUpdate() } returns 0
         }
         val dbConnectorMockked = DatabaseConnector(
@@ -192,93 +178,30 @@ class DatabaseConnectorTest : DatabaseTest() {
             tracer,
         )
         // when
-        dbConnectorMockked.insertAction(TEST_ACTION, "foo")
+        dbConnectorMockked.insertRight(TEST_RIGHT)
         // then exception
     }
 
     @Test
-    fun testInsertActionWithoutRestriction() {
+    fun testInsertRight() {
         // given
-        val givenHeaderId = "action_test"
-        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
-        val givenAction = Action(
-            type = ActionType.READ,
-            permission = true,
-            restrictions = listOf(),
-        )
+        val rightId = "testInsertRight"
+        val givenAction = TEST_RIGHT.copy(rightId = rightId)
 
         // when
-        dbConnector.insertMetadata(givenHeader)
-        val actionResponse = dbConnector.insertAction(givenAction, givenHeaderId)
+        val actionResponse = dbConnector.insertRight(givenAction)
         // then
-        assertTrue(actionResponse > 0, "Inserting an action with a header was not successful")
+        assertEquals(actionResponse, rightId, "Inserting a right column was not successful")
 
         // when
-        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenHeaderId))
+        val receivedRights: List<ItemRight> = dbConnector.getRights(listOf(rightId))
 
         // then
-        assertThat(receivedActions[givenHeaderId]!!.first(), `is`(givenAction))
-    }
-
-    @Test
-    fun testInsertWithRestriction() {
-        // given
-        val givenHeaderId = "action_test_with_restriction"
-        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
-        val givenAction = TEST_ACTION
-
-        // when
-        dbConnector.insertMetadata(givenHeader)
-        val actionResponse = dbConnector.insertAction(givenAction, givenHeaderId)
-
-        // then
-        assertTrue(actionResponse > 0, "Inserting an action with a header was not successful")
-
-        // when
-        dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionResponse)
-        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenHeaderId))
-
-        // then
-        assertThat(receivedActions[givenHeaderId]!!.first(), `is`(givenAction))
+        assertThat(receivedRights.first(), `is`(givenAction))
     }
 
     @Test(expectedExceptions = [SQLException::class])
-    fun testInsertRestrictionError() {
-        // when
-        val dbConnector = DatabaseConnector(
-            mockk<Connection>() {
-                every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } throws SQLException()
-            },
-            tracer,
-        )
-        // then
-        dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), 1)
-        // exception
-    }
-
-    @Test(expectedExceptions = [IllegalStateException::class])
-    fun testInsertRestrictionNoInsertError() {
-        // given
-        val stmntRestIns = "INSERT INTO ${DatabaseConnector.TABLE_NAME_ITEM_RESTRICTION}" +
-            "(type, attribute_type, attribute_values, action_id) " +
-            "VALUES(?,?,?,?)"
-
-        val prepStmt = spyk(dbConnector.connection.prepareStatement(stmntRestIns)) {
-            every { executeUpdate() } returns 0
-        }
-        val dbConnectorMockked = DatabaseConnector(
-            mockk<Connection>() {
-                every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            },
-            tracer,
-        )
-        // when
-        dbConnectorMockked.insertRestriction(TEST_ACTION.restrictions.first(), 1)
-        // then exception
-    }
-
-    @Test(expectedExceptions = [SQLException::class])
-    fun testGetHeadersException() {
+    fun testGetMetadataException() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any()) } throws SQLException()
@@ -289,31 +212,31 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test(expectedExceptions = [SQLException::class])
-    fun testGetActionException() {
+    fun testGetRightException() {
         val dbConnector = DatabaseConnector(
             mockk<Connection>() {
                 every { prepareStatement(any()) } throws SQLException()
             },
             tracer,
         )
-        dbConnector.getActions(listOf("foo"))
+        dbConnector.getRights(listOf("foo"))
     }
 
     @Test
-    fun testContainsHeader() {
+    fun testContainsMetadata() {
 
         // given
-        val testHeaderId = "headerIdContainCheck"
-        val testHeader = TEST_Metadata.copy(id = testHeaderId)
+        val metadataId = "metadataIdContainCheck"
+        val expectedMetadata = TEST_Metadata.copy(id = metadataId)
 
         // when
-        val containedBefore = dbConnector.containsHeader(testHeaderId)
-        assertFalse(containedBefore, "Header should not exist yet")
+        val containedBefore = dbConnector.containsMetadata(metadataId)
+        assertFalse(containedBefore, "Metadata should not exist yet")
 
         // when
-        dbConnector.insertMetadata(testHeader)
-        val containedAfter = dbConnector.containsHeader(testHeaderId)
-        assertTrue(containedAfter, "Header should exist now")
+        dbConnector.insertMetadata(expectedMetadata)
+        val containedAfter = dbConnector.containsMetadata(metadataId)
+        assertTrue(containedAfter, "Metadata should exist now")
     }
 
     @Test
@@ -326,129 +249,12 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // then
         assertThat(
-            dbConnector.getItemIds(limit = 3, offset = 0),
+            dbConnector.getMetadataRange(limit = 3, offset = 0),
             `is`(listOf("aaaa", "aaaab", "aaaac"))
         )
         assertThat(
-            dbConnector.getItemIds(limit = 2, offset = 1),
+            dbConnector.getMetadataRange(limit = 2, offset = 1),
             `is`(listOf("aaaab", "aaaac"))
-        )
-    }
-
-    @Test
-    fun testGetPrimaryKeys() {
-        // given
-        val givenHeaderId = "test_primkey"
-        val givenHeader = TEST_Metadata.copy(id = givenHeaderId)
-        val givenAction = TEST_ACTION
-
-        // when
-        dbConnector.insertMetadata(givenHeader)
-        val actionId = dbConnector.insertAction(givenAction, givenHeaderId)
-        val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
-        val receivedAccessInformationKeys = dbConnector.getItemPrimaryKeys(listOf(givenHeaderId))
-
-        // then
-        assertThat(
-            "The primary keys do not match",
-            listOf(
-                JoinHeaderActionRestrictionIdTransient(
-                    headerId = givenHeaderId,
-                    actionId = actionId.toInt(),
-                    restrictionId = restrictionId.toInt(),
-                )
-            ),
-            `is`(receivedAccessInformationKeys)
-        )
-    }
-
-    @Test
-    fun testDeleteItem() {
-        // given
-        val givenId = "test_primkey_to_be_deleted"
-        val givenMetadata = TEST_Metadata.copy(id = givenId)
-        val givenAction = TEST_ACTION
-
-        // when
-        dbConnector.insertMetadata(givenMetadata)
-        val actionId = dbConnector.insertAction(givenAction, givenId)
-        val restrictionId = dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
-        val receivedPrimaryKeys = dbConnector.getItemPrimaryKeys(listOf(givenId))
-
-        // then
-        assertThat(
-            "The primary keys do not match",
-            listOf(
-                JoinHeaderActionRestrictionIdTransient(
-                    headerId = givenId,
-                    actionId = actionId.toInt(),
-                    restrictionId = restrictionId.toInt(),
-                )
-            ),
-            `is`(receivedPrimaryKeys)
-        )
-
-        // when
-        val deletedItems = dbConnector.deleteItems(listOf(givenId))
-
-        // then
-        assertThat(
-            "One item should have been deleted",
-            deletedItems,
-            `is`(1)
-        )
-
-        // when
-        val receivedHeader = dbConnector.getMetadata(listOf(givenId))
-        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenId))
-
-        // then
-        assertThat(
-            "No header of the id $givenId should exist anymore",
-            receivedHeader,
-            `is`(emptyList())
-        )
-        assertThat(
-            "No actions for the gvien header id $givenId should exist anymore",
-            receivedActions,
-            `is`(emptyMap())
-        )
-    }
-
-    @Test
-    fun testDeleteActionsAndRestrictions() {
-        // given
-        val givenId = "test_delete_actions"
-        val givenMetadata = TEST_Metadata.copy(id = givenId)
-        val givenAction = TEST_ACTION
-
-        // when
-        dbConnector.insertMetadata(givenMetadata)
-        val actionId = dbConnector.insertAction(givenAction, givenId)
-        dbConnector.insertRestriction(TEST_ACTION.restrictions.first(), actionId)
-        val deletedActions = dbConnector.deleteActionAndRestrictedEntries(listOf(givenId))
-
-        // then
-        assertThat(
-            "One item should have been deleted",
-            deletedActions,
-            `is`(1)
-        )
-
-        // when
-        val receivedMetadata: List<ItemMetadata> = dbConnector.getMetadata(listOf(givenId))
-        val receivedActions: Map<String, List<Action>> = dbConnector.getActions(listOf(givenId))
-
-        // then
-        assertThat(
-            "The metadata of the id $givenId should still exist",
-            receivedMetadata,
-            `is`(listOf(givenMetadata))
-        )
-        assertThat(
-            "No actions for the gvien header id $givenId should exist anymore",
-            receivedActions,
-            `is`(emptyMap())
         )
     }
 
@@ -464,9 +270,10 @@ class DatabaseConnectorTest : DatabaseTest() {
             ZoneOffset.UTC,
         )!!
 
+        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+
         val TEST_Metadata = ItemMetadata(
             id = "that-test",
-            accessState = AccessState.OPEN,
             band = "band",
             createdBy = "user1",
             createdOn = NOW,
@@ -476,11 +283,9 @@ class DatabaseConnectorTest : DatabaseTest() {
             issn = "123456",
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
-            licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            provenanceLicense = "provenance license",
             publicationType = PublicationType.ARTICLE,
             publicationYear = 2000,
             rightsK10plus = "some rights",
@@ -492,18 +297,17 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
         private
-        val TEST_ACTION = Action(
-            type = ActionType.READ,
-            permission = true,
-            restrictions = listOf(
-                Restriction(
-                    type = RestrictionType.DATE,
-                    attribute = Attribute(
-                        type = AttributeType.FROM_DATE,
-                        values = listOf("2022-01-01")
-                    )
-                )
-            )
+        val TEST_RIGHT = ItemRight(
+            rightId = "testright",
+            accessState = AccessState.OPEN,
+            createdBy = "user1",
+            createdOn = NOW,
+            licenseConditions = "some conditions",
+            provenanceLicense = "provenance license",
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = NOW,
+            startDate = TODAY.minusDays(1),
+            endDate = TODAY,
         )
     }
 

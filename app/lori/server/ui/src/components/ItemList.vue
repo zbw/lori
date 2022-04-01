@@ -29,10 +29,10 @@
         </v-select>
         <v-data-table
           :headers="selectedHeaders"
-          :items="items"
+          :items="items.map((value) => value.metadata)"
           :search="search"
           show-select
-          @click:row="setActiveAccessInformation"
+          @click:row="setActiveItem"
           loading="tableContentLoading"
           loading-text="Daten werden geladen... Bitte warten."
         >
@@ -43,18 +43,15 @@
         </v-alert>
       </v-card>
       <v-col>
-        <v-card v-if="currentAccInf.id" class="mx-auto" tile>
+        <v-card v-if="currentItem.metadata" class="mx-auto" tile>
           <v-card-title class="subheading font-weight-bold">
-            Item Information</v-card-title
-          >
+            Metadaten
+          </v-card-title>
           <MetadataView
-            :displayed-item="Object.assign({}, currentAccInf)"
+            :displayed-item="Object.assign({}, currentItem.metadata)"
           ></MetadataView>
           <RightsView
-            :actions="Object.assign({}, currentAccInf.actions)"
-            :access-state="currentAccInf.accessState"
-            :lisence-conditions="currentAccInf.licenseConditions"
-            :provenance-license="currentAccInf.provenanceLicense"
+            :rights="Object.assign({}, currentItem.rights)"
           ></RightsView>
           <v-dialog v-model="dialogDelete" max-width="500px">
             <v-card>
@@ -106,7 +103,7 @@
               </v-btn>
             </template>
             <AccessEdit
-              :edit-item="Object.assign({}, currentAccInf)"
+              :edit-item="Object.assign({}, currentItem)"
               v-on:closeDialog="closeEditItemDialog"
             />
           </v-dialog>
@@ -122,9 +119,8 @@
 
 <script lang="ts">
 import { Vue, Watch } from "vue-property-decorator";
-import { ItemRest } from "@/generated-sources/openapi";
+import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
 import api from "@/api/api";
-import { Result } from "neverthrow";
 import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
 import { DataTableHeader } from "vuetify";
@@ -136,7 +132,7 @@ import RightsView from "@/components/RightsView.vue";
 })
 export default class AccessInformationList extends Vue {
   private items: Array<ItemRest> = [];
-  private currentAccInf = {} as ItemRest;
+  private currentItem = {} as ItemRest;
   private currentIndex = -1;
   private dialogEdit = false;
   private dialogDelete = false;
@@ -165,10 +161,6 @@ export default class AccessInformationList extends Vue {
       width: "300px",
     },
     {
-      text: "Access State",
-      value: "accessState",
-    },
-    {
       text: "Handle",
       sortable: true,
       value: "handle",
@@ -195,10 +187,6 @@ export default class AccessInformationList extends Vue {
       value: "issn",
     },
     {
-      text: "Lizensbedingungen",
-      value: "licenseConditions",
-    },
-    {
       text: "Paket-Sigel",
       value: "paketSigel",
     },
@@ -209,10 +197,6 @@ export default class AccessInformationList extends Vue {
     {
       text: "PPN-Ebook",
       value: "ppnEbook",
-    },
-    {
-      text: "Provienz Lizensinformationen",
-      value: "provenanceLicense",
     },
     {
       text: "Rechte-K10Plus",
@@ -252,8 +236,13 @@ export default class AccessInformationList extends Vue {
       });
   }
 
-  public setActiveAccessInformation(accessInformation: ItemRest): void {
-    this.currentAccInf = accessInformation;
+  public setActiveItem(metadata: MetadataRest): void {
+    let item = this.items.find(
+      (e) => e.metadata.metadataId === metadata.metadataId
+    );
+    if (item !== null && item !== undefined) {
+      this.currentItem = item;
+    }
   }
 
   public searchTitle(): void {
@@ -266,23 +255,6 @@ export default class AccessInformationList extends Vue {
 
   public openDeleteItemDialog(): void {
     this.dialogDelete = true;
-  }
-
-  public approveDeleteDialog(): void {
-    this.deleteConfirmationLoading = true;
-    api
-      .deleteAccessInformation(this.currentAccInf.id)
-      .then((response: Result<void, Error>) => {
-        if (response.isOk()) {
-          this.deleteAlertSuccessful = true;
-          this.retrieveAccessInformation();
-        } else {
-          this.deleteAlertError = true;
-          this.deleteErrorMessage = response.error.message;
-        }
-        this.dialogDelete = false;
-        this.deleteConfirmationLoading = false;
-      });
   }
 
   public cancelDeleteDialog(): void {

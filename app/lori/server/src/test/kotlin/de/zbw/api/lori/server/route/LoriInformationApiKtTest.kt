@@ -6,9 +6,8 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.lori.model.ActionRest
 import de.zbw.lori.model.ItemRest
-import de.zbw.lori.model.RestrictionRest
+import de.zbw.lori.model.MetadataRest
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -34,7 +33,7 @@ class LoriInformationApiKtTest {
     fun testItemPostCreated() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertItem(any()) } returns "foo"
+            every { insertMetadataElement(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -53,11 +52,11 @@ class LoriInformationApiKtTest {
                 handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ITEM_REST))
+                    setBody(jsonAsString(TEST_ITEM))
                 }
             ) {
                 assertThat("Should return Accepted", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertMetadataElement(ITEM_METADATA.toBusiness()) }
             }
         }
     }
@@ -66,7 +65,7 @@ class LoriInformationApiKtTest {
     fun testItemPostBadContentType() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertItem(any()) } returns "foo"
+            every { insertMetadataElement(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -85,7 +84,7 @@ class LoriInformationApiKtTest {
                 handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.contentType)
-                    setBody(jsonAsString(ITEM_REST))
+                    setBody(jsonAsString(ITEM_METADATA))
                 }
             ) {
                 assertThat(
@@ -101,7 +100,7 @@ class LoriInformationApiKtTest {
     fun testItemPostConflictId() {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { containsAccessRightId(ITEM_REST.id) } returns true
+            every { containsMetadataId(TEST_ITEM.metadata.metadataId) } returns true
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -120,7 +119,7 @@ class LoriInformationApiKtTest {
                 handleRequest(HttpMethod.Post, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ITEM_REST))
+                    setBody(jsonAsString(TEST_ITEM))
                 }
             ) {
                 assertThat(
@@ -135,7 +134,7 @@ class LoriInformationApiKtTest {
     @Test
     fun testItemPostInternalError() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertItem(any()) } throws SQLException("foo")
+            every { insertMetadataElement(any()) } throws SQLException("foo")
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -155,9 +154,7 @@ class LoriInformationApiKtTest {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
-                        jsonAsString(
-                            ITEM_REST
-                        )
+                        jsonAsString(TEST_ITEM)
                     )
                 }
             ) {
@@ -166,7 +163,7 @@ class LoriInformationApiKtTest {
                     response.status(),
                     `is`(HttpStatusCode.InternalServerError)
                 )
-                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertMetadataElement(ITEM_METADATA.toBusiness()) }
             }
         }
     }
@@ -174,7 +171,7 @@ class LoriInformationApiKtTest {
     @Test
     fun testPostItemBadJSON() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertItem(any()) } returns "foo"
+            every { insertMetadataElement(any()) } returns "foo"
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -194,9 +191,7 @@ class LoriInformationApiKtTest {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
-                        jsonAsString(
-                            RESTRICTION_REST
-                        )
+                        jsonAsString(ITEM_METADATA)
                     )
                 }
             ) {
@@ -212,8 +207,8 @@ class LoriInformationApiKtTest {
     @Test
     fun testPutItemCreate() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertItem(any()) } returns "foo"
-            every { containsAccessRightId(any()) } returns false
+            every { insertMetadataElement(any()) } returns "foo"
+            every { containsMetadataId(any()) } returns false
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -232,11 +227,11 @@ class LoriInformationApiKtTest {
                 handleRequest(HttpMethod.Put, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ITEM_REST))
+                    setBody(jsonAsString(TEST_ITEM))
                 }
             ) {
                 assertThat("Should return CREATED", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertItem(ITEM_REST.toBusiness()) }
+                verify(exactly = 1) { backend.insertMetadataElement(TEST_ITEM.metadata.toBusiness()) }
             }
         }
     }
@@ -244,8 +239,8 @@ class LoriInformationApiKtTest {
     @Test
     fun testPutUpdate() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { upsertItems(any()) } returns Unit
-            every { containsAccessRightId(any()) } returns true
+            every { upsertMetadataElements(any()) } returns IntArray(1) { _ -> 1 }
+            every { containsMetadataId(any()) } returns true
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -264,11 +259,11 @@ class LoriInformationApiKtTest {
                 handleRequest(HttpMethod.Put, "/api/v1/item") {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ITEM_REST))
+                    setBody(jsonAsString(TEST_ITEM))
                 }
             ) {
                 assertThat("Should return NO_CONTENT", response.status(), `is`(HttpStatusCode.NoContent))
-                verify(exactly = 1) { backend.upsertItems(listOf(ITEM_REST.toBusiness())) }
+                verify(exactly = 1) { backend.upsertMetadataElements(listOf(ITEM_METADATA.toBusiness())) }
             }
         }
     }
@@ -293,9 +288,7 @@ class LoriInformationApiKtTest {
                     addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
-                        jsonAsString(
-                            RESTRICTION_REST
-                        )
+                        jsonAsString(ITEM_METADATA)
                     )
                 }
             ) {
@@ -312,8 +305,12 @@ class LoriInformationApiKtTest {
     fun testGetItems() {
         // given
         val testId = "someId"
+        val expected = ItemRest(
+            metadata = ITEM_METADATA,
+            rights = emptyList(),
+        )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getItems(listOf(testId)) } returns listOf(ITEM_REST.toBusiness())
+            every { getRightsByMetadataId(testId) } returns expected.toBusiness()
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -332,7 +329,7 @@ class LoriInformationApiKtTest {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ItemRest>() {}.type
                 val received: ItemRest = Gson().fromJson(content, groupListType)
-                assertThat(received, `is`(ITEM_REST))
+                assertThat(received, `is`(expected))
             }
         }
     }
@@ -342,7 +339,7 @@ class LoriInformationApiKtTest {
         // given
         val testId = "someId"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getItems(listOf(testId)) } throws SQLException()
+            every { getRightsByMetadataId(testId) } throws SQLException()
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -374,8 +371,12 @@ class LoriInformationApiKtTest {
         // given
         val offset = 2
         val limit = 5
+        val expectedItem = ItemRest(
+            metadata = ITEM_METADATA,
+            rights = emptyList(),
+        )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getAccessRightList(limit, offset) } returns listOf(ITEM_REST.toBusiness())
+            every { getItemList(limit, offset) } returns listOf(expectedItem.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -394,10 +395,10 @@ class LoriInformationApiKtTest {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
                 val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(ITEM_REST)))
+                assertThat(received.toList(), `is`(listOf(expectedItem)))
             }
         }
-        verify(exactly = 1) { backend.getAccessRightList(limit, offset) }
+        verify(exactly = 1) { backend.getItemList(limit, offset) }
     }
 
     @Test
@@ -405,13 +406,17 @@ class LoriInformationApiKtTest {
         // given
         val defaultLimit = 25
         val defaultOffset = 0
+        val expectedItem = ItemRest(
+            metadata = ITEM_METADATA,
+            rights = emptyList(),
+        )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
-                getAccessRightList(
+                getItemList(
                     defaultLimit,
                     defaultOffset
                 )
-            } returns listOf(ITEM_REST.toBusiness())
+            } returns listOf(expectedItem.toBusiness())
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -430,10 +435,10 @@ class LoriInformationApiKtTest {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
                 val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(ITEM_REST)))
+                assertThat(received.toList(), `is`(listOf(expectedItem)))
             }
         }
-        verify(exactly = 1) { backend.getAccessRightList(defaultLimit, defaultOffset) }
+        verify(exactly = 1) { backend.getItemList(defaultLimit, defaultOffset) }
     }
 
     @DataProvider(name = DATA_FOR_INVALID_LIST_PARAM)
@@ -518,96 +523,6 @@ class LoriInformationApiKtTest {
         }
     }
 
-    @Test
-    fun testDELETEItemHappyPath() {
-        // given
-        val givenDeleteId = "toBeDeleted"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { containsAccessRightId(givenDeleteId) } returns true
-            every { deleteAccessRightEntries(listOf(givenDeleteId)) } returns 1
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
-                assertThat(
-                    "Should return 200 indicating a successful operation",
-                    response.status(),
-                    `is`(HttpStatusCode.OK)
-                )
-            }
-        }
-    }
-
-    @Test
-    fun testDELETEItemNotFound() {
-        // given
-        val givenDeleteId = "toBeDeleted"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { containsAccessRightId(givenDeleteId) } returns false
-            every { deleteAccessRightEntries(listOf(givenDeleteId)) } returns 1
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        // when + then
-        withTestApplication(servicePool.application()) {
-            handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")
-        }
-    }
-
-    @Test
-    fun testDELETEItemInternalError() {
-        // given
-        val givenDeleteId = "toBeDeleted"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { containsAccessRightId(givenDeleteId) } returns true
-            every { deleteAccessRightEntries(listOf(givenDeleteId)) } throws SQLException()
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Delete, "/api/v1/item/$givenDeleteId")) {
-                assertThat(
-                    "Should return 500 indicating that an internal error has occurred",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-            }
-        }
-    }
-
     companion object {
         const val DATA_FOR_INVALID_LIST_PARAM = "DATA_FOR_INVALID_LIST_PARAM"
 
@@ -624,15 +539,8 @@ class LoriInformationApiKtTest {
             digitalArchiveBasicAuth = "basicauth",
         )
 
-        val RESTRICTION_REST =
-            RestrictionRest(
-                restrictiontype = RestrictionRest.Restrictiontype.date,
-                attributetype = RestrictionRest.Attributetype.fromdate,
-                attributevalues = listOf("2022-01-0sav1"),
-            )
-        val ITEM_REST = ItemRest(
-            id = "foo",
-            accessState = ItemRest.AccessState.open,
+        val ITEM_METADATA = MetadataRest(
+            metadataId = "foo",
             band = "band",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
@@ -641,7 +549,7 @@ class LoriInformationApiKtTest {
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            publicationType = ItemRest.PublicationType.book,
+            publicationType = MetadataRest.PublicationType.book,
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
@@ -649,15 +557,11 @@ class LoriInformationApiKtTest {
             titleJournal = null,
             titleSeries = null,
             zbdId = null,
-            actions = listOf(
-                ActionRest(
-                    permission = true,
-                    actiontype = ActionRest.Actiontype.read,
-                    restrictions = listOf(
-                        RESTRICTION_REST
-                    )
-                )
-            )
+        )
+
+        val TEST_ITEM = ItemRest(
+            metadata = ITEM_METADATA,
+            rights = emptyList(),
         )
 
         fun jsonAsString(any: Any): String = Gson().toJson(any)

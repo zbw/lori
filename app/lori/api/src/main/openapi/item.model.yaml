@@ -1,21 +1,26 @@
 ItemRest:
   required:
-    - actions
+    - metadata
+  type: object
+  properties:
+    metadata:
+      $ref: '#/MetadataRest'
+    rights:
+      type: array
+      items:
+        $ref: '#/RightRest'
+
+MetadataRest:
+  required:
     - handle
-    - id
+    - metadataId
     - publicationType
     - publicationYear
     - title
   type: object
   properties:
-    id:
+    metadataId:
       type: string
-    accessState:
-      type: string
-      enum:
-        - open
-        - closed
-        - restricted
     band:
       type: string
     createdBy:
@@ -36,15 +41,11 @@ ItemRest:
     lastUpdatedOn:
       type: string
       format: date-time
-    licenseConditions:
-      type: string
     paketSigel:
       type: string
     ppn:
       type: string
     ppnEbook:
-      type: string
-    provenanceLicense:
       type: string
     publicationType:
       type: string
@@ -65,82 +66,38 @@ ItemRest:
       type: string
     zbdId:
       type: string
-    actions:
-      type: array
-      items:
-        $ref: '#/ActionRest'
 
-ActionRest:
+RightRest:
   required:
-    - permission
-    - actiontype
+    - rightId
+    - startDate
   type: object
   properties:
-    permission:
-      type: boolean
-    actiontype:
+    rightId:
+      type: string
+    accessState:
       type: string
       enum:
-        - read
-        - run
-        - lend
-        - download
-        - print
-        - reproduce
-        - modify
-        - reuse
-        - distribute
-        - publish
-        - archive
-        - index
-        - move
-        - displaymetadata
-    restrictions:
-      type: array
-      items:
-        $ref: '#/RestrictionRest'
-
-RestrictionRest:
-  required:
-    - restrictiontype
-    - attributetype
-    - attributevalues
-  type: object
-  properties:
-    restrictiontype:
+        - open
+        - closed
+        - restricted
+    createdBy:
       type: string
-      enum:
-        - group
-        - age
-        - location
-        - date
-        - duration
-        - count
-        - concurrent
-        - watermark
-        - quality
-        - agreement
-        - parts
-    attributetype:
+    createdOn:
       type: string
-      enum:
-        - fromdate
-        - todate
-        - maxresolution
-        - maxbitrate
-        - count
-        - inside
-        - subnet
-        - outside
-        - watermark
-        - duration
-        - minage
-        - maxage
-        - required
-        - groups
-        - parts
-        - sessions
-    attributevalues:
-      type: array
-      items:
-        type: string
+      format: date-time
+    endDate:
+      type: string
+      format: date
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
+    licenseConditions:
+      type: string
+    startDate:
+      type: string
+      format: date
+    provenanceLicense:
+      type: string

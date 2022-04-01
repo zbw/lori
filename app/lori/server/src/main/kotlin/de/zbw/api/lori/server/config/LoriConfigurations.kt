@@ -5,7 +5,7 @@ import de.gfelbing.konfig.core.source.EnvironmentKonfiguration
 import de.gfelbing.konfig.core.source.PropertiesFileKonfiguration
 
 /**
- * Configurations for the HelloWorld-Service.
+ * Configurations for the Lori-Service.
  *
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)

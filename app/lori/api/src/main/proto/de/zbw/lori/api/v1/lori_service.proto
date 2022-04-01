@@ -8,7 +8,5 @@ option java_package = "de.zbw.lori.api";
 option java_multiple_files = true;
 
 service LoriService {
-  rpc AddItem (AddItemRequest) returns (AddItemResponse);
-  rpc GetItem (GetItemRequest) returns (GetItemResponse);
   rpc FullImport (FullImportRequest) returns (FullImportResponse);
 }

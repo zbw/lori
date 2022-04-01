@@ -2,6 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
+import de.zbw.business.lori.server.Item
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.ItemRest
 import io.ktor.application.call
@@ -10,7 +11,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.Routing
-import io.ktor.routing.delete
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.put
@@ -42,14 +42,15 @@ fun Routing.accessInformationRoutes(
                     // receive() may return an object where non-null fields are null.
                     @Suppress("SENSELESS_COMPARISON")
                     val item: ItemRest =
-                        call.receive(ItemRest::class).takeIf { it.id != null }
+                        call.receive(ItemRest::class)
+                            .takeIf { it.metadata != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("item", item.toString())
-                    if (backend.containsAccessRightId(item.id)) {
+                    if (backend.containsMetadataId(item.metadata.metadataId)) {
                         span.setStatus(StatusCode.ERROR, "Conflict: Resource with this id already exists.")
                         call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")
                     } else {
-                        backend.insertItem(item.toBusiness())
+                        backend.insertMetadataElement(item.metadata.toBusiness())
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created)
                     }
@@ -77,9 +78,14 @@ fun Routing.accessInformationRoutes(
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
-                        val item = backend.getItems(listOf(itemId))
-                        span.setStatus(StatusCode.OK)
-                        call.respond(item.first().toRest())
+                        val item: Item? = backend.getRightsByMetadataId(itemId)
+                        item?.let {
+                            span.setStatus(StatusCode.OK)
+                            call.respond(item.toRest())
+                        } ?: let {
+                            span.setStatus(StatusCode.ERROR)
+                            call.respond(HttpStatusCode.NotFound, "No item found for given id.")
+                        }
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
@@ -100,14 +106,14 @@ fun Routing.accessInformationRoutes(
                     // receive() may return an object where non-null fields are null.
                     @Suppress("SENSELESS_COMPARISON")
                     val item: ItemRest =
-                        call.receive(ItemRest::class).takeIf { it.id != null }
+                        call.receive(ItemRest::class).takeIf { it.metadata != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
-                    if (backend.containsAccessRightId(item.id)) {
-                        backend.upsertItems(listOf(item.toBusiness()))
+                    if (backend.containsMetadataId(item.metadata.metadataId)) {
+                        backend.upsertMetadataElements(listOf(item.metadata.toBusiness()))
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
                     } else {
-                        backend.insertItem(item.toBusiness())
+                        backend.insertMetadataElement(item.metadata.toBusiness())
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created)
                     }
@@ -123,36 +129,6 @@ fun Routing.accessInformationRoutes(
             }
         }
 
-        delete("{id}") {
-            val span = tracer
-                .spanBuilder("lori.LoriService.DELETE/api/v1/item/{id}")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val itemId = call.parameters["id"]
-                    span.setAttribute("id", itemId ?: "null")
-                    if (itemId == null) {
-                        span.setStatus(StatusCode.ERROR, "Id not found")
-                        call.respond(HttpStatusCode.NotFound, "No id has been provided in the url.")
-                    } else {
-                        backend.containsAccessRightId(itemId)
-                            .takeIf { it }?.let {
-                                backend.deleteAccessRightEntries(listOf(itemId))
-                                call.respond(HttpStatusCode.OK)
-                            } ?: let {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.NotFound, "Resource with this id does not exist.")
-                        }
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
-                } finally {
-                    span.end()
-                }
-            }
-        }
         get("/list") {
             val span = tracer
                 .spanBuilder("lori.LoriService.GET/api/v1/item/list")
@@ -166,16 +142,19 @@ fun Routing.accessInformationRoutes(
                     call.respond(HttpStatusCode.BadRequest, "Limit parameter is expected to be between (0,100]")
                     return@get
                 } else if (offset < 0) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: Offset parameter is expected to be larger or equal zero")
+                    span.setStatus(
+                        StatusCode.ERROR,
+                        "BadRequest: Offset parameter is expected to be larger or equal zero"
+                    )
                     call.respond(
                         HttpStatusCode.BadRequest,
                         "Offset parameter is expected to be larger or equal zero"
                     )
                     return@get
                 } else {
-                    val accessRights = backend.getAccessRightList(limit, offset)
+                    val items = backend.getItemList(limit, offset)
                     span.setStatus(StatusCode.OK)
-                    call.respond(accessRights.map { it.toRest() })
+                    call.respond(items.map { it.toRest() })
                 }
             } catch (e: NumberFormatException) {
                 span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")

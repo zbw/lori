@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Access Service API
-  version: 0.0.2
+  version: 0.1.0
   contact:
     email: c.bay@zbw.eu
   license:
@@ -18,8 +18,11 @@ paths:
   /item/list:
     $ref: 'item.api.yaml#/item-list'
 
-
 components:
   schemas:
     ItemRest:
       $ref: 'item.model.yaml#/ItemRest'
+    MetadataRest:
+      $ref: 'item.model.yaml#/MetadataRest'
+    RightRest:
+      $ref: 'item.model.yaml#/RightRest'

@@ -1,5 +1,5 @@
 <template>
-  <v-card v-if="actions" class="mx-auto" tile>
+  <v-card v-if="rights" class="mx-auto" tile>
     <v-card-title class="subheading font-weight-bold">
       Rechteinformationen
     </v-card-title>
@@ -11,7 +11,7 @@
           <v-container>
             <v-row>
               <v-col>Lizensbedingungen</v-col>
-              <v-col>{{ prettyPrint(licenseConditions) }}</v-col>
+              <v-col>{{ prettyPrint(rights.licenseConditions) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row>
@@ -19,44 +19,8 @@
                 >Provenienz-Lizenzinformation/Dokumentation
                 Rechteänderungen</v-col
               >
-              <v-col>{{ prettyPrint(provenanceLicense) }}</v-col>
+              <v-col>{{ prettyPrint(rights.provenanceLicense) }}</v-col>
               <v-col></v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
-      <v-expansion-panel v-for="(action, i) in actions" :key="i">
-        <v-expansion-panel-header>{{
-          $t(action.actiontype)
-        }}</v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <v-container>
-            <v-row v-if="action.actiontype === 'read'">
-              <v-col> Zugriffstatus </v-col>
-              <v-col>
-                {{ prettyPrint(accessState) }}
-              </v-col>
-              <v-col></v-col>
-            </v-row>
-            <v-row v-for="(restriction, j) in action.restrictions" :key="j">
-              <v-col>
-                {{ $t(restriction.restrictiontype) }}
-              </v-col>
-              <v-col v-if="restriction.attributetype === 'parts'"> </v-col>
-              <v-col v-else-if="restriction.attributetype === 'groups'">
-              </v-col>
-              <v-col v-else>
-                {{ $t(restriction.attributetype) }}
-              </v-col>
-              <v-col v-if="restriction.attributetype === 'groups'">
-                {{ restriction.attributevalues }}
-              </v-col>
-              <v-col v-else-if="restriction.attributetype === 'parts'">
-                {{ restriction.attributevalues }}
-              </v-col>
-              <v-col v-else>
-                {{ restriction.attributevalues[0] }}
-              </v-col>
             </v-row>
           </v-container>
         </v-expansion-panel-content>
@@ -69,20 +33,14 @@
 import Component from "vue-class-component";
 import { Prop, Vue } from "vue-property-decorator";
 import {
-  ActionRest,
-  ItemRestAccessStateEnum,
+  RightRest,
+  RightRestAccessStateEnum,
 } from "@/generated-sources/openapi";
 
 @Component
 export default class RightsView extends Vue {
   @Prop({ required: true })
-  actions!: Array<ActionRest>;
-  @Prop({ required: false })
-  accessState!: ItemRestAccessStateEnum;
-  @Prop({ required: false })
-  licenseConditions!: string;
-  @Prop({ required: false })
-  provenanceLicense!: string;
+  rights!: Array<RightRest>;
 
   public prettyPrint(value: string): string {
     if (value) {

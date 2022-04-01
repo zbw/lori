@@ -1,21 +1,17 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.business.lori.server.AccessState
-import de.zbw.business.lori.server.Action
-import de.zbw.business.lori.server.ActionType
-import de.zbw.business.lori.server.Attribute
-import de.zbw.business.lori.server.AttributeType
 import de.zbw.business.lori.server.Item
 import de.zbw.business.lori.server.ItemMetadata
+import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
-import de.zbw.business.lori.server.Restriction
-import de.zbw.business.lori.server.RestrictionType
-import de.zbw.lori.model.ActionRest
 import de.zbw.lori.model.ItemRest
-import de.zbw.lori.model.RestrictionRest
+import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.RightRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -25,60 +21,46 @@ class RestConverterTest {
     fun testItemConversion() {
         // given
         val expected = Item(
-            itemMetadata = TEST_Metadata,
-            actions = listOf(
-                Action(
-                    type = ActionType.READ,
-                    permission = true,
-                    restrictions = listOf(
-                        Restriction(
-                            type = RestrictionType.DATE,
-                            attribute = Attribute(
-                                type = AttributeType.FROM_DATE,
-                                values = listOf("2022-01-01")
-                            )
-                        )
-                    )
-                )
-            ),
+            metadata = TEST_METADATA,
+            rights = listOf(TEST_RIGHT)
         )
 
         val restObject = ItemRest(
-            id = TEST_Metadata.id,
-            accessState = TEST_Metadata.accessState?.toRest(),
-            band = TEST_Metadata.band,
-            createdBy = TEST_Metadata.createdBy,
-            createdOn = TEST_Metadata.createdOn,
-            doi = TEST_Metadata.doi,
-            handle = TEST_Metadata.handle,
-            isbn = TEST_Metadata.isbn,
-            issn = TEST_Metadata.issn,
-            lastUpdatedBy = TEST_Metadata.lastUpdatedBy,
-            lastUpdatedOn = TEST_Metadata.lastUpdatedOn,
-            licenseConditions = TEST_Metadata.licenseConditions,
-            paketSigel = TEST_Metadata.paketSigel,
-            provenanceLicense = TEST_Metadata.provenanceLicense,
-            ppn = TEST_Metadata.ppn,
-            ppnEbook = TEST_Metadata.ppnEbook,
-            publicationType = TEST_Metadata.publicationType.toRest(),
-            publicationYear = TEST_Metadata.publicationYear,
-            rightsK10plus = TEST_Metadata.rightsK10plus,
-            serialNumber = TEST_Metadata.serialNumber,
-            title = TEST_Metadata.title,
-            titleJournal = TEST_Metadata.titleJournal,
-            titleSeries = TEST_Metadata.titleSeries,
-            zbdId = TEST_Metadata.zbdId,
-            actions = listOf(
-                ActionRest(
-                    permission = true,
-                    actiontype = ActionRest.Actiontype.read,
-                    restrictions = listOf(
-                        RestrictionRest(
-                            restrictiontype = RestrictionRest.Restrictiontype.date,
-                            attributetype = RestrictionRest.Attributetype.fromdate,
-                            attributevalues = listOf("2022-01-01"),
-                        )
-                    )
+            metadata = MetadataRest(
+                metadataId = TEST_METADATA.id,
+                band = TEST_METADATA.band,
+                createdBy = TEST_METADATA.createdBy,
+                createdOn = TEST_METADATA.createdOn,
+                doi = TEST_METADATA.doi,
+                handle = TEST_METADATA.handle,
+                isbn = TEST_METADATA.isbn,
+                issn = TEST_METADATA.issn,
+                lastUpdatedBy = TEST_METADATA.lastUpdatedBy,
+                lastUpdatedOn = TEST_METADATA.lastUpdatedOn,
+                paketSigel = TEST_METADATA.paketSigel,
+                ppn = TEST_METADATA.ppn,
+                ppnEbook = TEST_METADATA.ppnEbook,
+                publicationType = TEST_METADATA.publicationType.toRest(),
+                publicationYear = TEST_METADATA.publicationYear,
+                rightsK10plus = TEST_METADATA.rightsK10plus,
+                serialNumber = TEST_METADATA.serialNumber,
+                title = TEST_METADATA.title,
+                titleJournal = TEST_METADATA.titleJournal,
+                titleSeries = TEST_METADATA.titleSeries,
+                zbdId = TEST_METADATA.zbdId,
+            ),
+            rights = listOf(
+                RightRest(
+                    rightId = TEST_RIGHT.rightId,
+                    accessState = TEST_RIGHT.accessState?.toRest(),
+                    createdBy = TEST_RIGHT.createdBy,
+                    createdOn = TEST_RIGHT.createdOn,
+                    endDate = TEST_RIGHT.endDate,
+                    lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
+                    lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
+                    licenseConditions = TEST_RIGHT.licenseConditions,
+                    startDate = TEST_RIGHT.startDate,
+                    provenanceLicense = TEST_RIGHT.provenanceLicense,
                 )
             ),
         )
@@ -88,37 +70,10 @@ class RestConverterTest {
         assertThat(restObject.toBusiness().toRest(), `is`(restObject))
     }
 
-    @Test
-    fun testActionTypeConversionRoundtrip() {
-        ActionRest.Actiontype.values().toList().forEach {
-            assertThat(it.toBusiness().toRest(), `is`(it))
-        }
-    }
-
-    @Test
-    fun testAttributeTypeConversionRoundtrip() {
-        RestrictionRest.Attributetype.values().toList().forEach {
-            assertThat(
-                it.toBusiness().toRest(),
-                `is`(it)
-            )
-        }
-    }
-
-    @Test
-    fun testRestrictionTypeConversionRoundtrip() {
-        RestrictionRest.Restrictiontype.values().toList().forEach {
-            assertThat(
-                it.toBusiness().toRest(),
-                `is`(it)
-            )
-        }
-    }
-
     companion object {
-        val TEST_Metadata = ItemMetadata(
+        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+        val TEST_METADATA = ItemMetadata(
             id = "that-test",
-            accessState = AccessState.OPEN,
             band = "band",
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
@@ -146,11 +101,9 @@ class RestConverterTest {
                 0,
                 ZoneOffset.UTC,
             ),
-            licenseConditions = "some conditions",
             paketSigel = "sigel",
             ppn = "ppn",
             ppnEbook = "ppn ebook",
-            provenanceLicense = "provenance license",
             publicationType = PublicationType.BOOK,
             publicationYear = 2000,
             rightsK10plus = "some rights",
@@ -159,6 +112,37 @@ class RestConverterTest {
             titleJournal = null,
             titleSeries = null,
             zbdId = null,
+        )
+
+        val TEST_RIGHT = ItemRight(
+            rightId = "rightId",
+            accessState = AccessState.CLOSED,
+            createdBy = "user1",
+            createdOn = OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
+            endDate = TODAY,
+            lastUpdatedBy = "user2",
+            lastUpdatedOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
+            licenseConditions = "license",
+            provenanceLicense = "provenance",
+            startDate = TODAY.minusDays(1),
         )
     }
 }
