@@ -55,7 +55,7 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val testHeaderId = "double_entry"
-        val testHeader = TEST_Metadata.copy(id = testHeaderId)
+        val testHeader = TEST_Metadata.copy(metadataId = testHeaderId)
 
         // when
         dbConnector.insertMetadata(testHeader)
@@ -82,10 +82,10 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testInsertAndReceiveMetadata() {
+    fun testMetadataRoundtrip() {
         // given
         val testId = "id_test"
-        val testMetadata = TEST_Metadata.copy(id = testId, title = "foo")
+        val testMetadata = TEST_Metadata.copy(metadataId = testId, title = "foo")
 
         // when
         val responseInsert = dbConnector.insertMetadata(testMetadata)
@@ -105,6 +105,13 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(
             dbConnector.getMetadata(listOf("not_in_db")), `is`(listOf())
         )
+
+        // when
+        val deletedMetadata = dbConnector.deleteMetadata(listOf(testId))
+
+        // then
+        assertThat(deletedMetadata, `is`(1))
+        assertThat(dbConnector.getMetadata(listOf(testId)), `is`(listOf()))
     }
 
     @Test
@@ -112,8 +119,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         // given
         val id1 = "upsert1"
         val id2 = "upsert2"
-        val m1 = TEST_Metadata.copy(id = id1, title = "foo")
-        val m2 = TEST_Metadata.copy(id = id2, title = "bar")
+        val m1 = TEST_Metadata.copy(metadataId = id1, title = "foo")
+        val m2 = TEST_Metadata.copy(metadataId = id2, title = "bar")
 
         // when
         val responseUpsert = dbConnector.upsertMetadataBatch(listOf(m1, m2))
@@ -183,13 +190,14 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testInsertRight() {
+    fun testRightRoundtrip() {
         // given
         val rightId = "testInsertRight"
-        val givenAction = TEST_RIGHT.copy(rightId = rightId)
+        val initialRight = TEST_RIGHT.copy(rightId = rightId)
 
+        // Insert
         // when
-        val actionResponse = dbConnector.insertRight(givenAction)
+        val actionResponse = dbConnector.insertRight(initialRight)
         // then
         assertEquals(actionResponse, rightId, "Inserting a right column was not successful")
 
@@ -197,7 +205,34 @@ class DatabaseConnectorTest : DatabaseTest() {
         val receivedRights: List<ItemRight> = dbConnector.getRights(listOf(rightId))
 
         // then
-        assertThat(receivedRights.first(), `is`(givenAction))
+        assertThat(receivedRights.first(), `is`(initialRight))
+        assertTrue(dbConnector.rightContainsId(rightId))
+
+        // upsert
+
+        // given
+        val updatedRight = initialRight.copy(lastUpdatedBy = "user2", accessState = AccessState.RESTRICTED)
+        mockkStatic(Instant::class)
+        every { Instant.now() } returns NOW.plusDays(1).toInstant()
+
+        // when
+        val updatedRights = dbConnector.upsertRight(updatedRight)
+
+        // then
+        assertThat(updatedRights, `is`(1))
+        val receivedUpdatedRights: List<ItemRight> = dbConnector.getRights(listOf(rightId))
+        assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1))))
+
+        // delete
+        // when
+        val deletedItems = dbConnector.deleteRights(listOf(rightId))
+
+        // then
+        assertThat(deletedItems, `is`(1))
+
+        // when + then
+        assertThat(dbConnector.getRights(listOf(rightId)), `is`(emptyList()))
+        assertFalse(dbConnector.rightContainsId(rightId))
     }
 
     @Test(expectedExceptions = [SQLException::class])
@@ -227,25 +262,24 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val metadataId = "metadataIdContainCheck"
-        val expectedMetadata = TEST_Metadata.copy(id = metadataId)
+        val expectedMetadata = TEST_Metadata.copy(metadataId = metadataId)
 
         // when
-        val containedBefore = dbConnector.containsMetadata(metadataId)
+        val containedBefore = dbConnector.metadataContainsId(metadataId)
         assertFalse(containedBefore, "Metadata should not exist yet")
 
         // when
         dbConnector.insertMetadata(expectedMetadata)
-        val containedAfter = dbConnector.containsMetadata(metadataId)
+        val containedAfter = dbConnector.metadataContainsId(metadataId)
         assertTrue(containedAfter, "Metadata should exist now")
     }
 
     @Test
-    fun testAccessRightIds() {
-
+    fun testMetadataRange() {
         // when
-        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaa"))
-        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaab"))
-        dbConnector.insertMetadata(TEST_Metadata.copy(id = "aaaac"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaa"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaab"))
+        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaac"))
 
         // then
         assertThat(
@@ -256,6 +290,103 @@ class DatabaseConnectorTest : DatabaseTest() {
             dbConnector.getMetadataRange(limit = 2, offset = 1),
             `is`(listOf("aaaab", "aaaac"))
         )
+    }
+
+    @Test
+    fun testDeleteItem() {
+        // given
+        val expectedMetadata = TEST_Metadata.copy(metadataId = "item_roundtrip_meta")
+        val expectedRight = TEST_RIGHT.copy(rightId = "item_roundtrip_right")
+
+        // when
+        dbConnector.insertMetadata(expectedMetadata)
+        dbConnector.insertRight(expectedRight)
+        dbConnector.insertItem(expectedMetadata.metadataId, expectedRight.rightId)
+
+        // then
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(listOf(expectedRight.rightId))
+        )
+
+        val deletedItems = dbConnector.deleteItem(expectedMetadata.metadataId, expectedRight.rightId)
+        assertThat(
+            deletedItems,
+            `is`(1),
+        )
+
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(emptyList())
+        )
+    }
+
+    @Test
+    fun testDeleteItemBy() {
+        // given
+        val expectedMetadata = TEST_Metadata.copy(metadataId = "delete_item_meta")
+        val expectedRight = TEST_RIGHT.copy(rightId = "delete_item_right")
+
+        // when
+        dbConnector.insertMetadata(expectedMetadata)
+        dbConnector.insertRight(expectedRight)
+        dbConnector.insertItem(expectedMetadata.metadataId, expectedRight.rightId)
+
+        // then
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(listOf(expectedRight.rightId))
+        )
+
+        val deletedItemsByMetadata = dbConnector.deleteItemByMetadata(expectedMetadata.metadataId)
+        assertThat(
+            deletedItemsByMetadata,
+            `is`(1),
+        )
+
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(emptyList())
+        )
+
+        // when
+        dbConnector.insertItem(expectedMetadata.metadataId, expectedRight.rightId)
+        // then
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(listOf(expectedRight.rightId))
+        )
+
+        val deletedItemsByRight = dbConnector.deleteItemByRight(expectedRight.rightId)
+        assertThat(
+            deletedItemsByRight,
+            `is`(1),
+        )
+
+        assertThat(
+            dbConnector.getRightIdsByMetadata(expectedMetadata.metadataId),
+            `is`(emptyList())
+        )
+    }
+
+    @Test
+    fun testItemExists() {
+        // given
+        val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
+        val expectedRight = TEST_RIGHT.copy(rightId = "item_exists_right")
+
+        assertFalse(dbConnector.itemContainsRight(expectedRight.rightId))
+        assertFalse(dbConnector.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId))
+        assertFalse(dbConnector.itemContainsMetadata(expectedMetadata.metadataId))
+        // when
+        dbConnector.insertMetadata(expectedMetadata)
+        dbConnector.insertRight(expectedRight)
+        dbConnector.insertItem(expectedMetadata.metadataId, expectedRight.rightId)
+
+        // then
+        assertTrue(dbConnector.itemContainsRight(expectedRight.rightId))
+        assertTrue(dbConnector.itemContainsMetadata(expectedMetadata.metadataId))
+        assertTrue(dbConnector.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId))
     }
 
     companion object {
@@ -273,7 +404,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
         val TEST_Metadata = ItemMetadata(
-            id = "that-test",
+            metadataId = "that-test",
             band = "band",
             createdBy = "user1",
             createdOn = NOW,
@@ -291,7 +422,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             rightsK10plus = "some rights",
             serialNumber = "12354566",
             title = "Important title",
-            titleJournal = null,
+            titleJournal = "anything",
             titleSeries = null,
             zbdId = "some id",
         )

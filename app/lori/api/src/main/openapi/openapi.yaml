@@ -13,10 +13,24 @@ tags:
 paths:
   /item:
     $ref: 'item.api.yaml#/item'
-  /item/{id}:
-    $ref: 'item.api.yaml#/item-id'
   /item/list:
     $ref: 'item.api.yaml#/item-list'
+  /item/{metadata-id}/{right-id}:
+    $ref: 'item.api.yaml#/item-deletion'
+  /item/metadata/{metadata-id}:
+    $ref: 'item.api.yaml#/item-metadata'
+  /item/right/{right-id}:
+    $ref: 'item.api.yaml#/item-right'
+  /metadata:
+    $ref: 'metadata.api.yaml#/metadata'
+  /metadata/{id}:
+    $ref: 'metadata.api.yaml#/metadata-id'
+  /metadata/list:
+    $ref: 'metadata.api.yaml#/metadata-list'
+  /right:
+    $ref: 'right.api.yaml#/right'
+  /right/{id}:
+    $ref: 'right.api.yaml#/right-id'
 
 components:
   schemas:

@@ -9,7 +9,7 @@ data class Item(
 )
 
 data class ItemMetadata(
-    val id: String,
+    val metadataId: String,
     val band: String?,
     val createdBy: String?,
     val createdOn: OffsetDateTime?,

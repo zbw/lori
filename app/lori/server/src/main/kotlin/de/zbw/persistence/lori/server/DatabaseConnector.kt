@@ -37,6 +37,52 @@ class DatabaseConnector(
         tracer
     )
 
+    fun itemContainsMetadata(metadataId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
+            this.setString(1, metadataId)
+        }
+        val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun itemContainsEntry(metadataId: String, rightId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
+            this.setString(1, metadataId)
+            this.setString(2, rightId)
+        }
+        val span = tracer.spanBuilder("itemContainsEntry").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun itemContainsRight(rightId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_RIGHT).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("itemContainsRight").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
     fun insertItem(metadataId: String, rightId: String): String {
         val prepStmt = connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, metadataId)
@@ -61,7 +107,7 @@ class DatabaseConnector(
         val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
         connection.autoCommit = false
         itemMetadatas.map {
-            val p = insertUpsertSetParameters(it, prep)
+            val p = insertUpsertMetadataSetParameters(it, prep)
             p.addBatch()
         }
         val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
@@ -77,8 +123,7 @@ class DatabaseConnector(
     }
 
     fun insertMetadata(itemMetadata: ItemMetadata): String {
-
-        val prepStmt = insertUpsertSetParameters(
+        val prepStmt = insertUpsertMetadataSetParameters(
             itemMetadata,
             connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
         )
@@ -97,13 +142,13 @@ class DatabaseConnector(
         }
     }
 
-    private fun insertUpsertSetParameters(
+    private fun insertUpsertMetadataSetParameters(
         itemMetadata: ItemMetadata,
         prep: PreparedStatement,
     ): PreparedStatement {
         val now = Instant.now()
         return prep.apply {
-            this.setString(1, itemMetadata.id)
+            this.setString(1, itemMetadata.metadataId)
             this.setString(2, itemMetadata.handle)
             this.setIfNotNull(3, itemMetadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
@@ -156,9 +201,47 @@ class DatabaseConnector(
     }
 
     fun insertRight(right: ItemRight): String {
+        val prepStmt =
+            insertUpsertRightSetParameters(
+                right,
+                connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS)
+            )
+        val span = tracer.spanBuilder("insertRight").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = prepStmt.run { this.executeUpdate() }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getString(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
+    }
+
+    fun upsertRight(right: ItemRight): Int {
+        val prepStmt =
+            insertUpsertRightSetParameters(
+                right,
+                connection.prepareStatement(STATEMENT_UPSERT_RIGHT)
+            )
+        val span = tracer.spanBuilder("upsertRight").startSpan()
+        try {
+            span.makeCurrent()
+            return prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
+    private fun insertUpsertRightSetParameters(
+        right: ItemRight,
+        prep: PreparedStatement,
+    ): PreparedStatement {
         val now = Instant.now()
 
-        val prepStmt = connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS).apply {
+        return prep.apply {
             this.setString(1, right.rightId)
             this.setTimestamp(2, Timestamp.from(now))
             this.setTimestamp(3, Timestamp.from(now))
@@ -184,18 +267,6 @@ class DatabaseConnector(
                 prepStmt.setString(idx, value)
             }
         }
-        val span = tracer.spanBuilder("insertAction").startSpan()
-        try {
-            span.makeCurrent()
-            val affectedRows = prepStmt.run { this.executeUpdate() }
-            return if (affectedRows > 0) {
-                val rs: ResultSet = prepStmt.generatedKeys
-                rs.next()
-                rs.getString(1)
-            } else throw IllegalStateException("No row has been inserted.")
-        } finally {
-            span.end()
-        }
     }
 
     fun getMetadata(metadataIds: List<String>): List<ItemMetadata> {
@@ -213,7 +284,7 @@ class DatabaseConnector(
         return generateSequence {
             if (rs.next()) {
                 ItemMetadata(
-                    id = rs.getString(1),
+                    metadataId = rs.getString(1),
                     handle = rs.getString(2),
                     ppn = rs.getString(3),
                     ppnEbook = rs.getString(4),
@@ -249,7 +320,54 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
-    private fun deleteRights(rightIds: List<String>): Int {
+    fun deleteItem(
+        metadataId: String,
+        rightId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
+            this.setString(1, rightId)
+            this.setString(2, metadataId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteItemByMetadata(
+        metadataId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
+            this.setString(1, metadataId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteItemByRight(
+        rightId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteRights(rightIds: List<String>): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
             this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
         }
@@ -262,9 +380,9 @@ class DatabaseConnector(
         }
     }
 
-    private fun deleteMetadata(headerIds: List<String>): Int {
+    fun deleteMetadata(metadataIds: List<String>): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
-            this.setArray(1, connection.createArrayOf("text", headerIds.toTypedArray()))
+            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("deleteMetadata").startSpan()
         return try {
@@ -316,12 +434,26 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
-    fun containsMetadata(headerId: String): Boolean {
-        val stmt = "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE metadata_id=?)"
-        val prepStmt = connection.prepareStatement(stmt).apply {
-            this.setString(1, headerId)
+    fun metadataContainsId(metadataId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
+            this.setString(1, metadataId)
         }
-        val span = tracer.spanBuilder("containsMetadata").startSpan()
+        val span = tracer.spanBuilder("metadataContainsId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun rightContainsId(rightId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("rightContainsId").startSpan()
         val rs = try {
             span.makeCurrent()
             prepStmt.executeQuery()
@@ -378,9 +510,9 @@ class DatabaseConnector(
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
     companion object {
-        const val TABLE_NAME_ITEM = "item"
-        const val TABLE_NAME_ITEM_METADATA = "item_metadata"
-        const val TABLE_NAME_ITEM_RIGHT = "item_right"
+        private const val TABLE_NAME_ITEM = "item"
+        private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
+        private const val TABLE_NAME_ITEM_RIGHT = "item_right"
 
         const val STATEMENT_INSERT_ITEM = "INSERT INTO $TABLE_NAME_ITEM" +
             "(metadata_id, right_id) " +
@@ -436,6 +568,17 @@ class DatabaseConnector(
             "?,?,?," +
             "?)"
 
+        const val STATEMENT_UPSERT_RIGHT = STATEMENT_INSERT_RIGHT +
+            " ON CONFLICT (right_id) " +
+            "DO UPDATE SET " +
+            "last_updated_on = EXCLUDED.last_updated_on," +
+            "last_updated_by = EXCLUDED.last_updated_by," +
+            "access_state = EXCLUDED.access_state," +
+            "start_date = EXCLUDED.start_date," +
+            "end_date = EXCLUDED.end_date," +
+            "license_conditions = EXCLUDED.license_conditions," +
+            "provenance_license = EXCLUDED.provenance_license;"
+
         const val STATEMENT_GET_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
             "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
@@ -443,9 +586,22 @@ class DatabaseConnector(
             "FROM $TABLE_NAME_ITEM_METADATA " +
             "WHERE metadata_id = ANY(?)"
 
+        const val STATEMENT_DELETE_ITEM = "DELETE " +
+            "FROM $TABLE_NAME_ITEM i " +
+            "WHERE i.right_id = ? " +
+            "AND i.metadata_id = ?"
+
+        const val STATEMENT_DELETE_ITEM_BY_METADATA = "DELETE " +
+            "FROM $TABLE_NAME_ITEM i " +
+            "WHERE i.metadata_id = ?"
+
+        const val STATEMENT_DELETE_ITEM_BY_RIGHT = "DELETE " +
+            "FROM $TABLE_NAME_ITEM i " +
+            "WHERE i.right_id = ?"
+
         const val STATEMENT_DELETE_RIGHTS = "DELETE " +
-            "FROM $TABLE_NAME_ITEM_RIGHT a " +
-            "WHERE a.action_id = ANY(?)"
+            "FROM $TABLE_NAME_ITEM_RIGHT r " +
+            "WHERE r.right_id = ANY(?)"
 
         const val STATEMENT_DELETE_METADATA =
             "DELETE " +
@@ -465,5 +621,20 @@ class DatabaseConnector(
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
             " FROM $TABLE_NAME_ITEM" +
             " WHERE metadata_id = ?"
+
+        const val STATEMENT_METADATA_CONTAINS_ID =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE metadata_id=?)"
+
+        const val STATEMENT_RIGHT_CONTAINS_ID =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_RIGHT WHERE right_id=?)"
+
+        const val STATEMENT_ITEM_CONTAINS_METADATA =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=?)"
+
+        const val STATEMENT_ITEM_CONTAINS_ENTRY =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=? AND right_id=?)"
+
+        const val STATEMENT_ITEM_CONTAINS_RIGHT =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE right_id=?)"
     }
 }

@@ -33,20 +33,37 @@ class LoriServerBackend(
         }
     }
 
+    fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.insertItem(metadataId, rightId)
+
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
 
     fun insertMetadataElement(metadata: ItemMetadata): String =
         dbConnector.insertMetadata(metadata)
 
+    fun insertRight(right: ItemRight): String = dbConnector.insertRight(right)
+
+    fun upsertRight(right: ItemRight): Int = dbConnector.upsertRight(right)
+
     fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
         dbConnector.upsertMetadataBatch(metadataElems.map { it })
 
     fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.upsertMetadataBatch(metadata)
 
-    fun getMetadataElements(metadataIds: List<String>): List<ItemMetadata> = dbConnector.getMetadata(metadataIds)
+    fun getMetadataList(limit: Int, offset: Int): List<ItemMetadata> =
+        dbConnector.getMetadataRange(limit, offset).takeIf {
+            it.isNotEmpty()
+        }?.let { ids ->
+            getMetadataElementsByIds(ids).sortedBy { it.metadataId }
+        } ?: emptyList()
 
-    fun containsMetadataId(id: String): Boolean = dbConnector.containsMetadata(id)
+    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.getMetadata(metadataIds)
+
+    fun metadataContainsId(id: String): Boolean = dbConnector.metadataContainsId(id)
+
+    fun rightContainsId(rightId: String): Boolean = dbConnector.rightContainsId(rightId)
+
+    fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
 
     fun getRightsByMetadataId(metadataId: String): Item? =
         dbConnector.getMetadata(listOf(metadataId)).takeIf { it.isNotEmpty() }
@@ -70,10 +87,27 @@ class LoriServerBackend(
             }
             metadataToRights.map { p ->
                 Item(
-                    getMetadataElements(listOf(p.first)).first(),
+                    getMetadataElementsByIds(listOf(p.first)).first(),
                     dbConnector.getRights(p.second)
                 )
             }
         } ?: emptyList()
     }
+
+    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemContainsRight(rightId)
+
+    fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.itemContainsMetadata(metadataId)
+
+    fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
+        dbConnector.itemContainsEntry(metadataId, rightId)
+
+    fun deleteItemEntry(metadataId: String, rightId: String) = dbConnector.deleteItem(metadataId, rightId)
+
+    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.deleteItemByMetadata(metadataId)
+
+    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.deleteItemByRight(rightId)
+
+    fun deleteMetadata(metadataId: String): Int = dbConnector.deleteMetadata(listOf(metadataId))
+
+    fun deleteRight(rightId: String): Int = dbConnector.deleteRights(listOf(rightId))
 }

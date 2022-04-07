@@ -2,100 +2,89 @@ item:
   post:
     tags:
       - item
-    summary: Add a new item to LoRi
-    operationId: addItem
+    summary: Add a new relation between metadata and right
+    operationId: addItemRelation
     requestBody:
-      description: Item object
+      description: MetadataId and RightId
       content:
         application/json:
           schema:
-            $ref: 'item.model.yaml#/ItemRest'
+            $ref: 'item.model.yaml#/ItemEntry'
       required: true
     responses:
       201:
-        description: Item was successfully created
+        description: Successfully created
         content: { }
-      405:
-        description: Invalid input
+      400:
+        description: Bad request
         content: { }
-    x-codegen-request-body-name: body
-  put:
-    tags:
-      - item
-    summary: Update an existing item in LoRi
-    operationId: updateItem
-    requestBody:
-      description: Item object
-      content:
-        application/json:
-          schema:
-            $ref: 'item.model.yaml#/ItemRest'
-      required: true
-    responses:
-      201:
-        description: Item was successfully created
-        content: { }
-      204:
-        description: Item was successfully updated
-        content: { }
-      405:
-        description: Invalid input
-        content: { }
-    x-codegen-request-body-name: body
-
-item-id:
-  get:
-    tags:
-      - item
-    summary: Find item by ID
-    description: Return an item entry
-    operationId: getItemByIds
-    parameters:
-      - name: id
-        in: path
-        description: ID of item to return
-        required: true
-        schema:
-          type: string
-    responses:
-      200:
-        description: Successful operation
-        content:
-          application/json:
-            schema:
-              $ref: 'item.model.yaml#/ItemRest'
-      404:
-        description: Id not found
+      409:
+        description: Conflict resource exists already
         content: { }
       500:
         description: Internal error
         content: { }
+    x-codegen-request-body-name: body
+
+item-deletion:
   delete:
     tags:
-      - item
-    summary: Delete an item
-    operationId: deleteItemById
+      - delete item relation
+    summary: Delete an item relation
+    operationId: deleteItem
     parameters:
-      - name: id
+      - name: metadata-id
         in: path
-        description: Item id to delete
+        description: Metadata id
+        required: true
+        schema:
+          type: string
+      - name: right-id
+        in: path
+        description: Right id
         required: true
         schema:
           type: string
     responses:
       200:
-        description: Deletion of item was successfull
+        description: Deletion was successfull
         content: { }
       404:
-        description: Id does not exist
+        description: Relation does not exist
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+
+item-metadata:
+  delete:
+    tags:
+      - item relation
+    summary: Delete all item relations with metadata id
+    operationId: deleteItemByMetadataId
+    parameters:
+      - name: metadata-id
+        in: path
+        description: Metadata id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successfull
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
         content: { }
 
 item-list:
   get:
     tags:
-      - item
-    summary: Return a list of item items
-    description: Return a list of items with offset and limit
+      - item object list
+    summary: Get list of item objects with related rights
     operationId: getItemList
     parameters:
       - name: offset
@@ -125,14 +114,32 @@ item-list:
               items:
                 $ref: 'item.model.yaml#/ItemRest'
       400:
-        description: Bad input
+        description: Bad request
         content: { }
       500:
         description: Internal error
         content: { }
 
-
-
-
-
-
+item-right:
+  delete:
+    tags:
+      - item relation
+    summary: Delete all item relations with right id
+    operationId: deleteItemByRightId
+    parameters:
+      - name: right-id
+        in: path
+        description: Right id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successfull
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
+        content: { }

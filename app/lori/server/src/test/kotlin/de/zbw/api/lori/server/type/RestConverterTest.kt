@@ -27,7 +27,7 @@ class RestConverterTest {
 
         val restObject = ItemRest(
             metadata = MetadataRest(
-                metadataId = TEST_METADATA.id,
+                metadataId = TEST_METADATA.metadataId,
                 band = TEST_METADATA.band,
                 createdBy = TEST_METADATA.createdBy,
                 createdOn = TEST_METADATA.createdOn,
@@ -70,10 +70,47 @@ class RestConverterTest {
         assertThat(restObject.toBusiness().toRest(), `is`(restObject))
     }
 
+    @Test
+    fun testDAItemConverter() {
+        // given
+        val expected = ItemMetadata(
+            metadataId = "5",
+            band = null,
+            createdBy = null,
+            createdOn = null,
+            doi = null,
+            handle = "some_handle",
+            isbn = null,
+            issn = null,
+            lastUpdatedBy = null,
+            lastUpdatedOn = null,
+            paketSigel = null,
+            ppn = null,
+            ppnEbook = null,
+            publicationType = PublicationType.ARTICLE,
+            publicationYear = 2020,
+            rightsK10plus = null,
+            serialNumber = null,
+            title = "some_title",
+            titleJournal = "some_journal",
+            titleSeries = "some_series",
+            zbdId = null,
+        )
+
+        // when
+        val receivedItem = TEST_DA_ITEM.toBusiness()
+        // then
+        assertThat(expected, `is`(receivedItem))
+
+        // when + then
+        val receivedItem2 = TEST_DA_ITEM.copy(handle = null)
+        assertThat(receivedItem2, `is`(receivedItem2))
+    }
+
     companion object {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA = ItemMetadata(
-            id = "that-test",
+            metadataId = "that-test",
             band = "band",
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
@@ -143,6 +180,54 @@ class RestConverterTest {
             licenseConditions = "license",
             provenanceLicense = "provenance",
             startDate = TODAY.minusDays(1),
+        )
+
+        val TEST_DA_ITEM = DAItem(
+            id = 5,
+            name = "name",
+            handle = "handle",
+            type = "type",
+            link = "link",
+            expand = listOf("foo"),
+            lastModified = "2020-10-04",
+            parentCollection = null,
+            parentCollectionList = emptyList(),
+            parentCommunityList = emptyList(),
+            metadata = listOf(
+                DAMetadata(
+                    key = "dc.identifier.uri",
+                    value = "some_handle",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.type",
+                    value = "article",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.date.issued",
+                    value = "2020",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.title",
+                    value = "some_title",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.journalname",
+                    value = "some_journal",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.seriesname",
+                    value = "some_series",
+                    language = "DE",
+                ),
+            ),
+            bitstreams = emptyList(),
+            archived = "archived",
+            withdrawn = "withdrawn",
         )
     }
 }

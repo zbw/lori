@@ -10,6 +10,17 @@ ItemRest:
       items:
         $ref: '#/RightRest'
 
+ItemEntry:
+  required:
+    - metadataId
+    - rightId
+  type: object
+  properties:
+    metadataId:
+      type: string
+    rightId:
+      type: string
+
 MetadataRest:
   required:
     - handle
