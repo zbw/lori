@@ -30,7 +30,7 @@ fun Item.toRest() =
 
 fun MetadataRest.toBusiness() =
     ItemMetadata(
-        id = metadataId,
+        metadataId = metadataId,
         band = band,
         createdBy = createdBy,
         createdOn = createdOn,
@@ -55,7 +55,7 @@ fun MetadataRest.toBusiness() =
 
 fun ItemMetadata.toRest(): MetadataRest =
     MetadataRest(
-        metadataId = id,
+        metadataId = metadataId,
         band = band,
         createdBy = createdBy,
         createdOn = createdOn,
@@ -150,7 +150,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
         null
     } else {
         ItemMetadata(
-            id = this.id.toString(),
+            metadataId = this.id.toString(),
             band = null, // Not in DA yet
             createdBy = null,
             createdOn = null,
@@ -169,7 +169,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             serialNumber = null, // Not in DA yet
             title = title,
             titleJournal = extractMetadata("dc.journalname", metadata),
-            titleSeries = extractMetadata("dc.seriesName", metadata),
+            titleSeries = extractMetadata("dc.seriesname", metadata),
             zbdId = null, // Not in DA yet
         )
     }

@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import io.ktor.http.ContentType
@@ -27,341 +28,225 @@ import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
 
-class LoriInformationApiKtTest {
+class ItemRoutesKtTest {
 
     @Test
     fun testItemPostCreated() {
-
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertMetadataElement(any()) } returns "foo"
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM))
-                }
-            ) {
-                assertThat("Should return Accepted", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertMetadataElement(ITEM_METADATA.toBusiness()) }
-            }
-        }
-    }
-
-    @Test
-    fun testItemPostBadContentType() {
-
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertMetadataElement(any()) } returns "foo"
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.contentType)
-                    setBody(jsonAsString(ITEM_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return 400 because of bad content type",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest)
-                )
-            }
-        }
-    }
-
-    @Test
-    fun testItemPostConflictId() {
-
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { containsMetadataId(TEST_ITEM.metadata.metadataId) } returns true
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM))
-                }
-            ) {
-                assertThat(
-                    "Should return 409 due to a conflict",
-                    response.status(),
-                    `is`(HttpStatusCode.Conflict)
-                )
-            }
-        }
-    }
-
-    @Test
-    fun testItemPostInternalError() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertMetadataElement(any()) } throws SQLException("foo")
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(
-                        jsonAsString(TEST_ITEM)
-                    )
-                }
-            ) {
-                assertThat(
-                    "Should return 500 because of internal SQL exception",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-                verify(exactly = 1) { backend.insertMetadataElement(ITEM_METADATA.toBusiness()) }
-            }
-        }
-    }
-
-    @Test
-    fun testPostItemBadJSON() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertMetadataElement(any()) } returns "foo"
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(
-                        jsonAsString(ITEM_METADATA)
-                    )
-                }
-            ) {
-                assertThat(
-                    "Should return 400 because of json content",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest)
-                )
-            }
-        }
-    }
-
-    @Test
-    fun testPutItemCreate() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertMetadataElement(any()) } returns "foo"
-            every { containsMetadataId(any()) } returns false
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM))
-                }
-            ) {
-                assertThat("Should return CREATED", response.status(), `is`(HttpStatusCode.Created))
-                verify(exactly = 1) { backend.insertMetadataElement(TEST_ITEM.metadata.toBusiness()) }
-            }
-        }
-    }
-
-    @Test
-    fun testPutUpdate() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { upsertMetadataElements(any()) } returns IntArray(1) { _ -> 1 }
-            every { containsMetadataId(any()) } returns true
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM))
-                }
-            ) {
-                assertThat("Should return NO_CONTENT", response.status(), `is`(HttpStatusCode.NoContent))
-                verify(exactly = 1) { backend.upsertMetadataElements(listOf(ITEM_METADATA.toBusiness())) }
-            }
-        }
-    }
-
-    @Test
-    fun testPutItemBadJSON() {
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = mockk(),
-            tracer = tracer,
-        )
-
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(
-                        jsonAsString(ITEM_METADATA)
-                    )
-                }
-            ) {
-                assertThat(
-                    "Should return 400 because of json content",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest)
-                )
-            }
-        }
-    }
-
-    @Test
-    fun testGetItems() {
         // given
-        val testId = "someId"
-        val expected = ItemRest(
-            metadata = ITEM_METADATA,
-            rights = emptyList(),
-        )
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getRightsByMetadataId(testId) } returns expected.toBusiness()
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-        // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/$testId")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ItemRest>() {}.type
-                val received: ItemRest = Gson().fromJson(content, groupListType)
-                assertThat(received, `is`(expected))
-            }
-        }
-    }
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
 
-    @Test
-    fun testGetItemsInternalError() {
-        // given
-        val testId = "someId"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getRightsByMetadataId(testId) } throws SQLException()
+            every { itemContainsEntry(givenMetadataId, givenRightId) } returns false
+            every { insertItemEntry(givenMetadataId, givenRightId) } returns "foo"
         }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
+        val servicePool = getServicePool(backend)
+
         // when + then
         withTestApplication(servicePool.application()) {
             with(
-                handleRequest(HttpMethod.Get, "/api/v1/item/$testId")
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_ITEM_ENTRY))
+                }
+            ) {
+                assertThat("Should return Created", response.status(), `is`(HttpStatusCode.Created))
+            }
+        }
+    }
+
+    @Test
+    fun testItemPostConflict() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_ITEM_ENTRY))
+                }
+            ) {
+                assertThat("Should return Conflict", response.status(), `is`(HttpStatusCode.Conflict))
+            }
+        }
+    }
+
+    @Test
+    fun testItemBadRequest() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_ITEM))
+                }
+            ) {
+                assertThat("Should return BadRequest", response.status(), `is`(HttpStatusCode.BadRequest))
+            }
+        }
+    }
+
+    @Test
+    fun testItemPostInternal() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { itemContainsEntry(givenMetadataId, givenRightId) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Post, "/api/v1/item") {
+                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_ITEM_ENTRY))
+                }
             ) {
                 assertThat(
-                    "Should return 500 because of internal SQL exception",
+                    "Should return InternalServerError",
                     response.status(),
                     `is`(HttpStatusCode.InternalServerError)
                 )
+            }
+        }
+    }
+
+    @Test
+    fun testItemEntryDeleteOK() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
+            ) {
+                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
+            }
+        }
+    }
+
+    @Test
+    fun testItemEntryDeleteInternal() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntry(givenMetadataId, givenRightId) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
+            ) {
+                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
+            }
+        }
+    }
+
+    @Test
+    fun testItemDeleteByMetadataOK() {
+        // given
+        val givenMetadataId = "meta"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntriesByMetadataId(givenMetadataId) } returns 1
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/metadata/$givenMetadataId")
+            ) {
+                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
+            }
+        }
+    }
+
+    @Test
+    fun testItemDeleteByMetadataInternal() {
+        // given
+        val givenMetadataId = "meta"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntriesByMetadataId(givenMetadataId) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/metadata/$givenMetadataId")
+            ) {
+                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
+            }
+        }
+    }
+
+    @Test
+    fun testItemDeleteByRightOK() {
+        // given
+        val givenRightId = "meta"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntriesByRightId(givenRightId) } returns 1
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/right/$givenRightId")
+            ) {
+                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
+            }
+        }
+    }
+
+    @Test
+    fun testItemDeleteByRightInternal() {
+        // given
+        val givenRightId = "meta"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntriesByRightId(givenRightId) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/right/$givenRightId")
+            ) {
+                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
             }
         }
     }
@@ -564,7 +449,24 @@ class LoriInformationApiKtTest {
             rights = emptyList(),
         )
 
+        val TEST_ITEM_ENTRY = ItemEntry(
+            metadataId = "meta",
+            rightId = "right",
+        )
+
         fun jsonAsString(any: Any): String = Gson().toJson(any)
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
+
+        fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend,
+            tracer = tracer,
+        )
     }
 }

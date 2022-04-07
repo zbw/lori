@@ -1,12 +1,14 @@
-import { Configuration, ItemApi, ItemRest } from "@/generated-sources/openapi";
-
-import { ResultAsync } from "neverthrow";
+import {
+  Configuration,
+  ItemObjectListApi,
+  ItemRest,
+} from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
   basePath: window.location.origin + "/api/v1",
 });
 
-const accessInformationApi = new ItemApi(configuration);
+const accessInformationApi = new ItemObjectListApi(configuration);
 
 export default {
   getList(offset: number, limit: number): Promise<Array<ItemRest>> {
@@ -14,21 +16,5 @@ export default {
       offset: offset,
       limit: limit,
     });
-  },
-  getItemById(id: string): ResultAsync<ItemRest, Error> {
-    return ResultAsync.fromPromise(
-      accessInformationApi.getItemByIds({
-        id: id,
-      }),
-      (e: unknown) => {
-        const errResponse = e as Response;
-        return new Error(
-          "Getting an entry resulted in following error:\n" +
-            errResponse.status +
-            ": " +
-            errResponse.statusText
-        );
-      }
-    );
   },
 };

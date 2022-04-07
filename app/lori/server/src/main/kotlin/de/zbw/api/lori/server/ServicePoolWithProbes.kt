@@ -2,7 +2,9 @@ package de.zbw.api.lori.server
 
 import com.github.lamba92.ktor.features.SinglePageApplication
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.api.lori.server.route.accessInformationRoutes
+import de.zbw.api.lori.server.route.itemRoutes
+import de.zbw.api.lori.server.route.metadataRoutes
+import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
 import de.zbw.business.lori.server.LoriServerBackend
 import io.ktor.application.Application
@@ -64,7 +66,9 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            accessInformationRoutes(backend, tracer)
+            itemRoutes(backend, tracer)
+            metadataRoutes(backend, tracer)
+            rightRoutes(backend, tracer)
             staticRoutes()
         }
     }

@@ -1,0 +1,106 @@
+right:
+  post:
+    tags:
+      - right
+    summary: Add a new right information to LoRi
+    operationId: addRight
+    requestBody:
+      description: Right object
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/RightRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      409:
+        description: Conflicting resources
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body
+  put:
+    tags:
+      - right
+    summary: Update an existing right information in LoRi
+    operationId: updateRight
+    requestBody:
+      description: Right object
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/RightRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content: { }
+      204:
+        description: Successfully updated
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body
+
+right-id:
+  delete:
+    tags:
+      - right
+    summary: Delete right
+    operationId: deleteRightById
+    parameters:
+      - name: id
+        in: path
+        description: Right id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of right was successfull
+        content: { }
+      404:
+        description: Id does not exist
+        content: { }
+      409:
+        description: Deletion not possible due to conflict
+        content: { }
+  get:
+    tags:
+      - right
+    operationId: getRightById
+    parameters:
+      - name: id
+        in: path
+        description: Right id queried
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successfull operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'item.model.yaml#/RightRest'
+      400:
+        description: Bad request
+        content: { }
+      404:
+        description: Id does not exist
+        content: { }
+      500:
+        description: Internal error
+        content: { }

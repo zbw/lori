@@ -1,0 +1,150 @@
+metadata:
+  post:
+    tags:
+      - metadata
+    summary: Add a new metadata information
+    operationId: addMetadata
+    requestBody:
+      description: Metadata object
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/MetadataRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content: { }
+      405:
+        description: Invalid input
+        content: { }
+      409:
+        description: Deletion not possible due to conflict
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body
+  put:
+    tags:
+      - metadata
+    summary: Update an existing Metadata
+    operationId: updateMetadata
+    requestBody:
+      description: Metadata object
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/MetadataRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content: { }
+      204:
+        description: Successfully updated
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body
+
+metadata-list:
+  get:
+    tags:
+      - metadata
+    summary: Return a list of Metadata elements
+    description: Return a list of Metadata elements with offset and limit
+    operationId: getMetadataList
+    parameters:
+      - name: offset
+        in: query
+        description: An offset.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: The number of items to return.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        required: false
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'item.model.yaml#/MetadataRest'
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+
+metadata-id:
+  delete:
+    tags:
+      - metadata
+    summary: Delete metadata
+    operationId: deleteMetadataById
+    parameters:
+      - name: id
+        in: path
+        description: Id of the metadata to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successfull
+        content: { }
+      404:
+        description: Id does not exist
+        content: { }
+      409:
+        description: Deletion not possible due to conflict
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+  get:
+    tags:
+      - right
+    operationId: getRightById
+    parameters:
+      - name: id
+        in: path
+        description: Right id queried
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successfull operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'item.model.yaml#/RightRest'
+      400:
+        description: Bad request
+        content: { }
+      404:
+        description: Id does not exist
+        content: { }
+      500:
+        description: Internal error
+        content: { }

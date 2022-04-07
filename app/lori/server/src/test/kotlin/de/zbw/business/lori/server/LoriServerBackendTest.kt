@@ -49,22 +49,22 @@ class LoriServerBackendTest : DatabaseTest() {
         // given
         val givenMetadataEntries = arrayOf(
             TEST_Metadata,
-            TEST_Metadata.copy(id = "no_rights"),
+            TEST_Metadata.copy(metadataId = "no_rights"),
         )
         val rightAssignments = listOf(
-            TEST_RIGHT to listOf(TEST_Metadata.id)
+            TEST_RIGHT to listOf(TEST_Metadata.metadataId)
         )
 
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
         rightAssignments.forEach { backend.insertRightForMetadataIds(it.first, it.second) }
-        val received = backend.getRightsByMetadataId(givenMetadataEntries[0].id)!!
+        val received = backend.getRightsByMetadataId(givenMetadataEntries[0].metadataId)!!
 
         // then
         assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT))))
 
         // when
-        val receivedNoRights = backend.getRightsByMetadataId(givenMetadataEntries[1].id)!!
+        val receivedNoRights = backend.getRightsByMetadataId(givenMetadataEntries[1].metadataId)!!
         // then
         assertThat(receivedNoRights, `is`(Item(givenMetadataEntries[1], emptyList())))
     }
@@ -73,20 +73,20 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testGetList() {
         // given
         val givenMetadata = arrayOf(
-            TEST_Metadata.copy(id = "zzz"),
-            TEST_Metadata.copy(id = "zzz2"),
-            TEST_Metadata.copy(id = "aaa"),
-            TEST_Metadata.copy(id = "abb"),
-            TEST_Metadata.copy(id = "acc"),
+            TEST_Metadata.copy(metadataId = "zzz"),
+            TEST_Metadata.copy(metadataId = "zzz2"),
+            TEST_Metadata.copy(metadataId = "aaa"),
+            TEST_Metadata.copy(metadataId = "abb"),
+            TEST_Metadata.copy(metadataId = "acc"),
         )
 
         backend.insertMetadataElements(givenMetadata.toList())
         // when
-        val received: List<Item> = backend.getItemList(limit = 3, offset = 0)
+        val receivedItems: List<Item> = backend.getItemList(limit = 3, offset = 0)
         // then
         assertThat(
             "Not equal",
-            received,
+            receivedItems,
             `is`(
                 listOf(
                     Item(
@@ -111,7 +111,23 @@ class LoriServerBackendTest : DatabaseTest() {
         )
         assertThat(noLimit, `is`(emptyList()))
 
-        assertTrue(backend.containsMetadataId(givenMetadata[0].id))
+        assertTrue(backend.metadataContainsId(givenMetadata[0].metadataId))
+
+        // when
+        val receivedMetadataElements = backend.getMetadataList(3, 0)
+
+        // then
+        assertThat(
+            receivedMetadataElements,
+            `is`(
+                listOf(
+                    givenMetadata[2],
+                    givenMetadata[3],
+                    givenMetadata[4],
+                )
+            )
+        )
+        assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
     }
 
     @Test
@@ -121,7 +137,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         backend.upsertMetadataElements(listOf(expectedMetadata))
-        val received = backend.getMetadataElements(listOf(expectedMetadata.id))
+        val received = backend.getMetadataElementsByIds(listOf(expectedMetadata.metadataId))
 
         // then
         assertThat(received, `is`(listOf(expectedMetadata)))
@@ -129,7 +145,7 @@ class LoriServerBackendTest : DatabaseTest() {
         val expectedMetadata2 = TEST_Metadata.copy(band = "anotherband2")
         // when
         backend.upsertMetadataElements(listOf(expectedMetadata2))
-        val received2 = backend.getMetadataElements(listOf(expectedMetadata2.id))
+        val received2 = backend.getMetadataElementsByIds(listOf(expectedMetadata2.metadataId))
 
         // then
         assertThat(received2, `is`(listOf(expectedMetadata2)))
@@ -149,7 +165,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_Metadata = ItemMetadata(
-            id = "that-test",
+            metadataId = "that-test",
             band = "band",
             createdBy = "user1",
             createdOn = NOW,
