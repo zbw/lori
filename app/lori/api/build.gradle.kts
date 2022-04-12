@@ -15,7 +15,7 @@ openApiGenerate {
     apiPackage.set("de.zbw.lori.api.v1")
     modelPackage.set("de.zbw.lori.model")
     configOptions.set(mapOf(
-        Pair("dataLibrary", "java8")
+        Pair("dateLibrary", "java8")
     ).toMutableMap())
 }
 
