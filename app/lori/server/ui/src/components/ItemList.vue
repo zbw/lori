@@ -44,73 +44,10 @@
       </v-card>
       <v-col>
         <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-          <v-card-title class="subheading font-weight-bold">
-            Metadaten
-          </v-card-title>
+          <RightsView :rights="currentItem.rights"></RightsView>
           <MetadataView
             :displayed-item="Object.assign({}, currentItem.metadata)"
           ></MetadataView>
-          <RightsView
-            :rights="Object.assign({}, currentItem.rights)"
-          ></RightsView>
-          <v-dialog v-model="dialogDelete" max-width="500px">
-            <v-card>
-              <v-card-title class="text-h5">
-                Soll dieser Eintrag gelöscht werden?
-              </v-card-title>
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn
-                  :disabled="deleteConfirmationLoading"
-                  color="blue darken-1"
-                  @click="cancelDeleteDialog"
-                  >Abbrechen
-                </v-btn>
-                <v-btn
-                  :loading="deleteConfirmationLoading"
-                  color="error"
-                  @click="approveDeleteDialog"
-                >
-                  Löschen
-                </v-btn>
-                <v-spacer></v-spacer>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-alert
-            v-model="deleteAlertSuccessful"
-            dismissible
-            text
-            type="success"
-          >
-            Löschen war erfolgreich.
-          </v-alert>
-          <v-alert v-model="deleteAlertError" dismissible text type="error">
-            Löschen war nicht erfolgreich: {{ deleteErrorMessage }}
-          </v-alert>
-          <v-dialog v-model="dialogEdit" max-width="500px">
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn
-                v-bind="attrs"
-                v-on="on"
-                class="ma-2"
-                color="success"
-                outlined
-                tile
-              >
-                <v-icon left>mdi-pencil</v-icon>
-                Bearbeiten
-              </v-btn>
-            </template>
-            <AccessEdit
-              :edit-item="Object.assign({}, currentItem)"
-              v-on:closeDialog="closeEditItemDialog"
-            />
-          </v-dialog>
-          <v-btn color="error" @click="openDeleteItemDialog()">
-            <v-icon left>mdi-delete</v-icon>
-            Löschen
-          </v-btn>
         </v-card>
       </v-col>
     </v-row>
@@ -152,7 +89,7 @@ export default class AccessInformationList extends Vue {
       text: "Id",
       align: "start",
       sortable: false,
-      value: "id",
+      value: "metadataId",
     },
     {
       text: "Title",

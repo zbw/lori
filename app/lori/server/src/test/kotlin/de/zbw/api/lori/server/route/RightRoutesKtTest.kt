@@ -1,6 +1,9 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.Gson
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
@@ -27,6 +30,8 @@ import java.sql.SQLException
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 class RightRoutesKtTest {
 
@@ -44,7 +49,7 @@ class RightRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/right/$rightId")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<RightRest>() {}.type
-                val received: RightRest = Gson().fromJson(content, groupListType)
+                val received: RightRest = GSON.fromJson(content, groupListType)
                 assertThat(received, `is`(expected))
             }
         }
@@ -375,7 +380,35 @@ class RightRoutesKtTest {
             startDate = TODAY.minusDays(1),
         )
 
-        fun jsonAsString(any: Any): String = Gson().toJson(any)
+        val GSON: Gson = Gson().newBuilder()
+            .registerTypeAdapter(
+                LocalDate::class.java,
+                JsonDeserializer { json, _, _ ->
+                    LocalDate.parse(json.asString, DateTimeFormatter.ISO_LOCAL_DATE)
+                }
+            )
+            .registerTypeAdapter(
+                OffsetDateTime::class.java,
+                JsonDeserializer { json, _, _ ->
+                    ZonedDateTime.parse(json.asString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                        .toOffsetDateTime()
+                }
+            )
+            .registerTypeAdapter(
+                OffsetDateTime::class.java,
+                JsonSerializer<OffsetDateTime> { obj, _, _ ->
+                    JsonPrimitive(obj.toString())
+                }
+            )
+            .registerTypeAdapter(
+                LocalDate::class.java,
+                JsonSerializer<LocalDate> { obj, _, _ ->
+                    JsonPrimitive(obj.toString())
+                }
+            )
+            .create()
+
+        fun jsonAsString(any: Any): String = GSON.toJson(any)
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
         fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(
