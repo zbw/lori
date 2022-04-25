@@ -331,7 +331,7 @@ class DatabaseConnector(
         } finally {
             span.end()
         }
-        if(rs.next()){
+        if (rs.next()) {
             return rs.getInt(1)
         } else throw IllegalStateException("No count found.")
     }
