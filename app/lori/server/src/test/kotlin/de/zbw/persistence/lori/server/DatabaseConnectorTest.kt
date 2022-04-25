@@ -387,6 +387,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertTrue(dbConnector.itemContainsRight(expectedRight.rightId))
         assertTrue(dbConnector.itemContainsMetadata(expectedMetadata.metadataId))
         assertTrue(dbConnector.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId))
+        assertThat(dbConnector.countItemByRightId(expectedRight.rightId), `is`(1))
     }
 
     companion object {

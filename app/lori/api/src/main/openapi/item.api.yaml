@@ -143,3 +143,30 @@ item-right:
       500:
         description: Internal error
         content: { }
+
+item-count-right:
+  get:
+    tags:
+      - item relation
+    summary: Get number of items associated with right id.
+    operationId: getItemCountByRightId
+    parameters:
+      - name: right-id
+        in: path
+        description: Right id to lookup
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Request was successfull
+        content:
+          application/json:
+            schema:
+              $ref: 'item.model.yaml#/ItemCountByRight'
+      400:
+        description: Bad request
+        content: { }
+      500:
+        description: Internal error
+        content: { }

@@ -1,7 +1,10 @@
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
+    <v-alert v-model="updateSuccessful" dismissible text type="success">
+      Rechteinformation erfolgreich geupdated.
+    </v-alert>
     <v-divider></v-divider>
-    <v-data-table :headers="selectedHeaders" :items="rights">
+    <v-data-table :headers="selectedHeaders" :items="rights" :key="render">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Rechteinformationen</v-toolbar-title>
@@ -16,8 +19,15 @@
           </v-dialog>
         </v-toolbar>
       </template>
-      <template v-slot:item.actions="{ item }">
-        <v-icon small class="mr-2"> mdi-pencil </v-icon>
+      <template v-slot:item.actions="{ item, index }">
+        <RightsEditDialog
+          :activated="editDialog"
+          :right="currentRight"
+          :index="currentIndex"
+          v-on:editDialogClosed="editRightClosed"
+          v-on:updateSuccessful="updateRight"
+        ></RightsEditDialog>
+        <v-icon small class="mr-2" @click="editRight(item, index)"> mdi-pencil </v-icon>
         <v-icon small> mdi-delete </v-icon>
       </template>
     </v-data-table>
@@ -29,12 +39,19 @@ import Component from "vue-class-component";
 import { Prop, Vue } from "vue-property-decorator";
 import { RightRest } from "@/generated-sources/openapi";
 import { DataTableHeader } from "vuetify";
-
-@Component
+import RightsEditDialog from "@/components/RightsEditDialog.vue";
+@Component({
+  components: { RightsEditDialog },
+})
 export default class RightsView extends Vue {
   @Prop({ required: true })
   rights!: Array<RightRest>;
 
+  private render = 0;
+  private editDialog = false;
+  private currentRight: RightRest = {} as RightRest;
+  private currentIndex = 0;
+  private updateSuccessful = false;
   private selectedHeaders: Array<DataTableHeader> = [];
   private headers = [
     {
@@ -79,6 +96,24 @@ export default class RightsView extends Vue {
     } else {
       return "Kein Wert vorhanden";
     }
+  }
+
+  public editRight(right: RightRest, index: number): void {
+    this.editDialog = true;
+    this.currentIndex = index;
+    this.currentRight = right;
+    this.updateSuccessful = false;
+  }
+
+  public editRightClosed(): void {
+    this.editDialog = false;
+  }
+
+  public updateRight(right: RightRest, index: number): void {
+    this.rights[index] = right;
+    this.render += 1;
+    this.editDialog = false;
+    this.updateSuccessful = true;
   }
 
   created(): void {

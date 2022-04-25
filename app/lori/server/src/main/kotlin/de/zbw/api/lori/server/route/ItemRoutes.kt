@@ -2,6 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import io.ktor.application.call
 import io.ktor.features.BadRequestException
@@ -62,6 +63,105 @@ fun Routing.itemRoutes(
                 }
             }
         }
+
+        route("/metadata") {
+            delete("{metadataId}") {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/metadata/{metadataId}")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val metadataId = call.parameters["metadataId"]
+                        span.setAttribute("metadataId", metadataId ?: "null")
+                        if (metadataId == null) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: No valid id has been provided in the url."
+                            )
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            backend.deleteItemEntriesByMetadataId(metadataId)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(HttpStatusCode.OK)
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+        }
+
+        route("/right") {
+            delete("{rightId}") {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/right/{rightId}")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val rightId = call.parameters["rightId"]
+                        span.setAttribute("rightId", rightId ?: "null")
+                        if (rightId == null) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: No valid id has been provided in the url."
+                            )
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            backend.deleteItemEntriesByRightId(rightId)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(HttpStatusCode.OK)
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+        }
+
+        route("/count/right") {
+            get("{rightId}") {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/item/count/right/{rightId}")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val rightId = call.parameters["rightId"]
+                        span.setAttribute("rightId", rightId ?: "null")
+                        if (rightId == null) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: No valid id has been provided in the url."
+                            )
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            val count = backend.countItemByRightId(rightId)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(
+                                ItemCountByRight(
+                                    rightId = rightId,
+                                    count = count,
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+        }
+
         delete("{metadataId}/{rightId}") {
             val span = tracer
                 .spanBuilder("lori.LoriService.DELETE/api/v1/item/{metadataId}/{rightId}")
@@ -123,68 +223,6 @@ fun Routing.itemRoutes(
                     } catch (e: NumberFormatException) {
                         span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
                         call.respond(HttpStatusCode.BadRequest, "Parameters have a bad format")
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
-                    } finally {
-                        span.end()
-                    }
-                }
-            }
-        }
-
-        route("/metadata") {
-            delete("{metadataId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/metadata/{metadataId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val metadataId = call.parameters["metadataId"]
-                        span.setAttribute("metadataId", metadataId ?: "null")
-                        if (metadataId == null) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
-                            )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                        } else {
-                            backend.deleteItemEntriesByMetadataId(metadataId)
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
-                        }
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
-                    } finally {
-                        span.end()
-                    }
-                }
-            }
-        }
-
-        route("/right") {
-            delete("{rightId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/right/{rightId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val rightId = call.parameters["rightId"]
-                        span.setAttribute("rightId", rightId ?: "null")
-                        if (rightId == null) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
-                            )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                        } else {
-                            backend.deleteItemEntriesByRightId(rightId)
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
-                        }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
