@@ -73,10 +73,6 @@ export default class AccessInformationList extends Vue {
   private currentIndex = -1;
   private dialogEdit = false;
   private dialogDelete = false;
-  private deleteConfirmationLoading = false;
-  private deleteAlertSuccessful = false;
-  private deleteAlertError = false;
-  private deleteErrorMessage = "";
   private headersValueVSelect = [];
   private loadAlertError = false;
   private loadAlertErrorMessage = "";
@@ -188,14 +184,6 @@ export default class AccessInformationList extends Vue {
 
   public closeEditItemDialog(): void {
     this.dialogEdit = false;
-  }
-
-  public openDeleteItemDialog(): void {
-    this.dialogDelete = true;
-  }
-
-  public cancelDeleteDialog(): void {
-    this.dialogDelete = false;
   }
 
   public prettyPrint(value: string): string {

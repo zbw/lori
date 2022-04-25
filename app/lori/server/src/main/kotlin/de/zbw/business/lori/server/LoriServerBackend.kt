@@ -101,6 +101,8 @@ class LoriServerBackend(
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
         dbConnector.itemContainsEntry(metadataId, rightId)
 
+    fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
+
     fun deleteItemEntry(metadataId: String, rightId: String) = dbConnector.deleteItem(metadataId, rightId)
 
     fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.deleteItemByMetadata(metadataId)

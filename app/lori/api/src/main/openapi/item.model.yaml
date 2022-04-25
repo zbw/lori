@@ -82,6 +82,7 @@ RightRest:
   required:
     - rightId
     - startDate
+    - endDate
   type: object
   properties:
     rightId:
@@ -112,3 +113,14 @@ RightRest:
       format: date
     provenanceLicense:
       type: string
+
+ItemCountByRight:
+  required:
+    - rightId
+    - count
+  type: object
+  properties:
+    rightId:
+      type: string
+    count:
+      type: integer

@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
@@ -404,6 +405,48 @@ class ItemRoutesKtTest {
                     response.status(),
                     `is`(HttpStatusCode.NotFound)
                 )
+            }
+        }
+    }
+
+    @Test
+    fun testCountItemByRightId() {
+        // given
+        val expectedAnswer = ItemCountByRight(
+            rightId = "123",
+            count = 5,
+        )
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every {
+                countItemByRightId(expectedAnswer.rightId)
+            } returns expectedAnswer.count
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/count/right/${expectedAnswer.rightId}")) {
+                val content: String = response.content!!
+                val groupListType: Type = object : TypeToken<ItemCountByRight>() {}.type
+                val received: ItemCountByRight = Gson().fromJson(content, groupListType)
+                assertThat(received, `is`(expectedAnswer))
+            }
+        }
+    }
+
+    @Test
+    fun testCountItemByRightIdInternal() {
+        // given
+        val rightId = "123"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every {
+                countItemByRightId(rightId)
+            } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        withTestApplication(servicePool.application()) {
+            with(handleRequest(HttpMethod.Get, "/api/v1/item/count/right/$rightId")) {
+                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
             }
         }
     }

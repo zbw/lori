@@ -320,6 +320,22 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
+    fun countItemByRightId(rightId: String): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("countItemByRightId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.run { this.executeQuery() }
+        } finally {
+            span.end()
+        }
+        if(rs.next()){
+            return rs.getInt(1)
+        } else throw IllegalStateException("No count found.")
+    }
+
     fun deleteItem(
         metadataId: String,
         rightId: String,
@@ -426,7 +442,7 @@ class DatabaseConnector(
                     lastUpdatedBy = rs.getString(5),
                     accessState = rs.getString(6)?.let { AccessState.valueOf(it) },
                     startDate = rs.getDate(7).toLocalDate(),
-                    endDate = rs.getDate(8)?.toLocalDate(),
+                    endDate = rs.getDate(8).toLocalDate(),
                     licenseConditions = rs.getString(9),
                     provenanceLicense = rs.getString(10),
                 )
@@ -513,6 +529,10 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM = "item"
         private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
+
+        const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
+            "FROM $TABLE_NAME_ITEM " +
+            "WHERE right_id = ?;"
 
         const val STATEMENT_INSERT_ITEM = "INSERT INTO $TABLE_NAME_ITEM" +
             "(metadata_id, right_id) " +

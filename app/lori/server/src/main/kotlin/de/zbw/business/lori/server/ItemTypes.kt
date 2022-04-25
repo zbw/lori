@@ -48,7 +48,7 @@ data class ItemRight(
     val accessState: AccessState?,
     val createdBy: String?,
     val createdOn: OffsetDateTime?,
-    val endDate: LocalDate?,
+    val endDate: LocalDate,
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
     val licenseConditions: String?,
