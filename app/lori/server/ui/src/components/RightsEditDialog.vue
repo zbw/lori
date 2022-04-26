@@ -124,8 +124,9 @@
         <v-card>
           <v-card-title class="text-h5"> Achtung </v-card-title>
           <v-card-text>
-            {{ metadataCount }} andere Items verwenden diese Rechteinformation.
-            Es werden alle geupdated mit dieser Änderung. Bist du dir sicher?
+            {{ metadataCount - 1 }} andere Items verweisen ebenfalls auf diese
+            Rechteinformation. Mit der Bestätigung wird die Rechteinformation an
+            all diesen geändert. Bist du dir sicher?
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>

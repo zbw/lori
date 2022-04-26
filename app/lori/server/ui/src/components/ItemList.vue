@@ -58,21 +58,19 @@
 import { Vue, Watch } from "vue-property-decorator";
 import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
 import api from "@/api/api";
-import AccessEdit from "./AccessEdit.vue";
 import Component from "vue-class-component";
 import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
 
 @Component({
-  components: { RightsView, MetadataView, AccessEdit },
+  components: { RightsView, MetadataView },
 })
 export default class AccessInformationList extends Vue {
   private items: Array<ItemRest> = [];
   private currentItem = {} as ItemRest;
   private currentIndex = -1;
   private dialogEdit = false;
-  private dialogDelete = false;
   private headersValueVSelect = [];
   private loadAlertError = false;
   private loadAlertErrorMessage = "";
@@ -82,13 +80,13 @@ export default class AccessInformationList extends Vue {
 
   private headers = [
     {
-      text: "Id",
+      text: "Item-Id",
       align: "start",
       sortable: false,
       value: "metadataId",
     },
     {
-      text: "Title",
+      text: "Titel",
       sortable: true,
       value: "title",
       width: "300px",
@@ -99,7 +97,7 @@ export default class AccessInformationList extends Vue {
       value: "handle",
     },
     {
-      text: "Publication Type",
+      text: "Publikationstyp",
       sortable: true,
       value: "publicationType",
     },
@@ -136,7 +134,7 @@ export default class AccessInformationList extends Vue {
       value: "rightsK10plus",
     },
     {
-      text: "Serial Number",
+      text: "Seriennummer",
       value: "serialNumber",
     },
     {
@@ -170,10 +168,10 @@ export default class AccessInformationList extends Vue {
   }
 
   public setActiveItem(metadata: MetadataRest): void {
-    let item = this.items.find(
+    let item: ItemRest | undefined = this.items.find(
       (e) => e.metadata.metadataId === metadata.metadataId
     );
-    if (item !== null && item !== undefined) {
+    if (item !== undefined) {
       this.currentItem = item;
     }
   }
@@ -184,14 +182,6 @@ export default class AccessInformationList extends Vue {
 
   public closeEditItemDialog(): void {
     this.dialogEdit = false;
-  }
-
-  public prettyPrint(value: string): string {
-    if (value) {
-      return value;
-    } else {
-      return "Kein Wert vorhanden";
-    }
   }
 
   public getAlertLoad(): boolean {
