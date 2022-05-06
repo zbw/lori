@@ -31,10 +31,11 @@
           :headers="selectedHeaders"
           :items="items.map((value) => value.metadata)"
           :search="search"
-          show-select
           @click:row="setActiveItem"
           loading="tableContentLoading"
           loading-text="Daten werden geladen... Bitte warten."
+          show-select
+          item-key="metadataId"
         >
         </v-data-table>
         <v-alert v-model="loadAlertError" dismissible text type="error">
