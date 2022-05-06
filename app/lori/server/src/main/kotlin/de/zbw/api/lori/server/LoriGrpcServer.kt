@@ -48,6 +48,8 @@ class LoriGrpcServer(
                     Status.INTERNAL.withCause(e.cause)
                         .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
                 )
+            } finally {
+                span.end()
             }
         }
     }
