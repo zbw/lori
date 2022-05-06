@@ -52,7 +52,8 @@ RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm
 ARG HELMFILE_VERSION=0.142.0
 RUN curl -L https://github.com/roboll/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_linux_amd64 -o helmfile-v"$HELMFILE_VERSION" && \
     chmod +x helmfile-v"$HELMFILE_VERSION" && \
-    mv helmfile-v"$HELMFILE_VERSION" /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION"
+    mv helmfile-v"$HELMFILE_VERSION" /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION" \
+    helm plugin install https://github.com/databus23/helm-diff
 
 FROM DownloadHelm AS AddUser
 ARG IMAGE_USER=vault-kubectl-helm-user
