@@ -44,7 +44,10 @@
       </v-card>
       <v-col>
         <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-          <RightsView :rights="currentItem.rights"></RightsView>
+          <RightsView
+            :rights="currentItem.rights"
+            :metadataId="currentItem.metadata.metadataId"
+          ></RightsView>
           <MetadataView
             :displayed-item="Object.assign({}, currentItem.metadata)"
           ></MetadataView>
