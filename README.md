@@ -1,5 +1,5 @@
-[#](#) About
-TODO
+# About
+This repository contains the microservice source code.
 
 # Docker Login
 To be able to upload images to the OTC cloud a user needs to login
@@ -17,13 +17,20 @@ export LONGTERM_TOKEN=$(printf $ACCESS_KEY | openssl dgst -binary -sha256 -hmac 
 docker login -u eu-de_dev@$ACCESS_KEY -p $LONGTERM_TOKEN swr.eu-de.otc.t-systems.com
 ```
 
-## Build image and push it to registry
+There exists a helper script for the above commands in the terraform repository.
+
+## Build & Push microservice image
 
 ```shell
-# Build
 ./gradlew :app:access:server:jib
-
-## Push
 docker push swr.eu-de.otc.t-systems.com/zbw-dev/app-access-server:latest
 ```
 
+## Build & push CI/CD image
+
+```shell
+cd docker/vault-terraform
+docker build -t vault-terraform .
+docker tag vault-terraform swr.eu-de.otc.t-systems.com/zbw-tools/vault-terraform:latest
+docker push swr.eu-de.otc.t-systems.com/zbw-tools/vault-terraform:latest
+```
