@@ -31,11 +31,12 @@
         <v-icon small class="mr-2" @click="editRight(item, index)">
           mdi-pencil
         </v-icon>
-        <v-icon small> mdi-delete </v-icon>
+        <v-icon small @click="initiateDeleteDialog(item, index)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
+
     <RightsEditDialog
-      :activated="editDialog"
+      :activated="editDialogActivated"
       :right="currentRight"
       :index="currentIndex"
       :isNew="isNew"
@@ -44,6 +45,14 @@
       v-on:updateSuccessful="updateRight"
       v-on:addSuccessful="addRight"
     ></RightsEditDialog>
+    <RightsDeleteDialog
+      :activated="deleteDialogActivated"
+      :right="currentRight"
+      :index="currentIndex"
+      :metadataId="metadataId"
+      v-on:deleteSuccessful="deleteSuccessful"
+      v-on:deleteDialogClosed="deleteDialogClosed"
+    ></RightsDeleteDialog>
   </v-card>
 </template>
 
@@ -53,8 +62,9 @@ import { Prop, Vue } from "vue-property-decorator";
 import { RightRest } from "@/generated-sources/openapi";
 import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 @Component({
-  components: { RightsEditDialog },
+  components: { RightsDeleteDialog, RightsEditDialog },
 })
 export default class RightsView extends Vue {
   @Prop({ required: true })
@@ -62,9 +72,10 @@ export default class RightsView extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  private editDialog = false;
+  private editDialogActivated = false;
   private currentRight: RightRest = {} as RightRest;
   private currentIndex = 0;
+  private deleteDialogActivated = false;
   private headers = [
     {
       text: "Rechte-Id",
@@ -116,7 +127,7 @@ export default class RightsView extends Vue {
   }
 
   public editRight(right: RightRest, index: number): void {
-    this.editDialog = true;
+    this.editDialogActivated = true;
     this.currentIndex = index;
     this.currentRight = right;
     this.updateSuccessful = false;
@@ -125,7 +136,7 @@ export default class RightsView extends Vue {
   }
 
   public newRight(): void {
-    this.editDialog = true;
+    this.editDialogActivated = true;
     this.currentRight = {} as RightRest;
     this.updateSuccessful = false;
     this.addSuccessful = false;
@@ -134,21 +145,36 @@ export default class RightsView extends Vue {
   }
 
   public editRightClosed(): void {
-    this.editDialog = false;
+    this.editDialogActivated = false;
   }
 
   public addRight(right: RightRest): void {
     this.rights.unshift(right);
     this.renderKey += 1;
-    this.editDialog = false;
+    this.editDialogActivated = false;
     this.addSuccessful = true;
   }
 
   public updateRight(right: RightRest, index: number): void {
     this.rights[index] = right;
     this.renderKey += 1;
-    this.editDialog = false;
+    this.editDialogActivated = false;
     this.updateSuccessful = true;
+  }
+
+  public initiateDeleteDialog(right: RightRest, index: number): void {
+    this.currentIndex = index;
+    this.currentRight = right;
+    this.deleteDialogActivated = true;
+  }
+
+  public deleteSuccessful(index: number): void {
+    this.rights.splice(index, 1);
+    this.renderKey += 1;
+  }
+
+  public deleteDialogClosed(): void {
+    this.deleteDialogActivated = false;
   }
 
   public parseLastUpdatedOn(d: Date | undefined): string {

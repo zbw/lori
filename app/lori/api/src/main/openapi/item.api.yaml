@@ -29,7 +29,7 @@ item:
 item-deletion:
   delete:
     tags:
-      - delete item relation
+      - item
     summary: Delete an item relation
     operationId: deleteItem
     parameters:
@@ -59,7 +59,7 @@ item-deletion:
 item-metadata:
   delete:
     tags:
-      - item relation
+      - item
     summary: Delete all item relations with metadata id
     operationId: deleteItemByMetadataId
     parameters:
@@ -83,7 +83,7 @@ item-metadata:
 item-list:
   get:
     tags:
-      - item object list
+      - item
     summary: Get list of item objects with related rights
     operationId: getItemList
     parameters:
@@ -123,7 +123,7 @@ item-list:
 item-right:
   delete:
     tags:
-      - item relation
+      - item
     summary: Delete all item relations with right id
     operationId: deleteItemByRightId
     parameters:
@@ -147,7 +147,7 @@ item-right:
 item-count-right:
   get:
     tags:
-      - item relation
+      - item
     summary: Get number of items associated with right id.
     operationId: getItemCountByRightId
     parameters:
