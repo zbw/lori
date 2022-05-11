@@ -137,13 +137,15 @@ class ItemRoutesKtTest {
     }
 
     @Test
-    fun testItemEntryDeleteOK() {
+    fun testItemEntryDeleteOKLastRelation() {
         // given
         val givenMetadataId = "meta"
         val givenRightId = "right"
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+            every { countItemByRightId(givenRightId) } returns 0
+            every { deleteRight(givenRightId) } returns 1
         }
         val servicePool = getServicePool(backend)
 
@@ -152,6 +154,29 @@ class ItemRoutesKtTest {
                 handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
             ) {
                 assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
+                verify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
+            }
+        }
+    }
+
+    @Test
+    fun testItemEntryDeleteOKRemainingRelations() {
+        // given
+        val givenMetadataId = "meta"
+        val givenRightId = "right"
+
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+            every { countItemByRightId(givenRightId) } returns 1
+        }
+        val servicePool = getServicePool(backend)
+
+        withTestApplication(servicePool.application()) {
+            with(
+                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
+            ) {
+                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
+                verify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
             }
         }
     }

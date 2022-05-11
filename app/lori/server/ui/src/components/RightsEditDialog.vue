@@ -5,7 +5,7 @@
     @close="emitClosedDialog"
     :retain-focus="false"
   >
-    <v-card ref="formRef">
+    <v-card>
       <v-card-title>
         <span class="text-h5">{{ title }} Eintrag</span>
       </v-card-title>
@@ -210,8 +210,6 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  @Ref("formRef") readonly formRef!: any;
-
   private formHasErrors = false;
   private showDialog = false;
   private menuEndDate = false;
@@ -400,7 +398,7 @@ export default class RightsEditDialog extends Vue {
   }
 
   @Watch("isNew")
-  onChangedIsNew(other: boolean): void {
+  onChangedIsNew(): void {
     this.isIdDisabled();
   }
 }

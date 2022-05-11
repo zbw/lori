@@ -1,13 +1,11 @@
 import {
   Configuration,
+  ItemApi,
   ItemCountByRight,
-  ItemRelationApi,
-  ItemObjectListApi,
+  ItemEntry,
   ItemRest,
   RightApi,
   RightRest,
-  ItemApi,
-  ItemEntry,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -15,19 +13,17 @@ const configuration = new Configuration({
 });
 
 const loriItem = new ItemApi(configuration);
-const loriItemListApi = new ItemObjectListApi(configuration);
-const loriItemRelationApi = new ItemRelationApi(configuration);
 const loriRightApi = new RightApi(configuration);
 
 export default {
   getList(offset: number, limit: number): Promise<Array<ItemRest>> {
-    return loriItemListApi.getItemList({
+    return loriItem.getItemList({
       offset: offset,
       limit: limit,
     });
   },
   getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {
-    return loriItemRelationApi.getItemCountByRightId({ rightId: rightId });
+    return loriItem.getItemCountByRightId({ rightId: rightId });
   },
   updateRight(right: RightRest): Promise<void> {
     return loriRightApi.updateRight({ body: right });
@@ -37,5 +33,11 @@ export default {
   },
   addItemEntry(entry: ItemEntry): Promise<void> {
     return loriItem.addItemRelation({ body: entry });
+  },
+  deleteRight(rightId: string): Promise<void> {
+    return loriRightApi.deleteRightById({ id: rightId });
+  },
+  deleteItemRelation(metadataId: string, rightId: string): Promise<void> {
+    return loriItem.deleteItem({ metadataId: metadataId, rightId: rightId });
   },
 };

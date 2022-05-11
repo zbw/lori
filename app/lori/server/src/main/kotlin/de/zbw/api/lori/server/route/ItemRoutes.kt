@@ -178,6 +178,9 @@ fun Routing.itemRoutes(
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
                         backend.deleteItemEntry(metadataId, rightId)
+                        if (backend.countItemByRightId(rightId) == 0) {
+                            backend.deleteRight(rightId)
+                        }
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.OK)
                     }
