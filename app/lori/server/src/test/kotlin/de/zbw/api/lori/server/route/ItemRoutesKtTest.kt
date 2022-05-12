@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.route
 
-import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
@@ -10,6 +9,7 @@ import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -305,7 +305,7 @@ class ItemRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-                val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
+                val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received.toList(), `is`(listOf(expectedItem)))
             }
         }
@@ -345,7 +345,7 @@ class ItemRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/item/list")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-                val received: ArrayList<ItemRest> = Gson().fromJson(content, groupListType)
+                val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received.toList(), `is`(listOf(expectedItem)))
             }
         }
@@ -452,7 +452,7 @@ class ItemRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/item/count/right/${expectedAnswer.rightId}")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ItemCountByRight>() {}.type
-                val received: ItemCountByRight = Gson().fromJson(content, groupListType)
+                val received: ItemCountByRight = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received, `is`(expectedAnswer))
             }
         }
@@ -494,7 +494,10 @@ class ItemRoutesKtTest {
 
         val ITEM_METADATA = MetadataRest(
             metadataId = "foo",
+            author = "Colbjørnsen, Terje",
             band = "band",
+            collectionName = "collectionName",
+            communityName = "communityName",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
@@ -506,6 +509,7 @@ class ItemRoutesKtTest {
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
+            storageDate = DatabaseConnectorTest.NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
@@ -522,7 +526,7 @@ class ItemRoutesKtTest {
             rightId = "right",
         )
 
-        fun jsonAsString(any: Any): String = Gson().toJson(any)
+        fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
         fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(

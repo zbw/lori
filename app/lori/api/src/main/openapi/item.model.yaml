@@ -27,12 +27,19 @@ MetadataRest:
     - metadataId
     - publicationType
     - publicationYear
+    - storageDate
     - title
   type: object
   properties:
     metadataId:
       type: string
+    author:
+      type: string
     band:
+      type: string
+    collectionName:
+      type: string
+    communityName:
       type: string
     createdBy:
       type: string
@@ -69,6 +76,9 @@ MetadataRest:
       type: string
     serialNumber:
       type: string
+    storageDate:
+      type: string
+      format: date-time
     title:
       type: string
     titleJournal:

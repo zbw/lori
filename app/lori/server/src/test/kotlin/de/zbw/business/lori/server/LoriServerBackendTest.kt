@@ -166,7 +166,10 @@ class LoriServerBackendTest : DatabaseTest() {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_Metadata = ItemMetadata(
             metadataId = "that-test",
+            author = "Colbjørnsen, Terje",
             band = "band",
+            collectionName = "collectionName",
+            communityName = "communityName",
             createdBy = "user1",
             createdOn = NOW,
             doi = "doi:example.org",
@@ -182,6 +185,7 @@ class LoriServerBackendTest : DatabaseTest() {
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
+            storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,

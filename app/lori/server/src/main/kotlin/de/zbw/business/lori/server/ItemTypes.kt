@@ -10,7 +10,10 @@ data class Item(
 
 data class ItemMetadata(
     val metadataId: String,
+    val author: String?,
     val band: String?,
+    val collectionName: String?,
+    val communityName: String?,
     val createdBy: String?,
     val createdOn: OffsetDateTime?,
     val doi: String?,
@@ -26,6 +29,7 @@ data class ItemMetadata(
     val publicationYear: Int,
     val rightsK10plus: String?,
     val serialNumber: String?,
+    val storageDate: OffsetDateTime,
     val title: String,
     val titleJournal: String?,
     val titleSeries: String?,

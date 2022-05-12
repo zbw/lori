@@ -17,6 +17,11 @@
               <v-col>{{ prettyPrint(displayedItem.title) }}</v-col>
               <v-col></v-col>
             </v-row>
+            <v-row v-show="displayedItem.author">
+              <v-col>Autor:in</v-col>
+              <v-col>{{ prettyPrint(displayedItem.author) }}</v-col>
+              <v-col></v-col>
+            </v-row>
             <v-row v-show="displayedItem.band">
               <v-col>Band</v-col>
               <v-col>{{ prettyPrint(displayedItem.band) }}</v-col>
@@ -62,6 +67,13 @@
               <v-col>{{ prettyPrint(displayedItem.rightsK10plus) }}</v-col>
               <v-col></v-col>
             </v-row>
+            <v-row v-show="displayedItem.storageDate">
+              <v-col>Speicherdatum im Digitalen Archiv</v-col>
+              <v-col>{{
+                parseDateToLocaleString(displayedItem.storageDate)
+              }}</v-col>
+              <v-col></v-col>
+            </v-row>
             <v-row v-show="displayedItem.serialNumber">
               <v-col>Seriennummer</v-col>
               <v-col>{{ prettyPrint(displayedItem.serialNumber) }}</v-col>
@@ -74,6 +86,16 @@
         <v-expansion-panel-header>Ebene 2</v-expansion-panel-header>
         <v-expansion-panel-content>
           <v-container>
+            <v-row v-show="displayedItem.collectionName">
+              <v-col>Collectionsname</v-col>
+              <v-col>{{ prettyPrint(displayedItem.collectionName) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="displayedItem.communityName">
+              <v-col>Communityname</v-col>
+              <v-col>{{ prettyPrint(displayedItem.communityName) }}</v-col>
+              <v-col></v-col>
+            </v-row>
             <v-row v-show="displayedItem.issn">
               <v-col>Issn</v-col>
               <v-col>{{ prettyPrint(displayedItem.issn) }}</v-col>
@@ -107,13 +129,13 @@
 </template>
 
 <script lang="ts">
-import {Prop, Vue} from "vue-property-decorator";
+import { Prop, Vue } from "vue-property-decorator";
 import Component from "vue-class-component";
-import {MetadataRest} from "@/generated-sources/openapi";
+import { MetadataRest } from "@/generated-sources/openapi";
 
 @Component
 export default class MetadataView extends Vue {
-  @Prop({required: true})
+  @Prop({ required: true })
   displayedItem!: MetadataRest;
 
   public prettyPrint(value: string): string {
@@ -121,6 +143,13 @@ export default class MetadataView extends Vue {
       return value;
     } else {
       return "Kein Wert vorhanden";
+    }
+  }
+  public parseDateToLocaleString(d: Date | undefined): string {
+    if (d === undefined) {
+      return "Please reload";
+    } else {
+      return d.toLocaleString("de");
     }
   }
 }
