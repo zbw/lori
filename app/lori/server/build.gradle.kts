@@ -29,7 +29,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
     implementation("io.zonky.test:embedded-postgres:1.3.1")
-    implementation("org.postgresql:postgresql:42.3.1")
+    implementation("org.postgresql:postgresql:42.3.5")
     implementation("org.flywaydb:flyway-core:7.15.0")
     testImplementation("io.ktor:ktor-client-mock:$ktorVersion")
 }
