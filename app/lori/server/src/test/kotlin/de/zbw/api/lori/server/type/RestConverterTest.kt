@@ -28,7 +28,10 @@ class RestConverterTest {
         val restObject = ItemRest(
             metadata = MetadataRest(
                 metadataId = TEST_METADATA.metadataId,
+                author = TEST_METADATA.author,
                 band = TEST_METADATA.band,
+                collectionName = TEST_METADATA.collectionName,
+                communityName = TEST_METADATA.communityName,
                 createdBy = TEST_METADATA.createdBy,
                 createdOn = TEST_METADATA.createdOn,
                 doi = TEST_METADATA.doi,
@@ -44,6 +47,7 @@ class RestConverterTest {
                 publicationYear = TEST_METADATA.publicationYear,
                 rightsK10plus = TEST_METADATA.rightsK10plus,
                 serialNumber = TEST_METADATA.serialNumber,
+                storageDate = TEST_METADATA.storageDate,
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
                 titleSeries = TEST_METADATA.titleSeries,
@@ -75,7 +79,10 @@ class RestConverterTest {
         // given
         val expected = ItemMetadata(
             metadataId = "5",
+            author = "Colbjørnsen, Terje",
             band = null,
+            collectionName = "Collectionname",
+            communityName = "Communityname",
             createdBy = null,
             createdOn = null,
             doi = null,
@@ -91,6 +98,16 @@ class RestConverterTest {
             publicationYear = 2020,
             rightsK10plus = null,
             serialNumber = null,
+            storageDate = OffsetDateTime.of(
+                2022,
+                1,
+                19,
+                7,
+                57,
+                26,
+                0,
+                ZoneOffset.UTC,
+            ),
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
@@ -111,7 +128,10 @@ class RestConverterTest {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA = ItemMetadata(
             metadataId = "that-test",
+            author = "Colbjørnsen, Terje",
             band = "band",
+            collectionName = "Collectioname",
+            communityName = "Communityname",
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
                 2022,
@@ -144,6 +164,7 @@ class RestConverterTest {
             publicationType = PublicationType.BOOK,
             publicationYear = 2000,
             rightsK10plus = "some rights",
+            storageDate = OffsetDateTime.now(),
             serialNumber = "12354566",
             title = "Important title",
             titleJournal = null,
@@ -190,9 +211,44 @@ class RestConverterTest {
             link = "link",
             expand = listOf("foo"),
             lastModified = "2020-10-04",
-            parentCollection = null,
+            parentCollection = DACollection(
+                id = 3,
+                name = "Collectionname",
+                handle = null,
+                type = null,
+                link = "link",
+                expand = emptyList(),
+                logo = null,
+                parentCommunity = null,
+                copyrightText = null,
+                introductoryText = null,
+                shortDescription = null,
+                sidebarText = null,
+                items = emptyList(),
+                license = null,
+                numberItems = 4,
+                parentCommunityList = emptyList(),
+            ),
             parentCollectionList = emptyList(),
-            parentCommunityList = emptyList(),
+            parentCommunityList = listOf(
+                DACommunity(
+                    id = 1,
+                    name = "Communityname",
+                    handle = null,
+                    type = null,
+                    countItems = null,
+                    link = "link",
+                    expand = emptyList(),
+                    logo = null,
+                    parentCommunity = null,
+                    copyrightText = null,
+                    introductoryText = null,
+                    shortDescription = null,
+                    sidebarText = null,
+                    subcommunities = emptyList(),
+                    collections = emptyList(),
+                )
+            ),
             metadata = listOf(
                 DAMetadata(
                     key = "dc.identifier.uri",
@@ -205,8 +261,18 @@ class RestConverterTest {
                     language = "DE",
                 ),
                 DAMetadata(
+                    key = "dc.contributor.author",
+                    value = "Colbjørnsen, Terje",
+                    language = null,
+                ),
+                DAMetadata(
                     key = "dc.date.issued",
                     value = "2020",
+                    language = "DE",
+                ),
+                DAMetadata(
+                    key = "dc.date.accessioned",
+                    value = "2022-01-19T07:57:26Z",
                     language = "DE",
                 ),
                 DAMetadata(

@@ -197,6 +197,16 @@ class DatabaseConnector(
             this.setIfNotNull(21, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(22, itemMetadata.author) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(23, itemMetadata.collectionName) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(24, itemMetadata.communityName) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setTimestamp(25, Timestamp.from(itemMetadata.storageDate.toInstant()))
         }
     }
 
@@ -301,20 +311,14 @@ class DatabaseConnector(
                     paketSigel = rs.getString(15),
                     zbdId = rs.getString(16),
                     issn = rs.getString(17),
-                    createdOn = rs.getTimestamp(18)?.let {
-                        OffsetDateTime.ofInstant(
-                            it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
-                        )
-                    },
-                    lastUpdatedOn = rs.getTimestamp(19)?.let {
-                        OffsetDateTime.ofInstant(
-                            it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
-                        )
-                    },
+                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
+                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
                     createdBy = rs.getString(20),
                     lastUpdatedBy = rs.getString(21),
+                    author = rs.getString(22),
+                    collectionName = rs.getString(23),
+                    communityName = rs.getString(24),
+                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -542,11 +546,13 @@ class DatabaseConnector(
             "(metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
             "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by) " +
+            "created_on,last_updated_on,created_by,last_updated_by," +
+            "author, collection_name, community_name, storage_date) " +
             "VALUES(?,?,?,?,?," +
             "?,?,?,?,?,?," +
             "?,?,?,?,?,?," +
-            "?,?,?,?) " +
+            "?,?,?,?,?,?," +
+            "?,?) " +
             "ON CONFLICT (metadata_id) " +
             "DO UPDATE SET " +
             "handle = EXCLUDED.handle," +
@@ -566,17 +572,23 @@ class DatabaseConnector(
             "zbd_id = EXCLUDED.zbd_id," +
             "issn = EXCLUDED.issn," +
             "last_updated_on = EXCLUDED.last_updated_on," +
-            "last_updated_by = EXCLUDED.last_updated_by;"
+            "last_updated_by = EXCLUDED.last_updated_by," +
+            "author = EXCLUDED.author," +
+            "collection_name = EXCLUDED.collection_name," +
+            "community_name = EXCLUDED.community_name," +
+            "storage_date = EXCLUDED.storage_date;"
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
             "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by) " +
+            "created_on,last_updated_on,created_by,last_updated_by," +
+            "author, collection_name, community_name, storage_date) " +
             "VALUES(?,?,?,?,?,?," +
             "?,?,?,?,?,?," +
             "?,?,?,?,?,?," +
-            "?,?,?)"
+            "?,?,?,?,?,?," +
+            "?)"
 
         const val STATEMENT_INSERT_RIGHT = "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
             "(right_id, created_on, last_updated_on," +
@@ -602,7 +614,8 @@ class DatabaseConnector(
         const val STATEMENT_GET_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
             "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by " +
+            "created_on,last_updated_on,created_by,last_updated_by," +
+            "author, collection_name, community_name, storage_date " +
             "FROM $TABLE_NAME_ITEM_METADATA " +
             "WHERE metadata_id = ANY(?)"
 
@@ -656,5 +669,11 @@ class DatabaseConnector(
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE right_id=?)"
+
+        fun Timestamp.toOffsetDateTime(): OffsetDateTime =
+            OffsetDateTime.ofInstant(
+                this.toInstant(),
+                ZoneId.of("UTC+00:00"),
+            )
     }
 }

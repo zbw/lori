@@ -1,12 +1,12 @@
 package de.zbw.api.lori.server.route
 
-import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
+import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -207,7 +207,7 @@ class MetadataRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/metadata/$testId")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<MetadataRest>() {}.type
-                val received: MetadataRest = Gson().fromJson(content, groupListType)
+                val received: MetadataRest = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received, `is`(expected))
             }
         }
@@ -365,7 +365,7 @@ class MetadataRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list?limit=$limit&offset=$offset")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
-                val received: ArrayList<MetadataRest> = Gson().fromJson(content, groupListType)
+                val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received.toList(), `is`(listOf(expectedMetadata)))
             }
         }
@@ -392,7 +392,7 @@ class MetadataRoutesKtTest {
             with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list")) {
                 val content: String = response.content!!
                 val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
-                val received: ArrayList<MetadataRest> = Gson().fromJson(content, groupListType)
+                val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
                 assertThat(received.toList(), `is`(listOf(expectedMetadata)))
             }
         }
@@ -471,7 +471,10 @@ class MetadataRoutesKtTest {
 
         val TEST_METADATA = MetadataRest(
             metadataId = "foo",
+            author = "Colbjørnsen, Terje",
             band = "band",
+            collectionName = "collectionName",
+            communityName = "communityName",
             doi = "doi:example.org",
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
@@ -483,13 +486,14 @@ class MetadataRoutesKtTest {
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
+            storageDate = DatabaseConnectorTest.NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
             zbdId = null,
         )
 
-        fun jsonAsString(any: Any): String = Gson().toJson(any)
+        fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
         fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(

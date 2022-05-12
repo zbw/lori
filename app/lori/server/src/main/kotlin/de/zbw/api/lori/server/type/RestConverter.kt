@@ -8,6 +8,7 @@ import de.zbw.business.lori.server.PublicationType
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
+import java.time.OffsetDateTime
 
 /**
  * Conversion functions between rest interface and business logic.
@@ -31,7 +32,10 @@ fun Item.toRest() =
 fun MetadataRest.toBusiness() =
     ItemMetadata(
         metadataId = metadataId,
+        author = author,
         band = band,
+        collectionName = collectionName,
+        communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
         doi = doi,
@@ -47,6 +51,7 @@ fun MetadataRest.toBusiness() =
         publicationYear = publicationYear,
         rightsK10plus = rightsK10plus,
         serialNumber = serialNumber,
+        storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
@@ -56,7 +61,10 @@ fun MetadataRest.toBusiness() =
 fun ItemMetadata.toRest(): MetadataRest =
     MetadataRest(
         metadataId = metadataId,
+        author = author,
         band = band,
+        collectionName = collectionName,
+        communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
         doi = doi,
@@ -72,6 +80,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         publicationYear = publicationYear,
         rightsK10plus = rightsK10plus,
         serialNumber = serialNumber,
+        storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
@@ -151,7 +160,10 @@ fun DAItem.toBusiness(): ItemMetadata? {
     } else {
         ItemMetadata(
             metadataId = this.id.toString(),
+            author = extractMetadata("dc.contributor.author", metadata),
             band = null, // Not in DA yet
+            collectionName = this.parentCollection?.name,
+            communityName = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.name,
             createdBy = null,
             createdOn = null,
             doi = extractMetadata("dc.identifier.pi", metadata),
@@ -167,6 +179,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             publicationYear = publicationYear,
             rightsK10plus = extractMetadata("dc.rights", metadata),
             serialNumber = null, // Not in DA yet
+            storageDate = OffsetDateTime.parse(extractMetadata("dc.date.accessioned", metadata)),
             title = title,
             titleJournal = extractMetadata("dc.journalname", metadata),
             titleSeries = extractMetadata("dc.seriesname", metadata),

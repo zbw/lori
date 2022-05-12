@@ -406,7 +406,10 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         val TEST_Metadata = ItemMetadata(
             metadataId = "that-test",
+            author = "Colbjørnsen, Terje",
             band = "band",
+            collectionName = "collectionName",
+            communityName = "communityName",
             createdBy = "user1",
             createdOn = NOW,
             doi = "doi:example.org",
@@ -422,6 +425,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             publicationYear = 2000,
             rightsK10plus = "some rights",
             serialNumber = "12354566",
+            storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = "anything",
             titleSeries = null,
