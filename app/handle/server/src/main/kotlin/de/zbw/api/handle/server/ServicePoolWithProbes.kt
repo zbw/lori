@@ -1,18 +1,18 @@
 package de.zbw.api.handle.server
 
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import io.ktor.serialization.gson.gson
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 
 /**
  * A pool for services.
@@ -22,7 +22,7 @@ import io.ktor.server.netty.NettyApplicationEngine
  */
 class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
-    private val port: Int,
+    port: Int,
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(

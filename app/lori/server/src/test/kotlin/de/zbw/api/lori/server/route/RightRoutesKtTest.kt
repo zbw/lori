@@ -10,13 +10,17 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.RightRest
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -45,13 +49,15 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/right/$rightId")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<RightRest>() {}.type
-                val received: RightRest = GSON.fromJson(content, groupListType)
-                assertThat(received, `is`(expected))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/right/$rightId")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<RightRest>() {}.type
+            val received: RightRest = GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expected))
         }
     }
 
@@ -64,14 +70,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/right/$testId")) {
-                assertThat(
-                    "Should return NotFound",
-                    response.status(),
-                    `is`(HttpStatusCode.NotFound)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/right/$testId")
+            assertThat(
+                "Should return NotFound",
+                response.status,
+                `is`(HttpStatusCode.NotFound)
+            )
         }
     }
 
@@ -84,14 +92,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/right/$rightId")) {
-                assertThat(
-                    "Should return InternalServerError",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/right/$rightId")
+            assertThat(
+                "Should return InternalServerError",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -106,20 +116,19 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/right/$rightId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-                verify(exactly = 1) { backend.itemContainsRight(rightId) }
-                verify(exactly = 1) { backend.deleteRight(rightId) }
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/right/$rightId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
+            verify(exactly = 1) { backend.itemContainsRight(rightId) }
+            verify(exactly = 1) { backend.deleteRight(rightId) }
         }
     }
 
     @Test
     fun testDeleteRightConflict() {
-
         // given
         val rightId = "123"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -127,19 +136,18 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/right/$rightId")
-            ) {
-                assertThat("Should return Conflict", response.status(), `is`(HttpStatusCode.Conflict))
-                verify(exactly = 1) { backend.itemContainsRight(rightId) }
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/right/$rightId")
+            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
+            verify(exactly = 1) { backend.itemContainsRight(rightId) }
         }
     }
 
     @Test
     fun testDeleteRightException() {
-
         // given
         val rightId = "123"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -148,16 +156,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/right/$rightId")
-            ) {
-                assertThat(
-                    "Should return 500 because of internal SQL exception",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/right/$rightId")
+            assertThat(
+                "Should return 500 because of internal SQL exception",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -169,16 +177,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat("Should return CREATED", response.status(), `is`(HttpStatusCode.Created))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat("Should return CREATED", response.status, `is`(HttpStatusCode.Created))
         }
     }
 
@@ -188,16 +196,16 @@ class RightRoutesKtTest {
             every { rightContainsId(TEST_RIGHT.rightId) } returns true
         }
         val servicePool = getServicePool(backend)
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat("Should return Conflict", response.status(), `is`(HttpStatusCode.Conflict))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
 
@@ -207,20 +215,20 @@ class RightRoutesKtTest {
             every { rightContainsId(TEST_RIGHT.rightId) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat(
-                    "Should return 500 because of internal SQL exception",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError),
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat(
+                "Should return 500 because of internal SQL exception",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError),
+            )
         }
     }
 
@@ -229,20 +237,20 @@ class RightRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-                }
-            ) {
-                assertThat(
-                    "Should return 400 because of wrong JSON data.",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest),
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
+            assertThat(
+                "Should return 400 because of wrong JSON data.",
+                response.status,
+                `is`(HttpStatusCode.BadRequest),
+            )
         }
     }
 
@@ -254,16 +262,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat("Should return NO_CONTENT", response.status(), `is`(HttpStatusCode.NoContent))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat("Should return NO_CONTENT", response.status, `is`(HttpStatusCode.NoContent))
         }
     }
 
@@ -275,16 +283,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat("Should return CREATED", response.status(), `is`(HttpStatusCode.Created))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat("Should return CREATED", response.status, `is`(HttpStatusCode.Created))
         }
     }
 
@@ -296,16 +304,16 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-                }
-            ) {
-                assertThat("Should return BAD_REQUEST", response.status(), `is`(HttpStatusCode.BadRequest))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
+            assertThat("Should return BAD_REQUEST", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 
@@ -316,27 +324,27 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/right") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_RIGHT))
-                }
-            ) {
-                assertThat(
-                    "Should return Internal Server Error",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/right") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_RIGHT))
             }
+            assertThat(
+                "Should return Internal Server Error",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
     companion object {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
-        val CONFIG = LoriConfiguration(
+        private val CONFIG = LoriConfiguration(
             grpcPort = 9092,
             httpPort = 8080,
             sqlUser = "postgres",

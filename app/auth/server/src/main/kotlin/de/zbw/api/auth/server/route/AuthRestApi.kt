@@ -8,13 +8,13 @@ import de.zbw.auth.model.SignInUserData
 import de.zbw.auth.model.SignUpUserData
 import de.zbw.auth.model.UserRole
 import de.zbw.business.auth.server.AuthBackend
-import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Routing
-import io.ktor.routing.post
-import io.ktor.routing.route
+import io.ktor.server.application.call
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
 import java.util.Date
 
 /**

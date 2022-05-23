@@ -5,17 +5,17 @@ import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
-import io.ktor.application.call
-import io.ktor.features.BadRequestException
 import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respond
-import io.ktor.routing.Routing
-import io.ktor.routing.delete
-import io.ktor.routing.get
-import io.ktor.routing.post
-import io.ktor.routing.put
-import io.ktor.routing.route
+import io.ktor.server.application.call
+import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.request.receive
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Routing
+import io.ktor.server.routing.delete
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
@@ -43,7 +43,7 @@ fun Routing.metadataRoutes(
                     // receive() may return an object where non-null fields are null.
                     @Suppress("SENSELESS_COMPARISON")
                     val metadata: MetadataRest =
-                        call.receive(MetadataRest::class)
+                        call.receive<MetadataRest>()
                             .takeIf { it.metadataId != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("metadata", metadata.toString())
