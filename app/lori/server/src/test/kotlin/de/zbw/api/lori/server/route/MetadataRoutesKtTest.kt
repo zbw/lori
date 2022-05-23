@@ -7,13 +7,18 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.put
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.testing.testApplication
+import io.ktor.util.InternalAPI
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -25,6 +30,7 @@ import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
 
+@InternalAPI
 class MetadataRoutesKtTest {
 
     @Test
@@ -35,20 +41,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return Accepted",
-                    response.status(),
-                    `is`(HttpStatusCode.Created)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return Accepted",
+                response.status,
+                `is`(HttpStatusCode.Created)
+            )
         }
     }
 
@@ -59,20 +65,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return Conflict",
-                    response.status(),
-                    `is`(HttpStatusCode.Conflict)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return Conflict",
+                response.status,
+                `is`(HttpStatusCode.Conflict)
+            )
         }
     }
 
@@ -81,20 +87,20 @@ class MetadataRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-                }
-            ) {
-                assertThat(
-                    "Should return Conflict",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
+            assertThat(
+                "Should return Conflict",
+                response.status,
+                `is`(HttpStatusCode.BadRequest)
+            )
         }
     }
 
@@ -105,20 +111,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return Internal Server Error",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return Internal Server Error",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -132,14 +138,14 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/metadata/$metadataId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-                verify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
-                verify(exactly = 1) { backend.deleteMetadata(metadataId) }
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/metadata/$metadataId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
+            verify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
+            verify(exactly = 1) { backend.deleteMetadata(metadataId) }
         }
     }
 
@@ -152,12 +158,12 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/metadata/$metadataId")
-            ) {
-                assertThat("Should return Conflict", response.status(), `is`(HttpStatusCode.Conflict))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/metadata/$metadataId")
+            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
 
@@ -180,16 +186,16 @@ class MetadataRoutesKtTest {
             tracer = tracer,
         )
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/metadata/$metadataId")
-            ) {
-                assertThat(
-                    "Should return Internal Server Error",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/metadata/$metadataId")
+            assertThat(
+                "Should return Internal Server Error",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -203,13 +209,15 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/$testId")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<MetadataRest>() {}.type
-                val received: MetadataRest = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received, `is`(expected))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/$testId")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<MetadataRest>() {}.type
+            val received: MetadataRest = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expected))
         }
     }
 
@@ -222,14 +230,16 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/$testId")) {
-                assertThat(
-                    "Should return NotFound",
-                    response.status(),
-                    `is`(HttpStatusCode.NotFound)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/$testId")
+            assertThat(
+                "Should return NotFound",
+                response.status,
+                `is`(HttpStatusCode.NotFound)
+            )
         }
     }
 
@@ -242,14 +252,16 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/$testId")) {
-                assertThat(
-                    "Should return InternalServerError",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/$testId")
+            assertThat(
+                "Should return InternalServerError",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -261,20 +273,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return NoContent",
-                    response.status(),
-                    `is`(HttpStatusCode.NoContent)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return NoContent",
+                response.status,
+                `is`(HttpStatusCode.NoContent)
+            )
         }
     }
 
@@ -286,20 +298,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return Created",
-                    response.status(),
-                    `is`(HttpStatusCode.Created)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return Created",
+                response.status,
+                `is`(HttpStatusCode.Created)
+            )
         }
     }
 
@@ -308,20 +320,20 @@ class MetadataRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-                }
-            ) {
-                assertThat(
-                    "Should return BadRequest",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
+            assertThat(
+                "Should return BadRequest",
+                response.status,
+                `is`(HttpStatusCode.BadRequest)
+            )
         }
     }
 
@@ -332,20 +344,20 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Put, "/api/v1/metadata") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_METADATA))
-                }
-            ) {
-                assertThat(
-                    "Should return InternalServerError",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.put("/api/v1/metadata") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_METADATA))
             }
+            assertThat(
+                "Should return InternalServerError",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -361,13 +373,15 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list?limit=$limit&offset=$offset")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
-                val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(expectedMetadata)))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
+            val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received.toList(), `is`(listOf(expectedMetadata)))
         }
         verify(exactly = 1) { backend.getMetadataList(limit, offset) }
     }
@@ -388,13 +402,15 @@ class MetadataRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
-                val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(expectedMetadata)))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/list")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<MetadataRest>>() {}.type
+            val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received.toList(), `is`(listOf(expectedMetadata)))
         }
         verify(exactly = 1) { backend.getMetadataList(defaultLimit, defaultOffset) }
     }
@@ -405,14 +421,16 @@ class MetadataRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list?limit=0")) {
-                assertThat(
-                    "Should return BadRequest",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest),
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/list?limit=0")
+            assertThat(
+                "Should return BadRequest",
+                response.status,
+                `is`(HttpStatusCode.BadRequest),
+            )
         }
     }
 
@@ -422,14 +440,16 @@ class MetadataRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list?offset=-1")) {
-                assertThat(
-                    "Should return BadRequest",
-                    response.status(),
-                    `is`(HttpStatusCode.BadRequest),
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/list?offset=-1")
+            assertThat(
+                "Should return BadRequest",
+                response.status,
+                `is`(HttpStatusCode.BadRequest),
+            )
         }
     }
 
@@ -444,14 +464,16 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/metadata/list?limit=$limit&offset=$offset")) {
-                assertThat(
-                    "Should return InternalServerError",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError),
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
+            assertThat(
+                "Should return InternalServerError",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError),
+            )
         }
     }
 

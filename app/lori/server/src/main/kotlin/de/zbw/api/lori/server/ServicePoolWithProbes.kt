@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server
 
-import com.github.lamba92.ktor.features.SinglePageApplication
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
@@ -10,20 +9,22 @@ import de.zbw.api.lori.server.route.metadataRoutes
 import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
 import de.zbw.business.lori.server.LoriServerBackend
-import io.ktor.application.Application
-import io.ktor.application.call
-import io.ktor.application.install
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.gson.gson
 import io.ktor.http.HttpStatusCode
-import io.ktor.response.respond
-import io.ktor.routing.get
-import io.ktor.routing.routing
+import io.ktor.serialization.gson.gson
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 import io.opentelemetry.api.trace.Tracer
+import org.slf4j.event.Level
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZonedDateTime
@@ -83,11 +84,16 @@ class ServicePoolWithProbes(
                 )
             }
         }
-        install(CallLogging)
-        install(SinglePageApplication) {
-            folderPath = "dist/"
+        install(CallLogging) {
+            level = Level.INFO
         }
         routing {
+            singlePageApplication {
+                useResources = true
+                filesPath = "dist/"
+                defaultPage = "index.html"
+            }
+
             get("/ready") {
                 if (isReady()) {
                     call.respond(HttpStatusCode.OK)

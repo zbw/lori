@@ -1,9 +1,9 @@
 package de.zbw.api.lori.server.route
 
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
-import io.ktor.routing.Route
+import io.ktor.server.http.content.defaultResource
+import io.ktor.server.http.content.resources
+import io.ktor.server.http.content.static
+import io.ktor.server.routing.Route
 
 /**
  * Route static content.

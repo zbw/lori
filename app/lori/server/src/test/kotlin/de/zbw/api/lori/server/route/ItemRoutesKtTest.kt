@@ -10,13 +10,16 @@ import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.setBody
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -44,16 +47,16 @@ class ItemRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM_ENTRY))
-                }
-            ) {
-                assertThat("Should return Created", response.status(), `is`(HttpStatusCode.Created))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/item") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_ITEM_ENTRY))
             }
+            assertThat("Should return Created", response.status, `is`(HttpStatusCode.Created))
         }
     }
 
@@ -69,16 +72,16 @@ class ItemRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM_ENTRY))
-                }
-            ) {
-                assertThat("Should return Conflict", response.status(), `is`(HttpStatusCode.Conflict))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/item") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_ITEM_ENTRY))
             }
+            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
 
@@ -94,16 +97,16 @@ class ItemRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM))
-                }
-            ) {
-                assertThat("Should return BadRequest", response.status(), `is`(HttpStatusCode.BadRequest))
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/item") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_ITEM))
             }
+            assertThat("Should return BadRequest", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 
@@ -119,20 +122,20 @@ class ItemRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Post, "/api/v1/item") {
-                    addHeader(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                    addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_ITEM_ENTRY))
-                }
-            ) {
-                assertThat(
-                    "Should return InternalServerError",
-                    response.status(),
-                    `is`(HttpStatusCode.InternalServerError)
-                )
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/item") {
+                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_ITEM_ENTRY))
             }
+            assertThat(
+                "Should return InternalServerError",
+                response.status,
+                `is`(HttpStatusCode.InternalServerError)
+            )
         }
     }
 
@@ -149,13 +152,13 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-                verify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
+            verify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
         }
     }
 
@@ -171,13 +174,13 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-                verify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
+            verify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
         }
     }
 
@@ -192,12 +195,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/$givenMetadataId/$givenRightId")
-            ) {
-                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 
@@ -211,12 +214,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/metadata/$givenMetadataId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/metadata/$givenMetadataId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
         }
     }
 
@@ -230,12 +233,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/metadata/$givenMetadataId")
-            ) {
-                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/metadata/$givenMetadataId")
+            assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 
@@ -249,12 +252,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/right/$givenRightId")
-            ) {
-                assertThat("Should return OK", response.status(), `is`(HttpStatusCode.OK))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/right/$givenRightId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
         }
     }
 
@@ -268,12 +271,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
 
-        withTestApplication(servicePool.application()) {
-            with(
-                handleRequest(HttpMethod.Delete, "/api/v1/item/right/$givenRightId")
-            ) {
-                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/item/right/$givenRightId")
+            assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 
@@ -301,13 +304,15 @@ class ItemRoutesKtTest {
             tracer = tracer,
         )
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-                val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(expectedItem)))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/list?limit=$limit&offset=$offset")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
+            val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received.toList(), `is`(listOf(expectedItem)))
         }
         verify(exactly = 1) { backend.getItemList(limit, offset) }
     }
@@ -341,13 +346,15 @@ class ItemRoutesKtTest {
             tracer = tracer,
         )
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/list")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-                val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received.toList(), `is`(listOf(expectedItem)))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/list")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
+            val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received.toList(), `is`(listOf(expectedItem)))
         }
         verify(exactly = 1) { backend.getItemList(defaultLimit, defaultOffset) }
     }
@@ -400,37 +407,12 @@ class ItemRoutesKtTest {
             tracer = tracer,
         )
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/list?limit=$limit&offset=$offset")) {
-                assertThat(msg, response.status(), `is`(HttpStatusCode.BadRequest))
-            }
-        }
-    }
-
-    @Test
-    fun testGETItemMissingParameter() {
-        // given
-        val backend = mockk<LoriServerBackend>(relaxed = true)
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
-        // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/")) {
-                assertThat(
-                    "Should return 404 because of missing get parameter",
-                    response.status(),
-                    `is`(HttpStatusCode.NotFound)
-                )
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/list?limit=$limit&offset=$offset")
+            assertThat(msg, response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 
@@ -448,13 +430,15 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/count/right/${expectedAnswer.rightId}")) {
-                val content: String = response.content!!
-                val groupListType: Type = object : TypeToken<ItemCountByRight>() {}.type
-                val received: ItemCountByRight = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-                assertThat(received, `is`(expectedAnswer))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/count/right/${expectedAnswer.rightId}")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ItemCountByRight>() {}.type
+            val received: ItemCountByRight = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedAnswer))
         }
     }
 
@@ -469,10 +453,12 @@ class ItemRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         // when + then
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/api/v1/item/count/right/$rightId")) {
-                assertThat("Should return Internal Error", response.status(), `is`(HttpStatusCode.InternalServerError))
-            }
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/count/right/$rightId")
+            assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 
