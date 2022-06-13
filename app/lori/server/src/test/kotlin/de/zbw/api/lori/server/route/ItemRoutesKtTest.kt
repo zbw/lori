@@ -9,6 +9,7 @@ import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.RightRest
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -200,6 +201,65 @@ class ItemRoutesKtTest {
                 servicePool.application()
             )
             val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
+    fun testItemGetRightsByMetadataOK() {
+        // given
+        val givenMetadataId = "meta"
+        val expected = listOf(TEST_RIGHT)
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getRightEntriesByMetadataId(givenMetadataId) } returns expected.map { it.toBusiness() }
+            every { metadataContainsId(givenMetadataId) } returns true
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<RightRest>>() {}.type
+            val received: ArrayList<RightRest> = GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testItemGetRightsByMetadataNotFound() {
+        // given
+        val givenMetadataId = "meta"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { metadataContainsId(givenMetadataId) } returns false
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
+            assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
+        }
+    }
+
+    @Test
+    fun testItemGetRightsByMetadataInternal() {
+        // given
+        val givenMetadataId = "meta"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { metadataContainsId(givenMetadataId) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -511,6 +571,10 @@ class ItemRoutesKtTest {
             metadataId = "meta",
             rightId = "right",
         )
+
+        val TEST_RIGHT = RightRoutesKtTest.TEST_RIGHT
+
+        val GSON = RightRoutesKtTest.GSON
 
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")

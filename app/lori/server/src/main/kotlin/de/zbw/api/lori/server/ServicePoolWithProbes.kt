@@ -46,7 +46,7 @@ class ServicePoolWithProbes(
     private var server: NettyApplicationEngine = embeddedServer(
         Netty,
         port = config.httpPort,
-        module = application()
+        module = application(),
     )
 
     // This method is a hack due to ktors extension based design. It makes

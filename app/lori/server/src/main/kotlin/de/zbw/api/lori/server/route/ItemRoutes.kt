@@ -93,6 +93,38 @@ fun Routing.itemRoutes(
                     }
                 }
             }
+            get("{metadataId}") {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/item/metadata/{metadataId}")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val metadataId = call.parameters["metadataId"]
+                        span.setAttribute("metadataId", metadataId ?: "null")
+                        if (metadataId == null) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: No valid id has been provided in the url."
+                            )
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            if (!backend.metadataContainsId(metadataId)) {
+                                call.respond(HttpStatusCode.NotFound)
+                            } else {
+                                val rights = backend.getRightEntriesByMetadataId(metadataId)
+                                span.setStatus(StatusCode.OK)
+                                call.respond(rights.map { it.toRest() })
+                            }
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
         }
 
         route("/right") {
