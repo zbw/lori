@@ -1,12 +1,10 @@
-Access-Service
+LORI-Service
 ====
 
 ## About
 
-This service manages access rights for all kind of items. It provides a (g)rpc interface to change any information and
-REST interface.
-
-The [LIBRML](https://librml.org/index.html) standard (currently in beta version) is used as baseline for the interface.
+This service manages rights for bibliographic items. It provides a (g)rpc and REST interface to
+read, update and delete these right information.
 
 ## Local setup
 
@@ -15,29 +13,29 @@ Prerequisite: Setting up a local postgres.
 First create a postgres docker container and start it.
 
 ```shell
-docker run --name postgres_access -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres
-docker start postgres_access
+docker run --name <CONTAINER_NAME> -p <LOCAL_PORT>:5432 -e POSTGRES_PASSWORD=somepassword -d postgres
+docker start <CONTAINER_NAME>
 ```
 
 Then create a role, and a new database as follows with `psql`:
 
 ```shell
-docker exec -it postgres_access psql -U postgres
-CREATE USER access WITH PASSWORD '1qay2wsx' CREATEDB;
-CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
+docker exec -it <CONTAINER_NAME> psql -U postgres
+CREATE USER lori WITH PASSWORD '1qay2wsx' CREATEDB;
+CREATE DATABASE loridb OWNER lori ENCODING UTF8;
 \q
 ```
 
 Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database.
 You can connect yourself then via pgadmin or `psql`:
 ```
-docker exec -it postgres_access_9.6 psql -U access -d accessinformation
+docker exec -it postgres_lori_9.6 psql -U lori -d loriinformation
 ```
 
 Finally, start the service:
 
 ```shell
-./gradlew :app:access:server:run
+./gradlew :app:lori:server:run
 ```
 
 ## Setup in Cloud environment
@@ -55,30 +53,38 @@ There exist two possible ways to accomplish this right now:
 Either way, from their you are able to connect to the database for the first time (password
 should be saved in vault):
 ```
-psql --no-readline -U access -h 192.168.179.203 -p 5432 -d root -W
+psql --no-readline -U lori -h 192.168.179.203 -p 5432 -d root -W
 ```
 Create user with a save password and the database:
 
 ```sql
-CREATE USER access WITH PASSWORD '1qay2wsx' CREATEDB;
-GRANT access TO root;
-CREATE DATABASE accessinformation OWNER access ENCODING UTF8;
+CREATE USER lori WITH PASSWORD '1qay2wsx' CREATEDB;
+GRANT lori TO root;
+CREATE DATABASE loriinformation OWNER lori ENCODING UTF8;
 ```
 
 ## (G)RPC
 
 In order to send messages grpc it the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl) is recommended.
 
-1. Add an items access right for _read_ rights with a restriction via grpc.
+1. Add an items lori right for _read_ rights with a restriction via grpc.
 
 ```shell
-grpcurl -plaintext -d '{"items":[{"id":"test_id", "tenant": "www.zbw.eu", "usage_guide":"www.zbw.eu/licence", "mention":"true", "actions":[{"type":"ACTION_TYPE_PROTO_PUBLISH", "permission":"true", "restrictions":[{"type":"RESTRICTION_TYPE_PROTO_DATE", "attribute":{"type":"ATTRIBUTE_TYPE_PROTO_FROM_DATE", "values":"2020.01.01"}}]},{"type":"ACTION_TYPE_PROTO_READ", "permission":"true", "restrictions":[{"type":"RESTRICTION_TYPE_PROTO_AGE", "attribute":{"type":"ATTRIBUTE_TYPE_PROTO_MIN_AGE", "values":"18"}}]}]}]}' localhost:9092 de.zbw.access.api.v1.AccessService.AddAccessInformation
+grpcurl -plaintext -d '{"items":[{"id":"test_id", "tenant": "www.zbw.eu",
+"usage_guide":"www.zbw.eu/licence", "mention":"true",
+"actions":[{"type":"ACTION_TYPE_PROTO_PUBLISH", "permission":"true",
+"restrictions":[{"type":"RESTRICTION_TYPE_PROTO_DATE",
+"attribute":{"type":"ATTRIBUTE_TYPE_PROTO_FROM_DATE",
+"values":"2020.01.01"}}]},{"type":"ACTION_TYPE_PROTO_READ", "permission":"true",
+"restrictions":[{"type":"RESTRICTION_TYPE_PROTO_AGE",
+"attribute":{"type":"ATTRIBUTE_TYPE_PROTO_MIN_AGE", "values":"18"}}]}]}]}' localhost:9092
+de.zbw.lori.api.v1.LoriService.AddAccessInformation
 ```
 
-2. Retrieve access right via grpc:
+2. Retrieve lori right via grpc:
 
 ```shell
-grpcurl -plaintext -d '{"ids":["test_no_rest"]}' localhost:9092 de.zbw.access.api.v1.AccessService.GetAccessInformation
+grpcurl -plaintext -d '{"ids":["test_no_rest"]}' localhost:9092 de.zbw.lori.api.v1.LoriService.GetAccessInformation
 ```
 
 

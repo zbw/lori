@@ -58,13 +58,13 @@ class LoriServerBackendTest : DatabaseTest() {
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
         rightAssignments.forEach { backend.insertRightForMetadataIds(it.first, it.second) }
-        val received = backend.getRightsByMetadataId(givenMetadataEntries[0].metadataId)!!
+        val received = backend.getItemByMetadataId(givenMetadataEntries[0].metadataId)!!
 
         // then
         assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT))))
 
         // when
-        val receivedNoRights = backend.getRightsByMetadataId(givenMetadataEntries[1].metadataId)!!
+        val receivedNoRights = backend.getItemByMetadataId(givenMetadataEntries[1].metadataId)!!
         // then
         assertThat(receivedNoRights, `is`(Item(givenMetadataEntries[1], emptyList())))
     }

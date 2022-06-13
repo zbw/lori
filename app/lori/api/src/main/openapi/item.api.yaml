@@ -79,6 +79,33 @@ item-metadata:
       500:
         description: Internal error
         content: { }
+  get:
+    tags:
+      - item
+    summary: Get all right information related to metadata id
+    operationId: getItemByMetadataId
+    parameters:
+      - name: metadata-id
+        in: path
+        description: Metadata id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'item.model.yaml#/RightRest'
+      404:
+        description: Not found
+        content: { }
+      500:
+        description: Internal error
+        content: { }
 
 item-list:
   get:

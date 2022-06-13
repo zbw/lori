@@ -65,7 +65,7 @@ class LoriServerBackend(
 
     fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
 
-    fun getRightsByMetadataId(metadataId: String): Item? =
+    fun getItemByMetadataId(metadataId: String): Item? =
         dbConnector.getMetadata(listOf(metadataId)).takeIf { it.isNotEmpty() }
             ?.first()
             ?.let { meta ->
@@ -112,4 +112,9 @@ class LoriServerBackend(
     fun deleteMetadata(metadataId: String): Int = dbConnector.deleteMetadata(listOf(metadataId))
 
     fun deleteRight(rightId: String): Int = dbConnector.deleteRights(listOf(rightId))
+
+    fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
+        dbConnector.getRightIdsByMetadata(metadataId).let {
+            dbConnector.getRights(it)
+        }
 }
