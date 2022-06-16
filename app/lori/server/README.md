@@ -41,8 +41,8 @@ Finally, start the service:
 ## Setup in Cloud environment
 
 Due to OTC restrictions to configure databases via terraform (for more details see
-[here](https://github.com/opentelekomcloud/terraform-provider-opentelekomcloud/issues/1513))
-the initial commands need to be applied manually.
+[here](https://github.com/opentelekomcloud/terraform-provider-opentelekomcloud/issues/1513)) the
+initial setup of the database is done manually.
 There exist two possible ways to accomplish this right now:
 1. Run a postgres image in the k8s cluster (recommenend):
     - `kubectl run -n apps -i --tty --rm debug3 --image=library/postgres --restart=Never -- sh`
@@ -52,8 +52,9 @@ There exist two possible ways to accomplish this right now:
 
 Either way, from their you are able to connect to the database for the first time (password
 should be saved in vault):
+
 ```
-psql --no-readline -U lori -h 192.168.179.203 -p 5432 -d root -W
+psql --no-readline -U root -h <FLOATING_IP_ADDRESS_POSTGRES> -p 5432 postgres
 ```
 Create user with a save password and the database:
 
@@ -63,9 +64,13 @@ GRANT lori TO root;
 CREATE DATABASE loriinformation OWNER lori ENCODING UTF8;
 ```
 
+Be aware that this password and database name needs to be provided to Lori. See the the values file
+in the microservice helm chart. Passwords are read from Vault, while the table name is passed with a
+config map.
+
 ## (G)RPC
 
-In order to send messages grpc it the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl) is recommended.
+To send messages via grpc the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl) is recommended.
 
 1. Add an items lori right for _read_ rights with a restriction via grpc.
 
@@ -86,7 +91,6 @@ de.zbw.lori.api.v1.LoriService.AddAccessInformation
 ```shell
 grpcurl -plaintext -d '{"ids":["test_no_rest"]}' localhost:9092 de.zbw.lori.api.v1.LoriService.GetAccessInformation
 ```
-
 
 ## REST
 
