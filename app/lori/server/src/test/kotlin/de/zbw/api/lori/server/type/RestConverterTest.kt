@@ -1,6 +1,8 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.BasisAccessState
+import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.Item
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
@@ -57,14 +59,25 @@ class RestConverterTest {
                 RightRest(
                     rightId = TEST_RIGHT.rightId,
                     accessState = TEST_RIGHT.accessState?.toRest(),
+                    authorRightException = TEST_RIGHT.authorRightException,
+                    basisAccessState = TEST_RIGHT.basisAccessState?.toRest(),
+                    basisStorage = TEST_RIGHT.basisStorage?.toRest(),
                     createdBy = TEST_RIGHT.createdBy,
                     createdOn = TEST_RIGHT.createdOn,
                     endDate = TEST_RIGHT.endDate,
                     lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
                     lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
-                    licenseConditions = TEST_RIGHT.licenseConditions,
+                    licenceContract = TEST_RIGHT.licenceContract,
+                    nonStandardOpenContentLicence = TEST_RIGHT.nonStandardOpenContentLicence,
+                    nonStandardOpenContentLicenceURL = TEST_RIGHT.nonStandardOpenContentLicenceURL,
+                    notesGeneral = TEST_RIGHT.notesGeneral,
+                    notesFormalRules = TEST_RIGHT.notesFormalRules,
+                    notesProcessDocumentation = TEST_RIGHT.notesProcessDocumentation,
+                    notesManagementRelated = TEST_RIGHT.notesManagementRelated,
+                    openContentLicence = TEST_RIGHT.openContentLicence,
+                    restrictedOpenContentLicence = TEST_RIGHT.restrictedOpenContentLicence,
                     startDate = TEST_RIGHT.startDate,
-                    provenanceLicense = TEST_RIGHT.provenanceLicense,
+                    zbwUserAgreement = TEST_RIGHT.zbwUserAgreement,
                 )
             ),
         )
@@ -175,6 +188,9 @@ class RestConverterTest {
         val TEST_RIGHT = ItemRight(
             rightId = "rightId",
             accessState = AccessState.CLOSED,
+            authorRightException = true,
+            basisAccessState = BasisAccessState.LICENCE_CONTRACT,
+            basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
                 2022,
@@ -198,9 +214,17 @@ class RestConverterTest {
                 0,
                 ZoneOffset.UTC,
             ),
-            licenseConditions = "license",
-            provenanceLicense = "provenance",
             startDate = TODAY.minusDays(1),
+            licenceContract = "some contract",
+            nonStandardOpenContentLicence = true,
+            nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
+            notesGeneral = "Some general notes",
+            notesFormalRules = "Some formal rule notes",
+            notesProcessDocumentation = "Some process documentation",
+            notesManagementRelated = "Some management related notes",
+            openContentLicence = "some licence",
+            restrictedOpenContentLicence = false,
+            zbwUserAgreement = true,
         )
 
         val TEST_DA_ITEM = DAItem(

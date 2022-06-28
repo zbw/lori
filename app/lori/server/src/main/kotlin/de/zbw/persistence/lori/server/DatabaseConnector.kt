@@ -2,6 +2,8 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.BasisAccessState
+import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
@@ -270,10 +272,43 @@ class DatabaseConnector(
             this.setIfNotNull(8, right.endDate) { value, idx, prepStmt ->
                 prepStmt.setDate(idx, Date.valueOf(value))
             }
-            this.setIfNotNull(9, right.licenseConditions) { value, idx, prepStmt ->
+            this.setIfNotNull(9, right.notesGeneral) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(10, right.provenanceLicense) { value, idx, prepStmt ->
+            this.setIfNotNull(10, right.licenceContract) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(11, right.authorRightException) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(12, right.zbwUserAgreement) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(13, right.openContentLicence) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(14, right.nonStandardOpenContentLicenceURL) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(15, right.nonStandardOpenContentLicence) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(16, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(17, right.notesFormalRules) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(18, right.basisStorage) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setIfNotNull(19, right.basisAccessState) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setIfNotNull(20, right.notesProcessDocumentation) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(21, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -447,8 +482,19 @@ class DatabaseConnector(
                     accessState = rs.getString(6)?.let { AccessState.valueOf(it) },
                     startDate = rs.getDate(7).toLocalDate(),
                     endDate = rs.getDate(8).toLocalDate(),
-                    licenseConditions = rs.getString(9),
-                    provenanceLicense = rs.getString(10),
+                    notesGeneral = rs.getString(9),
+                    licenceContract = rs.getString(10),
+                    authorRightException = rs.getBoolean(11),
+                    zbwUserAgreement = rs.getBoolean(12),
+                    openContentLicence = rs.getString(13),
+                    nonStandardOpenContentLicenceURL = rs.getString(14),
+                    nonStandardOpenContentLicence = rs.getBoolean(15),
+                    restrictedOpenContentLicence = rs.getBoolean(16),
+                    notesFormalRules = rs.getString(17),
+                    basisStorage = rs.getString(18)?.let { BasisStorage.valueOf(it) },
+                    basisAccessState = rs.getString(19)?.let { BasisAccessState.valueOf(it) },
+                    notesProcessDocumentation = rs.getString(20),
+                    notesManagementRelated = rs.getString(21),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -593,12 +639,18 @@ class DatabaseConnector(
         const val STATEMENT_INSERT_RIGHT = "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
             "(right_id, created_on, last_updated_on," +
             "created_by, last_updated_by, access_state," +
-            "start_date, end_date, license_conditions," +
-            "provenance_license) " +
+            "start_date, end_date, notes_general," +
+            "licence_contract, author_right_exception, zbw_user_agreement," +
+            "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
+            "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+            "basis_access_state, notes_process_documentation, notes_management_related) " +
             "VALUES(?,?,?," +
             "?,?,?," +
             "?,?,?," +
-            "?)"
+            "?,?,?," +
+            "?,?,?," +
+            "?,?,?," +
+            "?,?,?)"
 
         const val STATEMENT_UPSERT_RIGHT = STATEMENT_INSERT_RIGHT +
             " ON CONFLICT (right_id) " +
@@ -608,8 +660,17 @@ class DatabaseConnector(
             "access_state = EXCLUDED.access_state," +
             "start_date = EXCLUDED.start_date," +
             "end_date = EXCLUDED.end_date," +
-            "license_conditions = EXCLUDED.license_conditions," +
-            "provenance_license = EXCLUDED.provenance_license;"
+            "notes_general = EXCLUDED.notes_general," +
+            "licence_contract = EXCLUDED.licence_contract," +
+            "open_content_licence = EXCLUDED.open_content_licence ," +
+            "non_standard_open_content_licence_url = EXCLUDED.non_standard_open_content_licence_url," +
+            "non_standard_open_content_licence = EXCLUDED.non_standard_open_content_licence," +
+            "restricted_open_content_licence = EXCLUDED.restricted_open_content_licence," +
+            "notes_formal_rules = EXCLUDED.notes_formal_rules," +
+            "basis_storage = EXCLUDED.basis_storage," +
+            "basis_access_state = EXCLUDED.basis_access_state," +
+            "notes_process_documentation = EXCLUDED.notes_process_documentation," +
+            "notes_management_related = EXCLUDED.notes_management_related;"
 
         const val STATEMENT_GET_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
@@ -643,8 +704,11 @@ class DatabaseConnector(
 
         const val STATEMENT_GET_RIGHTS =
             "SELECT right_id, created_on, last_updated_on, created_by," +
-                "last_updated_by, access_state, start_date, end_date," +
-                "license_conditions, provenance_license " +
+                "last_updated_by, access_state, start_date, end_date, notes_general," +
+                "licence_contract, author_right_exception, zbw_user_agreement," +
+                "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
+                "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+                "basis_access_state, notes_process_documentation, notes_management_related " +
                 "FROM $TABLE_NAME_ITEM_RIGHT " +
                 "WHERE right_id = ANY(?)"
 

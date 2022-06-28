@@ -383,9 +383,17 @@ class RightRoutesKtTest {
                 0,
                 ZoneOffset.UTC,
             ),
-            licenseConditions = "license",
-            provenanceLicense = "provenance",
+            licenceContract = "some contract",
+            nonStandardOpenContentLicence = true,
+            nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
+            notesGeneral = "Some general notes",
+            notesFormalRules = "Some formal rule notes",
+            notesProcessDocumentation = "Some process documentation",
+            notesManagementRelated = "Some management related notes",
+            openContentLicence = "some licence",
+            restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
+            zbwUserAgreement = true,
         )
 
         val GSON: Gson = Gson().newBuilder()

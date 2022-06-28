@@ -103,6 +103,26 @@ RightRest:
         - open
         - closed
         - restricted
+    authorRightException:
+      type: boolean
+    basisAccessState:
+      type: string
+      enum:
+        - author_right_exception
+        - licence_contract
+        - licence_contract_oa
+        - open_content_licence
+        - user_agreement
+        - zbw_policy
+    basisStorage:
+      type: string
+      enum:
+        - author_right_exception
+        - licence_contract
+        - open_content_licence
+        - user_agreement
+        - zbw_policy_resticted
+        - zbw_policy_unanswered
     createdBy:
       type: string
     createdOn:
@@ -116,13 +136,29 @@ RightRest:
     lastUpdatedOn:
       type: string
       format: date-time
-    licenseConditions:
+    licenceContract:
       type: string
+    nonStandardOpenContentLicence:
+      type: boolean
+    nonStandardOpenContentLicenceURL:
+      type: string
+    notesGeneral:
+      type: string
+    notesFormalRules:
+      type: string
+    notesProcessDocumentation:
+      type: string
+    notesManagementRelated:
+      type: string
+    openContentLicence:
+      type: string
+    restrictedOpenContentLicence:
+      type: boolean
     startDate:
       type: string
       format: date
-    provenanceLicense:
-      type: string
+    zbwUserAgreement:
+      type: boolean
 
 ItemCountByRight:
   required:
