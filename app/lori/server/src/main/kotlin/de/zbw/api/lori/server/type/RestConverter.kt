@@ -1,6 +1,8 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.BasisAccessState
+import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.Item
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
@@ -91,28 +93,50 @@ fun RightRest.toBusiness(): ItemRight =
     ItemRight(
         rightId = rightId,
         accessState = accessState?.toBusiness(),
+        authorRightException = authorRightException,
+        basisAccessState = basisAccessState?.toBusiness(),
+        basisStorage = basisStorage?.toBusiness(),
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
-        licenseConditions = licenseConditions,
-        provenanceLicense = provenanceLicense,
+        licenceContract = licenceContract,
+        nonStandardOpenContentLicence = nonStandardOpenContentLicence,
+        nonStandardOpenContentLicenceURL = nonStandardOpenContentLicenceURL,
+        notesGeneral = notesGeneral,
+        notesFormalRules = notesFormalRules,
+        notesProcessDocumentation = notesProcessDocumentation,
+        notesManagementRelated = notesManagementRelated,
+        openContentLicence = openContentLicence,
+        restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
+        zbwUserAgreement = zbwUserAgreement,
     )
 
 fun ItemRight.toRest(): RightRest =
     RightRest(
         rightId = rightId,
         accessState = accessState?.toRest(),
+        authorRightException = authorRightException,
+        basisAccessState = basisAccessState?.toRest(),
+        basisStorage = basisStorage?.toRest(),
         createdBy = createdBy,
         createdOn = createdOn,
+        endDate = endDate,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
+        licenceContract = licenceContract,
+        nonStandardOpenContentLicence = nonStandardOpenContentLicence,
+        nonStandardOpenContentLicenceURL = nonStandardOpenContentLicenceURL,
+        notesGeneral = notesGeneral,
+        notesFormalRules = notesFormalRules,
+        notesProcessDocumentation = notesProcessDocumentation,
+        notesManagementRelated = notesManagementRelated,
+        openContentLicence = openContentLicence,
+        restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
-        endDate = endDate,
-        provenanceLicense = provenanceLicense,
-        licenseConditions = licenseConditions,
+        zbwUserAgreement = zbwUserAgreement,
     )
 
 internal fun RightRest.AccessState.toBusiness(): AccessState =
@@ -127,6 +151,46 @@ internal fun AccessState.toRest(): RightRest.AccessState =
         AccessState.CLOSED -> RightRest.AccessState.closed
         AccessState.OPEN -> RightRest.AccessState.open
         AccessState.RESTRICTED -> RightRest.AccessState.restricted
+    }
+
+internal fun RightRest.BasisAccessState.toBusiness(): BasisAccessState =
+    when (this) {
+        RightRest.BasisAccessState.authorRightException -> BasisAccessState.AUTHOR_RIGHT_EXCEPTION
+        RightRest.BasisAccessState.licenceContract -> BasisAccessState.LICENCE_CONTRACT
+        RightRest.BasisAccessState.licenceContractOa -> BasisAccessState.LICENCE_CONTRACT_OA
+        RightRest.BasisAccessState.openContentLicence -> BasisAccessState.OPEN_CONTENT_LICENCE
+        RightRest.BasisAccessState.userAgreement -> BasisAccessState.USER_AGREEMENT
+        RightRest.BasisAccessState.zbwPolicy -> BasisAccessState.ZBW_POLICY
+    }
+
+internal fun BasisAccessState.toRest(): RightRest.BasisAccessState =
+    when (this) {
+        BasisAccessState.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisAccessState.authorRightException
+        BasisAccessState.LICENCE_CONTRACT -> RightRest.BasisAccessState.licenceContract
+        BasisAccessState.LICENCE_CONTRACT_OA -> RightRest.BasisAccessState.licenceContractOa
+        BasisAccessState.OPEN_CONTENT_LICENCE -> RightRest.BasisAccessState.openContentLicence
+        BasisAccessState.USER_AGREEMENT -> RightRest.BasisAccessState.userAgreement
+        BasisAccessState.ZBW_POLICY -> RightRest.BasisAccessState.zbwPolicy
+    }
+
+internal fun RightRest.BasisStorage.toBusiness(): BasisStorage =
+    when (this) {
+        RightRest.BasisStorage.authorRightException -> BasisStorage.AUTHOR_RIGHT_EXCEPTION
+        RightRest.BasisStorage.licenceContract -> BasisStorage.LICENCE_CONTRACT
+        RightRest.BasisStorage.openContentLicence -> BasisStorage.LICENCE_CONTRACT
+        RightRest.BasisStorage.userAgreement -> BasisStorage.USER_AGREEMENT
+        RightRest.BasisStorage.zbwPolicyResticted -> BasisStorage.ZBW_POLICY_RESTRICTED
+        RightRest.BasisStorage.zbwPolicyUnanswered -> BasisStorage.ZBW_POLICY_UNANSWERED
+    }
+
+internal fun BasisStorage.toRest(): RightRest.BasisStorage =
+    when (this) {
+        BasisStorage.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisStorage.authorRightException
+        BasisStorage.LICENCE_CONTRACT -> RightRest.BasisStorage.licenceContract
+        BasisStorage.OPEN_CONTENT_LICENCE -> RightRest.BasisStorage.openContentLicence
+        BasisStorage.USER_AGREEMENT -> RightRest.BasisStorage.userAgreement
+        BasisStorage.ZBW_POLICY_RESTRICTED -> RightRest.BasisStorage.zbwPolicyResticted
+        BasisStorage.ZBW_POLICY_UNANSWERED -> RightRest.BasisStorage.zbwPolicyUnanswered
     }
 
 internal fun MetadataRest.PublicationType.toBusiness(): PublicationType =

@@ -1,6 +1,8 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.BasisAccessState
+import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
@@ -432,18 +434,28 @@ class DatabaseConnectorTest : DatabaseTest() {
             zbdId = "some id",
         )
 
-        private
-        val TEST_RIGHT = ItemRight(
+        private val TEST_RIGHT = ItemRight(
             rightId = "testright",
             accessState = AccessState.OPEN,
+            authorRightException = true,
+            basisAccessState = BasisAccessState.LICENCE_CONTRACT,
+            basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
             createdBy = "user1",
             createdOn = NOW,
-            licenseConditions = "some conditions",
-            provenanceLicense = "provenance license",
+            endDate = TODAY,
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
+            licenceContract = "some contract",
+            nonStandardOpenContentLicence = true,
+            nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
+            notesGeneral = "Some general notes",
+            notesFormalRules = "Some formal rule notes",
+            notesProcessDocumentation = "Some process documentation",
+            notesManagementRelated = "Some management related notes",
+            openContentLicence = "some licence",
+            restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
-            endDate = TODAY,
+            zbwUserAgreement = true,
         )
     }
 

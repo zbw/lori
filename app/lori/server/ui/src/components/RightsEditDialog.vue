@@ -123,18 +123,18 @@
           <v-row>
             <v-col cols="12" md="8">
               <v-textarea
-                v-model="tmpRight.licenseConditions"
-                ref="licenseConditions"
-                label="Lizensbedingungen"
+                v-model="tmpRight.licenceContract"
+                ref="licenceContract"
+                label="Lizenzvertrag"
               ></v-textarea>
             </v-col>
           </v-row>
           <v-row>
             <v-col cols="12" md="8">
               <v-textarea
-                v-model="tmpRight.provenanceLicense"
-                ref="provenanceLicense"
-                label="Provenance"
+                v-model="tmpRight.notesGeneral"
+                ref="notesGeneral"
+                label="Allgemeines Bemerkungsfeld"
               ></v-textarea>
             </v-col>
           </v-row>
@@ -190,7 +190,7 @@
 <script lang="ts">
 import api from "@/api/api";
 import Component from "vue-class-component";
-import { Prop, Ref, Vue, Watch } from "vue-property-decorator";
+import { Prop, Vue, Watch } from "vue-property-decorator";
 import {
   ItemEntry,
   RightRest,
@@ -365,8 +365,8 @@ export default class RightsEditDialog extends Vue {
       rightId: this.tmpRight.rightId,
       startDate: this.tmpRight.startDate,
       endDate: this.tmpRight.endDate,
-      provenanceLicense: this.tmpRight.provenanceLicense,
-      licenseConditions: this.tmpRight.licenseConditions,
+      notesGeneral: this.tmpRight.notesGeneral,
+      licenceContract: this.tmpRight.licenceContract,
     };
   }
 
@@ -379,9 +379,14 @@ export default class RightsEditDialog extends Vue {
   }
 
   get accessStatus() {
-    return Object.keys(RightRestAccessStateEnum).filter((access) => {
-      return isNaN(Number(access));
-    });
+    return (
+      Object.keys(RightRestAccessStateEnum)
+        .filter((access) => {
+          return isNaN(Number(access));
+        })
+        // TODO(CB): this is a workaround. replace when reworking the UI
+        .map((access) => access.toLowerCase())
+    );
   }
 
   // Watched properties

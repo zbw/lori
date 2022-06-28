@@ -95,12 +95,12 @@ export default class RightsView extends Vue {
       value: "endDate",
     },
     {
-      text: "Lizenzbedingungen",
-      value: "licenseConditions",
+      text: "Lizenzvertrag",
+      value: "licenceContract",
     },
     {
-      text: "Provenienz-Lizenzinformation",
-      value: "provenanceLicense",
+      text: "Allgemines Bemerkungsfeld",
+      value: "notesGeneral",
     },
     {
       text: "Zuletzt verändert am",

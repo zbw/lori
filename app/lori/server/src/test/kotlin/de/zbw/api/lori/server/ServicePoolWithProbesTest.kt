@@ -1,15 +1,17 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
-import io.ktor.http.HttpMethod
+import de.zbw.business.lori.server.LoriServerBackend
+import io.ktor.client.request.get
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.netty.NettyApplicationEngine
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.withTestApplication
+import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import org.testng.Assert.assertEquals
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -48,36 +50,23 @@ class ServicePoolWithProbesTest {
         ready: Boolean,
         healthy: Boolean,
     ) {
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                // One service is always healthy and ready
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                },
-                mockk {
-                    every { isReady() } returns ready
-                    every { isHealthy() } returns healthy
-                }
-            ),
-            config = TEST_CONFIG,
-            backend = mockk(),
-            tracer = mockk(),
-        )
-        withTestApplication(servicePool.application()) {
-            with(handleRequest(HttpMethod.Get, "/ready")) {
-                if (ready) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                } else {
-                    assertEquals(HttpStatusCode.InternalServerError, response.status())
-                }
+
+        val servicePool = getServicePool(mockk(), ready, healthy)
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val readyResonse = client.get("/ready")
+            if (ready) {
+                assertEquals(HttpStatusCode.OK, readyResonse.status)
+            } else {
+                assertEquals(HttpStatusCode.InternalServerError, readyResonse.status)
             }
-            with(handleRequest(HttpMethod.Get, "/healthz")) {
-                if (healthy) {
-                    assertEquals(HttpStatusCode.OK, response.status())
-                } else {
-                    assertEquals(HttpStatusCode.InternalServerError, response.status())
-                }
+            val healthzResponse = client.get("/healthz")
+            if (healthy) {
+                assertEquals(HttpStatusCode.OK, healthzResponse.status)
+            } else {
+                assertEquals(HttpStatusCode.InternalServerError, healthzResponse.status)
             }
         }
     }
@@ -134,6 +123,19 @@ class ServicePoolWithProbesTest {
             digitalArchiveUsername = "testuser",
             digitalArchivePassword = "password",
             digitalArchiveBasicAuth = "basicauth"
+        )
+
+        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
+        fun getServicePool(backend: LoriServerBackend, isReady: Boolean, isHealthy: Boolean) = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns isReady
+                    every { isHealthy() } returns isHealthy
+                }
+            ),
+            config = TEST_CONFIG,
+            backend = backend,
+            tracer = tracer,
         )
     }
 }
