@@ -54,6 +54,6 @@ tasks.jacocoTestCoverageVerification {
 }
 
 tasks.test {
-    // https://github.com/mockk/mockk/issues/681
+    // See https://github.com/mockk/mockk/issues/681 for more information
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
