@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 ## Author   : Christian Bay
-## About    : A small helper script that returns a list of all microservices
-##              that have been changed in this branch.
+## About    : A small helper script to find all microservices
+##              that have been changed and push their image to the registry.
 regex="app\/(\w*)\/(server|api)\/\S*"
 
 # Production
