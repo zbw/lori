@@ -14,7 +14,6 @@ before_script:
 
 build:
   stage: build
-  image: $VAULT_OPENJDK_IMAGE
   script:
     - ./gradlew assemble --parallel
   artifacts:
