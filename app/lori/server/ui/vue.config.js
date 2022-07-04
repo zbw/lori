@@ -10,5 +10,8 @@ module.exports = {
       includeLocales: false,
       enableBridge: true
     }
+  },
+  devServer: {
+      proxy: 'http://localhost:8082',
   }
 };

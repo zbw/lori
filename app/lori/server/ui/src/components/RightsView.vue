@@ -7,7 +7,12 @@
       Rechteinformation erfolgreich hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
-    <v-data-table :headers="selectedHeaders" :items="rights" :key="renderKey">
+    <v-data-table
+      :headers="selectedHeaders"
+      :items="rights"
+      :key="renderKey"
+      @click:row="editRightSlot"
+    >
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Rechteinformationen</v-toolbar-title>
@@ -23,15 +28,6 @@
       </template>
       <template v-slot:item.startDate="{ item }">
         <td>{{ item.startDate.toLocaleDateString("de") }}</td>
-      </template>
-      <template v-slot:item.lastUpdatedOn="{ item }">
-        <td>{{ parseLastUpdatedOn(item.lastUpdatedOn) }}</td>
-      </template>
-      <template v-slot:item.actions="{ item, index }">
-        <v-icon small class="mr-2" @click="editRight(item, index)">
-          mdi-pencil
-        </v-icon>
-        <v-icon small @click="initiateDeleteDialog(item, index)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
 
@@ -63,6 +59,8 @@ import { RightRest } from "@/generated-sources/openapi";
 import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
+import {ItemSlot} from "@/types/types";
+
 @Component({
   components: { RightsDeleteDialog, RightsEditDialog },
 })
@@ -94,23 +92,6 @@ export default class RightsView extends Vue {
       text: "End-Datum",
       value: "endDate",
     },
-    {
-      text: "Lizenzvertrag",
-      value: "licenceContract",
-    },
-    {
-      text: "Allgemines Bemerkungsfeld",
-      value: "notesGeneral",
-    },
-    {
-      text: "Zuletzt verändert am",
-      value: "lastUpdatedOn",
-    },
-    {
-      text: "Zuletzt verändert von",
-      value: "lastUpdatedBy",
-    },
-    { text: "Actions", value: "actions", sortable: false },
   ] as Array<DataTableHeader>;
   private isNew = false;
   private renderKey = 0;
@@ -133,6 +114,10 @@ export default class RightsView extends Vue {
     this.updateSuccessful = false;
     this.addSuccessful = false;
     this.isNew = false;
+  }
+
+  public editRightSlot(right: RightRest, slot: ItemSlot): void {
+    this.editRight(right, slot.index);
   }
 
   public newRight(): void {

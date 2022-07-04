@@ -1,8 +1,9 @@
 <template>
   <v-dialog
-    v-model="activated"
+    v-model="isActivated"
     max-width="500px"
-    @close="emitClosedDialog"
+    v-on:close="emitClosedDialog"
+    v-on:click:outside="emitClosedDialog"
     :retain-focus="false"
   >
     <v-card>
@@ -24,7 +25,6 @@
               <v-text-field
                 v-else
                 ref="rightId"
-                disabled="false"
                 v-model="tmpRight.rightId"
                 label="RightId"
                 :rules="[rules.required]"
@@ -210,6 +210,7 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
+  private isActivated = false;
   private formHasErrors = false;
   private showDialog = false;
   private menuEndDate = false;
@@ -239,7 +240,6 @@ export default class RightsEditDialog extends Vue {
   public close(): void {
     this.updateConfirmDialog = false;
     this.updateInProgress = false;
-    this.activated = false;
     this.emitClosedDialog();
   }
 
@@ -265,7 +265,6 @@ export default class RightsEditDialog extends Vue {
             rightId: this.tmpRight.rightId,
           } as ItemEntry)
           .then(() => {
-            this.right = Object.assign({}, this.tmpRight);
             this.$emit("addSuccessful", this.tmpRight);
             this.close();
           })
@@ -293,7 +292,6 @@ export default class RightsEditDialog extends Vue {
     api
       .updateRight(this.tmpRight)
       .then(() => {
-        this.right = Object.assign({}, this.tmpRight);
         this.$emit("updateSuccessful", this.tmpRight, this.index);
         this.close();
       })
@@ -405,6 +403,11 @@ export default class RightsEditDialog extends Vue {
   @Watch("isNew")
   onChangedIsNew(): void {
     this.isIdDisabled();
+  }
+
+  @Watch("activated")
+  onChangedActivated(other: boolean): void {
+    this.isActivated = other;
   }
 }
 </script>
