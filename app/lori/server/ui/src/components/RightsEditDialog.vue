@@ -16,10 +16,35 @@
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
+                  <v-subheader>Right-Id</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-if="isNew"
+                    ref="rightId"
+                    v-model="tmpRight.rightId"
+                    :rules="[rules.required]"
+                    outlined
+                    hint="Rechte Id"
+                  ></v-text-field>
+                  <v-text-field
+                    v-else
+                    ref="rightId"
+                    v-model="tmpRight.rightId"
+                    :rules="[rules.required]"
+                    outlined
+                    hint="Rechte Id"
+                    disabled
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
                   <v-subheader>Aktueller Access-Status</v-subheader>
                 </v-col>
                 <v-col cols="8">
                   <v-select
+                    ref="accessState"
                     :items="accessStatus"
                     v-model="tmpRight.accessState"
                     :rules="[rules.required]"
@@ -124,7 +149,13 @@
                   <v-subheader>Group</v-subheader>
                 </v-col>
                 <v-col cols="8">
-                  <v-text-field outlined hint="Erklärung Gruppe"></v-text-field>
+                  <v-text-field
+                    outlined
+                    hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
+                    ref="group"
+                    :rules="[rules.maxLength256]"
+                    maxlength="256"
+                  ></v-text-field>
                 </v-col>
               </v-row>
               <v-row>
@@ -136,6 +167,8 @@
                     v-model="tmpRight.notesGeneral"
                     hint="Allgemeine Bemerkungen"
                     ref="notesGeneral"
+                    :rules="[rules.maxLength256]"
+                    maxlength="256"
                     outlined
                   ></v-textarea>
                 </v-col>
@@ -165,6 +198,7 @@
                 <v-col cols="8">
                   <v-switch
                     v-model="tmpRight.authorRightException"
+                    ref="authorRightException"
                     color="indigo"
                     label="Ja"
                     hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
@@ -246,6 +280,8 @@
                 <v-col cols="8">
                   <v-textarea
                     v-model="tmpRight.notesFormalRules"
+                    :rules="[rules.maxLength256]"
+                    maxlength="256"
                     hint="Bemerkungen für formale Regelungen"
                     ref="notesFormalRules"
                     outlined
@@ -269,6 +305,7 @@
                   <v-select
                     :items="basisStorage"
                     v-model="tmpRight.basisStorage"
+                    ref="basisStorage"
                     :rules="[rules.required]"
                     outlined
                   ></v-select>
@@ -281,6 +318,7 @@
                 <v-col cols="8">
                   <v-select
                     :items="basisAccessState"
+                    ref="basisAccessState"
                     v-model="tmpRight.basisAccessState"
                     :rules="[rules.required]"
                     outlined
@@ -295,6 +333,8 @@
                   <v-textarea
                     v-model="tmpRight.notesProcessDocumentation"
                     hint="Bemerkungen für prozessdokumentierende Elemente"
+                    :rules="[rules.maxLength256]"
+                    maxlength="256"
                     ref="notesProcessDocumentation"
                     outlined
                   ></v-textarea>
@@ -305,7 +345,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <v-expansion-panel-header>
-            Steuerungsrelevante Elemente
+            Metadaten über den Rechteinformationseintrag
           </v-expansion-panel-header>
           <v-expansion-panel-content>
             <v-container fluid>
@@ -340,8 +380,10 @@
                 <v-col cols="8">
                   <v-textarea
                     v-model="tmpRight.notesManagementRelated"
-                    hint="Bemerkungen für steuerungsrelevante Elemente"
-                    ref="notesProcessDocumentation"
+                    hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
+                    ref="notesManagementRelated"
+                    :rules="[rules.maxLength256]"
+                    maxlength="256"
                     outlined
                   ></v-textarea>
                 </v-col>
@@ -438,8 +480,16 @@ export default class RightsEditDialog extends Vue {
     required: (value: string) => {
       return !!value || "Benötigt.";
     },
-    counter: (value: string) => {
+    maxLength20: (value: string) => {
       return value.length <= 20 || "Max 20 Zeichen";
+    },
+    maxLength256: (value: string) => {
+      console.log('Value: ' + value)
+      if (value == undefined) {
+        return true;
+      } else {
+        return value.length <= 256 || "Max 256 Zeichen";
+      }
     },
   };
 
@@ -555,6 +605,7 @@ export default class RightsEditDialog extends Vue {
   public validateInput() {
     this.formHasErrors = false;
     Object.keys(this.form).forEach((f) => {
+      console.log("Refs: " + f);
       if (
         !(
           this.$refs[f] as Vue & { validate: (v: boolean) => boolean }
@@ -573,9 +624,15 @@ export default class RightsEditDialog extends Vue {
   get form() {
     return {
       rightId: this.tmpRight.rightId,
+      accessState: this.tmpRight.accessState,
+      basisAccessState: this.tmpRight.accessState,
+      basisStorage: this.tmpRight.basisStorage,
       startDate: this.tmpRight.startDate,
       endDate: this.tmpRight.endDate,
+      notesFormalRules: this.tmpRight.notesFormalRules,
       notesGeneral: this.tmpRight.notesGeneral,
+      notesProcessDocumentation: this.tmpRight.notesProcessDocumentation,
+      notesManagementRelated: this.tmpRight.notesManagementRelated,
       licenceContract: this.tmpRight.licenceContract,
     };
   }
