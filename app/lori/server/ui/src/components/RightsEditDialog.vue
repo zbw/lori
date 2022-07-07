@@ -7,7 +7,7 @@
     :retain-focus="false"
   >
     <v-card>
-      <v-expansion-panels focusable multiple v-model="panel">
+      <v-expansion-panels focusable multiple v-model="openPanelsDefault">
         <v-expansion-panel>
           <v-expansion-panel-header
             >Steuerungsrelevante Elemente</v-expansion-panel-header
@@ -45,8 +45,8 @@
                 <v-col cols="8">
                   <v-select
                     ref="accessState"
-                    :items="accessStatus"
-                    v-model="tmpRight.accessState"
+                    :items="accessStatusSelect"
+                    v-model="showAccessState"
                     :rules="[rules.required]"
                     outlined
                   ></v-select>
@@ -154,6 +154,7 @@
                     hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
                     ref="group"
                     :rules="[rules.maxLength256]"
+                    counter
                     maxlength="256"
                   ></v-text-field>
                 </v-col>
@@ -168,6 +169,7 @@
                     hint="Allgemeine Bemerkungen"
                     ref="notesGeneral"
                     :rules="[rules.maxLength256]"
+                    counter
                     maxlength="256"
                     outlined
                   ></v-textarea>
@@ -186,8 +188,10 @@
                 </v-col>
                 <v-col cols="8">
                   <v-text-field
+                    v-model="tmpRight.licenceContract"
+                    ref="licenceContract"
                     outlined
-                    hint="Erklärung Lizenzvertrag"
+                    hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -202,7 +206,7 @@
                     color="indigo"
                     label="Ja"
                     hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
-                    persistent-hint="true"
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -216,7 +220,7 @@
                     color="indigo"
                     label="Ja"
                     hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
-                    persistent-hint="true"
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -225,7 +229,10 @@
                   <v-subheader>Open-Content-Licence</v-subheader>
                 </v-col>
                 <v-col cols="8">
-                  <v-text-field outlined hint="Erklärung OCL"></v-text-field>
+                  <v-text-field
+                    outlined
+                    hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                  ></v-text-field>
                 </v-col>
               </v-row>
               <v-row>
@@ -255,7 +262,7 @@
                     color="indigo"
                     label="Ja"
                     hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
-                    persistent-hint="true"
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -269,7 +276,7 @@
                     color="indigo"
                     label="Ja"
                     hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
-                    persistent-hint="true"
+                    persistent-hint
                   ></v-switch>
                 </v-col>
               </v-row>
@@ -280,10 +287,11 @@
                 <v-col cols="8">
                   <v-textarea
                     v-model="tmpRight.notesFormalRules"
+                    ref="notesFormalRules"
                     :rules="[rules.maxLength256]"
+                    counter
                     maxlength="256"
                     hint="Bemerkungen für formale Regelungen"
-                    ref="notesFormalRules"
                     outlined
                   ></v-textarea>
                 </v-col>
@@ -304,7 +312,7 @@
                 <v-col cols="8">
                   <v-select
                     :items="basisStorage"
-                    v-model="tmpRight.basisStorage"
+                    v-model="selectBasisStorage"
                     ref="basisStorage"
                     :rules="[rules.required]"
                     outlined
@@ -319,7 +327,7 @@
                   <v-select
                     :items="basisAccessState"
                     ref="basisAccessState"
-                    v-model="tmpRight.basisAccessState"
+                    v-model="selectBasisAccessState"
                     :rules="[rules.required]"
                     outlined
                   ></v-select>
@@ -334,6 +342,7 @@
                     v-model="tmpRight.notesProcessDocumentation"
                     hint="Bemerkungen für prozessdokumentierende Elemente"
                     :rules="[rules.maxLength256]"
+                    counter
                     maxlength="256"
                     ref="notesProcessDocumentation"
                     outlined
@@ -383,6 +392,7 @@
                     hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                     ref="notesManagementRelated"
                     :rules="[rules.maxLength256]"
+                    counter
                     maxlength="256"
                     outlined
                   ></v-textarea>
@@ -463,7 +473,23 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  private panel = [0];
+  private openPanelsDefault = [0, 1, 2, 3];
+  private accessStatusSelect = ["Open", "Closed", "Restricted"];
+  private basisAccessState = [
+    "Lizenzvertrag",
+    "OA-Rechte aus Lizenzvertrag",
+    "Nutzungsvereinbarung",
+    "Urheberrechtschranke",
+    "ZBW-Policy",
+  ];
+  private basisStorage = [
+    "Lizenzvertrag",
+    "Nutzungsvereinbarung",
+    "Urheberrechtschranke",
+    "Open-Content-Lizenz",
+    "ZBW-Policy (Eingeschränkte OCL)",
+    "ZBW-Policy (unbeantwortete Rechteanforderung)",
+  ];
   private isActivated = false;
   private formHasErrors = false;
   private showDialog = false;
@@ -480,11 +506,7 @@ export default class RightsEditDialog extends Vue {
     required: (value: string) => {
       return !!value || "Benötigt.";
     },
-    maxLength20: (value: string) => {
-      return value.length <= 20 || "Max 20 Zeichen";
-    },
     maxLength256: (value: string) => {
-      console.log('Value: ' + value)
       if (value == undefined) {
         return true;
       } else {
@@ -605,7 +627,6 @@ export default class RightsEditDialog extends Vue {
   public validateInput() {
     this.formHasErrors = false;
     Object.keys(this.form).forEach((f) => {
-      console.log("Refs: " + f);
       if (
         !(
           this.$refs[f] as Vue & { validate: (v: boolean) => boolean }
@@ -637,45 +658,147 @@ export default class RightsEditDialog extends Vue {
     };
   }
 
+  get showAccessState() {
+    let accessState = this.tmpRight.accessState;
+    if (accessState == undefined) {
+      return "Kein Wert";
+    } else {
+      switch (accessState) {
+        case RightRestAccessStateEnum.Open:
+          return "Open";
+        case RightRestAccessStateEnum.Closed:
+          return "Closed";
+        default:
+          return "Restriced";
+      }
+    }
+  }
+
+  set showAccessState(value: string | undefined) {
+    if (value == undefined || value == "Kein Wert") {
+      this.tmpRight.accessState = undefined;
+    } else {
+      switch (value) {
+        case "Open":
+          this.tmpRight.accessState = RightRestAccessStateEnum.Open;
+          break;
+        case "Closed":
+          this.tmpRight.accessState = RightRestAccessStateEnum.Closed;
+          break;
+        default:
+          this.tmpRight.accessState = RightRestAccessStateEnum.Restricted;
+          break;
+      }
+    }
+  }
+  get selectBasisStorage() {
+    let basisStorage = this.tmpRight.basisStorage;
+    if (basisStorage == undefined) {
+      return "Kein Wert";
+    } else {
+      switch (basisStorage) {
+        case RightRestBasisStorageEnum.AuthorRightException:
+          return "Urheberrechtschranke";
+        case RightRestBasisStorageEnum.UserAgreement:
+          return "Nutzungsvereinbarung";
+        case RightRestBasisStorageEnum.OpenContentLicence:
+          return "Open-Content-Lizenz";
+        case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
+          return "ZBW-Policy (unbeantwortete Rechteanforderung)";
+        case RightRestBasisStorageEnum.ZbwPolicyRestricted:
+          return "ZBW-Policy (Eingeschränkte OCL)";
+        default:
+          return "Lizenzvertrag";
+      }
+    }
+  }
+
+  set selectBasisStorage(value: string | undefined) {
+    if (value == undefined) {
+      this.tmpRight.basisStorage = undefined;
+    } else {
+      switch (value) {
+        case "Lizenzvertrag":
+          this.tmpRight.basisStorage =
+            RightRestBasisStorageEnum.LicenceContract;
+          break;
+        case "Nutzungsvereinbarung":
+          this.tmpRight.basisStorage = RightRestBasisStorageEnum.UserAgreement;
+          break;
+        case "Urheberrechtschranke":
+          this.tmpRight.basisStorage =
+            RightRestBasisStorageEnum.AuthorRightException;
+          break;
+        case "Open-Content-Lizenz":
+          this.tmpRight.basisStorage =
+            RightRestBasisStorageEnum.OpenContentLicence;
+          break;
+        case "ZBW-Policy (Eingeschränkte OCL)":
+          this.tmpRight.basisStorage =
+            RightRestBasisStorageEnum.ZbwPolicyRestricted;
+          break;
+        default:
+          this.tmpRight.basisStorage =
+            RightRestBasisStorageEnum.ZbwPolicyUnanswered;
+          break;
+      }
+    }
+  }
+  get selectBasisAccessState() {
+    let basisAccessState = this.tmpRight.basisAccessState;
+    if (basisAccessState == undefined) {
+      return "Kein Wert";
+    } else {
+      switch (basisAccessState) {
+        case RightRestBasisAccessStateEnum.AuthorRightException:
+          return "Urheberrechtschranke";
+        case RightRestBasisAccessStateEnum.UserAgreement:
+          return "Nutzungsvereinbarung";
+        case RightRestBasisAccessStateEnum.LicenceContract:
+          return "Lizenzvertrag";
+        case RightRestBasisAccessStateEnum.ZbwPolicy:
+          return "ZBW-Policy";
+        default:
+          return "OA-Rechte aus Lizenzvertrag";
+      }
+    }
+  }
+
+  set selectBasisAccessState(value: string | undefined) {
+    if (value == undefined) {
+      this.tmpRight.basisAccessState = undefined;
+    } else {
+      switch (value) {
+        case "Lizenzvertrag":
+          this.tmpRight.basisAccessState =
+            RightRestBasisAccessStateEnum.LicenceContract;
+          break;
+        case "Nutzungsvereinbarung":
+          this.tmpRight.basisAccessState =
+            RightRestBasisAccessStateEnum.UserAgreement;
+          break;
+        case "OA-Rechte aus Lizenzvertrag":
+          this.tmpRight.basisAccessState =
+            RightRestBasisAccessStateEnum.LicenceContractOa;
+          break;
+        case "Urheberrechtschranke":
+          this.tmpRight.basisAccessState =
+            RightRestBasisAccessStateEnum.AuthorRightException;
+          break;
+        default:
+          this.tmpRight.basisAccessState =
+            RightRestBasisAccessStateEnum.ZbwPolicy;
+          break;
+      }
+    }
+  }
+
   get title() {
     if (this.isNew) {
       return "Erstelle";
     } else {
       return "Editiere";
     }
-  }
-
-  get accessStatus(): string[] {
-    return (
-      Object.keys(RightRestAccessStateEnum)
-        .filter((access) => {
-          return isNaN(Number(access));
-        })
-        // TODO(CB): this is a workaround. replace when reworking the UI
-        .map((access) => access.toLowerCase())
-    );
-  }
-
-  get basisAccessState(): string[] {
-    return (
-      Object.keys(RightRestBasisAccessStateEnum)
-        .filter((access) => {
-          return isNaN(Number(access));
-        })
-        // TODO(CB): this is a workaround. replace when reworking the UI
-        .map((access) => access.toLowerCase())
-    );
-  }
-
-  get basisStorage(): string[] {
-    return (
-      Object.keys(RightRestBasisStorageEnum)
-        .filter((access) => {
-          return isNaN(Number(access));
-        })
-        // TODO(CB): this is a workaround. replace when reworking the UI
-        .map((access) => access.toLowerCase())
-    );
   }
 
   // Watched properties
