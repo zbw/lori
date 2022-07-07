@@ -122,11 +122,11 @@ metadata-id:
   get:
     tags:
       - right
-    operationId: getRightById
+    operationId: getMetadataById
     parameters:
       - name: id
         in: path
-        description: Right id queried
+        description: Metadata id queried
         required: true
         schema:
           type: string
@@ -138,7 +138,7 @@ metadata-id:
             schema:
               type: array
               items:
-                $ref: 'item.model.yaml#/RightRest'
+                $ref: 'item.model.yaml#/MetadataRest'
       400:
         description: Bad request
         content: { }

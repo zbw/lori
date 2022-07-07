@@ -121,7 +121,7 @@ RightRest:
         - licence_contract
         - open_content_licence
         - user_agreement
-        - zbw_policy_resticted
+        - zbw_policy_restricted
         - zbw_policy_unanswered
     createdBy:
       type: string
