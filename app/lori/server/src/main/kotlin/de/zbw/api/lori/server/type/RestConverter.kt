@@ -179,7 +179,7 @@ internal fun RightRest.BasisStorage.toBusiness(): BasisStorage =
         RightRest.BasisStorage.licenceContract -> BasisStorage.LICENCE_CONTRACT
         RightRest.BasisStorage.openContentLicence -> BasisStorage.LICENCE_CONTRACT
         RightRest.BasisStorage.userAgreement -> BasisStorage.USER_AGREEMENT
-        RightRest.BasisStorage.zbwPolicyResticted -> BasisStorage.ZBW_POLICY_RESTRICTED
+        RightRest.BasisStorage.zbwPolicyRestricted -> BasisStorage.ZBW_POLICY_RESTRICTED
         RightRest.BasisStorage.zbwPolicyUnanswered -> BasisStorage.ZBW_POLICY_UNANSWERED
     }
 
@@ -189,7 +189,7 @@ internal fun BasisStorage.toRest(): RightRest.BasisStorage =
         BasisStorage.LICENCE_CONTRACT -> RightRest.BasisStorage.licenceContract
         BasisStorage.OPEN_CONTENT_LICENCE -> RightRest.BasisStorage.openContentLicence
         BasisStorage.USER_AGREEMENT -> RightRest.BasisStorage.userAgreement
-        BasisStorage.ZBW_POLICY_RESTRICTED -> RightRest.BasisStorage.zbwPolicyResticted
+        BasisStorage.ZBW_POLICY_RESTRICTED -> RightRest.BasisStorage.zbwPolicyRestricted
         BasisStorage.ZBW_POLICY_UNANSWERED -> RightRest.BasisStorage.zbwPolicyUnanswered
     }
 
