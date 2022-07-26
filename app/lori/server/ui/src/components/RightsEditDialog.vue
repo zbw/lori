@@ -22,13 +22,14 @@
                   <v-text-field
                     v-if="isNew"
                     ref="rightId"
-                    v-model="tmpRight.rightId"
+                    label="Wird automatisch generiert"
                     :rules="[rules.required]"
+                    disabled
                     outlined
                     hint="Rechte Id"
                   ></v-text-field>
                   <v-text-field
-                    v-else
+                    v-if="!isNew"
                     ref="rightId"
                     v-model="tmpRight.rightId"
                     :rules="[rules.required]"
@@ -458,7 +459,7 @@ import {
   RightRestAccessStateEnum,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
-} from "@/generated-sources/openapi";
+} from "../generated-sources/openapi";
 
 @Component
 export default class RightsEditDialog extends Vue {
@@ -538,17 +539,19 @@ export default class RightsEditDialog extends Vue {
 
   public createRight(): void {
     this.updateInProgress = true;
+    this.tmpRight.rightId = "unset";
     this.tmpRight.startDate = new Date(this.tmpStartDate);
     this.tmpRight.endDate = new Date(this.tmpEndDate);
     api
       .addRight(this.tmpRight)
-      .then(() => {
+      .then((r) => {
         api
           .addItemEntry({
             metadataId: this.metadataId,
-            rightId: this.tmpRight.rightId,
+            rightId: r.rightId,
           } as ItemEntry)
           .then(() => {
+            this.tmpRight.rightId = r.rightId;
             this.$emit("addSuccessful", this.tmpRight);
             this.close();
           })
@@ -593,31 +596,11 @@ export default class RightsEditDialog extends Vue {
     if (this.formHasErrors) {
       return;
     }
-    api
-      .getItemCountByRightId(this.tmpRight.rightId)
-      .then((response) => {
-        if (this.isNew) {
-          if (response.count == 0) {
-            this.createRight();
-          } else {
-            this.saveAlertError = true;
-            this.saveAlertErrorMessage =
-              "Eine Rechteinformation mit dieser ID existiert bereits.";
-          }
-        } else {
-          if (response.count == 1) {
-            this.updateRight();
-          } else {
-            this.metadataCount = response.count;
-            this.updateConfirmDialog = true;
-          }
-        }
-      })
-      .catch((e) => {
-        this.saveAlertError = true;
-        this.saveAlertErrorMessage =
-          e.statusText + " (Statuscode: " + e.status + ")";
-      });
+    if (this.isNew) {
+      this.createRight();
+    } else {
+      this.updateRight();
+    }
   }
 
   public isIdDisabled() {
@@ -644,7 +627,6 @@ export default class RightsEditDialog extends Vue {
   // Computed properties
   get form() {
     return {
-      rightId: this.tmpRight.rightId,
       accessState: this.tmpRight.accessState,
       basisAccessState: this.tmpRight.accessState,
       basisStorage: this.tmpRight.basisStorage,

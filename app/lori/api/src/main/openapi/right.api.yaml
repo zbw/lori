@@ -12,9 +12,12 @@ right:
             $ref: 'item.model.yaml#/RightRest'
       required: true
     responses:
-      201:
+      200:
         description: Successfully created
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'item.model.yaml#/RightIdCreated'
       400:
         description: Bad request
         content: { }

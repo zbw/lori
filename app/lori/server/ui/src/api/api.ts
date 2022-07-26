@@ -1,12 +1,12 @@
 import {
-  Configuration,
-  ItemApi,
-  ItemCountByRight,
-  ItemEntry,
-  ItemRest,
-  RightApi,
-  RightRest,
-} from "@/generated-sources/openapi";
+    Configuration,
+    ItemApi,
+    ItemCountByRight,
+    ItemEntry,
+    ItemRest,
+    RightApi, RightIdCreated,
+    RightRest,
+} from "../generated-sources/openapi";
 
 const configuration = new Configuration({
   basePath: window.location.origin + "/api/v1",
@@ -28,7 +28,7 @@ export default {
   updateRight(right: RightRest): Promise<void> {
     return loriRightApi.updateRight({ body: right });
   },
-  addRight(right: RightRest): Promise<void> {
+  addRight(right: RightRest): Promise<RightIdCreated> {
     return loriRightApi.addRight({ body: right });
   },
   addItemEntry(entry: ItemEntry): Promise<void> {

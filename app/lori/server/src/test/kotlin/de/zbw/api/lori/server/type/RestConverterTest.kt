@@ -186,7 +186,7 @@ class RestConverterTest {
         )
 
         val TEST_RIGHT = ItemRight(
-            rightId = "rightId",
+            rightId = "123",
             accessState = AccessState.CLOSED,
             authorRightException = true,
             basisAccessState = BasisAccessState.LICENCE_CONTRACT,

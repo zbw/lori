@@ -172,8 +172,7 @@ class RightRoutesKtTest {
     @Test
     fun testPostRightOK() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } returns false
-            every { insertRight(any()) } returns "foo"
+            every { insertRight(any()) } returns "5"
         }
         val servicePool = getServicePool(backend)
 
@@ -182,37 +181,18 @@ class RightRoutesKtTest {
                 servicePool.application()
             )
             val response = client.post("/api/v1/right") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_RIGHT))
             }
-            assertThat("Should return CREATED", response.status, `is`(HttpStatusCode.Created))
-        }
-    }
-
-    @Test
-    fun testPostRightConflict() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } returns true
-        }
-        val servicePool = getServicePool(backend)
-        testApplication {
-            application(
-                servicePool.application()
-            )
-            val response = client.post("/api/v1/right") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_RIGHT))
-            }
-            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
+            assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
         }
     }
 
     @Test
     fun testPostRightInternalError() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } throws SQLException()
+            every { insertRight(any()) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
         testApplication {
@@ -257,7 +237,7 @@ class RightRoutesKtTest {
     @Test
     fun testPutRightNoContent() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } returns true
+            every { rightContainsId(TEST_RIGHT.rightId!!) } returns true
             every { upsertRight(any()) } returns 1
         }
         val servicePool = getServicePool(backend)
@@ -278,7 +258,7 @@ class RightRoutesKtTest {
     @Test
     fun testPutRightCreated() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } returns false
+            every { rightContainsId(TEST_RIGHT.rightId!!) } returns false
             every { insertRight(any()) } returns "1"
         }
         val servicePool = getServicePool(backend)
@@ -299,7 +279,7 @@ class RightRoutesKtTest {
     @Test
     fun testPutRightBadRequest() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } returns true
+            every { rightContainsId(TEST_RIGHT.rightId!!) } returns true
             every { upsertRight(any()) } returns 1
         }
         val servicePool = getServicePool(backend)
@@ -320,7 +300,7 @@ class RightRoutesKtTest {
     @Test
     fun testPutRightInternalError() {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { rightContainsId(TEST_RIGHT.rightId) } throws SQLException()
+            every { rightContainsId(TEST_RIGHT.rightId!!) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
 
