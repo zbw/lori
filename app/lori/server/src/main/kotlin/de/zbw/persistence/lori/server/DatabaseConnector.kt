@@ -214,7 +214,7 @@ class DatabaseConnector(
 
     fun insertRight(right: ItemRight): String {
         val prepStmt =
-            insertUpsertRightSetParameters(
+            insertRightSetParameters(
                 right,
                 connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS)
             )
@@ -234,7 +234,7 @@ class DatabaseConnector(
 
     fun upsertRight(right: ItemRight): Int {
         val prepStmt =
-            insertUpsertRightSetParameters(
+            upsertRightSetParameters(
                 right,
                 connection.prepareStatement(STATEMENT_UPSERT_RIGHT)
             )
@@ -247,7 +247,7 @@ class DatabaseConnector(
         }
     }
 
-    private fun insertUpsertRightSetParameters(
+    private fun upsertRightSetParameters(
         right: ItemRight,
         prep: PreparedStatement,
     ): PreparedStatement {
@@ -309,6 +309,72 @@ class DatabaseConnector(
                 prepStmt.setString(idx, value)
             }
             this.setIfNotNull(21, right.notesManagementRelated) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+        }
+    }
+
+    private fun insertRightSetParameters(
+        right: ItemRight,
+        prep: PreparedStatement,
+    ): PreparedStatement {
+        val now = Instant.now()
+
+        return prep.apply {
+            this.setTimestamp(1, Timestamp.from(now))
+            this.setTimestamp(2, Timestamp.from(now))
+            this.setIfNotNull(3, right.createdBy) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(4, right.lastUpdatedBy) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(5, right.accessState) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setIfNotNull(6, right.startDate) { value, idx, prepStmt ->
+                prepStmt.setDate(idx, Date.valueOf(value))
+            }
+            this.setIfNotNull(7, right.endDate) { value, idx, prepStmt ->
+                prepStmt.setDate(idx, Date.valueOf(value))
+            }
+            this.setIfNotNull(8, right.notesGeneral) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(9, right.licenceContract) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(10, right.authorRightException) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(11, right.zbwUserAgreement) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(12, right.openContentLicence) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(13, right.nonStandardOpenContentLicenceURL) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(14, right.nonStandardOpenContentLicence) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(15, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
+            this.setIfNotNull(16, right.notesFormalRules) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(17, right.basisStorage) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setIfNotNull(18, right.basisAccessState) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value.toString())
+            }
+            this.setIfNotNull(19, right.notesProcessDocumentation) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(20, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -637,14 +703,14 @@ class DatabaseConnector(
             "?)"
 
         const val STATEMENT_INSERT_RIGHT = "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
-            "(right_id, created_on, last_updated_on," +
+            "(created_on, last_updated_on," +
             "created_by, last_updated_by, access_state," +
             "start_date, end_date, notes_general," +
             "licence_contract, author_right_exception, zbw_user_agreement," +
             "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
             "restricted_open_content_licence, notes_formal_rules, basis_storage," +
             "basis_access_state, notes_process_documentation, notes_management_related) " +
-            "VALUES(?,?,?," +
+            "VALUES(?,?," +
             "?,?,?," +
             "?,?,?," +
             "?,?,?," +
@@ -652,25 +718,40 @@ class DatabaseConnector(
             "?,?,?," +
             "?,?,?)"
 
-        const val STATEMENT_UPSERT_RIGHT = STATEMENT_INSERT_RIGHT +
-            " ON CONFLICT (right_id) " +
-            "DO UPDATE SET " +
-            "last_updated_on = EXCLUDED.last_updated_on," +
-            "last_updated_by = EXCLUDED.last_updated_by," +
-            "access_state = EXCLUDED.access_state," +
-            "start_date = EXCLUDED.start_date," +
-            "end_date = EXCLUDED.end_date," +
-            "notes_general = EXCLUDED.notes_general," +
-            "licence_contract = EXCLUDED.licence_contract," +
-            "open_content_licence = EXCLUDED.open_content_licence ," +
-            "non_standard_open_content_licence_url = EXCLUDED.non_standard_open_content_licence_url," +
-            "non_standard_open_content_licence = EXCLUDED.non_standard_open_content_licence," +
-            "restricted_open_content_licence = EXCLUDED.restricted_open_content_licence," +
-            "notes_formal_rules = EXCLUDED.notes_formal_rules," +
-            "basis_storage = EXCLUDED.basis_storage," +
-            "basis_access_state = EXCLUDED.basis_access_state," +
-            "notes_process_documentation = EXCLUDED.notes_process_documentation," +
-            "notes_management_related = EXCLUDED.notes_management_related;"
+        const val STATEMENT_UPSERT_RIGHT =
+            "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
+                "(right_id, created_on, last_updated_on," +
+                "created_by, last_updated_by, access_state," +
+                "start_date, end_date, notes_general," +
+                "licence_contract, author_right_exception, zbw_user_agreement," +
+                "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
+                "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+                "basis_access_state, notes_process_documentation, notes_management_related) " +
+                "VALUES(?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?)" +
+                " ON CONFLICT (right_id) " +
+                "DO UPDATE SET " +
+                "last_updated_on = EXCLUDED.last_updated_on," +
+                "last_updated_by = EXCLUDED.last_updated_by," +
+                "access_state = EXCLUDED.access_state," +
+                "start_date = EXCLUDED.start_date," +
+                "end_date = EXCLUDED.end_date," +
+                "notes_general = EXCLUDED.notes_general," +
+                "licence_contract = EXCLUDED.licence_contract," +
+                "open_content_licence = EXCLUDED.open_content_licence ," +
+                "non_standard_open_content_licence_url = EXCLUDED.non_standard_open_content_licence_url," +
+                "non_standard_open_content_licence = EXCLUDED.non_standard_open_content_licence," +
+                "restricted_open_content_licence = EXCLUDED.restricted_open_content_licence," +
+                "notes_formal_rules = EXCLUDED.notes_formal_rules," +
+                "basis_storage = EXCLUDED.basis_storage," +
+                "basis_access_state = EXCLUDED.basis_access_state," +
+                "notes_process_documentation = EXCLUDED.notes_process_documentation," +
+                "notes_management_related = EXCLUDED.notes_management_related;"
 
         const val STATEMENT_GET_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +

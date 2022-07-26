@@ -51,17 +51,15 @@ class LoriServerBackendTest : DatabaseTest() {
             TEST_Metadata,
             TEST_Metadata.copy(metadataId = "no_rights"),
         )
-        val rightAssignments = listOf(
-            TEST_RIGHT to listOf(TEST_Metadata.metadataId)
-        )
+        val rightAssignments = TEST_RIGHT to listOf(TEST_Metadata.metadataId)
 
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
-        rightAssignments.forEach { backend.insertRightForMetadataIds(it.first, it.second) }
+        val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
         val received = backend.getItemByMetadataId(givenMetadataEntries[0].metadataId)!!
 
         // then
-        assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT))))
+        assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT.copy(rightId = generatedRightId)))))
 
         // when
         val receivedNoRights = backend.getItemByMetadataId(givenMetadataEntries[1].metadataId)!!
@@ -193,7 +191,7 @@ class LoriServerBackendTest : DatabaseTest() {
         )
 
         private val TEST_RIGHT = ItemRight(
-            rightId = "test_right",
+            rightId = "12",
             accessState = AccessState.OPEN,
             authorRightException = true,
             basisAccessState = BasisAccessState.LICENCE_CONTRACT,

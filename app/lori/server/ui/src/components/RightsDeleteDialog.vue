@@ -56,21 +56,27 @@ export default class RightsDeleteDialog extends Vue {
     this.deleteAlertError = false;
     this.deleteError = false;
 
-    api
-      .deleteItemRelation(this.metadataId, this.right.rightId)
-      .then(() => {
-        this.$emit("deleteSuccessful", this.index);
-        this.close();
-      })
-      .catch((e) => {
-        this.deleteErrorMessage =
-          e.statusText + "(Statuscode: " + e.status + ")";
-        this.deleteError = true;
-        this.deleteAlertError = true;
-      })
-      .finally(() => {
-        this.deleteInProgress = false;
-      });
+    if (this.right.rightId == undefined) {
+      this.deleteErrorMessage = "A right-id is missing!";
+      this.deleteError = true;
+      this.deleteAlertError = true;
+    } else {
+      api
+        .deleteItemRelation(this.metadataId, this.right.rightId)
+        .then(() => {
+          this.$emit("deleteSuccessful", this.index);
+          this.close();
+        })
+        .catch((e) => {
+          this.deleteErrorMessage =
+            e.statusText + "(Statuscode: " + e.status + ")";
+          this.deleteError = true;
+          this.deleteAlertError = true;
+        })
+        .finally(() => {
+          this.deleteInProgress = false;
+        });
+    }
   }
 }
 </script>

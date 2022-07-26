@@ -26,11 +26,12 @@ class LoriServerBackend(
     fun insertRightForMetadataIds(
         right: ItemRight,
         metadataIds: List<String>,
-    ) {
+    ): String {
         val pkRight = dbConnector.insertRight(right)
         metadataIds.forEach {
             dbConnector.insertItem(it, pkRight)
         }
+        return pkRight
     }
 
     fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.insertItem(metadataId, rightId)

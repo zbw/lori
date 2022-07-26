@@ -90,7 +90,6 @@ MetadataRest:
 
 RightRest:
   required:
-    - rightId
     - startDate
     - endDate
   type: object
@@ -170,3 +169,11 @@ ItemCountByRight:
       type: string
     count:
       type: integer
+
+RightIdCreated:
+  required:
+    - rightId
+  type: object
+  properties:
+    rightId:
+      type: string

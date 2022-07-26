@@ -4,6 +4,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -72,19 +73,13 @@ fun Routing.rightRoutes(
             withContext(span.asContextElement()) {
                 try {
                     @Suppress("SENSELESS_COMPARISON")
-                    val right: RightRest =
-                        call.receive(RightRest::class)
-                            .takeIf { it.rightId != null }
-                            ?: throw BadRequestException("Invalid Json has been provided")
+                    val right: RightRest = call.receive(RightRest::class)
+                        .takeIf { it.startDate != null && it.accessState != null }
+                        ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("right", right.toString())
-                    if (backend.rightContainsId(right.rightId)) {
-                        span.setStatus(StatusCode.ERROR, "Conflict: Resource with this id already exists.")
-                        call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")
-                    } else {
-                        backend.insertRight(right.toBusiness())
-                        span.setStatus(StatusCode.OK)
-                        call.respond(HttpStatusCode.Created)
-                    }
+                    val pk = backend.insertRight(right.toBusiness())
+                    span.setStatus(StatusCode.OK)
+                    call.respond(RightIdCreated(pk))
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, "Invalid input")
@@ -107,10 +102,10 @@ fun Routing.rightRoutes(
                     @Suppress("SENSELESS_COMPARISON")
                     val right: RightRest =
                         call.receive(RightRest::class)
-                            .takeIf { it.rightId != null }
+                            .takeIf { it.rightId != null && it.startDate != null && it.accessState != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("right", right.toString())
-                    if (backend.rightContainsId(right.rightId)) {
+                    if (backend.rightContainsId(right.rightId!!)) {
                         backend.upsertRight(right.toBusiness())
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
