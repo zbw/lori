@@ -473,7 +473,9 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  private openPanelsDefault = [0, 1, 2, 3];
+  // Important: Panels that contain required fields need to be expanded by default.
+  // Otherwise, the required check will be skipped (see validateInput).
+  private openPanelsDefault = [0];
   private accessStatusSelect = ["Open", "Closed", "Restricted"];
   private basisAccessState = [
     "Lizenzvertrag",
@@ -612,6 +614,7 @@ export default class RightsEditDialog extends Vue {
     this.formHasErrors = false;
     Object.keys(this.form).forEach((f) => {
       if (
+        this.$refs[f] != undefined &&
         !(
           this.$refs[f] as Vue & { validate: (v: boolean) => boolean }
         ).validate(true)
