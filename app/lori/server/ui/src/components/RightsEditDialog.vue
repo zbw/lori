@@ -7,6 +7,28 @@
     :retain-focus="false"
   >
     <v-card>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="blue darken-1"
+          text
+          @click="save"
+          :disabled="updateInProgress"
+          >Speichern
+        </v-btn>
+        <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
+        <v-btn icon @click="initiateDeleteDialog">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+        <RightsDeleteDialog
+          :activated="deleteDialogActivated"
+          :right="right"
+          :index="index"
+          :metadataId="metadataId"
+          v-on:deleteSuccessful="deleteSuccessful"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+        ></RightsDeleteDialog>
+      </v-card-actions>
       <v-expansion-panels focusable multiple v-model="openPanelsDefault">
         <v-expansion-panel>
           <v-expansion-panel-header
@@ -404,7 +426,7 @@
       </v-expansion-panels>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="cancel">Abbrechen</v-btn>
+        <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
         <v-btn
           color="blue darken-1"
           text
@@ -452,15 +474,18 @@
 import api from "@/api/api";
 import Component from "vue-class-component";
 import { Prop, Vue, Watch } from "vue-property-decorator";
+import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
   ItemEntry,
   RightRest,
   RightRestAccessStateEnum,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
-} from "../generated-sources/openapi";
+} from "@/generated-sources/openapi";
 
-@Component
+@Component({
+  components: { RightsDeleteDialog },
+})
 export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   activated!: boolean;
@@ -492,6 +517,7 @@ export default class RightsEditDialog extends Vue {
     "ZBW-Policy (Eingeschränkte OCL)",
     "ZBW-Policy (unbeantwortete Rechteanforderung)",
   ];
+  private deleteDialogActivated = false;
   private isActivated = false;
   private formHasErrors = false;
   private showDialog = false;
@@ -536,6 +562,15 @@ export default class RightsEditDialog extends Vue {
 
   public cancelConfirm(): void {
     this.updateConfirmDialog = false;
+  }
+
+  public deleteSuccessful(): void {
+    this.$emit("deleteSuccessful");
+    this.emitClosedDialog();
+  }
+
+  public deleteDialogClosed(): void {
+    this.deleteDialogActivated = false;
   }
 
   public createRight(): void {
@@ -622,6 +657,10 @@ export default class RightsEditDialog extends Vue {
         this.formHasErrors = true;
       }
     });
+  }
+
+  public initiateDeleteDialog(): void {
+    this.deleteDialogActivated = true;
   }
 
   mounted(): void {

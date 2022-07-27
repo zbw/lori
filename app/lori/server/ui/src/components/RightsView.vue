@@ -37,6 +37,7 @@
       :index="currentIndex"
       :isNew="isNew"
       :metadataId="metadataId"
+      v-on:deleteSuccessful="deleteSuccessful"
       v-on:editDialogClosed="editRightClosed"
       v-on:updateSuccessful="updateRight"
       v-on:addSuccessful="addRight"
