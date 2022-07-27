@@ -547,7 +547,7 @@ class DatabaseConnector(
                     lastUpdatedBy = rs.getString(5),
                     accessState = rs.getString(6)?.let { AccessState.valueOf(it) },
                     startDate = rs.getDate(7).toLocalDate(),
-                    endDate = rs.getDate(8).toLocalDate(),
+                    endDate = rs.getDate(8)?.toLocalDate(),
                     notesGeneral = rs.getString(9),
                     licenceContract = rs.getString(10),
                     authorRightException = rs.getBoolean(11),
