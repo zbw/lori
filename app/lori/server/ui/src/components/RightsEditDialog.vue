@@ -125,7 +125,6 @@
                         outlined
                         v-bind="attrs"
                         v-on="on"
-                        :rules="[rules.required]"
                         required
                       ></v-text-field>
                     </template>
@@ -541,7 +540,8 @@ export default class RightsEditDialog extends Vue {
     this.updateInProgress = true;
     this.tmpRight.rightId = "unset";
     this.tmpRight.startDate = new Date(this.tmpStartDate);
-    this.tmpRight.endDate = new Date(this.tmpEndDate);
+    this.tmpRight.endDate =
+      this.tmpEndDate == "" ? undefined : new Date(this.tmpEndDate);
     api
       .addRight(this.tmpRight)
       .then((r) => {
@@ -575,7 +575,8 @@ export default class RightsEditDialog extends Vue {
   public updateRight(): void {
     this.updateInProgress = true;
     this.tmpRight.startDate = new Date(this.tmpStartDate);
-    this.tmpRight.endDate = new Date(this.tmpEndDate);
+    this.tmpRight.endDate =
+      this.tmpEndDate == "" ? undefined : new Date(this.tmpEndDate);
     api
       .updateRight(this.tmpRight)
       .then(() => {
@@ -651,7 +652,7 @@ export default class RightsEditDialog extends Vue {
         case RightRestAccessStateEnum.Closed:
           return "Closed";
         default:
-          return "Restriced";
+          return "Restricted";
       }
     }
   }
@@ -788,8 +789,12 @@ export default class RightsEditDialog extends Vue {
   onChangedRight(other: RightRest): void {
     this.tmpRight = Object.assign({}, other);
     if (!this.isNew) {
-      this.tmpEndDate = this.right.endDate.toISOString().slice(0, 10);
       this.tmpStartDate = this.right.startDate.toISOString().slice(0, 10);
+      if (this.right.endDate !== undefined) {
+        this.tmpEndDate = this.right.endDate.toISOString().slice(0, 10);
+      } else {
+        this.tmpEndDate = "";
+      }
     } else {
       this.tmpEndDate = "";
       this.tmpStartDate = "";

@@ -24,7 +24,7 @@
         </v-toolbar>
       </template>
       <template v-slot:item.endDate="{ item }">
-        <td>{{ item.endDate.toLocaleDateString("de") }}</td>
+        <td>{{ parseEndDate(item.endDate) }}</td>
       </template>
       <template v-slot:item.startDate="{ item }">
         <td>{{ item.startDate.toLocaleDateString("de") }}</td>
@@ -59,7 +59,7 @@ import { RightRest } from "@/generated-sources/openapi";
 import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
-import {ItemSlot} from "@/types/types";
+import { ItemSlot } from "@/types/types";
 
 @Component({
   components: { RightsDeleteDialog, RightsEditDialog },
@@ -167,6 +167,14 @@ export default class RightsView extends Vue {
       return "Please reload";
     } else {
       return d.toLocaleString("de");
+    }
+  }
+
+  public parseEndDate(d: Date | undefined): string {
+    if (d === undefined) {
+      return "";
+    } else {
+      return d.toLocaleDateString("de");
     }
   }
 

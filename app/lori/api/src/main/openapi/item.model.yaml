@@ -91,7 +91,6 @@ MetadataRest:
 RightRest:
   required:
     - startDate
-    - endDate
   type: object
   properties:
     rightId:
