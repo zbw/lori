@@ -34,7 +34,7 @@
           <v-expansion-panel-header
             >Steuerungsrelevante Elemente</v-expansion-panel-header
           >
-          <v-expansion-panel-content>
+          <v-expansion-panel-content eager>
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
@@ -202,7 +202,7 @@
         </v-expansion-panel>
         <v-expansion-panel>
           <v-expansion-panel-header>Formale Regelung</v-expansion-panel-header>
-          <v-expansion-panel-content>
+          <v-expansion-panel-content eager>
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
@@ -325,7 +325,7 @@
           <v-expansion-panel-header
             >Prozessdokumentierende Elemente</v-expansion-panel-header
           >
-          <v-expansion-panel-content>
+          <v-expansion-panel-content eager>
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
@@ -378,7 +378,7 @@
           <v-expansion-panel-header>
             Metadaten über den Rechteinformationseintrag
           </v-expansion-panel-header>
-          <v-expansion-panel-content>
+          <v-expansion-panel-content eager>
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
@@ -498,8 +498,6 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  // Important: Panels that contain required fields need to be expanded by default.
-  // Otherwise, the required check will be skipped (see validateInput).
   private openPanelsDefault = [0];
   private accessStatusSelect = ["Open", "Closed", "Restricted"];
   private basisAccessState = [
