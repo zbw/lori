@@ -1,10 +1,7 @@
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
-    <v-alert v-model="updateSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich geupdated.
-    </v-alert>
     <v-alert v-model="addSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich hinzugefügt.
+      Rechteinformation erfolgreich für Item {{ this.metadataId }} hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
     <v-data-table
@@ -43,6 +40,7 @@
         :isNew="isNew"
         :metadataId="metadataId"
         v-on:addSuccessful="addRight"
+        v-on:editDialogClosed="editRightClosed"
       ></RightsEditDialog>
     </v-dialog>
     <v-dialog

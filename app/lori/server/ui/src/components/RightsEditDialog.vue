@@ -542,9 +542,8 @@ export default class RightsEditDialog extends Vue {
     this.updateConfirmDialog = false;
   }
 
-  public deleteSuccessful(): void {
-    this.$emit("deleteSuccessful");
-    this.emitClosedDialog();
+  public deleteSuccessful(index: number): void {
+    this.$emit("deleteSuccessful", index,  this.right.rightId);
   }
 
   public deleteDialogClosed(): void {
@@ -806,6 +805,7 @@ export default class RightsEditDialog extends Vue {
   // Watched properties
   @Watch("right")
   onChangedRight(other: RightRest): void {
+    this.updateInProgress = false;
     this.tmpRight = Object.assign({}, other);
     if (!this.isNew) {
       this.tmpStartDate = this.right.startDate.toISOString().slice(0, 10);
