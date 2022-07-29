@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-model="activated" max-width="500px" :retain-focus="false">
+  <v-dialog v-model="isActivated" max-width="500px" :retain-focus="false">
     <v-card>
       <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
       <v-alert v-model="deleteAlertError" dismissible text type="error">
@@ -27,7 +27,7 @@
 import api from "@/api/api";
 import Component from "vue-class-component";
 import Vue from "vue";
-import { Prop } from "vue-property-decorator";
+import {Prop, Watch} from "vue-property-decorator";
 import { RightRest } from "@/generated-sources/openapi";
 
 @Component
@@ -45,9 +45,10 @@ export default class RightsDeleteDialog extends Vue {
   private deleteInProgress = false;
   private deleteErrorMessage = "";
   private deleteError = false;
+  private isActivated = false;
 
   public close(): void {
-    this.activated = false;
+    this.isActivated = false;
     this.$emit("deleteDialogClosed");
   }
 
@@ -77,6 +78,11 @@ export default class RightsDeleteDialog extends Vue {
           this.deleteInProgress = false;
         });
     }
+  }
+
+  @Watch("activated")
+  onChangedActivated(other: boolean): void {
+    this.isActivated = other;
   }
 }
 </script>

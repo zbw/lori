@@ -1,17 +1,14 @@
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
-    <v-alert v-model="updateSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich geupdated.
-    </v-alert>
     <v-alert v-model="addSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich hinzugefügt.
+      Rechteinformation erfolgreich für Item {{ this.metadataId }} hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
     <v-data-table
       :headers="selectedHeaders"
       :items="rights"
       :key="renderKey"
-      @click:row="editRightSlot"
+      @click:row="activateTabEdit"
     >
       <template v-slot:top>
         <v-toolbar flat>
@@ -30,25 +27,36 @@
         <td>{{ item.startDate.toLocaleDateString("de") }}</td>
       </template>
     </v-data-table>
-
-    <RightsEditDialog
-      :activated="editDialogActivated"
-      :right="currentRight"
-      :index="currentIndex"
-      :isNew="isNew"
-      :metadataId="metadataId"
-      v-on:editDialogClosed="editRightClosed"
+    <v-dialog
+      v-model="editDialogActivated"
+      max-width="1000px"
+      v-on:close="editRightClosed"
+      v-on:click:outside="editRightClosed"
+      :retain-focus="false"
+    >
+      <RightsEditDialog
+        :right="currentRight"
+        :index="currentIndex"
+        :isNew="isNew"
+        :metadataId="metadataId"
+        v-on:addSuccessful="addRight"
+        v-on:editDialogClosed="editRightClosed"
+      ></RightsEditDialog>
+    </v-dialog>
+    <v-dialog
+      v-model="tabDialogActivated"
+      v-on:close="tabDialogClosed"
+      v-on:click:outside="tabDialogClosed"
       v-on:updateSuccessful="updateRight"
-      v-on:addSuccessful="addRight"
-    ></RightsEditDialog>
-    <RightsDeleteDialog
-      :activated="deleteDialogActivated"
-      :right="currentRight"
-      :index="currentIndex"
-      :metadataId="metadataId"
-      v-on:deleteSuccessful="deleteSuccessful"
-      v-on:deleteDialogClosed="deleteDialogClosed"
-    ></RightsDeleteDialog>
+      :retain-focus="false"
+    >
+      <RightsEditTabs
+        :rights="rights"
+        :metadata-id="metadataId"
+        v-on:tabDialogClosed="tabDialogClosed"
+        v-on:updateSuccessful="updateRight"
+      ></RightsEditTabs>
+    </v-dialog>
   </v-card>
 </template>
 
@@ -60,9 +68,10 @@ import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import { ItemSlot } from "@/types/types";
+import RightsEditTabs from "@/components/RightsEditTabs.vue";
 
 @Component({
-  components: { RightsDeleteDialog, RightsEditDialog },
+  components: { RightsDeleteDialog, RightsEditDialog, RightsEditTabs },
 })
 export default class RightsView extends Vue {
   @Prop({ required: true })
@@ -71,9 +80,9 @@ export default class RightsView extends Vue {
   metadataId!: string;
 
   private editDialogActivated = false;
+  private tabDialogActivated = false;
   private currentRight: RightRest = {} as RightRest;
   private currentIndex = 0;
-  private deleteDialogActivated = false;
   private headers = [
     {
       text: "Rechte-Id",
@@ -119,6 +128,13 @@ export default class RightsView extends Vue {
   public editRightSlot(right: RightRest, slot: ItemSlot): void {
     this.editRight(right, slot.index);
   }
+  public activateTabEdit(): void {
+    this.tabDialogActivated = true;
+  }
+
+  public tabDialogClosed(): void {
+    this.tabDialogActivated = false;
+  }
 
   public newRight(): void {
     this.editDialogActivated = true;
@@ -143,23 +159,12 @@ export default class RightsView extends Vue {
   public updateRight(right: RightRest, index: number): void {
     this.rights[index] = right;
     this.renderKey += 1;
-    this.editDialogActivated = false;
     this.updateSuccessful = true;
-  }
-
-  public initiateDeleteDialog(right: RightRest, index: number): void {
-    this.currentIndex = index;
-    this.currentRight = right;
-    this.deleteDialogActivated = true;
   }
 
   public deleteSuccessful(index: number): void {
     this.rights.splice(index, 1);
     this.renderKey += 1;
-  }
-
-  public deleteDialogClosed(): void {
-    this.deleteDialogActivated = false;
   }
 
   public parseLastUpdatedOn(d: Date | undefined): string {

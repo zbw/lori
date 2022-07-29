@@ -1,469 +1,476 @@
 <template>
-  <v-dialog
-    v-model="isActivated"
-    max-width="1000px"
-    v-on:close="emitClosedDialog"
-    v-on:click:outside="emitClosedDialog"
-    :retain-focus="false"
-  >
-    <v-card>
-      <v-expansion-panels focusable multiple v-model="openPanelsDefault">
-        <v-expansion-panel>
-          <v-expansion-panel-header
-            >Steuerungsrelevante Elemente</v-expansion-panel-header
-          >
-          <v-expansion-panel-content>
-            <v-container fluid>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Right-Id</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-if="isNew"
-                    ref="rightId"
-                    label="Wird automatisch generiert"
-                    :rules="[rules.required]"
-                    disabled
-                    outlined
-                    hint="Rechte Id"
-                  ></v-text-field>
-                  <v-text-field
-                    v-if="!isNew"
-                    ref="rightId"
-                    v-model="tmpRight.rightId"
-                    :rules="[rules.required]"
-                    outlined
-                    hint="Rechte Id"
-                    disabled
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Aktueller Access-Status</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-select
-                    ref="accessState"
-                    :items="accessStatusSelect"
-                    v-model="showAccessState"
-                    :rules="[rules.required]"
-                    outlined
-                  ></v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Gültigkeit Startdatum</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-menu
-                    ref="menuStart"
-                    v-model="menuStartDate"
-                    :close-on-content-click="false"
-                    :return-value.sync="tmpStartDate"
-                    transition="scale-transition"
-                    offset-y
-                    min-width="auto"
-                  >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        v-model="tmpStartDate"
-                        ref="startDate"
-                        label="Start-Datum"
-                        prepend-icon="mdi-calendar"
-                        readonly
-                        outlined
-                        v-bind="attrs"
-                        v-on="on"
-                        :rules="[rules.required]"
-                        required
-                      ></v-text-field>
-                    </template>
-                    <v-date-picker v-model="tmpStartDate" no-title scrollable>
-                      <v-spacer></v-spacer>
-                      <v-btn
-                        text
-                        color="primary"
-                        @click="menuStartDate = false"
-                      >
-                        Cancel
-                      </v-btn>
-                      <v-btn
-                        text
-                        color="primary"
-                        @click="$refs.menuStart.save(tmpStartDate)"
-                      >
-                        OK
-                      </v-btn>
-                    </v-date-picker>
-                  </v-menu>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Gültigkeit Enddatum</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-menu
-                    ref="menuEnd"
-                    v-model="menuEndDate"
-                    :close-on-content-click="false"
-                    :return-value.sync="tmpEndDate"
-                    transition="scale-transition"
-                    offset-y
-                    min-width="auto"
-                  >
-                    <template v-slot:activator="{ on, attrs }">
-                      <v-text-field
-                        v-model="tmpEndDate"
-                        ref="endDate"
-                        label="End-Datum"
-                        prepend-icon="mdi-calendar"
-                        readonly
-                        outlined
-                        v-bind="attrs"
-                        v-on="on"
-                        required
-                      ></v-text-field>
-                    </template>
-                    <v-date-picker v-model="tmpEndDate" no-title scrollable>
-                      <v-spacer></v-spacer>
-                      <v-btn text color="primary" @click="menuEndDate = false">
-                        Cancel
-                      </v-btn>
-                      <v-btn
-                        text
-                        color="primary"
-                        @click="$refs.menuEnd.save(tmpEndDate)"
-                      >
-                        OK
-                      </v-btn>
-                    </v-date-picker>
-                  </v-menu>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Group</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    outlined
-                    hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
-                    ref="group"
-                    :rules="[rules.maxLength256]"
-                    counter
-                    maxlength="256"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Bemerkungen</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-textarea
-                    v-model="tmpRight.notesGeneral"
-                    hint="Allgemeine Bemerkungen"
-                    ref="notesGeneral"
-                    :rules="[rules.maxLength256]"
-                    counter
-                    maxlength="256"
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header>Formale Regelung</v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-container fluid>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Lizenzvertrag</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.licenceContract"
-                    ref="licenceContract"
-                    outlined
-                    hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Urheberrechtschrankennutzung</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-switch
-                    v-model="tmpRight.authorRightException"
-                    ref="authorRightException"
-                    color="indigo"
-                    label="Ja"
-                    hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
-                    persistent-hint
-                  ></v-switch>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>ZBW Nutzungsvereinbarung</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-switch
-                    v-model="tmpRight.zbwUserAgreement"
-                    color="indigo"
-                    label="Ja"
-                    hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
-                    persistent-hint
-                  ></v-switch>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Open-Content-Licence</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    outlined
-                    hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>
-                    Nicht-standardisierte Open-Content-Lizenz (URL)
-                  </v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                    outlined
-                    hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader
-                    >Nicht-standardisierte Open-Content-Lizenz (keine
-                    URL)</v-subheader
-                  >
-                </v-col>
-                <v-col cols="8">
-                  <v-switch
-                    v-model="tmpRight.nonStandardOpenContentLicence"
-                    color="indigo"
-                    label="Ja"
-                    hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
-                    persistent-hint
-                  ></v-switch>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Eingeschränkte Open-Content-Lizenz</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-switch
-                    v-model="tmpRight.restrictedOpenContentLicence"
-                    color="indigo"
-                    label="Ja"
-                    hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
-                    persistent-hint
-                  ></v-switch>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Bemerkungen</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-textarea
-                    v-model="tmpRight.notesFormalRules"
-                    ref="notesFormalRules"
-                    :rules="[rules.maxLength256]"
-                    counter
-                    maxlength="256"
-                    hint="Bemerkungen für formale Regelungen"
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header
-            >Prozessdokumentierende Elemente</v-expansion-panel-header
-          >
-          <v-expansion-panel-content>
-            <v-container fluid>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Basis der Speicherung</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-select
-                    :items="basisStorage"
-                    v-model="selectBasisStorage"
-                    ref="basisStorage"
-                    :rules="[rules.required]"
-                    outlined
-                  ></v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Basis des Access-Status</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-select
-                    :items="basisAccessState"
-                    ref="basisAccessState"
-                    v-model="selectBasisAccessState"
-                    :rules="[rules.required]"
-                    outlined
-                  ></v-select>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Bemerkungen</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-textarea
-                    v-model="tmpRight.notesProcessDocumentation"
-                    hint="Bemerkungen für prozessdokumentierende Elemente"
-                    :rules="[rules.maxLength256]"
-                    counter
-                    maxlength="256"
-                    ref="notesProcessDocumentation"
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header>
-            Metadaten über den Rechteinformationseintrag
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-container fluid>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Zuletzt editiert am</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.lastUpdatedOn"
-                    readonly
-                    outlined
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Zuletzt editiert von</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.lastUpdatedBy"
-                    readonly
-                    outlined
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4">
-                  <v-subheader>Bemerkungen</v-subheader>
-                </v-col>
-                <v-col cols="8">
-                  <v-textarea
-                    v-model="tmpRight.notesManagementRelated"
-                    hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
-                    ref="notesManagementRelated"
-                    :rules="[rules.maxLength256]"
-                    counter
-                    maxlength="256"
-                    outlined
-                  ></v-textarea>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="cancel">Abbrechen</v-btn>
-        <v-btn
-          color="blue darken-1"
-          text
-          @click="save"
-          :disabled="updateInProgress"
-          >Speichern
-        </v-btn>
-      </v-card-actions>
-      <v-alert v-model="saveAlertError" dismissible text type="error">
-        Speichern war nicht erfolgreich:
-        {{ saveAlertErrorMessage }}
-      </v-alert>
-      <v-dialog v-model="updateConfirmDialog" max-width="500px">
-        <v-card>
-          <v-card-title class="text-h5"> Achtung</v-card-title>
-          <v-card-text>
-            {{ metadataCount - 1 }} andere Items verweisen ebenfalls auf diese
-            Rechteinformation. Mit der Bestätigung wird die Rechteinformation an
-            all diesen geändert. Bist du dir sicher?
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn
-              :disabled="updateInProgress"
-              color="blue darken-1"
-              @click="cancelConfirm"
-              >Abbrechen
-            </v-btn>
-            <v-btn
-              :loading="updateInProgress"
-              color="error"
-              @click="updateRight"
-            >
-              Update
-            </v-btn>
-            <v-spacer></v-spacer>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </v-card>
-  </v-dialog>
+  <v-card>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn
+        color="blue darken-1"
+        text
+        @click="save"
+        :disabled="updateInProgress"
+        >Speichern
+      </v-btn>
+      <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
+      <v-btn icon @click="initiateDeleteDialog">
+        <v-icon>mdi-delete</v-icon>
+      </v-btn>
+      <RightsDeleteDialog
+        :activated="deleteDialogActivated"
+        :right="right"
+        :index="index"
+        :metadataId="metadataId"
+        v-on:deleteSuccessful="deleteSuccessful"
+        v-on:deleteDialogClosed="deleteDialogClosed"
+      ></RightsDeleteDialog>
+    </v-card-actions>
+    <v-expansion-panels focusable multiple v-model="openPanelsDefault">
+      <v-expansion-panel>
+        <v-expansion-panel-header
+          >Steuerungsrelevante Elemente</v-expansion-panel-header
+        >
+        <v-expansion-panel-content eager>
+          <v-container fluid>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Right-Id</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-if="isNew"
+                  ref="rightId"
+                  label="Wird automatisch generiert"
+                  :rules="[rules.required]"
+                  disabled
+                  outlined
+                  hint="Rechte Id"
+                ></v-text-field>
+                <v-text-field
+                  v-if="!isNew"
+                  ref="rightId"
+                  v-model="tmpRight.rightId"
+                  :rules="[rules.required]"
+                  outlined
+                  hint="Rechte Id"
+                  disabled
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Aktueller Access-Status</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-select
+                  ref="accessState"
+                  :items="accessStatusSelect"
+                  v-model="showAccessState"
+                  :rules="[rules.required]"
+                  outlined
+                ></v-select>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Gültigkeit Startdatum</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-menu
+                  ref="menuStart"
+                  v-model="menuStartDate"
+                  :close-on-content-click="false"
+                  :return-value.sync="tmpStartDate"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="tmpStartDate"
+                      ref="startDate"
+                      label="Start-Datum"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      outlined
+                      v-bind="attrs"
+                      v-on="on"
+                      :rules="[rules.required]"
+                      required
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker v-model="tmpStartDate" no-title scrollable>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="primary" @click="menuStartDate = false">
+                      Cancel
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="$refs.menuStart.save(tmpStartDate)"
+                    >
+                      OK
+                    </v-btn>
+                  </v-date-picker>
+                </v-menu>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Gültigkeit Enddatum</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-menu
+                  ref="menuEnd"
+                  v-model="menuEndDate"
+                  :close-on-content-click="false"
+                  :return-value.sync="tmpEndDate"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="auto"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="tmpEndDate"
+                      ref="endDate"
+                      label="End-Datum"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      outlined
+                      v-bind="attrs"
+                      v-on="on"
+                      required
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker v-model="tmpEndDate" no-title scrollable>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="primary" @click="menuEndDate = false">
+                      Cancel
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="$refs.menuEnd.save(tmpEndDate)"
+                    >
+                      OK
+                    </v-btn>
+                  </v-date-picker>
+                </v-menu>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Group</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  outlined
+                  hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
+                  ref="group"
+                  :rules="[rules.maxLength256]"
+                  counter
+                  maxlength="256"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Bemerkungen</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-textarea
+                  v-model="tmpRight.notesGeneral"
+                  hint="Allgemeine Bemerkungen"
+                  ref="notesGeneral"
+                  :rules="[rules.maxLength256]"
+                  counter
+                  maxlength="256"
+                  outlined
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+      <v-expansion-panel>
+        <v-expansion-panel-header>Formale Regelung</v-expansion-panel-header>
+        <v-expansion-panel-content eager>
+          <v-container fluid>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Lizenzvertrag</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.licenceContract"
+                  ref="licenceContract"
+                  outlined
+                  hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Urheberrechtschrankennutzung</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                  v-model="tmpRight.authorRightException"
+                  ref="authorRightException"
+                  color="indigo"
+                  label="Ja"
+                  hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
+                  persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>ZBW Nutzungsvereinbarung</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                  v-model="tmpRight.zbwUserAgreement"
+                  color="indigo"
+                  label="Ja"
+                  hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
+                  persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Open-Content-Licence</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  outlined
+                  hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>
+                  Nicht-standardisierte Open-Content-Lizenz (URL)
+                </v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.nonStandardOpenContentLicenceURL"
+                  outlined
+                  hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader
+                  >Nicht-standardisierte Open-Content-Lizenz (keine
+                  URL)</v-subheader
+                >
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                  v-model="tmpRight.nonStandardOpenContentLicence"
+                  color="indigo"
+                  label="Ja"
+                  hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
+                  persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Eingeschränkte Open-Content-Lizenz</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                  v-model="tmpRight.restrictedOpenContentLicence"
+                  color="indigo"
+                  label="Ja"
+                  hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
+                  persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Bemerkungen</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-textarea
+                  v-model="tmpRight.notesFormalRules"
+                  ref="notesFormalRules"
+                  :rules="[rules.maxLength256]"
+                  counter
+                  maxlength="256"
+                  hint="Bemerkungen für formale Regelungen"
+                  outlined
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+      <v-expansion-panel>
+        <v-expansion-panel-header
+          >Prozessdokumentierende Elemente</v-expansion-panel-header
+        >
+        <v-expansion-panel-content eager>
+          <v-container fluid>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Basis der Speicherung</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-select
+                  :items="basisStorage"
+                  v-model="selectBasisStorage"
+                  ref="basisStorage"
+                  :rules="[rules.required]"
+                  outlined
+                ></v-select>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Basis des Access-Status</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-select
+                  :items="basisAccessState"
+                  ref="basisAccessState"
+                  v-model="selectBasisAccessState"
+                  :rules="[rules.required]"
+                  outlined
+                ></v-select>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Bemerkungen</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-textarea
+                  v-model="tmpRight.notesProcessDocumentation"
+                  hint="Bemerkungen für prozessdokumentierende Elemente"
+                  :rules="[rules.maxLength256]"
+                  counter
+                  maxlength="256"
+                  ref="notesProcessDocumentation"
+                  outlined
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+      <v-expansion-panel>
+        <v-expansion-panel-header>
+          Metadaten über den Rechteinformationseintrag
+        </v-expansion-panel-header>
+        <v-expansion-panel-content eager>
+          <v-container fluid>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Zuletzt editiert am</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.lastUpdatedOn"
+                  readonly
+                  outlined
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Zuletzt editiert von</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.lastUpdatedBy"
+                  readonly
+                  outlined
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Bemerkungen</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-textarea
+                  v-model="tmpRight.notesManagementRelated"
+                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
+                  ref="notesManagementRelated"
+                  :rules="[rules.maxLength256]"
+                  counter
+                  maxlength="256"
+                  outlined
+                ></v-textarea>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+    </v-expansion-panels>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
+      <v-btn
+        color="blue darken-1"
+        text
+        @click="save"
+        :disabled="updateInProgress"
+        >Speichern
+      </v-btn>
+    </v-card-actions>
+    <v-alert v-model="saveAlertError" dismissible text type="error">
+      Speichern war nicht erfolgreich:
+      {{ saveAlertErrorMessage }}
+    </v-alert>
+    <v-dialog v-model="updateConfirmDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5"> Achtung</v-card-title>
+        <v-card-text>
+          {{ metadataCount - 1 }} andere Items verweisen ebenfalls auf diese
+          Rechteinformation. Mit der Bestätigung wird die Rechteinformation an
+          all diesen geändert. Bist du dir sicher?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            :disabled="updateInProgress"
+            color="blue darken-1"
+            @click="cancelConfirm"
+            >Abbrechen
+          </v-btn>
+          <v-btn :loading="updateInProgress" color="error" @click="updateRight">
+            Update
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-card>
 </template>
 
 <script lang="ts">
 import api from "@/api/api";
 import Component from "vue-class-component";
 import { Prop, Vue, Watch } from "vue-property-decorator";
+import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
   ItemEntry,
   RightRest,
   RightRestAccessStateEnum,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
-} from "../generated-sources/openapi";
+} from "@/generated-sources/openapi";
 
-@Component
+@Component({
+  components: { RightsDeleteDialog },
+})
 export default class RightsEditDialog extends Vue {
-  @Prop({ required: true })
-  activated!: boolean;
   @Prop({ required: true })
   right!: RightRest;
   @Prop({ required: true })
@@ -473,8 +480,6 @@ export default class RightsEditDialog extends Vue {
   @Prop({ required: true })
   metadataId!: string;
 
-  // Important: Panels that contain required fields need to be expanded by default.
-  // Otherwise, the required check will be skipped (see validateInput).
   private openPanelsDefault = [0];
   private accessStatusSelect = ["Open", "Closed", "Restricted"];
   private basisAccessState = [
@@ -492,9 +497,8 @@ export default class RightsEditDialog extends Vue {
     "ZBW-Policy (Eingeschränkte OCL)",
     "ZBW-Policy (unbeantwortete Rechteanforderung)",
   ];
-  private isActivated = false;
+  private deleteDialogActivated = false;
   private formHasErrors = false;
-  private showDialog = false;
   private menuEndDate = false;
   private menuStartDate = false;
   private tmpStartDate = "";
@@ -536,6 +540,14 @@ export default class RightsEditDialog extends Vue {
 
   public cancelConfirm(): void {
     this.updateConfirmDialog = false;
+  }
+
+  public deleteSuccessful(index: number): void {
+    this.$emit("deleteSuccessful", index,  this.right.rightId);
+  }
+
+  public deleteDialogClosed(): void {
+    this.deleteDialogActivated = false;
   }
 
   public createRight(): void {
@@ -583,7 +595,6 @@ export default class RightsEditDialog extends Vue {
       .updateRight(this.tmpRight)
       .then(() => {
         this.$emit("updateSuccessful", this.tmpRight, this.index);
-        this.close();
       })
       .catch((e) => {
         console.log(e);
@@ -624,8 +635,8 @@ export default class RightsEditDialog extends Vue {
     });
   }
 
-  mounted(): void {
-    this.showDialog = this.activated;
+  public initiateDeleteDialog(): void {
+    this.deleteDialogActivated = true;
   }
 
   // Computed properties
@@ -787,9 +798,14 @@ export default class RightsEditDialog extends Vue {
     }
   }
 
+  mounted(): void {
+    this.onChangedRight(this.right);
+  }
+
   // Watched properties
   @Watch("right")
   onChangedRight(other: RightRest): void {
+    this.updateInProgress = false;
     this.tmpRight = Object.assign({}, other);
     if (!this.isNew) {
       this.tmpStartDate = this.right.startDate.toISOString().slice(0, 10);
@@ -807,11 +823,6 @@ export default class RightsEditDialog extends Vue {
   @Watch("isNew")
   onChangedIsNew(): void {
     this.isIdDisabled();
-  }
-
-  @Watch("activated")
-  onChangedActivated(other: boolean): void {
-    this.isActivated = other;
   }
 }
 </script>
