@@ -1,7 +1,9 @@
 <template>
   <v-card>
     <v-toolbar color="cyan" dark flat :key="renderKey">
-      <v-toolbar-title>Editiere Rechte</v-toolbar-title>
+      <v-toolbar-title>
+        Editiere Rechte für {{ this.metadataId }}
+      </v-toolbar-title>
       <v-spacer></v-spacer>
       <template v-slot:extension>
         <v-tabs v-model="tab" align-with-title show-arrows>

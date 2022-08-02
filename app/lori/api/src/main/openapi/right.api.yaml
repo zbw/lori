@@ -9,7 +9,7 @@ right:
       content:
         application/json:
           schema:
-            $ref: 'item.model.yaml#/RightRest'
+            $ref: 'right.model.yaml#/RightRest'
       required: true
     responses:
       200:
@@ -17,7 +17,7 @@ right:
         content:
           application/json:
             schema:
-              $ref: 'item.model.yaml#/RightIdCreated'
+              $ref: 'right.model.yaml#/RightIdCreated'
       400:
         description: Bad request
         content: { }
@@ -38,7 +38,7 @@ right:
       content:
         application/json:
           schema:
-            $ref: 'item.model.yaml#/RightRest'
+            $ref: 'right.model.yaml#/RightRest'
       required: true
     responses:
       201:
@@ -97,7 +97,7 @@ right-id:
             schema:
               type: array
               items:
-                $ref: 'item.model.yaml#/RightRest'
+                $ref: 'right.model.yaml#/RightRest'
       400:
         description: Bad request
         content: { }

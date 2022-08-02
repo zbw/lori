@@ -4,7 +4,9 @@
     <v-divider></v-divider>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
-        <v-expansion-panel-header>Ebene 1</v-expansion-panel-header>
+        <v-expansion-panel-header>
+          DSpace-Item Metadaten
+        </v-expansion-panel-header>
         <v-expansion-panel-content>
           <v-container>
             <v-row>
@@ -12,6 +14,32 @@
               <v-col>{{ prettyPrint(displayedItem.metadataId) }}</v-col>
               <v-col></v-col>
             </v-row>
+            <v-row v-show="displayedItem.collectionName">
+              <v-col>Collectionsname</v-col>
+              <v-col>{{ prettyPrint(displayedItem.collectionName) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="displayedItem.communityName">
+              <v-col>Communityname</v-col>
+              <v-col>{{ prettyPrint(displayedItem.communityName) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="displayedItem.storageDate">
+              <v-col>Speicherdatum im Digitalen Archiv</v-col>
+              <v-col>{{
+                parseDateToLocaleString(displayedItem.storageDate)
+              }}</v-col>
+              <v-col></v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
+      <v-expansion-panel>
+        <v-expansion-panel-header>
+          Bibliographische Metadaten
+        </v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <v-container>
             <v-row v-show="displayedItem.title">
               <v-col>Titel</v-col>
               <v-col>{{ prettyPrint(displayedItem.title) }}</v-col>
@@ -67,33 +95,9 @@
               <v-col>{{ prettyPrint(displayedItem.rightsK10plus) }}</v-col>
               <v-col></v-col>
             </v-row>
-            <v-row v-show="displayedItem.storageDate">
-              <v-col>Speicherdatum im Digitalen Archiv</v-col>
-              <v-col>{{
-                parseDateToLocaleString(displayedItem.storageDate)
-              }}</v-col>
-              <v-col></v-col>
-            </v-row>
             <v-row v-show="displayedItem.serialNumber">
               <v-col>Seriennummer</v-col>
               <v-col>{{ prettyPrint(displayedItem.serialNumber) }}</v-col>
-              <v-col></v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
-      <v-expansion-panel>
-        <v-expansion-panel-header>Ebene 2</v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <v-container>
-            <v-row v-show="displayedItem.collectionName">
-              <v-col>Collectionsname</v-col>
-              <v-col>{{ prettyPrint(displayedItem.collectionName) }}</v-col>
-              <v-col></v-col>
-            </v-row>
-            <v-row v-show="displayedItem.communityName">
-              <v-col>Communityname</v-col>
-              <v-col>{{ prettyPrint(displayedItem.communityName) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="displayedItem.issn">

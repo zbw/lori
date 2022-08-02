@@ -99,7 +99,7 @@ item-metadata:
             schema:
               type: array
               items:
-                $ref: 'item.model.yaml#/RightRest'
+                $ref: 'right.model.yaml#/RightRest'
       404:
         description: Not found
         content: { }

@@ -39,6 +39,6 @@ components:
     ItemRest:
       $ref: 'item.model.yaml#/ItemRest'
     MetadataRest:
-      $ref: 'item.model.yaml#/MetadataRest'
+      $ref: 'metadata.model.yaml#/MetadataRest'
     RightRest:
       $ref: 'item.model.yaml#/RightRest'

@@ -543,7 +543,7 @@ export default class RightsEditDialog extends Vue {
   }
 
   public deleteSuccessful(index: number): void {
-    this.$emit("deleteSuccessful", index,  this.right.rightId);
+    this.$emit("deleteSuccessful", index, this.right.rightId);
   }
 
   public deleteDialogClosed(): void {

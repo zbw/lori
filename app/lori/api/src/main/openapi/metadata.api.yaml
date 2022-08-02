@@ -9,7 +9,7 @@ metadata:
       content:
         application/json:
           schema:
-            $ref: 'item.model.yaml#/MetadataRest'
+            $ref: 'metadata.model.yaml#/MetadataRest'
       required: true
     responses:
       201:
@@ -35,7 +35,7 @@ metadata:
       content:
         application/json:
           schema:
-            $ref: 'item.model.yaml#/MetadataRest'
+            $ref: 'metadata.model.yaml#/MetadataRest'
       required: true
     responses:
       201:
@@ -85,7 +85,7 @@ metadata-list:
             schema:
               type: array
               items:
-                $ref: 'item.model.yaml#/MetadataRest'
+                $ref: 'metadata.model.yaml#/MetadataRest'
       400:
         description: Bad request
         content: { }
@@ -138,7 +138,7 @@ metadata-id:
             schema:
               type: array
               items:
-                $ref: 'item.model.yaml#/MetadataRest'
+                $ref: 'metadata.model.yaml#/MetadataRest'
       400:
         description: Bad request
         content: { }
