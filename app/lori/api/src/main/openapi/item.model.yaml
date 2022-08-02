@@ -4,11 +4,11 @@ ItemRest:
   type: object
   properties:
     metadata:
-      $ref: '#/MetadataRest'
+      $ref: 'metadata.model.yaml#/MetadataRest'
     rights:
       type: array
       items:
-        $ref: '#/RightRest'
+        $ref: 'right.model.yaml#/RightRest'
 
 ItemEntry:
   required:
@@ -21,143 +21,6 @@ ItemEntry:
     rightId:
       type: string
 
-MetadataRest:
-  required:
-    - handle
-    - metadataId
-    - publicationType
-    - publicationYear
-    - storageDate
-    - title
-  type: object
-  properties:
-    metadataId:
-      type: string
-    author:
-      type: string
-    band:
-      type: string
-    collectionName:
-      type: string
-    communityName:
-      type: string
-    createdBy:
-      type: string
-    createdOn:
-      type: string
-      format: date-time
-    doi:
-      type: string
-    handle:
-      type: string
-    isbn:
-      type: string
-    issn:
-      type: string
-    lastUpdatedBy:
-      type: string
-    lastUpdatedOn:
-      type: string
-      format: date-time
-    paketSigel:
-      type: string
-    ppn:
-      type: string
-    ppnEbook:
-      type: string
-    publicationType:
-      type: string
-      enum:
-        - article
-        - book
-    publicationYear:
-      type: integer
-    rightsK10plus:
-      type: string
-    serialNumber:
-      type: string
-    storageDate:
-      type: string
-      format: date-time
-    title:
-      type: string
-    titleJournal:
-      type: string
-    titleSeries:
-      type: string
-    zbdId:
-      type: string
-
-RightRest:
-  required:
-    - startDate
-  type: object
-  properties:
-    rightId:
-      type: string
-    accessState:
-      type: string
-      enum:
-        - open
-        - closed
-        - restricted
-    authorRightException:
-      type: boolean
-    basisAccessState:
-      type: string
-      enum:
-        - author_right_exception
-        - licence_contract
-        - licence_contract_oa
-        - open_content_licence
-        - user_agreement
-        - zbw_policy
-    basisStorage:
-      type: string
-      enum:
-        - author_right_exception
-        - licence_contract
-        - open_content_licence
-        - user_agreement
-        - zbw_policy_restricted
-        - zbw_policy_unanswered
-    createdBy:
-      type: string
-    createdOn:
-      type: string
-      format: date-time
-    endDate:
-      type: string
-      format: date
-    lastUpdatedBy:
-      type: string
-    lastUpdatedOn:
-      type: string
-      format: date-time
-    licenceContract:
-      type: string
-    nonStandardOpenContentLicence:
-      type: boolean
-    nonStandardOpenContentLicenceURL:
-      type: string
-    notesGeneral:
-      type: string
-    notesFormalRules:
-      type: string
-    notesProcessDocumentation:
-      type: string
-    notesManagementRelated:
-      type: string
-    openContentLicence:
-      type: string
-    restrictedOpenContentLicence:
-      type: boolean
-    startDate:
-      type: string
-      format: date
-    zbwUserAgreement:
-      type: boolean
-
 ItemCountByRight:
   required:
     - rightId
@@ -168,11 +31,3 @@ ItemCountByRight:
       type: string
     count:
       type: integer
-
-RightIdCreated:
-  required:
-    - rightId
-  type: object
-  properties:
-    rightId:
-      type: string
