@@ -79,18 +79,6 @@ export default defineComponent({
     const updateInProgress = ref(false);
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
-    const rules = {
-      required: (value: string) => {
-        return !!value || "Benötigt.";
-      },
-      maxLength256: (value: string) => {
-        if (value == undefined) {
-          return true;
-        } else {
-          return value.length <= 256 || "Max 256 Zeichen";
-        }
-      },
-    };
 
     const emitClosedDialog = () => {
       emit("editDialogClosed");
@@ -191,21 +179,6 @@ export default defineComponent({
     };
 
     // Computed properties
-    const form = computed(() => {
-      return {
-        accessState: tmpRight.value.accessState,
-        basisAccessState: tmpRight.value.accessState,
-        basisStorage: tmpRight.value.basisStorage,
-        startDate: tmpRight.value.startDate,
-        endDate: tmpRight.value.endDate,
-        notesFormalRules: tmpRight.value.notesFormalRules,
-        notesGeneral: tmpRight.value.notesGeneral,
-        notesProcessDocumentation: tmpRight.value.notesProcessDocumentation,
-        notesManagementRelated: tmpRight.value.notesManagementRelated,
-        licenceContract: tmpRight.value.licenceContract,
-      };
-    });
-
     const showAccessState = computed({
       get: () => {
         let accessState = tmpRight.value.accessState;
@@ -427,14 +400,20 @@ export default defineComponent({
       <v-btn icon @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
-      <RightsDeleteDialog
-        :activated="deleteDialogActivated.value"
-        :right="right"
-        :index="index"
-        :metadataId="metadataId"
-        v-on:deleteSuccessful="deleteSuccessful"
-        v-on:deleteDialogClosed="deleteDialogClosed"
-      ></RightsDeleteDialog>
+
+      <v-dialog
+        v-model="deleteDialogActivated"
+        max-width="500px"
+        :retain-focus="false"
+      >
+        <RightsDeleteDialog
+          :right="right"
+          :index="index"
+          :metadataId="metadataId"
+          v-on:deleteSuccessful="deleteSuccessful"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+        ></RightsDeleteDialog>
+      </v-dialog>
     </v-card-actions>
     <v-expansion-panels focusable multiple v-model="openPanelsDefault">
       <v-expansion-panel>
