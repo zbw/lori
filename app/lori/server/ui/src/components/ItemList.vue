@@ -50,7 +50,7 @@
             :metadataId="currentItem.metadata.metadataId"
           ></RightsView>
           <MetadataView
-            :displayed-item="Object.assign({}, currentItem.metadata)"
+            :metadata="Object.assign({}, currentItem.metadata)"
           ></MetadataView>
         </v-card>
       </v-col>
