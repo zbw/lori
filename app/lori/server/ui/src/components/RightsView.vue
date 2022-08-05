@@ -1,7 +1,136 @@
+<script lang="ts">
+import { RightRest } from "@/generated-sources/openapi";
+import { DataTableHeader } from "vuetify";
+import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import RightsEditTabs from "@/components/RightsEditTabs.vue";
+import { computed, defineComponent, PropType, ref } from "vue";
+
+export default defineComponent({
+  props: {
+    rights: {
+      type: {} as PropType<Array<RightRest>>,
+      required: true,
+    },
+    metadataId: {
+      type: String,
+      required: true,
+    },
+  },
+  components: {
+    RightsEditDialog,
+    RightsEditTabs,
+  },
+
+  setup(props) {
+    const editDialogActivated = ref(false);
+    const tabDialogActivated = ref(false);
+    let currentRight: RightRest = {} as RightRest;
+    const currentIndex = ref(0);
+    const headers = [
+      {
+        text: "Rechte-Id",
+        align: "start",
+        value: "rightId",
+      },
+      {
+        text: "AccessState",
+        value: "accessState",
+      },
+      {
+        text: "Start-Datum",
+        value: "startDate",
+      },
+      {
+        text: "End-Datum",
+        value: "endDate",
+      },
+    ] as Array<DataTableHeader>;
+    const isNew = ref(false);
+    const renderKey = ref(0);
+    const selectedHeaders: Array<DataTableHeader> = headers;
+    const updateSuccessful = ref(false);
+    const addSuccessful = ref(false);
+
+    const activateTabEdit = () => {
+      tabDialogActivated.value = true;
+    };
+
+    const tabDialogClosed = () => {
+      tabDialogActivated.value = false;
+    };
+
+    const newRight = () => {
+      editDialogActivated.value = true;
+      currentRight = {} as RightRest;
+      updateSuccessful.value = false;
+      addSuccessful.value = false;
+      currentIndex.value = -1;
+      isNew.value = true;
+    };
+
+    const editRightClosed = () => {
+      editDialogActivated.value = false;
+    };
+
+    const addRight = (right: RightRest) => {
+      currentRights.value.unshift(right);
+      renderKey.value += 1;
+      editDialogActivated.value = false;
+      addSuccessful.value = true;
+    };
+
+    const updateRight = (right: RightRest, index: number) => {
+      currentRights.value[index] = right;
+      renderKey.value += 1;
+      updateSuccessful.value = true;
+    };
+
+    const deleteSuccessful = (index: number) => {
+      currentRights.value.splice(index, 1);
+      renderKey.value += 1;
+    };
+
+    const parseEndDate = (d: Date | undefined) => {
+      if (d === undefined) {
+        return "";
+      } else {
+        return d.toLocaleDateString("de");
+      }
+    };
+
+    const currentRights = computed(() => {
+      return props.rights;
+    });
+
+    return {
+      // Variables
+      addSuccessful,
+      currentRight,
+      currentIndex,
+      editDialogActivated,
+      isNew,
+      renderKey,
+      selectedHeaders,
+      tabDialogActivated,
+      // Methods
+      activateTabEdit,
+      addRight,
+      deleteSuccessful,
+      editRightClosed,
+      newRight,
+      parseEndDate,
+      tabDialogClosed,
+      updateRight,
+    };
+  },
+});
+</script>
+
+<style scoped></style>
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
     <v-alert v-model="addSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich für Item {{ this.metadataId }} hinzugefügt.
+      Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
     <v-data-table
@@ -48,6 +177,7 @@
       v-on:close="tabDialogClosed"
       v-on:click:outside="tabDialogClosed"
       v-on:updateSuccessful="updateRight"
+      v-on:deleteSuccessful="deleteSuccessful"
       :retain-focus="false"
     >
       <RightsEditTabs
@@ -59,134 +189,3 @@
     </v-dialog>
   </v-card>
 </template>
-
-<script lang="ts">
-import Component from "vue-class-component";
-import { Prop, Vue } from "vue-property-decorator";
-import { RightRest } from "@/generated-sources/openapi";
-import { DataTableHeader } from "vuetify";
-import RightsEditDialog from "@/components/RightsEditDialog.vue";
-import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
-import { ItemSlot } from "@/types/types";
-import RightsEditTabs from "@/components/RightsEditTabs.vue";
-
-@Component({
-  components: { RightsDeleteDialog, RightsEditDialog, RightsEditTabs },
-})
-export default class RightsView extends Vue {
-  @Prop({ required: true })
-  rights!: Array<RightRest>;
-  @Prop({ required: true })
-  metadataId!: string;
-
-  private editDialogActivated = false;
-  private tabDialogActivated = false;
-  private currentRight: RightRest = {} as RightRest;
-  private currentIndex = 0;
-  private headers = [
-    {
-      text: "Rechte-Id",
-      align: "start",
-      value: "rightId",
-    },
-    {
-      text: "AccessState",
-      value: "accessState",
-    },
-    {
-      text: "Start-Datum",
-      value: "startDate",
-    },
-    {
-      text: "End-Datum",
-      value: "endDate",
-    },
-  ] as Array<DataTableHeader>;
-  private isNew = false;
-  private renderKey = 0;
-  private selectedHeaders: Array<DataTableHeader> = [];
-  private updateSuccessful = false;
-  private addSuccessful = false;
-
-  public prettyPrint(value: string): string {
-    if (value) {
-      return value;
-    } else {
-      return "Kein Wert vorhanden";
-    }
-  }
-
-  public editRight(right: RightRest, index: number): void {
-    this.editDialogActivated = true;
-    this.currentIndex = index;
-    this.currentRight = right;
-    this.updateSuccessful = false;
-    this.addSuccessful = false;
-    this.isNew = false;
-  }
-
-  public editRightSlot(right: RightRest, slot: ItemSlot): void {
-    this.editRight(right, slot.index);
-  }
-  public activateTabEdit(): void {
-    this.tabDialogActivated = true;
-  }
-
-  public tabDialogClosed(): void {
-    this.tabDialogActivated = false;
-  }
-
-  public newRight(): void {
-    this.editDialogActivated = true;
-    this.currentRight = {} as RightRest;
-    this.updateSuccessful = false;
-    this.addSuccessful = false;
-    this.currentIndex = -1;
-    this.isNew = true;
-  }
-
-  public editRightClosed(): void {
-    this.editDialogActivated = false;
-  }
-
-  public addRight(right: RightRest): void {
-    this.rights.unshift(right);
-    this.renderKey += 1;
-    this.editDialogActivated = false;
-    this.addSuccessful = true;
-  }
-
-  public updateRight(right: RightRest, index: number): void {
-    this.rights[index] = right;
-    this.renderKey += 1;
-    this.updateSuccessful = true;
-  }
-
-  public deleteSuccessful(index: number): void {
-    this.rights.splice(index, 1);
-    this.renderKey += 1;
-  }
-
-  public parseLastUpdatedOn(d: Date | undefined): string {
-    if (d === undefined) {
-      return "Please reload";
-    } else {
-      return d.toLocaleString("de");
-    }
-  }
-
-  public parseEndDate(d: Date | undefined): string {
-    if (d === undefined) {
-      return "";
-    } else {
-      return d.toLocaleDateString("de");
-    }
-  }
-
-  created(): void {
-    this.selectedHeaders = this.headers;
-  }
-}
-</script>
-
-<style scoped></style>

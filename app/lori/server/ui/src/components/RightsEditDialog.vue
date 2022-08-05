@@ -1,3 +1,390 @@
+<script lang="ts">
+import api from "@/api/api";
+import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
+import {
+  ItemEntry,
+  RightRest,
+  RightRestAccessStateEnum,
+  RightRestBasisAccessStateEnum,
+  RightRestBasisStorageEnum,
+} from "@/generated-sources/openapi";
+import {
+  computed,
+  onMounted,
+  ref,
+  watch,
+  defineComponent,
+  PropType,
+} from "vue";
+
+export default defineComponent({
+  props: {
+    right: {
+      type: {} as PropType<RightRest>,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+    isNew: {
+      type: Boolean,
+      required: true,
+    },
+    metadataId: {
+      type: String,
+      required: true,
+    },
+  },
+  // Emits
+  emits: [
+    "addSuccessful",
+    "deleteSuccessful",
+    "editDialogClosed",
+    "updateSuccessful",
+  ],
+
+  // Components
+  components: {
+    RightsDeleteDialog,
+  },
+
+  setup(props, { emit }) {
+    const openPanelsDefault = [0];
+    const accessStatusSelect = ["Open", "Closed", "Restricted"];
+    const basisAccessState = ref([
+      "Lizenzvertrag",
+      "OA-Rechte aus Lizenzvertrag",
+      "Nutzungsvereinbarung",
+      "Urheberrechtschranke",
+      "ZBW-Policy",
+    ]);
+    const basisStorage = ref([
+      "Lizenzvertrag",
+      "Nutzungsvereinbarung",
+      "Urheberrechtschranke",
+      "Open-Content-Lizenz",
+      "ZBW-Policy (Eingeschränkte OCL)",
+      "ZBW-Policy (unbeantwortete Rechteanforderung)",
+    ]);
+    const deleteDialogActivated = ref(false);
+    const formHasErrors = ref(false);
+    const menuEndDate = ref(false);
+    const menuStartDate = ref(false);
+    const tmpStartDate = ref("");
+    const tmpEndDate = ref("");
+    const saveAlertError = ref(false);
+    const saveAlertErrorMessage = ref("");
+    const updateConfirmDialog = ref(false);
+    const updateInProgress = ref(false);
+    const metadataCount = ref(0);
+    const tmpRight = ref({} as RightRest);
+
+    const emitClosedDialog = () => {
+      emit("editDialogClosed");
+    };
+
+    const close = () => {
+      updateConfirmDialog.value = false;
+      updateInProgress.value = false;
+      emitClosedDialog();
+    };
+
+    const cancel = () => {
+      tmpRight.value = Object.assign({}, props.right);
+      close();
+    };
+
+    const cancelConfirm = () => {
+      updateConfirmDialog.value = false;
+    };
+
+    const deleteSuccessful = (index: number) => {
+      emit("deleteSuccessful", index, props.right.rightId);
+    };
+
+    const deleteDialogClosed = () => {
+      deleteDialogActivated.value = false;
+    };
+
+    const createRight = () => {
+      updateInProgress.value = true;
+      tmpRight.value.rightId = "unset";
+      tmpRight.value.startDate = new Date(tmpStartDate.value);
+      tmpRight.value.endDate =
+        tmpEndDate.value == "" ? undefined : new Date(tmpEndDate.value);
+      api
+        .addRight(tmpRight.value)
+        .then((r) => {
+          api
+            .addItemEntry({
+              metadataId: props.metadataId,
+              rightId: r.rightId,
+            } as ItemEntry)
+            .then(() => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addSuccessful", tmpRight.value);
+              close();
+            })
+            .catch((e) => {
+              console.log(e);
+              saveAlertError.value = true;
+              saveAlertErrorMessage.value =
+                e.statusText + " (Statuscode: " + e.status + ")";
+              updateConfirmDialog.value = false;
+            });
+        })
+        .catch((e) => {
+          console.log(e);
+          saveAlertError.value = true;
+          saveAlertErrorMessage.value =
+            e.statusText + " (Statuscode: " + e.status + ")";
+          updateConfirmDialog.value = false;
+        });
+    };
+
+    const updateRight = () => {
+      updateInProgress.value = true;
+      tmpRight.value.startDate = new Date(tmpStartDate.value);
+      tmpRight.value.endDate =
+        tmpEndDate.value == "" ? undefined : new Date(tmpEndDate.value);
+      api
+        .updateRight(tmpRight.value)
+        .then(() => {
+          emit("updateSuccessful", tmpRight.value, props.index);
+        })
+        .catch((e) => {
+          console.log(e);
+          saveAlertError.value = true;
+          saveAlertErrorMessage.value =
+            e.statusText + " (Statuscode: " + e.status + ")";
+          updateConfirmDialog.value = false;
+        });
+    };
+
+    const save = () => {
+      // TODO(vuelidate)
+      if (formHasErrors.value) {
+        return;
+      }
+      if (props.isNew) {
+        createRight();
+      } else {
+        updateRight();
+      }
+    };
+
+    const initiateDeleteDialog = () => {
+      deleteDialogActivated.value = true;
+    };
+
+    // Computed properties
+    const showAccessState = computed({
+      get: () => {
+        let accessState = tmpRight.value.accessState;
+        if (accessState == undefined) {
+          return "Kein Wert";
+        } else {
+          switch (accessState) {
+            case RightRestAccessStateEnum.Open:
+              return "Open";
+            case RightRestAccessStateEnum.Closed:
+              return "Closed";
+            default:
+              return "Restricted";
+          }
+        }
+      },
+      set: (value: string | undefined) => {
+        if (value == undefined || value == "Kein Wert") {
+          tmpRight.value.accessState = undefined;
+        } else {
+          switch (value) {
+            case "Open":
+              tmpRight.value.accessState = RightRestAccessStateEnum.Open;
+              break;
+            case "Closed":
+              tmpRight.value.accessState = RightRestAccessStateEnum.Closed;
+              break;
+            default:
+              tmpRight.value.accessState = RightRestAccessStateEnum.Restricted;
+              break;
+          }
+        }
+      },
+    });
+
+    const selectBasisStorage = computed({
+      get: () => {
+        let basisStorage = tmpRight.value.basisStorage;
+        if (basisStorage == undefined) {
+          return "Kein Wert";
+        } else {
+          switch (basisStorage) {
+            case RightRestBasisStorageEnum.AuthorRightException:
+              return "Urheberrechtschranke";
+            case RightRestBasisStorageEnum.UserAgreement:
+              return "Nutzungsvereinbarung";
+            case RightRestBasisStorageEnum.OpenContentLicence:
+              return "Open-Content-Lizenz";
+            case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
+              return "ZBW-Policy (unbeantwortete Rechteanforderung)";
+            case RightRestBasisStorageEnum.ZbwPolicyRestricted:
+              return "ZBW-Policy (Eingeschränkte OCL)";
+            default:
+              return "Lizenzvertrag";
+          }
+        }
+      },
+      set: (value: string | undefined) => {
+        if (value == undefined) {
+          tmpRight.value.basisStorage = undefined;
+        } else {
+          switch (value) {
+            case "Lizenzvertrag":
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.LicenceContract;
+              break;
+            case "Nutzungsvereinbarung":
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.UserAgreement;
+              break;
+            case "Urheberrechtschranke":
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.AuthorRightException;
+              break;
+            case "Open-Content-Lizenz":
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.OpenContentLicence;
+              break;
+            case "ZBW-Policy (Eingeschränkte OCL)":
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.ZbwPolicyRestricted;
+              break;
+            default:
+              tmpRight.value.basisStorage =
+                RightRestBasisStorageEnum.ZbwPolicyUnanswered;
+              break;
+          }
+        }
+      },
+    });
+
+    const selectBasisAccessState = computed({
+      get: () => {
+        let basisAccessState = tmpRight.value.basisAccessState;
+        if (basisAccessState == undefined) {
+          return "Kein Wert";
+        } else {
+          switch (basisAccessState) {
+            case RightRestBasisAccessStateEnum.AuthorRightException:
+              return "Urheberrechtschranke";
+            case RightRestBasisAccessStateEnum.UserAgreement:
+              return "Nutzungsvereinbarung";
+            case RightRestBasisAccessStateEnum.LicenceContract:
+              return "Lizenzvertrag";
+            case RightRestBasisAccessStateEnum.ZbwPolicy:
+              return "ZBW-Policy";
+            default:
+              return "OA-Rechte aus Lizenzvertrag";
+          }
+        }
+      },
+      set: (value: string | undefined) => {
+        if (value == undefined) {
+          tmpRight.value.basisAccessState = undefined;
+        } else {
+          switch (value) {
+            case "Lizenzvertrag":
+              tmpRight.value.basisAccessState =
+                RightRestBasisAccessStateEnum.LicenceContract;
+              break;
+            case "Nutzungsvereinbarung":
+              tmpRight.value.basisAccessState =
+                RightRestBasisAccessStateEnum.UserAgreement;
+              break;
+            case "OA-Rechte aus Lizenzvertrag":
+              tmpRight.value.basisAccessState =
+                RightRestBasisAccessStateEnum.LicenceContractOa;
+              break;
+            case "Urheberrechtschranke":
+              tmpRight.value.basisAccessState =
+                RightRestBasisAccessStateEnum.AuthorRightException;
+              break;
+            default:
+              tmpRight.value.basisAccessState =
+                RightRestBasisAccessStateEnum.ZbwPolicy;
+              break;
+          }
+        }
+      },
+    });
+
+    const title = computed(() => {
+      if (props.isNew) {
+        return "Erstelle";
+      } else {
+        return "Editiere";
+      }
+    });
+
+    onMounted(() => reinitializeRight(props.right));
+
+    watch(props.right, (currentValue, oldValue) => {
+      reinitializeRight(currentValue);
+    });
+
+    const reinitializeRight = (newValue: RightRest) => {
+      updateInProgress.value = false;
+      tmpRight.value = Object.assign({}, newValue);
+      if (!props.isNew) {
+        tmpStartDate.value = props.right.startDate.toISOString().slice(0, 10);
+        if (props.right.endDate !== undefined) {
+          tmpEndDate.value = props.right.endDate.toISOString().slice(0, 10);
+        } else {
+          tmpEndDate.value = "";
+        }
+      } else {
+        tmpEndDate.value = "";
+        tmpStartDate.value = "";
+      }
+    };
+    return {
+      // variables
+      accessStatusSelect,
+      basisAccessState,
+      basisStorage,
+      deleteDialogActivated,
+      menuStartDate,
+      menuEndDate,
+      metadataCount,
+      openPanelsDefault,
+      saveAlertError,
+      saveAlertErrorMessage,
+      selectBasisAccessState,
+      selectBasisStorage,
+      showAccessState,
+      updateConfirmDialog,
+      title,
+      tmpRight,
+      tmpEndDate,
+      tmpStartDate,
+      updateInProgress,
+      // methods
+      cancel,
+      cancelConfirm,
+      initiateDeleteDialog,
+      deleteDialogClosed,
+      deleteSuccessful,
+      updateRight,
+      save,
+    };
+  },
+});
+</script>
+
+<style scoped></style>
+
 <template>
   <v-card>
     <v-card-actions>
@@ -13,14 +400,20 @@
       <v-btn icon @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
-      <RightsDeleteDialog
-        :activated="deleteDialogActivated"
-        :right="right"
-        :index="index"
-        :metadataId="metadataId"
-        v-on:deleteSuccessful="deleteSuccessful"
-        v-on:deleteDialogClosed="deleteDialogClosed"
-      ></RightsDeleteDialog>
+
+      <v-dialog
+        v-model="deleteDialogActivated"
+        max-width="500px"
+        :retain-focus="false"
+      >
+        <RightsDeleteDialog
+          :right="right"
+          :index="index"
+          :metadataId="metadataId"
+          v-on:deleteSuccessful="deleteSuccessful"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+        ></RightsDeleteDialog>
+      </v-dialog>
     </v-card-actions>
     <v-expansion-panels focusable multiple v-model="openPanelsDefault">
       <v-expansion-panel>
@@ -38,7 +431,6 @@
                   v-if="isNew"
                   ref="rightId"
                   label="Wird automatisch generiert"
-                  :rules="[rules.required]"
                   disabled
                   outlined
                   hint="Rechte Id"
@@ -47,7 +439,6 @@
                   v-if="!isNew"
                   ref="rightId"
                   v-model="tmpRight.rightId"
-                  :rules="[rules.required]"
                   outlined
                   hint="Rechte Id"
                   disabled
@@ -60,10 +451,8 @@
               </v-col>
               <v-col cols="8">
                 <v-select
-                  ref="accessState"
                   :items="accessStatusSelect"
                   v-model="showAccessState"
-                  :rules="[rules.required]"
                   outlined
                 ></v-select>
               </v-col>
@@ -92,7 +481,6 @@
                       outlined
                       v-bind="attrs"
                       v-on="on"
-                      :rules="[rules.required]"
                       required
                     ></v-text-field>
                   </template>
@@ -163,8 +551,6 @@
                 <v-text-field
                   outlined
                   hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
-                  ref="group"
-                  :rules="[rules.maxLength256]"
                   counter
                   maxlength="256"
                 ></v-text-field>
@@ -178,8 +564,6 @@
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
                   hint="Allgemeine Bemerkungen"
-                  ref="notesGeneral"
-                  :rules="[rules.maxLength256]"
                   counter
                   maxlength="256"
                   outlined
@@ -200,7 +584,6 @@
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
-                  ref="licenceContract"
                   outlined
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                 ></v-text-field>
@@ -213,7 +596,6 @@
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
-                  ref="authorRightException"
                   color="indigo"
                   label="Ja"
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
@@ -298,8 +680,6 @@
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
-                  ref="notesFormalRules"
-                  :rules="[rules.maxLength256]"
                   counter
                   maxlength="256"
                   hint="Bemerkungen für formale Regelungen"
@@ -324,8 +704,6 @@
                 <v-select
                   :items="basisStorage"
                   v-model="selectBasisStorage"
-                  ref="basisStorage"
-                  :rules="[rules.required]"
                   outlined
                 ></v-select>
               </v-col>
@@ -337,9 +715,7 @@
               <v-col cols="8">
                 <v-select
                   :items="basisAccessState"
-                  ref="basisAccessState"
                   v-model="selectBasisAccessState"
-                  :rules="[rules.required]"
                   outlined
                 ></v-select>
               </v-col>
@@ -352,10 +728,8 @@
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
                   hint="Bemerkungen für prozessdokumentierende Elemente"
-                  :rules="[rules.maxLength256]"
                   counter
                   maxlength="256"
-                  ref="notesProcessDocumentation"
                   outlined
                 ></v-textarea>
               </v-col>
@@ -401,8 +775,6 @@
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
-                  ref="notesManagementRelated"
-                  :rules="[rules.maxLength256]"
                   counter
                   maxlength="256"
                   outlined
@@ -453,378 +825,3 @@
     </v-dialog>
   </v-card>
 </template>
-
-<script lang="ts">
-import api from "@/api/api";
-import Component from "vue-class-component";
-import { Prop, Vue, Watch } from "vue-property-decorator";
-import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
-import {
-  ItemEntry,
-  RightRest,
-  RightRestAccessStateEnum,
-  RightRestBasisAccessStateEnum,
-  RightRestBasisStorageEnum,
-} from "@/generated-sources/openapi";
-
-@Component({
-  components: { RightsDeleteDialog },
-})
-export default class RightsEditDialog extends Vue {
-  @Prop({ required: true })
-  right!: RightRest;
-  @Prop({ required: true })
-  index!: number;
-  @Prop({ required: true })
-  isNew!: boolean;
-  @Prop({ required: true })
-  metadataId!: string;
-
-  private openPanelsDefault = [0];
-  private accessStatusSelect = ["Open", "Closed", "Restricted"];
-  private basisAccessState = [
-    "Lizenzvertrag",
-    "OA-Rechte aus Lizenzvertrag",
-    "Nutzungsvereinbarung",
-    "Urheberrechtschranke",
-    "ZBW-Policy",
-  ];
-  private basisStorage = [
-    "Lizenzvertrag",
-    "Nutzungsvereinbarung",
-    "Urheberrechtschranke",
-    "Open-Content-Lizenz",
-    "ZBW-Policy (Eingeschränkte OCL)",
-    "ZBW-Policy (unbeantwortete Rechteanforderung)",
-  ];
-  private deleteDialogActivated = false;
-  private formHasErrors = false;
-  private menuEndDate = false;
-  private menuStartDate = false;
-  private tmpStartDate = "";
-  private tmpEndDate = "";
-  private saveAlertError = false;
-  private saveAlertErrorMessage = "";
-  private updateConfirmDialog = false;
-  private updateInProgress = false;
-  private metadataCount = 0;
-  private rules = {
-    required: (value: string) => {
-      return !!value || "Benötigt.";
-    },
-    maxLength256: (value: string) => {
-      if (value == undefined) {
-        return true;
-      } else {
-        return value.length <= 256 || "Max 256 Zeichen";
-      }
-    },
-  };
-
-  private tmpRight: RightRest = {} as RightRest;
-
-  public emitClosedDialog(): void {
-    this.$emit("editDialogClosed");
-  }
-
-  public close(): void {
-    this.updateConfirmDialog = false;
-    this.updateInProgress = false;
-    this.emitClosedDialog();
-  }
-
-  public cancel(): void {
-    this.tmpRight = Object.assign({}, this.right);
-    this.close();
-  }
-
-  public cancelConfirm(): void {
-    this.updateConfirmDialog = false;
-  }
-
-  public deleteSuccessful(index: number): void {
-    this.$emit("deleteSuccessful", index, this.right.rightId);
-  }
-
-  public deleteDialogClosed(): void {
-    this.deleteDialogActivated = false;
-  }
-
-  public createRight(): void {
-    this.updateInProgress = true;
-    this.tmpRight.rightId = "unset";
-    this.tmpRight.startDate = new Date(this.tmpStartDate);
-    this.tmpRight.endDate =
-      this.tmpEndDate == "" ? undefined : new Date(this.tmpEndDate);
-    api
-      .addRight(this.tmpRight)
-      .then((r) => {
-        api
-          .addItemEntry({
-            metadataId: this.metadataId,
-            rightId: r.rightId,
-          } as ItemEntry)
-          .then(() => {
-            this.tmpRight.rightId = r.rightId;
-            this.$emit("addSuccessful", this.tmpRight);
-            this.close();
-          })
-          .catch((e) => {
-            console.log(e);
-            this.saveAlertError = true;
-            this.saveAlertErrorMessage =
-              e.statusText + " (Statuscode: " + e.status + ")";
-            this.updateConfirmDialog = false;
-          });
-      })
-      .catch((e) => {
-        console.log(e);
-        this.saveAlertError = true;
-        this.saveAlertErrorMessage =
-          e.statusText + " (Statuscode: " + e.status + ")";
-        this.updateConfirmDialog = false;
-      });
-  }
-
-  public updateRight(): void {
-    this.updateInProgress = true;
-    this.tmpRight.startDate = new Date(this.tmpStartDate);
-    this.tmpRight.endDate =
-      this.tmpEndDate == "" ? undefined : new Date(this.tmpEndDate);
-    api
-      .updateRight(this.tmpRight)
-      .then(() => {
-        this.$emit("updateSuccessful", this.tmpRight, this.index);
-      })
-      .catch((e) => {
-        console.log(e);
-        this.saveAlertError = true;
-        this.saveAlertErrorMessage =
-          e.statusText + " (Statuscode: " + e.status + ")";
-        this.updateConfirmDialog = false;
-      });
-  }
-
-  public save(): void {
-    this.validateInput();
-    if (this.formHasErrors) {
-      return;
-    }
-    if (this.isNew) {
-      this.createRight();
-    } else {
-      this.updateRight();
-    }
-  }
-
-  public isIdDisabled() {
-    return !this.isNew;
-  }
-
-  public validateInput() {
-    this.formHasErrors = false;
-    Object.keys(this.form).forEach((f) => {
-      if (
-        this.$refs[f] != undefined &&
-        !(
-          this.$refs[f] as Vue & { validate: (v: boolean) => boolean }
-        ).validate(true)
-      ) {
-        this.formHasErrors = true;
-      }
-    });
-  }
-
-  public initiateDeleteDialog(): void {
-    this.deleteDialogActivated = true;
-  }
-
-  // Computed properties
-  get form() {
-    return {
-      accessState: this.tmpRight.accessState,
-      basisAccessState: this.tmpRight.accessState,
-      basisStorage: this.tmpRight.basisStorage,
-      startDate: this.tmpRight.startDate,
-      endDate: this.tmpRight.endDate,
-      notesFormalRules: this.tmpRight.notesFormalRules,
-      notesGeneral: this.tmpRight.notesGeneral,
-      notesProcessDocumentation: this.tmpRight.notesProcessDocumentation,
-      notesManagementRelated: this.tmpRight.notesManagementRelated,
-      licenceContract: this.tmpRight.licenceContract,
-    };
-  }
-
-  get showAccessState() {
-    let accessState = this.tmpRight.accessState;
-    if (accessState == undefined) {
-      return "Kein Wert";
-    } else {
-      switch (accessState) {
-        case RightRestAccessStateEnum.Open:
-          return "Open";
-        case RightRestAccessStateEnum.Closed:
-          return "Closed";
-        default:
-          return "Restricted";
-      }
-    }
-  }
-
-  set showAccessState(value: string | undefined) {
-    if (value == undefined || value == "Kein Wert") {
-      this.tmpRight.accessState = undefined;
-    } else {
-      switch (value) {
-        case "Open":
-          this.tmpRight.accessState = RightRestAccessStateEnum.Open;
-          break;
-        case "Closed":
-          this.tmpRight.accessState = RightRestAccessStateEnum.Closed;
-          break;
-        default:
-          this.tmpRight.accessState = RightRestAccessStateEnum.Restricted;
-          break;
-      }
-    }
-  }
-  get selectBasisStorage() {
-    let basisStorage = this.tmpRight.basisStorage;
-    if (basisStorage == undefined) {
-      return "Kein Wert";
-    } else {
-      switch (basisStorage) {
-        case RightRestBasisStorageEnum.AuthorRightException:
-          return "Urheberrechtschranke";
-        case RightRestBasisStorageEnum.UserAgreement:
-          return "Nutzungsvereinbarung";
-        case RightRestBasisStorageEnum.OpenContentLicence:
-          return "Open-Content-Lizenz";
-        case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
-          return "ZBW-Policy (unbeantwortete Rechteanforderung)";
-        case RightRestBasisStorageEnum.ZbwPolicyRestricted:
-          return "ZBW-Policy (Eingeschränkte OCL)";
-        default:
-          return "Lizenzvertrag";
-      }
-    }
-  }
-
-  set selectBasisStorage(value: string | undefined) {
-    if (value == undefined) {
-      this.tmpRight.basisStorage = undefined;
-    } else {
-      switch (value) {
-        case "Lizenzvertrag":
-          this.tmpRight.basisStorage =
-            RightRestBasisStorageEnum.LicenceContract;
-          break;
-        case "Nutzungsvereinbarung":
-          this.tmpRight.basisStorage = RightRestBasisStorageEnum.UserAgreement;
-          break;
-        case "Urheberrechtschranke":
-          this.tmpRight.basisStorage =
-            RightRestBasisStorageEnum.AuthorRightException;
-          break;
-        case "Open-Content-Lizenz":
-          this.tmpRight.basisStorage =
-            RightRestBasisStorageEnum.OpenContentLicence;
-          break;
-        case "ZBW-Policy (Eingeschränkte OCL)":
-          this.tmpRight.basisStorage =
-            RightRestBasisStorageEnum.ZbwPolicyRestricted;
-          break;
-        default:
-          this.tmpRight.basisStorage =
-            RightRestBasisStorageEnum.ZbwPolicyUnanswered;
-          break;
-      }
-    }
-  }
-  get selectBasisAccessState() {
-    let basisAccessState = this.tmpRight.basisAccessState;
-    if (basisAccessState == undefined) {
-      return "Kein Wert";
-    } else {
-      switch (basisAccessState) {
-        case RightRestBasisAccessStateEnum.AuthorRightException:
-          return "Urheberrechtschranke";
-        case RightRestBasisAccessStateEnum.UserAgreement:
-          return "Nutzungsvereinbarung";
-        case RightRestBasisAccessStateEnum.LicenceContract:
-          return "Lizenzvertrag";
-        case RightRestBasisAccessStateEnum.ZbwPolicy:
-          return "ZBW-Policy";
-        default:
-          return "OA-Rechte aus Lizenzvertrag";
-      }
-    }
-  }
-
-  set selectBasisAccessState(value: string | undefined) {
-    if (value == undefined) {
-      this.tmpRight.basisAccessState = undefined;
-    } else {
-      switch (value) {
-        case "Lizenzvertrag":
-          this.tmpRight.basisAccessState =
-            RightRestBasisAccessStateEnum.LicenceContract;
-          break;
-        case "Nutzungsvereinbarung":
-          this.tmpRight.basisAccessState =
-            RightRestBasisAccessStateEnum.UserAgreement;
-          break;
-        case "OA-Rechte aus Lizenzvertrag":
-          this.tmpRight.basisAccessState =
-            RightRestBasisAccessStateEnum.LicenceContractOa;
-          break;
-        case "Urheberrechtschranke":
-          this.tmpRight.basisAccessState =
-            RightRestBasisAccessStateEnum.AuthorRightException;
-          break;
-        default:
-          this.tmpRight.basisAccessState =
-            RightRestBasisAccessStateEnum.ZbwPolicy;
-          break;
-      }
-    }
-  }
-
-  get title() {
-    if (this.isNew) {
-      return "Erstelle";
-    } else {
-      return "Editiere";
-    }
-  }
-
-  mounted(): void {
-    this.onChangedRight(this.right);
-  }
-
-  // Watched properties
-  @Watch("right")
-  onChangedRight(other: RightRest): void {
-    this.updateInProgress = false;
-    this.tmpRight = Object.assign({}, other);
-    if (!this.isNew) {
-      this.tmpStartDate = this.right.startDate.toISOString().slice(0, 10);
-      if (this.right.endDate !== undefined) {
-        this.tmpEndDate = this.right.endDate.toISOString().slice(0, 10);
-      } else {
-        this.tmpEndDate = "";
-      }
-    } else {
-      this.tmpEndDate = "";
-      this.tmpStartDate = "";
-    }
-  }
-
-  @Watch("isNew")
-  onChangedIsNew(): void {
-    this.isIdDisabled();
-  }
-}
-</script>
-
-<style scoped></style>

@@ -1,90 +1,97 @@
-<template>
-  <v-dialog v-model="isActivated" max-width="500px" :retain-focus="false">
-    <v-card>
-      <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
-      <v-alert v-model="deleteAlertError" dismissible text type="error">
-        Löschen war nicht erfolgreich:
-        {{ deleteErrorMessage }}
-      </v-alert>
-      <v-card-text>
-        Möchtest du diese Rechteinformation wirklich löschen?
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
-          >Abbrechen
-        </v-btn>
-        <v-btn :loading="deleteInProgress" color="error" @click="deleteRight">
-          Löschen
-        </v-btn>
-        <v-spacer></v-spacer>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-</template>
-
 <script lang="ts">
 import api from "@/api/api";
-import Component from "vue-class-component";
-import Vue from "vue";
-import {Prop, Watch} from "vue-property-decorator";
+import { defineComponent, PropType, ref } from "vue";
 import { RightRest } from "@/generated-sources/openapi";
 
-@Component
-export default class RightsDeleteDialog extends Vue {
-  @Prop({ required: true })
-  activated!: boolean;
-  @Prop({ required: true })
-  right!: RightRest;
-  @Prop({ required: true })
-  index!: number;
-  @Prop({ required: true })
-  metadataId!: string;
+export default defineComponent({
+  props: {
+    right: {
+      type: {} as PropType<RightRest>,
+      required: true,
+    },
+    index: {
+      type: Number,
+      required: true,
+    },
+    metadataId: {
+      type: String,
+      required: true,
+    },
+  },
+  // Emits
+  emits: ["deleteDialogClosed", "deleteSuccessful"],
 
-  private deleteAlertError = false;
-  private deleteInProgress = false;
-  private deleteErrorMessage = "";
-  private deleteError = false;
-  private isActivated = false;
+  setup(props, { emit }) {
+    const deleteAlertError = ref(false);
+    const deleteInProgress = ref(false);
+    const deleteErrorMessage = ref("");
+    const deleteError = ref(false);
 
-  public close(): void {
-    this.isActivated = false;
-    this.$emit("deleteDialogClosed");
-  }
+    const close = () => {
+      emit("deleteDialogClosed");
+    };
 
-  public deleteRight() {
-    this.deleteInProgress = true;
-    this.deleteAlertError = false;
-    this.deleteError = false;
+    const deleteRight = () => {
+      deleteInProgress.value = true;
+      deleteAlertError.value = false;
+      deleteError.value = false;
 
-    if (this.right.rightId == undefined) {
-      this.deleteErrorMessage = "A right-id is missing!";
-      this.deleteError = true;
-      this.deleteAlertError = true;
-    } else {
-      api
-        .deleteItemRelation(this.metadataId, this.right.rightId)
-        .then(() => {
-          this.$emit("deleteSuccessful", this.index);
-          this.close();
-        })
-        .catch((e) => {
-          this.deleteErrorMessage =
-            e.statusText + "(Statuscode: " + e.status + ")";
-          this.deleteError = true;
-          this.deleteAlertError = true;
-        })
-        .finally(() => {
-          this.deleteInProgress = false;
-        });
-    }
-  }
+      if (props.right.rightId == undefined) {
+        deleteErrorMessage.value = "A right-id is missing!";
+        deleteError.value = true;
+        deleteAlertError.value = true;
+      } else {
+        api
+          .deleteItemRelation(props.metadataId, props.right.rightId)
+          .then(() => {
+            emit("deleteSuccessful", props.index);
+            close();
+          })
+          .catch((e) => {
+            deleteErrorMessage.value =
+              e.statusText + "(Statuscode: " + e.status + ")";
+            deleteError.value = true;
+            deleteAlertError.value = true;
+          })
+          .finally(() => {
+            deleteInProgress.value = false;
+          });
+      }
+    };
 
-  @Watch("activated")
-  onChangedActivated(other: boolean): void {
-    this.isActivated = other;
-  }
-}
+    return {
+      // variables
+      deleteAlertError,
+      deleteErrorMessage,
+      deleteInProgress,
+      // methods
+      deleteRight,
+      close,
+    };
+  },
+});
 </script>
-
 <style scoped></style>
+
+<template>
+  <v-card>
+    <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
+    <v-alert v-model="deleteAlertError" dismissible text type="error">
+      Löschen war nicht erfolgreich:
+      {{ deleteErrorMessage }}
+    </v-alert>
+    <v-card-text>
+      Möchtest du diese Rechteinformation wirklich löschen?
+    </v-card-text>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
+      >Abbrechen
+      </v-btn>
+      <v-btn :loading="deleteInProgress" color="error" @click="deleteRight">
+        Löschen
+      </v-btn>
+      <v-spacer></v-spacer>
+    </v-card-actions>
+  </v-card>
+</template>
