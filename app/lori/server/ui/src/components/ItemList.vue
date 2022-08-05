@@ -139,6 +139,7 @@ export default defineComponent({
       selectedHeaders,
       // Methods
       getAlertLoad,
+      retrieveAccessInformation,
       setActiveItem,
     };
   },

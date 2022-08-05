@@ -6,7 +6,6 @@ import Vue from "vue";
 import api from "@/api/api";
 import {
     ItemRest,
-    MetadataRest, RightRest,
 } from "@/generated-sources/openapi";
 
 Vue.use(Vuetify);
@@ -33,10 +32,10 @@ describe("Test ItemList UI", () => {
     wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
     });
-    expect((wrapper.vm as any).getAlertLoad()).toBeFalsy();
+    expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
     (wrapper.vm as any).retrieveAccessInformation();
     await wrapper.vm.$nextTick();
-    expect((wrapper.vm as any).getAlertLoad()).toBeFalsy();
+    expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
   });
 
   it("initial table load fails", async () => {
@@ -47,9 +46,9 @@ describe("Test ItemList UI", () => {
     wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
     });
-    expect((wrapper.vm as any).getAlertLoad()).toBeFalsy();
+    expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
     (wrapper.vm as any).retrieveAccessInformation();
     await wrapper.vm.$nextTick();
-    expect((wrapper.vm as any).getAlertLoad()).toBeTruthy();
+    expect((wrapper.vm as any).getAlertLoad().value).toBeTruthy();
   });
 });
