@@ -1,3 +1,150 @@
+<script lang="ts">
+import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
+import api from "@/api/api";
+import { DataTableHeader } from "vuetify";
+import MetadataView from "@/components/MetadataView.vue";
+import RightsView from "@/components/RightsView.vue";
+import { defineComponent, onMounted, Ref, ref, watch } from "vue";
+
+export default defineComponent({
+  components: { RightsView, MetadataView },
+
+  setup() {
+    const items: Ref<Array<ItemRest>> = ref([]);
+    const currentItem = ref({} as ItemRest);
+    const headersValueVSelect = ref([]);
+    const loadAlertError = ref(false);
+    const loadAlertErrorMessage = ref("");
+    const search = ref("");
+    const tableContentLoading = ref(true);
+
+    const headers = [
+      {
+        text: "Item-Id",
+        align: "start",
+        sortable: false,
+        value: "metadataId",
+      },
+      {
+        text: "Titel",
+        sortable: true,
+        value: "title",
+        width: "300px",
+      },
+      {
+        text: "Handle",
+        sortable: true,
+        value: "handle",
+      },
+      {
+        text: "Publikationstyp",
+        sortable: true,
+        value: "constationType",
+      },
+      {
+        text: "Band",
+        value: "band",
+      },
+      {
+        text: "DOI",
+        value: "doi",
+      },
+      {
+        text: "ISBN",
+        value: "isbn",
+      },
+      {
+        text: "ISSN",
+        value: "issn",
+      },
+      {
+        text: "Paket-Sigel",
+        value: "paketSigel",
+      },
+      {
+        text: "PPN",
+        value: "ppn",
+      },
+      {
+        text: "PPN-Ebook",
+        value: "ppnEbook",
+      },
+      {
+        text: "Rechte-K10Plus",
+        value: "rightsK10plus",
+      },
+      {
+        text: "Seriennummer",
+        value: "serialNumber",
+      },
+      {
+        text: "Titel Journal",
+        value: "titleJournal",
+      },
+      {
+        text: "Titel Serie",
+        value: "titleSeries",
+      },
+      {
+        text: "ZBD-Id",
+        value: "zbdId",
+      },
+    ] as Array<DataTableHeader>;
+
+    const selectedHeaders = ref(headers.slice(0, 6));
+
+    const retrieveAccessInformation = () => {
+      api
+        .getList(0, 25)
+        .then((response) => {
+          items.value = response;
+          tableContentLoading.value = false;
+        })
+        .catch((e) => {
+          console.log(e);
+          tableContentLoading.value = false;
+          loadAlertErrorMessage.value =
+            e.statusText + " (Statuscode: " + e.status + ")";
+          loadAlertError.value = true;
+        });
+    };
+
+    const setActiveItem = (metadata: MetadataRest) => {
+      let item: ItemRest | undefined = items.value.find(
+        (e) => e.metadata.metadataId === metadata.metadataId
+      );
+      if (item !== undefined) {
+        currentItem.value = item;
+      }
+    };
+
+    const getAlertLoad = () => {
+      return loadAlertError;
+    };
+
+    onMounted(() => retrieveAccessInformation());
+
+    watch(headersValueVSelect, (currentValue, oldValue) => {
+      selectedHeaders.value = currentValue;
+    });
+
+    return {
+      currentItem,
+      headers,
+      headersValueVSelect,
+      items,
+      loadAlertError,
+      loadAlertErrorMessage,
+      search,
+      selectedHeaders,
+      // Methods
+      getAlertLoad,
+      setActiveItem,
+    };
+  },
+});
+</script>
+
 <template>
   <v-container>
     <v-row>
@@ -57,152 +204,3 @@
     </v-row>
   </v-container>
 </template>
-
-<script lang="ts">
-import { Vue, Watch } from "vue-property-decorator";
-import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
-import api from "@/api/api";
-import Component from "vue-class-component";
-import { DataTableHeader } from "vuetify";
-import MetadataView from "@/components/MetadataView.vue";
-import RightsView from "@/components/RightsView.vue";
-
-@Component({
-  components: { RightsView, MetadataView },
-})
-export default class AccessInformationList extends Vue {
-  private items: Array<ItemRest> = [];
-  private currentItem = {} as ItemRest;
-  private currentIndex = -1;
-  private dialogEdit = false;
-  private headersValueVSelect = [];
-  private loadAlertError = false;
-  private loadAlertErrorMessage = "";
-  private search = "";
-  private selectedHeaders: Array<DataTableHeader> = [];
-  private tableContentLoading = true;
-
-  private headers = [
-    {
-      text: "Item-Id",
-      align: "start",
-      sortable: false,
-      value: "metadataId",
-    },
-    {
-      text: "Titel",
-      sortable: true,
-      value: "title",
-      width: "300px",
-    },
-    {
-      text: "Handle",
-      sortable: true,
-      value: "handle",
-    },
-    {
-      text: "Publikationstyp",
-      sortable: true,
-      value: "publicationType",
-    },
-    {
-      text: "Band",
-      value: "band",
-    },
-    {
-      text: "DOI",
-      value: "doi",
-    },
-    {
-      text: "ISBN",
-      value: "isbn",
-    },
-    {
-      text: "ISSN",
-      value: "issn",
-    },
-    {
-      text: "Paket-Sigel",
-      value: "paketSigel",
-    },
-    {
-      text: "PPN",
-      value: "ppn",
-    },
-    {
-      text: "PPN-Ebook",
-      value: "ppnEbook",
-    },
-    {
-      text: "Rechte-K10Plus",
-      value: "rightsK10plus",
-    },
-    {
-      text: "Seriennummer",
-      value: "serialNumber",
-    },
-    {
-      text: "Titel Journal",
-      value: "titleJournal",
-    },
-    {
-      text: "Titel Serie",
-      value: "titleSeries",
-    },
-    {
-      text: "ZBD-Id",
-      value: "zbdId",
-    },
-  ] as Array<DataTableHeader>;
-
-  public retrieveAccessInformation(): void {
-    api
-      .getList(0, 25)
-      .then((response) => {
-        this.items = response;
-        this.tableContentLoading = false;
-      })
-      .catch((e) => {
-        console.log(e);
-        this.tableContentLoading = false;
-        this.loadAlertErrorMessage =
-          e.statusText + " (Statuscode: " + e.status + ")";
-        this.loadAlertError = true;
-      });
-  }
-
-  public setActiveItem(metadata: MetadataRest): void {
-    let item: ItemRest | undefined = this.items.find(
-      (e) => e.metadata.metadataId === metadata.metadataId
-    );
-    if (item !== undefined) {
-      this.currentItem = item;
-    }
-  }
-
-  public searchTitle(): void {
-    this.currentIndex = -1;
-  }
-
-  public closeEditItemDialog(): void {
-    this.dialogEdit = false;
-  }
-
-  public getAlertLoad(): boolean {
-    return this.loadAlertError;
-  }
-
-  mounted(): void {
-    this.retrieveAccessInformation();
-  }
-
-  created(): void {
-    this.selectedHeaders = this.headers.slice(0, 6);
-  }
-
-  @Watch("headersValueVSelect")
-  onValueChanged(val: Array<DataTableHeader>): void {
-    this.selectedHeaders = val;
-  }
-}
-</script>
