@@ -1,9 +1,96 @@
+<script lang="ts">
+import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import { RightRest } from "@/generated-sources/openapi";
+import { computed, defineComponent, PropType, ref } from "vue";
+
+export default defineComponent({
+  props: {
+    rights: {
+      type: {} as PropType<Array<RightRest>>,
+      required: true,
+    },
+    metadataId: {
+      type: String,
+      required: true,
+    },
+  },
+  emits: ["deleteSuccessful", "tabDialogClosed", "updateSuccessful"],
+  components: {
+    RightsEditDialog,
+  },
+
+  setup(props, { emit }) {
+    const renderKey = ref(0);
+    const tab = ref(null);
+    const lastDeletedRight = ref("");
+    const lastDeletionSuccessful = ref(false);
+    const lastUpdatedRight = ref("");
+    const lastUpdateSuccessful = ref(false);
+
+    // Methods
+    const deleteSuccessful = (
+      index: number,
+      rightIdDeleted: string | undefined
+    ) => {
+      currentRights.value.splice(index, 1);
+      renderKey.value += 1;
+      lastDeletionSuccessful.value = true;
+      lastDeletedRight.value =
+        rightIdDeleted != undefined ? rightIdDeleted : "";
+      emit("deleteSuccessful", index);
+    };
+
+    const resetLastDeletionSuccessful = () => {
+      lastDeletionSuccessful.value = false;
+    };
+
+    const tabDialogClosed = () => {
+      emit("tabDialogClosed");
+    };
+
+    const updateSuccessful = (right: RightRest, index: number) => {
+      lastUpdateSuccessful.value = true;
+      lastUpdatedRight.value = right.rightId != undefined ? right.rightId : "";
+      emit("updateSuccessful", right, index);
+    };
+
+    const resetLastUpdateSuccessful = () => {
+      lastUpdateSuccessful.value = false;
+    };
+
+    // Computed properties
+    const tabNames = computed(() => {
+      return props.rights.map((r) => r.rightId);
+    });
+
+    const currentRights = computed(() => {
+      return props.rights;
+    });
+
+    return {
+      currentRights,
+      lastDeletedRight,
+      lastDeletionSuccessful,
+      lastUpdatedRight,
+      lastUpdateSuccessful,
+      renderKey,
+      tab,
+      tabNames,
+      deleteSuccessful,
+      resetLastDeletionSuccessful,
+      resetLastUpdateSuccessful,
+      tabDialogClosed,
+      updateSuccessful,
+    };
+  },
+});
+</script>
+
+<style scoped></style>
 <template>
   <v-card>
     <v-toolbar color="cyan" dark flat :key="renderKey">
-      <v-toolbar-title>
-        Editiere Rechte für {{ this.metadataId }}
-      </v-toolbar-title>
+      <v-toolbar-title> Editiere Rechte für {{ metadataId }} </v-toolbar-title>
       <v-spacer></v-spacer>
       <template v-slot:extension>
         <v-tabs v-model="tab" align-with-title show-arrows>
@@ -24,8 +111,8 @@
         text
         type="success"
       >
-        Rechteinformation {{ this.lastUpdatedRight }} erfolgreich geupdated für
-        Item {{ this.metadataId }}.
+        Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item
+        {{ metadataId }}.
       </v-alert>
       <v-alert
         @close="resetLastDeletionSuccessful"
@@ -34,10 +121,10 @@
         text
         type="success"
       >
-        Rechteinformation {{ this.lastDeletedRight }} erfolgreich gelöscht für
-        Item {{ this.metadataId }}.
+        Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
+        {{ metadataId }}.
       </v-alert>
-      <v-tab-item v-for="(item, index) in rights" :key="item.rightId">
+      <v-tab-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
           :activated="true"
           :right="item"
@@ -52,62 +139,3 @@
     </v-tabs-items>
   </v-card>
 </template>
-
-<script lang="ts">
-import Component from "vue-class-component";
-import RightsEditDialog from "@/components/RightsEditDialog.vue";
-import { Prop, Vue } from "vue-property-decorator";
-import { RightRest } from "@/generated-sources/openapi";
-
-@Component({
-  components: { RightsEditDialog },
-})
-export default class RightsEditTabs extends Vue {
-  @Prop({ required: true })
-  rights!: Array<RightRest>;
-  @Prop({ required: true })
-  metadataId!: string;
-
-  // Data properties
-  private renderKey = 0;
-  private tab = null;
-  private lastDeletedRight = "";
-  private lastDeletionSuccessful = false;
-  private lastUpdatedRight = "";
-  private lastUpdateSuccessful = false;
-
-  // Methods
-  public deleteSuccessful(index: number, rightIdDeleted: string | undefined) {
-    this.rights.splice(index, 1);
-    this.renderKey += 1;
-    this.lastDeletionSuccessful = true;
-    this.lastDeletedRight = rightIdDeleted != undefined ? rightIdDeleted : "";
-    this.$emit("deleteSuccessful", index);
-  }
-
-  public resetLastDeletionSuccessful() {
-    this.lastDeletionSuccessful = false;
-  }
-
-  public tabDialogClosed() {
-    this.$emit("tabDialogClosed");
-  }
-
-  public updateSuccessful(right: RightRest, index: number): void {
-    this.lastUpdateSuccessful = true;
-    this.lastUpdatedRight = right.rightId != undefined ? right.rightId : "";
-    this.$emit("updateSuccessful", right, index);
-  }
-
-  public resetLastUpdateSuccessful() {
-    this.lastUpdateSuccessful = false;
-  }
-
-  // Computed properties
-  get tabNames() {
-    return this.rights.map((r) => r.rightId);
-  }
-}
-</script>
-
-<style scoped></style>
