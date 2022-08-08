@@ -11,6 +11,8 @@
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
   "dependencies": {
+    "@vuelidate/core": "^2.0.0-alpha.44",
+    "@vuelidate/validators": "^2.0.0-alpha.31",
     "core-js": "^3.24.1",
     "neverthrow": "^4.4.2",
     "ts-enum-util": "^4.0.2",
