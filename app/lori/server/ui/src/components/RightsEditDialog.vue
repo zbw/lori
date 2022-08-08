@@ -11,11 +11,15 @@ import {
 import {
   computed,
   onMounted,
+  reactive,
   ref,
   watch,
   defineComponent,
   PropType,
 } from "vue";
+
+import { useVuelidate } from "@vuelidate/core";
+import { required } from "@vuelidate/validators";
 
 export default defineComponent({
   props: {
@@ -50,6 +54,64 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    // Vuelidate
+    type FormState = {
+      accessState: string;
+      startDate: string;
+      endDate: string;
+    };
+
+    const formState = reactive({
+      accessState: "",
+      basisStorage: "",
+      basisAccessState: "",
+      startDate: "",
+      endDate: "",
+    });
+
+    const endDateCheck = (value: string, siblings: FormState) => {
+      if (value == "") {
+        return true;
+      } else {
+        const endDate = new Date(value);
+        const startDate = new Date(siblings.startDate);
+        return startDate < endDate;
+      }
+    };
+
+    const rules = {
+      accessState: { required },
+      startDate: { required },
+      endDate: { endDateCheck },
+    };
+
+    const v$ = useVuelidate(rules, formState);
+
+    const errorAccessState = computed(() => {
+      const errors: Array<string> = [];
+      if (
+        v$.value.accessState.required.$invalid &&
+        v$.value.accessState.$dirty
+      ) {
+        errors.push("Eintrag wird benötigt");
+      }
+      return errors;
+    });
+    const errorStartDate = computed(() => {
+      const errors: Array<string> = [];
+      if (v$.value.startDate.required.$invalid && v$.value.startDate.$dirty) {
+        errors.push("Eintrag wird benötigt");
+      }
+      return errors;
+    });
+    const errorEndDate = computed(() => {
+      const errors: Array<string> = [];
+      if (v$.value.endDate.$invalid) {
+        errors.push("Enddatum muss nach dem Startdatum liegen");
+      }
+      return errors;
+    });
+
     const openPanelsDefault = [0];
     const accessStatusSelect = ["Open", "Closed", "Restricted"];
     const basisAccessState = ref([
@@ -68,11 +130,8 @@ export default defineComponent({
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
     const deleteDialogActivated = ref(false);
-    const formHasErrors = ref(false);
     const menuEndDate = ref(false);
     const menuStartDate = ref(false);
-    const tmpStartDate = ref("");
-    const tmpEndDate = ref("");
     const saveAlertError = ref(false);
     const saveAlertErrorMessage = ref("");
     const updateConfirmDialog = ref(false);
@@ -87,6 +146,7 @@ export default defineComponent({
     const close = () => {
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
+      v$.value.$reset();
       emitClosedDialog();
     };
 
@@ -110,9 +170,9 @@ export default defineComponent({
     const createRight = () => {
       updateInProgress.value = true;
       tmpRight.value.rightId = "unset";
-      tmpRight.value.startDate = new Date(tmpStartDate.value);
+      tmpRight.value.startDate = new Date(formState.startDate);
       tmpRight.value.endDate =
-        tmpEndDate.value == "" ? undefined : new Date(tmpEndDate.value);
+        formState.endDate == "" ? undefined : new Date(formState.endDate);
       api
         .addRight(tmpRight.value)
         .then((r) => {
@@ -145,9 +205,9 @@ export default defineComponent({
 
     const updateRight = () => {
       updateInProgress.value = true;
-      tmpRight.value.startDate = new Date(tmpStartDate.value);
+      tmpRight.value.startDate = new Date(formState.startDate);
       tmpRight.value.endDate =
-        tmpEndDate.value == "" ? undefined : new Date(tmpEndDate.value);
+        formState.endDate == "" ? undefined : new Date(formState.endDate);
       api
         .updateRight(tmpRight.value)
         .then(() => {
@@ -163,163 +223,146 @@ export default defineComponent({
     };
 
     const save = () => {
-      // TODO(vuelidate)
-      if (formHasErrors.value) {
-        return;
-      }
-      if (props.isNew) {
-        createRight();
-      } else {
-        updateRight();
-      }
+      v$.value.$validate().then((isValid) => {
+        if (!isValid) {
+          return;
+        }
+        tmpRight.value.accessState = stringToAccessState(formState.accessState);
+        tmpRight.value.basisStorage = stringToBasisStorage(
+          formState.basisStorage
+        );
+        tmpRight.value.basisAccessState = stringToBasisAccessState(
+          formState.basisAccessState
+        );
+        if (props.isNew) {
+          createRight();
+        } else {
+          updateRight();
+        }
+      });
     };
 
     const initiateDeleteDialog = () => {
       deleteDialogActivated.value = true;
     };
 
+    const accessStateToString = (
+      access: RightRestAccessStateEnum | undefined
+    ) => {
+      if (access == undefined) {
+        return "Kein Wert";
+      } else {
+        switch (access) {
+          case RightRestAccessStateEnum.Open:
+            return "Open";
+          case RightRestAccessStateEnum.Closed:
+            return "Closed";
+          default:
+            return "Restricted";
+        }
+      }
+    };
+
+    const stringToAccessState = (value: string | undefined) => {
+      if (value == undefined || value == "Kein Wert") {
+        return;
+      } else {
+        switch (value) {
+          case "Open":
+            return RightRestAccessStateEnum.Open;
+          case "Closed":
+            return RightRestAccessStateEnum.Closed;
+          default:
+            return RightRestAccessStateEnum.Restricted;
+        }
+      }
+    };
+
+    const basisStorageToString = (
+      basisStorage: RightRestBasisStorageEnum | undefined
+    ) => {
+      if (basisStorage == undefined) {
+        return "Kein Wert";
+      } else {
+        switch (basisStorage) {
+          case RightRestBasisStorageEnum.AuthorRightException:
+            return "Urheberrechtschranke";
+          case RightRestBasisStorageEnum.UserAgreement:
+            return "Nutzungsvereinbarung";
+          case RightRestBasisStorageEnum.OpenContentLicence:
+            return "Open-Content-Lizenz";
+          case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
+            return "ZBW-Policy (unbeantwortete Rechteanforderung)";
+          case RightRestBasisStorageEnum.ZbwPolicyRestricted:
+            return "ZBW-Policy (Eingeschränkte OCL)";
+          default:
+            return "Lizenzvertrag";
+        }
+      }
+    };
+
+    const stringToBasisStorage = (value: string | undefined) => {
+      if (value == undefined) {
+        return undefined;
+      } else {
+        switch (value) {
+          case "Lizenzvertrag":
+            return RightRestBasisStorageEnum.LicenceContract;
+          case "Nutzungsvereinbarung":
+            return RightRestBasisStorageEnum.UserAgreement;
+          case "Urheberrechtschranke":
+            return RightRestBasisStorageEnum.AuthorRightException;
+          case "Open-Content-Lizenz":
+            return RightRestBasisStorageEnum.OpenContentLicence;
+          case "ZBW-Policy (Eingeschränkte OCL)":
+            return RightRestBasisStorageEnum.ZbwPolicyRestricted;
+          default:
+            return RightRestBasisStorageEnum.ZbwPolicyUnanswered;
+        }
+      }
+    };
+
+    const basisAccessStateToString = (
+      basisAccessState: RightRestBasisAccessStateEnum | undefined
+    ) => {
+      if (basisAccessState == undefined) {
+        return "Kein Wert";
+      } else {
+        switch (basisAccessState) {
+          case RightRestBasisAccessStateEnum.AuthorRightException:
+            return "Urheberrechtschranke";
+          case RightRestBasisAccessStateEnum.UserAgreement:
+            return "Nutzungsvereinbarung";
+          case RightRestBasisAccessStateEnum.LicenceContract:
+            return "Lizenzvertrag";
+          case RightRestBasisAccessStateEnum.ZbwPolicy:
+            return "ZBW-Policy";
+          default:
+            return "OA-Rechte aus Lizenzvertrag";
+        }
+      }
+    };
+
+    const stringToBasisAccessState = (value: string | undefined) => {
+      if (value == undefined) {
+        tmpRight.value.basisAccessState = undefined;
+      } else {
+        switch (value) {
+          case "Lizenzvertrag":
+            return RightRestBasisAccessStateEnum.LicenceContract;
+          case "Nutzungsvereinbarung":
+            return RightRestBasisAccessStateEnum.UserAgreement;
+          case "OA-Rechte aus Lizenzvertrag":
+            return RightRestBasisAccessStateEnum.LicenceContractOa;
+          case "Urheberrechtschranke":
+            return RightRestBasisAccessStateEnum.AuthorRightException;
+          default:
+            return RightRestBasisAccessStateEnum.ZbwPolicy;
+        }
+      }
+    };
+
     // Computed properties
-    const showAccessState = computed({
-      get: () => {
-        let accessState = tmpRight.value.accessState;
-        if (accessState == undefined) {
-          return "Kein Wert";
-        } else {
-          switch (accessState) {
-            case RightRestAccessStateEnum.Open:
-              return "Open";
-            case RightRestAccessStateEnum.Closed:
-              return "Closed";
-            default:
-              return "Restricted";
-          }
-        }
-      },
-      set: (value: string | undefined) => {
-        if (value == undefined || value == "Kein Wert") {
-          tmpRight.value.accessState = undefined;
-        } else {
-          switch (value) {
-            case "Open":
-              tmpRight.value.accessState = RightRestAccessStateEnum.Open;
-              break;
-            case "Closed":
-              tmpRight.value.accessState = RightRestAccessStateEnum.Closed;
-              break;
-            default:
-              tmpRight.value.accessState = RightRestAccessStateEnum.Restricted;
-              break;
-          }
-        }
-      },
-    });
-
-    const selectBasisStorage = computed({
-      get: () => {
-        let basisStorage = tmpRight.value.basisStorage;
-        if (basisStorage == undefined) {
-          return "Kein Wert";
-        } else {
-          switch (basisStorage) {
-            case RightRestBasisStorageEnum.AuthorRightException:
-              return "Urheberrechtschranke";
-            case RightRestBasisStorageEnum.UserAgreement:
-              return "Nutzungsvereinbarung";
-            case RightRestBasisStorageEnum.OpenContentLicence:
-              return "Open-Content-Lizenz";
-            case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
-              return "ZBW-Policy (unbeantwortete Rechteanforderung)";
-            case RightRestBasisStorageEnum.ZbwPolicyRestricted:
-              return "ZBW-Policy (Eingeschränkte OCL)";
-            default:
-              return "Lizenzvertrag";
-          }
-        }
-      },
-      set: (value: string | undefined) => {
-        if (value == undefined) {
-          tmpRight.value.basisStorage = undefined;
-        } else {
-          switch (value) {
-            case "Lizenzvertrag":
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.LicenceContract;
-              break;
-            case "Nutzungsvereinbarung":
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.UserAgreement;
-              break;
-            case "Urheberrechtschranke":
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.AuthorRightException;
-              break;
-            case "Open-Content-Lizenz":
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.OpenContentLicence;
-              break;
-            case "ZBW-Policy (Eingeschränkte OCL)":
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.ZbwPolicyRestricted;
-              break;
-            default:
-              tmpRight.value.basisStorage =
-                RightRestBasisStorageEnum.ZbwPolicyUnanswered;
-              break;
-          }
-        }
-      },
-    });
-
-    const selectBasisAccessState = computed({
-      get: () => {
-        let basisAccessState = tmpRight.value.basisAccessState;
-        if (basisAccessState == undefined) {
-          return "Kein Wert";
-        } else {
-          switch (basisAccessState) {
-            case RightRestBasisAccessStateEnum.AuthorRightException:
-              return "Urheberrechtschranke";
-            case RightRestBasisAccessStateEnum.UserAgreement:
-              return "Nutzungsvereinbarung";
-            case RightRestBasisAccessStateEnum.LicenceContract:
-              return "Lizenzvertrag";
-            case RightRestBasisAccessStateEnum.ZbwPolicy:
-              return "ZBW-Policy";
-            default:
-              return "OA-Rechte aus Lizenzvertrag";
-          }
-        }
-      },
-      set: (value: string | undefined) => {
-        if (value == undefined) {
-          tmpRight.value.basisAccessState = undefined;
-        } else {
-          switch (value) {
-            case "Lizenzvertrag":
-              tmpRight.value.basisAccessState =
-                RightRestBasisAccessStateEnum.LicenceContract;
-              break;
-            case "Nutzungsvereinbarung":
-              tmpRight.value.basisAccessState =
-                RightRestBasisAccessStateEnum.UserAgreement;
-              break;
-            case "OA-Rechte aus Lizenzvertrag":
-              tmpRight.value.basisAccessState =
-                RightRestBasisAccessStateEnum.LicenceContractOa;
-              break;
-            case "Urheberrechtschranke":
-              tmpRight.value.basisAccessState =
-                RightRestBasisAccessStateEnum.AuthorRightException;
-              break;
-            default:
-              tmpRight.value.basisAccessState =
-                RightRestBasisAccessStateEnum.ZbwPolicy;
-              break;
-          }
-        }
-      },
-    });
-
     const title = computed(() => {
       if (props.isNew) {
         return "Erstelle";
@@ -338,37 +381,43 @@ export default defineComponent({
       updateInProgress.value = false;
       tmpRight.value = Object.assign({}, newValue);
       if (!props.isNew) {
-        tmpStartDate.value = props.right.startDate.toISOString().slice(0, 10);
-        if (props.right.endDate !== undefined) {
-          tmpEndDate.value = props.right.endDate.toISOString().slice(0, 10);
+        formState.accessState = accessStateToString(newValue.accessState);
+        formState.basisStorage = basisStorageToString(newValue.basisStorage);
+        formState.basisAccessState = basisAccessStateToString(
+          newValue.basisAccessState
+        );
+        formState.startDate = newValue.startDate.toISOString().slice(0, 10);
+        if (newValue.endDate !== undefined) {
+          formState.endDate = newValue.endDate.toISOString().slice(0, 10);
         } else {
-          tmpEndDate.value = "";
+          formState.endDate = "";
         }
       } else {
-        tmpEndDate.value = "";
-        tmpStartDate.value = "";
+        formState.endDate = "";
+        formState.startDate = "";
       }
     };
+
     return {
+      formState,
+      v$,
       // variables
       accessStatusSelect,
       basisAccessState,
       basisStorage,
       deleteDialogActivated,
+      errorAccessState,
+      errorEndDate,
+      errorStartDate,
       menuStartDate,
       menuEndDate,
       metadataCount,
       openPanelsDefault,
       saveAlertError,
       saveAlertErrorMessage,
-      selectBasisAccessState,
-      selectBasisStorage,
-      showAccessState,
       updateConfirmDialog,
       title,
       tmpRight,
-      tmpEndDate,
-      tmpStartDate,
       updateInProgress,
       // methods
       cancel,
@@ -452,8 +501,11 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   :items="accessStatusSelect"
-                  v-model="showAccessState"
+                  v-model="formState.accessState"
                   outlined
+                  @blur="v$.accessState.$touch()"
+                  @change="v$.accessState.$touch()"
+                  :error-messages="errorAccessState"
                 ></v-select>
               </v-col>
             </v-row>
@@ -466,14 +518,14 @@ export default defineComponent({
                   ref="menuStart"
                   v-model="menuStartDate"
                   :close-on-content-click="false"
-                  :return-value.sync="tmpStartDate"
+                  :return-value.sync="formState.startDate"
                   transition="scale-transition"
                   offset-y
                   min-width="auto"
                 >
                   <template v-slot:activator="{ on, attrs }">
                     <v-text-field
-                      v-model="tmpStartDate"
+                      v-model="formState.startDate"
                       ref="startDate"
                       label="Start-Datum"
                       prepend-icon="mdi-calendar"
@@ -482,9 +534,16 @@ export default defineComponent({
                       v-bind="attrs"
                       v-on="on"
                       required
+                      @change="v$.startDate.$touch()"
+                      @blur="v$.startDate.$touch()"
+                      :error-messages="errorStartDate"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="tmpStartDate" no-title scrollable>
+                  <v-date-picker
+                    v-model="formState.startDate"
+                    no-title
+                    scrollable
+                  >
                     <v-spacer></v-spacer>
                     <v-btn text color="primary" @click="menuStartDate = false">
                       Cancel
@@ -492,7 +551,7 @@ export default defineComponent({
                     <v-btn
                       text
                       color="primary"
-                      @click="$refs.menuStart.save(tmpStartDate)"
+                      @click="$refs.menuStart.save(formState.startDate)"
                     >
                       OK
                     </v-btn>
@@ -509,14 +568,14 @@ export default defineComponent({
                   ref="menuEnd"
                   v-model="menuEndDate"
                   :close-on-content-click="false"
-                  :return-value.sync="tmpEndDate"
+                  :return-value.sync="formState.endDate"
                   transition="scale-transition"
                   offset-y
                   min-width="auto"
                 >
                   <template v-slot:activator="{ on, attrs }">
                     <v-text-field
-                      v-model="tmpEndDate"
+                      v-model="formState.endDate"
                       ref="endDate"
                       label="End-Datum"
                       prepend-icon="mdi-calendar"
@@ -525,9 +584,16 @@ export default defineComponent({
                       v-bind="attrs"
                       v-on="on"
                       required
+                      @change="v$.endDate.$touch()"
+                      @blur="v$.endDate.$touch()"
+                      :error-messages="errorEndDate"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="tmpEndDate" no-title scrollable>
+                  <v-date-picker
+                    v-model="formState.endDate"
+                    no-title
+                    scrollable
+                  >
                     <v-spacer></v-spacer>
                     <v-btn text color="primary" @click="menuEndDate = false">
                       Cancel
@@ -535,7 +601,7 @@ export default defineComponent({
                     <v-btn
                       text
                       color="primary"
-                      @click="$refs.menuEnd.save(tmpEndDate)"
+                      @click="$refs.menuEnd.save(formState.endDate)"
                     >
                       OK
                     </v-btn>
@@ -703,7 +769,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   :items="basisStorage"
-                  v-model="selectBasisStorage"
+                  v-model="formState.basisStorage"
                   outlined
                 ></v-select>
               </v-col>
@@ -715,7 +781,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   :items="basisAccessState"
-                  v-model="selectBasisAccessState"
+                  v-model="formState.basisAccessState"
                   outlined
                 ></v-select>
               </v-col>
