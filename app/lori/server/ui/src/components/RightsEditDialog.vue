@@ -20,6 +20,7 @@ import {
 
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
+import {ChangeType, useHistoryStore} from "@/stores/history";
 
 export default defineComponent({
   props: {
@@ -54,6 +55,8 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    // Stores
+    const historyStore = useHistoryStore();
     // Vuelidate
     type FormState = {
       accessState: string;
@@ -183,6 +186,10 @@ export default defineComponent({
             } as ItemEntry)
             .then(() => {
               tmpRight.value.rightId = r.rightId;
+              historyStore.addEntry({
+                type: ChangeType.CREATED,
+                rightId: r.rightId,
+              });
               emit("addSuccessful", tmpRight.value);
               close();
             })
@@ -211,6 +218,10 @@ export default defineComponent({
       api
         .updateRight(tmpRight.value)
         .then(() => {
+          historyStore.addEntry({
+            type: ChangeType.UPDATED,
+            rightId: tmpRight.value.rightId,
+          });
           emit("updateSuccessful", tmpRight.value, props.index);
         })
         .catch((e) => {
@@ -409,6 +420,7 @@ export default defineComponent({
       errorAccessState,
       errorEndDate,
       errorStartDate,
+      historyStore,
       menuStartDate,
       menuEndDate,
       metadataCount,

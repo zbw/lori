@@ -15,6 +15,7 @@
     "@vuelidate/validators": "^2.0.0-alpha.31",
     "core-js": "^3.24.1",
     "neverthrow": "^4.4.2",
+    "pinia": "^2.0.17",
     "ts-enum-util": "^4.0.2",
     "vue": "^2.7.8",
     "vue-i18n": "^8.27.2",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@intlify/vue-i18n-loader": "^3.3.0",
+    "@pinia/testing": "^0.0.13",
     "@types/jest": "^27.5.2",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "@typescript-eslint/parser": "^5.32.0",

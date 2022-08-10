@@ -2,6 +2,7 @@
 import api from "@/api/api";
 import { defineComponent, PropType, ref } from "vue";
 import { RightRest } from "@/generated-sources/openapi";
+import { ChangeType, useHistoryStore } from "@/stores/history";
 
 export default defineComponent({
   props: {
@@ -26,6 +27,7 @@ export default defineComponent({
     const deleteInProgress = ref(false);
     const deleteErrorMessage = ref("");
     const deleteError = ref(false);
+    const historyStore = useHistoryStore();
 
     const close = () => {
       emit("deleteDialogClosed");
@@ -44,6 +46,10 @@ export default defineComponent({
         api
           .deleteItemRelation(props.metadataId, props.right.rightId)
           .then(() => {
+            historyStore.addEntry({
+              type: ChangeType.DELETED,
+              rightId: props.right.rightId,
+            });
             emit("deleteSuccessful", props.index);
             close();
           })
@@ -64,6 +70,7 @@ export default defineComponent({
       deleteAlertError,
       deleteErrorMessage,
       deleteInProgress,
+      historyStore,
       // methods
       deleteRight,
       close,
@@ -86,7 +93,7 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
-      >Abbrechen
+        >Abbrechen
       </v-btn>
       <v-btn :loading="deleteInProgress" color="error" @click="deleteRight">
         Löschen
