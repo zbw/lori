@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@intlify/vue-i18n-loader": "^3.3.0",
+    "@pinia/testing": "^0.0.13",
     "@types/jest": "^27.5.2",
     "@typescript-eslint/eslint-plugin": "^5.32.0",
     "@typescript-eslint/parser": "^5.32.0",

@@ -1,4 +1,4 @@
-import { mount, shallowMount, Wrapper } from "@vue/test-utils";
+import { shallowMount, Wrapper } from "@vue/test-utils";
 import { mocked } from "ts-jest/utils";
 import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
