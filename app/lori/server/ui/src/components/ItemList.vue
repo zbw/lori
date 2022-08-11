@@ -101,7 +101,6 @@ export default defineComponent({
           tableContentLoading.value = false;
         })
         .catch((e) => {
-          console.log(e);
           tableContentLoading.value = false;
           loadAlertErrorMessage.value =
             e.statusText + " (Statuscode: " + e.status + ")";

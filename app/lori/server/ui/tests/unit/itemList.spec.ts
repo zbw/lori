@@ -4,9 +4,7 @@ import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
-import {
-    ItemRest,
-} from "@/generated-sources/openapi";
+import { ItemRest } from "@/generated-sources/openapi";
 
 Vue.use(Vuetify);
 
@@ -16,6 +14,7 @@ jest.mock("@/api/api");
 const mockedApi = mocked(api, true);
 
 afterEach(() => {
+  jest.clearAllMocks();
   wrapper.destroy();
 });
 
