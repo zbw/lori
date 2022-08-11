@@ -233,8 +233,8 @@ export default defineComponent({
         });
     };
 
-    const save = () => {
-      v$.value.$validate().then((isValid) => {
+    const save: () => Promise<void> = () => {
+      return v$.value.$validate().then((isValid) => {
         if (!isValid) {
           return;
         }
@@ -434,6 +434,7 @@ export default defineComponent({
       // methods
       cancel,
       cancelConfirm,
+      createRight,
       initiateDeleteDialog,
       deleteDialogClosed,
       deleteSuccessful,
