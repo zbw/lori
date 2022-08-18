@@ -1,0 +1,10 @@
+UserRest:
+  required:
+    - name
+    - password
+  type: object
+  properties:
+    name:
+      type: string
+    password:
+      type: string

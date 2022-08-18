@@ -1,8 +1,12 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.type.User
+import de.zbw.api.lori.server.type.UserRole
+import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import io.opentelemetry.api.trace.Tracer
+import java.security.MessageDigest
 
 /**
  * Backend for the Access-Server.
@@ -118,4 +122,22 @@ class LoriServerBackend(
         dbConnector.getRightIdsByMetadata(metadataId).let {
             dbConnector.getRights(it)
         }
+
+    fun userContainsName(name: String): Boolean = dbConnector.userTableContainsName(name)
+
+    fun insertNewUser(user: UserRest): String =
+        dbConnector.insertUser(
+            User(
+                name = user.name,
+                passwordHash = hashString("SHA-256", user.password),
+                role = UserRole.READ_ONLY,
+            )
+        )
+
+    internal fun hashString(type: String, input: String): String {
+        val bytes = MessageDigest
+            .getInstance(type)
+            .digest(input.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
 }

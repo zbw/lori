@@ -8,6 +8,7 @@ import de.zbw.api.lori.server.route.itemRoutes
 import de.zbw.api.lori.server.route.metadataRoutes
 import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
+import de.zbw.api.lori.server.route.usersRoutes
 import de.zbw.business.lori.server.LoriServerBackend
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.gson.gson
@@ -111,6 +112,7 @@ class ServicePoolWithProbes(
             itemRoutes(backend, tracer)
             metadataRoutes(backend, tracer)
             rightRoutes(backend, tracer)
+            usersRoutes(backend, tracer)
             staticRoutes()
         }
     }

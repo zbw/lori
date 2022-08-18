@@ -97,7 +97,7 @@ class MetadataRoutesKtTest {
                 setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
             assertThat(
-                "Should return Conflict",
+                "Should return BadRequest",
                 response.status,
                 `is`(HttpStatusCode.BadRequest)
             )

@@ -1,0 +1,27 @@
+register:
+  post:
+    tags:
+      - users
+    summary: Add a new right information to LoRi
+    operationId: registerUser
+    requestBody:
+      description: User credentials
+      content:
+        application/json:
+          schema:
+            $ref: 'users.model.yaml#/UserRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      409:
+        description: Username already exists
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body

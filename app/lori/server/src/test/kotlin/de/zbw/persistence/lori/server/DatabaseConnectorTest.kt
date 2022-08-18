@@ -1,5 +1,7 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.api.lori.server.type.User
+import de.zbw.api.lori.server.type.UserRole
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.BasisAccessState
 import de.zbw.business.lori.server.BasisStorage
@@ -386,6 +388,20 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(dbConnector.countItemByRightId(generatedRightId), `is`(1))
     }
 
+    @Test
+    fun testUsernameExists() {
+        // given
+        val expectedUser = TEST_USER
+
+        assertFalse(dbConnector.userTableContainsName(expectedUser.name))
+        // when
+        val userName = dbConnector.insertUser(expectedUser)
+
+        // then
+        assertThat(userName, `is`(TEST_USER.name))
+        assertTrue(dbConnector.userTableContainsName(expectedUser.name))
+    }
+
     companion object {
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
@@ -450,6 +466,12 @@ class DatabaseConnectorTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
             zbwUserAgreement = true,
+        )
+
+        private val TEST_USER = User(
+            name = "Bob",
+            passwordHash = "122345",
+            role = UserRole.ADMIN,
         )
     }
 
