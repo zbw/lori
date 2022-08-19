@@ -1,8 +1,10 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -30,7 +32,8 @@ class LoriServerBackendTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        )
+        ),
+        mockk<LoriConfiguration>(),
     )
 
     @BeforeClass
@@ -147,6 +150,13 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // then
         assertThat(received2, `is`(listOf(expectedMetadata2)))
+    }
+
+    @Test
+    fun testHashString() {
+        val hashedPassword = backend.hashString("SHA-256", "foobar")
+        val expectedHash = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"
+        assertThat(hashedPassword, `is`(expectedHash))
     }
 
     companion object {

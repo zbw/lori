@@ -24,6 +24,10 @@ data class LoriConfiguration(
     val digitalArchiveCommunity: String,
     val digitalArchiveUsername: String,
     val digitalArchivePassword: String,
+    val jwtSecret: String,
+    val jwtAudience: String,
+    val jwtIssuer: String,
+    val jwtRealm: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -43,6 +47,10 @@ data class LoriConfiguration(
             val digitalArchiveBasicAuth = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "basicauth").required()
             val digitalArchiveUsername = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "user").required()
             val digitalArchivePassword = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "password").secret().required()
+            val jwtAudience = KonfigDeclaration.string(prefix, "jwt", "audience").required()
+            val jwtIssuer = KonfigDeclaration.string(prefix, "jwt", "issuer").required()
+            val jwtRealm = KonfigDeclaration.string(prefix, "jwt", "realm").required()
+            val jwtSecret = KonfigDeclaration.string(prefix, "jwt", "secret").secret().required()
             return LoriConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
@@ -54,6 +62,10 @@ data class LoriConfiguration(
                 digitalArchiveUsername = source[digitalArchiveUsername],
                 digitalArchivePassword = source[digitalArchivePassword],
                 digitalArchiveBasicAuth = source[digitalArchiveBasicAuth],
+                jwtAudience = source[jwtAudience],
+                jwtIssuer = source[jwtIssuer],
+                jwtRealm = source[jwtRealm],
+                jwtSecret = source[jwtSecret],
             )
         }
     }

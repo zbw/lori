@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.User
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.Date
@@ -635,6 +636,61 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
+    fun userTableContainsName(username: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_USER_CONTAINS_NAME).apply {
+            this.setString(1, username)
+        }
+        val span = tracer.spanBuilder("userContainsName").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun insertUser(user: User): String {
+        val prepStmt = connection.prepareStatement(STATEMENT_INSERT_USER, Statement.RETURN_GENERATED_KEYS).apply {
+            this.setString(1, user.name)
+            this.setString(2, user.passwordHash)
+            this.setString(3, user.role.dbRepresentation)
+        }
+
+        val span = tracer.spanBuilder("insertUser").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = prepStmt.run { this.executeUpdate() }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getString(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
+    }
+
+    fun userExistsByNameAndPassword(
+        username: String,
+        hashedPassword: String
+    ): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_USER_CREDENTIALS_EXIST).apply {
+            this.setString(1, username)
+            this.setString(2, hashedPassword)
+        }
+        val span = tracer.spanBuilder("userExistByNameAndPassword").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         idx: Int,
         element: T?,
@@ -645,6 +701,7 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM = "item"
         private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
+        private const val TABLE_NAME_USERS = "users"
 
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
@@ -717,6 +774,10 @@ class DatabaseConnector(
             "?,?,?," +
             "?,?,?," +
             "?,?,?)"
+
+        const val STATEMENT_INSERT_USER = "INSERT INTO $TABLE_NAME_USERS" +
+            "(username, password, role) " +
+            "VALUES(?,?,?::role_enum)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -814,6 +875,12 @@ class DatabaseConnector(
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE right_id=?)"
+
+        const val STATEMENT_USER_CONTAINS_NAME =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_USERS WHERE username=?)"
+
+        const val STATEMENT_USER_CREDENTIALS_EXIST =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_USERS WHERE username=? AND password=?)"
 
         fun Timestamp.toOffsetDateTime(): OffsetDateTime =
             OffsetDateTime.ofInstant(

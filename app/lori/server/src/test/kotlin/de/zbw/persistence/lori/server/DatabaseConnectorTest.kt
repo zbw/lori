@@ -6,6 +6,8 @@ import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.User
+import de.zbw.business.lori.server.UserRole
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -207,7 +209,8 @@ class DatabaseConnectorTest : DatabaseTest() {
         // upsert
 
         // given
-        val updatedRight = initialRight.copy(rightId = generatedRightId, lastUpdatedBy = "user2", accessState = AccessState.RESTRICTED)
+        val updatedRight =
+            initialRight.copy(rightId = generatedRightId, lastUpdatedBy = "user2", accessState = AccessState.RESTRICTED)
         mockkStatic(Instant::class)
         every { Instant.now() } returns NOW.plusDays(1).toInstant()
 
@@ -386,6 +389,68 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(dbConnector.countItemByRightId(generatedRightId), `is`(1))
     }
 
+    @Test
+    fun testUsernameExists() {
+        // given
+        val expectedUser = TEST_USER
+
+        assertFalse(dbConnector.userTableContainsName(expectedUser.name))
+        // when
+        val userName = dbConnector.insertUser(expectedUser)
+
+        // then
+        assertThat(userName, `is`(TEST_USER.name))
+        assertTrue(dbConnector.userTableContainsName(expectedUser.name))
+    }
+
+    @Test
+    fun testUserExistsByNameAndPassword() {
+        // given
+        val expectedUser = TEST_USER.copy(
+            name = "testUserExists",
+        )
+
+        assertFalse(dbConnector.userTableContainsName(expectedUser.name))
+        // when
+        val userName = dbConnector.insertUser(expectedUser)
+
+        // then
+        assertThat(userName, `is`(expectedUser.name))
+        assertTrue(dbConnector.userTableContainsName(expectedUser.name))
+
+        // when
+        assertTrue(
+            dbConnector.userExistsByNameAndPassword(
+                expectedUser.name,
+                expectedUser.passwordHash
+            )
+        )
+    }
+
+    @Test
+    fun testUserDoesNotExistsByNameAndPassword() {
+        // given
+        val expectedUser = TEST_USER.copy(
+            name = "testUserNotExisting",
+        )
+
+        assertFalse(dbConnector.userTableContainsName(expectedUser.name))
+        // when
+        val userName = dbConnector.insertUser(expectedUser)
+
+        // then
+        assertThat(userName, `is`(expectedUser.name))
+        assertTrue(dbConnector.userTableContainsName(expectedUser.name))
+
+        // when
+        assertFalse(
+            dbConnector.userExistsByNameAndPassword(
+                expectedUser.name,
+                expectedUser.passwordHash + "$",
+            )
+        )
+    }
+
     companion object {
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
@@ -450,6 +515,12 @@ class DatabaseConnectorTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
             zbwUserAgreement = true,
+        )
+
+        private val TEST_USER = User(
+            name = "Bob",
+            passwordHash = "122345",
+            role = UserRole.ADMIN,
         )
     }
 

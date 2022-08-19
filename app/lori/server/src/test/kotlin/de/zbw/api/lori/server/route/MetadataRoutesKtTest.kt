@@ -97,7 +97,7 @@ class MetadataRoutesKtTest {
                 setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
             }
             assertThat(
-                "Should return Conflict",
+                "Should return BadRequest",
                 response.status,
                 `is`(HttpStatusCode.BadRequest)
             )
@@ -489,6 +489,10 @@ class MetadataRoutesKtTest {
             digitalArchiveUsername = "testuser",
             digitalArchivePassword = "password",
             digitalArchiveBasicAuth = "basicauth",
+            jwtAudience = "0.0.0.0:8080/ui",
+            jwtIssuer = "0.0.0.0:8080",
+            jwtRealm = "Lori ui",
+            jwtSecret = "foobar",
         )
 
         val TEST_METADATA = MetadataRest(
