@@ -1,12 +1,13 @@
 package de.zbw.business.lori.server
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.api.lori.server.type.User
-import de.zbw.api.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
+import java.util.Date
 
 /**
  * Backend for the Access-Server.
@@ -16,6 +17,7 @@ import java.security.MessageDigest
  */
 class LoriServerBackend(
     private val dbConnector: DatabaseConnector,
+    private val config: LoriConfiguration,
 ) {
     constructor(
         config: LoriConfiguration,
@@ -25,6 +27,7 @@ class LoriServerBackend(
             config,
             tracer,
         ),
+        config
     )
 
     fun insertRightForMetadataIds(
@@ -133,6 +136,19 @@ class LoriServerBackend(
                 role = UserRole.READ_ONLY,
             )
         )
+
+    fun checkCredentials(user: UserRest): Boolean =
+        dbConnector.userExistsByNameAndPassword(
+            user.name,
+            hashString("SHA-256", user.password),
+        )
+
+    fun generateJWT(username: String): String = JWT.create()
+        .withAudience(config.jwtAudience)
+        .withIssuer(config.jwtIssuer)
+        .withClaim("username", username)
+        .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+        .sign(Algorithm.HMAC256(config.jwtSecret))
 
     internal fun hashString(type: String, input: String): String {
         val bytes = MessageDigest

@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.AuthTokenRest
 import de.zbw.lori.model.UserRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -17,7 +18,7 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 
 /**
- * REST-API routes for items.
+ * REST-API routes for users.
  *
  * Created on 07-28-2021.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -51,6 +52,32 @@ fun Routing.usersRoutes(
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError)
+                } finally {
+                    span.end()
+                }
+            }
+        }
+        post("/login") {
+            val span = tracer
+                .spanBuilder("lori.LoriService.POST/api/v1/users")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    @Suppress("SENSELESS_COMPARISON")
+                    val user: UserRest =
+                        call.receive(UserRest::class)
+                            .takeIf { it.name != null && it.password != null }
+                            ?: throw BadRequestException("Invalid Json has been provided")
+                    val isValidUser = backend.checkCredentials(user)
+                    if (isValidUser) {
+                        call.respond(AuthTokenRest(backend.generateJWT(user.name)))
+                    } else {
+                        call.respond(HttpStatusCode.Unauthorized)
+                    }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError)

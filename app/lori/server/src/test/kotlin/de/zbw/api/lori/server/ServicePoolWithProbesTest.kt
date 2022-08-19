@@ -122,7 +122,11 @@ class ServicePoolWithProbesTest {
             digitalArchiveCommunity = "5678",
             digitalArchiveUsername = "testuser",
             digitalArchivePassword = "password",
-            digitalArchiveBasicAuth = "basicauth"
+            digitalArchiveBasicAuth = "basicauth",
+            jwtAudience = "0.0.0.0:8080/ui",
+            jwtIssuer = "0.0.0.0:8080",
+            jwtRealm = "Lori ui",
+            jwtSecret = "foobar",
         )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")

@@ -1,5 +1,7 @@
 package de.zbw.api.lori.server
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
@@ -15,6 +17,9 @@ import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.application.install
+import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.jwt.JWTPrincipal
+import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.http.content.singlePageApplication
 import io.ktor.server.netty.Netty
@@ -39,7 +44,7 @@ import java.time.format.DateTimeFormatter
  */
 class ServicePoolWithProbes(
     private val services: List<ServiceLifecycle>,
-    config: LoriConfiguration,
+    val config: LoriConfiguration,
     private val backend: LoriServerBackend,
     private val tracer: Tracer,
 ) : ServiceLifecycle() {
@@ -87,6 +92,28 @@ class ServicePoolWithProbes(
         }
         install(CallLogging) {
             level = Level.INFO
+        }
+        install(Authentication) {
+            jwt("auth-jwt") {
+                realm = config.jwtRealm
+                verifier(
+                    JWT
+                        .require(Algorithm.HMAC256(config.jwtSecret))
+                        .withAudience(config.jwtAudience)
+                        .withIssuer(config.jwtIssuer)
+                        .build()
+                )
+                validate { credential ->
+                    if (credential.payload.getClaim("username").asString() != "") {
+                        JWTPrincipal(credential.payload)
+                    } else {
+                        null
+                    }
+                }
+                challenge { _, _ ->
+                    call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+                }
+            }
         }
         routing {
             singlePageApplication {

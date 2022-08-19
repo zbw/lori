@@ -1,13 +1,13 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.api.lori.server.type.User
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.BasisAccessState
 import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.User
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.Date
@@ -672,6 +672,25 @@ class DatabaseConnector(
         }
     }
 
+    fun userExistsByNameAndPassword(
+        username: String,
+        hashedPassword: String
+    ): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_USER_CREDENTIALS_EXIST).apply {
+            this.setString(1, username)
+            this.setString(2, hashedPassword)
+        }
+        val span = tracer.spanBuilder("userExistByNameAndPassword").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            prepStmt.executeQuery()
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         idx: Int,
         element: T?,
@@ -859,6 +878,9 @@ class DatabaseConnector(
 
         const val STATEMENT_USER_CONTAINS_NAME =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_USERS WHERE username=?)"
+
+        const val STATEMENT_USER_CREDENTIALS_EXIST =
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_USERS WHERE username=? AND password=?)"
 
         fun Timestamp.toOffsetDateTime(): OffsetDateTime =
             OffsetDateTime.ofInstant(

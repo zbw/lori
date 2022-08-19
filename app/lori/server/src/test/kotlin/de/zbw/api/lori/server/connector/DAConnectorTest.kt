@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.connector
 
+import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.DABitstream
 import de.zbw.api.lori.server.type.DAChecksum
 import de.zbw.api.lori.server.type.DACollection
@@ -108,7 +109,8 @@ class DAConnectorTest {
                 LoriServerBackend(
                     mockk<DatabaseConnector>() {
                         every { upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
-                    }
+                    },
+                    mockk<LoriConfiguration>(),
                 )
             )
             val daConnector = spyk(

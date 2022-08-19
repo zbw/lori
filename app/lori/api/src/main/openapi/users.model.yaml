@@ -8,3 +8,11 @@ UserRest:
       type: string
     password:
       type: string
+
+AuthTokenRest:
+  required:
+    - token
+  type: object
+  properties:
+    token:
+      type: string

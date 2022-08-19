@@ -25,3 +25,33 @@ register:
         description: Internal error
         content: { }
     x-codegen-request-body-name: body
+login:
+  post:
+    tags:
+      - users
+    summary: Login with credentials
+    operationId: loginUser
+    requestBody:
+      description: User credentials
+      content:
+        application/json:
+          schema:
+            $ref: 'users.model.yaml#/UserRest'
+      required: true
+    responses:
+      200:
+        description: Successfully logged in
+        content:
+          application/json:
+            schema:
+              $ref: 'users.model.yaml#/AuthTokenRest'
+      400:
+        description: Bad request
+        content: { }
+      401:
+        description: Login failed
+        content: { }
+      500:
+        description: Internal error
+        content: { }
+    x-codegen-request-body-name: body

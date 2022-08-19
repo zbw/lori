@@ -1,8 +1,10 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -30,7 +32,8 @@ class LoriServerBackendTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        )
+        ),
+        mockk<LoriConfiguration>(),
     )
 
     @BeforeClass

@@ -33,6 +33,8 @@ paths:
     $ref: 'right.api.yaml#/right'
   /right/{id}:
     $ref: 'right.api.yaml#/right-id'
+  /users/login:
+    $ref: 'users.api.yaml#/login'
   /users/register:
     $ref: 'users.api.yaml#/register'
 
