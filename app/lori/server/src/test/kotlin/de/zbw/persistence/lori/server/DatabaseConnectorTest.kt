@@ -391,7 +391,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
-    fun testUsernameExists() {
+    fun testUsernameExistsRoundtrip() {
         // given
         val expectedUser = TEST_USER
 
@@ -402,6 +402,11 @@ class DatabaseConnectorTest : DatabaseTest() {
         // then
         assertThat(userName, `is`(TEST_USER.name))
         assertTrue(dbConnector.userTableContainsName(expectedUser.name))
+
+        // when
+        val deletedUsers = dbConnector.deleteUser(expectedUser.name)
+        assertThat(deletedUsers, `is`(1))
+        assertFalse(dbConnector.userTableContainsName(expectedUser.name))
     }
 
     @Test

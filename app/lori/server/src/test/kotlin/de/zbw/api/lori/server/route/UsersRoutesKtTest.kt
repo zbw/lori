@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.UserRole
 import de.zbw.lori.model.AuthTokenRest
 import de.zbw.lori.model.UserRest
+import io.ktor.client.request.delete
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -201,14 +202,16 @@ class UsersRoutesKtTest {
     }
 
     @Test
-    fun testJWTValidation() {
+    fun testUpdateJWTValidation() {
         // 1. Login successfully
-        val backend = spyk(LoriServerBackend(
-            dbConnector = mockk(),
-            config = CONFIG,
-        )) {
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
             every { checkCredentials(TEST_USER) } returns true
-            every { updateUserNonRoleProperties(any())} returns 1
+            every { updateUserNonRoleProperties(any()) } returns 1
         }
         val servicePool = getServicePool(backend)
         testApplication {
@@ -228,7 +231,7 @@ class UsersRoutesKtTest {
             val content: String = loginResponse.bodyAsText()
             val groupListType: Type = object : TypeToken<AuthTokenRest>() {}.type
             val authToken = RightRoutesKtTest.GSON.fromJson<AuthTokenRest?>(content, groupListType).token
-            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}"){
+            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}") {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_USER.copy(password = "newPW")))
@@ -242,15 +245,17 @@ class UsersRoutesKtTest {
     }
 
     @Test
-    fun testJWTValidationExpired() {
+    fun testUpdateJWTValidationExpired() {
         // 1. Login successfully
-        val backend = spyk(LoriServerBackend(
-            dbConnector = mockk(),
-            config = CONFIG,
-        )) {
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
             every { checkCredentials(TEST_USER) } returns true
-            every { updateUserNonRoleProperties(any())} returns 1
-            every { generateJWT(any())} returns JWT.create()
+            every { updateUserNonRoleProperties(any()) } returns 1
+            every { generateJWT(any()) } returns JWT.create()
                 .withAudience(CONFIG.jwtAudience)
                 .withIssuer(CONFIG.jwtIssuer)
                 .withClaim("username", TEST_USER.name)
@@ -275,7 +280,7 @@ class UsersRoutesKtTest {
             val content: String = loginResponse.bodyAsText()
             val groupListType: Type = object : TypeToken<AuthTokenRest>() {}.type
             val authToken = RightRoutesKtTest.GSON.fromJson<AuthTokenRest?>(content, groupListType).token
-            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}"){
+            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}") {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_USER.copy(password = "newPW")))
@@ -289,14 +294,16 @@ class UsersRoutesKtTest {
     }
 
     @Test
-    fun testJWTValidationUsernameNotEqual() {
+    fun testUpdateJWTValidationUsernameNotEqual() {
         // 1. Login successfully
-        val backend = spyk(LoriServerBackend(
-            dbConnector = mockk(),
-            config = CONFIG,
-        )) {
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
             every { checkCredentials(TEST_USER) } returns true
-            every { updateUserNonRoleProperties(any())} returns 1
+            every { updateUserNonRoleProperties(any()) } returns 1
         }
         val servicePool = getServicePool(backend)
         testApplication {
@@ -316,7 +323,7 @@ class UsersRoutesKtTest {
             val content: String = loginResponse.bodyAsText()
             val groupListType: Type = object : TypeToken<AuthTokenRest>() {}.type
             val authToken = RightRoutesKtTest.GSON.fromJson<AuthTokenRest?>(content, groupListType).token
-            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}"){
+            val updateResponse = client.put("/api/v1/users/${TEST_USER.name}") {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_USER.copy(name = "foobar", password = "newPW")))
@@ -330,15 +337,17 @@ class UsersRoutesKtTest {
     }
 
     @Test
-    fun testJWTValidationAdminUser() {
+    fun testUpdateJWTValidationAdminUser() {
         // 1. Login successfully
-        val backend = spyk(LoriServerBackend(
-            dbConnector = mockk(),
-            config = CONFIG,
-        )) {
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
             every { checkCredentials(TEST_USER) } returns true
-            every { updateUserNonRoleProperties(any())} returns 1
-            every { getCurrentUserRole(TEST_USER.name)} returns UserRole.ADMIN
+            every { updateUserNonRoleProperties(any()) } returns 1
+            every { getCurrentUserRole(TEST_USER.name) } returns UserRole.ADMIN
         }
         val servicePool = getServicePool(backend)
         testApplication {
@@ -361,7 +370,7 @@ class UsersRoutesKtTest {
 
             val userToChange = TEST_USER.copy(name = "randomUser", password = "555nase")
 
-            val updateResponse = client.put("/api/v1/users/${userToChange.name}"){
+            val updateResponse = client.put("/api/v1/users/${userToChange.name}") {
                 header(HttpHeaders.Authorization, "Bearer $authToken")
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(userToChange))
@@ -371,7 +380,94 @@ class UsersRoutesKtTest {
                 updateResponse.status,
                 `is`(HttpStatusCode.NoContent)
             )
-            verify(exactly = 1){ backend.getCurrentUserRole(TEST_USER.name)}
+            verify(exactly = 1) { backend.getCurrentUserRole(TEST_USER.name) }
+        }
+    }
+
+    @Test
+    fun testDeleteJWTValidation() {
+        // 1. Login successfully
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
+            every { checkCredentials(TEST_USER) } returns true
+            every { deleteUser(TEST_USER.name) } returns 1
+        }
+        val servicePool = getServicePool(backend)
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val loginResponse = client.post("/api/v1/users/login") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_USER))
+            }
+            assertThat(
+                "Should return OK",
+                loginResponse.status,
+                `is`(HttpStatusCode.OK)
+            )
+            val content: String = loginResponse.bodyAsText()
+            val groupListType: Type = object : TypeToken<AuthTokenRest>() {}.type
+            val authToken = RightRoutesKtTest.GSON.fromJson<AuthTokenRest?>(content, groupListType).token
+            val updateResponse = client.delete("/api/v1/users/${TEST_USER.name}") {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
+            assertThat(
+                "Return Status should be 200",
+                updateResponse.status,
+                `is`(HttpStatusCode.OK)
+            )
+        }
+    }
+
+    @Test
+    fun testDeleteValidationAdminUser() {
+        // 1. Login successfully
+        val userToDelete = TEST_USER.copy(name = "randomUser", password = "555nase")
+        val backend = spyk(
+            LoriServerBackend(
+                dbConnector = mockk(),
+                config = CONFIG,
+            )
+        ) {
+            every { checkCredentials(TEST_USER) } returns true
+            every { deleteUser(userToDelete.name) } returns 1
+            every { getCurrentUserRole(TEST_USER.name) } returns UserRole.ADMIN
+        }
+        val servicePool = getServicePool(backend)
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val loginResponse = client.post("/api/v1/users/login") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_USER))
+            }
+            assertThat(
+                "Should return OK",
+                loginResponse.status,
+                `is`(HttpStatusCode.OK)
+            )
+            val content: String = loginResponse.bodyAsText()
+            val groupListType: Type = object : TypeToken<AuthTokenRest>() {}.type
+            val authToken = RightRoutesKtTest.GSON.fromJson<AuthTokenRest?>(content, groupListType).token
+
+
+            val updateResponse = client.delete("/api/v1/users/${userToDelete.name}") {
+                header(HttpHeaders.Authorization, "Bearer $authToken")
+            }
+            assertThat(
+                "Return Status should be 200",
+                updateResponse.status,
+                `is`(HttpStatusCode.OK)
+            )
+            verify(exactly = 1) { backend.getCurrentUserRole(TEST_USER.name) }
         }
     }
 

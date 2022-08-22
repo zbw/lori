@@ -99,6 +99,9 @@ users-id:
       200:
         description: Deletion of user was successfull
         content: { }
+      400:
+        description: Bad request
+        content: { }
       401:
         description: Delete request denied
         content: { }

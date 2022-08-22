@@ -746,6 +746,19 @@ class DatabaseConnector(
         } else null
     }
 
+    fun deleteUser(username: String): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_USER).apply {
+            this.setString(1, username)
+        }
+        val span = tracer.spanBuilder("deleteUser").startSpan()
+        try {
+            span.makeCurrent()
+            return prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         idx: Int,
         element: T?,
@@ -947,6 +960,10 @@ class DatabaseConnector(
             "SELECT username, password, role " +
                 "FROM $TABLE_NAME_USERS " +
                 "WHERE username=?"
+
+        const val STATEMENT_DELETE_USER = "DELETE " +
+            "FROM $TABLE_NAME_USERS i " +
+            "WHERE i.username = ?"
 
         fun Timestamp.toOffsetDateTime(): OffsetDateTime =
             OffsetDateTime.ofInstant(
