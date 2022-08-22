@@ -28,6 +28,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -431,7 +432,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     fun testUserDoesNotExistsByNameAndPassword() {
         // given
         val expectedUser = TEST_USER.copy(
-            name = "testUserNotExisting",
+            name = notExistingUsername,
         )
 
         assertFalse(dbConnector.userTableContainsName(expectedUser.name))
@@ -451,7 +452,52 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testGetRoleByUsername() {
+        // given
+        val expectedUser = TEST_USER.copy(
+            name = "testGetRoleByExistingUsername",
+            role = UserRole.READWRITE,
+        )
+
+        // when
+        val userName = dbConnector.insertUser(expectedUser)
+        // then
+        assertThat(userName, `is`(expectedUser.name))
+
+        // when
+        val receivedRole = dbConnector.getRoleByUsername(expectedUser.name)
+        // then
+        assertThat(receivedRole, `is`(expectedUser.role))
+
+        // when
+        val receivedRoleNonExistingUser = dbConnector.getRoleByUsername(notExistingUsername)
+        // then
+        assertNull(receivedRoleNonExistingUser)
+    }
+
+    @Test
+    fun testUpdateUserNonRoleProperties() {
+        // given
+        val beforeUpdateUser = TEST_USER.copy(
+            name = "testUpdateUserNonRoleProp",
+            role = UserRole.READONLY,
+        )
+        dbConnector.insertUser(beforeUpdateUser)
+
+        val afterUpdateUser = beforeUpdateUser.copy(
+            passwordHash = "foobar23456"
+        )
+
+        dbConnector.updateUserNonRoleProperties(afterUpdateUser)
+        assertThat(
+            dbConnector.getUserByName(afterUpdateUser.name),
+            `is`(afterUpdateUser),
+        )
+    }
+
     companion object {
+        const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
             3,

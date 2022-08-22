@@ -37,6 +37,8 @@ paths:
     $ref: 'users.api.yaml#/login'
   /users/register:
     $ref: 'users.api.yaml#/register'
+  /users/{id}:
+    $ref: 'users.api.yaml#/users-id'
 
 components:
   schemas:

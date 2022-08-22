@@ -133,7 +133,7 @@ class LoriServerBackend(
             User(
                 name = user.name,
                 passwordHash = hashString("SHA-256", user.password),
-                role = UserRole.READ_ONLY,
+                role = UserRole.READONLY,
             )
         )
 
@@ -142,6 +142,16 @@ class LoriServerBackend(
             user.name,
             hashString("SHA-256", user.password),
         )
+
+    fun getCurrentUserRole(username: String) : UserRole? =
+        dbConnector.getRoleByUsername(username)
+
+    fun updateUserNonRoleProperties(user: UserRest): Int =
+        dbConnector.updateUserNonRoleProperties(User(
+            name = user.name,
+            passwordHash = hashString("SHA-256", user.password),
+            role = null,
+        ))
 
     fun generateJWT(username: String): String = JWT.create()
         .withAudience(config.jwtAudience)
