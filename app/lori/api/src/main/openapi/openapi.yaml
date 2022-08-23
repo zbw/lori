@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Access Service API
+  title: Lori Service API
   version: 0.1.0
   contact:
     email: c.bay@zbw.eu
@@ -34,9 +34,13 @@ paths:
   /right/{id}:
     $ref: 'right.api.yaml#/right-id'
   /users/login:
-    $ref: 'users.api.yaml#/login'
+    $ref: 'users.api.yaml#/users-login'
   /users/register:
-    $ref: 'users.api.yaml#/register'
+    $ref: 'users.api.yaml#/users-register'
+  /users/{id}:
+    $ref: 'users.api.yaml#/users-id'
+  /users/admin/role:
+    $ref: 'users.api.yaml#/users-admin-role'
 
 components:
   schemas:

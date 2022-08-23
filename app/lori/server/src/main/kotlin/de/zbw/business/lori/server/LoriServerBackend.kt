@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
 import java.util.Date
@@ -131,17 +132,35 @@ class LoriServerBackend(
     fun insertNewUser(user: UserRest): String =
         dbConnector.insertUser(
             User(
-                name = user.name,
+                name = user.username,
                 passwordHash = hashString("SHA-256", user.password),
-                role = UserRole.READ_ONLY,
+                role = UserRole.READONLY,
             )
         )
 
     fun checkCredentials(user: UserRest): Boolean =
         dbConnector.userExistsByNameAndPassword(
-            user.name,
+            user.username,
             hashString("SHA-256", user.password),
         )
+
+    fun getCurrentUserRole(username: String): UserRole? =
+        dbConnector.getRoleByUsername(username)
+
+    fun updateUserNonRoleProperties(user: UserRest): Int =
+        dbConnector.updateUserNonRoleProperties(
+            User(
+                name = user.username,
+                passwordHash = hashString("SHA-256", user.password),
+                role = null,
+            )
+        )
+
+    fun updateUserRoleProperty(username: String, role: UserRole): Int =
+        dbConnector.updateUserRoleProperty(username, role)
+
+    fun deleteUser(username: String): Int =
+        dbConnector.deleteUser(username)
 
     fun generateJWT(username: String): String = JWT.create()
         .withAudience(config.jwtAudience)
@@ -149,6 +168,14 @@ class LoriServerBackend(
         .withClaim("username", username)
         .withExpiresAt(Date(System.currentTimeMillis() + 60000))
         .sign(Algorithm.HMAC256(config.jwtSecret))
+
+    fun isExpired(principal: JWTPrincipal): Boolean {
+        val expiresAt: Long? = principal
+            .expiresAt
+            ?.time
+            ?.minus(System.currentTimeMillis())
+        return expiresAt == null || expiresAt < 0
+    }
 
     internal fun hashString(type: String, input: String): String {
         val bytes = MessageDigest

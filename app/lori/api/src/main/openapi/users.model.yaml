@@ -1,10 +1,10 @@
 UserRest:
   required:
-    - name
+    - username
     - password
   type: object
   properties:
-    name:
+    username:
       type: string
     password:
       type: string
@@ -16,3 +16,18 @@ AuthTokenRest:
   properties:
     token:
       type: string
+
+RoleRest:
+  required:
+    - username
+    - role
+  type: object
+  properties:
+    username:
+      type: string
+    role:
+      type: string
+      enum:
+        - read_only
+        - read_write
+        - admin
