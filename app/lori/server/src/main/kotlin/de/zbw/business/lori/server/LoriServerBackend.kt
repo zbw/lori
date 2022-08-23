@@ -132,7 +132,7 @@ class LoriServerBackend(
     fun insertNewUser(user: UserRest): String =
         dbConnector.insertUser(
             User(
-                name = user.name,
+                name = user.username,
                 passwordHash = hashString("SHA-256", user.password),
                 role = UserRole.READONLY,
             )
@@ -140,7 +140,7 @@ class LoriServerBackend(
 
     fun checkCredentials(user: UserRest): Boolean =
         dbConnector.userExistsByNameAndPassword(
-            user.name,
+            user.username,
             hashString("SHA-256", user.password),
         )
 
@@ -150,11 +150,14 @@ class LoriServerBackend(
     fun updateUserNonRoleProperties(user: UserRest): Int =
         dbConnector.updateUserNonRoleProperties(
             User(
-                name = user.name,
+                name = user.username,
                 passwordHash = hashString("SHA-256", user.password),
                 role = null,
             )
         )
+
+    fun updateUserRoleProperty(username: String, role: UserRole): Int =
+        dbConnector.updateUserRoleProperty(username, role)
 
     fun deleteUser(username: String): Int =
         dbConnector.deleteUser(username)

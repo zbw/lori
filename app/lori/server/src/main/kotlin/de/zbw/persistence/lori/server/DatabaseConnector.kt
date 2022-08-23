@@ -759,6 +759,20 @@ class DatabaseConnector(
         }
     }
 
+    fun updateUserRoleProperty(username: String, role: UserRole): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_USER_ROLE).apply {
+            this.setString(1, role.toString())
+            this.setString(2, username)
+        }
+        val span = tracer.spanBuilder("updateUserRole").startSpan()
+        try {
+            span.makeCurrent()
+            return prepStmt.run { this.executeUpdate() }
+        } finally {
+            span.end()
+        }
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         idx: Int,
         element: T?,
@@ -955,6 +969,9 @@ class DatabaseConnector(
 
         const val STATEMENT_UPDATE_USER =
             "UPDATE $TABLE_NAME_USERS SET password=? WHERE username=?"
+
+        const val STATEMENT_UPDATE_USER_ROLE =
+            "UPDATE $TABLE_NAME_USERS SET role=?::role_enum WHERE username=?"
 
         const val STATEMENT_GET_USER_BY_NAME =
             "SELECT username, password, role " +

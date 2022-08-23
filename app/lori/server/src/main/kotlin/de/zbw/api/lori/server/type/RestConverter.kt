@@ -7,9 +7,11 @@ import de.zbw.business.lori.server.Item
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.UserRole
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.RoleRest
 import java.time.OffsetDateTime
 
 /**
@@ -251,6 +253,13 @@ fun DAItem.toBusiness(): ItemMetadata? {
         )
     }
 }
+
+fun RoleRest.Role.toBusiness(): UserRole =
+    when (this) {
+        RoleRest.Role.readOnly -> UserRole.READONLY
+        RoleRest.Role.readWrite -> UserRole.READWRITE
+        RoleRest.Role.admin -> UserRole.ADMIN
+    }
 
 private fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
     metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value

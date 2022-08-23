@@ -501,6 +501,29 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testUpdateUserRoleProperty() {
+        // given
+        val beforeUpdateUser = TEST_USER.copy(
+            name = "testUpdateUserRoleProp",
+            role = UserRole.READONLY,
+        )
+        dbConnector.insertUser(beforeUpdateUser)
+
+        val afterUpdateUser = beforeUpdateUser.copy(
+            role = UserRole.READWRITE
+        )
+
+        // when
+        dbConnector.updateUserRoleProperty(afterUpdateUser.name, afterUpdateUser.role!!)
+
+        // then
+        assertThat(
+            dbConnector.getUserByName(afterUpdateUser.name),
+            `is`(afterUpdateUser),
+        )
+    }
+
     companion object {
         const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(

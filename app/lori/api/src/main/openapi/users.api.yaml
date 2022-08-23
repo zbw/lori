@@ -1,4 +1,4 @@
-register:
+users-register:
   post:
     tags:
       - users
@@ -25,7 +25,7 @@ register:
         description: Internal error
         content: { }
     x-codegen-request-body-name: body
-login:
+users-login:
   post:
     tags:
       - users
@@ -106,5 +106,31 @@ users-id:
         description: Delete request denied
         content: { }
       404:
-        description: USer does not exist
+        description: User does not exist
+        content: { }
+users-admin-role:
+  put:
+    tags:
+      - users
+    summary: Update role of a user
+    operationId: updateRole
+    requestBody:
+      description: Update role of a user
+      content:
+        application/json:
+          schema:
+            $ref: 'users.model.yaml#/RoleRest'
+      required: true
+    responses:
+      204:
+        description: Successfully updated
+        content: { }
+      400:
+        description: Bad request
+        content: { }
+      401:
+        description: Update request denied
+        content: { }
+      500:
+        description: Internal error
         content: { }
