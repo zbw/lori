@@ -190,7 +190,7 @@ class LoriServerBackendTest : DatabaseTest() {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             publicationType = PublicationType.ARTICLE,
-            publicationYear = 2000,
+            publicationYear = "2000",
             rightsK10plus = "some rights",
             serialNumber = "12354566",
             storageDate = NOW.minusDays(3),

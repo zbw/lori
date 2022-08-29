@@ -6,7 +6,6 @@ import de.zbw.persistence.lori.server.FlywayMigrator
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import org.apache.logging.log4j.LogManager
-import org.slf4j.LoggerFactory
 
 /**
  * Lori-Server.

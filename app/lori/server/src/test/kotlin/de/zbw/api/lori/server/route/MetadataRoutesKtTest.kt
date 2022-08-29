@@ -509,7 +509,7 @@ class MetadataRoutesKtTest {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             publicationType = MetadataRest.PublicationType.book,
-            publicationYear = 2000,
+            publicationYear = "2000",
             rightsK10plus = "some rights",
             serialNumber = "12354566",
             storageDate = DatabaseConnectorTest.NOW.minusDays(3),
