@@ -61,8 +61,8 @@ class DAConnector(
         return statement.bodyAsText()
     }
 
-    suspend fun getCommunity(loginToken: String): DACommunity {
-        val response = client.request("$restURL/communities/${config.digitalArchiveCommunity}") {
+    suspend fun getCommunity(loginToken: String, community: String): DACommunity {
+        val response = client.request("$restURL/communities/$community") {
             method = HttpMethod.Get
             headers {
                 append(HttpHeaders.Accept, "text/json")

@@ -47,8 +47,15 @@ MetadataRest:
       enum:
         - article
         - book
+        - book_part
+        - conference_paper
+        - periodical_part
+        - proceedings
+        - research_report
+        - thesis
+        - working_paper
     publicationYear:
-      type: integer
+      type: string
     rightsK10plus:
       type: string
     serialNumber:

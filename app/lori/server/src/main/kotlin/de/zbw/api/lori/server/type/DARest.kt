@@ -64,7 +64,7 @@ data class DACommunity(
     val link: String,
     val expand: List<String>,
     val logo: DABitstream?,
-    val parentCommunity: String?,
+    val parentCommunity: DACommunity?,
     val copyrightText: String?,
     val introductoryText: String?,
     val shortDescription: String?,

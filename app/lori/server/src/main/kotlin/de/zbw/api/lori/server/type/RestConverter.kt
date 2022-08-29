@@ -199,21 +199,35 @@ internal fun MetadataRest.PublicationType.toBusiness(): PublicationType =
     when (this) {
         MetadataRest.PublicationType.article -> PublicationType.ARTICLE
         MetadataRest.PublicationType.book -> PublicationType.BOOK
+        MetadataRest.PublicationType.bookPart -> PublicationType.BOOK_PART
+        MetadataRest.PublicationType.periodicalPart -> PublicationType.PERIODICAL_PART
+        MetadataRest.PublicationType.workingPaper -> PublicationType.WORKING_PAPER
+        MetadataRest.PublicationType.researchReport -> PublicationType.RESEARCH_REPORT
+        MetadataRest.PublicationType.proceedings -> PublicationType.PROCEEDINGS
+        MetadataRest.PublicationType.thesis -> PublicationType.THESIS
+        MetadataRest.PublicationType.conferencePaper -> PublicationType.CONFERENCE_PAPER
     }
 
 internal fun PublicationType.toRest(): MetadataRest.PublicationType =
     when (this) {
         PublicationType.ARTICLE -> MetadataRest.PublicationType.article
         PublicationType.BOOK -> MetadataRest.PublicationType.book
+        PublicationType.BOOK_PART -> MetadataRest.PublicationType.bookPart
+        PublicationType.CONFERENCE_PAPER -> MetadataRest.PublicationType.conferencePaper
+        PublicationType.PERIODICAL_PART -> MetadataRest.PublicationType.periodicalPart
+        PublicationType.WORKING_PAPER -> MetadataRest.PublicationType.workingPaper
+        PublicationType.RESEARCH_REPORT -> MetadataRest.PublicationType.researchReport
+        PublicationType.PROCEEDINGS -> MetadataRest.PublicationType.proceedings
+        PublicationType.THESIS -> MetadataRest.PublicationType.thesis
     }
 
 fun DAItem.toBusiness(): ItemMetadata? {
     val metadata = this.metadata
     val handle = extractMetadata("dc.identifier.uri", metadata)
     val publicationType = extractMetadata("dc.type", metadata)?.let {
-        PublicationType.valueOf(it.uppercase())
+        PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
     }
-    val publicationYear = extractMetadata("dc.date.issued", metadata)?.toInt()
+    val publicationYear = extractMetadata("dc.date.issued", metadata)
     val title = extractMetadata("dc.title", metadata)
 
     return if (
