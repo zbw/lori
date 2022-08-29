@@ -26,7 +26,7 @@ data class ItemMetadata(
     val ppn: String?,
     val ppnEbook: String?,
     val publicationType: PublicationType,
-    val publicationYear: Int,
+    val publicationYear: String,
     val rightsK10plus: String?,
     val serialNumber: String?,
     val storageDate: OffsetDateTime,
@@ -45,6 +45,13 @@ enum class AccessState {
 enum class PublicationType {
     ARTICLE,
     BOOK,
+    BOOK_PART,
+    CONFERENCE_PAPER,
+    PERIODICAL_PART,
+    PROCEEDINGS,
+    RESEARCH_REPORT,
+    THESIS,
+    WORKING_PAPER,
 }
 
 enum class BasisStorage {

@@ -108,7 +108,7 @@ class RestConverterTest {
             ppn = null,
             ppnEbook = null,
             publicationType = PublicationType.ARTICLE,
-            publicationYear = 2020,
+            publicationYear = "2020",
             rightsK10plus = null,
             serialNumber = null,
             storageDate = OffsetDateTime.of(
@@ -175,7 +175,7 @@ class RestConverterTest {
             ppn = "ppn",
             ppnEbook = "ppn ebook",
             publicationType = PublicationType.BOOK,
-            publicationYear = 2000,
+            publicationYear = "2000",
             rightsK10plus = "some rights",
             storageDate = OffsetDateTime.now(),
             serialNumber = "12354566",

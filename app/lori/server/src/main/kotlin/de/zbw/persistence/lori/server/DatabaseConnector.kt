@@ -167,7 +167,7 @@ class DatabaseConnector(
             this.setIfNotNull(7, itemMetadata.titleSeries) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setInt(8, itemMetadata.publicationYear)
+            this.setString(8, itemMetadata.publicationYear)
             this.setIfNotNull(9, itemMetadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -404,7 +404,7 @@ class DatabaseConnector(
                     title = rs.getString(5),
                     titleJournal = rs.getString(6),
                     titleSeries = rs.getString(7),
-                    publicationYear = rs.getInt(8),
+                    publicationYear = rs.getString(8),
                     band = rs.getString(9),
                     publicationType = PublicationType.valueOf(rs.getString(10)),
                     doi = rs.getString(11),

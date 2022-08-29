@@ -5,13 +5,12 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.persistence.lori.server.FlywayMigrator
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.LogManager
 
 /**
- * The Access-Server.
+ * Lori-Server.
  *
- * Manages access rights. Provides an REST-API
- * for managing access rights.
+ * Manages access rights of bibliograhic entities.
  *
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -52,5 +51,5 @@ object LoriServer {
         }
     }
 
-    private val LOG = LoggerFactory.getLogger(LoriServer::class.java)
+    private val LOG = LogManager.getLogger(LoriServer::class.java)
 }

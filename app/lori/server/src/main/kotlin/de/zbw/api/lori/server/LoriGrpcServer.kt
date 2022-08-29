@@ -16,13 +16,13 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 
 /**
- * Access GRPC-server.
+ * Lori GRPC-server.
  *
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriGrpcServer(
-    config: LoriConfiguration,
+    private val config: LoriConfiguration,
     private val backend: LoriServerBackend,
     private val daConnector: DAConnector = DAConnector(config, backend),
     private val tracer: Tracer,
@@ -36,8 +36,7 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val token = daConnector.login()
-                val community: DACommunity = daConnector.getCommunity(token)
-                val imports = daConnector.startFullImport(token, community.collections.map { it.id })
+                val imports = config.digitalArchiveCommunity.map { importCommunity(token, it) }
                 FullImportResponse
                     .newBuilder()
                     .setItemsImported(imports.sum())
@@ -52,5 +51,11 @@ class LoriGrpcServer(
                 span.end()
             }
         }
+    }
+
+    private suspend fun importCommunity(token: String, community: String): Int {
+        val daCommunity: DACommunity = daConnector.getCommunity(token, community)
+        val import = daConnector.startFullImport(token, daCommunity.collections.map { it.id })
+        return import.sum()
     }
 }

@@ -1,0 +1,73 @@
+package de.zbw.api.lori.server.config
+
+import de.gfelbing.konfig.core.source.ChainedKonfiguration
+import de.gfelbing.konfig.core.source.SystemPropertiesKonfiguration
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.core.Is.`is`
+import org.testng.annotations.DataProvider
+import org.testng.annotations.Test
+
+class LoriConfigurationTest {
+
+    @DataProvider(name = DATA_FOR_LORI_CONFIGURATION)
+    fun createDataForLoriConfigurationTest() =
+        arrayOf(
+            arrayOf(
+                CONFIG,
+            ),
+            arrayOf(
+                CONFIG.copy(digitalArchiveCommunity = listOf("1")),
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_LORI_CONFIGURATION)
+    fun testLoriConfiguration(expectedConfig: LoriConfiguration) {
+        System.setProperty("lori.grpc.port", expectedConfig.grpcPort.toString())
+        System.setProperty("lori.http.port", expectedConfig.httpPort.toString())
+        System.setProperty("lori.sql.url", expectedConfig.sqlUrl)
+        System.setProperty("lori.sql.user", expectedConfig.sqlUser)
+        System.setProperty("lori.sql.password", expectedConfig.sqlPassword)
+        System.setProperty("lori.connection.digitalarchive.address", expectedConfig.digitalArchiveAddress)
+        System.setProperty(
+            "lori.connection.digitalarchive.community",
+            expectedConfig.digitalArchiveCommunity.joinToString(separator = ",")
+        )
+        System.setProperty("lori.connection.digitalarchive.basicauth", expectedConfig.digitalArchiveBasicAuth)
+        System.setProperty("lori.connection.digitalarchive.credentials.user", expectedConfig.digitalArchiveUsername)
+        System.setProperty("lori.connection.digitalarchive.credentials.password", expectedConfig.digitalArchivePassword)
+        System.setProperty("lori.jwt.audience", expectedConfig.jwtAudience)
+        System.setProperty("lori.jwt.issuer", expectedConfig.jwtIssuer)
+        System.setProperty("lori.jwt.realm", expectedConfig.jwtRealm)
+        System.setProperty("lori.jwt.secret", expectedConfig.jwtSecret)
+        val receivedConfig = LoriConfiguration.load(
+            "lori",
+            ChainedKonfiguration(
+                listOf(
+                    SystemPropertiesKonfiguration(),
+                )
+            )
+        )
+        assertThat(receivedConfig, `is`(expectedConfig))
+    }
+
+    companion object {
+        const val DATA_FOR_LORI_CONFIGURATION = "DATA_FOR_LORI_CONFIGURATION"
+        val CONFIG =
+            LoriConfiguration(
+                grpcPort = 1234,
+                httpPort = 45678,
+                sqlUser = "user",
+                sqlUrl = "someUrl",
+                sqlPassword = "somePW",
+                digitalArchiveAddress = "someAddress",
+                digitalArchiveBasicAuth = "1234555nase",
+                digitalArchiveCommunity = listOf("1", "2", "4"),
+                digitalArchiveUsername = "daUser",
+                digitalArchivePassword = "daPW",
+                jwtSecret = "jwtSecret",
+                jwtAudience = "jwtAudience",
+                jwtIssuer = "jwtIssuer",
+                jwtRealm = "jwtRealm",
+            )
+    }
+}
