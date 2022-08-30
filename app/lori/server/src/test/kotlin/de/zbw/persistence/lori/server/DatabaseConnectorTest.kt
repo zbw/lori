@@ -75,7 +75,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             every { executeUpdate() } returns 0
         }
         val dbConnectorMockked = DatabaseConnector(
-            mockk<Connection> {
+            mockk<Connection>(relaxed = true) {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
             },
             tracer,
@@ -183,7 +183,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             every { executeUpdate() } returns 0
         }
         val dbConnectorMockked = DatabaseConnector(
-            mockk<Connection>() {
+            mockk<Connection>(relaxed = true) {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
             },
             tracer,
@@ -238,7 +238,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test(expectedExceptions = [SQLException::class])
     fun testGetMetadataException() {
         val dbConnector = DatabaseConnector(
-            mockk<Connection>() {
+            mockk<Connection>(relaxed = true) {
                 every { prepareStatement(any()) } throws SQLException()
             },
             tracer,
@@ -249,7 +249,7 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test(expectedExceptions = [SQLException::class])
     fun testGetRightException() {
         val dbConnector = DatabaseConnector(
-            mockk<Connection>() {
+            mockk<Connection>(relaxed = true) {
                 every { prepareStatement(any()) } throws SQLException()
             },
             tracer,

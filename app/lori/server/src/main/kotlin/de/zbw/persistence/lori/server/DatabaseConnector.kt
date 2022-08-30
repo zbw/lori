@@ -32,7 +32,6 @@ class DatabaseConnector(
     val connection: Connection,
     private val tracer: Tracer,
 ) {
-
     constructor(
         config: LoriConfiguration,
         tracer: Tracer,
@@ -41,6 +40,10 @@ class DatabaseConnector(
         tracer
     )
 
+    init {
+        connection.autoCommit = false
+    }
+
     fun itemContainsMetadata(metadataId: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
             this.setString(1, metadataId)
@@ -48,7 +51,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -64,7 +67,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("itemContainsEntry").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -79,7 +82,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("itemContainsRight").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -96,7 +99,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("insertItem").startSpan()
         try {
             span.makeCurrent()
-            val affectedRows = prepStmt.run { this.executeUpdate() }
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
@@ -109,7 +112,6 @@ class DatabaseConnector(
 
     fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
         val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
-        connection.autoCommit = false
         itemMetadatas.map {
             val p = insertUpsertMetadataSetParameters(it, prep)
             p.addBatch()
@@ -117,10 +119,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
         try {
             span.makeCurrent()
-            val rows: IntArray = prep.executeBatch()
-            connection.commit()
-            connection.autoCommit = true
-            return rows
+            return runInTransaction(connection) { prep.executeBatch() }
         } finally {
             span.end()
         }
@@ -135,7 +134,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("insertMetadata").startSpan()
         try {
             span.makeCurrent()
-            val affectedRows = prepStmt.run { this.executeUpdate() }
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
@@ -223,7 +222,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("insertRight").startSpan()
         try {
             span.makeCurrent()
-            val affectedRows = prepStmt.run { this.executeUpdate() }
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
@@ -243,7 +242,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("upsertRight").startSpan()
         try {
             span.makeCurrent()
-            return prepStmt.run { this.executeUpdate() }
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -390,7 +389,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -434,7 +433,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("countItemByRightId").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.run { this.executeQuery() }
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
         } finally {
             span.end()
         }
@@ -454,7 +453,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteItem").startSpan()
         return try {
             span.makeCurrent()
-            prepStmt.run { this.executeUpdate() }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -469,7 +468,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteItem").startSpan()
         return try {
             span.makeCurrent()
-            prepStmt.run { this.executeUpdate() }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -484,7 +483,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteItem").startSpan()
         return try {
             span.makeCurrent()
-            prepStmt.run { this.executeUpdate() }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -497,7 +496,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteRights").startSpan()
         return try {
             span.makeCurrent()
-            prepStmt.run { this.executeUpdate() }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -510,7 +509,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteMetadata").startSpan()
         return try {
             span.makeCurrent()
-            prepStmt.run { this.executeUpdate() }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -525,7 +524,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getRights").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -575,7 +574,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("metadataContainsId").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -590,7 +589,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("rightContainsId").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -607,7 +606,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getMetadataRange").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -626,7 +625,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getRightIdsByMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -664,7 +663,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("insertUser").startSpan()
         try {
             span.makeCurrent()
-            val affectedRows = prepStmt.run { this.executeUpdate() }
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
@@ -701,7 +700,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getRoleByUser").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -718,7 +717,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("updateUserNonRoleProperties").startSpan()
         try {
             span.makeCurrent()
-            return prepStmt.run { this.executeUpdate() }
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -731,7 +730,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("getUserByName").startSpan()
         val rs = try {
             span.makeCurrent()
-            prepStmt.executeQuery()
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -753,7 +752,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("deleteUser").startSpan()
         try {
             span.makeCurrent()
-            return prepStmt.run { this.executeUpdate() }
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -767,7 +766,7 @@ class DatabaseConnector(
         val span = tracer.spanBuilder("updateUserRole").startSpan()
         try {
             span.makeCurrent()
-            return prepStmt.run { this.executeUpdate() }
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -987,5 +986,13 @@ class DatabaseConnector(
                 this.toInstant(),
                 ZoneId.of("UTC+00:00"),
             )
+
+        fun <T> runInTransaction(connection: Connection, block: () -> T): T =
+            try {
+                block().also { connection.commit() }
+            } catch (e: Exception) {
+                connection.rollback()
+                throw e
+            }
     }
 }
