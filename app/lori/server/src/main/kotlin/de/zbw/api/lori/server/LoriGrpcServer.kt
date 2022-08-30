@@ -43,7 +43,6 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val token = daConnector.login()
-                //val imports = config.digitalArchiveCommunity.map { importCommunity(token, it) }
                 val imports = runImports(config.digitalArchiveCommunity, token)
                 FullImportResponse
                     .newBuilder()
@@ -77,7 +76,7 @@ class LoriGrpcServer(
                 }
             }
         }
-        return importCount;
+        return importCount
     }
 
     private suspend fun importCommunity(token: String, communityId: String): Int {
