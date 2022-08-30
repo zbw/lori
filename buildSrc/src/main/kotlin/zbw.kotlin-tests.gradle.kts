@@ -11,6 +11,14 @@ jacoco {
     toolVersion = "0.8.7"
 }
 
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        html
+        csv
+    }
+}
+
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
