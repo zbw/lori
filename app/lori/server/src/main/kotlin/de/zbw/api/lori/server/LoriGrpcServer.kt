@@ -13,7 +13,14 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.LogManager
 
 /**
  * Lori GRPC-server.
@@ -36,10 +43,11 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val token = daConnector.login()
-                val imports = config.digitalArchiveCommunity.map { importCommunity(token, it) }
+                //val imports = config.digitalArchiveCommunity.map { importCommunity(token, it) }
+                val imports = runImports(config.digitalArchiveCommunity, token)
                 FullImportResponse
                     .newBuilder()
-                    .setItemsImported(imports.sum())
+                    .setItemsImported(imports)
                     .build()
             } catch (e: Exception) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
@@ -53,9 +61,33 @@ class LoriGrpcServer(
         }
     }
 
-    private suspend fun importCommunity(token: String, community: String): Int {
-        val daCommunity: DACommunity = daConnector.getCommunity(token, community)
+    private suspend fun runImports(communities: List<String>, token: String): Int {
+        val semaphore = Semaphore(3)
+        val mutex = Mutex()
+        var importCount = 0
+        coroutineScope {
+            launch(Dispatchers.IO) {
+                repeat(communities.size) {
+                    semaphore.acquire()
+                    val imports = importCommunity(token, communities[it])
+                    mutex.withLock {
+                        importCount += imports
+                    }
+                    semaphore.release()
+                }
+            }
+        }
+        return importCount;
+    }
+
+    private suspend fun importCommunity(token: String, communityId: String): Int {
+        LOG.info("Start importing community $communityId")
+        val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
         val import = daConnector.startFullImport(token, daCommunity.collections.map { it.id })
         return import.sum()
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(LoriGrpcServer::class.java)
     }
 }
