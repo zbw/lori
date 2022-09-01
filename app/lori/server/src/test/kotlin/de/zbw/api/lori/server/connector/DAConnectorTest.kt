@@ -137,10 +137,12 @@ class DAConnectorTest {
     fun testImportCollection() {
         runBlocking {
             // given
-            val mockEngine = MockEngine {
-                respond(
-                    content = ByteReadChannel(
-                        """
+            val givenCommunityId = 6
+            val mockEngine = MockEngine { request ->
+                if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCommunityId/items")) {
+                    respond(
+                        content = ByteReadChannel(
+                            """
                        [{"id":4594,"name":"National climate change mitigation legislation, strategy and targets: a global update",
                        "handle":"11159/4268",
                        "type":"item",
@@ -172,14 +174,49 @@ class DAConnectorTest {
                         "archived":"true",
                         "withdrawn":"false"}] 
                         """.trimIndent()
-                    ),
-                    status = HttpStatusCode.OK,
-                    headers = headersOf(HttpHeaders.ContentType, "application/json")
-                )
+                        ),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    respond(
+                        content = ByteReadChannel(
+                            """
+                                {
+                                  "id": 137,
+                                  "name": "Monografien",
+                                  "handle": "11159/1801",
+                                  "type": "collection",
+                                  "link": "/econis-archiv/rest/collections/137",
+                                  "expand": [
+                                    "parentCommunityList",
+                                    "parentCommunity",
+                                    "items",
+                                    "license",
+                                    "logo",
+                                    "all"
+                                  ],
+                                  "logo": null,
+                                  "parentCommunity": null,
+                                  "parentCommunityList": [],
+                                  "items": [],
+                                  "license": null,
+                                  "copyrightText": "",
+                                  "introductoryText": "",
+                                  "shortDescription": "",
+                                  "sidebarText": "",
+                                  "numberItems": 39
+                                }
+                        """.trimIndent()
+                        ),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                }
             }
             val daConnector = DAConnector(
                 config = mockk() {
-                    every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
+                    every { digitalArchiveAddress } returns REST_URL
                     every { digitalArchiveBasicAuth } returns "pw"
                 },
                 engine = mockEngine,
@@ -188,7 +225,105 @@ class DAConnectorTest {
             val expected = listOf(TEST_ITEM)
 
             // when
-            val received: List<DAItem> = daConnector.importCollection("sometoken", 6)
+            val received: List<DAItem> = daConnector.importCollection("sometoken", givenCommunityId)
+            // then
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testImportCollectionZeroEntries() {
+        runBlocking {
+            // given
+            val givenCommunityId = 6
+            val mockEngine = MockEngine { request ->
+                if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCommunityId/items")) {
+                    respond(
+                        content = ByteReadChannel(
+                            """
+                       [{"id":4594,"name":"National climate change mitigation legislation, strategy and targets: a global update",
+                       "handle":"11159/4268",
+                       "type":"item",
+                       "link":"/econis-archiv/rest/items/4594",
+                       "expand":[],
+                       "lastModified":"2022-01-20 03:00:22.582",
+                       "parentCollection":null,
+                       "parentCollectionList":[],
+                       "parentCommunityList":[],
+                       "metadata":[{"key":"dc.contributor.author","value":"Iacobuta, Gabriela","language":"DE_de"}],
+                       "bitstreams":[{
+                            "id":13358,
+                            "name":"National climate change mitigation legislation strategy and targets a global update.pdf.txt",
+                            "handle":null,
+                            "type":"bitstream",
+                            "link":"/econis-archiv/rest/bitstreams/13358",
+                            "expand":["parent","policies","all"],
+                            "bundleName":"TEXT",
+                            "description":"Extracted Text",
+                            "format":"Text",
+                            "mimeType":"text/plain",
+                            "sizeBytes":60303,
+                            "parentObject":null,
+                            "retrieveLink":"/econis-archiv/rest/bitstreams/13358/retrieve",
+                            "checkSum":{"value":"ff6f2af4afdf3b8afabf85de4a77be97","checkSumAlgorithm":"MD5"},
+                            "sequenceId":3,
+                            "policies":null
+                            }],
+                        "archived":"true",
+                        "withdrawn":"false"}] 
+                        """.trimIndent()
+                        ),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                } else {
+                    respond(
+                        content = ByteReadChannel(
+                            """
+                                {
+                                  "id": 137,
+                                  "name": "Monografien",
+                                  "handle": "11159/1801",
+                                  "type": "collection",
+                                  "link": "/econis-archiv/rest/collections/137",
+                                  "expand": [
+                                    "parentCommunityList",
+                                    "parentCommunity",
+                                    "items",
+                                    "license",
+                                    "logo",
+                                    "all"
+                                  ],
+                                  "logo": null,
+                                  "parentCommunity": null,
+                                  "parentCommunityList": [],
+                                  "items": [],
+                                  "license": null,
+                                  "copyrightText": "",
+                                  "introductoryText": "",
+                                  "shortDescription": "",
+                                  "sidebarText": "",
+                                  "numberItems": 0
+                                }
+                        """.trimIndent()
+                        ),
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/json")
+                    )
+                }
+            }
+            val daConnector = DAConnector(
+                config = mockk() {
+                    every { digitalArchiveAddress } returns REST_URL
+                    every { digitalArchiveBasicAuth } returns "pw"
+                },
+                engine = mockEngine,
+                backend = mockk(),
+            )
+            val expected = emptyList<DAItem>()
+
+            // when
+            val received: List<DAItem> = daConnector.importCollection("sometoken", givenCommunityId)
             // then
             assertThat(received, `is`(expected))
         }
@@ -257,6 +392,7 @@ class DAConnectorTest {
 
     companion object {
         const val DATA_FOR_SERIALIZATION = "DATA_FOR_SERIALIZATION"
+        const val REST_URL = "http://test-archive.de"
 
         val TEST_COLLECTION = DACollection(
             id = 249,

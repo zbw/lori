@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.connector
 
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.type.DACollection
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.api.lori.server.type.DACredentials
 import de.zbw.api.lori.server.type.DAItem
@@ -25,6 +26,8 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
 import kotlinx.coroutines.coroutineScope
+import org.apache.logging.log4j.LogManager
+import kotlin.math.ceil
 
 /**
  * Connector for the Digital Archive (DA).
@@ -86,7 +89,7 @@ class DAConnector(
         }
 
     suspend fun importCollection(loginToken: String, cId: Int): List<DAItem> {
-        val response: List<DAItem> = client.get("$restURL/collections/$cId/items") {
+        val numberItems: Int = client.get("$restURL/collections/$cId") {
             headers {
                 append(HttpHeaders.Accept, "application/json")
                 append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
@@ -94,14 +97,29 @@ class DAConnector(
             headers {
                 append(DSPACE_TOKEN, loginToken)
             }
-            parameter("expand", "all")
-            parameter("offset", "0")
-            parameter("limit", "100")
-        }.body<List<DAItem>>()
-        return response
+        }.body<DACollection>().numberItems ?: 0
+        LOG.info("CollectionId $cId: Number of Items: $numberItems")
+
+        return (1..ceil(numberItems.toDouble() / 100).toInt()).map {
+            LOG.info("CollectionId $cId: Offset ${(it -1) * 100}")
+
+            client.get("$restURL/collections/$cId/items") {
+                headers {
+                    append(HttpHeaders.Accept, "application/json")
+                    append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
+                }
+                headers {
+                    append(DSPACE_TOKEN, loginToken)
+                }
+                parameter("expand", "all")
+                parameter("offset", "${(it -1) * 100}")
+                parameter("limit", "100")
+            }.body<List<DAItem>>()
+        }.flatten()
     }
 
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
+        private val LOG = LogManager.getLogger(DAConnector::class.java)
     }
 }

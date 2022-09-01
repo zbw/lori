@@ -29,7 +29,7 @@ data class ItemMetadata(
     val publicationYear: String,
     val rightsK10plus: String?,
     val serialNumber: String?,
-    val storageDate: OffsetDateTime,
+    val storageDate: OffsetDateTime?,
     val title: String,
     val titleJournal: String?,
     val titleSeries: String?,
