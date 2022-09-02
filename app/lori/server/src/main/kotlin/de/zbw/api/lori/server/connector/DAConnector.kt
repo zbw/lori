@@ -101,7 +101,7 @@ class DAConnector(
         LOG.info("CollectionId $cId: Number of Items: $numberItems")
 
         return (1..ceil(numberItems.toDouble() / 100).toInt()).map {
-            LOG.info("CollectionId $cId: Offset ${(it -1) * 100}")
+            LOG.info("CollectionId $cId: Offset ${(it - 1) * 100}")
 
             client.get("$restURL/collections/$cId/items") {
                 headers {
@@ -112,7 +112,7 @@ class DAConnector(
                     append(DSPACE_TOKEN, loginToken)
                 }
                 parameter("expand", "all")
-                parameter("offset", "${(it -1) * 100}")
+                parameter("offset", "${(it - 1) * 100}")
                 parameter("limit", "100")
             }.body<List<DAItem>>()
         }.flatten()

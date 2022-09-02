@@ -259,7 +259,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             publicationYear = publicationYear,
             rightsK10plus = extractMetadata("dc.rights", metadata),
             serialNumber = null, // Not in DA yet
-            storageDate = extractMetadata("dc.date.accessioned", metadata)?.let{OffsetDateTime.parse(it)},
+            storageDate = extractMetadata("dc.date.accessioned", metadata)?.let { OffsetDateTime.parse(it) },
             title = title,
             titleJournal = extractMetadata("dc.journalname", metadata),
             titleSeries = extractMetadata("dc.seriesname", metadata),
