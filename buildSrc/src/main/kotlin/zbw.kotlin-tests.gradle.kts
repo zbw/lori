@@ -5,6 +5,7 @@ plugins {
 
 tasks.test {
     useTestNG()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
 jacoco {

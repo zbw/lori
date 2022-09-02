@@ -4,7 +4,6 @@ MetadataRest:
     - metadataId
     - publicationType
     - publicationYear
-    - storageDate
     - title
   type: object
   properties:

@@ -209,7 +209,9 @@ class DatabaseConnector(
             this.setIfNotNull(24, itemMetadata.communityName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setTimestamp(25, Timestamp.from(itemMetadata.storageDate.toInstant()))
+            this.setIfNotNull(25, itemMetadata.storageDate) { value, idx, prepStmt ->
+                prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
+            }
         }
     }
 
