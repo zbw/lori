@@ -173,7 +173,7 @@ class DAConnectorTest {
                             }],
                         "archived":"true",
                         "withdrawn":"false"}] 
-                        """.trimIndent()
+                            """.trimIndent()
                         ),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -207,7 +207,7 @@ class DAConnectorTest {
                                   "sidebarText": "",
                                   "numberItems": 39
                                 }
-                        """.trimIndent()
+                            """.trimIndent()
                         ),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -271,7 +271,7 @@ class DAConnectorTest {
                             }],
                         "archived":"true",
                         "withdrawn":"false"}] 
-                        """.trimIndent()
+                            """.trimIndent()
                         ),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
@@ -305,7 +305,7 @@ class DAConnectorTest {
                                   "sidebarText": "",
                                   "numberItems": 0
                                 }
-                        """.trimIndent()
+                            """.trimIndent()
                         ),
                         status = HttpStatusCode.OK,
                         headers = headersOf(HttpHeaders.ContentType, "application/json")
