@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.Date
@@ -389,43 +390,21 @@ class DatabaseConnector(
         }
 
         val span = tracer.spanBuilder("getMetadata").startSpan()
+        return runMetadataStatement(prepStmt, span)
+    }
+
+    fun countMetadataEntries(): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_METADATA)
+        val span = tracer.spanBuilder("countMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
         } finally {
             span.end()
         }
-        return generateSequence {
-            if (rs.next()) {
-                ItemMetadata(
-                    metadataId = rs.getString(1),
-                    handle = rs.getString(2),
-                    ppn = rs.getString(3),
-                    ppnEbook = rs.getString(4),
-                    title = rs.getString(5),
-                    titleJournal = rs.getString(6),
-                    titleSeries = rs.getString(7),
-                    publicationYear = rs.getString(8),
-                    band = rs.getString(9),
-                    publicationType = PublicationType.valueOf(rs.getString(10)),
-                    doi = rs.getString(11),
-                    serialNumber = rs.getString(12),
-                    isbn = rs.getString(13),
-                    rightsK10plus = rs.getString(14),
-                    paketSigel = rs.getString(15),
-                    zbdId = rs.getString(16),
-                    issn = rs.getString(17),
-                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
-                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
-                    createdBy = rs.getString(20),
-                    lastUpdatedBy = rs.getString(21),
-                    author = rs.getString(22),
-                    collectionName = rs.getString(23),
-                    communityName = rs.getString(24),
-                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
-                )
-            } else null
-        }.takeWhile { true }.toList()
+        if (rs.next()) {
+            return rs.getInt(1)
+        } else throw IllegalStateException("No count found.")
     }
 
     fun countItemByRightId(rightId: String): Int {
@@ -599,13 +578,16 @@ class DatabaseConnector(
         return rs.getBoolean(1)
     }
 
-    fun getMetadataRange(limit: Int, offset: Int): List<String> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_METADATA_RANGE).apply {
+    fun getMetadataRange(limit: Int, offset: Int): List<ItemMetadata> {
+        val prepStmt: PreparedStatement = connection.prepareStatement(STATEMENT_GET_METADATA_RANGE).apply {
             this.setInt(1, limit)
             this.setInt(2, offset)
         }
+        val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
+        return runMetadataStatement(prepStmt, span)
+    }
 
-        val span = tracer.spanBuilder("getMetadataRange").startSpan()
+    private fun runMetadataStatement(prepStmt: PreparedStatement, span: Span): List<ItemMetadata> {
         val rs = try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.executeQuery() }
@@ -615,7 +597,33 @@ class DatabaseConnector(
 
         return generateSequence {
             if (rs.next()) {
-                rs.getString(1)
+                ItemMetadata(
+                    metadataId = rs.getString(1),
+                    handle = rs.getString(2),
+                    ppn = rs.getString(3),
+                    ppnEbook = rs.getString(4),
+                    title = rs.getString(5),
+                    titleJournal = rs.getString(6),
+                    titleSeries = rs.getString(7),
+                    publicationYear = rs.getString(8),
+                    band = rs.getString(9),
+                    publicationType = PublicationType.valueOf(rs.getString(10)),
+                    doi = rs.getString(11),
+                    serialNumber = rs.getString(12),
+                    isbn = rs.getString(13),
+                    rightsK10plus = rs.getString(14),
+                    paketSigel = rs.getString(15),
+                    zbdId = rs.getString(16),
+                    issn = rs.getString(17),
+                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
+                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
+                    createdBy = rs.getString(20),
+                    lastUpdatedBy = rs.getString(21),
+                    author = rs.getString(22),
+                    collectionName = rs.getString(23),
+                    communityName = rs.getString(24),
+                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
+                )
             } else null
         }.takeWhile { true }.toList()
     }
@@ -786,6 +794,9 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_USERS = "users"
 
+        const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
+            "FROM $TABLE_NAME_ITEM_METADATA"
+
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
             "WHERE right_id = ?;"
@@ -938,7 +949,12 @@ class DatabaseConnector(
                 "WHERE right_id = ANY(?)"
 
         const val STATEMENT_GET_METADATA_RANGE =
-            "SELECT metadata_id FROM $TABLE_NAME_ITEM_METADATA ORDER BY metadata_id ASC LIMIT ? OFFSET ?"
+            "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
+                "title_series,published_year,band,publication_type,doi," +
+                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "created_on,last_updated_on,created_by,last_updated_by," +
+                "author, collection_name, community_name, storage_date " +
+                "FROM $TABLE_NAME_ITEM_METADATA ORDER BY metadata_id ASC LIMIT ? OFFSET ?"
 
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
             " FROM $TABLE_NAME_ITEM" +

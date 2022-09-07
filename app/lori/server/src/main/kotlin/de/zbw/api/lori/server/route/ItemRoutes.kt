@@ -4,6 +4,7 @@ import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
+import de.zbw.lori.model.ItemInformation
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
@@ -19,6 +20,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import kotlin.math.ceil
 
 /**
  * REST-API routes for items.
@@ -235,6 +237,7 @@ fun Routing.itemRoutes(
                     try {
                         val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                         val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                        val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
                         if (limit < 1 || limit > 100) {
                             span.setStatus(
                                 StatusCode.ERROR,
@@ -250,10 +253,27 @@ fun Routing.itemRoutes(
                                 HttpStatusCode.BadRequest,
                                 "Offset parameter is expected to be larger or equal zero"
                             )
+                        } else if (pageSize < 0) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: PageSize parameter is expected to be between (0,100]"
+                            )
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                "PageSize parameter is expected to be between (0,100]"
+                            )
                         } else {
                             val items = backend.getItemList(limit, offset)
+                            val entries = backend.countMetadataEntries()
+                            val totalPages = ceil(entries.toDouble() / pageSize.toDouble()).toInt()
                             span.setStatus(StatusCode.OK)
-                            call.respond(items.map { it.toRest() })
+                            call.respond(
+                                ItemInformation(
+                                    itemArray = items.map { it.toRest() },
+                                    totalPages = totalPages,
+                                    numberOfResults = entries,
+                                )
+                            )
                         }
                     } catch (e: NumberFormatException) {
                         span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")

@@ -93,12 +93,22 @@ export default defineComponent({
 
     const selectedHeaders = ref(headers.slice(0, 6));
 
-    const retrieveAccessInformation = () => {
+    const currentPage = ref(1);
+    const pageSize = ref(25); // Default page size is 25
+    const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
+    const totalPages = ref(0);
+
+    const retrieveItemInformation = () => {
       api
-        .getList(0, 25)
+        .getList(
+          (currentPage.value - 1) * pageSize.value,
+          pageSize.value,
+          pageSize.value
+        )
         .then((response) => {
-          items.value = response;
+          items.value = response.itemArray;
           tableContentLoading.value = false;
+          totalPages.value = response.totalPages;
         })
         .catch((e) => {
           tableContentLoading.value = false;
@@ -106,6 +116,17 @@ export default defineComponent({
             e.statusText + " (Statuscode: " + e.status + ")";
           loadAlertError.value = true;
         });
+    };
+
+    const handlePageChange = (nextPage: number) => {
+      currentPage.value = nextPage;
+      retrieveItemInformation();
+    };
+
+    const handlePageSizeChange = (size: number) => {
+      pageSize.value = size;
+      currentPage.value = 1;
+      retrieveItemInformation();
     };
 
     const setActiveItem = (metadata: MetadataRest) => {
@@ -121,7 +142,7 @@ export default defineComponent({
       return loadAlertError;
     };
 
-    onMounted(() => retrieveAccessInformation());
+    onMounted(() => retrieveItemInformation());
 
     watch(headersValueVSelect, (currentValue, oldValue) => {
       selectedHeaders.value = currentValue;
@@ -129,16 +150,23 @@ export default defineComponent({
 
     return {
       currentItem,
+      currentPage,
       headers,
       headersValueVSelect,
       items,
       loadAlertError,
       loadAlertErrorMessage,
+      pageSize,
+      pageSizes,
       search,
       selectedHeaders,
+      tableContentLoading,
+      totalPages,
       // Methods
       getAlertLoad,
-      retrieveAccessInformation,
+      handlePageChange,
+      handlePageSizeChange,
+      retrieveAccessInformation: retrieveItemInformation,
       setActiveItem,
     };
   },
@@ -175,6 +203,8 @@ export default defineComponent({
           </template>
         </v-select>
         <v-data-table
+          disable-pagination
+          :hide-default-footer="true"
           :headers="selectedHeaders"
           :items="items.map((value) => value.metadata)"
           :search="search"
@@ -185,6 +215,27 @@ export default defineComponent({
           item-key="metadataId"
         >
         </v-data-table>
+        <v-col cols="12" sm="12">
+          <v-row>
+            <v-col cols="4" sm="3">
+              <v-select
+                v-model="pageSize"
+                :items="pageSizes"
+                label="Einträge pro Seite"
+                @change="handlePageSizeChange"
+              ></v-select>
+            </v-col>
+            <v-col cols="12" sm="9">
+              <v-pagination
+                v-model="currentPage"
+                total-visible="7"
+                :length="totalPages"
+                next-icon="mdi-menu-right"
+                prev-icon="mdi-menu-left"
+                @input="handlePageChange"
+              ></v-pagination> </v-col
+          ></v-row>
+        </v-col>
         <v-alert v-model="loadAlertError" dismissible text type="error">
           Laden der bibliographischen Daten war nicht erfolgreich:
           {{ loadAlertErrorMessage }}

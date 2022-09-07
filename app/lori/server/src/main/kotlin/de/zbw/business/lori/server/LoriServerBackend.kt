@@ -62,8 +62,8 @@ class LoriServerBackend(
     fun getMetadataList(limit: Int, offset: Int): List<ItemMetadata> =
         dbConnector.getMetadataRange(limit, offset).takeIf {
             it.isNotEmpty()
-        }?.let { ids ->
-            getMetadataElementsByIds(ids).sortedBy { it.metadataId }
+        }?.let { metadataList ->
+            metadataList.sortedBy { it.metadataId }
         } ?: emptyList()
 
     fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.getMetadata(metadataIds)
@@ -90,13 +90,13 @@ class LoriServerBackend(
     fun getItemList(limit: Int, offset: Int): List<Item> {
         return dbConnector.getMetadataRange(limit, offset).takeIf {
             it.isNotEmpty()
-        }?.let { ids ->
-            val metadataToRights = ids.map { id ->
-                id to dbConnector.getRightIdsByMetadata(id)
+        }?.let { metadataList ->
+            val metadataToRights = metadataList.map { metadata ->
+                metadata to dbConnector.getRightIdsByMetadata(metadata.metadataId)
             }
             metadataToRights.map { p ->
                 Item(
-                    getMetadataElementsByIds(listOf(p.first)).first(),
+                    p.first,
                     dbConnector.getRights(p.second)
                 )
             }
@@ -109,6 +109,8 @@ class LoriServerBackend(
 
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
         dbConnector.itemContainsEntry(metadataId, rightId)
+
+    fun countMetadataEntries(): Int = dbConnector.countMetadataEntries()
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
 

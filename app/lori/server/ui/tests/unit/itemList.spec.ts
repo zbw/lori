@@ -4,7 +4,7 @@ import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
-import { ItemRest } from "@/generated-sources/openapi";
+import { ItemInformation, ItemRest } from "@/generated-sources/openapi";
 
 Vue.use(Vuetify);
 
@@ -21,12 +21,13 @@ afterEach(() => {
 describe("Test ItemList UI", () => {
   it("initial table load is successful", async () => {
     mockedApi.getList.mockReturnValue(
-      Promise.resolve(
-        Array<ItemRest>({
+      Promise.resolve({
+        itemArray: Array<ItemRest>({
           metadata: {},
           rights: {},
-        } as ItemRest)
-      )
+        } as ItemRest),
+        totalPages: 25,
+      } as ItemInformation)
     );
     wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
@@ -35,6 +36,8 @@ describe("Test ItemList UI", () => {
     (wrapper.vm as any).retrieveAccessInformation();
     await wrapper.vm.$nextTick();
     expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
+    expect((wrapper.vm as any).totalPages).toBe(25);
+    expect((wrapper.vm as any).tableContentLoading).toBeFalsy();
   });
 
   it("initial table load fails", async () => {
