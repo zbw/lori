@@ -1,11 +1,12 @@
 import {
-    Configuration,
-    ItemApi,
-    ItemCountByRight,
-    ItemEntry,
-    ItemRest,
-    RightApi, RightIdCreated,
-    RightRest,
+  Configuration,
+  ItemApi,
+  ItemCountByRight,
+  ItemEntry,
+  ItemInformation,
+  RightApi,
+  RightIdCreated,
+  RightRest,
 } from "../generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -16,10 +17,11 @@ const loriItem = new ItemApi(configuration);
 const loriRightApi = new RightApi(configuration);
 
 export default {
-  getList(offset: number, limit: number): Promise<Array<ItemRest>> {
+  getList(offset: number, limit: number, pageSize: number): Promise<ItemInformation> {
     return loriItem.getItemList({
       offset: offset,
       limit: limit,
+      pageSize: pageSize,
     });
   },
   getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {

@@ -1,3 +1,19 @@
+ItemInformation:
+  required:
+    - totalPages
+    - numberOfResults
+    - itemArray
+  type: object
+  properties:
+    totalPages:
+      type: integer
+    numberOfResults:
+      type: integer
+    itemArray:
+      type: array
+      items:
+        $ref: 'item.model.yaml#/ItemRest'
+
 ItemRest:
   required:
     - metadata

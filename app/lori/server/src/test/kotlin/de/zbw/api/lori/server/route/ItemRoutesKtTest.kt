@@ -7,6 +7,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
+import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
@@ -345,12 +346,24 @@ class ItemRoutesKtTest {
         // given
         val offset = 2
         val limit = 5
-        val expectedItem = ItemRest(
-            metadata = ITEM_METADATA,
-            rights = emptyList(),
-        )
+        val pageSize = 25
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 5,
+                itemArray = listOf(
+                    ItemRest(
+                        metadata = ITEM_METADATA,
+                        rights = emptyList(),
+                    )
+                ),
+                numberOfResults = 101,
+            )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getItemList(limit, offset) } returns listOf(expectedItem.toBusiness())
+            every { getItemList(limit, offset) } returns
+                expectedInformation
+                    .itemArray
+                    .map { it.toBusiness() }
+            every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -368,11 +381,11 @@ class ItemRoutesKtTest {
             application(
                 servicePool.application()
             )
-            val response = client.get("/api/v1/item/list?limit=$limit&offset=$offset")
+            val response = client.get("/api/v1/item/list?limit=$limit&offset=$offset&pageSize=$pageSize")
             val content: String = response.bodyAsText()
-            val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-            val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-            assertThat(received.toList(), `is`(listOf(expectedItem)))
+            val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
+            val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedInformation))
         }
         verify(exactly = 1) { backend.getItemList(limit, offset) }
     }
@@ -382,17 +395,26 @@ class ItemRoutesKtTest {
         // given
         val defaultLimit = 25
         val defaultOffset = 0
-        val expectedItem = ItemRest(
-            metadata = ITEM_METADATA,
-            rights = emptyList(),
-        )
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 0,
+                itemArray = listOf(
+                    ItemRest(
+                        metadata = ITEM_METADATA,
+                        rights = emptyList(),
+                    )
+                ),
+                numberOfResults = 0,
+            )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
                 getItemList(
                     defaultLimit,
                     defaultOffset
                 )
-            } returns listOf(expectedItem.toBusiness())
+            } returns expectedInformation
+                .itemArray
+                .map { it.toBusiness() }
         }
         val servicePool = ServicePoolWithProbes(
             services = listOf(
@@ -412,9 +434,9 @@ class ItemRoutesKtTest {
             )
             val response = client.get("/api/v1/item/list")
             val content: String = response.bodyAsText()
-            val groupListType: Type = object : TypeToken<ArrayList<ItemRest>>() {}.type
-            val received: ArrayList<ItemRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
-            assertThat(received.toList(), `is`(listOf(expectedItem)))
+            val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
+            val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedInformation))
         }
         verify(exactly = 1) { backend.getItemList(defaultLimit, defaultOffset) }
     }

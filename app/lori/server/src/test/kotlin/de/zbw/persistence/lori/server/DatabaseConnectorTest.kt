@@ -276,19 +276,26 @@ class DatabaseConnectorTest : DatabaseTest() {
 
     @Test
     fun testMetadataRange() {
+        // given
+        val givenMetadata =
+            listOf(
+                TEST_Metadata.copy(metadataId = "aaaa"),
+                TEST_Metadata.copy(metadataId = "aaab"),
+                TEST_Metadata.copy(metadataId = "aaac"),
+            )
         // when
-        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaa"))
-        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaab"))
-        dbConnector.insertMetadata(TEST_Metadata.copy(metadataId = "aaaac"))
+        givenMetadata.map {
+            dbConnector.insertMetadata(it)
+        }
 
         // then
         assertThat(
-            dbConnector.getMetadataRange(limit = 3, offset = 0),
-            `is`(listOf("aaaa", "aaaab", "aaaac"))
+            dbConnector.getMetadataRange(limit = 3, offset = 0).toSet(),
+            `is`(givenMetadata.toSet())
         )
         assertThat(
-            dbConnector.getMetadataRange(limit = 2, offset = 1),
-            `is`(listOf("aaaab", "aaaac"))
+            dbConnector.getMetadataRange(limit = 2, offset = 1).toSet(),
+            `is`(givenMetadata.subList(1,3).toSet())
         )
     }
 
