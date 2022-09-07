@@ -62,7 +62,8 @@ class LoriServerBackend(
     fun getMetadataList(limit: Int, offset: Int): List<ItemMetadata> =
         dbConnector.getMetadataRange(limit, offset).takeIf {
             it.isNotEmpty()
-        }?.let { metadataList -> metadataList.sortedBy { it.metadataId }
+        }?.let { metadataList ->
+            metadataList.sortedBy { it.metadataId }
         } ?: emptyList()
 
     fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.getMetadata(metadataIds)

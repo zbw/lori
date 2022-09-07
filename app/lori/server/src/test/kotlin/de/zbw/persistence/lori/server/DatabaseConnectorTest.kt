@@ -295,7 +295,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
         assertThat(
             dbConnector.getMetadataRange(limit = 2, offset = 1).toSet(),
-            `is`(givenMetadata.subList(1,3).toSet())
+            `is`(givenMetadata.subList(1, 3).toSet())
         )
     }
 
