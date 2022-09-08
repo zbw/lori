@@ -97,6 +97,7 @@ export default defineComponent({
     const pageSize = ref(25); // Default page size is 25
     const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
     const totalPages = ref(0);
+    const numberOfResults = ref(0);
 
     const retrieveItemInformation = () => {
       api
@@ -109,6 +110,7 @@ export default defineComponent({
           items.value = response.itemArray;
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
+          numberOfResults.value = response.numberOfResults;
         })
         .catch((e) => {
           tableContentLoading.value = false;
@@ -156,6 +158,7 @@ export default defineComponent({
       items,
       loadAlertError,
       loadAlertErrorMessage,
+      numberOfResults,
       pageSize,
       pageSizes,
       search,
@@ -202,6 +205,10 @@ export default defineComponent({
             >
           </template>
         </v-select>
+
+        <v-col cols="5" sm="5">
+          Suchergebnisse: {{numberOfResults}}
+        </v-col>
         <v-data-table
           disable-pagination
           :hide-default-footer="true"
@@ -215,9 +222,9 @@ export default defineComponent({
           item-key="metadataId"
         >
         </v-data-table>
-        <v-col cols="12" sm="12">
+        <v-col cols="14" sm="12">
           <v-row>
-            <v-col cols="4" sm="3">
+            <v-col cols="2" sm="2">
               <v-select
                 v-model="pageSize"
                 :items="pageSizes"
@@ -225,7 +232,7 @@ export default defineComponent({
                 @change="handlePageSizeChange"
               ></v-select>
             </v-col>
-            <v-col cols="12" sm="9">
+            <v-col cols="10" sm="9">
               <v-pagination
                 v-model="currentPage"
                 total-visible="7"
@@ -233,8 +240,8 @@ export default defineComponent({
                 next-icon="mdi-menu-right"
                 prev-icon="mdi-menu-left"
                 @input="handlePageChange"
-              ></v-pagination> </v-col
-          ></v-row>
+              ></v-pagination> </v-col>
+          </v-row>
         </v-col>
         <v-alert v-model="loadAlertError" dismissible text type="error">
           Laden der bibliographischen Daten war nicht erfolgreich:
