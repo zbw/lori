@@ -287,5 +287,91 @@ fun Routing.itemRoutes(
                 }
             }
         }
+
+        get("search") {
+            val span = tracer
+                .spanBuilder("lori.LoriService.GET/api/v1/item/search")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val searchTerm: String? = call.request.queryParameters["searchTerm"]
+                    val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
+                    val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                    val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
+                    span.setAttribute("searchTerm", searchTerm ?: "null")
+                    span.setAttribute("limit", limit.toString())
+                    span.setAttribute("offset", offset.toString())
+                    span.setAttribute("pageSize", pageSize.toString())
+
+                    if (limit < 1 || limit > 100) {
+                        span.setStatus(
+                            StatusCode.ERROR,
+                            "BadRequest: Limit parameter is expected to be between (0,100]"
+                        )
+                        call.respond(HttpStatusCode.BadRequest, "Limit parameter is expected to be between (0,100]")
+                        return@withContext
+                    }
+                    if (offset < 0) {
+                        span.setStatus(
+                            StatusCode.ERROR,
+                            "BadRequest: Offset parameter is expected to be larger or equal zero"
+                        )
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            "Offset parameter is expected to be larger or equal zero"
+                        )
+                        return@withContext
+                    }
+                    if (pageSize < 0) {
+                        span.setStatus(
+                            StatusCode.ERROR,
+                            "BadRequest: PageSize parameter is expected to be between (0,100]"
+                        )
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            "PageSize parameter is expected to be between (0,100]"
+                        )
+                        return@withContext
+                    }
+                    if (searchTerm == null || searchTerm.isBlank()) {
+                        val items = backend.getItemList(limit, offset)
+                        val entries = backend.countMetadataEntries()
+                        val totalPages = ceil(entries.toDouble() / pageSize.toDouble()).toInt()
+                        span.setStatus(StatusCode.OK)
+                        call.respond(
+                            ItemInformation(
+                                itemArray = items.map { it.toRest() },
+                                totalPages = totalPages,
+                                numberOfResults = entries,
+                            )
+                        )
+                        return@withContext
+                    }
+
+                    val (numberOfResults, searchResults) = LoriServerBackend.parseSearchKeys(searchTerm)
+                        .takeIf { it.isNotEmpty() }
+                        ?.let { backend.searchQuery(it, limit, offset) }
+                        ?: (0 to emptyList())
+                    val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
+                    span.setStatus(StatusCode.OK)
+                    call.respond(
+                        ItemInformation(
+                            itemArray = searchResults.map { it.toRest() },
+                            totalPages = totalPages,
+                            numberOfResults = numberOfResults,
+                        )
+                    )
+                } catch (e: NumberFormatException) {
+                    span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
+                    call.respond(HttpStatusCode.BadRequest, "Parameters have a bad format")
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                } finally {
+                    span.end()
+                }
+            }
+        }
     }
 }

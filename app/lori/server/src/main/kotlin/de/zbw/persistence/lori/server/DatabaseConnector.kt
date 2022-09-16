@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
 import io.opentelemetry.api.trace.Span
@@ -782,11 +783,88 @@ class DatabaseConnector(
         }
     }
 
+    fun countSearchMetadata(searchTerms: Map<SearchKey, String>): Int {
+        val entries: List<Map.Entry<SearchKey, String>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(buildCountSearchQuery(entries.map { it.key })).apply {
+            IntRange(0, entries.size - 1).map { idx ->
+                this.setString(idx + 1, entries[idx].value)
+            }
+        }
+        val span = tracer.spanBuilder("countMetadataSearch").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+        if (rs.next()) {
+            return rs.getInt(1)
+        } else throw IllegalStateException("No count found.")
+    }
+
+    fun searchMetadata(searchTerms: Map<SearchKey, String>, limit: Int, offset: Int): List<ItemMetadata> {
+        val entries: List<Map.Entry<SearchKey, String>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(buildSearchQuery(entries.map { it.key })).apply {
+            IntRange(0, entries.size - 1).map { idx ->
+                this.setString(idx + 1, entries[idx].value)
+            }
+            this.setInt(entries.size + 1, limit)
+            this.setInt(entries.size + 2, offset)
+        }
+        val span = tracer.spanBuilder("searchMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+        return generateSequence {
+            if (rs.next()) {
+                ItemMetadata(
+                    metadataId = rs.getString(1),
+                    handle = rs.getString(2),
+                    ppn = rs.getString(3),
+                    ppnEbook = rs.getString(4),
+                    title = rs.getString(5),
+                    titleJournal = rs.getString(6),
+                    titleSeries = rs.getString(7),
+                    publicationYear = rs.getString(8),
+                    band = rs.getString(9),
+                    publicationType = PublicationType.valueOf(rs.getString(10)),
+                    doi = rs.getString(11),
+                    serialNumber = rs.getString(12),
+                    isbn = rs.getString(13),
+                    rightsK10plus = rs.getString(14),
+                    paketSigel = rs.getString(15),
+                    zbdId = rs.getString(16),
+                    issn = rs.getString(17),
+                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
+                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
+                    createdBy = rs.getString(20),
+                    lastUpdatedBy = rs.getString(21),
+                    author = rs.getString(22),
+                    collectionName = rs.getString(23),
+                    communityName = rs.getString(24),
+                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
     private fun <T> PreparedStatement.setIfNotNull(
         idx: Int,
         element: T?,
         setter: (T, Int, PreparedStatement) -> Unit,
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
+
+    internal fun buildSearchQuery(searchKeys: List<SearchKey>): String =
+        STATEMENT_SELECT_ALL_METADATA +
+            " WHERE " + searchKeys.joinToString(separator = " AND ") { it.toWhereClause() } +
+            " LIMIT ? OFFSET ?;"
+
+    internal fun buildCountSearchQuery(searchKeys: List<SearchKey>): String =
+        STATEMENT_COUNT_METADATA +
+            " WHERE " + searchKeys.joinToString(separator = " AND ") { it.toWhereClause() } + ";"
 
     companion object {
         private const val TABLE_NAME_ITEM = "item"
@@ -908,13 +986,15 @@ class DatabaseConnector(
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
-        const val STATEMENT_GET_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
+        const val STATEMENT_SELECT_ALL_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
             "title_series,published_year,band,publication_type,doi," +
             "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date " +
-            "FROM $TABLE_NAME_ITEM_METADATA " +
-            "WHERE metadata_id = ANY(?)"
+            "FROM $TABLE_NAME_ITEM_METADATA"
+
+        const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA +
+            " WHERE metadata_id = ANY(?)"
 
         const val STATEMENT_DELETE_ITEM = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +

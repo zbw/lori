@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
 import io.mockk.every
@@ -19,6 +20,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.sql.Connection
 import java.sql.SQLException
@@ -59,13 +61,13 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // given
         val testHeaderId = "double_entry"
-        val testHeader = TEST_Metadata.copy(metadataId = testHeaderId)
+        val testMetadata = TEST_Metadata.copy(metadataId = testHeaderId)
 
         // when
-        dbConnector.insertMetadata(testHeader)
+        dbConnector.insertMetadata(testMetadata)
 
         // exception
-        dbConnector.insertMetadata(testHeader)
+        dbConnector.insertMetadata(testMetadata)
     }
 
     @Test(expectedExceptions = [IllegalStateException::class])
@@ -531,7 +533,114 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun searchMetadata() {
+        // given
+        val testZBD = TEST_Metadata.copy(metadataId = "searchZBD", zbdId = "zbdId")
+        dbConnector.insertMetadata(testZBD)
+
+        // when
+        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, testZBD.zbdId!!))
+        val resultZBD =
+            dbConnector.searchMetadata(
+                searchTerms = searchTermsZBD,
+                limit = 5,
+                offset = 0,
+            )
+        val numberResultZBD = dbConnector.countSearchMetadata(
+            searchTerms = searchTermsZBD,
+        )
+        // then
+        assertThat(resultZBD[0], `is`(testZBD))
+        assertThat(numberResultZBD, `is`(1))
+        // when
+        val searchTermsAll = mapOf(
+            Pair(SearchKey.COLLECTION, testZBD.collectionName!!),
+            Pair(SearchKey.COMMUNITY, testZBD.communityName!!),
+            Pair(SearchKey.PAKET_SIGEL, testZBD.paketSigel!!),
+            Pair(SearchKey.ZBD_ID, testZBD.zbdId!!),
+        )
+        val resultAll =
+            dbConnector.searchMetadata(
+                searchTerms = searchTermsAll,
+                limit = 5,
+                offset = 0,
+            )
+        val numberResultAll = dbConnector.countSearchMetadata(
+            searchTerms = searchTermsAll
+        )
+        // then
+        assertThat(resultAll.toSet(), `is`(setOf(testZBD)))
+        assertThat(numberResultAll, `is`(1))
+
+        // Add second metadata with same zbdID
+        val testZBD2 = TEST_Metadata.copy(metadataId = "searchZBD2", zbdId = "zbdId")
+        dbConnector.insertMetadata(testZBD2)
+        // when
+        val resultZBD2 =
+            dbConnector.searchMetadata(
+                searchTerms = searchTermsZBD,
+                limit = 5,
+                offset = 0,
+            )
+        val numberResultZBD2 = dbConnector.countSearchMetadata(
+            searchTerms = searchTermsAll
+        )
+        // then
+        assertThat(resultZBD2.toSet(), `is`(setOf(testZBD, testZBD2)))
+        assertThat(numberResultZBD2, `is`(2))
+
+        // when
+        val resultZBD2Offset =
+            dbConnector.searchMetadata(
+                searchTerms = searchTermsZBD,
+                limit = 5,
+                offset = 1,
+            )
+        assertThat(
+            resultZBD2Offset.size, `is`(1)
+        )
+    }
+
+    @DataProvider(name = DATA_FOR_BUILD_SEARCH_QUERY)
+    private fun createBuildSearchQueryData() =
+        arrayOf(
+            arrayOf(
+                listOf(SearchKey.COLLECTION),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+            arrayOf(
+                listOf(SearchKey.ZBD_ID, SearchKey.PAKET_SIGEL),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BUILD_SEARCH_QUERY)
+    fun testBuildSearchQuery(searchKeys: List<SearchKey>, expectedWhereClause: String) {
+        assertThat(dbConnector.buildSearchQuery(searchKeys), `is`(expectedWhereClause))
+    }
+
+    @DataProvider(name = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
+    private fun createBuildSearchCountQueryData() =
+        arrayOf(
+            arrayOf(
+                listOf(SearchKey.COLLECTION),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?);",
+            ),
+            arrayOf(
+                listOf(SearchKey.ZBD_ID, SearchKey.PAKET_SIGEL),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
+    fun testBuildSearchCountQuery(searchKeys: List<SearchKey>, expectedWhereClause: String) {
+        assertThat(dbConnector.buildCountSearchQuery(searchKeys), `is`(expectedWhereClause))
+    }
+
     companion object {
+        const val DATA_FOR_BUILD_SEARCH_QUERY = "DATA_FOR_BUILD_SEARCH_QUERY"
+        const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
         const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,

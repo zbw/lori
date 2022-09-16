@@ -252,7 +252,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             issn = extractMetadata("dc.identifier.issn", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
-            paketSigel = null, // Not in DA yet
+            paketSigel = extractMetadata("dc.identifier.packageid", metadata),
             ppn = extractMetadata("dc.identifier.ppn", metadata),
             ppnEbook = null, // Not in DA yet
             publicationType = publicationType,
@@ -263,7 +263,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             title = title,
             titleJournal = extractMetadata("dc.journalname", metadata),
             titleSeries = extractMetadata("dc.seriesname", metadata),
-            zbdId = null, // Not in DA yet
+            zbdId = extractMetadata("dc.relation.journalzbdid", metadata),
         )
     }
 }

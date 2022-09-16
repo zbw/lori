@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server
 
-import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
@@ -12,6 +11,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.Instant
 import java.time.Instant.now
@@ -33,7 +33,7 @@ class LoriServerBackendTest : DatabaseTest() {
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
         ),
-        mockk<LoriConfiguration>(),
+        mockk(),
     )
 
     @BeforeClass
@@ -154,12 +154,103 @@ class LoriServerBackendTest : DatabaseTest() {
 
     @Test
     fun testHashString() {
-        val hashedPassword = backend.hashString("SHA-256", "foobar")
+        val hashedPassword = LoriServerBackend.hashString("SHA-256", "foobar")
         val expectedHash = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"
         assertThat(hashedPassword, `is`(expectedHash))
     }
 
+    @DataProvider(name = DATA_FOR_SEARCH_KEY_PARSING)
+    fun createDataForSearchKeyParsing() =
+        arrayOf(
+            arrayOf(
+                "bllaaaa",
+                emptyMap<SearchKey, String>(),
+                "no search key pair"
+            ),
+            arrayOf(
+                "bllaaaa col:bar",
+                mapOf(
+                    SearchKey.COLLECTION to "bar",
+                ),
+                "single case with random string"
+            ),
+            arrayOf(
+                "col:bar",
+                mapOf(
+                    SearchKey.COLLECTION to "bar",
+                ),
+                "single case no additional string"
+            ),
+            arrayOf(
+                "                col:bar                             ",
+                mapOf(
+                    SearchKey.COLLECTION to "bar",
+                ),
+                "single case with whitespace"
+            ),
+            arrayOf(
+                "col:bar zbd:foo",
+                mapOf(
+                    SearchKey.COLLECTION to "bar",
+                    SearchKey.ZBD_ID to "foo",
+                ),
+                "two search keys"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
+    fun testParseSearchKeys(
+        searchTerm: String,
+        expectedKeys: Map<SearchKey, String>,
+        description: String,
+    ) {
+        assertThat(description, LoriServerBackend.parseSearchKeys(searchTerm), `is`(expectedKeys))
+    }
+
+    @Test
+    fun testSearchQuery() {
+        // given
+        val givenMetadataEntries = arrayOf(
+            TEST_Metadata.copy(metadataId = "search_test_1", zbdId = "zbdTest"),
+            TEST_Metadata.copy(metadataId = "search_test_2", zbdId = "zbdTest"),
+        )
+        val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
+
+        backend.insertMetadataElements(givenMetadataEntries.toList())
+        val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
+
+        // when
+        val (number, items) = backend.searchQuery(mapOf(SearchKey.ZBD_ID to givenMetadataEntries[0].zbdId!!), 5, 0)
+
+        // then
+        assertThat(number, `is`(2))
+        assertThat(
+            items.toSet(),
+            `is`(
+                setOf(
+                    Item(
+                        metadata = givenMetadataEntries[0],
+                        rights = listOf(TEST_RIGHT.copy(rightId = generatedRightId)),
+                    ),
+                    Item(
+                        metadata = givenMetadataEntries[1],
+                        rights = emptyList(),
+                    )
+                )
+            )
+        )
+
+        // when
+        val (numberNoItem, itemsNoItem) = backend.searchQuery(mapOf(SearchKey.ZBD_ID to NOT_IN_DATABASE_ID), 5, 0)
+        assertThat(numberNoItem, `is`(0))
+        assertThat(itemsNoItem, `is`(emptyList()))
+    }
+
     companion object {
+        const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
+
+        const val NOT_IN_DATABASE_ID = "not_in_db_metadata_id"
+
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
             3,

@@ -87,20 +87,23 @@ class LoriServerBackend(
                 )
             }
 
-    fun getItemList(limit: Int, offset: Int): List<Item> {
-        return dbConnector.getMetadataRange(limit, offset).takeIf {
+    fun getItemList(limit: Int, offset: Int): List<Item> =
+        dbConnector.getMetadataRange(limit, offset).takeIf {
             it.isNotEmpty()
         }?.let { metadataList ->
-            val metadataToRights = metadataList.map { metadata ->
-                metadata to dbConnector.getRightIdsByMetadata(metadata.metadataId)
-            }
-            metadataToRights.map { p ->
-                Item(
-                    p.first,
-                    dbConnector.getRights(p.second)
-                )
-            }
+            getRightsForMetadata(metadataList)
         } ?: emptyList()
+
+    private fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> {
+        val metadataToRights = metadataList.map { metadata ->
+            metadata to dbConnector.getRightIdsByMetadata(metadata.metadataId)
+        }
+        return metadataToRights.map { p ->
+            Item(
+                p.first,
+                dbConnector.getRights(p.second)
+            )
+        }
     }
 
     fun itemContainsRight(rightId: String): Boolean = dbConnector.itemContainsRight(rightId)
@@ -171,18 +174,57 @@ class LoriServerBackend(
         .withExpiresAt(Date(System.currentTimeMillis() + 60000))
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
-    fun isExpired(principal: JWTPrincipal): Boolean {
-        val expiresAt: Long? = principal
-            .expiresAt
-            ?.time
-            ?.minus(System.currentTimeMillis())
-        return expiresAt == null || expiresAt < 0
+    fun searchQuery(
+        searchKeys: Map<SearchKey, String>,
+        limit: Int,
+        offset: Int,
+    ): Pair<Int, List<Item>> {
+        val items: List<Item> = dbConnector.searchMetadata(searchKeys, limit, offset).takeIf {
+            it.isNotEmpty()
+        }?.let { metadata ->
+            getRightsForMetadata(metadata)
+        } ?: (emptyList())
+        return if (items.isEmpty()) {
+            (0 to items)
+        } else {
+            val count = dbConnector.countSearchMetadata(searchKeys)
+            (count to items)
+        }
     }
 
-    internal fun hashString(type: String, input: String): String {
-        val bytes = MessageDigest
-            .getInstance(type)
-            .digest(input.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
+    companion object {
+        fun isJWTExpired(principal: JWTPrincipal): Boolean {
+            val expiresAt: Long? = principal
+                .expiresAt
+                ?.time
+                ?.minus(System.currentTimeMillis())
+            return expiresAt == null || expiresAt < 0
+        }
+
+        fun parseSearchKeys(s: String): Map<SearchKey, String> {
+            val iter = Regex("\\w+:\\w+").findAll(s).iterator()
+            val tokens: List<String> = generateSequence {
+                if (iter.hasNext()) {
+                    iter.next().value
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+            return tokens.mapNotNull {
+                val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
+                if (key == null) {
+                    null
+                } else {
+                    key to it.substringAfter(":")
+                }
+            }.toMap()
+        }
+
+        fun hashString(type: String, input: String): String {
+            val bytes = MessageDigest
+                .getInstance(type)
+                .digest(input.toByteArray())
+            return bytes.joinToString("") { "%02x".format(it) }
+        }
     }
 }

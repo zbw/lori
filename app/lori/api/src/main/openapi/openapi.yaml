@@ -15,6 +15,8 @@ paths:
     $ref: 'item.api.yaml#/item'
   /item/list:
     $ref: 'item.api.yaml#/item-list'
+  /item/search:
+    $ref: 'item.api.yaml#/item-search'
   /item/metadata/{metadata-id}:
     $ref: 'item.api.yaml#/item-metadata'
   /item/right/{right-id}:
