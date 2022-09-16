@@ -5,6 +5,7 @@ import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
+import {useSearchStore} from "@/stores/search";
 
 export default defineComponent({
   components: { RightsView, MetadataView },
@@ -15,7 +16,7 @@ export default defineComponent({
     const headersValueVSelect = ref([]);
     const loadAlertError = ref(false);
     const loadAlertErrorMessage = ref("");
-    const search = ref("");
+    const searchTerm = ref("");
     const tableContentLoading = ref(true);
 
     const headers = [
@@ -122,13 +123,13 @@ export default defineComponent({
 
     const handlePageChange = (nextPage: number) => {
       currentPage.value = nextPage;
-      retrieveItemInformation();
+      searchQuery();
     };
 
     const handlePageSizeChange = (size: number) => {
       pageSize.value = size;
       currentPage.value = 1;
-      retrieveItemInformation();
+      searchQuery();
     };
 
     const setActiveItem = (metadata: MetadataRest) => {
@@ -150,6 +151,36 @@ export default defineComponent({
       selectedHeaders.value = currentValue;
     });
 
+    // Search
+    const searchStore = useSearchStore();
+
+    const startSearch = () => {
+      searchStore.lastSearchTerm = searchTerm.value;
+      searchQuery();
+    };
+
+    const searchQuery = () => {
+      api
+        .searchQuery(
+          searchTerm.value,
+          (currentPage.value - 1) * pageSize.value,
+          pageSize.value,
+          pageSize.value
+        )
+        .then((response) => {
+          items.value = response.itemArray;
+          tableContentLoading.value = false;
+          totalPages.value = response.totalPages;
+          numberOfResults.value = response.numberOfResults;
+        })
+        .catch((e) => {
+          tableContentLoading.value = false;
+          loadAlertErrorMessage.value =
+            e.statusText + " (Statuscode: " + e.status + ")";
+          loadAlertError.value = true;
+        });
+    };
+
     return {
       currentItem,
       currentPage,
@@ -161,7 +192,8 @@ export default defineComponent({
       numberOfResults,
       pageSize,
       pageSizes,
-      search,
+      searchTerm,
+      searchStore,
       selectedHeaders,
       tableContentLoading,
       totalPages,
@@ -169,8 +201,10 @@ export default defineComponent({
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
-      retrieveAccessInformation: retrieveItemInformation,
+      retrieveItemInformation,
+      searchQuery,
       setActiveItem,
+      startSearch,
     };
   },
 });
@@ -187,6 +221,7 @@ export default defineComponent({
             label="Suche"
             single-line
             hide-details
+            @click:append="startSearch"
           ></v-text-field>
         </v-card-title>
         <v-select
@@ -206,15 +241,12 @@ export default defineComponent({
           </template>
         </v-select>
 
-        <v-col cols="5" sm="5">
-          Suchergebnisse: {{numberOfResults}}
-        </v-col>
+        <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }} </v-col>
         <v-data-table
           disable-pagination
           :hide-default-footer="true"
           :headers="selectedHeaders"
           :items="items.map((value) => value.metadata)"
-          :search="search"
           @click:row="setActiveItem"
           loading="tableContentLoading"
           loading-text="Daten werden geladen... Bitte warten."
@@ -240,7 +272,8 @@ export default defineComponent({
                 next-icon="mdi-menu-right"
                 prev-icon="mdi-menu-left"
                 @input="handlePageChange"
-              ></v-pagination> </v-col>
+              ></v-pagination>
+            </v-col>
           </v-row>
         </v-col>
         <v-alert v-model="loadAlertError" dismissible text type="error">

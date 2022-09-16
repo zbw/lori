@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.SearchKey
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -365,17 +366,7 @@ class ItemRoutesKtTest {
                     .map { it.toBusiness() }
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
+        val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             application(
@@ -544,8 +535,174 @@ class ItemRoutesKtTest {
         }
     }
 
+    @Test
+    fun testMetadataGetSearchResult() {
+        // given
+        val searchTerm = "com:foobar"
+        val offset = 2
+        val limit = 5
+        val pageSize = 25
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 5,
+                itemArray = listOf(
+                    ItemRest(
+                        metadata = ITEM_METADATA,
+                        rights = emptyList(),
+                    )
+                ),
+                numberOfResults = 101,
+            )
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every {
+                searchQuery(
+                    mapOf(SearchKey.COMMUNITY to "foobar"),
+                    any(),
+                    any()
+                )
+            } returns (
+                expectedInformation.numberOfResults to
+                    expectedInformation
+                        .itemArray
+                        .map { it.toBusiness() }
+                )
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response =
+                client.get("/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset&pageSize=$pageSize")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
+            val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedInformation))
+            assertThat(response.status, `is`(HttpStatusCode.OK))
+        }
+    }
+
+    @Test
+    fun testItemGetSearchResultNoSearchTerm() {
+        // given
+        val defaultLimit = 25
+        val defaultOffset = 0
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 1,
+                itemArray = listOf(
+                    ItemRest(
+                        metadata = ITEM_METADATA,
+                        rights = emptyList(),
+                    )
+                ),
+                numberOfResults = 1,
+            )
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every {
+                getItemList(
+                    defaultLimit,
+                    defaultOffset
+                )
+            } returns (
+                expectedInformation
+                    .itemArray
+                    .map { it.toBusiness() }
+                )
+            every { countMetadataEntries() } returns expectedInformation.numberOfResults
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/search")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
+            val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedInformation))
+            assertThat(response.status, `is`(HttpStatusCode.OK))
+        }
+    }
+
+    @DataProvider(name = DATA_FOR_SEARCH_BAD_REQUEST)
+    fun createrDataForSearchBadRequest() =
+        arrayOf(
+            arrayOf(
+                "200",
+                "10",
+                "10",
+            ),
+            arrayOf(
+                "99",
+                "-10",
+                "10",
+            ),
+            arrayOf(
+                "99",
+                "10",
+                "-10",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_SEARCH_BAD_REQUEST)
+    fun testItemGetSearchResultBadRequest(
+        limit: String,
+        offset: String,
+        pageSize: String,
+    ) {
+        // given
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 1,
+                itemArray = listOf(
+                    ItemRest(
+                        metadata = ITEM_METADATA,
+                        rights = emptyList(),
+                    )
+                ),
+                numberOfResults = 1,
+            )
+        val backend = mockk<LoriServerBackend>(relaxed = true) { }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response =
+                client.get("/api/v1/item/search?searchTerm=foobar&limit=$limit&offset=$offset&pageSize=$pageSize")
+            assertThat(response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
+    fun testItemGetSearchResultInternal() {
+        // given
+        val searchTerm = "com:foobar"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { searchQuery(mapOf(SearchKey.COMMUNITY to "foobar"), any(), any()) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/item/search?searchTerm=$searchTerm")
+            assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
     companion object {
         const val DATA_FOR_INVALID_LIST_PARAM = "DATA_FOR_INVALID_LIST_PARAM"
+        const val DATA_FOR_SEARCH_BAD_REQUEST = "DATA_FOR_SEARCH_BAD_REQUEST"
 
         val CONFIG = LoriConfiguration(
             grpcPort = 9092,

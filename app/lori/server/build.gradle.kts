@@ -34,9 +34,9 @@ dependencies {
     implementation("com.mchange:c3p0:0.9.5.5")
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
-    implementation("io.zonky.test:embedded-postgres:1.3.1")
+    implementation("io.zonky.test:embedded-postgres:2.0.1")
     implementation("org.postgresql:postgresql:42.3.5")
-    implementation("org.flywaydb:flyway-core:7.15.0")
+    implementation("org.flywaydb:flyway-core:9.3.0")
 }
 
 application {
@@ -48,7 +48,7 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = "0.790".toBigDecimal()
+                minimum = "0.800".toBigDecimal()
             }
         }
     }

@@ -118,7 +118,7 @@ fun Routing.usersRoutes(
                         span.setAttribute("username", username)
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
-                        if (backend.isExpired(principal)) {
+                        if (LoriServerBackend.isJWTExpired(principal)) {
                             call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
                             return@withContext
                         }
@@ -155,7 +155,7 @@ fun Routing.usersRoutes(
                         span.setAttribute("username", username)
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
-                        if (backend.isExpired(principal)) {
+                        if (LoriServerBackend.isJWTExpired(principal)) {
                             call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
                             return@withContext
                         }
@@ -189,7 +189,7 @@ fun Routing.usersRoutes(
                     try {
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
-                        if (backend.isExpired(principal)) {
+                        if (LoriServerBackend.isJWTExpired(principal)) {
                             call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
                             return@withContext
                         }

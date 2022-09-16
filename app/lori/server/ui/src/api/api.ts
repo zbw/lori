@@ -17,7 +17,11 @@ const loriItem = new ItemApi(configuration);
 const loriRightApi = new RightApi(configuration);
 
 export default {
-  getList(offset: number, limit: number, pageSize: number): Promise<ItemInformation> {
+  getList(
+    offset: number,
+    limit: number,
+    pageSize: number
+  ): Promise<ItemInformation> {
     return loriItem.getItemList({
       offset: offset,
       limit: limit,
@@ -41,5 +45,18 @@ export default {
   },
   deleteItemRelation(metadataId: string, rightId: string): Promise<void> {
     return loriItem.deleteItem({ metadataId: metadataId, rightId: rightId });
+  },
+  searchQuery(
+    searchTerm: string,
+    offset: number,
+    limit: number,
+    pageSize: number
+  ): Promise<ItemInformation> {
+    return loriItem.getSearchResult({
+      searchTerm: searchTerm,
+      offset: offset,
+      limit: limit,
+      pageSize: pageSize,
+    });
   },
 };
