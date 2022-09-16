@@ -556,7 +556,7 @@ class ItemRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
                 searchQuery(
-                    mapOf(SearchKey.COMMUNITY to "foobar"),
+                    mapOf(SearchKey.COMMUNITY to listOf("foobar")),
                     any(),
                     any()
                 )
@@ -686,7 +686,7 @@ class ItemRoutesKtTest {
         // given
         val searchTerm = "com:foobar"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { searchQuery(mapOf(SearchKey.COMMUNITY to "foobar"), any(), any()) } throws SQLException()
+            every { searchQuery(mapOf(SearchKey.COMMUNITY to listOf("foobar")), any(), any()) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
 

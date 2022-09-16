@@ -175,7 +175,7 @@ class LoriServerBackend(
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(
-        searchKeys: Map<SearchKey, String>,
+        searchKeys: Map<SearchKey, List<String>>,
         limit: Int,
         offset: Int,
     ): Pair<Int, List<Item>> {
@@ -201,11 +201,11 @@ class LoriServerBackend(
             return expiresAt == null || expiresAt < 0
         }
 
-        fun parseSearchKeys(s: String): Map<SearchKey, String> {
-            val iter = Regex("\\w+:\\w+").findAll(s).iterator()
+        fun parseSearchKeys(s: String): Map<SearchKey, List<String>> {
+            val iter = Regex("\\w+:\\w+|\\w+:'[\\w\\s]+'").findAll(s).iterator()
             val tokens: List<String> = generateSequence {
                 if (iter.hasNext()) {
-                    iter.next().value
+                    iter.next().value.filter { it != '\'' }
                 } else {
                     null
                 }
@@ -215,7 +215,7 @@ class LoriServerBackend(
                 if (key == null) {
                     null
                 } else {
-                    key to it.substringAfter(":")
+                    key to it.substringAfter(":").trim().split("\\s+".toRegex())
                 }
             }.toMap()
         }

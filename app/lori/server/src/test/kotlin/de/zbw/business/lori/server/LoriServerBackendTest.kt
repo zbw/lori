@@ -164,44 +164,66 @@ class LoriServerBackendTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 "bllaaaa",
-                emptyMap<SearchKey, String>(),
+                emptyMap<SearchKey, List<String>>(),
                 "no search key pair"
             ),
             arrayOf(
                 "bllaaaa col:bar",
                 mapOf(
-                    SearchKey.COLLECTION to "bar",
+                    SearchKey.COLLECTION to listOf("bar"),
                 ),
                 "single case with random string"
             ),
             arrayOf(
                 "col:bar",
                 mapOf(
-                    SearchKey.COLLECTION to "bar",
+                    SearchKey.COLLECTION to listOf("bar"),
                 ),
                 "single case no additional string"
             ),
             arrayOf(
                 "                col:bar                             ",
                 mapOf(
-                    SearchKey.COLLECTION to "bar",
+                    SearchKey.COLLECTION to listOf("bar"),
                 ),
                 "single case with whitespace"
             ),
             arrayOf(
                 "col:bar zbd:foo",
                 mapOf(
-                    SearchKey.COLLECTION to "bar",
-                    SearchKey.ZBD_ID to "foo",
+                    SearchKey.COLLECTION to listOf("bar"),
+                    SearchKey.ZBD_ID to listOf("foo"),
                 ),
                 "two search keys"
+            ),
+            arrayOf(
+                "col:'foo bar'",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("foo", "bar"),
+                ),
+                "multiple words quoted"
+            ),
+            arrayOf(
+                "col:'foobar'",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("foobar"),
+                ),
+                "single word quoted"
+            ),
+            arrayOf(
+                "            col:'foobar'           com:'foo bar'",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("foobar"),
+                    SearchKey.COMMUNITY to listOf("foo", "bar"),
+                ),
+                "mutltiple and single words quoted with whitespaces"
             ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
     fun testParseSearchKeys(
         searchTerm: String,
-        expectedKeys: Map<SearchKey, String>,
+        expectedKeys: Map<SearchKey, List<String>>,
         description: String,
     ) {
         assertThat(description, LoriServerBackend.parseSearchKeys(searchTerm), `is`(expectedKeys))
@@ -220,7 +242,11 @@ class LoriServerBackendTest : DatabaseTest() {
         val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
 
         // when
-        val (number, items) = backend.searchQuery(mapOf(SearchKey.ZBD_ID to givenMetadataEntries[0].zbdId!!), 5, 0)
+        val (number, items) = backend.searchQuery(
+            mapOf(SearchKey.ZBD_ID to listOf(givenMetadataEntries[0].zbdId!!)),
+            5,
+            0
+        )
 
         // then
         assertThat(number, `is`(2))
@@ -241,7 +267,11 @@ class LoriServerBackendTest : DatabaseTest() {
         )
 
         // when
-        val (numberNoItem, itemsNoItem) = backend.searchQuery(mapOf(SearchKey.ZBD_ID to NOT_IN_DATABASE_ID), 5, 0)
+        val (numberNoItem, itemsNoItem) = backend.searchQuery(
+            mapOf(SearchKey.ZBD_ID to listOf(NOT_IN_DATABASE_ID)),
+            5,
+            0
+        )
         assertThat(numberNoItem, `is`(0))
         assertThat(itemsNoItem, `is`(emptyList()))
     }
