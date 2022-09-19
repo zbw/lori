@@ -788,9 +788,7 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(buildCountSearchQuery(searchTerms)).apply {
             var counter = 1
             entries.forEach { entry ->
-                entry.value.forEachIndexed { index, word ->
-                    this.setString(++counter, word) // TODO
-                }
+                this.setString(counter++, entry.value.joinToString(" & "))
             }
         }
         val span = tracer.spanBuilder("countMetadataSearch").startSpan()
@@ -810,11 +808,9 @@ class DatabaseConnector(
         val prepStmt = connection.prepareStatement(buildSearchQuery(searchTerms)).apply {
             var counter = 1
             entries.forEach { entry ->
-                entry.value.forEachIndexed { index, word ->
-                    this.setString(++counter, word) // TODO
-                }
+                this.setString(counter++, entry.value.joinToString(" & "))
             }
-            this.setInt(++counter, limit)
+            this.setInt(counter++, limit)
             this.setInt(counter, offset)
         }
         val span = tracer.spanBuilder("searchMetadata").startSpan()
@@ -866,18 +862,14 @@ class DatabaseConnector(
     internal fun buildSearchQuery(searchTerm: Map<SearchKey, List<String>>): String =
         STATEMENT_SELECT_ALL_METADATA +
             " WHERE " + searchTerm.entries.joinToString(separator = " AND ") { entry ->
-            entry.key.toWhereClause(
-                entry.value.size
-            )
+            entry.key.toWhereClause()
         } +
             " LIMIT ? OFFSET ?;"
 
     internal fun buildCountSearchQuery(searchKeys: Map<SearchKey, List<String>>): String =
         STATEMENT_COUNT_METADATA +
             " WHERE " + searchKeys.entries.joinToString(separator = " AND ") { entry ->
-                entry.key.toWhereClause(
-                   entry.value.size
-                )
+            entry.key.toWhereClause()
         } + ";"
 
     companion object {

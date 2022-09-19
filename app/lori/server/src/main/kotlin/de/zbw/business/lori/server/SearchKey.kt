@@ -15,13 +15,8 @@ enum class SearchKey(
     PAKET_SIGEL("ts_sigel"),
     ZBD_ID("ts_zbd_id");
 
-    fun toWhereClause(numberOfWords: Int): String {
-        val start = "${this.dbColumnName} @@ to_tsquery('english', ?"
-        return IntRange(2, numberOfWords).fold(initial = start){ acc, _ ->
-            "$acc & ?"
-        } + ")"
-
-    }
+    fun toWhereClause(): String =
+        "${this.dbColumnName} @@ to_tsquery('english', ?)"
 
     companion object {
         fun toEnum(s: String): SearchKey? {

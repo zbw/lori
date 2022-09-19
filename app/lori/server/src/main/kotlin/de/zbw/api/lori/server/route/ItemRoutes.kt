@@ -349,10 +349,7 @@ fun Routing.itemRoutes(
                         return@withContext
                     }
 
-                    val (numberOfResults, searchResults) = LoriServerBackend.parseSearchKeys(searchTerm)
-                        .takeIf { it.isNotEmpty() }
-                        ?.let { backend.searchQuery(it, limit, offset) }
-                        ?: (0 to emptyList())
+                    val (numberOfResults, searchResults) = backend.searchQuery(searchTerm, limit, offset)
                     val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)
                     call.respond(

@@ -243,7 +243,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (number, items) = backend.searchQuery(
-            mapOf(SearchKey.ZBD_ID to listOf(givenMetadataEntries[0].zbdId!!)),
+            "zbd:${givenMetadataEntries[0].zbdId!!}",
             5,
             0
         )
@@ -268,7 +268,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (numberNoItem, itemsNoItem) = backend.searchQuery(
-            mapOf(SearchKey.ZBD_ID to listOf(NOT_IN_DATABASE_ID)),
+            "zbd:NOT_IN_DATABASE_ID",
             5,
             0
         )

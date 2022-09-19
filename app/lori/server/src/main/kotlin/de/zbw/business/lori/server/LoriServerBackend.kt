@@ -175,21 +175,25 @@ class LoriServerBackend(
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(
-        searchKeys: Map<SearchKey, List<String>>,
+        searchTerm: String,
         limit: Int,
         offset: Int,
     ): Pair<Int, List<Item>> {
-        val items: List<Item> = dbConnector.searchMetadata(searchKeys, limit, offset).takeIf {
+        return parseSearchKeys(searchTerm).takeIf {
             it.isNotEmpty()
-        }?.let { metadata ->
-            getRightsForMetadata(metadata)
-        } ?: (emptyList())
-        return if (items.isEmpty()) {
-            (0 to items)
-        } else {
-            val count = dbConnector.countSearchMetadata(searchKeys)
-            (count to items)
-        }
+        }?.let { keys ->
+            val items: List<Item> = dbConnector.searchMetadata(keys, limit, offset).takeIf {
+                it.isNotEmpty()
+            }?.let { metadata ->
+                getRightsForMetadata(metadata)
+            } ?: (emptyList())
+            if (items.isEmpty()) {
+                (0 to items)
+            } else {
+                val count = dbConnector.countSearchMetadata(keys)
+                (count to items)
+            }
+        } ?: (0 to emptyList())
     }
 
     companion object {

@@ -610,13 +610,21 @@ class DatabaseConnectorTest : DatabaseTest() {
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to "foo", SearchKey.PAKET_SIGEL to listOf("bar")),
+                mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_QUERY)
-    fun testBuildSearchQuery(searchKeys: Map<SearchKey,List<String>>, expectedWhereClause: String) {
+    fun testBuildSearchQuery(searchKeys: Map<SearchKey, List<String>>, expectedWhereClause: String) {
         assertThat(dbConnector.buildSearchQuery(searchKeys), `is`(expectedWhereClause))
     }
 
@@ -631,7 +639,14 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
             ),
-            // TODO: more tests with multiple words per key
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?);",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)

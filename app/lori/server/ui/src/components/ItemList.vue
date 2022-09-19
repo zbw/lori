@@ -216,7 +216,7 @@ export default defineComponent({
       <v-card>
         <v-card-title>
           <v-text-field
-            v-model="search"
+            v-model="searchTerm"
             append-icon="mdi-magnify"
             label="Suche"
             single-line
