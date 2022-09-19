@@ -1,11 +1,15 @@
 <script lang="ts">
-import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
+import {
+  ItemRest,
+  MetadataRest,
+  MetadataRestPublicationTypeEnum,
+} from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
-import {useSearchStore} from "@/stores/search";
+import { useSearchStore } from "@/stores/search";
 
 export default defineComponent({
   components: { RightsView, MetadataView },
@@ -40,7 +44,7 @@ export default defineComponent({
       {
         text: "Publikationstyp",
         sortable: true,
-        value: "constationType",
+        value: "publicationType",
       },
       {
         text: "Band",
@@ -121,6 +125,7 @@ export default defineComponent({
         });
     };
 
+    // Page changes
     const handlePageChange = (nextPage: number) => {
       currentPage.value = nextPage;
       searchQuery();
@@ -181,6 +186,32 @@ export default defineComponent({
         });
     };
 
+    // parse publication type
+    const parsePublicationType = (pubType: string) => {
+      switch (pubType) {
+        case "article":
+          return "Article";
+        case "book":
+          return "Book";
+        case "bookPart":
+          return "Book Part";
+        case "conferencePaper":
+          return "Conference Paper";
+        case "periodicalPart":
+          return "Periodical Part";
+        case "proceedings":
+          return "Proceedings";
+        case "researchReport":
+          return "Research Report";
+        case "thesis":
+          return "Thesis";
+        case "workingPaper":
+          return "Working Paper";
+        default:
+          return "Unknown pub type:" + pubType;
+      }
+    };
+
     return {
       currentItem,
       currentPage,
@@ -202,6 +233,7 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       retrieveItemInformation,
+      parsePublicationType,
       searchQuery,
       setActiveItem,
       startSearch,
@@ -222,6 +254,7 @@ export default defineComponent({
             single-line
             hide-details
             @click:append="startSearch"
+            @keydown.enter.prevent="startSearch"
           ></v-text-field>
         </v-card-title>
         <v-select
@@ -253,6 +286,14 @@ export default defineComponent({
           show-select
           item-key="metadataId"
         >
+          <template v-slot:item.handle="{ item }">
+            <td>
+              <a :href="item.handle">{{ item.handle.substring(22, 35) }}</a>
+            </td>
+          </template>
+          <template v-slot:item.publicationType="{ item }">
+            <td>{{ parsePublicationType(item.publicationType) }}</td>
+          </template>
         </v-data-table>
         <v-col cols="14" sm="12">
           <v-row>
