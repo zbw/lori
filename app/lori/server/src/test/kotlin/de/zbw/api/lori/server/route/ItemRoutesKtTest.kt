@@ -5,7 +5,6 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.SearchKey
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -556,7 +555,7 @@ class ItemRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
                 searchQuery(
-                    mapOf(SearchKey.COMMUNITY to "foobar"),
+                    searchTerm,
                     any(),
                     any()
                 )
@@ -686,7 +685,7 @@ class ItemRoutesKtTest {
         // given
         val searchTerm = "com:foobar"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { searchQuery(mapOf(SearchKey.COMMUNITY to "foobar"), any(), any()) } throws SQLException()
+            every { searchQuery(searchTerm, any(), any()) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
 

@@ -783,11 +783,12 @@ class DatabaseConnector(
         }
     }
 
-    fun countSearchMetadata(searchTerms: Map<SearchKey, String>): Int {
-        val entries: List<Map.Entry<SearchKey, String>> = searchTerms.entries.toList()
-        val prepStmt = connection.prepareStatement(buildCountSearchQuery(entries.map { it.key })).apply {
-            IntRange(0, entries.size - 1).map { idx ->
-                this.setString(idx + 1, entries[idx].value)
+    fun countSearchMetadata(searchTerms: Map<SearchKey, List<String>>): Int {
+        val entries = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(buildCountSearchQuery(searchTerms)).apply {
+            var counter = 1
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" & "))
             }
         }
         val span = tracer.spanBuilder("countMetadataSearch").startSpan()
@@ -802,14 +803,15 @@ class DatabaseConnector(
         } else throw IllegalStateException("No count found.")
     }
 
-    fun searchMetadata(searchTerms: Map<SearchKey, String>, limit: Int, offset: Int): List<ItemMetadata> {
-        val entries: List<Map.Entry<SearchKey, String>> = searchTerms.entries.toList()
-        val prepStmt = connection.prepareStatement(buildSearchQuery(entries.map { it.key })).apply {
-            IntRange(0, entries.size - 1).map { idx ->
-                this.setString(idx + 1, entries[idx].value)
+    fun searchMetadata(searchTerms: Map<SearchKey, List<String>>, limit: Int, offset: Int): List<ItemMetadata> {
+        val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(buildSearchQuery(searchTerms)).apply {
+            var counter = 1
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" & "))
             }
-            this.setInt(entries.size + 1, limit)
-            this.setInt(entries.size + 2, offset)
+            this.setInt(counter++, limit)
+            this.setInt(counter, offset)
         }
         val span = tracer.spanBuilder("searchMetadata").startSpan()
         val rs = try {
@@ -857,14 +859,18 @@ class DatabaseConnector(
         setter: (T, Int, PreparedStatement) -> Unit,
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
-    internal fun buildSearchQuery(searchKeys: List<SearchKey>): String =
+    internal fun buildSearchQuery(searchTerm: Map<SearchKey, List<String>>): String =
         STATEMENT_SELECT_ALL_METADATA +
-            " WHERE " + searchKeys.joinToString(separator = " AND ") { it.toWhereClause() } +
+            " WHERE " + searchTerm.entries.joinToString(separator = " AND ") { entry ->
+            entry.key.toWhereClause()
+        } +
             " LIMIT ? OFFSET ?;"
 
-    internal fun buildCountSearchQuery(searchKeys: List<SearchKey>): String =
+    internal fun buildCountSearchQuery(searchKeys: Map<SearchKey, List<String>>): String =
         STATEMENT_COUNT_METADATA +
-            " WHERE " + searchKeys.joinToString(separator = " AND ") { it.toWhereClause() } + ";"
+            " WHERE " + searchKeys.entries.joinToString(separator = " AND ") { entry ->
+            entry.key.toWhereClause()
+        } + ";"
 
     companion object {
         private const val TABLE_NAME_ITEM = "item"

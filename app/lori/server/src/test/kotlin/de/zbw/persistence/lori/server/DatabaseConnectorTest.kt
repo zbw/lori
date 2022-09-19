@@ -540,7 +540,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         dbConnector.insertMetadata(testZBD)
 
         // when
-        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, testZBD.zbdId!!))
+        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, listOf(testZBD.zbdId!!)))
         val resultZBD =
             dbConnector.searchMetadata(
                 searchTerms = searchTermsZBD,
@@ -555,10 +555,10 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(numberResultZBD, `is`(1))
         // when
         val searchTermsAll = mapOf(
-            Pair(SearchKey.COLLECTION, testZBD.collectionName!!),
-            Pair(SearchKey.COMMUNITY, testZBD.communityName!!),
-            Pair(SearchKey.PAKET_SIGEL, testZBD.paketSigel!!),
-            Pair(SearchKey.ZBD_ID, testZBD.zbdId!!),
+            Pair(SearchKey.COLLECTION, listOf(testZBD.collectionName!!)),
+            Pair(SearchKey.COMMUNITY, listOf(testZBD.communityName!!)),
+            Pair(SearchKey.PAKET_SIGEL, listOf(testZBD.paketSigel!!)),
+            Pair(SearchKey.ZBD_ID, listOf(testZBD.zbdId!!)),
         )
         val resultAll =
             dbConnector.searchMetadata(
@@ -606,17 +606,25 @@ class DatabaseConnectorTest : DatabaseTest() {
     private fun createBuildSearchQueryData() =
         arrayOf(
             arrayOf(
-                listOf(SearchKey.COLLECTION),
+                mapOf(SearchKey.COLLECTION to listOf("foo")),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
             arrayOf(
-                listOf(SearchKey.ZBD_ID, SearchKey.PAKET_SIGEL),
+                mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_QUERY)
-    fun testBuildSearchQuery(searchKeys: List<SearchKey>, expectedWhereClause: String) {
+    fun testBuildSearchQuery(searchKeys: Map<SearchKey, List<String>>, expectedWhereClause: String) {
         assertThat(dbConnector.buildSearchQuery(searchKeys), `is`(expectedWhereClause))
     }
 
@@ -624,17 +632,25 @@ class DatabaseConnectorTest : DatabaseTest() {
     private fun createBuildSearchCountQueryData() =
         arrayOf(
             arrayOf(
-                listOf(SearchKey.COLLECTION),
+                mapOf(SearchKey.COLLECTION to listOf("foo")),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?);",
             ),
             arrayOf(
-                listOf(SearchKey.ZBD_ID, SearchKey.PAKET_SIGEL),
+                mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?);",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
-    fun testBuildSearchCountQuery(searchKeys: List<SearchKey>, expectedWhereClause: String) {
+    fun testBuildSearchCountQuery(searchKeys: Map<SearchKey, List<String>>, expectedWhereClause: String) {
         assertThat(dbConnector.buildCountSearchQuery(searchKeys), `is`(expectedWhereClause))
     }
 
