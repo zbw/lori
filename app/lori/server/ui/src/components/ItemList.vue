@@ -1,18 +1,15 @@
 <script lang="ts">
-import {
-  ItemRest,
-  MetadataRest,
-  MetadataRestPublicationTypeEnum,
-} from "@/generated-sources/openapi";
+import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
+import SearchFilter from "@/components/SearchFilter.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
 
 export default defineComponent({
-  components: { RightsView, MetadataView },
+  components: { RightsView, MetadataView, SearchFilter },
 
   setup() {
     const items: Ref<Array<ItemRest>> = ref([]);
@@ -245,93 +242,98 @@ export default defineComponent({
 <template>
   <v-container>
     <v-row>
-      <v-card>
-        <v-card-title>
-          <v-text-field
-            v-model="searchTerm"
-            append-icon="mdi-magnify"
-            label="Suche"
-            single-line
-            hide-details
-            @click:append="startSearch"
-            @keydown.enter.prevent="startSearch"
-          ></v-text-field>
-        </v-card-title>
-        <v-select
-          v-model="headersValueVSelect"
-          :items="headers"
-          label="Spaltenauswahl"
-          multiple
-          return-object
-        >
-          <template v-slot:selection="{ item, index }">
-            <v-chip v-if="index === 0">
-              <span>{{ item.text }}</span>
-            </v-chip>
-            <span v-if="index === 1" class="grey--text caption"
-              >(+{{ headersValueVSelect.length - 1 }} others)</span
-            >
-          </template>
-        </v-select>
+      <v-col cols="3">
+        <SearchFilter></SearchFilter>
+      </v-col>
+      <v-col cols="9">
+        <v-card>
+          <v-card-title>
+            <v-text-field
+              v-model="searchTerm"
+              append-icon="mdi-magnify"
+              label="Suche"
+              single-line
+              hide-details
+              @click:append="startSearch"
+              @keydown.enter.prevent="startSearch"
+            ></v-text-field>
+          </v-card-title>
+          <v-select
+            v-model="headersValueVSelect"
+            :items="headers"
+            label="Spaltenauswahl"
+            multiple
+            return-object
+          >
+            <template v-slot:selection="{ item, index }">
+              <v-chip v-if="index === 0">
+                <span>{{ item.text }}</span>
+              </v-chip>
+              <span v-if="index === 1" class="grey--text caption"
+                >(+{{ headersValueVSelect.length - 1 }} others)</span
+              >
+            </template>
+          </v-select>
 
-        <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }} </v-col>
-        <v-data-table
-          disable-pagination
-          :hide-default-footer="true"
-          :headers="selectedHeaders"
-          :items="items.map((value) => value.metadata)"
-          @click:row="setActiveItem"
-          loading="tableContentLoading"
-          loading-text="Daten werden geladen... Bitte warten."
-          show-select
-          item-key="metadataId"
-        >
-          <template v-slot:item.handle="{ item }">
-            <td>
-              <a :href="item.handle">{{ item.handle.substring(22, 35) }}</a>
-            </td>
-          </template>
-          <template v-slot:item.publicationType="{ item }">
-            <td>{{ parsePublicationType(item.publicationType) }}</td>
-          </template>
-        </v-data-table>
-        <v-col cols="14" sm="12">
-          <v-row>
-            <v-col cols="2" sm="2">
-              <v-select
-                v-model="pageSize"
-                :items="pageSizes"
-                label="Einträge pro Seite"
-                @change="handlePageSizeChange"
-              ></v-select>
-            </v-col>
-            <v-col cols="10" sm="9">
-              <v-pagination
-                v-model="currentPage"
-                total-visible="7"
-                :length="totalPages"
-                next-icon="mdi-menu-right"
-                prev-icon="mdi-menu-left"
-                @input="handlePageChange"
-              ></v-pagination>
-            </v-col>
-          </v-row>
-        </v-col>
-        <v-alert v-model="loadAlertError" dismissible text type="error">
-          Laden der bibliographischen Daten war nicht erfolgreich:
-          {{ loadAlertErrorMessage }}
-        </v-alert>
-      </v-card>
-      <v-col>
-        <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-          <RightsView
-            :rights="currentItem.rights"
-            :metadataId="currentItem.metadata.metadataId"
-          ></RightsView>
-          <MetadataView
-            :metadata="Object.assign({}, currentItem.metadata)"
-          ></MetadataView>
+          <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }} </v-col>
+          <v-data-table
+            disable-pagination
+            :hide-default-footer="true"
+            :headers="selectedHeaders"
+            :items="items.map((value) => value.metadata)"
+            @click:row="setActiveItem"
+            loading="tableContentLoading"
+            loading-text="Daten werden geladen... Bitte warten."
+            show-select
+            item-key="metadataId"
+          >
+            <template v-slot:item.handle="{ item }">
+              <td>
+                <a :href="item.handle">{{ item.handle.substring(22, 35) }}</a>
+              </td>
+            </template>
+            <template v-slot:item.publicationType="{ item }">
+              <td>{{ parsePublicationType(item.publicationType) }}</td>
+            </template>
+          </v-data-table>
+          <v-col cols="14" sm="12">
+            <v-row>
+              <v-col cols="2" sm="2">
+                <v-select
+                  v-model="pageSize"
+                  :items="pageSizes"
+                  label="Einträge pro Seite"
+                  @change="handlePageSizeChange"
+                ></v-select>
+              </v-col>
+              <v-col cols="10" sm="9">
+                <v-pagination
+                  v-model="currentPage"
+                  total-visible="7"
+                  :length="totalPages"
+                  next-icon="mdi-menu-right"
+                  prev-icon="mdi-menu-left"
+                  @input="handlePageChange"
+                ></v-pagination>
+              </v-col>
+            </v-row>
+          </v-col>
+          <v-alert v-model="loadAlertError" dismissible text type="error">
+            Laden der bibliographischen Daten war nicht erfolgreich:
+            {{ loadAlertErrorMessage }}
+          </v-alert>
         </v-card>
+        <v-col>
+          <v-card v-if="currentItem.metadata" class="mx-auto" tile>
+            <RightsView
+              :rights="currentItem.rights"
+              :metadataId="currentItem.metadata.metadataId"
+            ></RightsView>
+            <MetadataView
+              :metadata="Object.assign({}, currentItem.metadata)"
+            ></MetadataView>
+          </v-card>
+        </v-col>
       </v-col>
     </v-row>
   </v-container>
