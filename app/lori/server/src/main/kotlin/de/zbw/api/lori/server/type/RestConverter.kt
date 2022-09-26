@@ -12,7 +12,10 @@ import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
+import org.apache.logging.log4j.LogManager
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * Conversion functions between rest interface and business logic.
@@ -50,11 +53,9 @@ fun MetadataRest.toBusiness() =
         lastUpdatedOn = lastUpdatedOn,
         paketSigel = paketSigel,
         ppn = ppn,
-        ppnEbook = ppnEbook,
         publicationType = publicationType.toBusiness(),
-        publicationYear = publicationYear,
+        publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
-        serialNumber = serialNumber,
         storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
@@ -79,11 +80,9 @@ fun ItemMetadata.toRest(): MetadataRest =
         lastUpdatedOn = lastUpdatedOn,
         paketSigel = paketSigel,
         ppn = ppn,
-        ppnEbook = ppnEbook,
         publicationType = publicationType.toRest(),
-        publicationYear = publicationYear,
+        publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
-        serialNumber = serialNumber,
         storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
@@ -223,16 +222,16 @@ internal fun PublicationType.toRest(): MetadataRest.PublicationType =
 
 fun DAItem.toBusiness(): ItemMetadata? {
     val metadata = this.metadata
-    val handle = extractMetadata("dc.identifier.uri", metadata)
-    val publicationType = extractMetadata("dc.type", metadata)?.let {
+    val handle = RestConverter.extractMetadata("dc.identifier.uri", metadata)
+    val publicationType = RestConverter.extractMetadata("dc.type", metadata)?.let {
         PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
     }
-    val publicationYear = extractMetadata("dc.date.issued", metadata)
-    val title = extractMetadata("dc.title", metadata)
+    val publicationDate = RestConverter.extractMetadata("dc.date.issued", metadata)
+    val title = RestConverter.extractMetadata("dc.title", metadata)
 
     return if (
         handle == null ||
-        publicationYear == null ||
+        publicationDate == null ||
         publicationType == null ||
         title == null
     ) {
@@ -240,30 +239,29 @@ fun DAItem.toBusiness(): ItemMetadata? {
     } else {
         ItemMetadata(
             metadataId = this.id.toString(),
-            author = extractMetadata("dc.contributor.author", metadata),
+            author = RestConverter.extractMetadata("dc.contributor.author", metadata),
             band = null, // Not in DA yet
             collectionName = this.parentCollection?.name,
             communityName = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.name,
             createdBy = null,
             createdOn = null,
-            doi = extractMetadata("dc.identifier.pi", metadata),
+            doi = RestConverter.extractMetadata("dc.identifier.pi", metadata),
             handle = handle,
-            isbn = extractMetadata("dc.identifier.isbn", metadata),
-            issn = extractMetadata("dc.identifier.issn", metadata),
+            isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
+            issn = RestConverter.extractMetadata("dc.identifier.issn", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
-            paketSigel = extractMetadata("dc.identifier.packageid", metadata),
-            ppn = extractMetadata("dc.identifier.ppn", metadata),
-            ppnEbook = null, // Not in DA yet
+            paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
+            ppn = RestConverter.extractMetadata("dc.identifier.ppn", metadata),
             publicationType = publicationType,
-            publicationYear = publicationYear,
-            rightsK10plus = extractMetadata("dc.rights", metadata),
-            serialNumber = null, // Not in DA yet
-            storageDate = extractMetadata("dc.date.accessioned", metadata)?.let { OffsetDateTime.parse(it) },
+            publicationDate = RestConverter.parseToDate(publicationDate),
+            rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
+            storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
+                ?.let { OffsetDateTime.parse(it) },
             title = title,
-            titleJournal = extractMetadata("dc.journalname", metadata),
-            titleSeries = extractMetadata("dc.seriesname", metadata),
-            zbdId = extractMetadata("dc.relation.journalzbdid", metadata),
+            titleJournal = RestConverter.extractMetadata("dc.journalname", metadata),
+            titleSeries = RestConverter.extractMetadata("dc.seriesname", metadata),
+            zbdId = RestConverter.extractMetadata("dc.relation.journalzbdid", metadata),
         )
     }
 }
@@ -275,5 +273,29 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.admin -> UserRole.ADMIN
     }
 
-private fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
-    metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
+class RestConverter {
+    companion object {
+        fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
+            metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
+
+        fun parseToDate(s: String): LocalDate {
+            return if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
+                LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
+            } else if (s.matches("\\d{4}-\\d{2}".toRegex())) {
+                LocalDate.parse("$s-01", DateTimeFormatter.ISO_LOCAL_DATE)
+            } else if (s.matches("\\d{4}/\\d{2}".toRegex())) {
+                LocalDate.parse(
+                    "${s.substringBefore('/')}-${s.substringAfter('/')}-01",
+                    DateTimeFormatter.ISO_LOCAL_DATE
+                )
+            } else if (s.matches("\\d{4}".toRegex())) {
+                LocalDate.parse("$s-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+            } else {
+                LOG.warn("Date format can't be recognized: $s")
+                LocalDate.parse("1970-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+            }
+        }
+
+        private val LOG = LogManager.getLogger(RestConverter::class.java)
+    }
+}

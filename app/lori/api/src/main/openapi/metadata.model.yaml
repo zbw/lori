@@ -3,7 +3,7 @@ MetadataRest:
     - handle
     - metadataId
     - publicationType
-    - publicationYear
+    - publicationDate
     - title
   type: object
   properties:
@@ -39,8 +39,6 @@ MetadataRest:
       type: string
     ppn:
       type: string
-    ppnEbook:
-      type: string
     publicationType:
       type: string
       enum:
@@ -53,11 +51,10 @@ MetadataRest:
         - research_report
         - thesis
         - working_paper
-    publicationYear:
+    publicationDate:
       type: string
+      format: date
     rightsK10plus:
-      type: string
-    serialNumber:
       type: string
     storageDate:
       type: string
