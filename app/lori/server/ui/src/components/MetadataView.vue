@@ -104,7 +104,7 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col>Publikationsjahr</v-col>
-              <v-col>{{ currentMetadata.publicationYear }}</v-col>
+              <v-col>{{ currentMetadata.publicationDate.toLocaleDateString("de") }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.doi">

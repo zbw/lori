@@ -50,13 +50,15 @@ export default {
     searchTerm: string,
     offset: number,
     limit: number,
-    pageSize: number
+    pageSize: number,
+    filterPublicationDate: string
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
       offset: offset,
       limit: limit,
       pageSize: pageSize,
+      filterPublicationDate: filterPublicationDate,
     });
   },
 };

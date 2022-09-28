@@ -1,7 +1,16 @@
 <script lang="ts">
 import { defineComponent } from "vue";
+import { useSearchStore } from "@/stores/search";
 
-export default defineComponent({});
+export default defineComponent({
+  setup() {
+    const searchStore = useSearchStore();
+
+    return {
+      searchStore,
+    };
+  },
+});
 </script>
 <template>
   <v-card height="100%">
@@ -9,14 +18,20 @@ export default defineComponent({});
     <v-container fluid>
       <v-list-group no-action sub-group eager>
         <template v-slot:activator>
-          <v-list-item-title>Erscheinigungsjahr</v-list-item-title>
+          <v-list-item-title>Erscheinungsjahr</v-list-item-title>
         </template>
         <v-row>
           <v-col cols="6">
-            <v-text-field label="Von"></v-text-field>
+            <v-text-field
+              label="Von"
+              v-model="searchStore.publicationDateFrom"
+            ></v-text-field>
           </v-col>
           <v-col cols="6">
-            <v-text-field label="Bis"></v-text-field>
+            <v-text-field
+              label="Bis"
+              v-model="searchStore.publicationDateTo"
+            ></v-text-field>
           </v-col>
         </v-row>
       </v-list-group>
