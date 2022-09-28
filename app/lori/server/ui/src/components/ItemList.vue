@@ -73,16 +73,8 @@ export default defineComponent({
         value: "ppn",
       },
       {
-        text: "PPN-Ebook",
-        value: "ppnEbook",
-      },
-      {
         text: "Rechte-K10Plus",
         value: "rightsK10plus",
-      },
-      {
-        text: "Seriennummer",
-        value: "serialNumber",
       },
       {
         text: "Titel Journal",
