@@ -279,8 +279,6 @@ class LoriServerBackendTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
 
-        const val NOT_IN_DATABASE_ID = "not_in_db_metadata_id"
-
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
             3,

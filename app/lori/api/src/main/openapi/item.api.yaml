@@ -244,6 +244,10 @@ item-search:
           minimum: 1
           maximum: 100
           default: 25
+      - name: filterPublicationDate
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation

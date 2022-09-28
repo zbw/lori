@@ -178,11 +178,12 @@ class LoriServerBackend(
         searchTerm: String,
         limit: Int,
         offset: Int,
+        searchFilter: List<SearchFilter> = emptyList(),
     ): Pair<Int, List<Item>> {
         return parseSearchKeys(searchTerm).takeIf {
             it.isNotEmpty()
         }?.let { keys ->
-            val items: List<Item> = dbConnector.searchMetadata(keys, limit, offset).takeIf {
+            val items: List<Item> = dbConnector.searchMetadata(keys, limit, offset, searchFilter).takeIf {
                 it.isNotEmpty()
             }?.let { metadata ->
                 getRightsForMetadata(metadata)
@@ -190,7 +191,7 @@ class LoriServerBackend(
             if (items.isEmpty()) {
                 (0 to items)
             } else {
-                val count = dbConnector.countSearchMetadata(keys)
+                val count = dbConnector.countSearchMetadata(keys, searchFilter)
                 (count to items)
             }
         } ?: (0 to emptyList())

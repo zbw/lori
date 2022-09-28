@@ -16,7 +16,6 @@ import org.testng.annotations.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.test.assertTrue
 
 class RestConverterTest {
 
@@ -153,12 +152,10 @@ class RestConverterTest {
             RestConverter.parseToDate("2022/09"),
             `is`(LocalDate.of(2022, 9, 1))
         )
-        try {
-            RestConverter.parseToDate("foooo")
-            assertTrue(false)
-        } catch (e: InternalError) {
-            assertTrue(true)
-        }
+        assertThat(
+            RestConverter.parseToDate("foo"),
+            `is`(LocalDate.of(1970, 1, 1))
+        )
     }
 
     companion object {
