@@ -44,11 +44,9 @@ class RestConverterTest {
                 lastUpdatedOn = TEST_METADATA.lastUpdatedOn,
                 paketSigel = TEST_METADATA.paketSigel,
                 ppn = TEST_METADATA.ppn,
-                ppnEbook = TEST_METADATA.ppnEbook,
                 publicationType = TEST_METADATA.publicationType.toRest(),
-                publicationYear = TEST_METADATA.publicationYear,
+                publicationDate = TEST_METADATA.publicationDate,
                 rightsK10plus = TEST_METADATA.rightsK10plus,
-                serialNumber = TEST_METADATA.serialNumber,
                 storageDate = TEST_METADATA.storageDate,
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
@@ -106,11 +104,9 @@ class RestConverterTest {
             lastUpdatedOn = null,
             paketSigel = null,
             ppn = null,
-            ppnEbook = null,
             publicationType = PublicationType.ARTICLE,
-            publicationYear = "2020",
+            publicationDate = LocalDate.of(2022, 9, 1),
             rightsK10plus = null,
-            serialNumber = null,
             storageDate = OffsetDateTime.of(
                 2022,
                 1,
@@ -135,6 +131,31 @@ class RestConverterTest {
         // when + then
         val receivedItem2 = TEST_DA_ITEM.copy(handle = null)
         assertThat(receivedItem2, `is`(receivedItem2))
+    }
+
+    @Test
+    fun testParseToDate() {
+        // when + then
+        assertThat(
+            RestConverter.parseToDate("2022"),
+            `is`(LocalDate.of(2022, 1, 1))
+        )
+        assertThat(
+            RestConverter.parseToDate("2022-09"),
+            `is`(LocalDate.of(2022, 9, 1))
+        )
+        assertThat(
+            RestConverter.parseToDate("2022-09-02"),
+            `is`(LocalDate.of(2022, 9, 2))
+        )
+        assertThat(
+            RestConverter.parseToDate("2022/09"),
+            `is`(LocalDate.of(2022, 9, 1))
+        )
+        assertThat(
+            RestConverter.parseToDate("foo"),
+            `is`(LocalDate.of(1970, 1, 1))
+        )
     }
 
     companion object {
@@ -173,12 +194,10 @@ class RestConverterTest {
             ),
             paketSigel = "sigel",
             ppn = "ppn",
-            ppnEbook = "ppn ebook",
             publicationType = PublicationType.BOOK,
-            publicationYear = "2000",
+            publicationDate = LocalDate.of(2022, 9, 1),
             rightsK10plus = "some rights",
             storageDate = OffsetDateTime.now(),
-            serialNumber = "12354566",
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
@@ -291,7 +310,7 @@ class RestConverterTest {
                 ),
                 DAMetadata(
                     key = "dc.date.issued",
-                    value = "2020",
+                    value = "2022-09",
                     language = "DE",
                 ),
                 DAMetadata(

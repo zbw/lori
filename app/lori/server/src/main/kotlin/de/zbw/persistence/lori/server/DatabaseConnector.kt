@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
@@ -158,60 +159,54 @@ class DatabaseConnector(
             this.setIfNotNull(3, itemMetadata.ppn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(4, itemMetadata.ppnEbook) { value, idx, prepStmt ->
+            this.setString(4, itemMetadata.title)
+            this.setIfNotNull(5, itemMetadata.titleJournal) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(5, itemMetadata.title)
-            this.setIfNotNull(6, itemMetadata.titleJournal) { value, idx, prepStmt ->
+            this.setIfNotNull(6, itemMetadata.titleSeries) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(7, itemMetadata.titleSeries) { value, idx, prepStmt ->
+            this.setDate(7, Date.valueOf(itemMetadata.publicationDate))
+            this.setIfNotNull(8, itemMetadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(8, itemMetadata.publicationYear)
-            this.setIfNotNull(9, itemMetadata.band) { value, idx, prepStmt ->
+            this.setString(9, itemMetadata.publicationType.toString())
+            this.setIfNotNull(10, itemMetadata.doi) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setString(10, itemMetadata.publicationType.toString())
-            this.setIfNotNull(11, itemMetadata.doi) { value, idx, prepStmt ->
+            this.setIfNotNull(11, itemMetadata.isbn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(12, itemMetadata.serialNumber) { value, idx, prepStmt ->
+            this.setIfNotNull(12, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(13, itemMetadata.isbn) { value, idx, prepStmt ->
+            this.setIfNotNull(13, itemMetadata.paketSigel) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(14, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
+            this.setIfNotNull(14, itemMetadata.zbdId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(15, itemMetadata.paketSigel) { value, idx, prepStmt ->
+            this.setIfNotNull(15, itemMetadata.issn) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(16, itemMetadata.zbdId) { value, idx, prepStmt ->
+            this.setTimestamp(16, Timestamp.from(now))
+            this.setTimestamp(17, Timestamp.from(now))
+            this.setIfNotNull(18, itemMetadata.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(17, itemMetadata.issn) { value, idx, prepStmt ->
+            this.setIfNotNull(19, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setTimestamp(18, Timestamp.from(now))
-            this.setTimestamp(19, Timestamp.from(now))
-            this.setIfNotNull(20, itemMetadata.createdBy) { value, idx, prepStmt ->
+            this.setIfNotNull(20, itemMetadata.author) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(21, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
+            this.setIfNotNull(21, itemMetadata.collectionName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(22, itemMetadata.author) { value, idx, prepStmt ->
+            this.setIfNotNull(22, itemMetadata.communityName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(23, itemMetadata.collectionName) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(24, itemMetadata.communityName) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(25, itemMetadata.storageDate) { value, idx, prepStmt ->
+            this.setIfNotNull(23, itemMetadata.storageDate) { value, idx, prepStmt ->
                 prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
             }
         }
@@ -394,8 +389,18 @@ class DatabaseConnector(
         return runMetadataStatement(prepStmt, span)
     }
 
-    fun countMetadataEntries(): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_METADATA)
+    fun countMetadataEntries(
+        filters: List<SearchFilter> = emptyList(),
+    ): Int {
+        val prepStmt = connection.prepareStatement(
+            STATEMENT_COUNT_METADATA +
+                buildSearchQueryHelper(emptyMap(), filters) + ";"
+        ).apply {
+            var counter = 1
+            filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+        }
         val span = tracer.spanBuilder("countMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
@@ -579,10 +584,21 @@ class DatabaseConnector(
         return rs.getBoolean(1)
     }
 
-    fun getMetadataRange(limit: Int, offset: Int): List<ItemMetadata> {
-        val prepStmt: PreparedStatement = connection.prepareStatement(STATEMENT_GET_METADATA_RANGE).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
+    fun getMetadataRange(
+        limit: Int,
+        offset: Int,
+        filters: List<SearchFilter> = emptyList(),
+    ): List<ItemMetadata> {
+        val prepStmt: PreparedStatement = connection.prepareStatement(
+            STATEMENT_GET_METADATA_RANGE +
+                buildMetasearchWhereFilter(filters)
+        ).apply {
+            var counter = 1
+            filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            this.setInt(counter++, limit)
+            this.setInt(counter, offset)
         }
         val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
         return runMetadataStatement(prepStmt, span)
@@ -602,28 +618,26 @@ class DatabaseConnector(
                     metadataId = rs.getString(1),
                     handle = rs.getString(2),
                     ppn = rs.getString(3),
-                    ppnEbook = rs.getString(4),
-                    title = rs.getString(5),
-                    titleJournal = rs.getString(6),
-                    titleSeries = rs.getString(7),
-                    publicationYear = rs.getString(8),
-                    band = rs.getString(9),
-                    publicationType = PublicationType.valueOf(rs.getString(10)),
-                    doi = rs.getString(11),
-                    serialNumber = rs.getString(12),
-                    isbn = rs.getString(13),
-                    rightsK10plus = rs.getString(14),
-                    paketSigel = rs.getString(15),
-                    zbdId = rs.getString(16),
-                    issn = rs.getString(17),
-                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
-                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
-                    createdBy = rs.getString(20),
-                    lastUpdatedBy = rs.getString(21),
-                    author = rs.getString(22),
-                    collectionName = rs.getString(23),
-                    communityName = rs.getString(24),
-                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
+                    title = rs.getString(4),
+                    titleJournal = rs.getString(5),
+                    titleSeries = rs.getString(6),
+                    publicationDate = rs.getDate(7).toLocalDate(),
+                    band = rs.getString(8),
+                    publicationType = PublicationType.valueOf(rs.getString(9)),
+                    doi = rs.getString(10),
+                    isbn = rs.getString(11),
+                    rightsK10plus = rs.getString(12),
+                    paketSigel = rs.getString(13),
+                    zbdId = rs.getString(14),
+                    issn = rs.getString(15),
+                    createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
+                    lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
+                    createdBy = rs.getString(18),
+                    lastUpdatedBy = rs.getString(19),
+                    author = rs.getString(20),
+                    collectionName = rs.getString(21),
+                    communityName = rs.getString(22),
+                    storageDate = rs.getTimestamp(23).toOffsetDateTime(),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -783,14 +797,23 @@ class DatabaseConnector(
         }
     }
 
-    fun countSearchMetadata(searchTerms: Map<SearchKey, List<String>>): Int {
+    fun countSearchMetadata(
+        searchTerms: Map<SearchKey, List<String>>,
+        filters: List<SearchFilter>,
+    ): Int {
         val entries = searchTerms.entries.toList()
-        val prepStmt = connection.prepareStatement(buildCountSearchQuery(searchTerms)).apply {
-            var counter = 1
-            entries.forEach { entry ->
-                this.setString(counter++, entry.value.joinToString(" & "))
+        val prepStmt = connection.prepareStatement(
+            buildCountSearchQuery(searchTerms, filters)
+        )
+            .apply {
+                var counter = 1
+                entries.forEach { entry ->
+                    this.setString(counter++, entry.value.joinToString(" & "))
+                }
+                filters.forEach { f ->
+                    counter = f.setSQLParameter(counter, this)
+                }
             }
-        }
         val span = tracer.spanBuilder("countMetadataSearch").startSpan()
         val rs = try {
             span.makeCurrent()
@@ -803,12 +826,22 @@ class DatabaseConnector(
         } else throw IllegalStateException("No count found.")
     }
 
-    fun searchMetadata(searchTerms: Map<SearchKey, List<String>>, limit: Int, offset: Int): List<ItemMetadata> {
+    fun searchMetadata(
+        searchTerms: Map<SearchKey, List<String>>,
+        limit: Int,
+        offset: Int,
+        filters: List<SearchFilter>,
+    ): List<ItemMetadata> {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
-        val prepStmt = connection.prepareStatement(buildSearchQuery(searchTerms)).apply {
+        val prepStmt = connection.prepareStatement(
+            buildSearchQuery(searchTerms, filters)
+        ).apply {
             var counter = 1
             entries.forEach { entry ->
                 this.setString(counter++, entry.value.joinToString(" & "))
+            }
+            filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
             }
             this.setInt(counter++, limit)
             this.setInt(counter, offset)
@@ -826,28 +859,26 @@ class DatabaseConnector(
                     metadataId = rs.getString(1),
                     handle = rs.getString(2),
                     ppn = rs.getString(3),
-                    ppnEbook = rs.getString(4),
-                    title = rs.getString(5),
-                    titleJournal = rs.getString(6),
-                    titleSeries = rs.getString(7),
-                    publicationYear = rs.getString(8),
-                    band = rs.getString(9),
-                    publicationType = PublicationType.valueOf(rs.getString(10)),
-                    doi = rs.getString(11),
-                    serialNumber = rs.getString(12),
-                    isbn = rs.getString(13),
-                    rightsK10plus = rs.getString(14),
-                    paketSigel = rs.getString(15),
-                    zbdId = rs.getString(16),
-                    issn = rs.getString(17),
-                    createdOn = rs.getTimestamp(18)?.toOffsetDateTime(),
-                    lastUpdatedOn = rs.getTimestamp(19)?.toOffsetDateTime(),
-                    createdBy = rs.getString(20),
-                    lastUpdatedBy = rs.getString(21),
-                    author = rs.getString(22),
-                    collectionName = rs.getString(23),
-                    communityName = rs.getString(24),
-                    storageDate = rs.getTimestamp(25).toOffsetDateTime(),
+                    title = rs.getString(4),
+                    titleJournal = rs.getString(5),
+                    titleSeries = rs.getString(6),
+                    publicationDate = rs.getDate(7).toLocalDate(),
+                    band = rs.getString(8),
+                    publicationType = PublicationType.valueOf(rs.getString(9)),
+                    doi = rs.getString(10),
+                    isbn = rs.getString(11),
+                    rightsK10plus = rs.getString(12),
+                    paketSigel = rs.getString(13),
+                    zbdId = rs.getString(14),
+                    issn = rs.getString(15),
+                    createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
+                    lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
+                    createdBy = rs.getString(18),
+                    lastUpdatedBy = rs.getString(19),
+                    author = rs.getString(20),
+                    collectionName = rs.getString(21),
+                    communityName = rs.getString(22),
+                    storageDate = rs.getTimestamp(23).toOffsetDateTime(),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -859,24 +890,13 @@ class DatabaseConnector(
         setter: (T, Int, PreparedStatement) -> Unit,
     ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
-    internal fun buildSearchQuery(searchTerm: Map<SearchKey, List<String>>): String =
-        STATEMENT_SELECT_ALL_METADATA +
-            " WHERE " + searchTerm.entries.joinToString(separator = " AND ") { entry ->
-            entry.key.toWhereClause()
-        } +
-            " LIMIT ? OFFSET ?;"
-
-    internal fun buildCountSearchQuery(searchKeys: Map<SearchKey, List<String>>): String =
-        STATEMENT_COUNT_METADATA +
-            " WHERE " + searchKeys.entries.joinToString(separator = " AND ") { entry ->
-            entry.key.toWhereClause()
-        } + ";"
-
     companion object {
         private const val TABLE_NAME_ITEM = "item"
         private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_USERS = "users"
+
+        const val COLUMN_PUBLICATION_DATE = "publication_date"
 
         const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM_METADATA"
@@ -890,29 +910,27 @@ class DatabaseConnector(
             "VALUES(?,?)"
 
         const val STATEMENT_UPSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-            "(metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
-            "title_series,published_year,band,publication_type,doi," +
-            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "(metadata_id,handle,ppn,title,title_journal," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
-            "VALUES(?,?,?,?,?," +
+            "VALUES(?,?,?,?," +
             "?,?,?,?,?,?," +
-            "?,?,?,?,?,?," +
+            "?,?,?,?,?," +
             "?,?,?,?,?,?," +
             "?,?) " +
             "ON CONFLICT (metadata_id) " +
             "DO UPDATE SET " +
             "handle = EXCLUDED.handle," +
             "ppn = EXCLUDED.ppn," +
-            "ppn_ebook = EXCLUDED.ppn_ebook," +
             "title = EXCLUDED.title," +
             "title_journal = EXCLUDED.title_journal," +
             "title_series = EXCLUDED.title_series," +
-            "published_year = EXCLUDED.published_year," +
+            "$COLUMN_PUBLICATION_DATE = EXCLUDED.$COLUMN_PUBLICATION_DATE," +
             "band = EXCLUDED.band," +
             "publication_type = EXCLUDED.publication_type," +
             "doi = EXCLUDED.doi," +
-            "serial_number = EXCLUDED.serial_number," +
             "isbn = EXCLUDED.isbn," +
             "rights_k10plus = EXCLUDED.rights_k10plus," +
             "paket_sigel = EXCLUDED.paket_sigel," +
@@ -926,14 +944,14 @@ class DatabaseConnector(
             "storage_date = EXCLUDED.storage_date;"
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-            "(metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
-            "title_series,published_year,band,publication_type,doi," +
-            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "(metadata_id,handle,ppn,title,title_journal," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
-            "VALUES(?,?,?,?,?,?," +
+            "VALUES(?,?,?,?,?," +
             "?,?,?,?,?,?," +
-            "?,?,?,?,?,?," +
+            "?,?,?,?,?," +
             "?,?,?,?,?,?," +
             "?)"
 
@@ -992,9 +1010,9 @@ class DatabaseConnector(
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
-        const val STATEMENT_SELECT_ALL_METADATA = "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
-            "title_series,published_year,band,publication_type,doi," +
-            "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+        const val STATEMENT_SELECT_ALL_METADATA = "SELECT metadata_id,handle,ppn,title,title_journal," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date " +
             "FROM $TABLE_NAME_ITEM_METADATA"
@@ -1035,12 +1053,12 @@ class DatabaseConnector(
                 "WHERE right_id = ANY(?)"
 
         const val STATEMENT_GET_METADATA_RANGE =
-            "SELECT metadata_id,handle,ppn,ppn_ebook,title,title_journal," +
-                "title_series,published_year,band,publication_type,doi," +
-                "serial_number,isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+            "SELECT metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+                "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
-                "FROM $TABLE_NAME_ITEM_METADATA ORDER BY metadata_id ASC LIMIT ? OFFSET ?"
+                "FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
             " FROM $TABLE_NAME_ITEM" +
@@ -1098,5 +1116,52 @@ class DatabaseConnector(
                 connection.rollback()
                 throw e
             }
+
+        fun buildSearchQuery(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            searchFilter: List<SearchFilter>
+        ): String =
+            STATEMENT_SELECT_ALL_METADATA +
+                buildSearchQueryHelper(searchKeyMap, searchFilter) +
+                " LIMIT ? OFFSET ?;"
+
+        fun buildCountSearchQuery(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            searchFilter: List<SearchFilter>,
+        ): String =
+            STATEMENT_COUNT_METADATA +
+                buildSearchQueryHelper(searchKeyMap, searchFilter) + ";"
+
+        fun buildMetasearchWhereFilter(
+            searchFilter: List<SearchFilter>,
+        ): String = buildSearchQueryHelper(emptyMap(), searchFilter) +
+            " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+
+        private fun buildSearchQueryHelper(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            searchFilter: List<SearchFilter>,
+        ): String {
+            val searchKeys = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
+                entry.key.toWhereClause()
+            }
+            val filter = searchFilter.joinToString(separator = " AND ") { f ->
+                f.toWhereClause()
+            }.takeIf { it.isNotBlank() }
+                ?.let {
+                    if (searchKeyMap.isNotEmpty()) {
+                        " AND $it"
+                    } else {
+                        it
+                    }
+                }
+                ?: ""
+            return if (filter.isBlank() && searchKeys.isBlank()) {
+                ""
+            } else {
+                " WHERE " +
+                    searchKeys +
+                    filter
+            }
+        }
     }
 }

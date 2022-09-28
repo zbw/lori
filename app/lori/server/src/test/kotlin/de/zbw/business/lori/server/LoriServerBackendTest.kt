@@ -74,8 +74,8 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testGetList() {
         // given
         val givenMetadata = arrayOf(
-            TEST_Metadata.copy(metadataId = "zzz"),
-            TEST_Metadata.copy(metadataId = "zzz2"),
+            TEST_Metadata.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
+            TEST_Metadata.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
             TEST_Metadata.copy(metadataId = "aaa"),
             TEST_Metadata.copy(metadataId = "abb"),
             TEST_Metadata.copy(metadataId = "acc"),
@@ -129,6 +129,31 @@ class LoriServerBackendTest : DatabaseTest() {
             )
         )
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
+
+        // with filter
+        val givenFilter = listOf(PublicationDateFilter(1970, 1980))
+        // when
+        val receiveFilteredMetadataElements =
+            backend.getItemList(10, 0, givenFilter)
+        // then
+        assertThat(
+            receiveFilteredMetadataElements,
+            `is`(
+                listOf(
+                    Item(
+                        givenMetadata[0],
+                        emptyList(),
+                    ),
+                    Item(
+                        givenMetadata[1],
+                        emptyList(),
+                    ),
+                )
+            )
+        )
+        assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
+        assertThat(backend.countMetadataEntries(givenFilter), `is`(2))
+        assertThat(backend.countMetadataEntries(), `is`(5))
     }
 
     @Test
@@ -279,8 +304,6 @@ class LoriServerBackendTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
 
-        const val NOT_IN_DATABASE_ID = "not_in_db_metadata_id"
-
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
             3,
@@ -309,11 +332,9 @@ class LoriServerBackendTest : DatabaseTest() {
             lastUpdatedOn = NOW,
             paketSigel = "sigel",
             ppn = "ppn",
-            ppnEbook = "ppn ebook",
             publicationType = PublicationType.ARTICLE,
-            publicationYear = "2000",
+            publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
-            serialNumber = "12354566",
             storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,

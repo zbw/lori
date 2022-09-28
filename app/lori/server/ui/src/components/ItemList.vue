@@ -44,6 +44,11 @@ export default defineComponent({
         value: "publicationType",
       },
       {
+        text: "Publikationsjahr",
+        sortable: true,
+        value: "publicationDate",
+      },
+      {
         text: "Band",
         value: "band",
       },
@@ -68,16 +73,8 @@ export default defineComponent({
         value: "ppn",
       },
       {
-        text: "PPN-Ebook",
-        value: "ppnEbook",
-      },
-      {
         text: "Rechte-K10Plus",
         value: "rightsK10plus",
-      },
-      {
-        text: "Seriennummer",
-        value: "serialNumber",
       },
       {
         text: "Titel Journal",
@@ -162,12 +159,20 @@ export default defineComponent({
     };
 
     const searchQuery = () => {
+      let filterPublicationDate =
+        searchStore.publicationDateFrom == "" &&
+        searchStore.publicationDateTo == ""
+          ? null
+          : searchStore.publicationDateFrom +
+            "-" +
+            searchStore.publicationDateTo;
       api
         .searchQuery(
           searchTerm.value,
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
-          pageSize.value
+          pageSize.value,
+          filterPublicationDate
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -294,6 +299,9 @@ export default defineComponent({
             </template>
             <template v-slot:item.publicationType="{ item }">
               <td>{{ parsePublicationType(item.publicationType) }}</td>
+            </template>
+            <template v-slot:item.publicationDate="{ item }">
+              <td>{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
           </v-data-table>
           <v-col cols="14" sm="12">

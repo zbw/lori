@@ -48,7 +48,7 @@ class LoriGrpcServer(
                     .newBuilder()
                     .setItemsImported(imports)
                     .build()
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
                     Status.INTERNAL.withCause(e.cause)

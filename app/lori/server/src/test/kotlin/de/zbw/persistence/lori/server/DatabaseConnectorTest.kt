@@ -5,7 +5,9 @@ import de.zbw.business.lori.server.BasisAccessState
 import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
+import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
@@ -546,9 +548,11 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
+                filters = emptyList(),
             )
         val numberResultZBD = dbConnector.countSearchMetadata(
             searchTerms = searchTermsZBD,
+            filters = emptyList(),
         )
         // then
         assertThat(resultZBD[0], `is`(testZBD))
@@ -565,9 +569,11 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchTerms = searchTermsAll,
                 limit = 5,
                 offset = 0,
+                filters = emptyList(),
             )
         val numberResultAll = dbConnector.countSearchMetadata(
-            searchTerms = searchTermsAll
+            searchTerms = searchTermsAll,
+            filters = emptyList(),
         )
         // then
         assertThat(resultAll.toSet(), `is`(setOf(testZBD)))
@@ -582,9 +588,11 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
+                filters = emptyList(),
             )
         val numberResultZBD2 = dbConnector.countSearchMetadata(
-            searchTerms = searchTermsAll
+            searchTerms = searchTermsAll,
+            filters = emptyList(),
         )
         // then
         assertThat(resultZBD2.toSet(), `is`(setOf(testZBD, testZBD2)))
@@ -596,6 +604,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 1,
+                filters = emptyList(),
             )
         assertThat(
             resultZBD2Offset.size, `is`(1)
@@ -607,25 +616,40 @@ class DatabaseConnectorTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
             ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                listOf<SearchFilter>(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                ),
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) AND  publication_date >= ? AND publication_date <= ? LIMIT ? OFFSET ?;",
+            )
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_QUERY)
-    fun testBuildSearchQuery(searchKeys: Map<SearchKey, List<String>>, expectedWhereClause: String) {
-        assertThat(dbConnector.buildSearchQuery(searchKeys), `is`(expectedWhereClause))
+    fun testBuildSearchQuery(
+        searchKeys: Map<SearchKey, List<String>>,
+        filters: List<SearchFilter>,
+        expectedWhereClause: String
+    ) {
+        assertThat(DatabaseConnector.buildSearchQuery(searchKeys, filters), `is`(expectedWhereClause))
     }
 
     @DataProvider(name = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
@@ -633,30 +657,81 @@ class DatabaseConnectorTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_collection @@ to_tsquery('english', ?);",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?);",
             ),
             arrayOf(
                 mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                emptyList<SearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                listOf<SearchFilter>(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                ),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) AND  publication_date >= ? AND publication_date <= ?;",
+            ),
+            arrayOf(
+                emptyMap<SearchKey, List<String>>(),
+                listOf<SearchFilter>(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                ),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE  publication_date >= ? AND publication_date <= ?;",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
-    fun testBuildSearchCountQuery(searchKeys: Map<SearchKey, List<String>>, expectedWhereClause: String) {
-        assertThat(dbConnector.buildCountSearchQuery(searchKeys), `is`(expectedWhereClause))
+    fun testBuildSearchCountQuery(
+        searchKeys: Map<SearchKey, List<String>>,
+        filters: List<SearchFilter>,
+        expectedWhereClause: String,
+    ) {
+        assertThat(
+            DatabaseConnector.buildCountSearchQuery(searchKeys, filters),
+            `is`(expectedWhereClause)
+        )
+    }
+
+    @DataProvider(name = DATA_FOR_METASEARCH_QUERY)
+    private fun createMetasearchQueryWithFilter() =
+        arrayOf(
+            arrayOf(
+                listOf(PublicationDateFilter(2000, 2019)),
+                DatabaseConnector.STATEMENT_GET_METADATA_RANGE + " WHERE  publication_date >= ? AND publication_date <= ? ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+            ),
+            arrayOf(
+                emptyList<SearchFilter>(),
+                DatabaseConnector.STATEMENT_GET_METADATA_RANGE + " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_METASEARCH_QUERY)
+    fun testBuildFilterOnlyQuery(
+        filters: List<SearchFilter>,
+        expectedSQLQuery: String,
+    ) {
+        assertThat(
+            DatabaseConnector.STATEMENT_GET_METADATA_RANGE +
+                DatabaseConnector.buildMetasearchWhereFilter(filters),
+            `is`(expectedSQLQuery)
+        )
     }
 
     companion object {
         const val DATA_FOR_BUILD_SEARCH_QUERY = "DATA_FOR_BUILD_SEARCH_QUERY"
         const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
+        const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
         const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,
@@ -687,11 +762,9 @@ class DatabaseConnectorTest : DatabaseTest() {
             lastUpdatedOn = NOW,
             paketSigel = "sigel",
             ppn = "ppn",
-            ppnEbook = "ppn ebook",
             publicationType = PublicationType.ARTICLE,
-            publicationYear = "2000",
+            publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
-            serialNumber = "12354566",
             storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = "anything",

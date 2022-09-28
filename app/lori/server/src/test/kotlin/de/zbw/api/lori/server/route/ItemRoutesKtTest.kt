@@ -33,6 +33,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
+import java.time.LocalDate
 
 class ItemRoutesKtTest {
 
@@ -541,6 +542,7 @@ class ItemRoutesKtTest {
         val offset = 2
         val limit = 5
         val pageSize = 25
+        val filterPublicationDate = "2000-2022"
         val expectedInformation =
             ItemInformation(
                 totalPages = 5,
@@ -557,7 +559,8 @@ class ItemRoutesKtTest {
                 searchQuery(
                     searchTerm,
                     any(),
-                    any()
+                    any(),
+                    any(),
                 )
             } returns (
                 expectedInformation.numberOfResults to
@@ -574,7 +577,7 @@ class ItemRoutesKtTest {
                 servicePool.application()
             )
             val response =
-                client.get("/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset&pageSize=$pageSize")
+                client.get("/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset&pageSize=$pageSize&filterPublicationDate=$filterPublicationDate")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
@@ -655,17 +658,6 @@ class ItemRoutesKtTest {
         pageSize: String,
     ) {
         // given
-        val expectedInformation =
-            ItemInformation(
-                totalPages = 1,
-                itemArray = listOf(
-                    ItemRest(
-                        metadata = ITEM_METADATA,
-                        rights = emptyList(),
-                    )
-                ),
-                numberOfResults = 1,
-            )
         val backend = mockk<LoriServerBackend>(relaxed = true) { }
         val servicePool = getServicePool(backend)
 
@@ -732,11 +724,9 @@ class ItemRoutesKtTest {
             issn = "123456",
             paketSigel = "sigel",
             ppn = "ppn",
-            ppnEbook = "ppn ebook",
             publicationType = MetadataRest.PublicationType.book,
-            publicationYear = "2000",
+            publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
-            serialNumber = "12354566",
             storageDate = DatabaseConnectorTest.NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,
