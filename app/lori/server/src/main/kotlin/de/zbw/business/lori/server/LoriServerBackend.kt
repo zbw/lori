@@ -87,8 +87,12 @@ class LoriServerBackend(
                 )
             }
 
-    fun getItemList(limit: Int, offset: Int): List<Item> =
-        dbConnector.getMetadataRange(limit, offset).takeIf {
+    fun getItemList(
+        limit: Int,
+        offset: Int,
+        filters: List<SearchFilter> = emptyList(),
+    ): List<Item> =
+        dbConnector.getMetadataRange(limit, offset, filters).takeIf {
             it.isNotEmpty()
         }?.let { metadataList ->
             getRightsForMetadata(metadataList)
@@ -113,7 +117,9 @@ class LoriServerBackend(
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
         dbConnector.itemContainsEntry(metadataId, rightId)
 
-    fun countMetadataEntries(): Int = dbConnector.countMetadataEntries()
+    fun countMetadataEntries(
+        filters: List<SearchFilter> = emptyList(),
+    ): Int = dbConnector.countMetadataEntries(filters)
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
 

@@ -74,8 +74,8 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testGetList() {
         // given
         val givenMetadata = arrayOf(
-            TEST_Metadata.copy(metadataId = "zzz"),
-            TEST_Metadata.copy(metadataId = "zzz2"),
+            TEST_Metadata.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
+            TEST_Metadata.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
             TEST_Metadata.copy(metadataId = "aaa"),
             TEST_Metadata.copy(metadataId = "abb"),
             TEST_Metadata.copy(metadataId = "acc"),
@@ -129,6 +129,31 @@ class LoriServerBackendTest : DatabaseTest() {
             )
         )
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
+
+        // with filter
+        val givenFilter = listOf(PublicationDateFilter(1970, 1980))
+        // when
+        val receiveFilteredMetadataElements =
+            backend.getItemList(10, 0, givenFilter)
+        // then
+        assertThat(
+            receiveFilteredMetadataElements,
+            `is`(
+                listOf(
+                    Item(
+                        givenMetadata[0],
+                        emptyList(),
+                    ),
+                    Item(
+                        givenMetadata[1],
+                        emptyList(),
+                    ),
+                )
+            )
+        )
+        assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
+        assertThat(backend.countMetadataEntries(givenFilter), `is`(2))
+        assertThat(backend.countMetadataEntries(), `is`(5))
     }
 
     @Test

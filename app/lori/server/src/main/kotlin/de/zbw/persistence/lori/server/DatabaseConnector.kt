@@ -389,8 +389,18 @@ class DatabaseConnector(
         return runMetadataStatement(prepStmt, span)
     }
 
-    fun countMetadataEntries(): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_METADATA)
+    fun countMetadataEntries(
+        filters: List<SearchFilter> = emptyList(),
+    ): Int {
+        val prepStmt = connection.prepareStatement(
+            STATEMENT_COUNT_METADATA +
+                buildSearchQueryHelper(emptyMap(), filters) + ";"
+        ).apply {
+            var counter = 1
+            filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+        }
         val span = tracer.spanBuilder("countMetadata").startSpan()
         val rs = try {
             span.makeCurrent()
@@ -574,10 +584,21 @@ class DatabaseConnector(
         return rs.getBoolean(1)
     }
 
-    fun getMetadataRange(limit: Int, offset: Int): List<ItemMetadata> {
-        val prepStmt: PreparedStatement = connection.prepareStatement(STATEMENT_GET_METADATA_RANGE).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
+    fun getMetadataRange(
+        limit: Int,
+        offset: Int,
+        filters: List<SearchFilter> = emptyList(),
+    ): List<ItemMetadata> {
+        val prepStmt: PreparedStatement = connection.prepareStatement(
+            STATEMENT_GET_METADATA_RANGE +
+                buildMetasearchWhereFilter(filters)
+        ).apply {
+            var counter = 1
+            filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            this.setInt(counter++, limit)
+            this.setInt(counter, offset)
         }
         val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
         return runMetadataStatement(prepStmt, span)
@@ -1037,7 +1058,7 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
-                "FROM $TABLE_NAME_ITEM_METADATA ORDER BY metadata_id ASC LIMIT ? OFFSET ?"
+                "FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
             " FROM $TABLE_NAME_ITEM" +
@@ -1111,6 +1132,11 @@ class DatabaseConnector(
             STATEMENT_COUNT_METADATA +
                 buildSearchQueryHelper(searchKeyMap, searchFilter) + ";"
 
+        fun buildMetasearchWhereFilter(
+            searchFilter: List<SearchFilter>,
+        ): String = buildSearchQueryHelper(emptyMap(), searchFilter) +
+            " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+
         private fun buildSearchQueryHelper(
             searchKeyMap: Map<SearchKey, List<String>>,
             searchFilter: List<SearchFilter>,
@@ -1121,11 +1147,21 @@ class DatabaseConnector(
             val filter = searchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }.takeIf { it.isNotBlank() }
-                ?.let { " AND $it" }
+                ?.let {
+                    if (searchKeyMap.isNotEmpty()) {
+                        " AND $it"
+                    } else {
+                        it
+                    }
+                }
                 ?: ""
-            return " WHERE " +
-                searchKeys +
-                filter
+            return if (filter.isBlank() && searchKeys.isBlank()) {
+                ""
+            } else {
+                " WHERE " +
+                    searchKeys +
+                    filter
+            }
         }
     }
 }

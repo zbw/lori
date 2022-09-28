@@ -682,13 +682,20 @@ class DatabaseConnectorTest : DatabaseTest() {
                 ),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) AND  publication_date >= ? AND publication_date <= ?;",
             ),
+            arrayOf(
+                emptyMap<SearchKey, List<String>>(),
+                listOf<SearchFilter>(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                ),
+                DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE  publication_date >= ? AND publication_date <= ?;",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
     fun testBuildSearchCountQuery(
         searchKeys: Map<SearchKey, List<String>>,
         filters: List<SearchFilter>,
-        expectedWhereClause: String
+        expectedWhereClause: String,
     ) {
         assertThat(
             DatabaseConnector.buildCountSearchQuery(searchKeys, filters),
@@ -696,9 +703,35 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_METASEARCH_QUERY)
+    private fun createMetasearchQueryWithFilter() =
+        arrayOf(
+            arrayOf(
+                listOf(PublicationDateFilter(2000, 2019)),
+                DatabaseConnector.STATEMENT_GET_METADATA_RANGE + " WHERE  publication_date >= ? AND publication_date <= ? ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+            ),
+            arrayOf(
+                emptyList<SearchFilter>(),
+                DatabaseConnector.STATEMENT_GET_METADATA_RANGE + " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_METASEARCH_QUERY)
+    fun testBuildFilterOnlyQuery(
+        filters: List<SearchFilter>,
+        expectedSQLQuery: String,
+    ) {
+        assertThat(
+            DatabaseConnector.STATEMENT_GET_METADATA_RANGE +
+                DatabaseConnector.buildMetasearchWhereFilter(filters),
+            `is`(expectedSQLQuery)
+        )
+    }
+
     companion object {
         const val DATA_FOR_BUILD_SEARCH_QUERY = "DATA_FOR_BUILD_SEARCH_QUERY"
         const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
+        const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
         const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,

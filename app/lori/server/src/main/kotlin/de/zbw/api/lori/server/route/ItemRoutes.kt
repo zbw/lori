@@ -337,9 +337,10 @@ fun Routing.itemRoutes(
                         )
                         return@withContext
                     }
+                    val filters = listOfNotNull(publicationDateFilter)
                     if (searchTerm == null || searchTerm.isBlank()) {
-                        val items = backend.getItemList(limit, offset)
-                        val entries = backend.countMetadataEntries()
+                        val items = backend.getItemList(limit, offset, filters)
+                        val entries = backend.countMetadataEntries(filters)
                         val totalPages = ceil(entries.toDouble() / pageSize.toDouble()).toInt()
                         span.setStatus(StatusCode.OK)
                         call.respond(
@@ -356,7 +357,7 @@ fun Routing.itemRoutes(
                         searchTerm,
                         limit,
                         offset,
-                        listOfNotNull(publicationDateFilter),
+                        filters,
                     )
                     val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)
