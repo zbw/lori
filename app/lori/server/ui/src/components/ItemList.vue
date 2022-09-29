@@ -162,7 +162,7 @@ export default defineComponent({
       let filterPublicationDate =
         searchStore.publicationDateFrom == "" &&
         searchStore.publicationDateTo == ""
-          ? null
+          ? undefined
           : searchStore.publicationDateFrom +
             "-" +
             searchStore.publicationDateTo;

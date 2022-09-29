@@ -24,7 +24,7 @@ export default defineComponent({
   setup(props) {
     const editDialogActivated = ref(false);
     const tabDialogActivated = ref(false);
-    let currentRight: RightRest = {} as RightRest;
+    const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
     const headers = [
       {
@@ -61,7 +61,7 @@ export default defineComponent({
 
     const newRight = () => {
       editDialogActivated.value = true;
-      currentRight = {} as RightRest;
+      currentRight.value = {} as RightRest;
       updateSuccessful.value = false;
       addSuccessful.value = false;
       currentIndex.value = -1;
