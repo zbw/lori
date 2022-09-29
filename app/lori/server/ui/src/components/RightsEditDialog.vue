@@ -383,8 +383,9 @@ export default defineComponent({
     });
 
     onMounted(() => reinitializeRight(props.right));
+    const computedRight = computed(() => props.right);
 
-    watch(props.right, (currentValue, oldValue) => {
+    watch(computedRight, (currentValue, oldValue) => {
       reinitializeRight(currentValue);
     });
 

@@ -51,7 +51,7 @@ export default {
     offset: number,
     limit: number,
     pageSize: number,
-    filterPublicationDate: string
+    filterPublicationDate: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
