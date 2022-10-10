@@ -18,7 +18,7 @@ export default defineComponent({
     <v-container fluid>
       <v-list-group no-action sub-group eager>
         <template v-slot:activator>
-          <v-list-item-title>Erscheinungsjahr</v-list-item-title>
+          <v-list-item-title>Publikationsjahr</v-list-item-title>
         </template>
         <v-row>
           <v-col cols="6">
@@ -39,47 +39,56 @@ export default defineComponent({
         <v-col cols="12">
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>
-              <v-list-item-title>Publikationsform</v-list-item-title>
+              <v-list-item-title>Publikationstyp</v-list-item-title>
             </template>
             <v-checkbox
               label="Aufsatz/Article"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeArticle"
+              data-test="foobar"
             ></v-checkbox>
             <v-checkbox
               label="Buchaufsatz/Book Part"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeBookPart"
             ></v-checkbox>
             <v-checkbox
               label="Konferenzschrift/Conference Paper"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeConferencePaper"
             ></v-checkbox>
             <v-checkbox
               label="Zeitschriftenband/Periodical Part"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypePeriodicalPart"
             ></v-checkbox>
             <v-checkbox
               label="Forschungsbericht/Research Report"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeResearchReport"
             ></v-checkbox>
             <v-checkbox
               label="Konferenzband/Proceeding"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeProceedings"
             ></v-checkbox>
             <v-checkbox
               label="Working Paper"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeWorkingPaper"
             ></v-checkbox>
             <v-checkbox
               label="Buch/Book"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeBook"
             ></v-checkbox>
           </v-list-group>
           <v-list-group no-action sub-group eager>
@@ -142,16 +151,16 @@ export default defineComponent({
               </template>
               <v-date-picker no-title scrollable>
                 <v-spacer></v-spacer>
-                <v-btn text color="primary"> Cancel </v-btn>
-                <v-btn text color="primary"> OK </v-btn>
+                <v-btn text color="primary"> Cancel</v-btn>
+                <v-btn text color="primary"> OK</v-btn>
               </v-date-picker>
             </v-menu>
           </v-list-group>
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>
               <v-list-item-title
-                >Zeitliche Gütligkeit Ereignis</v-list-item-title
-              >
+                >Zeitliche Gütligkeit Ereignis
+              </v-list-item-title>
             </template>
             <v-menu
               ref="menuStart"
@@ -172,8 +181,8 @@ export default defineComponent({
               </template>
               <v-date-picker no-title scrollable>
                 <v-spacer></v-spacer>
-                <v-btn text color="primary"> Cancel </v-btn>
-                <v-btn text color="primary"> OK </v-btn>
+                <v-btn text color="primary"> Cancel</v-btn>
+                <v-btn text color="primary"> OK</v-btn>
               </v-date-picker>
             </v-menu>
             <v-checkbox

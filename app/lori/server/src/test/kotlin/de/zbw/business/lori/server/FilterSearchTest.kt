@@ -30,15 +30,33 @@ class FilterSearchTest : DatabaseTest() {
         mockk(),
     )
 
-    private val publicationDateFilter = DatabaseConnectorTest.TEST_Metadata.copy(
-        collectionName = "subject1 subject2 subject3",
-        metadataId = "publicationDate2022",
-        publicationDate = LocalDate.of(2022, 1, 1)
+    private val publicationDateFilter = listOf(
+        DatabaseConnectorTest.TEST_Metadata.copy(
+            collectionName = "subject1 subject2 subject3",
+            metadataId = "publicationDate2022",
+            publicationDate = LocalDate.of(2022, 1, 1)
+        )
+    )
+
+    private val publicationTypeFilter = listOf(
+        DatabaseConnectorTest.TEST_Metadata.copy(
+            collectionName = "subject4",
+            metadataId = "publicationTypeArticle",
+            publicationType = PublicationType.PROCEEDINGS,
+            publicationDate = LocalDate.of(2022, 1, 1)
+        ),
+        DatabaseConnectorTest.TEST_Metadata.copy(
+            collectionName = "subject4",
+            metadataId = "publicationTypeWorkingPaper",
+            publicationType = PublicationType.WORKING_PAPER,
+            publicationDate = LocalDate.of(2020, 1, 1)
+        ),
     )
 
     private fun getInitialMetadata() = listOf(
         publicationDateFilter,
-    )
+        publicationTypeFilter,
+    ).flatten()
 
     @BeforeClass
     fun fillDB() {
@@ -53,24 +71,60 @@ class FilterSearchTest : DatabaseTest() {
     fun createDataForPublicationDate() = arrayOf(
         arrayOf(
             "col:'subject1 subject2'",
-            PublicationDateFilter(2021, 2023),
-            setOf(publicationDateFilter),
+            listOf(PublicationDateFilter(2021, 2023)),
+            publicationDateFilter.toSet(),
             1,
             "search with filter in range",
         ),
         arrayOf(
             "col:'subject1 subject2'",
-            PublicationDateFilter(2020, 2021),
+            listOf(PublicationDateFilter(2020, 2021)),
             emptySet<ItemMetadata>(),
             0,
             "search with filter out of range",
+        ),
+        arrayOf(
+            "col:'subject4'",
+            listOf(PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+            setOf(publicationTypeFilter[0]),
+            1,
+            "search with publication type filter for articles",
+        ),
+        arrayOf(
+            "col:'subject4'",
+            listOf(
+                PublicationTypeFilter(
+                    listOf(
+                        PublicationType.PROCEEDINGS,
+                        PublicationType.WORKING_PAPER,
+                    )
+                )
+            ),
+            publicationTypeFilter.toSet(),
+            2,
+            "search with publication type filter for articles and working paper",
+        ),
+        arrayOf(
+            "col:'subject4'",
+            listOf(
+                PublicationTypeFilter(
+                    listOf(
+                        PublicationType.PROCEEDINGS,
+                        PublicationType.WORKING_PAPER,
+                    )
+                ),
+                PublicationDateFilter(fromYear = 2022, toYear = 2022),
+            ),
+            setOf(publicationTypeFilter[0]),
+            1,
+            "search with publication type and publication date combined",
         ),
     )
 
     @Test(dataProvider = DATA_FOR_PUBLICATION_DATE)
     fun testFilterByPublicationDate(
         searchTerm: String,
-        searchFilter: SearchFilter,
+        searchFilter: List<SearchFilter>,
         expectedResult: Set<ItemMetadata>,
         expectedNumberOfResults: Int,
         description: String,
@@ -80,7 +134,7 @@ class FilterSearchTest : DatabaseTest() {
             searchTerm,
             10,
             0,
-            listOf(searchFilter),
+            searchFilter,
         )
 
         // then
@@ -96,7 +150,46 @@ class FilterSearchTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_NO_SEARCHTERM)
+    fun createDataForNoSearchTerm() = arrayOf(
+        arrayOf(
+            listOf(
+                PublicationTypeFilter(
+                    listOf(
+                        PublicationType.PROCEEDINGS,
+                        PublicationType.WORKING_PAPER,
+                    )
+                ),
+                PublicationDateFilter(fromYear = 2022, toYear = 2022),
+            ),
+            setOf(publicationTypeFilter[0]),
+            "Filter for publication type and publication date",
+        ),
+    )
+
+    @Test(dataProvider = DATA_FOR_NO_SEARCHTERM)
+    fun testFilterNoSearchTerm(
+        searchFilter: List<SearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult = backend.getItemList(
+            10,
+            0,
+            searchFilter,
+        )
+
+        // then
+        assertThat(
+            description,
+            searchResult.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_MULTIPLE_WORDS"
+        const val DATA_FOR_NO_SEARCHTERM = "DATA_FOR_NO_SEARCHTERM"
     }
 }

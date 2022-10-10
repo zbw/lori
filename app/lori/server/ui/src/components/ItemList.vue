@@ -166,13 +166,15 @@ export default defineComponent({
           : searchStore.publicationDateFrom +
             "-" +
             searchStore.publicationDateTo;
+      let filterPublicationType = buildPublicationTypeFilter();
       api
         .searchQuery(
           searchTerm.value,
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
-          filterPublicationDate
+          filterPublicationDate,
+          filterPublicationType
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -186,6 +188,38 @@ export default defineComponent({
             e.statusText + " (Statuscode: " + e.status + ")";
           loadAlertError.value = true;
         });
+    };
+
+    const buildPublicationTypeFilter = () => {
+      let types: Array<string> = [];
+      if (searchStore.publicationTypeArticle) {
+        types.push("ARTICLE");
+      }
+      if (searchStore.publicationTypeBook) {
+        types.push("BOOK");
+      }
+      if (searchStore.publicationTypeBookPart) {
+        types.push("BOOK_PART");
+      }
+      if (searchStore.publicationTypeConferencePaper) {
+        types.push("CONFERENCE_PAPER");
+      }
+      if (searchStore.publicationTypePeriodicalPart) {
+        types.push("PERIODICAL_PART");
+      }
+      if (searchStore.publicationTypeProceedings) {
+        types.push("PROCEEDINGS");
+      }
+      if (searchStore.publicationTypeResearchReport) {
+        types.push("RESEARCH_REPORT");
+      }
+      if (searchStore.publicationTypeThesis) {
+        types.push("THESIS");
+      }
+      if (searchStore.publicationTypeWorkingPaper) {
+        types.push("WORKING_PAPER");
+      }
+      return types.join(",");
     };
 
     // parse publication type

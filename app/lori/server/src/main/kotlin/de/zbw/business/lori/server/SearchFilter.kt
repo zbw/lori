@@ -28,7 +28,7 @@ class PublicationDateFilter(
     private val toDate = LocalDate.of(toYear, 12, 31)
 
     override fun toWhereClause(): String =
-        " $dbColumnName >= ? AND $dbColumnName <= ?"
+        "$dbColumnName >= ? AND $dbColumnName <= ?"
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
         preparedStatement.setDate(counter, Date.valueOf(fromDate))
@@ -39,5 +39,24 @@ class PublicationDateFilter(
     companion object {
         const val MIN_YEAR = 1800
         const val MAX_YEAR = 2200
+    }
+}
+
+class PublicationTypeFilter(
+    val publicationFilter: List<PublicationType>
+) : SearchFilter(
+    DatabaseConnector.COLUMN_PUBLICATION_TYPE,
+) {
+    override fun toWhereClause(): String =
+        publicationFilter.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "$dbColumnName = ?"
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        publicationFilter.forEach {
+            preparedStatement.setString(localCounter++, it.toString())
+        }
+        return localCounter
     }
 }
