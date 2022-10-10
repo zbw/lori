@@ -1,6 +1,8 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.PublicationTypeFilter
 
 /**
  * Helper object for parsing all sort of query parameters.
@@ -28,5 +30,19 @@ object QueryParameterParser {
         } else {
             null
         }
+    }
+
+    fun parsePublicationTypeFilter(s: String?): PublicationTypeFilter? {
+        if (s == null) {
+            return null
+        }
+        val receivedPubTypes: List<PublicationType> = s.split(",".toRegex()).mapNotNull {
+            try {
+                PublicationType.valueOf(it)
+            } catch (iae: IllegalArgumentException) {
+                null
+            }
+        }
+        return receivedPubTypes.takeIf { it.isNotEmpty() }?.let { PublicationTypeFilter(it) }
     }
 }

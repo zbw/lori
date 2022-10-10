@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -302,6 +303,8 @@ fun Routing.itemRoutes(
                     val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
                     val publicationDateFilter: PublicationDateFilter? =
                         QueryParameterParser.parsePublicationDateFilter(call.request.queryParameters["filterPublicationDate"])
+                    val publicationTypeFilter: PublicationTypeFilter? =
+                        QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
@@ -337,7 +340,7 @@ fun Routing.itemRoutes(
                         )
                         return@withContext
                     }
-                    val filters = listOfNotNull(publicationDateFilter)
+                    val filters = listOfNotNull(publicationDateFilter, publicationTypeFilter)
                     if (searchTerm == null || searchTerm.isBlank()) {
                         val items = backend.getItemList(limit, offset, filters)
                         val entries = backend.countMetadataEntries(filters)

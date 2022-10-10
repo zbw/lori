@@ -543,6 +543,7 @@ class ItemRoutesKtTest {
         val limit = 5
         val pageSize = 25
         val filterPublicationDate = "2000-2022"
+        val filterPublicationType = "ARTICLE,THESIS"
         val expectedInformation =
             ItemInformation(
                 totalPages = 5,
@@ -577,7 +578,7 @@ class ItemRoutesKtTest {
                 servicePool.application()
             )
             val response =
-                client.get("/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset&pageSize=$pageSize&filterPublicationDate=$filterPublicationDate")
+                client.get("/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset&pageSize=$pageSize&filterPublicationDate=$filterPublicationDate&filterPublicationType=$filterPublicationType")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)

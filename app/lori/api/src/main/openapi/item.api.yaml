@@ -248,6 +248,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterPublicationType
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation

@@ -897,6 +897,7 @@ class DatabaseConnector(
         private const val TABLE_NAME_USERS = "users"
 
         const val COLUMN_PUBLICATION_DATE = "publication_date"
+        const val COLUMN_PUBLICATION_TYPE = "publication_type"
 
         const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM_METADATA"
@@ -911,7 +912,7 @@ class DatabaseConnector(
 
         const val STATEMENT_UPSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
@@ -929,7 +930,7 @@ class DatabaseConnector(
             "title_series = EXCLUDED.title_series," +
             "$COLUMN_PUBLICATION_DATE = EXCLUDED.$COLUMN_PUBLICATION_DATE," +
             "band = EXCLUDED.band," +
-            "publication_type = EXCLUDED.publication_type," +
+            "$COLUMN_PUBLICATION_TYPE = EXCLUDED.$COLUMN_PUBLICATION_TYPE," +
             "doi = EXCLUDED.doi," +
             "isbn = EXCLUDED.isbn," +
             "rights_k10plus = EXCLUDED.rights_k10plus," +
@@ -945,7 +946,7 @@ class DatabaseConnector(
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
@@ -1011,7 +1012,7 @@ class DatabaseConnector(
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
         const val STATEMENT_SELECT_ALL_METADATA = "SELECT metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date " +
@@ -1054,7 +1055,7 @@ class DatabaseConnector(
 
         const val STATEMENT_GET_METADATA_RANGE =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_PUBLICATION_DATE,band,publication_type,doi," +
+                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
