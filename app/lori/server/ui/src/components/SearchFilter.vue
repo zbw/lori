@@ -100,7 +100,7 @@ export default defineComponent({
       </v-row>
       <v-list-group no-action sub-group eager>
         <template v-slot:activator>
-          <v-list-item-title>ZBD-IDs</v-list-item-title>
+          <v-list-item-title>ZDB-IDs</v-list-item-title>
         </template>
       </v-list-group>
     </v-container>
@@ -226,7 +226,7 @@ export default defineComponent({
               class="pl-9 ml-4"
             ></v-checkbox>
             <v-checkbox
-              label="ZBW-Nutzungsvereinbarung Access"
+              label="ZBW-Nutzungsvereinbarung"
               hide-details
               class="pl-9 ml-4"
             ></v-checkbox>

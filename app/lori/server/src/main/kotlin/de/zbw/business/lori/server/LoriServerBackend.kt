@@ -92,11 +92,12 @@ class LoriServerBackend(
         offset: Int,
         filters: List<SearchFilter> = emptyList(),
     ): List<Item> =
-        dbConnector.getMetadataRange(limit, offset, filters).takeIf {
-            it.isNotEmpty()
-        }?.let { metadataList ->
-            getRightsForMetadata(metadataList)
-        } ?: emptyList()
+        dbConnector.getMetadataRange(limit, offset, filters)
+            .takeIf {
+                it.isNotEmpty()
+            }?.let { metadataList ->
+                getRightsForMetadata(metadataList)
+            } ?: emptyList()
 
     private fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> {
         val metadataToRights = metadataList.map { metadata ->
