@@ -90,16 +90,30 @@ class LoriServerBackend(
     fun getItemList(
         limit: Int,
         offset: Int,
-        filters: List<SearchFilter> = emptyList(),
-    ): List<Item> =
-        dbConnector.getMetadataRange(limit, offset, filters)
+        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
+        rightSearchFilter: List<RightSearchFilter> = emptyList(),
+    ): List<Item> {
+        val receivedMetadata = if (rightSearchFilter.isEmpty()){
+            dbConnector.getMetadataRange(limit, offset, metadataSearchFilter)
+        } else {
+            dbConnector.getMetadataRangeWithRightFilter(
+                limit,
+                offset,
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
+        }
+        return receivedMetadata
             .takeIf {
                 it.isNotEmpty()
             }?.let { metadataList ->
                 getRightsForMetadata(metadataList)
             } ?: emptyList()
+    }
 
-    private fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> {
+    private fun getRightsForMetadata(
+        metadataList: List<ItemMetadata>,
+    ): List<Item> {
         val metadataToRights = metadataList.map { metadata ->
             metadata to dbConnector.getRightIdsByMetadata(metadata.metadataId)
         }
@@ -119,8 +133,15 @@ class LoriServerBackend(
         dbConnector.itemContainsEntry(metadataId, rightId)
 
     fun countMetadataEntries(
-        filters: List<SearchFilter> = emptyList(),
-    ): Int = dbConnector.countMetadataEntries(filters)
+        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
+        rightSearchFilter: List<RightSearchFilter> = emptyList(),
+    ): Int {
+        return if(rightSearchFilter.isEmpty()) {
+            dbConnector.countMetadataEntries(metadataSearchFilter)
+        } else {
+            dbConnector.countMetadataEntriesWithRightFilter(metadataSearchFilter, rightSearchFilter)
+        }
+    }
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
 
@@ -185,12 +206,30 @@ class LoriServerBackend(
         searchTerm: String,
         limit: Int,
         offset: Int,
-        searchFilter: List<SearchFilter> = emptyList(),
+        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
+        rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): Pair<Int, List<Item>> {
         return parseSearchKeys(searchTerm).takeIf {
             it.isNotEmpty()
         }?.let { keys ->
-            val items: List<Item> = dbConnector.searchMetadata(keys, limit, offset, searchFilter).takeIf {
+            val receivedMetadata = if (rightSearchFilter.isEmpty()){
+                dbConnector.searchMetadata(
+                    keys,
+                    limit,
+                    offset,
+                    metadataSearchFilter,
+                )
+            } else {
+                dbConnector.searchMetadataWithRightFilter(
+                    keys,
+                    limit,
+                    offset,
+                    metadataSearchFilter,
+                    rightSearchFilter,
+                )
+            }
+            val items: List<Item> =
+                receivedMetadata.takeIf {
                 it.isNotEmpty()
             }?.let { metadata ->
                 getRightsForMetadata(metadata)
@@ -198,7 +237,7 @@ class LoriServerBackend(
             if (items.isEmpty()) {
                 (0 to items)
             } else {
-                val count = dbConnector.countSearchMetadata(keys, searchFilter)
+                val count = dbConnector.countSearchMetadata(keys, metadataSearchFilter, rightSearchFilter)
                 (count to items)
             }
         } ?: (0 to emptyList())

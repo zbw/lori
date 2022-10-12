@@ -1,5 +1,7 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -112,7 +114,56 @@ class QueryParameterParserTest {
         }
     }
 
+    @DataProvider(name = DATA_FOR_PARSE_ACCESS_STATE)
+    fun createDataForParseAccessState() =
+        arrayOf(
+            arrayOf(
+                "CLOSED,OPEN,RESTRICTED",
+                AccessStateFilter(
+                    listOf(
+                        AccessState.CLOSED,
+                        AccessState.OPEN,
+                        AccessState.RESTRICTED,
+                    ),
+                ),
+            ),
+            arrayOf(
+                "OPEN,FOOBAR",
+                AccessStateFilter(
+                    listOf(
+                        AccessState.OPEN,
+                    ),
+                ),
+            ),
+            arrayOf(
+                "FOOBAR",
+                null,
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_PARSE_ACCESS_STATE)
+    fun testParseAccessStateFilter(
+        input: String,
+        expectedFilter: AccessStateFilter?,
+    ) {
+        // when
+        val received: AccessStateFilter? = QueryParameterParser.parseAccessStateFilter(input)
+
+        // then
+        if (expectedFilter == null) {
+            assertNull(received)
+        } else {
+            assertThat(
+                received!!.accessStates.toSet(),
+                `is`(
+                    expectedFilter.accessStates.toSet(),
+                )
+            )
+        }
+    }
+
     companion object {
+        const val DATA_FOR_PARSE_ACCESS_STATE = "DATA_FOR_PARSE_ACCESS_STATE"
         const val DATA_FOR_PARSE_PUBLICATION_DATE = "DATA_FOR_PARSE_PUBLICATION_DATE"
         const val DATA_FOR_PARSE_PUBLICATION_TYPE = "DATA_FOR_PARSE_PUBLICATION_TYPE"
     }

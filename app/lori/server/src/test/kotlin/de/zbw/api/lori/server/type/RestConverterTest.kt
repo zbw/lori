@@ -159,7 +159,7 @@ class RestConverterTest {
     }
 
     companion object {
-        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+        val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA = ItemMetadata(
             metadataId = "that-test",
             author = "Colbjørnsen, Terje",

@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toRest
+import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -305,6 +306,8 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parsePublicationDateFilter(call.request.queryParameters["filterPublicationDate"])
                     val publicationTypeFilter: PublicationTypeFilter? =
                         QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
+                    val accessStateFilter: AccessStateFilter? =
+                        QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
@@ -340,10 +343,11 @@ fun Routing.itemRoutes(
                         )
                         return@withContext
                     }
-                    val filters = listOfNotNull(publicationDateFilter, publicationTypeFilter)
+                    val metadataFilters = listOfNotNull(publicationDateFilter, publicationTypeFilter)
+                    val rightFilters = listOfNotNull(accessStateFilter)
                     if (searchTerm == null || searchTerm.isBlank()) {
-                        val items = backend.getItemList(limit, offset, filters)
-                        val entries = backend.countMetadataEntries(filters)
+                        val items = backend.getItemList(limit, offset, metadataFilters, rightFilters)
+                        val entries = backend.countMetadataEntries(metadataFilters, rightFilters)
                         val totalPages = ceil(entries.toDouble() / pageSize.toDouble()).toInt()
                         span.setStatus(StatusCode.OK)
                         call.respond(
@@ -360,7 +364,8 @@ fun Routing.itemRoutes(
                         searchTerm,
                         limit,
                         offset,
-                        filters,
+                        metadataFilters,
+                        rightFilters,
                     )
                     val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)

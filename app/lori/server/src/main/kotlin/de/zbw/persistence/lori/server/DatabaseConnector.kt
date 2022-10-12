@@ -6,8 +6,9 @@ import de.zbw.business.lori.server.BasisAccessState
 import de.zbw.business.lori.server.BasisStorage
 import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.ItemRight
+import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.PublicationType
-import de.zbw.business.lori.server.SearchFilter
+import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.User
 import de.zbw.business.lori.server.UserRole
@@ -389,15 +390,48 @@ class DatabaseConnector(
         return runMetadataStatement(prepStmt, span)
     }
 
+    fun countMetadataEntriesWithRightFilter(
+        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
+        rightSearchFilter: List<RightSearchFilter> = emptyList(),
+    ): Int {
+        val prepStmt = connection.prepareStatement(
+            buildCountMetadataQueryBothFilterNoSearchKey(
+                emptyMap(),
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
+        ).apply {
+            var counter = 1
+            if (rightSearchFilter.isNotEmpty()) {
+                rightSearchFilter.forEach { f ->
+                    counter = f.setSQLParameter(counter, this)
+                }
+            }
+            metadataSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+        }
+        val span = tracer.spanBuilder("countMetadataWithRightFilter").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+        if (rs.next()) {
+            return rs.getInt(1)
+        } else throw IllegalStateException("No count found.")
+    }
+
     fun countMetadataEntries(
-        filters: List<SearchFilter> = emptyList(),
+        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
     ): Int {
         val prepStmt = connection.prepareStatement(
             STATEMENT_COUNT_METADATA +
-                buildSearchQueryHelper(emptyMap(), filters) + ";"
+                buildSearchQueryHelper(emptyMap(), metadataSearchFilter) + ";"
         ).apply {
             var counter = 1
-            filters.forEach { f ->
+            metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
         }
@@ -587,14 +621,38 @@ class DatabaseConnector(
     fun getMetadataRange(
         limit: Int,
         offset: Int,
-        filters: List<SearchFilter> = emptyList(),
+        filters: List<MetadataSearchFilter> = emptyList(),
     ): List<ItemMetadata> {
         val prepStmt: PreparedStatement = connection.prepareStatement(
-            STATEMENT_GET_METADATA_RANGE +
+            STATEMENT_SELECT_ALL_METADATA +
                 buildMetasearchWhereFilter(filters)
         ).apply {
             var counter = 1
             filters.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            this.setInt(counter++, limit)
+            this.setInt(counter, offset)
+        }
+        val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
+        return runMetadataStatement(prepStmt, span)
+    }
+
+    fun getMetadataRangeWithRightFilter(
+        limit: Int,
+        offset: Int,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+    ): List<ItemMetadata> {
+        val prepStmt: PreparedStatement = connection.prepareStatement(
+            STATEMENT_SELECT_ALL_METADATA_DISTINCT +
+                buildMetasearchWhereFilterWithRights(metadataSearchFilter, rightSearchFilter)
+        ).apply {
+            var counter = 1
+            rightSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
             this.setInt(counter++, limit)
@@ -614,31 +672,7 @@ class DatabaseConnector(
 
         return generateSequence {
             if (rs.next()) {
-                ItemMetadata(
-                    metadataId = rs.getString(1),
-                    handle = rs.getString(2),
-                    ppn = rs.getString(3),
-                    title = rs.getString(4),
-                    titleJournal = rs.getString(5),
-                    titleSeries = rs.getString(6),
-                    publicationDate = rs.getDate(7).toLocalDate(),
-                    band = rs.getString(8),
-                    publicationType = PublicationType.valueOf(rs.getString(9)),
-                    doi = rs.getString(10),
-                    isbn = rs.getString(11),
-                    rightsK10plus = rs.getString(12),
-                    paketSigel = rs.getString(13),
-                    zbdId = rs.getString(14),
-                    issn = rs.getString(15),
-                    createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
-                    lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
-                    createdBy = rs.getString(18),
-                    lastUpdatedBy = rs.getString(19),
-                    author = rs.getString(20),
-                    collectionName = rs.getString(21),
-                    communityName = rs.getString(22),
-                    storageDate = rs.getTimestamp(23).toOffsetDateTime(),
-                )
+                extractMetadataRS(rs)
             } else null
         }.takeWhile { true }.toList()
     }
@@ -799,18 +833,24 @@ class DatabaseConnector(
 
     fun countSearchMetadata(
         searchTerms: Map<SearchKey, List<String>>,
-        filters: List<SearchFilter>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): Int {
         val entries = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
-            buildCountSearchQuery(searchTerms, filters)
+            buildCountSearchQuery(searchTerms, metadataSearchFilter, rightSearchFilter)
         )
             .apply {
                 var counter = 1
+                if (rightSearchFilter.isNotEmpty()) {
+                    rightSearchFilter.forEach { f ->
+                        counter = f.setSQLParameter(counter, this)
+                    }
+                }
                 entries.forEach { entry ->
                     this.setString(counter++, entry.value.joinToString(" & "))
                 }
-                filters.forEach { f ->
+                metadataSearchFilter.forEach { f ->
                     counter = f.setSQLParameter(counter, this)
                 }
             }
@@ -830,7 +870,7 @@ class DatabaseConnector(
         searchTerms: Map<SearchKey, List<String>>,
         limit: Int,
         offset: Int,
-        filters: List<SearchFilter>,
+        filters: List<MetadataSearchFilter>,
     ): List<ItemMetadata> {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
@@ -855,31 +895,49 @@ class DatabaseConnector(
         }
         return generateSequence {
             if (rs.next()) {
-                ItemMetadata(
-                    metadataId = rs.getString(1),
-                    handle = rs.getString(2),
-                    ppn = rs.getString(3),
-                    title = rs.getString(4),
-                    titleJournal = rs.getString(5),
-                    titleSeries = rs.getString(6),
-                    publicationDate = rs.getDate(7).toLocalDate(),
-                    band = rs.getString(8),
-                    publicationType = PublicationType.valueOf(rs.getString(9)),
-                    doi = rs.getString(10),
-                    isbn = rs.getString(11),
-                    rightsK10plus = rs.getString(12),
-                    paketSigel = rs.getString(13),
-                    zbdId = rs.getString(14),
-                    issn = rs.getString(15),
-                    createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
-                    lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
-                    createdBy = rs.getString(18),
-                    lastUpdatedBy = rs.getString(19),
-                    author = rs.getString(20),
-                    collectionName = rs.getString(21),
-                    communityName = rs.getString(22),
-                    storageDate = rs.getTimestamp(23).toOffsetDateTime(),
-                )
+                extractMetadataRS(rs)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    fun searchMetadataWithRightFilter(
+        searchTerms: Map<SearchKey, List<String>>,
+        limit: Int,
+        offset: Int,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+    ): List<ItemMetadata> {
+        val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(
+            buildSearchQuery(
+                searchTerms,
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
+        ).apply {
+            var counter = 1
+            rightSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" & "))
+            }
+            metadataSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            this.setInt(counter++, limit)
+            this.setInt(counter, offset)
+        }
+        val span = tracer.spanBuilder("searchMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+        return generateSequence {
+            if (rs.next()) {
+                extractMetadataRS(rs)
             } else null
         }.takeWhile { true }.toList()
     }
@@ -896,6 +954,7 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_USERS = "users"
 
+        const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
         const val COLUMN_PUBLICATION_DATE = "publication_date"
         const val COLUMN_PUBLICATION_TYPE = "publication_type"
 
@@ -958,7 +1017,7 @@ class DatabaseConnector(
 
         const val STATEMENT_INSERT_RIGHT = "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
             "(created_on, last_updated_on," +
-            "created_by, last_updated_by, access_state," +
+            "created_by, last_updated_by, $COLUMN_RIGHT_ACCESS_STATE," +
             "start_date, end_date, notes_general," +
             "licence_contract, author_right_exception, zbw_user_agreement," +
             "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
@@ -979,7 +1038,7 @@ class DatabaseConnector(
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
                 "(right_id, created_on, last_updated_on," +
-                "created_by, last_updated_by, access_state," +
+                "created_by, last_updated_by, $COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date, end_date, notes_general," +
                 "licence_contract, author_right_exception, zbw_user_agreement," +
                 "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
@@ -996,7 +1055,7 @@ class DatabaseConnector(
                 "DO UPDATE SET " +
                 "last_updated_on = EXCLUDED.last_updated_on," +
                 "last_updated_by = EXCLUDED.last_updated_by," +
-                "access_state = EXCLUDED.access_state," +
+                "$COLUMN_RIGHT_ACCESS_STATE = EXCLUDED.$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date = EXCLUDED.start_date," +
                 "end_date = EXCLUDED.end_date," +
                 "notes_general = EXCLUDED.notes_general," +
@@ -1011,12 +1070,23 @@ class DatabaseConnector(
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
-        const val STATEMENT_SELECT_ALL_METADATA = "SELECT metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
-            "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by," +
-            "author, collection_name, community_name, storage_date " +
-            "FROM $TABLE_NAME_ITEM_METADATA"
+        const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
+            "SELECT DISTINCT ON (${TABLE_NAME_ITEM_METADATA}.metadata_id) ${TABLE_NAME_ITEM_METADATA}.metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "${TABLE_NAME_ITEM_METADATA}.created_on,${TABLE_NAME_ITEM_METADATA}.last_updated_on," +
+                "${TABLE_NAME_ITEM_METADATA}.created_by,${TABLE_NAME_ITEM_METADATA}.last_updated_by," +
+                "author, collection_name, community_name, storage_date " +
+                "FROM $TABLE_NAME_ITEM_METADATA"
+
+        const val STATEMENT_SELECT_ALL_METADATA =
+            "SELECT ${TABLE_NAME_ITEM_METADATA}.metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
+                "${TABLE_NAME_ITEM_METADATA}.created_on,${TABLE_NAME_ITEM_METADATA}.last_updated_on," +
+                "${TABLE_NAME_ITEM_METADATA}.created_by,${TABLE_NAME_ITEM_METADATA}.last_updated_by," +
+                "author, collection_name, community_name, storage_date " +
+                "FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA +
             " WHERE metadata_id = ANY(?)"
@@ -1045,7 +1115,7 @@ class DatabaseConnector(
 
         const val STATEMENT_GET_RIGHTS =
             "SELECT right_id, created_on, last_updated_on, created_by," +
-                "last_updated_by, access_state, start_date, end_date, notes_general," +
+                "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
                 "licence_contract, author_right_exception, zbw_user_agreement," +
                 "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
                 "restricted_open_content_licence, notes_formal_rules, basis_storage," +
@@ -1120,27 +1190,70 @@ class DatabaseConnector(
 
         fun buildSearchQuery(
             searchKeyMap: Map<SearchKey, List<String>>,
-            searchFilter: List<SearchFilter>
+            searchFilter: List<MetadataSearchFilter>
         ): String =
             STATEMENT_SELECT_ALL_METADATA +
                 buildSearchQueryHelper(searchKeyMap, searchFilter) +
                 " LIMIT ? OFFSET ?;"
 
+        fun buildSearchQuery(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            metadataSearchFilters: List<MetadataSearchFilter>,
+            rightSearchFilters: List<RightSearchFilter>,
+        ): String =
+            if (rightSearchFilters.isEmpty()) {
+                STATEMENT_SELECT_ALL_METADATA +
+                    buildSearchQueryHelper(
+                        searchKeyMap,
+                        metadataSearchFilters,
+                        rightSearchFilters,
+                    ) +
+                    " LIMIT ? OFFSET ?;"
+            } else {
+                STATEMENT_SELECT_ALL_METADATA_DISTINCT +
+                    buildSearchQueryHelper(
+                        searchKeyMap,
+                        metadataSearchFilters,
+                        rightSearchFilters,
+                    ) +
+                    " LIMIT ? OFFSET ?;"
+            }
+
         fun buildCountSearchQuery(
             searchKeyMap: Map<SearchKey, List<String>>,
-            searchFilter: List<SearchFilter>,
-        ): String =
-            STATEMENT_COUNT_METADATA +
-                buildSearchQueryHelper(searchKeyMap, searchFilter) + ";"
+            metadataSearchFilter: List<MetadataSearchFilter>,
+            rightSearchFilter: List<RightSearchFilter>,
+        ): String {
+            return if (rightSearchFilter.isNotEmpty()) {
+                buildCountMetadataQueryBothFilterNoSearchKey(
+                    searchKeyMap, metadataSearchFilter, rightSearchFilter
+                )
+            } else {
+                STATEMENT_COUNT_METADATA +
+                    buildSearchQueryHelper(
+                        searchKeyMap,
+                        metadataSearchFilter,
+                    ) + ";"
+            }
+        }
 
         fun buildMetasearchWhereFilter(
-            searchFilter: List<SearchFilter>,
+            searchFilter: List<MetadataSearchFilter>,
         ): String = buildSearchQueryHelper(emptyMap(), searchFilter) +
             " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
 
+        fun buildMetasearchWhereFilterWithRights(
+            metadataSearchFilter: List<MetadataSearchFilter>,
+            rightSearchFilter: List<RightSearchFilter>,
+        ): String = buildSearchQueryHelper(
+            emptyMap(),
+            metadataSearchFilter,
+            rightSearchFilter,
+        ) + " ORDER BY ${TABLE_NAME_ITEM_METADATA}.metadata_id ASC LIMIT ? OFFSET ?;"
+
         private fun buildSearchQueryHelper(
             searchKeyMap: Map<SearchKey, List<String>>,
-            searchFilter: List<SearchFilter>,
+            searchFilter: List<MetadataSearchFilter>,
         ): String {
             val searchKeys = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
                 entry.key.toWhereClause()
@@ -1164,5 +1277,79 @@ class DatabaseConnector(
                     filter
             }
         }
+
+        internal fun buildCountMetadataQueryBothFilterNoSearchKey(
+            searchKeyMap: Map<SearchKey, List<String>> = emptyMap(),
+            metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
+            rightSearchFilter: List<RightSearchFilter> = emptyList(),
+        ) =
+            "SELECT COUNT(*) FROM" +
+                " (SELECT DISTINCT ON (${TABLE_NAME_ITEM_METADATA}.metadata_id) ${TABLE_NAME_ITEM_METADATA}.*" +
+                " FROM ${TABLE_NAME_ITEM_METADATA}" +
+                buildSearchQueryHelper(searchKeyMap, metadataSearchFilter, rightSearchFilter) +
+                ") a;"
+
+        private fun buildSearchQueryHelper(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            metadataSearchFilter: List<MetadataSearchFilter>,
+            rightSearchFilter: List<RightSearchFilter>,
+        ): String {
+            val searchKeys = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
+                entry.key.toWhereClause()
+            }
+            val metadataFilters = metadataSearchFilter.joinToString(separator = " AND ") { f ->
+                f.toWhereClause()
+            }.takeIf { it.isNotBlank() }
+                ?.let {
+                    if (searchKeyMap.isNotEmpty()) {
+                        " AND $it"
+                    } else {
+                        it
+                    }
+                }
+                ?: ""
+            val rightFilters = rightSearchFilter.joinToString(separator = " AND ") { f ->
+                f.toWhereClause()
+            }
+            val whereClause = if (metadataFilters.isBlank() && searchKeys.isBlank()) {
+                ""
+            } else {
+                " WHERE " +
+                    searchKeys +
+                    metadataFilters
+            }
+            return " LEFT JOIN $TABLE_NAME_ITEM " +
+                "ON ${TABLE_NAME_ITEM}.metadata_id = ${TABLE_NAME_ITEM_METADATA}.metadata_id " +
+                "JOIN ${TABLE_NAME_ITEM_RIGHT} " +
+                "ON ${TABLE_NAME_ITEM}.right_id = ${TABLE_NAME_ITEM_RIGHT}.right_id AND " +
+                rightFilters +
+                whereClause
+        }
+
+        private fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
+            metadataId = rs.getString(1),
+            handle = rs.getString(2),
+            ppn = rs.getString(3),
+            title = rs.getString(4),
+            titleJournal = rs.getString(5),
+            titleSeries = rs.getString(6),
+            publicationDate = rs.getDate(7).toLocalDate(),
+            band = rs.getString(8),
+            publicationType = PublicationType.valueOf(rs.getString(9)),
+            doi = rs.getString(10),
+            isbn = rs.getString(11),
+            rightsK10plus = rs.getString(12),
+            paketSigel = rs.getString(13),
+            zbdId = rs.getString(14),
+            issn = rs.getString(15),
+            createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
+            lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
+            createdBy = rs.getString(18),
+            lastUpdatedBy = rs.getString(19),
+            author = rs.getString(20),
+            collectionName = rs.getString(21),
+            communityName = rs.getString(22),
+            storageDate = rs.getTimestamp(23).toOffsetDateTime(),
+        )
     }
 }
