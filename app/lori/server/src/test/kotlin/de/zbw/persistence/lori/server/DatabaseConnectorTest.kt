@@ -908,7 +908,6 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
-
     @DataProvider(name = DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH)
     private fun createBuildCountQueryRightFilterNoSearch() =
         arrayOf(
@@ -933,7 +932,6 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "only right filter"
             ),
         )
-
 
     @Test(dataProvider = DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH)
     fun testBuildCountQueryBothFilterNoSearch(

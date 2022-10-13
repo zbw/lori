@@ -93,7 +93,7 @@ class LoriServerBackend(
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): List<Item> {
-        val receivedMetadata = if (rightSearchFilter.isEmpty()){
+        val receivedMetadata = if (rightSearchFilter.isEmpty()) {
             dbConnector.getMetadataRange(limit, offset, metadataSearchFilter)
         } else {
             dbConnector.getMetadataRangeWithRightFilter(
@@ -136,7 +136,7 @@ class LoriServerBackend(
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): Int {
-        return if(rightSearchFilter.isEmpty()) {
+        return if (rightSearchFilter.isEmpty()) {
             dbConnector.countMetadataEntries(metadataSearchFilter)
         } else {
             dbConnector.countMetadataEntriesWithRightFilter(metadataSearchFilter, rightSearchFilter)
@@ -212,7 +212,7 @@ class LoriServerBackend(
         return parseSearchKeys(searchTerm).takeIf {
             it.isNotEmpty()
         }?.let { keys ->
-            val receivedMetadata = if (rightSearchFilter.isEmpty()){
+            val receivedMetadata = if (rightSearchFilter.isEmpty()) {
                 dbConnector.searchMetadata(
                     keys,
                     limit,
@@ -230,10 +230,10 @@ class LoriServerBackend(
             }
             val items: List<Item> =
                 receivedMetadata.takeIf {
-                it.isNotEmpty()
-            }?.let { metadata ->
-                getRightsForMetadata(metadata)
-            } ?: (emptyList())
+                    it.isNotEmpty()
+                }?.let { metadata ->
+                    getRightsForMetadata(metadata)
+                } ?: (emptyList())
             if (items.isEmpty()) {
                 (0 to items)
             } else {

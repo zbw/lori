@@ -85,4 +85,3 @@ class AccessStateFilter(
         return localCounter
     }
 }
-
