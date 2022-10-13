@@ -85,7 +85,7 @@ export default defineComponent({
         value: "titleSeries",
       },
       {
-        text: "ZBD-Id",
+        text: "ZDB-ID",
         value: "zbdId",
       },
     ] as Array<DataTableHeader>;
@@ -167,6 +167,7 @@ export default defineComponent({
             "-" +
             searchStore.publicationDateTo;
       let filterPublicationType = buildPublicationTypeFilter();
+      let filterAccessStates = buildAccessState();
       api
         .searchQuery(
           searchTerm.value,
@@ -174,7 +175,8 @@ export default defineComponent({
           pageSize.value,
           pageSize.value,
           filterPublicationDate,
-          filterPublicationType
+          filterPublicationType,
+          filterAccessStates
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -188,6 +190,20 @@ export default defineComponent({
             e.statusText + " (Statuscode: " + e.status + ")";
           loadAlertError.value = true;
         });
+    };
+
+    const buildAccessState = () => {
+      let accessStates: Array<string> = [];
+      if (searchStore.accessStateOpen) {
+        accessStates.push("OPEN");
+      }
+      if (searchStore.accessStateRestricted) {
+        accessStates.push("RESTRICTED");
+      }
+      if (searchStore.accessStateClosed) {
+        accessStates.push("CLOSED");
+      }
+      return accessStates;
     };
 
     const buildPublicationTypeFilter = () => {

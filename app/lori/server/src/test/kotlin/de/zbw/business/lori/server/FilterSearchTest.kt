@@ -124,7 +124,7 @@ class FilterSearchTest : DatabaseTest() {
     @Test(dataProvider = DATA_FOR_PUBLICATION_DATE)
     fun testFilterByPublicationDate(
         searchTerm: String,
-        searchFilter: List<SearchFilter>,
+        searchFilter: List<MetadataSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         expectedNumberOfResults: Int,
         description: String,
@@ -169,7 +169,7 @@ class FilterSearchTest : DatabaseTest() {
 
     @Test(dataProvider = DATA_FOR_NO_SEARCHTERM)
     fun testFilterNoSearchTerm(
-        searchFilter: List<SearchFilter>,
+        searchFilter: List<MetadataSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {

@@ -52,7 +52,8 @@ export default {
     limit: number,
     pageSize: number,
     filterPublicationDate: string | undefined,
-    filterPublicationType: string | undefined
+    filterPublicationType: string | undefined,
+    filterAccessState: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -61,6 +62,7 @@ export default {
       pageSize: pageSize,
       filterPublicationDate: filterPublicationDate,
       filterPublicationType: filterPublicationType,
+      filterAccessState: filterAccessState,
     });
   },
 };

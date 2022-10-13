@@ -1,5 +1,7 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -44,5 +46,19 @@ object QueryParameterParser {
             }
         }
         return receivedPubTypes.takeIf { it.isNotEmpty() }?.let { PublicationTypeFilter(it) }
+    }
+
+    fun parseAccessStateFilter(s: String?): AccessStateFilter? {
+        if (s == null) {
+            return null
+        }
+        val accessStates: List<AccessState> = s.split(",".toRegex()).mapNotNull {
+            try {
+                AccessState.valueOf(it)
+            } catch (iae: IllegalArgumentException) {
+                null
+            }
+        }
+        return accessStates.takeIf { it.isNotEmpty() }?.let { AccessStateFilter(it) }
     }
 }

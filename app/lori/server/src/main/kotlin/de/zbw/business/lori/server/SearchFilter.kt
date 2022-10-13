@@ -18,10 +18,14 @@ abstract class SearchFilter(
     abstract fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int
 }
 
+abstract class MetadataSearchFilter(
+    dbColumnName: String
+) : SearchFilter(dbColumnName)
+
 class PublicationDateFilter(
     val fromYear: Int,
     val toYear: Int,
-) : SearchFilter(
+) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_PUBLICATION_DATE,
 ) {
     private val fromDate = LocalDate.of(fromYear, 1, 1)
@@ -43,8 +47,8 @@ class PublicationDateFilter(
 }
 
 class PublicationTypeFilter(
-    val publicationFilter: List<PublicationType>
-) : SearchFilter(
+    val publicationFilter: List<PublicationType>,
+) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_PUBLICATION_TYPE,
 ) {
     override fun toWhereClause(): String =
@@ -55,6 +59,27 @@ class PublicationTypeFilter(
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
         var localCounter = counter
         publicationFilter.forEach {
+            preparedStatement.setString(localCounter++, it.toString())
+        }
+        return localCounter
+    }
+}
+
+abstract class RightSearchFilter(
+    dbColumnName: String
+) : SearchFilter(dbColumnName)
+
+class AccessStateFilter(
+    val accessStates: List<AccessState>,
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
+    override fun toWhereClause(): String =
+        accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "$dbColumnName = ?"
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        accessStates.forEach {
             preparedStatement.setString(localCounter++, it.toString())
         }
         return localCounter
