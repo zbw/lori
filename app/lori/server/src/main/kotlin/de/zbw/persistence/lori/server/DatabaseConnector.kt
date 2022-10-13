@@ -1071,20 +1071,20 @@ class DatabaseConnector(
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
-            "SELECT DISTINCT ON (${TABLE_NAME_ITEM_METADATA}.metadata_id) ${TABLE_NAME_ITEM_METADATA}.metadata_id,handle,ppn,title,title_journal," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-                "${TABLE_NAME_ITEM_METADATA}.created_on,${TABLE_NAME_ITEM_METADATA}.last_updated_on," +
-                "${TABLE_NAME_ITEM_METADATA}.created_by,${TABLE_NAME_ITEM_METADATA}.last_updated_by," +
+                "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
+                "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_SELECT_ALL_METADATA =
-            "SELECT ${TABLE_NAME_ITEM_METADATA}.metadata_id,handle,ppn,title,title_journal," +
+            "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
-                "${TABLE_NAME_ITEM_METADATA}.created_on,${TABLE_NAME_ITEM_METADATA}.last_updated_on," +
-                "${TABLE_NAME_ITEM_METADATA}.created_by,${TABLE_NAME_ITEM_METADATA}.last_updated_by," +
+                "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
+                "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
 
@@ -1249,7 +1249,7 @@ class DatabaseConnector(
             emptyMap(),
             metadataSearchFilter,
             rightSearchFilter,
-        ) + " ORDER BY ${TABLE_NAME_ITEM_METADATA}.metadata_id ASC LIMIT ? OFFSET ?;"
+        ) + " ORDER BY $TABLE_NAME_ITEM_METADATA.metadata_id ASC LIMIT ? OFFSET ?;"
 
         private fun buildSearchQueryHelper(
             searchKeyMap: Map<SearchKey, List<String>>,
@@ -1284,8 +1284,8 @@ class DatabaseConnector(
             rightSearchFilter: List<RightSearchFilter> = emptyList(),
         ) =
             "SELECT COUNT(*) FROM" +
-                " (SELECT DISTINCT ON (${TABLE_NAME_ITEM_METADATA}.metadata_id) ${TABLE_NAME_ITEM_METADATA}.*" +
-                " FROM ${TABLE_NAME_ITEM_METADATA}" +
+                " (SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.*" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
                 buildSearchQueryHelper(searchKeyMap, metadataSearchFilter, rightSearchFilter) +
                 ") a;"
 
@@ -1319,9 +1319,9 @@ class DatabaseConnector(
                     metadataFilters
             }
             return " LEFT JOIN $TABLE_NAME_ITEM " +
-                "ON ${TABLE_NAME_ITEM}.metadata_id = ${TABLE_NAME_ITEM_METADATA}.metadata_id " +
-                "JOIN ${TABLE_NAME_ITEM_RIGHT} " +
-                "ON ${TABLE_NAME_ITEM}.right_id = ${TABLE_NAME_ITEM_RIGHT}.right_id AND " +
+                "ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id " +
+                "JOIN $TABLE_NAME_ITEM_RIGHT " +
+                "ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.right_id AND " +
                 rightFilters +
                 whereClause
         }
