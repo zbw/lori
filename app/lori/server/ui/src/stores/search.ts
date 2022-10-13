@@ -4,6 +4,10 @@ import { computed, ref } from "vue";
 export const useSearchStore = defineStore("search", () => {
   const lastSearchTerm = ref("");
 
+  const accessStateClosed = ref(false);
+  const accessStateOpen = ref(false);
+  const accessStateRestricted = ref(false);
+
   const publicationDateFrom = ref("");
   const publicationDateTo = ref("");
 
@@ -19,6 +23,9 @@ export const useSearchStore = defineStore("search", () => {
 
   return {
     lastSearchTerm,
+    accessStateClosed,
+    accessStateRestricted,
+    accessStateOpen,
     publicationDateFrom,
     publicationDateTo,
     publicationTypeArticle,

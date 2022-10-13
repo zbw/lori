@@ -116,16 +116,19 @@ export default defineComponent({
               label="Open Access"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.accessStateOpen"
             ></v-checkbox>
             <v-checkbox
               label="Restricted Access"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.accessStateRestricted"
             ></v-checkbox>
             <v-checkbox
               label="Closed Access"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.accessStateClosed"
             ></v-checkbox>
           </v-list-group>
           <v-list-group no-action sub-group eager>
