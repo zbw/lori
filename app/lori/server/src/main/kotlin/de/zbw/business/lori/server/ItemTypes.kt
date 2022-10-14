@@ -40,6 +40,12 @@ enum class AccessState {
     RESTRICTED,
 }
 
+enum class TemporalValidity {
+    FUTURE,
+    PAST,
+    PRESENT,
+}
+
 enum class PublicationType {
     ARTICLE,
     BOOK,

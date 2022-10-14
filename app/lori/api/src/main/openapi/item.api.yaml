@@ -256,6 +256,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterTemporalValidity
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation

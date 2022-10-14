@@ -53,7 +53,8 @@ export default {
     pageSize: number,
     filterPublicationDate: string | undefined,
     filterPublicationType: string | undefined,
-    filterAccessState: string | undefined
+    filterAccessState: string | undefined,
+    filterTemporalValidity: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -63,6 +64,7 @@ export default {
       filterPublicationDate: filterPublicationDate,
       filterPublicationType: filterPublicationType,
       filterAccessState: filterAccessState,
+      filterTemporalValidity: filterTemporalValidity
     });
   },
 };

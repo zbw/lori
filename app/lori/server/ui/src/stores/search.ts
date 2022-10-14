@@ -21,6 +21,10 @@ export const useSearchStore = defineStore("search", () => {
   const publicationTypeThesis = ref(false);
   const publicationTypeWorkingPaper = ref(false);
 
+  const temporalValidityFilterFuture = ref(false);
+  const temporalValidityFilterPresent = ref(false);
+  const temporalValidityFilterPast = ref(false);
+
   return {
     lastSearchTerm,
     accessStateClosed,
@@ -37,5 +41,8 @@ export const useSearchStore = defineStore("search", () => {
     publicationTypeResearchReport,
     publicationTypeThesis,
     publicationTypeWorkingPaper,
+    temporalValidityFilterFuture,
+    temporalValidityFilterPast,
+    temporalValidityFilterPresent,
   };
 });
