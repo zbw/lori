@@ -5,6 +5,8 @@ import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.TemporalValidity
+import de.zbw.business.lori.server.TemporalValidityFilter
 
 /**
  * Helper object for parsing all sort of query parameters.
@@ -60,5 +62,19 @@ object QueryParameterParser {
             }
         }
         return accessStates.takeIf { it.isNotEmpty() }?.let { AccessStateFilter(it) }
+    }
+
+    fun parseTemporalValidity(s: String?): TemporalValidityFilter? {
+        if (s == null) {
+            return null
+        }
+        val temporalValidity: List<TemporalValidity> = s.split(",".toRegex()).mapNotNull {
+            try {
+                TemporalValidity.valueOf(it)
+            } catch (iae: IllegalArgumentException) {
+                null
+            }
+        }
+        return temporalValidity.takeIf { it.isNotEmpty() }?.let { TemporalValidityFilter(it) }
     }
 }

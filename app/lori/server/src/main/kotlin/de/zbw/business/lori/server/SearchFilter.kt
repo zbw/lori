@@ -85,3 +85,27 @@ class AccessStateFilter(
         return localCounter
     }
 }
+
+class TemporalValidityFilter(
+    val temporalValidity: List<TemporalValidity>,
+) : RightSearchFilter("") {
+    override fun toWhereClause(): String =
+        temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            when (it) {
+                TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_START_DATE} > ?"
+                TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_END_DATE} < ?"
+                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_START_DATE} < ? AND ${DatabaseConnector.COLUMN_END_DATE} > ?"
+            }
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        temporalValidity.forEach {
+            preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
+            if (it == TemporalValidity.PRESENT) {
+                preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
+            }
+        }
+        return localCounter
+    }
+}

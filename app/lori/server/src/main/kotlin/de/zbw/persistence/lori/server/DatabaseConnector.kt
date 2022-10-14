@@ -954,9 +954,11 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_USERS = "users"
 
+        const val COLUMN_END_DATE = "end_date"
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
         const val COLUMN_PUBLICATION_DATE = "publication_date"
         const val COLUMN_PUBLICATION_TYPE = "publication_type"
+        const val COLUMN_START_DATE = "start_date"
 
         const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM_METADATA"

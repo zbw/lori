@@ -7,13 +7,16 @@ import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -42,6 +45,20 @@ class RightFilterTest : DatabaseTest() {
         collectionName = "subject3",
         publicationType = PublicationType.PROCEEDINGS,
     )
+    private val tempValFilterPresent = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "validity filter present",
+        collectionName = "validity",
+    )
+
+    private val tempValFilterPast = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "validity filter post",
+        collectionName = "validity",
+    )
+
+    private val tempValFilterFuture = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "validity filter future",
+        collectionName = "validity",
+    )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
@@ -49,12 +66,32 @@ class RightFilterTest : DatabaseTest() {
             TEST_RIGHT.copy(accessState = AccessState.RESTRICTED),
             TEST_RIGHT.copy(accessState = AccessState.OPEN),
         ),
+        tempValFilterPresent to listOf(
+            TEST_RIGHT.copy(
+                endDate = LocalDate.of(2021, 9, 1),
+                startDate = LocalDate.of(2021, 6, 1),
+            )
+        ),
+        tempValFilterPast to listOf(
+            TEST_RIGHT.copy(
+                endDate = LocalDate.of(2021, 3, 1),
+                startDate = LocalDate.of(2021, 2, 1),
+            )
+        ),
+        tempValFilterFuture to listOf(
+            TEST_RIGHT.copy(
+                endDate = LocalDate.of(2021, 12, 1),
+                startDate = LocalDate.of(2021, 10, 1),
+            )
+        ),
     )
 
     @BeforeClass
     fun fillDB() {
         mockkStatic(Instant::class)
         every { Instant.now() } returns DatabaseConnectorTest.NOW.toInstant()
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
         getInitialMetadata().forEach { entry ->
             backend.insertMetadataElement(entry.key)
             entry.value.forEach { right ->
@@ -62,6 +99,11 @@ class RightFilterTest : DatabaseTest() {
                 backend.insertItemEntry(entry.key.metadataId, r)
             }
         }
+    }
+
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
     }
 
     @DataProvider(name = DATA_FOR_SEARCH_WITH_RIGHT_FILTER)
@@ -149,50 +191,51 @@ class RightFilterTest : DatabaseTest() {
     }
 
     @DataProvider(name = DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER)
-    fun createDataForGetItemWithRightFilter() = arrayOf(
+    fun createDataForGetItemWithRightFilter() =
         arrayOf(
-            listOf(
-                PublicationTypeFilter(
-                    listOf(
-                        PublicationType.PROCEEDINGS,
-                    )
+            arrayOf(
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        )
+                    ),
                 ),
-            ),
-            listOf(
-                AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED, AccessState.RESTRICTED)),
-            ),
-            setOf(itemRightRestricted, itemRightRestrictedOpen),
-            "Filter for all access states"
-        ),
-        arrayOf(
-            listOf(
-                PublicationTypeFilter(
-                    listOf(
-                        PublicationType.PROCEEDINGS,
-                    )
+                listOf(
+                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED, AccessState.RESTRICTED)),
                 ),
+                setOf(itemRightRestricted, itemRightRestrictedOpen),
+                "Filter for all access states"
             ),
-            listOf(
-                AccessStateFilter(listOf(AccessState.RESTRICTED)),
-            ),
-            setOf(itemRightRestricted, itemRightRestrictedOpen),
-            "Filter for Access State Restricted"
-        ),
-        arrayOf(
-            listOf(
-                PublicationTypeFilter(
-                    listOf(
-                        PublicationType.PROCEEDINGS,
-                    )
+            arrayOf(
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        )
+                    ),
                 ),
+                listOf(
+                    AccessStateFilter(listOf(AccessState.RESTRICTED)),
+                ),
+                setOf(itemRightRestricted, itemRightRestrictedOpen),
+                "Filter for Access State Restricted"
             ),
-            listOf(
-                AccessStateFilter(listOf(AccessState.OPEN)),
+            arrayOf(
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        )
+                    ),
+                ),
+                listOf(
+                    AccessStateFilter(listOf(AccessState.OPEN)),
+                ),
+                setOf(itemRightRestrictedOpen),
+                "Filter for Access State Open for Item that has only one right"
             ),
-            setOf(itemRightRestrictedOpen),
-            "Filter for Access State Open for Item that has only one right"
-        ),
-    )
+        )
 
     @Test(dataProvider = DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER)
     fun testGetItemWithRightFilter(
@@ -230,9 +273,151 @@ class RightFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER)
+    fun createDataForNoSearchTemValFilter() =
+        arrayOf(
+            arrayOf(
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.PRESENT)
+                    )
+                ),
+                setOf(tempValFilterPresent),
+                "Filter for all items that have an active right information"
+            ),
+            arrayOf(
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.PAST)
+                    )
+                ),
+                setOf(tempValFilterPast),
+                "Filter for all items that have an active right in the past"
+            ),
+            arrayOf(
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.FUTURE)
+                    )
+                ),
+                setOf(tempValFilterFuture, itemRightRestricted, itemRightRestrictedOpen),
+                "Filter for all items that have an active right in the future"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER)
+    fun testNoSearchTemporalValidityFilter(
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightsSearchFilter: List<RightSearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult: List<Item> = backend.getItemList(
+            10,
+            0,
+            metadataSearchFilter,
+            rightsSearchFilter,
+        )
+
+        // then
+        assertThat(
+            description,
+            searchResult.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+
+        // when
+        val numberOfResults = backend.countMetadataEntries(
+            metadataSearchFilter,
+            rightsSearchFilter,
+        )
+
+        // then
+        assertThat(
+            "Expected number of results does not match",
+            numberOfResults,
+            `is`(expectedResult.size)
+        )
+    }
+
+    @DataProvider(name = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
+    fun createDataForSearchTemValFilter() =
+        arrayOf(
+            arrayOf(
+                "col:validity",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.PRESENT)
+                    )
+                ),
+                setOf(tempValFilterPresent),
+                "Filter for all items that have an active right information"
+            ),
+            arrayOf(
+                "col:validity",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.PAST)
+                    )
+                ),
+                setOf(tempValFilterPast),
+                "Filter for all items that have an active right in the past"
+            ),
+            arrayOf(
+                "col:validity",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    TemporalValidityFilter(
+                        temporalValidity = listOf(TemporalValidity.FUTURE)
+                    )
+                ),
+                setOf(tempValFilterFuture),
+                "Filter for all items that have an active right in the future"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
+    fun testSearchTemporalValidityFilter(
+        givenSearchTerm: String,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightsSearchFilter: List<RightSearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult: Pair<Int, List<Item>> = backend.searchQuery(
+            givenSearchTerm,
+            10,
+            0,
+            metadataSearchFilter,
+            rightsSearchFilter,
+        )
+
+        // then
+        assertThat(
+            description,
+            searchResult.second.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+
+        assertThat(
+            "Expected number of results does not match",
+            searchResult.first,
+            `is`(expectedResult.size)
+        )
+    }
+
     companion object {
         const val DATA_FOR_SEARCH_WITH_RIGHT_FILTER = "DATA_FOR_SEARCH_WITH_RIGHT_FILTER"
         const val DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER = "DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER"
+        const val DATA_FOR_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_SEARCH_TEMP_VAL_FILTER"
+        const val DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER"
 
         val TEST_RIGHT = ItemRight(
             rightId = "123",

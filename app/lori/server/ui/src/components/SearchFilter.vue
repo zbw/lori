@@ -207,16 +207,19 @@ export default defineComponent({
               label="Vergangenheit"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.temporalValidityFilterPast"
             ></v-checkbox>
             <v-checkbox
               label="Aktuell"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.temporalValidityFilterPresent"
             ></v-checkbox>
             <v-checkbox
               label="Zukunft"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.temporalValidityFilterFuture"
             ></v-checkbox>
           </v-list-group>
           <v-list-group no-action sub-group eager>

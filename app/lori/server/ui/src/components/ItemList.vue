@@ -168,6 +168,7 @@ export default defineComponent({
             searchStore.publicationDateTo;
       let filterPublicationType = buildPublicationTypeFilter();
       let filterAccessStates = buildAccessState();
+      let filterTempVal = buildTempVal();
       api
         .searchQuery(
           searchTerm.value,
@@ -176,7 +177,8 @@ export default defineComponent({
           pageSize.value,
           filterPublicationDate,
           filterPublicationType,
-          filterAccessStates
+          filterAccessStates,
+          filterTempVal
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -203,7 +205,21 @@ export default defineComponent({
       if (searchStore.accessStateClosed) {
         accessStates.push("CLOSED");
       }
-      return accessStates;
+      return accessStates.join(",");
+    };
+
+    const buildTempVal = () => {
+      let tempVal: Array<string> = [];
+      if (searchStore.temporalValidityFilterFuture) {
+        tempVal.push("FUTURE");
+      }
+      if (searchStore.temporalValidityFilterPast) {
+        tempVal.push("PAST");
+      }
+      if (searchStore.temporalValidityFilterPresent) {
+        tempVal.push("PRESENT");
+      }
+      return tempVal.join(",");
     };
 
     const buildPublicationTypeFilter = () => {
