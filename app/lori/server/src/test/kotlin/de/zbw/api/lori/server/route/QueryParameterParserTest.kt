@@ -2,13 +2,16 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.StartDateFilter
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.time.LocalDate
 import kotlin.test.assertNull
 
 /**
@@ -160,6 +163,38 @@ class QueryParameterParserTest {
                 )
             )
         }
+    }
+
+    @Test
+    fun testParseDateFilter() {
+        // given
+        val expectedStartFilter = StartDateFilter(
+            LocalDate.of(2000, 10, 1)
+        )
+        val expectedEndFilter = EndDateFilter(
+            LocalDate.of(2000, 12, 1)
+        )
+
+        // when + then
+        assertThat(
+            QueryParameterParser.parseStartDateFilter("2000-10-01")!!.date,
+            `is`(expectedStartFilter.date),
+        )
+
+        // when + then
+        assertThat(
+            QueryParameterParser.parseEndDateFilter("2000-12-01")!!.date,
+            `is`(expectedEndFilter.date)
+        )
+
+        // when + then
+        assertNull(
+            QueryParameterParser.parseStartDateFilter("2000101Fobbar!"),
+        )
+
+        assertNull(
+            QueryParameterParser.parseEndDateFilter("2000101Fobbar!"),
+        )
     }
 
     companion object {

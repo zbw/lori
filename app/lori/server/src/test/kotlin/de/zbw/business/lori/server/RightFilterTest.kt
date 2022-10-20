@@ -60,6 +60,11 @@ class RightFilterTest : DatabaseTest() {
         collectionName = "validity",
     )
 
+    private val startEndDateFilter = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "start and end date At",
+        collectionName = "startAndEnd",
+    )
+
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
         itemRightRestrictedOpen to listOf(
@@ -68,21 +73,27 @@ class RightFilterTest : DatabaseTest() {
         ),
         tempValFilterPresent to listOf(
             TEST_RIGHT.copy(
-                endDate = LocalDate.of(2021, 9, 1),
                 startDate = LocalDate.of(2021, 6, 1),
+                endDate = LocalDate.of(2021, 9, 1),
             )
         ),
         tempValFilterPast to listOf(
             TEST_RIGHT.copy(
-                endDate = LocalDate.of(2021, 3, 1),
                 startDate = LocalDate.of(2021, 2, 1),
+                endDate = LocalDate.of(2021, 3, 1),
             )
         ),
         tempValFilterFuture to listOf(
             TEST_RIGHT.copy(
-                endDate = LocalDate.of(2021, 12, 1),
                 startDate = LocalDate.of(2021, 10, 1),
+                endDate = LocalDate.of(2021, 12, 1),
             )
+        ),
+        startEndDateFilter to listOf(
+            TEST_RIGHT.copy(
+                startDate = LocalDate.of(2000, 10, 1),
+                endDate = LocalDate.of(2000, 12, 1),
+            ),
         ),
     )
 
@@ -155,6 +166,30 @@ class RightFilterTest : DatabaseTest() {
             setOf(itemRightRestrictedOpen),
             1,
             "Filter for Access State Restricted for item that has multiple items",
+        ),
+        arrayOf(
+            "col:startAndEnd",
+            emptyList<MetadataSearchFilter>(),
+            listOf(
+                StartDateFilter(
+                    LocalDate.of(2000, 10, 1)
+                ),
+            ),
+            setOf(startEndDateFilter),
+            1,
+            "Filter for End Date",
+        ),
+        arrayOf(
+            "col:startAndEnd",
+            emptyList<MetadataSearchFilter>(),
+            listOf(
+                EndDateFilter(
+                    LocalDate.of(2000, 12, 1)
+                ),
+            ),
+            setOf(startEndDateFilter),
+            1,
+            "Filter for End Date",
         ),
     )
 
@@ -235,6 +270,26 @@ class RightFilterTest : DatabaseTest() {
                 setOf(itemRightRestrictedOpen),
                 "Filter for Access State Open for Item that has only one right"
             ),
+            arrayOf(
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    StartDateFilter(
+                        LocalDate.of(2000, 10, 1)
+                    ),
+                ),
+                setOf(startEndDateFilter),
+                "Filter for Start Date"
+            ),
+            arrayOf(
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    EndDateFilter(
+                        LocalDate.of(2000, 12, 1)
+                    ),
+                ),
+                setOf(startEndDateFilter),
+                "Filter for End Date"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER)
@@ -293,7 +348,7 @@ class RightFilterTest : DatabaseTest() {
                         temporalValidity = listOf(TemporalValidity.PAST)
                     )
                 ),
-                setOf(tempValFilterPast),
+                setOf(tempValFilterPast, startEndDateFilter),
                 "Filter for all items that have an active right in the past"
             ),
             arrayOf(

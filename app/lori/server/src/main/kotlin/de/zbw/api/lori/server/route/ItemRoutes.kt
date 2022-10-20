@@ -2,9 +2,11 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
@@ -311,6 +313,14 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
                         QueryParameterParser.parseTemporalValidity(call.request.queryParameters["filterTemporalValidity"])
+                    val startDateFilter: StartDateFilter? =
+                        QueryParameterParser.parseStartDateFilter(
+                            call.request.queryParameters["filterStartDate"]
+                        )
+                    val endDateFilter: EndDateFilter? =
+                        QueryParameterParser.parseEndDateFilter(
+                            call.request.queryParameters["filterEndDate"]
+                        )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
@@ -348,7 +358,12 @@ fun Routing.itemRoutes(
                         return@withContext
                     }
                     val metadataFilters = listOfNotNull(publicationDateFilter, publicationTypeFilter)
-                    val rightFilters = listOfNotNull(accessStateFilter, temporalValidityFilter)
+                    val rightFilters = listOfNotNull(
+                        accessStateFilter,
+                        temporalValidityFilter,
+                        startDateFilter,
+                        endDateFilter,
+                    )
                     if (searchTerm == null || searchTerm.isBlank()) {
                         val items = backend.getItemList(limit, offset, metadataFilters, rightFilters)
                         val entries = backend.countMetadataEntries(metadataFilters, rightFilters)
