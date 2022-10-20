@@ -21,6 +21,10 @@ export const useSearchStore = defineStore("search", () => {
   const publicationTypeThesis = ref(false);
   const publicationTypeWorkingPaper = ref(false);
 
+  const temporalEventInput = ref("");
+  const temporalEventStartDateFilter = ref(false);
+  const temporalEventEndDateFilter = ref(false);
+
   const temporalValidityFilterFuture = ref(false);
   const temporalValidityFilterPresent = ref(false);
   const temporalValidityFilterPast = ref(false);
@@ -41,6 +45,9 @@ export const useSearchStore = defineStore("search", () => {
     publicationTypeResearchReport,
     publicationTypeThesis,
     publicationTypeWorkingPaper,
+    temporalEventInput,
+    temporalEventStartDateFilter,
+    temporalEventEndDateFilter,
     temporalValidityFilterFuture,
     temporalValidityFilterPast,
     temporalValidityFilterPresent,

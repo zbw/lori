@@ -54,7 +54,9 @@ export default {
     filterPublicationDate: string | undefined,
     filterPublicationType: string | undefined,
     filterAccessState: string | undefined,
-    filterTemporalValidity: string | undefined
+    filterTemporalValidity: string | undefined,
+    filterStartDate: string | undefined,
+    filterEndDate: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -64,7 +66,9 @@ export default {
       filterPublicationDate: filterPublicationDate,
       filterPublicationType: filterPublicationType,
       filterAccessState: filterAccessState,
-      filterTemporalValidity: filterTemporalValidity
+      filterTemporalValidity: filterTemporalValidity,
+      filterStartDate: filterStartDate,
+      filterEndDate: filterEndDate
     });
   },
 };
