@@ -2,11 +2,16 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidity
 import de.zbw.business.lori.server.TemporalValidityFilter
+import java.time.DateTimeException
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Helper object for parsing all sort of query parameters.
@@ -76,5 +81,23 @@ object QueryParameterParser {
             }
         }
         return temporalValidity.takeIf { it.isNotEmpty() }?.let { TemporalValidityFilter(it) }
+    }
+
+    fun parseStartDateFilter(s: String?): StartDateFilter? =
+        s
+            ?.let { parseDate(it) }
+            ?.let { StartDateFilter(it) }
+
+    fun parseEndDateFilter(s: String?): EndDateFilter? =
+        s
+            ?.let { parseDate(it) }
+            ?.let { EndDateFilter(it) }
+
+    private fun parseDate(s: String): LocalDate? {
+        return try {
+            LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
+        } catch (dte: DateTimeException) {
+            null
+        }
     }
 }

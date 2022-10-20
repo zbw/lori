@@ -1,13 +1,80 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { computed, defineComponent, reactive, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
+import { useVuelidate } from "@vuelidate/core";
 
 export default defineComponent({
   setup() {
     const searchStore = useSearchStore();
+    const temporalEvent = -1;
+
+    const tempEventMenu = ref(false);
+    type FormState = {
+      tempEventInput: string;
+      tempEventStart: boolean;
+      temEventEnd: boolean;
+    };
+
+    const tempEventCheckForInput: (
+      value: string,
+      siblings: FormState
+    ) => boolean = (value: string, siblings: FormState) => {
+      return !(
+        ((value == "startDate" || value == "endDate") &&
+          siblings.tempEventInput != "") ||
+        siblings.tempEventInput != undefined
+      );
+    };
+
+    const tempEventState = reactive({
+      startDateOrEndDateValue: "",
+      startDateOrEndDateOption: "",
+    });
+    const rules = {
+      startDateOrEndDateValue: {},
+      startDateOrEndDateOption: { tempEventCheckForInput },
+    };
+
+    const v$ = useVuelidate(rules, tempEventState);
+
+    watch(tempEventState, (currentValue, oldValue) => {
+      searchStore.temporalEventStartDateFilter =
+        currentValue.startDateOrEndDateOption == "startDate";
+      searchStore.temporalEventEndDateFilter =
+        currentValue.startDateOrEndDateOption == "endDate";
+      searchStore.temporalEventInput = currentValue.startDateOrEndDateValue;
+    });
+
+    const errorTempEventInput = computed(() => {
+      const errors: Array<string> = [];
+      if (
+        v$.value.startDateOrEndDateOption.$invalid &&
+        tempEventState.startDateOrEndDateValue == ""
+      ) {
+        errors.push("Eintrag wird benötigt");
+      }
+      return errors;
+    });
+
+    const errorTempEventStartEnd = computed(() => {
+      const errors: Array<string> = [];
+      if (
+        !v$.value.startDateOrEndDateOption.$invalid &&
+        tempEventState.startDateOrEndDateValue != ""
+      ) {
+        errors.push("Wähle eine dieser Optionen aus");
+      }
+      return errors;
+    });
 
     return {
+      errorTempEventStartEnd,
+      errorTempEventInput,
+      tempEventState,
+      temporalEvent,
+      tempEventMenu,
       searchStore,
+      v$,
     };
   },
 });
@@ -136,8 +203,8 @@ export default defineComponent({
               <v-list-item-title>Zeitliche Gütligkeit am</v-list-item-title>
             </template>
             <v-menu
-              ref="menuStart"
               transition="scale-transition"
+              :close-on-content-click="false"
               offset-y
               min-width="auto"
             >
@@ -166,10 +233,12 @@ export default defineComponent({
               </v-list-item-title>
             </template>
             <v-menu
-              ref="menuStart"
+              ref="tempEventMenu"
               transition="scale-transition"
               offset-y
               min-width="auto"
+              :return-value.sync="tempEventState.startDateOrEndDateValue"
+              :close-on-content-click="false"
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-text-field
@@ -180,24 +249,55 @@ export default defineComponent({
                   v-on="on"
                   required
                   class="pl-7"
+                  v-model="tempEventState.startDateOrEndDateValue"
+                  @change="v$.startDateOrEndDateValue.$touch()"
+                  @blur="v$.startDateOrEndDateValue.$touch()"
+                  :error-messages="errorTempEventInput"
                 ></v-text-field>
               </template>
-              <v-date-picker no-title scrollable>
+              <v-date-picker
+                v-model="tempEventState.startDateOrEndDateValue"
+                no-title
+                scrollable
+              >
                 <v-spacer></v-spacer>
-                <v-btn text color="primary"> Cancel</v-btn>
-                <v-btn text color="primary"> OK</v-btn>
+                <v-btn text color="primary" @click="tempEventMenu = false">
+                  Cancel
+                </v-btn>
+                <v-btn
+                  text
+                  color="primary"
+                  @click="
+                    $refs.tempEventMenu.save(
+                      tempEventState.startDateOrEndDateValue
+                    )
+                  "
+                >
+                  OK
+                </v-btn>
               </v-date-picker>
             </v-menu>
-            <v-checkbox
-              label="Startdatum"
-              hide-details
-              class="pl-9 ml-4"
-            ></v-checkbox>
-            <v-checkbox
-              label="Enddatum"
-              hide-details
-              class="pl-9 ml-4"
-            ></v-checkbox>
+            <v-item-group v-model="temporalEvent">
+              <v-item>
+                <v-checkbox
+                  label="Startdatum"
+                  class="pl-9 ml-4"
+                  hide-details
+                  v-model="tempEventState.startDateOrEndDateOption"
+                  value="startDate"
+                  :error-messages="errorTempEventStartEnd"
+                ></v-checkbox>
+              </v-item>
+              <v-item>
+                <v-checkbox
+                  label="Enddatum"
+                  class="pl-9 ml-4"
+                  v-model="tempEventState.startDateOrEndDateOption"
+                  :error-messages="errorTempEventStartEnd"
+                  value="endDate"
+                ></v-checkbox>
+              </v-item>
+            </v-item-group>
           </v-list-group>
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>

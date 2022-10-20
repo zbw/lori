@@ -109,3 +109,27 @@ class TemporalValidityFilter(
         return localCounter
     }
 }
+
+class StartDateFilter(
+    val date: LocalDate,
+) : RightSearchFilter(DatabaseConnector.COLUMN_START_DATE) {
+    override fun toWhereClause(): String =
+        "$dbColumnName = ?"
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        preparedStatement.setDate(counter, Date.valueOf(date))
+        return counter + 1
+    }
+}
+
+class EndDateFilter(
+    val date: LocalDate,
+) : RightSearchFilter(DatabaseConnector.COLUMN_END_DATE) {
+    override fun toWhereClause(): String =
+        "$dbColumnName = ?"
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        preparedStatement.setDate(counter, Date.valueOf(date))
+        return counter + 1
+    }
+}

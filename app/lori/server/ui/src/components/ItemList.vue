@@ -178,7 +178,9 @@ export default defineComponent({
           filterPublicationDate,
           filterPublicationType,
           filterAccessStates,
-          filterTempVal
+          filterTempVal,
+          buildStartDateAt(),
+          buildEndDateAt()
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -205,7 +207,11 @@ export default defineComponent({
       if (searchStore.accessStateClosed) {
         accessStates.push("CLOSED");
       }
-      return accessStates.join(",");
+      if (accessStates.length == 0) {
+        return undefined;
+      } else {
+        return accessStates.join(",");
+      }
     };
 
     const buildTempVal = () => {
@@ -219,7 +225,29 @@ export default defineComponent({
       if (searchStore.temporalValidityFilterPresent) {
         tempVal.push("PRESENT");
       }
-      return tempVal.join(",");
+      if (tempVal.length == 0) {
+        return undefined;
+      } else {
+        return tempVal.join(",");
+      }
+    };
+
+    const buildStartDateAt = () => {
+      if (
+        searchStore.temporalEventStartDateFilter &&
+        searchStore.temporalEventInput != ""
+      ) {
+        return searchStore.temporalEventInput;
+      }
+    };
+
+    const buildEndDateAt = () => {
+      if (
+        searchStore.temporalEventEndDateFilter &&
+        searchStore.temporalEventInput != ""
+      ) {
+        return searchStore.temporalEventInput;
+      }
     };
 
     const buildPublicationTypeFilter = () => {
@@ -251,7 +279,11 @@ export default defineComponent({
       if (searchStore.publicationTypeWorkingPaper) {
         types.push("WORKING_PAPER");
       }
-      return types.join(",");
+      if (types.length == 0) {
+        return undefined;
+      } else {
+        return types.join(",");
+      }
     };
 
     // parse publication type

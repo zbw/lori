@@ -260,6 +260,14 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterStartDate
+        in: query
+        schema:
+          type: string
+      - name: filterEndDate
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation
