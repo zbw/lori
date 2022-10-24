@@ -180,7 +180,8 @@ export default defineComponent({
           filterAccessStates,
           filterTempVal,
           buildStartDateAt(),
-          buildEndDateAt()
+          buildEndDateAt(),
+          buildFormalRule()
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -211,6 +212,24 @@ export default defineComponent({
         return undefined;
       } else {
         return accessStates.join(",");
+      }
+    };
+
+    const buildFormalRule = () => {
+      let formalRule: Array<string> = [];
+      if (searchStore.formalRuleLicenceContract) {
+        formalRule.push("LICENCE_CONTRACT");
+      }
+      if (searchStore.formalRuleOpenContentLicence) {
+        formalRule.push("OPEN_CONTENT_LICENCE");
+      }
+      if (searchStore.formalRuleUserAgreement) {
+        formalRule.push("ZBW_USER_AGREEMENT");
+      }
+      if (formalRule.length == 0) {
+        return undefined;
+      } else {
+        return formalRule.join(",");
       }
     };
 
@@ -378,7 +397,7 @@ export default defineComponent({
             </template>
           </v-select>
 
-          <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }} </v-col>
+          <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }}</v-col>
           <v-data-table
             disable-pagination
             :hide-default-footer="true"

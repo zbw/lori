@@ -3,6 +3,8 @@ package de.zbw.api.lori.server.route
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
+import de.zbw.business.lori.server.FormalRule
+import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -100,4 +102,16 @@ object QueryParameterParser {
             null
         }
     }
+
+    fun parseFormalRuleFilter(s: String?): FormalRuleFilter? =
+        s?.let { input ->
+            val formalRules: List<FormalRule> = input.split(",".toRegex()).mapNotNull {
+                try {
+                    FormalRule.valueOf(it.uppercase())
+                } catch (iae: IllegalArgumentException) {
+                    null
+                }
+            }
+            return formalRules.takeIf { it.isNotEmpty() }?.let { FormalRuleFilter(it) }
+        }
 }

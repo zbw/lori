@@ -8,6 +8,10 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateOpen = ref(false);
   const accessStateRestricted = ref(false);
 
+  const formalRuleLicenceContract = ref(false);
+  const formalRuleOpenContentLicence = ref(false);
+  const formalRuleUserAgreement = ref(false);
+
   const publicationDateFrom = ref("");
   const publicationDateTo = ref("");
 
@@ -34,6 +38,9 @@ export const useSearchStore = defineStore("search", () => {
     accessStateClosed,
     accessStateRestricted,
     accessStateOpen,
+    formalRuleLicenceContract,
+    formalRuleOpenContentLicence,
+    formalRuleUserAgreement,
     publicationDateFrom,
     publicationDateTo,
     publicationTypeArticle,

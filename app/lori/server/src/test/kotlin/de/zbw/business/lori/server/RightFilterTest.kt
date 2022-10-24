@@ -65,6 +65,21 @@ class RightFilterTest : DatabaseTest() {
         collectionName = "startAndEnd",
     )
 
+    private val formalRuleLicenceContract = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "formal rule filter licence contract",
+        collectionName = "formalRuleLicence formal",
+    )
+
+    private val formalRuleUserAgreement = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "formal rule filter user agreement",
+        collectionName = "formalRuleUserAgreement formal",
+    )
+
+    private val formalRuleOCL = DatabaseConnectorTest.TEST_Metadata.copy(
+        metadataId = "formal rule filter ocl",
+        collectionName = "ocl formal",
+    )
+
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
         itemRightRestrictedOpen to listOf(
@@ -93,6 +108,21 @@ class RightFilterTest : DatabaseTest() {
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2000, 10, 1),
                 endDate = LocalDate.of(2000, 12, 1),
+            ),
+        ),
+        formalRuleLicenceContract to listOf(
+            TEST_RIGHT.copy(
+                licenceContract = "licence"
+            ),
+        ),
+        formalRuleUserAgreement to listOf(
+            TEST_RIGHT.copy(
+                zbwUserAgreement = true,
+            ),
+        ),
+        formalRuleOCL to listOf(
+            TEST_RIGHT.copy(
+                openContentLicence = "foobar",
             ),
         ),
     )
@@ -358,7 +388,14 @@ class RightFilterTest : DatabaseTest() {
                         temporalValidity = listOf(TemporalValidity.FUTURE)
                     )
                 ),
-                setOf(tempValFilterFuture, itemRightRestricted, itemRightRestrictedOpen),
+                setOf(
+                    tempValFilterFuture,
+                    itemRightRestricted,
+                    itemRightRestrictedOpen,
+                    formalRuleLicenceContract,
+                    formalRuleOCL,
+                    formalRuleUserAgreement,
+                ),
                 "Filter for all items that have an active right in the future"
             ),
         )
@@ -468,11 +505,96 @@ class RightFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_SEARCH_FORMAL_RULE_FILTER)
+    fun createDataForFormalRuleFilterTest() =
+        arrayOf(
+            arrayOf(
+                "col:formalRuleLicence",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    FormalRuleFilter(
+                        formalRules = listOf(FormalRule.LICENCE_CONTRACT)
+                    )
+                ),
+                setOf(formalRuleLicenceContract),
+                "formal rule licence contract"
+            ),
+            arrayOf(
+                "col:formalRuleUserAgreement",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    FormalRuleFilter(
+                        formalRules = listOf(FormalRule.ZBW_USER_AGREEMENT)
+                    )
+                ),
+                setOf(formalRuleUserAgreement),
+                "formal rule zbw agreement"
+            ),
+            arrayOf(
+                "col:ocl",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    FormalRuleFilter(
+                        formalRules = listOf(FormalRule.OPEN_CONTENT_LICENCE)
+                    )
+                ),
+                setOf(formalRuleOCL),
+                "formal rule ocl"
+            ),
+            arrayOf(
+                "col:formal",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    FormalRuleFilter(
+                        formalRules = listOf(
+                            FormalRule.OPEN_CONTENT_LICENCE,
+                            FormalRule.LICENCE_CONTRACT,
+                            FormalRule.ZBW_USER_AGREEMENT,
+                        )
+                    )
+                ),
+                setOf(formalRuleOCL, formalRuleUserAgreement, formalRuleLicenceContract),
+                "formal rule all"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_SEARCH_FORMAL_RULE_FILTER)
+    fun testSearchFormalRuleFilter(
+        givenSearchTerm: String,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightsSearchFilter: List<RightSearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult: Pair<Int, List<Item>> = backend.searchQuery(
+            givenSearchTerm,
+            10,
+            0,
+            metadataSearchFilter,
+            rightsSearchFilter,
+        )
+
+        // then
+        assertThat(
+            description,
+            searchResult.second.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+
+        assertThat(
+            "Expected number of results does not match",
+            searchResult.first,
+            `is`(expectedResult.size)
+        )
+    }
+
     companion object {
         const val DATA_FOR_SEARCH_WITH_RIGHT_FILTER = "DATA_FOR_SEARCH_WITH_RIGHT_FILTER"
         const val DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER = "DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER"
         const val DATA_FOR_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_SEARCH_TEMP_VAL_FILTER"
         const val DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER"
+        const val DATA_FOR_SEARCH_FORMAL_RULE_FILTER = "DATA_FOR_SEARCH_FORMAL_RULE_FILTER"
 
         val TEST_RIGHT = ItemRight(
             rightId = "123",
