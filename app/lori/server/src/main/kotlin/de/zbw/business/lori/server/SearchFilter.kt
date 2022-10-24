@@ -26,7 +26,7 @@ class PublicationDateFilter(
     val fromYear: Int,
     val toYear: Int,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_PUBLICATION_DATE,
+    DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
 ) {
     private val fromDate = LocalDate.of(fromYear, 1, 1)
     private val toDate = LocalDate.of(toYear, 12, 31)
@@ -49,7 +49,7 @@ class PublicationDateFilter(
 class PublicationTypeFilter(
     val publicationFilter: List<PublicationType>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_PUBLICATION_TYPE,
+    DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
 ) {
     override fun toWhereClause(): String =
         publicationFilter.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -92,9 +92,9 @@ class TemporalValidityFilter(
     override fun toWhereClause(): String =
         temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             when (it) {
-                TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_START_DATE} > ?"
-                TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_END_DATE} < ?"
-                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_START_DATE} < ? AND ${DatabaseConnector.COLUMN_END_DATE} > ?"
+                TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} > ?"
+                TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_RIGHT_END_DATE} < ?"
+                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} < ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} > ?"
             }
         }
 
@@ -112,7 +112,7 @@ class TemporalValidityFilter(
 
 class StartDateFilter(
     val date: LocalDate,
-) : RightSearchFilter(DatabaseConnector.COLUMN_START_DATE) {
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_START_DATE) {
     override fun toWhereClause(): String =
         "$dbColumnName = ?"
 
@@ -124,7 +124,7 @@ class StartDateFilter(
 
 class EndDateFilter(
     val date: LocalDate,
-) : RightSearchFilter(DatabaseConnector.COLUMN_END_DATE) {
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_END_DATE) {
     override fun toWhereClause(): String =
         "$dbColumnName = ?"
 
@@ -132,4 +132,23 @@ class EndDateFilter(
         preparedStatement.setDate(counter, Date.valueOf(date))
         return counter + 1
     }
+}
+
+class FormalRuleFilter(
+    val formalRules: List<FormalRule>,
+) : RightSearchFilter("") {
+    override fun toWhereClause(): String =
+        formalRules.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            when (it) {
+                FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
+                FormalRule.OPEN_CONTENT_LICENCE ->
+                    "(${DatabaseConnector.COLUMN_RIGHT_OPEN_CONTENT_LICENCE} <> '' OR" +
+                        " ${DatabaseConnector.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE} = true OR" +
+                        " ${DatabaseConnector.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL} <> '' OR" +
+                        " ${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true)"
+            }
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
 }

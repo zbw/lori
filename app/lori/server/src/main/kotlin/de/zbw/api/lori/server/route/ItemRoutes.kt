@@ -313,6 +313,9 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
                         QueryParameterParser.parseTemporalValidity(call.request.queryParameters["filterTemporalValidity"])
+                    val formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(
+                        call.request.queryParameters["filterFormalRule"]
+                    )
                     val startDateFilter: StartDateFilter? =
                         QueryParameterParser.parseStartDateFilter(
                             call.request.queryParameters["filterStartDate"]
@@ -363,6 +366,7 @@ fun Routing.itemRoutes(
                         temporalValidityFilter,
                         startDateFilter,
                         endDateFilter,
+                        formalRuleFilter,
                     )
                     if (searchTerm == null || searchTerm.isBlank()) {
                         val items = backend.getItemList(limit, offset, metadataFilters, rightFilters)

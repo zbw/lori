@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
+import de.zbw.business.lori.server.FormalRule
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -194,6 +195,30 @@ class QueryParameterParserTest {
 
         assertNull(
             QueryParameterParser.parseEndDateFilter("2000101Fobbar!"),
+        )
+    }
+
+    @Test
+    fun testFormalRuleFilter() {
+        // given
+        val expectedRuleLicence = listOf(FormalRule.LICENCE_CONTRACT)
+        // when + then
+        assertThat(
+            QueryParameterParser.parseFormalRuleFilter("licence_contract")!!.formalRules,
+            `is`(expectedRuleLicence),
+        )
+
+        // given
+        val expectedFormalRules = listOf(FormalRule.LICENCE_CONTRACT, FormalRule.OPEN_CONTENT_LICENCE)
+        // when + then
+        assertThat(
+            QueryParameterParser.parseFormalRuleFilter("licence_contract,fooobar,open_content_licence")!!.formalRules,
+            `is`(expectedFormalRules),
+        )
+
+        // when + then
+        assertNull(
+            QueryParameterParser.parseFormalRuleFilter("2000101Fobbar!"),
         )
     }
 

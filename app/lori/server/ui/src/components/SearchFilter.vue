@@ -330,16 +330,19 @@ export default defineComponent({
               label="Lizenzvertrag"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.formalRuleLicenceContract"
             ></v-checkbox>
             <v-checkbox
               label="ZBW-Nutzungsvereinbarung"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.formalRuleUserAgreement"
             ></v-checkbox>
             <v-checkbox
               label="Open-Content-Licence"
               hide-details
               class="pl-9 ml-4"
+              v-model="searchStore.formalRuleOpenContentLicence"
             ></v-checkbox>
           </v-list-group>
         </v-col>

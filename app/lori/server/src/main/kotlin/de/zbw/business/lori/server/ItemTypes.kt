@@ -99,3 +99,9 @@ data class ItemRight(
     val startDate: LocalDate,
     val zbwUserAgreement: Boolean?,
 )
+
+enum class FormalRule {
+    LICENCE_CONTRACT,
+    OPEN_CONTENT_LICENCE,
+    ZBW_USER_AGREEMENT;
+}

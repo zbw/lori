@@ -954,11 +954,18 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_USERS = "users"
 
-        const val COLUMN_END_DATE = "end_date"
+        const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
+        const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
+
+        const val COLUMN_RIGHT_START_DATE = "start_date"
+        const val COLUMN_RIGHT_END_DATE = "end_date"
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
-        const val COLUMN_PUBLICATION_DATE = "publication_date"
-        const val COLUMN_PUBLICATION_TYPE = "publication_type"
-        const val COLUMN_START_DATE = "start_date"
+        const val COLUMN_RIGHT_LICENCE_CONTRACT = "licence_contract"
+        const val COLUMN_RIGHT_ZBW_USER_AGREEMENT = "zbw_user_agreement"
+        const val COLUMN_RIGHT_OPEN_CONTENT_LICENCE = "open_content_licence"
+        const val COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE = "non_standard_open_content_licence"
+        const val COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL = "non_standard_open_content_licence_url"
+        const val COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = "restricted_open_content_licence"
 
         const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM_METADATA"
@@ -973,7 +980,7 @@ class DatabaseConnector(
 
         const val STATEMENT_UPSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+            "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
@@ -989,9 +996,9 @@ class DatabaseConnector(
             "title = EXCLUDED.title," +
             "title_journal = EXCLUDED.title_journal," +
             "title_series = EXCLUDED.title_series," +
-            "$COLUMN_PUBLICATION_DATE = EXCLUDED.$COLUMN_PUBLICATION_DATE," +
+            "$COLUMN_METADATA_PUBLICATION_DATE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_DATE," +
             "band = EXCLUDED.band," +
-            "$COLUMN_PUBLICATION_TYPE = EXCLUDED.$COLUMN_PUBLICATION_TYPE," +
+            "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
             "doi = EXCLUDED.doi," +
             "isbn = EXCLUDED.isbn," +
             "rights_k10plus = EXCLUDED.rights_k10plus," +
@@ -1007,7 +1014,7 @@ class DatabaseConnector(
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+            "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author, collection_name, community_name, storage_date) " +
@@ -1021,9 +1028,9 @@ class DatabaseConnector(
             "(created_on, last_updated_on," +
             "created_by, last_updated_by, $COLUMN_RIGHT_ACCESS_STATE," +
             "start_date, end_date, notes_general," +
-            "licence_contract, author_right_exception, zbw_user_agreement," +
-            "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
-            "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+            "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+            "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+            "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
             "basis_access_state, notes_process_documentation, notes_management_related) " +
             "VALUES(?,?," +
             "?,?,?," +
@@ -1042,9 +1049,9 @@ class DatabaseConnector(
                 "(right_id, created_on, last_updated_on," +
                 "created_by, last_updated_by, $COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date, end_date, notes_general," +
-                "licence_contract, author_right_exception, zbw_user_agreement," +
-                "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
-                "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
@@ -1061,11 +1068,12 @@ class DatabaseConnector(
                 "start_date = EXCLUDED.start_date," +
                 "end_date = EXCLUDED.end_date," +
                 "notes_general = EXCLUDED.notes_general," +
-                "licence_contract = EXCLUDED.licence_contract," +
-                "open_content_licence = EXCLUDED.open_content_licence ," +
-                "non_standard_open_content_licence_url = EXCLUDED.non_standard_open_content_licence_url," +
-                "non_standard_open_content_licence = EXCLUDED.non_standard_open_content_licence," +
-                "restricted_open_content_licence = EXCLUDED.restricted_open_content_licence," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT = EXCLUDED.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE ," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL = EXCLUDED.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_ZBW_USER_AGREEMENT = EXCLUDED.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "notes_formal_rules = EXCLUDED.notes_formal_rules," +
                 "basis_storage = EXCLUDED.basis_storage," +
                 "basis_access_state = EXCLUDED.basis_access_state," +
@@ -1074,7 +1082,7 @@ class DatabaseConnector(
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
@@ -1083,7 +1091,7 @@ class DatabaseConnector(
 
         const val STATEMENT_SELECT_ALL_METADATA =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
@@ -1118,16 +1126,16 @@ class DatabaseConnector(
         const val STATEMENT_GET_RIGHTS =
             "SELECT right_id, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
-                "licence_contract, author_right_exception, zbw_user_agreement," +
-                "open_content_licence, non_standard_open_content_licence_url, non_standard_open_content_licence," +
-                "restricted_open_content_licence, notes_formal_rules, basis_storage," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related " +
                 "FROM $TABLE_NAME_ITEM_RIGHT " +
                 "WHERE right_id = ANY(?)"
 
         const val STATEMENT_GET_METADATA_RANGE =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_PUBLICATION_DATE,band,$COLUMN_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,paket_sigel,zbd_id,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
