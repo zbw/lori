@@ -32,7 +32,11 @@ object Main {
             .startSpan()
 
         val loriClient = LoriClient(
-            configuration = LoriClientConfiguration(9092, "lori", 5000),
+            configuration = LoriClientConfiguration(
+                9092,
+                "lori",
+                3600000 // Wait for one hour max. Anything above that is at least worth investigating.
+            ),
             openTelemetry = openTelemetry,
         )
 

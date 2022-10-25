@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager
 /**
  * Lori-Server.
  *
- * Manages access rights of bibliograhic entities.
+ * Manages access rights of bibliographic entities.
  *
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)
