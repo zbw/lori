@@ -181,7 +181,8 @@ export default defineComponent({
           filterTempVal,
           buildStartDateAt(),
           buildEndDateAt(),
-          buildFormalRule()
+          buildFormalRule(),
+          buildValidOnFilter()
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -257,6 +258,8 @@ export default defineComponent({
         searchStore.temporalEventInput != ""
       ) {
         return searchStore.temporalEventInput;
+      } else {
+        return undefined;
       }
     };
 
@@ -266,6 +269,8 @@ export default defineComponent({
         searchStore.temporalEventInput != ""
       ) {
         return searchStore.temporalEventInput;
+      } else {
+        return undefined;
       }
     };
 
@@ -302,6 +307,17 @@ export default defineComponent({
         return undefined;
       } else {
         return types.join(",");
+      }
+    };
+
+    const buildValidOnFilter = () => {
+      if (
+        searchStore.temporalValidOn != undefined &&
+        searchStore.temporalValidOn != ""
+      ) {
+        return searchStore.temporalValidOn;
+      } else {
+        return undefined;
       }
     };
 

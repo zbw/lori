@@ -57,7 +57,8 @@ export default {
     filterTemporalValidity: string | undefined,
     filterStartDate: string | undefined,
     filterEndDate: string | undefined,
-    filterFormalRule: string | undefined
+    filterFormalRule: string | undefined,
+    filterValidOn: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -70,7 +71,8 @@ export default {
       filterTemporalValidity: filterTemporalValidity,
       filterStartDate: filterStartDate,
       filterEndDate: filterEndDate,
-      filterFormalRule: filterFormalRule
+      filterFormalRule: filterFormalRule,
+      filterValidOn: filterValidOn
     });
   },
 };

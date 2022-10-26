@@ -94,7 +94,7 @@ class TemporalValidityFilter(
             when (it) {
                 TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} > ?"
                 TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_RIGHT_END_DATE} < ?"
-                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} < ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} > ?"
+                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
             }
         }
 
@@ -106,6 +106,24 @@ class TemporalValidityFilter(
                 preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
             }
         }
+        return localCounter
+    }
+}
+
+/**
+ * Filters for items which have a valid right information
+ * on a given day.
+ */
+class RightValidOnFilter(
+    val date: LocalDate,
+) : RightSearchFilter("") {
+    override fun toWhereClause(): String =
+        "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
         return localCounter
     }
 }
