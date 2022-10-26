@@ -33,6 +33,8 @@ export const useSearchStore = defineStore("search", () => {
   const temporalValidityFilterPresent = ref(false);
   const temporalValidityFilterPast = ref(false);
 
+  const temporalValidOn = ref("");
+
   return {
     lastSearchTerm,
     accessStateClosed,
@@ -58,5 +60,6 @@ export const useSearchStore = defineStore("search", () => {
     temporalValidityFilterFuture,
     temporalValidityFilterPast,
     temporalValidityFilterPresent,
+    temporalValidOn,
   };
 });

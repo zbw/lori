@@ -8,6 +8,7 @@ import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidity
 import de.zbw.business.lori.server.TemporalValidityFilter
@@ -94,6 +95,11 @@ object QueryParameterParser {
         s
             ?.let { parseDate(it) }
             ?.let { EndDateFilter(it) }
+
+    fun parseRightValidOnFilter(s: String?): RightValidOnFilter? =
+        s
+            ?.let { parseDate(it) }
+            ?.let { RightValidOnFilter(it) }
 
     private fun parseDate(s: String): LocalDate? {
         return try {

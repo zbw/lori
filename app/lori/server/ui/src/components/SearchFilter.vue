@@ -9,6 +9,7 @@ export default defineComponent({
     const temporalEvent = -1;
 
     const tempEventMenu = ref(false);
+    const tempValidOnMenu = ref(false);
     type FormState = {
       tempEventInput: string;
       tempEventStart: boolean;
@@ -73,6 +74,7 @@ export default defineComponent({
       tempEventState,
       temporalEvent,
       tempEventMenu,
+      tempValidOnMenu,
       searchStore,
       v$,
     };
@@ -200,29 +202,49 @@ export default defineComponent({
           </v-list-group>
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>
-              <v-list-item-title>Zeitliche Gütligkeit am</v-list-item-title>
+              <v-list-item-title>Zeitliche Gültigkeit am</v-list-item-title>
             </template>
             <v-menu
+              ref="tempValidOnMenu"
               transition="scale-transition"
               :close-on-content-click="false"
               offset-y
               min-width="auto"
+              :return-value.sync="searchStore.temporalValidOn"
             >
               <template v-slot:activator="{ on, attrs }">
                 <v-text-field
                   prepend-icon="mdi-calendar"
                   readonly
                   outlined
+                  clearable
                   v-bind="attrs"
                   v-on="on"
                   required
                   class="pl-7"
+                  v-model="searchStore.temporalValidOn"
                 ></v-text-field>
               </template>
-              <v-date-picker no-title scrollable>
+              <v-date-picker
+                v-model="searchStore.temporalValidOn"
+                no-title
+                scrollable
+              >
                 <v-spacer></v-spacer>
-                <v-btn text color="primary"> Cancel</v-btn>
-                <v-btn text color="primary"> OK</v-btn>
+                <v-btn text color="primary" @click="tempValidOnMenu = false">
+                  Cancel</v-btn
+                >
+                <v-btn
+                  text
+                  color="primary"
+                  @click="
+                    $refs.tempValidOnMenu.save(
+                      searchStore.temporalValidOn
+                    )
+                  "
+                >
+                  OK</v-btn
+                >
               </v-date-picker>
             </v-menu>
           </v-list-group>
@@ -245,6 +267,7 @@ export default defineComponent({
                   prepend-icon="mdi-calendar"
                   readonly
                   outlined
+                  clearable
                   v-bind="attrs"
                   v-on="on"
                   required

@@ -324,6 +324,10 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseEndDateFilter(
                             call.request.queryParameters["filterEndDate"]
                         )
+                    val validOnFilter =
+                        QueryParameterParser.parseRightValidOnFilter(
+                            call.request.queryParameters["filterValidOn"]
+                        )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
@@ -367,6 +371,7 @@ fun Routing.itemRoutes(
                         startDateFilter,
                         endDateFilter,
                         formalRuleFilter,
+                        validOnFilter,
                     )
                     if (searchTerm == null || searchTerm.isBlank()) {
                         val items = backend.getItemList(limit, offset, metadataFilters, rightFilters)

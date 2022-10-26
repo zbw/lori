@@ -472,6 +472,17 @@ class RightFilterTest : DatabaseTest() {
                 setOf(tempValFilterFuture),
                 "Filter for all items that have an active right in the future"
             ),
+            arrayOf(
+                "col:validity",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    RightValidOnFilter(
+                        date = LocalDate.of(2021, 10, 1)
+                    )
+                ),
+                setOf(tempValFilterFuture),
+                "Filter for items having an active right information at a certain point in time"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
