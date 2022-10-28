@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest

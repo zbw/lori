@@ -1,16 +1,16 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
-import de.zbw.business.lori.server.FormalRule
+import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.PublicationDateFilter
-import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.TemporalValidity
+import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.business.lori.server.TemporalValidityFilter
 import java.time.DateTimeException
 import java.time.LocalDate

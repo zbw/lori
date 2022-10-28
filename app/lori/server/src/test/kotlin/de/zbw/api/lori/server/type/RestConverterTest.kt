@@ -1,12 +1,12 @@
 package de.zbw.api.lori.server.type
 
-import de.zbw.business.lori.server.AccessState
-import de.zbw.business.lori.server.BasisAccessState
-import de.zbw.business.lori.server.BasisStorage
-import de.zbw.business.lori.server.Item
-import de.zbw.business.lori.server.ItemMetadata
-import de.zbw.business.lori.server.ItemRight
-import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Item
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
@@ -51,7 +51,7 @@ class RestConverterTest {
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
                 titleSeries = TEST_METADATA.titleSeries,
-                zbdId = TEST_METADATA.zbdId,
+                zbdId = TEST_METADATA.zdbId,
             ),
             rights = listOf(
                 RightRest(
@@ -120,7 +120,7 @@ class RestConverterTest {
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
-            zbdId = null,
+            zdbId = null,
         )
 
         // when
@@ -201,7 +201,7 @@ class RestConverterTest {
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zbdId = null,
+            zdbId = null,
         )
 
         val TEST_RIGHT = ItemRight(

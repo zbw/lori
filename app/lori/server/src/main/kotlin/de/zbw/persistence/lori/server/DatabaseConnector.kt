@@ -1,17 +1,17 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.business.lori.server.AccessState
-import de.zbw.business.lori.server.BasisAccessState
-import de.zbw.business.lori.server.BasisStorage
-import de.zbw.business.lori.server.ItemMetadata
-import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.MetadataSearchFilter
-import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchKey
-import de.zbw.business.lori.server.User
-import de.zbw.business.lori.server.UserRole
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.User
+import de.zbw.business.lori.server.type.UserRole
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
@@ -184,7 +184,7 @@ class DatabaseConnector(
             this.setIfNotNull(13, itemMetadata.paketSigel) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(14, itemMetadata.zbdId) { value, idx, prepStmt ->
+            this.setIfNotNull(14, itemMetadata.zdbId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setIfNotNull(15, itemMetadata.issn) { value, idx, prepStmt ->
@@ -866,21 +866,23 @@ class DatabaseConnector(
         } else throw IllegalStateException("No count found.")
     }
 
+    // TODO: Isn't this function redundant? searchMetadataWithRightFilter should already
+    // cover this.
     fun searchMetadata(
         searchTerms: Map<SearchKey, List<String>>,
         limit: Int,
         offset: Int,
-        filters: List<MetadataSearchFilter>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
     ): List<ItemMetadata> {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
-            buildSearchQuery(searchTerms, filters)
+            buildSearchQuery(searchTerms, metadataSearchFilter)
         ).apply {
             var counter = 1
             entries.forEach { entry ->
                 this.setString(counter++, entry.value.joinToString(" & "))
             }
-            filters.forEach { f ->
+            metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
             this.setInt(counter++, limit)
@@ -928,7 +930,7 @@ class DatabaseConnector(
             this.setInt(counter++, limit)
             this.setInt(counter, offset)
         }
-        val span = tracer.spanBuilder("searchMetadata").startSpan()
+        val span = tracer.spanBuilder("searchMetadataWithRightsFilter").startSpan()
         val rs = try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
@@ -940,6 +942,52 @@ class DatabaseConnector(
                 extractMetadataRS(rs)
             } else null
         }.takeWhile { true }.toList()
+    }
+
+    fun searchMetadataWithRightFilterForZDBAndSigel(
+        searchTerms: Map<SearchKey, List<String>>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+    ): PaketSigelAndZDBIdSet {
+        val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(
+            buildSearchQueryForPaketSigelAndZDBId(
+                searchTerms,
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
+        ).apply {
+            var counter = 1
+            rightSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" & "))
+            }
+            metadataSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+        }
+        val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+
+        val received: List<PaketSigelAndZDBId> = generateSequence {
+            if (rs.next()) {
+                PaketSigelAndZDBId(
+                    paketSigel = rs.getString(1),
+                    zdbId = rs.getString(2),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+        return PaketSigelAndZDBIdSet(
+            paketSigels = received.mapNotNull { it.paketSigel }.toSet(),
+            zdbIds = received.mapNotNull { it.zdbId }.toSet(),
+        )
     }
 
     private fun <T> PreparedStatement.setIfNotNull(
@@ -1210,24 +1258,37 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
-        ): String =
-            if (rightSearchFilters.isEmpty()) {
+        ): String {
+            return if (rightSearchFilters.isEmpty()) {
                 STATEMENT_SELECT_ALL_METADATA +
                     buildSearchQueryHelper(
                         searchKeyMap,
                         metadataSearchFilters,
-                        rightSearchFilters,
-                    ) +
-                    " LIMIT ? OFFSET ?;"
+                    ) + " LIMIT ? OFFSET ?;"
             } else {
                 STATEMENT_SELECT_ALL_METADATA_DISTINCT +
                     buildSearchQueryHelper(
                         searchKeyMap,
                         metadataSearchFilters,
                         rightSearchFilters,
-                    ) +
-                    " LIMIT ? OFFSET ?;"
+                    ) + " LIMIT ? OFFSET ?;"
             }
+        }
+
+        fun buildSearchQueryForPaketSigelAndZDBId(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            metadataSearchFilters: List<MetadataSearchFilter>,
+            rightSearchFilters: List<RightSearchFilter>,
+        ): String {
+            val queryClausePart = buildSearchQueryHelper(
+                searchKeyMap,
+                metadataSearchFilters,
+                rightSearchFilters,
+            )
+            return "SELECT $TABLE_NAME_ITEM_METADATA.paket_sigel, $TABLE_NAME_ITEM_METADATA.zdb_id" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
+                queryClausePart
+        }
 
         fun buildCountSearchQuery(
             searchKeyMap: Map<SearchKey, List<String>>,
@@ -1350,7 +1411,7 @@ class DatabaseConnector(
             isbn = rs.getString(11),
             rightsK10plus = rs.getString(12),
             paketSigel = rs.getString(13),
-            zbdId = rs.getString(14),
+            zdbId = rs.getString(14),
             issn = rs.getString(15),
             createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
             lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),

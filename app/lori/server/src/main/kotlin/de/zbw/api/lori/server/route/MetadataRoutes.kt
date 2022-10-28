@@ -2,7 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
-import de.zbw.business.lori.server.ItemMetadata
+import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
 import io.ktor.http.HttpStatusCode

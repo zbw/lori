@@ -1,19 +1,19 @@
 package de.zbw.persistence.lori.server
 
-import de.zbw.business.lori.server.AccessState
+import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
-import de.zbw.business.lori.server.BasisAccessState
-import de.zbw.business.lori.server.BasisStorage
-import de.zbw.business.lori.server.ItemMetadata
-import de.zbw.business.lori.server.ItemRight
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.PublicationDateFilter
-import de.zbw.business.lori.server.PublicationType
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchKey
-import de.zbw.business.lori.server.User
-import de.zbw.business.lori.server.UserRole
+import de.zbw.business.lori.server.type.User
+import de.zbw.business.lori.server.type.UserRole
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -541,17 +541,18 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test
     fun searchMetadata() {
         // given
-        val testZBD = TEST_Metadata.copy(metadataId = "searchZBD", zbdId = "zbdId")
+        val testZBD = TEST_Metadata.copy(metadataId = "searchZBD", zdbId = "zbdId")
         dbConnector.insertMetadata(testZBD)
 
         // when
-        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, listOf(testZBD.zbdId!!)))
+        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)))
         val resultZBD =
-            dbConnector.searchMetadata(
+            dbConnector.searchMetadataWithRightFilter(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
-                filters = emptyList(),
+                metadataSearchFilter = emptyList(),
+                rightSearchFilter = emptyList(),
             )
         val numberResultZBD = dbConnector.countSearchMetadata(
             searchTerms = searchTermsZBD,
@@ -565,14 +566,15 @@ class DatabaseConnectorTest : DatabaseTest() {
             Pair(SearchKey.COLLECTION, listOf(testZBD.collectionName!!)),
             Pair(SearchKey.COMMUNITY, listOf(testZBD.communityName!!)),
             Pair(SearchKey.PAKET_SIGEL, listOf(testZBD.paketSigel!!)),
-            Pair(SearchKey.ZBD_ID, listOf(testZBD.zbdId!!)),
+            Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)),
         )
         val resultAll =
-            dbConnector.searchMetadata(
+            dbConnector.searchMetadataWithRightFilter(
                 searchTerms = searchTermsAll,
                 limit = 5,
                 offset = 0,
-                filters = emptyList(),
+                metadataSearchFilter = emptyList(),
+                rightSearchFilter = emptyList(),
             )
         val numberResultAll = dbConnector.countSearchMetadata(
             searchTerms = searchTermsAll,
@@ -583,15 +585,16 @@ class DatabaseConnectorTest : DatabaseTest() {
         assertThat(numberResultAll, `is`(1))
 
         // Add second metadata with same zbdID
-        val testZBD2 = TEST_Metadata.copy(metadataId = "searchZBD2", zbdId = "zbdId")
+        val testZBD2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbId = "zbdId")
         dbConnector.insertMetadata(testZBD2)
         // when
         val resultZBD2 =
-            dbConnector.searchMetadata(
+            dbConnector.searchMetadataWithRightFilter(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
-                filters = emptyList(),
+                metadataSearchFilter = emptyList(),
+                rightSearchFilter = emptyList(),
             )
         val numberResultZBD2 = dbConnector.countSearchMetadata(
             searchTerms = searchTermsAll,
@@ -603,11 +606,12 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // when
         val resultZBD2Offset =
-            dbConnector.searchMetadata(
+            dbConnector.searchMetadataWithRightFilter(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 1,
-                filters = emptyList(),
+                metadataSearchFilter = emptyList(),
+                rightSearchFilter = emptyList(),
             )
         assertThat(
             resultZBD2Offset.size, `is`(1)
@@ -1038,7 +1042,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             title = "Important title",
             titleJournal = "anything",
             titleSeries = null,
-            zbdId = "some id",
+            zdbId = "some id",
         )
 
         private val TEST_RIGHT = ItemRight(

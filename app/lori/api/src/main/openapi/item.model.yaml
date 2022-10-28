@@ -9,6 +9,14 @@ ItemInformation:
       type: integer
     numberOfResults:
       type: integer
+    paketSigels:
+      type: array
+      items:
+        type: string
+    zdbIds:
+      type: array
+      items:
+        type: string
     itemArray:
       type: array
       items:

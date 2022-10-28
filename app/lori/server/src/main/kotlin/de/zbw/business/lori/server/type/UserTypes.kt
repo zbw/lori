@@ -1,4 +1,4 @@
-package de.zbw.business.lori.server
+package de.zbw.business.lori.server.type
 
 /**
  * Types related to User information.

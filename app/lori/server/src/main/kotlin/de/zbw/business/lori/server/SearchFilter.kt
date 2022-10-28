@@ -1,5 +1,9 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.FormalRule
+import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
 import java.sql.Date
 import java.sql.PreparedStatement

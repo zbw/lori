@@ -1,5 +1,12 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Item
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
@@ -115,7 +122,7 @@ class LoriServerBackendTest : DatabaseTest() {
         assertTrue(backend.metadataContainsId(givenMetadata[0].metadataId))
 
         // when
-        val receivedMetadataElements = backend.getMetadataList(3, 0)
+        val receivedMetadataElements: List<ItemMetadata> = backend.getMetadataList(3, 0)
 
         // then
         assertThat(
@@ -258,8 +265,8 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testSearchQuery() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_Metadata.copy(metadataId = "search_test_1", zbdId = "zbdTest"),
-            TEST_Metadata.copy(metadataId = "search_test_2", zbdId = "zbdTest"),
+            TEST_Metadata.copy(metadataId = "search_test_1", zdbId = "zbdTest"),
+            TEST_Metadata.copy(metadataId = "search_test_2", zdbId = "zbdTest"),
         )
         val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
@@ -268,7 +275,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (number, items) = backend.searchQuery(
-            "zbd:${givenMetadataEntries[0].zbdId!!}",
+            "zbd:${givenMetadataEntries[0].zdbId!!}",
             5,
             0
         )
@@ -339,7 +346,7 @@ class LoriServerBackendTest : DatabaseTest() {
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zbdId = null,
+            zdbId = null,
         )
 
         private val TEST_RIGHT = ItemRight(

@@ -8,6 +8,7 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -388,20 +389,20 @@ fun Routing.itemRoutes(
                         return@withContext
                     }
 
-                    val (numberOfResults, searchResults) = backend.searchQuery(
+                    val queryResult: SearchQueryResult = backend.searchQuery(
                         searchTerm,
                         limit,
                         offset,
                         metadataFilters,
                         rightFilters,
                     )
-                    val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
+                    val totalPages = ceil(queryResult.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)
                     call.respond(
                         ItemInformation(
-                            itemArray = searchResults.map { it.toRest() },
+                            itemArray = queryResult.results.map { it.toRest() },
                             totalPages = totalPages,
-                            numberOfResults = numberOfResults,
+                            numberOfResults = queryResult.numberOfResults
                         )
                     )
                 } catch (e: NumberFormatException) {

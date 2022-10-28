@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -564,11 +565,16 @@ class ItemRoutesKtTest {
                     any(),
                 )
             } returns (
-                expectedInformation.numberOfResults to
+                SearchQueryResult(
+                    numberOfResults = expectedInformation.numberOfResults,
+                    results =
                     expectedInformation
                         .itemArray
-                        .map { it.toBusiness() }
+                        .map { it.toBusiness() },
+                    paketSigels = emptyList(),
+                    zdbIds = emptyList(),
                 )
+            )
         }
         val servicePool = getServicePool(backend)
 

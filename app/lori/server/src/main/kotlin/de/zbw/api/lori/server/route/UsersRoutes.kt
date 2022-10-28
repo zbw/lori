@@ -2,7 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.UserRole
+import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AuthTokenRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.UserRest
