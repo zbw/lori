@@ -547,7 +547,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // when
         val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)))
         val resultZBD =
-            dbConnector.searchMetadataWithRightFilter(
+            dbConnector.searchMetadata(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
@@ -569,7 +569,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)),
         )
         val resultAll =
-            dbConnector.searchMetadataWithRightFilter(
+            dbConnector.searchMetadata(
                 searchTerms = searchTermsAll,
                 limit = 5,
                 offset = 0,
@@ -589,7 +589,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         dbConnector.insertMetadata(testZBD2)
         // when
         val resultZBD2 =
-            dbConnector.searchMetadataWithRightFilter(
+            dbConnector.searchMetadata(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 0,
@@ -606,7 +606,7 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // when
         val resultZBD2Offset =
-            dbConnector.searchMetadataWithRightFilter(
+            dbConnector.searchMetadata(
                 searchTerms = searchTermsZBD,
                 limit = 5,
                 offset = 1,
@@ -899,19 +899,6 @@ class DatabaseConnectorTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_METASEARCH_QUERY)
-    fun testBuildMetadataQueryFilterNoSearch(
-        filters: List<MetadataSearchFilter>,
-        expectedSQLQuery: String,
-        description: String,
-    ) {
-        assertThat(
-            DatabaseConnector.STATEMENT_GET_METADATA_RANGE +
-                DatabaseConnector.buildMetasearchWhereFilter(filters),
-            `is`(expectedSQLQuery)
-        )
-    }
-
     @DataProvider(name = DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH)
     private fun createBuildCountQueryRightFilterNoSearch() =
         arrayOf(
@@ -945,7 +932,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         description: String,
     ) {
         assertThat(
-            DatabaseConnector.buildCountMetadataQueryBothFilterNoSearchKey(
+            DatabaseConnector.buildCountSearchQuery(
                 emptyMap(),
                 metadataSearchFilter,
                 rightSearchFilter,
@@ -960,7 +947,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             arrayOf(
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA +
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id" +
                     " AND (access_state = ? OR access_state = ?)" +
@@ -970,7 +957,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             arrayOf(
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA +
+                DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id" +
                     " AND (access_state = ? OR access_state = ?)" +
@@ -988,8 +975,64 @@ class DatabaseConnectorTest : DatabaseTest() {
         description: String,
     ) {
         assertThat(
-            DatabaseConnector.STATEMENT_SELECT_ALL_METADATA +
-                DatabaseConnector.buildMetasearchWhereFilterWithRights(
+                DatabaseConnector.buildSearchQuery(
+                    emptyMap(),
+                    metadataSearchFilter,
+                    rightSearchFilter,
+                ),
+            `is`(expectedSQLQuery)
+        )
+    }
+
+    @DataProvider(name = DATA_FOR_BUILD_SIGEL_AND_ZDB)
+    private fun createQueryFilterSearchForSigelAndZDB() =
+        arrayOf(
+            arrayOf(
+                listOf(SearchKey.COLLECTION to "foo").toMap(),
+                emptyList<MetadataSearchFilter>(),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                DatabaseConnector.STATEMENT_SELECT_SIGEL_ZDB +
+                    " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right ON item.right_id = item_right.right_id" +
+                    " AND (access_state = ? OR access_state = ?)" +
+                    " WHERE ts_collection @@ to_tsquery('english', ?)" +
+                    " GROUP BY item_metadata.paket_sigel, item_metadata.zdb_id;",
+                "query with search and right filter",
+            ),
+            arrayOf(
+                emptyMap<SearchKey,List<String>>(),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                DatabaseConnector.STATEMENT_SELECT_SIGEL_ZDB +
+                    " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right ON item.right_id = item_right.right_id" +
+                    " AND (access_state = ? OR access_state = ?)" +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)" +
+                    " GROUP BY item_metadata.paket_sigel, item_metadata.zdb_id;",
+                "query with both filters and no searchkey",
+            ),
+            arrayOf(
+                emptyMap<SearchKey,List<String>>(),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                emptyList<RightSearchFilter>(),
+                DatabaseConnector.STATEMENT_SELECT_SIGEL_ZDB +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)" +
+                    " GROUP BY item_metadata.paket_sigel, item_metadata.zdb_id;",
+                "query with metadata filter only",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BUILD_SIGEL_AND_ZDB)
+    fun testBuildMetadataQueryForSigelAndZDB(
+        searchKeys: Map<SearchKey, List<String>>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+        expectedSQLQuery: String,
+        description: String,
+    ) {
+        assertThat(
+                DatabaseConnector.buildSearchQueryForPaketSigelAndZDBId(
+                    searchKeys,
                     metadataSearchFilter,
                     rightSearchFilter,
                 ),
@@ -1005,6 +1048,8 @@ class DatabaseConnectorTest : DatabaseTest() {
             "DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH "
         const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
         const val DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY "
+
+        const val DATA_FOR_BUILD_SIGEL_AND_ZDB = "DATA_FOR_BUILD_SIGEL_AND_ZDB"
         const val notExistingUsername = "notExistentUser"
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,

@@ -9,6 +9,6 @@ package de.zbw.business.lori.server.type
 data class SearchQueryResult(
     val numberOfResults: Int,
     val results: List<Item>,
-    val paketSigels: List<String>,
-    val zdbIds: List<String>,
+    val paketSigels: Set<String>,
+    val zdbIds: Set<String>,
     )

@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -176,7 +177,8 @@ class FilterSearchTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult = backend.getItemList(
+        val searchResult: SearchQueryResult = backend.searchQuery(
+            null,
             10,
             0,
             searchFilter,
@@ -185,7 +187,7 @@ class FilterSearchTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
     }

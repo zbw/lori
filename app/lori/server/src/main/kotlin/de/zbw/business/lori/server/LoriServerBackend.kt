@@ -11,6 +11,7 @@ import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.PaketSigelAndZDBIdSet
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
@@ -96,19 +97,8 @@ class LoriServerBackend(
     fun getItemList(
         limit: Int,
         offset: Int,
-        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
-        rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): List<Item> {
-        val receivedMetadata = if (rightSearchFilter.isEmpty()) {
-            dbConnector.getMetadataRange(limit, offset, metadataSearchFilter)
-        } else {
-            dbConnector.getMetadataRangeWithRightFilter(
-                limit,
-                offset,
-                metadataSearchFilter,
-                rightSearchFilter,
-            )
-        }
+        val receivedMetadata = dbConnector.getMetadataRange(limit, offset)
         return receivedMetadata
             .takeIf {
                 it.isNotEmpty()
@@ -138,16 +128,12 @@ class LoriServerBackend(
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
         dbConnector.itemContainsEntry(metadataId, rightId)
 
-    fun countMetadataEntries(
-        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
-        rightSearchFilter: List<RightSearchFilter> = emptyList(),
-    ): Int {
-        return if (rightSearchFilter.isEmpty()) {
-            dbConnector.countMetadataEntries(metadataSearchFilter)
-        } else {
-            dbConnector.countMetadataEntriesWithRightFilter(metadataSearchFilter, rightSearchFilter)
-        }
-    }
+    fun countMetadataEntries(): Int =
+        dbConnector.countSearchMetadata(
+            emptyMap(),
+            emptyList(),
+            emptyList(),
+        )
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
 
@@ -209,30 +195,25 @@ class LoriServerBackend(
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(
-        searchTerm: String,
+        searchTerm: String?,
         limit: Int,
         offset: Int,
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): SearchQueryResult {
-        val keys = parseSearchKeys(searchTerm)
-        if (keys.isEmpty()) {
-            return SearchQueryResult(
-                numberOfResults = 0,
-                results = emptyList(),
-                paketSigels = emptyList(),
-                zdbIds = emptyList(),
-            )
-        }
+        val keys = searchTerm
+            ?.let { parseSearchKeys(searchTerm) }
+            ?: emptyMap()
+
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
-                dbConnector.searchMetadataWithRightFilter(
-                    keys,
-                    limit,
-                    offset,
-                    metadataSearchFilter,
-                    rightSearchFilter,
-                )
+            dbConnector.searchMetadata(
+                keys,
+                limit,
+                offset,
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
 
         // Combine Metadata entries with their rights
         val items: List<Item> =
@@ -246,17 +227,24 @@ class LoriServerBackend(
         val numberOfResults =
             items
                 .takeIf { it.isNotEmpty() }
-                ?.let{
+                ?.let {
                     dbConnector.countSearchMetadata(keys, metadataSearchFilter, rightSearchFilter)
                 }
                 ?: 0
 
         // Acquire all zdbIds and paketSigels
+        val paketSigelAndZDBId: PaketSigelAndZDBIdSet = dbConnector.searchMetadataWithRightFilterForZDBAndSigel(
+            keys,
+            metadataSearchFilter.filter {
+                it !is ZDBIdFilter && it !is PaketSigelFilter
+            },
+            rightSearchFilter,
+        )
         return SearchQueryResult(
             numberOfResults = numberOfResults,
             results = items,
-            paketSigels = emptyList(), // TODO
-            zdbIds = emptyList(), // TODO
+            paketSigels = paketSigelAndZDBId.paketSigels,
+            zdbIds = paketSigelAndZDBId.zdbIds,
         )
     }
 

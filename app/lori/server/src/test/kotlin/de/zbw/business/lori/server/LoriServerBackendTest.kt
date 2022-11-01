@@ -136,30 +136,7 @@ class LoriServerBackendTest : DatabaseTest() {
             )
         )
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
-
-        // with filter
-        val givenFilter = listOf(PublicationDateFilter(1970, 1980))
-        // when
-        val receiveFilteredMetadataElements =
-            backend.getItemList(10, 0, givenFilter)
-        // then
-        assertThat(
-            receiveFilteredMetadataElements,
-            `is`(
-                listOf(
-                    Item(
-                        givenMetadata[0],
-                        emptyList(),
-                    ),
-                    Item(
-                        givenMetadata[1],
-                        emptyList(),
-                    ),
-                )
-            )
-        )
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
-        assertThat(backend.countMetadataEntries(givenFilter), `is`(2))
         assertThat(backend.countMetadataEntries(), `is`(5))
     }
 

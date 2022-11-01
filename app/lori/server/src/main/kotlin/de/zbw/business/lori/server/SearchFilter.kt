@@ -51,24 +51,65 @@ class PublicationDateFilter(
 }
 
 class PublicationTypeFilter(
-    val publicationFilter: List<PublicationType>,
+    val publicationTypes: List<PublicationType>,
 ) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
 ) {
     override fun toWhereClause(): String =
-        publicationFilter.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+        publicationTypes.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"
         }
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
         var localCounter = counter
-        publicationFilter.forEach {
+        publicationTypes.forEach {
             preparedStatement.setString(localCounter++, it.toString())
         }
         return localCounter
     }
 }
 
+class PaketSigelFilter(
+    val paketSigels: List<String>,
+): MetadataSearchFilter(
+    DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
+){
+    override fun toWhereClause(): String =
+        paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "$dbColumnName = ?"
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        paketSigels.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+}
+
+class ZDBIdFilter(
+    val zdbIds: List<String>,
+): MetadataSearchFilter(
+    DatabaseConnector.COLUMN_METADATA_ZDB_ID,
+){
+    override fun toWhereClause(): String =
+        zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "$dbColumnName = ?"
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        zdbIds.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+}
+
+/**
+ * All right related filter options.
+ */
 abstract class RightSearchFilter(
     dbColumnName: String
 ) : SearchFilter(dbColumnName)

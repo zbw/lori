@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.FormalRuleFilter
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -12,6 +13,7 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.business.lori.server.TemporalValidityFilter
+import de.zbw.business.lori.server.ZDBIdFilter
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -56,6 +58,22 @@ object QueryParameterParser {
             }
         }
         return receivedPubTypes.takeIf { it.isNotEmpty() }?.let { PublicationTypeFilter(it) }
+    }
+
+    fun parsePaketSigelFilter(s: String?): PaketSigelFilter? {
+        if (s == null) {
+            return null
+        }
+        val paketSigelIds: List<String> = s.split(",".toRegex())
+        return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilter(it) }
+    }
+
+    fun parseZDBIdFilter(s: String?): ZDBIdFilter? {
+        if (s == null) {
+            return null
+        }
+        val zdbIds: List<String> = s.split(",".toRegex())
+        return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilter(it) }
     }
 
     fun parseAccessStateFilter(s: String?): AccessStateFilter? {

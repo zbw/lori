@@ -110,9 +110,9 @@ class QueryParameterParserTest {
             assertNull(received)
         } else {
             assertThat(
-                received!!.publicationFilter.toSet(),
+                received!!.publicationTypes.toSet(),
                 `is`(
-                    expectedFilter.publicationFilter.toSet(),
+                    expectedFilter.publicationTypes.toSet(),
                 )
             )
         }

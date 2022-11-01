@@ -555,6 +555,8 @@ class ItemRoutesKtTest {
                     )
                 ),
                 numberOfResults = 101,
+                paketSigels = emptyList(),
+                zdbIds = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -571,10 +573,10 @@ class ItemRoutesKtTest {
                     expectedInformation
                         .itemArray
                         .map { it.toBusiness() },
-                    paketSigels = emptyList(),
-                    zdbIds = emptyList(),
+                    paketSigels = emptySet(),
+                    zdbIds = emptySet(),
                 )
-            )
+                )
         }
         val servicePool = getServicePool(backend)
 
@@ -608,18 +610,28 @@ class ItemRoutesKtTest {
                     )
                 ),
                 numberOfResults = 1,
+                paketSigels = emptyList(),
+                zdbIds = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
-                getItemList(
+                searchQuery(
+                    any(),
                     defaultLimit,
-                    defaultOffset
+                    defaultOffset,
+                    emptyList(),
+                    emptyList(),
                 )
             } returns (
-                expectedInformation
-                    .itemArray
-                    .map { it.toBusiness() }
+                SearchQueryResult(
+                    results = expectedInformation
+                        .itemArray
+                        .map { it.toBusiness() },
+                    numberOfResults = 1,
+                    paketSigels = emptySet(),
+                    zdbIds = emptySet(),
                 )
+            )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
         val servicePool = getServicePool(backend)

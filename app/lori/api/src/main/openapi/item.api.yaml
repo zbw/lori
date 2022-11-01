@@ -276,6 +276,14 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterPaketSigel
+        in: query
+        schema:
+          type: string
+      - name: filterZDBId
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation
