@@ -174,7 +174,7 @@ export default defineComponent({
               :label="item"
               hide-details
               class="pl-9 ml-4"
-              v-model=searchStore.test[i]
+              v-model=searchStore.paketSigelIdIdx[i]
             ></v-checkbox>
           </v-list-group>
         </v-col>
@@ -189,6 +189,7 @@ export default defineComponent({
           :label="item"
           hide-details
           class="pl-9 ml-4"
+          v-model=searchStore.zdbIdIdx[i]
         ></v-checkbox>
       </v-list-group>
     </v-container>

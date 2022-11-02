@@ -18,7 +18,8 @@ export const useSearchStore = defineStore("search", () => {
   const publicationDateFrom = ref("");
   const publicationDateTo = ref("");
 
-  const test: Ref<Array<boolean>> = ref([]);
+  const paketSigelIdIdx: Ref<Array<boolean>> = ref([]);
+  const zdbIdIdx: Ref<Array<boolean>> = ref([]);
 
   const publicationTypeArticle = ref(false);
   const publicationTypeBook = ref(false);
@@ -41,7 +42,6 @@ export const useSearchStore = defineStore("search", () => {
   const temporalValidOn = ref("");
 
   return {
-    test,
     lastSearchTerm,
     accessStateClosed,
     accessStateRestricted,
@@ -51,6 +51,7 @@ export const useSearchStore = defineStore("search", () => {
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,
+    paketSigelIdIdx,
     publicationDateFrom,
     publicationDateTo,
     publicationTypeArticle,
@@ -69,5 +70,6 @@ export const useSearchStore = defineStore("search", () => {
     temporalValidityFilterPast,
     temporalValidityFilterPresent,
     temporalValidOn,
+    zdbIdIdx,
   };
 });

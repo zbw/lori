@@ -159,30 +159,22 @@ export default defineComponent({
     };
 
     const searchQuery = () => {
-      let filterPublicationDate =
-        searchStore.publicationDateFrom == "" &&
-        searchStore.publicationDateTo == ""
-          ? undefined
-          : searchStore.publicationDateFrom +
-            "-" +
-            searchStore.publicationDateTo;
-      let filterPublicationType = buildPublicationTypeFilter();
-      let filterAccessStates = buildAccessState();
-      let filterTempVal = buildTempVal();
       api
         .searchQuery(
           searchTerm.value,
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
-          filterPublicationDate,
-          filterPublicationType,
-          filterAccessStates,
-          filterTempVal,
-          buildStartDateAt(),
-          buildEndDateAt(),
-          buildFormalRule(),
-          buildValidOnFilter()
+          buildPublicationDateFilter(),
+          buildPublicationTypeFilter(),
+          buildAccessStateFilter(),
+          buildTempValFilter(),
+          buildStartDateAtFilter(),
+          buildEndDateAtFilter(),
+          buildFormalRuleFilter(),
+          buildValidOnFilter(),
+          buildPaketSigelIdFilter(),
+          buildZDBIdFilter()
         )
         .then((response) => {
           items.value = response.itemArray;
@@ -204,7 +196,46 @@ export default defineComponent({
         });
     };
 
-    const buildAccessState = () => {
+    const buildPublicationDateFilter: () => string | undefined = () => {
+      return searchStore.publicationDateFrom == "" &&
+        searchStore.publicationDateTo == ""
+        ? undefined
+        : searchStore.publicationDateFrom + "-" + searchStore.publicationDateTo;
+    };
+
+    const buildPaketSigelIdFilter: () => string | undefined = () => {
+      let paketSigelIds: Array<string> = [];
+      searchStore.paketSigelIdIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            paketSigelIds.push(searchStore.availablePaketSigelIds[index]);
+          }
+        }
+      );
+      if (paketSigelIds.length == 0) {
+        return undefined;
+      } else {
+        return paketSigelIds.join(",");
+      }
+    };
+
+    const buildZDBIdFilter: () => string | undefined = () => {
+      let zdbIds: Array<string> = [];
+      searchStore.zdbIdIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            zdbIds.push(searchStore.availableZDBIds[index]);
+          }
+        }
+      );
+      if (zdbIds.length == 0) {
+        return undefined;
+      } else {
+        return zdbIds.join(",");
+      }
+    };
+
+    const buildAccessStateFilter = () => {
       let accessStates: Array<string> = [];
       if (searchStore.accessStateOpen) {
         accessStates.push("OPEN");
@@ -222,7 +253,7 @@ export default defineComponent({
       }
     };
 
-    const buildFormalRule = () => {
+    const buildFormalRuleFilter = () => {
       let formalRule: Array<string> = [];
       if (searchStore.formalRuleLicenceContract) {
         formalRule.push("LICENCE_CONTRACT");
@@ -240,7 +271,7 @@ export default defineComponent({
       }
     };
 
-    const buildTempVal = () => {
+    const buildTempValFilter = () => {
       let tempVal: Array<string> = [];
       if (searchStore.temporalValidityFilterFuture) {
         tempVal.push("FUTURE");
@@ -258,7 +289,7 @@ export default defineComponent({
       }
     };
 
-    const buildStartDateAt = () => {
+    const buildStartDateAtFilter = () => {
       if (
         searchStore.temporalEventStartDateFilter &&
         searchStore.temporalEventInput != ""
@@ -269,7 +300,7 @@ export default defineComponent({
       }
     };
 
-    const buildEndDateAt = () => {
+    const buildEndDateAtFilter = () => {
       if (
         searchStore.temporalEventEndDateFilter &&
         searchStore.temporalEventInput != ""
