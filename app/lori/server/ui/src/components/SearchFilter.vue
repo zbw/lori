@@ -160,10 +160,22 @@ export default defineComponent({
               v-model="searchStore.publicationTypeBook"
             ></v-checkbox>
           </v-list-group>
-          <v-list-group no-action sub-group eager>
+          <v-list-group
+              no-action
+              sub-group
+              eager
+          >
             <template v-slot:activator>
               <v-list-item-title>Paketsigel</v-list-item-title>
             </template>
+            <v-checkbox
+              v-for="(item, i) in searchStore.availablePaketSigelIds"
+              :key="i"
+              :label="item"
+              hide-details
+              class="pl-9 ml-4"
+              v-model=searchStore.test[i]
+            ></v-checkbox>
           </v-list-group>
         </v-col>
       </v-row>
@@ -171,6 +183,13 @@ export default defineComponent({
         <template v-slot:activator>
           <v-list-item-title>ZDB-IDs</v-list-item-title>
         </template>
+        <v-checkbox
+          v-for="(item, i) in searchStore.availableZDBIds"
+          :key="i"
+          :label="item"
+          hide-details
+          class="pl-9 ml-4"
+        ></v-checkbox>
       </v-list-group>
     </v-container>
     <v-card-title>Rechteinformationsfilter</v-card-title>
@@ -238,9 +257,7 @@ export default defineComponent({
                   text
                   color="primary"
                   @click="
-                    $refs.tempValidOnMenu.save(
-                      searchStore.temporalValidOn
-                    )
+                    $refs.tempValidOnMenu.save(searchStore.temporalValidOn)
                   "
                 >
                   OK</v-btn

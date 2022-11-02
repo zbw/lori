@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import {computed, Ref, ref} from "vue";
 
 export const useSearchStore = defineStore("search", () => {
   const lastSearchTerm = ref("");
@@ -8,12 +8,17 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateOpen = ref(false);
   const accessStateRestricted = ref(false);
 
+  const availablePaketSigelIds: Ref<Array<string>> = ref([]);
+  const availableZDBIds: Ref<Array<string>> = ref([]);
+
   const formalRuleLicenceContract = ref(false);
   const formalRuleOpenContentLicence = ref(false);
   const formalRuleUserAgreement = ref(false);
 
   const publicationDateFrom = ref("");
   const publicationDateTo = ref("");
+
+  const test: Ref<Array<boolean>> = ref([]);
 
   const publicationTypeArticle = ref(false);
   const publicationTypeBook = ref(false);
@@ -36,10 +41,13 @@ export const useSearchStore = defineStore("search", () => {
   const temporalValidOn = ref("");
 
   return {
+    test,
     lastSearchTerm,
     accessStateClosed,
     accessStateRestricted,
     accessStateOpen,
+    availablePaketSigelIds,
+    availableZDBIds,
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,

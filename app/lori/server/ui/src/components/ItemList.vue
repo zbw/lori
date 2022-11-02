@@ -189,6 +189,12 @@ export default defineComponent({
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
           numberOfResults.value = response.numberOfResults;
+          if (response.paketSigels != undefined) {
+            searchStore.availablePaketSigelIds = response.paketSigels;
+          }
+          if (response.zdbIds != undefined) {
+            searchStore.availableZDBIds = response.zdbIds;
+          }
         })
         .catch((e) => {
           tableContentLoading.value = false;
