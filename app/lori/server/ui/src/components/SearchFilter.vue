@@ -179,7 +179,11 @@ export default defineComponent({
           </v-list-group>
         </v-col>
       </v-row>
-      <v-list-group no-action sub-group eager>
+      <v-list-group
+          no-action
+          sub-group
+          eager
+      >
         <template v-slot:activator>
           <v-list-item-title>ZDB-IDs</v-list-item-title>
         </template>

@@ -26,7 +26,7 @@ afterEach(() => {
 
 describe("Test ItemList UI", () => {
   it("initial table load is successful", async () => {
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -42,7 +42,7 @@ describe("Test ItemList UI", () => {
       }),
     });
     expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
-    (wrapper.vm as any).retrieveItemInformation();
+    (wrapper.vm as any).startSearch();
     await wrapper.vm.$nextTick();
     expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
     expect((wrapper.vm as any).totalPages).toBe(25);
@@ -50,7 +50,7 @@ describe("Test ItemList UI", () => {
   });
 
   it("initial table load fails", async () => {
-    mockedApi.getList.mockRejectedValue({
+    mockedApi.searchQuery.mockRejectedValue({
       status: 500,
       statusText: "Internal Server Error",
     });
@@ -61,7 +61,7 @@ describe("Test ItemList UI", () => {
       }),
     });
     expect((wrapper.vm as any).getAlertLoad().value).toBeFalsy();
-    (wrapper.vm as any).retrieveItemInformation();
+    (wrapper.vm as any).startSearch();
     await wrapper.vm.$nextTick();
     expect((wrapper.vm as any).getAlertLoad().value).toBeTruthy();
   });
@@ -72,15 +72,6 @@ describe("Test ItemList UI", () => {
     const givenMetadata = {
       metadataId: "5",
     } as MetadataRest;
-    mockedApi.getList.mockReturnValue(
-      Promise.resolve({
-        itemArray: Array<ItemRest>({
-          metadata: {},
-          rights: {},
-        } as ItemRest),
-        totalPages: 25,
-      } as ItemInformation)
-    );
     mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
@@ -114,7 +105,7 @@ describe("Test ItemList UI", () => {
 
   it("test search query fails", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -141,7 +132,7 @@ describe("Test ItemList UI", () => {
 
   it("testPublicationDateFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -180,7 +171,7 @@ describe("Test ItemList UI", () => {
 
   it("testPublicationTypeFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -217,7 +208,7 @@ describe("Test ItemList UI", () => {
 
   it("testAccessStateFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -250,7 +241,7 @@ describe("Test ItemList UI", () => {
 
   it("testTempValFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -283,7 +274,7 @@ describe("Test ItemList UI", () => {
 
   it("testDateAtFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -321,7 +312,7 @@ describe("Test ItemList UI", () => {
 
   it("testFormalRuleFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -354,7 +345,7 @@ describe("Test ItemList UI", () => {
 
   it("testValidOnFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -381,7 +372,7 @@ describe("Test ItemList UI", () => {
 
   it("testPaketSigelIdFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
@@ -411,7 +402,7 @@ describe("Test ItemList UI", () => {
 
   it("testZDBIdFilter", async () => {
     // given
-    mockedApi.getList.mockReturnValue(
+    mockedApi.searchQuery.mockReturnValue(
       Promise.resolve({
         itemArray: Array<ItemRest>({
           metadata: {},
