@@ -98,27 +98,6 @@ export default defineComponent({
     const totalPages = ref(0);
     const numberOfResults = ref(0);
 
-    const retrieveItemInformation = () => {
-      api
-        .getList(
-          (currentPage.value - 1) * pageSize.value,
-          pageSize.value,
-          pageSize.value
-        )
-        .then((response) => {
-          items.value = response.itemArray;
-          tableContentLoading.value = false;
-          totalPages.value = response.totalPages;
-          numberOfResults.value = response.numberOfResults;
-        })
-        .catch((e) => {
-          tableContentLoading.value = false;
-          loadAlertErrorMessage.value =
-            e.statusText + " (Statuscode: " + e.status + ")";
-          loadAlertError.value = true;
-        });
-    };
-
     // Page changes
     const handlePageChange = (nextPage: number) => {
       currentPage.value = nextPage;
@@ -144,7 +123,7 @@ export default defineComponent({
       return loadAlertError;
     };
 
-    onMounted(() => retrieveItemInformation());
+    onMounted(() => startSearch());
 
     watch(headersValueVSelect, (currentValue, oldValue) => {
       selectedHeaders.value = currentValue;
@@ -414,7 +393,6 @@ export default defineComponent({
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
-      retrieveItemInformation,
       parsePublicationType,
       searchQuery,
       setActiveItem,
