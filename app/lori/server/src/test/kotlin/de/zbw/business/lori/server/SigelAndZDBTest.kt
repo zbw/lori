@@ -11,9 +11,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
-import org.hamcrest.MatcherAssert
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.core.Is
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
@@ -215,7 +213,6 @@ class SigelAndZDBTest : DatabaseTest() {
                 "search for all items, filter by ZDB-Id and PaketSigel"
             ),
         )
-
 
     @Test(dataProvider = DATA_FOR_SEARCH_SIGEL_ZDB_WITH_SEARCHTERM)
     fun testSearchWithRightFilter(

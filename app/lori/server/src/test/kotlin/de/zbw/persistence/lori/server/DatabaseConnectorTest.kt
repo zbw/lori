@@ -1,17 +1,17 @@
 package de.zbw.persistence.lori.server
 
-import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.MetadataSearchFilter
+import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.RightSearchFilter
+import de.zbw.business.lori.server.SearchKey
+import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.MetadataSearchFilter
-import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.business.lori.server.PublicationTypeFilter
-import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import io.mockk.every
@@ -975,11 +975,11 @@ class DatabaseConnectorTest : DatabaseTest() {
         description: String,
     ) {
         assertThat(
-                DatabaseConnector.buildSearchQuery(
-                    emptyMap(),
-                    metadataSearchFilter,
-                    rightSearchFilter,
-                ),
+            DatabaseConnector.buildSearchQuery(
+                emptyMap(),
+                metadataSearchFilter,
+                rightSearchFilter,
+            ),
             `is`(expectedSQLQuery)
         )
     }
@@ -1000,7 +1000,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "query with search and right filter",
             ),
             arrayOf(
-                emptyMap<SearchKey,List<String>>(),
+                emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 DatabaseConnector.STATEMENT_SELECT_SIGEL_ZDB +
@@ -1012,7 +1012,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "query with both filters and no searchkey",
             ),
             arrayOf(
-                emptyMap<SearchKey,List<String>>(),
+                emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 emptyList<RightSearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_SIGEL_ZDB +
@@ -1031,11 +1031,11 @@ class DatabaseConnectorTest : DatabaseTest() {
         description: String,
     ) {
         assertThat(
-                DatabaseConnector.buildSearchQueryForPaketSigelAndZDBId(
-                    searchKeys,
-                    metadataSearchFilter,
-                    rightSearchFilter,
-                ),
+            DatabaseConnector.buildSearchQueryForPaketSigelAndZDBId(
+                searchKeys,
+                metadataSearchFilter,
+                rightSearchFilter,
+            ),
             `is`(expectedSQLQuery)
         )
     }

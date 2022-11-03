@@ -1,17 +1,17 @@
 package de.zbw.persistence.lori.server
 
 /**
- * // TODO
+ * Types that represent results of db queries.
  *
  * Created on 10-27-2022.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-data class PaketSigelAndZDBId (
+data class PaketSigelAndZDBId(
     val paketSigel: String?,
-    val zdbId : String?,
-    )
+    val zdbId: String?,
+)
 
-data class PaketSigelAndZDBIdSet (
+data class PaketSigelAndZDBIdSet(
     val paketSigels: Set<String>,
-    val zdbIds : Set<String>,
-    )
+    val zdbIds: Set<String>,
+)

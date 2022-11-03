@@ -1143,7 +1143,7 @@ class DatabaseConnector(
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
         ): String {
-            val suffix = if (searchKeyMap.isEmpty()){
+            val suffix = if (searchKeyMap.isEmpty()) {
                 " ORDER BY item_metadata.metadata_id ASC LIMIT ? OFFSET ?;"
             } else {
                 " LIMIT ? OFFSET ?;"

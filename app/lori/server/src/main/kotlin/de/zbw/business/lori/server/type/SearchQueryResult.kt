@@ -11,4 +11,4 @@ data class SearchQueryResult(
     val results: List<Item>,
     val paketSigels: Set<String>,
     val zdbIds: Set<String>,
-    )
+)

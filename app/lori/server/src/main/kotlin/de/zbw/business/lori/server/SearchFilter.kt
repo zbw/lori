@@ -71,9 +71,9 @@ class PublicationTypeFilter(
 
 class PaketSigelFilter(
     val paketSigels: List<String>,
-): MetadataSearchFilter(
+) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
-){
+) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"
@@ -90,9 +90,9 @@ class PaketSigelFilter(
 
 class ZDBIdFilter(
     val zdbIds: List<String>,
-): MetadataSearchFilter(
+) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_METADATA_ZDB_ID,
-){
+) {
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"

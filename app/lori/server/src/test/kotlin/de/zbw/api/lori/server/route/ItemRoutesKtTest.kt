@@ -631,7 +631,7 @@ class ItemRoutesKtTest {
                     paketSigels = emptySet(),
                     zdbIds = emptySet(),
                 )
-            )
+                )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
         val servicePool = getServicePool(backend)
