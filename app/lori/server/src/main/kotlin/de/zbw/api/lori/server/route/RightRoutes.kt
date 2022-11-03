@@ -2,8 +2,8 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
-import de.zbw.business.lori.server.ItemRight
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightRest
 import io.ktor.http.HttpStatusCode

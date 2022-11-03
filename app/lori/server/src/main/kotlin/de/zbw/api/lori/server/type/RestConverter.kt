@@ -1,13 +1,13 @@
 package de.zbw.api.lori.server.type
 
-import de.zbw.business.lori.server.AccessState
-import de.zbw.business.lori.server.BasisAccessState
-import de.zbw.business.lori.server.BasisStorage
-import de.zbw.business.lori.server.Item
-import de.zbw.business.lori.server.ItemMetadata
-import de.zbw.business.lori.server.ItemRight
-import de.zbw.business.lori.server.PublicationType
-import de.zbw.business.lori.server.UserRole
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Item
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
@@ -60,7 +60,7 @@ fun MetadataRest.toBusiness() =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zbdId = zbdId,
+        zdbId = zbdId,
     )
 
 fun ItemMetadata.toRest(): MetadataRest =
@@ -87,7 +87,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zbdId = zbdId,
+        zbdId = zdbId,
     )
 
 fun RightRest.toBusiness(): ItemRight =
@@ -261,7 +261,7 @@ fun DAItem.toBusiness(): ItemMetadata? {
             title = title,
             titleJournal = RestConverter.extractMetadata("dc.journalname", metadata),
             titleSeries = RestConverter.extractMetadata("dc.seriesname", metadata),
-            zbdId = RestConverter.extractMetadata("dc.relation.journalzbdid", metadata),
+            zdbId = RestConverter.extractMetadata("dc.relation.journalzdbid", metadata),
         )
     }
 }

@@ -1,4 +1,4 @@
-package de.zbw.business.lori.server
+package de.zbw.business.lori.server.type
 
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -31,7 +31,7 @@ data class ItemMetadata(
     val title: String,
     val titleJournal: String?,
     val titleSeries: String?,
-    val zbdId: String?,
+    val zdbId: String?,
 )
 
 enum class AccessState {

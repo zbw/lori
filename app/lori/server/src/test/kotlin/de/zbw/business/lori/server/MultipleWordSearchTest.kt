@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -77,17 +79,17 @@ class MultipleWordSearchTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val (numberOfResults, searchResult) = backend.searchQuery(searchTerm, limit, offset)
+        val searchQueryResult: SearchQueryResult = backend.searchQuery(searchTerm, limit, offset)
 
         // then
         assertThat(
             description,
-            searchResult.map { it.metadata }.toSet(),
+            searchQueryResult.results.map { it.metadata }.toSet(),
             `is`(setOf(expectedResult)),
         )
         assertThat(
             description,
-            numberOfResults,
+            searchQueryResult.numberOfResults,
             `is`(expectedNumberOfResults),
         )
     }

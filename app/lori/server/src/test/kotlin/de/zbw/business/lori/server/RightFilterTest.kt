@@ -1,6 +1,15 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.type.RestConverterTest
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.FormalRule
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -233,7 +242,7 @@ class RightFilterTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult: Pair<Int, List<Item>> = backend.searchQuery(
+        val searchResult: SearchQueryResult = backend.searchQuery(
             givenSearchTerm,
             10,
             0,
@@ -244,11 +253,11 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.second.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
         assertThat(
-            searchResult.first,
+            searchResult.numberOfResults,
             `is`(
                 expectedNumberOfResults
             ),
@@ -323,14 +332,15 @@ class RightFilterTest : DatabaseTest() {
         )
 
     @Test(dataProvider = DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER)
-    fun testGetItemWithRightFilter(
+    fun testRightFilterWithoutSearchTerm(
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightsSearchFilter: List<RightSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {
         // when
-        val searchResult: List<Item> = backend.getItemList(
+        val searchResult: SearchQueryResult = backend.searchQuery(
+            null,
             10,
             0,
             metadataSearchFilter,
@@ -340,20 +350,13 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
 
-        // when
-        val numberOfResults = backend.countMetadataEntries(
-            metadataSearchFilter,
-            rightsSearchFilter,
-        )
-
-        // then
         assertThat(
             "Expected number of results does not match",
-            numberOfResults,
+            searchResult.numberOfResults,
             `is`(expectedResult.size)
         )
     }
@@ -408,7 +411,8 @@ class RightFilterTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult: List<Item> = backend.getItemList(
+        val searchResult: SearchQueryResult = backend.searchQuery(
+            null,
             10,
             0,
             metadataSearchFilter,
@@ -418,20 +422,13 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
 
-        // when
-        val numberOfResults = backend.countMetadataEntries(
-            metadataSearchFilter,
-            rightsSearchFilter,
-        )
-
-        // then
         assertThat(
             "Expected number of results does not match",
-            numberOfResults,
+            searchResult.numberOfResults,
             `is`(expectedResult.size)
         )
     }
@@ -494,7 +491,7 @@ class RightFilterTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult: Pair<Int, List<Item>> = backend.searchQuery(
+        val searchResult: SearchQueryResult = backend.searchQuery(
             givenSearchTerm,
             10,
             0,
@@ -505,13 +502,13 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.second.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
 
         assertThat(
             "Expected number of results does not match",
-            searchResult.first,
+            searchResult.numberOfResults,
             `is`(expectedResult.size)
         )
     }
@@ -578,7 +575,7 @@ class RightFilterTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult: Pair<Int, List<Item>> = backend.searchQuery(
+        val searchResult: SearchQueryResult = backend.searchQuery(
             givenSearchTerm,
             10,
             0,
@@ -589,13 +586,13 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
-            searchResult.second.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
 
         assertThat(
             "Expected number of results does not match",
-            searchResult.first,
+            searchResult.numberOfResults,
             `is`(expectedResult.size)
         )
     }

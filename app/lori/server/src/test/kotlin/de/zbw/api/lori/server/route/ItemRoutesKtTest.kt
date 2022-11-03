@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -554,6 +555,8 @@ class ItemRoutesKtTest {
                     )
                 ),
                 numberOfResults = 101,
+                paketSigels = emptyList(),
+                zdbIds = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -564,10 +567,15 @@ class ItemRoutesKtTest {
                     any(),
                 )
             } returns (
-                expectedInformation.numberOfResults to
+                SearchQueryResult(
+                    numberOfResults = expectedInformation.numberOfResults,
+                    results =
                     expectedInformation
                         .itemArray
-                        .map { it.toBusiness() }
+                        .map { it.toBusiness() },
+                    paketSigels = emptySet(),
+                    zdbIds = emptySet(),
+                )
                 )
         }
         val servicePool = getServicePool(backend)
@@ -602,17 +610,27 @@ class ItemRoutesKtTest {
                     )
                 ),
                 numberOfResults = 1,
+                paketSigels = emptyList(),
+                zdbIds = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
-                getItemList(
+                searchQuery(
+                    any(),
                     defaultLimit,
-                    defaultOffset
+                    defaultOffset,
+                    emptyList(),
+                    emptyList(),
                 )
             } returns (
-                expectedInformation
-                    .itemArray
-                    .map { it.toBusiness() }
+                SearchQueryResult(
+                    results = expectedInformation
+                        .itemArray
+                        .map { it.toBusiness() },
+                    numberOfResults = 1,
+                    paketSigels = emptySet(),
+                    zdbIds = emptySet(),
+                )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }

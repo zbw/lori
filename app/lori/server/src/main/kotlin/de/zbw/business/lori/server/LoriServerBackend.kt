@@ -3,8 +3,15 @@ package de.zbw.business.lori.server
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.business.lori.server.type.Item
+import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.User
+import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.PaketSigelAndZDBIdSet
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
@@ -90,19 +97,8 @@ class LoriServerBackend(
     fun getItemList(
         limit: Int,
         offset: Int,
-        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
-        rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): List<Item> {
-        val receivedMetadata = if (rightSearchFilter.isEmpty()) {
-            dbConnector.getMetadataRange(limit, offset, metadataSearchFilter)
-        } else {
-            dbConnector.getMetadataRangeWithRightFilter(
-                limit,
-                offset,
-                metadataSearchFilter,
-                rightSearchFilter,
-            )
-        }
+        val receivedMetadata = dbConnector.getMetadataRange(limit, offset)
         return receivedMetadata
             .takeIf {
                 it.isNotEmpty()
@@ -132,16 +128,12 @@ class LoriServerBackend(
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
         dbConnector.itemContainsEntry(metadataId, rightId)
 
-    fun countMetadataEntries(
-        metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
-        rightSearchFilter: List<RightSearchFilter> = emptyList(),
-    ): Int {
-        return if (rightSearchFilter.isEmpty()) {
-            dbConnector.countMetadataEntries(metadataSearchFilter)
-        } else {
-            dbConnector.countMetadataEntriesWithRightFilter(metadataSearchFilter, rightSearchFilter)
-        }
-    }
+    fun countMetadataEntries(): Int =
+        dbConnector.countSearchMetadata(
+            emptyMap(),
+            emptyList(),
+            emptyList(),
+        )
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
 
@@ -203,44 +195,57 @@ class LoriServerBackend(
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(
-        searchTerm: String,
+        searchTerm: String?,
         limit: Int,
         offset: Int,
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
-    ): Pair<Int, List<Item>> {
-        return parseSearchKeys(searchTerm).takeIf {
-            it.isNotEmpty()
-        }?.let { keys ->
-            val receivedMetadata = if (rightSearchFilter.isEmpty()) {
-                dbConnector.searchMetadata(
-                    keys,
-                    limit,
-                    offset,
-                    metadataSearchFilter,
-                )
-            } else {
-                dbConnector.searchMetadataWithRightFilter(
-                    keys,
-                    limit,
-                    offset,
-                    metadataSearchFilter,
-                    rightSearchFilter,
-                )
-            }
-            val items: List<Item> =
-                receivedMetadata.takeIf {
-                    it.isNotEmpty()
-                }?.let { metadata ->
-                    getRightsForMetadata(metadata)
-                } ?: (emptyList())
-            if (items.isEmpty()) {
-                (0 to items)
-            } else {
-                val count = dbConnector.countSearchMetadata(keys, metadataSearchFilter, rightSearchFilter)
-                (count to items)
-            }
-        } ?: (0 to emptyList())
+    ): SearchQueryResult {
+        val keys = searchTerm
+            ?.let { parseSearchKeys(searchTerm) }
+            ?: emptyMap()
+
+        // Acquire search results
+        val receivedMetadata: List<ItemMetadata> =
+            dbConnector.searchMetadata(
+                keys,
+                limit,
+                offset,
+                metadataSearchFilter,
+                rightSearchFilter,
+            )
+
+        // Combine Metadata entries with their rights
+        val items: List<Item> =
+            receivedMetadata.takeIf {
+                it.isNotEmpty()
+            }?.let { metadata ->
+                getRightsForMetadata(metadata)
+            } ?: (emptyList())
+
+        // Acquire number of results
+        val numberOfResults =
+            items
+                .takeIf { it.isNotEmpty() }
+                ?.let {
+                    dbConnector.countSearchMetadata(keys, metadataSearchFilter, rightSearchFilter)
+                }
+                ?: 0
+
+        // Acquire all zdbIds and paketSigels
+        val paketSigelAndZDBId: PaketSigelAndZDBIdSet = dbConnector.searchMetadataWithRightFilterForZDBAndSigel(
+            keys,
+            metadataSearchFilter.filter {
+                it !is ZDBIdFilter && it !is PaketSigelFilter
+            },
+            rightSearchFilter,
+        )
+        return SearchQueryResult(
+            numberOfResults = numberOfResults,
+            results = items,
+            paketSigels = paketSigelAndZDBId.paketSigels,
+            zdbIds = paketSigelAndZDBId.zdbIds,
+        )
     }
 
     companion object {

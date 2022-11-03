@@ -6,8 +6,8 @@ import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.api.lori.server.type.DACredentials
 import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.toBusiness
-import de.zbw.business.lori.server.ItemMetadata
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ItemMetadata
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine

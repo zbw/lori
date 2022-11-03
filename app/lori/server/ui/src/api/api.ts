@@ -58,7 +58,9 @@ export default {
     filterStartDate: string | undefined,
     filterEndDate: string | undefined,
     filterFormalRule: string | undefined,
-    filterValidOn: string | undefined
+    filterValidOn: string | undefined,
+    filterPaketSigel: string | undefined,
+    filterZDBId: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -72,7 +74,9 @@ export default {
       filterStartDate: filterStartDate,
       filterEndDate: filterEndDate,
       filterFormalRule: filterFormalRule,
-      filterValidOn: filterValidOn
+      filterValidOn: filterValidOn,
+      filterPaketSigel: filterPaketSigel,
+      filterZDBId: filterZDBId,
     });
   },
 };

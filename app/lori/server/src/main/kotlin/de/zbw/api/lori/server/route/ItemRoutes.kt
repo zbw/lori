@@ -4,10 +4,13 @@ import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
+import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
@@ -309,6 +312,10 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parsePublicationDateFilter(call.request.queryParameters["filterPublicationDate"])
                     val publicationTypeFilter: PublicationTypeFilter? =
                         QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
+                    val paketSigelFilter: PaketSigelFilter? =
+                        QueryParameterParser.parsePaketSigelFilter(call.request.queryParameters["filterPaketSigel"])
+                    val zdbIdFilter: ZDBIdFilter? =
+                        QueryParameterParser.parseZDBIdFilter(call.request.queryParameters["filterZDBId"])
                     val accessStateFilter: AccessStateFilter? =
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
@@ -364,7 +371,12 @@ fun Routing.itemRoutes(
                         )
                         return@withContext
                     }
-                    val metadataFilters = listOfNotNull(publicationDateFilter, publicationTypeFilter)
+                    val metadataFilters = listOfNotNull(
+                        paketSigelFilter,
+                        publicationDateFilter,
+                        publicationTypeFilter,
+                        zdbIdFilter,
+                    )
                     val rightFilters = listOfNotNull(
                         accessStateFilter,
                         temporalValidityFilter,
@@ -373,35 +385,23 @@ fun Routing.itemRoutes(
                         formalRuleFilter,
                         validOnFilter,
                     )
-                    if (searchTerm == null || searchTerm.isBlank()) {
-                        val items = backend.getItemList(limit, offset, metadataFilters, rightFilters)
-                        val entries = backend.countMetadataEntries(metadataFilters, rightFilters)
-                        val totalPages = ceil(entries.toDouble() / pageSize.toDouble()).toInt()
-                        span.setStatus(StatusCode.OK)
-                        call.respond(
-                            ItemInformation(
-                                itemArray = items.map { it.toRest() },
-                                totalPages = totalPages,
-                                numberOfResults = entries,
-                            )
-                        )
-                        return@withContext
-                    }
 
-                    val (numberOfResults, searchResults) = backend.searchQuery(
+                    val queryResult: SearchQueryResult = backend.searchQuery(
                         searchTerm,
                         limit,
                         offset,
                         metadataFilters,
                         rightFilters,
                     )
-                    val totalPages = ceil(numberOfResults.toDouble() / pageSize.toDouble()).toInt()
+                    val totalPages = ceil(queryResult.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)
                     call.respond(
                         ItemInformation(
-                            itemArray = searchResults.map { it.toRest() },
+                            itemArray = queryResult.results.map { it.toRest() },
                             totalPages = totalPages,
-                            numberOfResults = numberOfResults,
+                            numberOfResults = queryResult.numberOfResults,
+                            paketSigels = queryResult.paketSigels.toList(),
+                            zdbIds = queryResult.zdbIds.toList(),
                         )
                     )
                 } catch (e: NumberFormatException) {

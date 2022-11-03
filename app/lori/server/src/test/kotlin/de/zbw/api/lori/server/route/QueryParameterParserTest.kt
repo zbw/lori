@@ -1,13 +1,13 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.business.lori.server.AccessState
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
-import de.zbw.business.lori.server.FormalRule
 import de.zbw.business.lori.server.PublicationDateFilter
-import de.zbw.business.lori.server.PublicationType
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.FormalRule
+import de.zbw.business.lori.server.type.PublicationType
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.DataProvider
@@ -110,9 +110,9 @@ class QueryParameterParserTest {
             assertNull(received)
         } else {
             assertThat(
-                received!!.publicationFilter.toSet(),
+                received!!.publicationTypes.toSet(),
                 `is`(
-                    expectedFilter.publicationFilter.toSet(),
+                    expectedFilter.publicationTypes.toSet(),
                 )
             )
         }
