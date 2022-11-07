@@ -28,11 +28,6 @@ export default defineComponent({
     const currentIndex = ref(0);
     const headers = [
       {
-        text: "Rechte-Id",
-        align: "start",
-        value: "rightId",
-      },
-      {
         text: "AccessState",
         value: "accessState",
       },

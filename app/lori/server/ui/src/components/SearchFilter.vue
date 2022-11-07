@@ -68,7 +68,85 @@ export default defineComponent({
       return errors;
     });
 
+    // Reset the search filter
+    const canReset = computed(() => {
+      return (
+        searchStore.publicationDateFrom != "" ||
+        searchStore.publicationDateTo != "" ||
+        searchStore.publicationTypeArticle ||
+        searchStore.publicationTypeBook ||
+        searchStore.publicationTypeBookPart ||
+        searchStore.publicationTypeConferencePaper ||
+        searchStore.publicationTypePeriodicalPart ||
+        searchStore.publicationTypeResearchReport ||
+        searchStore.publicationTypeProceedings ||
+        searchStore.publicationTypeWorkingPaper ||
+        searchStore.publicationTypeThesis ||
+        searchStore.accessStateOpen ||
+        searchStore.accessStateRestricted ||
+        searchStore.accessStateClosed ||
+        searchStore.temporalEventInput != "" ||
+        searchStore.temporalEventStartDateFilter ||
+        searchStore.temporalEventEndDateFilter ||
+        searchStore.accessStateClosed ||
+        searchStore.accessStateOpen ||
+        searchStore.accessStateRestricted ||
+        searchStore.formalRuleLicenceContract ||
+        searchStore.formalRuleOpenContentLicence ||
+        searchStore.formalRuleUserAgreement ||
+        searchStore.temporalValidityFilterFuture ||
+        searchStore.temporalValidityFilterPresent ||
+        searchStore.temporalValidityFilterPast ||
+        searchStore.temporalValidOn != "" ||
+        searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
+        searchStore.zdbIdIdx.filter((element) => element).length > 0
+      );
+    });
+
+    const resetFilter: () => void = () => {
+      searchStore.publicationDateFrom = "";
+      searchStore.publicationDateTo = "";
+
+      searchStore.publicationTypeArticle = false;
+      searchStore.publicationTypeBook = false;
+      searchStore.publicationTypeBookPart = false;
+      searchStore.publicationTypeConferencePaper = false;
+      searchStore.publicationTypePeriodicalPart = false;
+      searchStore.publicationTypeResearchReport = false;
+      searchStore.publicationTypeProceedings = false;
+      searchStore.publicationTypeWorkingPaper = false;
+      searchStore.publicationTypeThesis = false;
+
+      searchStore.accessStateOpen = false;
+      searchStore.accessStateRestricted = false;
+      searchStore.accessStateClosed = false;
+
+      searchStore.temporalEventInput = "";
+      searchStore.temporalEventStartDateFilter = false;
+      searchStore.temporalEventEndDateFilter = false;
+
+      searchStore.accessStateClosed = false;
+      searchStore.accessStateOpen = false;
+      searchStore.accessStateRestricted = false;
+
+      searchStore.formalRuleLicenceContract = false;
+      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleUserAgreement = false;
+
+      searchStore.temporalValidityFilterFuture = false;
+      searchStore.temporalValidityFilterPresent = false;
+      searchStore.temporalValidityFilterPast = false;
+
+      searchStore.temporalValidOn = "";
+      tempEventState.startDateOrEndDateValue = "";
+      tempEventState.startDateOrEndDateOption = "";
+
+      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(() => false);
+      searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+    };
+
     return {
+      canReset,
       errorTempEventStartEnd,
       errorTempEventInput,
       tempEventState,
@@ -77,13 +155,23 @@ export default defineComponent({
       tempValidOnMenu,
       searchStore,
       v$,
+      resetFilter,
     };
   },
 });
 </script>
 <template>
   <v-card height="100%">
-    <v-card-title>Publikationsfilter</v-card-title>
+    <v-row>
+      <v-col>
+        <v-card-title>Publikationsfilter</v-card-title>
+      </v-col>
+      <v-col>
+        <v-btn color="warning" dark :disabled="!canReset" @click="resetFilter">
+          Alle Filter löschen</v-btn
+        >
+      </v-col>
+    </v-row>
     <v-container fluid>
       <v-list-group no-action sub-group eager>
         <template v-slot:activator>
@@ -159,12 +247,14 @@ export default defineComponent({
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeBook"
             ></v-checkbox>
+            <v-checkbox
+              label="Thesis"
+              hide-details
+              class="pl-9 ml-4"
+              v-model="searchStore.publicationTypeThesis"
+            ></v-checkbox>
           </v-list-group>
-          <v-list-group
-              no-action
-              sub-group
-              eager
-          >
+          <v-list-group no-action sub-group eager>
             <template v-slot:activator>
               <v-list-item-title>Paketsigel</v-list-item-title>
             </template>
@@ -174,16 +264,12 @@ export default defineComponent({
               :label="item"
               hide-details
               class="pl-9 ml-4"
-              v-model=searchStore.paketSigelIdIdx[i]
+              v-model="searchStore.paketSigelIdIdx[i]"
             ></v-checkbox>
           </v-list-group>
         </v-col>
       </v-row>
-      <v-list-group
-          no-action
-          sub-group
-          eager
-      >
+      <v-list-group no-action sub-group eager>
         <template v-slot:activator>
           <v-list-item-title>ZDB-IDs</v-list-item-title>
         </template>
@@ -193,7 +279,7 @@ export default defineComponent({
           :label="item"
           hide-details
           class="pl-9 ml-4"
-          v-model=searchStore.zdbIdIdx[i]
+          v-model="searchStore.zdbIdIdx[i]"
         ></v-checkbox>
       </v-list-group>
     </v-container>
