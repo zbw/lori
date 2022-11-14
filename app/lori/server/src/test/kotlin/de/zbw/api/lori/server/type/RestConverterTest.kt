@@ -3,6 +3,8 @@ package de.zbw.api.lori.server.type
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Group
+import de.zbw.business.lori.server.type.GroupIpAddress
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -155,6 +157,24 @@ class RestConverterTest {
         assertThat(
             RestConverter.parseToDate("foo"),
             `is`(LocalDate.of(1970, 1, 1))
+        )
+    }
+
+    @Test
+    fun testGroupConverter() {
+        val givenGroup = Group(
+            name = "some name",
+            description = "description",
+            ipAddresses = listOf(
+                GroupIpAddress(
+                    organisationName = "some orga",
+                    ipAddress = "123.456.1.127",
+                ),
+            ),
+        )
+        assertThat(
+            (givenGroup.toRest()).toBusiness(false),
+            `is`(givenGroup),
         )
     }
 

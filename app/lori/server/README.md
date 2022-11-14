@@ -68,6 +68,12 @@ Be aware that this password and database name needs to be provided to Lori. See 
 in the microservice helm chart. Passwords are read from Vault, while the table name is passed with a
 config map.
 
+Afterwards you can connect to the DB as following:
+```
+psql -U lori -h 192.168.225.165 -p 5432 loriinformation
+```
+And then enter the chosen password (in this example `1qay2wsx`)
+
 ## (G)RPC
 
 To send messages via grpc the command line tool [grpcurl](https://github.com/fullstorydev/grpcurl) is recommended.
