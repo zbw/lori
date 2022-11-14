@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import com.google.gson.Gson
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -9,6 +10,8 @@ import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Group
+import de.zbw.business.lori.server.type.GroupIpAddress
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -47,7 +50,8 @@ import kotlin.test.assertTrue
 class DatabaseConnectorTest : DatabaseTest() {
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo")
+        tracer = OpenTelemetry.noop().getTracer("foo"),
+        gson = Gson().newBuilder().create(),
     )
 
     @BeforeMethod
@@ -86,6 +90,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
             },
             tracer,
+            mockk(),
         )
         // when
         dbConnectorMockked.insertMetadata(TEST_Metadata)
@@ -123,6 +128,58 @@ class DatabaseConnectorTest : DatabaseTest() {
         // then
         assertThat(deletedMetadata, `is`(1))
         assertThat(dbConnector.getMetadata(listOf(testId)), `is`(listOf()))
+    }
+
+    @Test
+    fun testGroupRoundtrip() {
+        // Create
+
+        // when + then
+        val receivedGroupId = dbConnector.insertGroup(TEST_GROUP)
+        assertThat(
+            receivedGroupId,
+            `is`(
+                TEST_GROUP.name
+            ),
+        )
+
+        // Get
+        // when + then
+        assertThat(
+            dbConnector.getGroupById(TEST_GROUP.name),
+            `is`(
+                TEST_GROUP
+            ),
+        )
+
+        // Update
+        // given
+        val updated = TEST_GROUP.copy(description = "baz")
+        assertThat(
+            dbConnector.updateGroup(updated),
+            `is`(1),
+        )
+
+        // when + then
+        assertThat(
+            dbConnector.getGroupById(TEST_GROUP.name),
+            `is`(
+                updated
+            ),
+        )
+
+        // Delete
+        assertThat(
+            dbConnector.deleteGroupById(TEST_GROUP.name),
+            `is`(
+                1
+            ),
+        )
+
+        // Get no result
+        assertNull(
+            dbConnector.getGroupById(TEST_GROUP.name),
+        )
     }
 
     @Test
@@ -194,6 +251,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
             },
             tracer,
+            mockk(),
         )
         // when
         dbConnectorMockked.insertRight(TEST_RIGHT)
@@ -249,6 +307,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 every { prepareStatement(any()) } throws SQLException()
             },
             tracer,
+            mockk(),
         )
         dbConnector.getMetadata(listOf("foo"))
     }
@@ -260,6 +319,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 every { prepareStatement(any()) } throws SQLException()
             },
             tracer,
+            mockk(),
         )
         dbConnector.getRights(listOf("1"))
     }
@@ -1063,6 +1123,17 @@ class DatabaseConnectorTest : DatabaseTest() {
         )!!
 
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+
+        val TEST_GROUP = Group(
+            name = "test group",
+            description = "some description",
+            ipAddresses = listOf(
+                GroupIpAddress(
+                    organisationName = "some organisation",
+                    ipAddress = "192.168.0.0",
+                ),
+            ),
+        )
 
         val TEST_Metadata = ItemMetadata(
             metadataId = "that-test",

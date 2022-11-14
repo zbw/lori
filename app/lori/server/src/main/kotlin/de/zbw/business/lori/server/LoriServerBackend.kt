@@ -3,6 +3,7 @@ package de.zbw.business.lori.server
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -54,10 +55,14 @@ class LoriServerBackend(
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
 
+    fun insertGroup(group: Group): String = dbConnector.insertGroup(group)
+
     fun insertMetadataElement(metadata: ItemMetadata): String =
         dbConnector.insertMetadata(metadata)
 
     fun insertRight(right: ItemRight): String = dbConnector.insertRight(right)
+
+    fun updateGroup(group: Group): Int = dbConnector.updateGroup(group)
 
     fun upsertRight(right: ItemRight): Int = dbConnector.upsertRight(right)
 
@@ -79,8 +84,6 @@ class LoriServerBackend(
 
     fun rightContainsId(rightId: String): Boolean = dbConnector.rightContainsId(rightId)
 
-    fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
-
     fun getItemByMetadataId(metadataId: String): Item? =
         dbConnector.getMetadata(listOf(metadataId)).takeIf { it.isNotEmpty() }
             ?.first()
@@ -93,6 +96,10 @@ class LoriServerBackend(
                     rights,
                 )
             }
+
+    fun getGroupById(groupId: String): Group? = dbConnector.getGroupById(groupId)
+
+    fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
 
     fun getItemList(
         limit: Int,
@@ -142,6 +149,8 @@ class LoriServerBackend(
     fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.deleteItemByMetadata(metadataId)
 
     fun deleteItemEntriesByRightId(rightId: String) = dbConnector.deleteItemByRight(rightId)
+
+    fun deleteGroup(groupId: String): Int = dbConnector.deleteGroupById(groupId)
 
     fun deleteMetadata(metadataId: String): Int = dbConnector.deleteMetadata(listOf(metadataId))
 

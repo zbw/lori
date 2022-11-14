@@ -27,9 +27,11 @@ object LoriServer {
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)
+
         // Migrate DB
         FlywayMigrator(config).migrate()
 
+        // TODO: Add Service for DB connection test
         ServicePoolWithProbes(
             config = config,
             services = listOf(
@@ -42,7 +44,7 @@ object LoriServer {
                             tracer = tracer
                         ),
                     ),
-                )
+                ),
             ),
             backend = backend,
             tracer = tracer,

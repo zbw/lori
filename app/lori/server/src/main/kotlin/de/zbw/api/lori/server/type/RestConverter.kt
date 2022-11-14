@@ -3,11 +3,14 @@ package de.zbw.api.lori.server.type
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Group
+import de.zbw.business.lori.server.type.GroupIpAddress
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.UserRole
+import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
@@ -23,7 +26,6 @@ import java.time.format.DateTimeFormatter
  * Created on 07-28-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-
 fun ItemRest.toBusiness() =
     Item(
         metadata = metadata.toBusiness(),
@@ -34,6 +36,30 @@ fun Item.toRest() =
     ItemRest(
         metadata = metadata.toRest(),
         rights = rights.map { it.toRest() },
+    )
+
+fun Group.toRest() =
+    GroupRest(
+        name = this.name,
+        description = this.description,
+        ipAddresses = this.ipAddresses.joinToString(separator = "\n") {
+            "${it.organisationName},${it.ipAddress}"
+        }
+    )
+
+/**
+ * Convertion throws an IllegalArgumentException if
+ * the string representing the CSV file does not satisfy
+ * the expected format.
+ */
+fun GroupRest.toBusiness(hasCSVHeader: Boolean) =
+    Group(
+        name = this.name,
+        description = this.description,
+        ipAddresses = RestConverter.parseToGroup(
+            hasCSVHeader,
+            this.ipAddresses
+        )
     )
 
 fun MetadataRest.toBusiness() =
@@ -273,29 +299,61 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.admin -> UserRole.ADMIN
     }
 
-class RestConverter {
-    companion object {
-        fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
-            metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
+/**
+ * Utility functions helping to perform convert
+ * REST to Business Object and vice versa.
+ */
+object RestConverter {
+    fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
+        metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
 
-        fun parseToDate(s: String): LocalDate {
-            return if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
-                LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
-            } else if (s.matches("\\d{4}-\\d{2}".toRegex())) {
-                LocalDate.parse("$s-01", DateTimeFormatter.ISO_LOCAL_DATE)
-            } else if (s.matches("\\d{4}/\\d{2}".toRegex())) {
-                LocalDate.parse(
-                    "${s.substringBefore('/')}-${s.substringAfter('/')}-01",
-                    DateTimeFormatter.ISO_LOCAL_DATE
-                )
-            } else if (s.matches("\\d{4}".toRegex())) {
-                LocalDate.parse("$s-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+    fun parseToDate(s: String): LocalDate {
+        return if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
+            LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
+        } else if (s.matches("\\d{4}-\\d{2}".toRegex())) {
+            LocalDate.parse("$s-01", DateTimeFormatter.ISO_LOCAL_DATE)
+        } else if (s.matches("\\d{4}/\\d{2}".toRegex())) {
+            LocalDate.parse(
+                "${s.substringBefore('/')}-${s.substringAfter('/')}-01",
+                DateTimeFormatter.ISO_LOCAL_DATE
+            )
+        } else if (s.matches("\\d{4}".toRegex())) {
+            LocalDate.parse("$s-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+        } else {
+            LOG.warn("Date format can't be recognized: $s")
+            LocalDate.parse("1970-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+        }
+    }
+
+    /**
+     * Parse CSV formatted string.
+     * The expected format is as following:
+     * organisation_name,ipAddress
+     */
+    fun parseToGroup(
+        hasCSVHeader: Boolean,
+        ipAddressesCSV: String
+    ): List<GroupIpAddress> {
+        val rows = ipAddressesCSV.split("\n")
+            .let {
+                if (hasCSVHeader) {
+                    it.drop(1)
+                } else {
+                    it
+                }
+            }
+        return rows.map {
+            val columns: List<String> = it.split(",")
+            if (columns.size != 2) {
+                throw IllegalArgumentException("Invalid number of columns.")
             } else {
-                LOG.warn("Date format can't be recognized: $s")
-                LocalDate.parse("1970-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+                GroupIpAddress(
+                    organisationName = columns[0],
+                    ipAddress = columns[1],
+                )
             }
         }
-
-        private val LOG = LogManager.getLogger(RestConverter::class.java)
     }
+
+    private val LOG = LogManager.getLogger(RestConverter::class.java)
 }

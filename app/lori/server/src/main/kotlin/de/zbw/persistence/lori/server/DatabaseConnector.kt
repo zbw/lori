@@ -1,5 +1,7 @@
 package de.zbw.persistence.lori.server
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.RightSearchFilter
@@ -7,6 +9,8 @@ import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Group
+import de.zbw.business.lori.server.type.GroupIpAddress
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -14,6 +18,8 @@ import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
+import org.postgresql.util.PGobject
+import java.lang.reflect.Type
 import java.sql.Connection
 import java.sql.Date
 import java.sql.DriverManager
@@ -35,34 +41,24 @@ import java.time.ZoneId
 class DatabaseConnector(
     val connection: Connection,
     private val tracer: Tracer,
+    private val gson: Gson,
 ) {
     constructor(
         config: LoriConfiguration,
         tracer: Tracer,
     ) : this(
         DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword),
-        tracer
+        tracer,
+        Gson().newBuilder().create(),
     )
 
     init {
         connection.autoCommit = false
     }
 
-    fun itemContainsMetadata(metadataId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
-            this.setString(1, metadataId)
-        }
-        val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
-        rs.next()
-        return rs.getBoolean(1)
-    }
-
+    /**
+     * ITEM related queries.
+     */
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
             this.setString(1, metadataId)
@@ -112,6 +108,226 @@ class DatabaseConnector(
         } finally {
             span.end()
         }
+    }
+
+    fun deleteItem(
+        metadataId: String,
+        rightId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
+            this.setString(1, rightId)
+            this.setString(2, metadataId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun countItemByRightId(rightId: String): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("countItemByRightId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+        if (rs.next()) {
+            return rs.getInt(1)
+        } else throw IllegalStateException("No count found.")
+    }
+
+    fun deleteItemByMetadata(
+        metadataId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
+            this.setString(1, metadataId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteItemByRight(
+        rightId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("deleteItem").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    /**
+     * GROUP RELATED QUERIES.
+     */
+    /**
+     * Insert an entry into RIGHT_GROUP table.
+     */
+    fun insertGroup(group: Group): String {
+        val prepStmt: PreparedStatement =
+            connection.prepareStatement(STATEMENT_INSERT_GROUP, Statement.RETURN_GENERATED_KEYS)
+                .apply {
+                    this.setString(1, group.name)
+                    this.setIfNotNull(2, group.description) { value, idx, prepStmt ->
+                        prepStmt.setString(idx, value)
+                    }
+                    val jsonObj = PGobject()
+                    jsonObj.type = "json"
+                    jsonObj.value = gson.toJson(group.ipAddresses)
+                    this.setObject(3, jsonObj)
+                }
+        val span = tracer.spanBuilder("insertGroup").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getString(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
+    }
+
+    fun getGroupById(groupId: String): Group? {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_GROUP_BY_ID).apply {
+            this.setString(1, groupId)
+        }
+
+        val span = tracer.spanBuilder("getGroupById").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return if (rs.next()) {
+            val groupListType: Type = object : TypeToken<ArrayList<GroupIpAddress>>() {}.type
+            val name = rs.getString(1)
+            val description = rs.getString(2)
+            val ipAddressJson: String? = rs
+                .getObject(3, PGobject::class.java)
+                .value
+            Group(
+                name = name,
+                description = description,
+                ipAddresses = ipAddressJson
+                    ?.let { gson.fromJson(it, groupListType) }
+                    ?: emptyList()
+            )
+        } else {
+            null
+        }
+    }
+
+    fun deleteGroupById(
+        groupId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_GROUP_BY_ID).apply {
+            this.setString(1, groupId)
+        }
+        val span = tracer.spanBuilder("deleteGroup").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun updateGroup(
+        group: Group,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_GROUP).apply {
+            this.setIfNotNull(1, group.description) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            val jsonObj = PGobject()
+            jsonObj.type = "json"
+            jsonObj.value = gson.toJson(group.ipAddresses)
+            this.setObject(2, jsonObj)
+            this.setString(3, group.name)
+        }
+        val span = tracer.spanBuilder("updateGroup").startSpan()
+        try {
+            span.makeCurrent()
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    /**
+     * Metadata RELATED QUERIES
+     */
+    fun deleteMetadata(metadataIds: List<String>): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
+            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+        }
+        val span = tracer.spanBuilder("deleteMetadata").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun metadataContainsId(metadataId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
+            this.setString(1, metadataId)
+        }
+        val span = tracer.spanBuilder("metadataContainsId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun itemContainsMetadata(metadataId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
+            this.setString(1, metadataId)
+        }
+        val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return rs.getBoolean(1)
+    }
+
+    fun getMetadata(metadataIds: List<String>): List<ItemMetadata> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_METADATA).apply {
+            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+        }
+
+        val span = tracer.spanBuilder("getMetadata").startSpan()
+        return runMetadataStatement(prepStmt, span)
     }
 
     fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
@@ -213,6 +429,39 @@ class DatabaseConnector(
         }
     }
 
+    fun getMetadataRange(
+        limit: Int,
+        offset: Int,
+    ): List<ItemMetadata> {
+        val prepStmt: PreparedStatement = connection.prepareStatement(
+            STATEMENT_SELECT_ALL_METADATA +
+                " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
+        ).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+        val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
+        return runMetadataStatement(prepStmt, span)
+    }
+
+    private fun runMetadataStatement(prepStmt: PreparedStatement, span: Span): List<ItemMetadata> {
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                extractMetadataRS(rs)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    /**
+     * Right related queries.
+     */
     fun insertRight(right: ItemRight): String {
         val prepStmt =
             insertRightSetParameters(
@@ -381,96 +630,11 @@ class DatabaseConnector(
         }
     }
 
-    fun getMetadata(metadataIds: List<String>): List<ItemMetadata> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_METADATA).apply {
-            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
-        }
-
-        val span = tracer.spanBuilder("getMetadata").startSpan()
-        return runMetadataStatement(prepStmt, span)
-    }
-
-    fun countItemByRightId(rightId: String): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
-            this.setString(1, rightId)
-        }
-        val span = tracer.spanBuilder("countItemByRightId").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-        } finally {
-            span.end()
-        }
-        if (rs.next()) {
-            return rs.getInt(1)
-        } else throw IllegalStateException("No count found.")
-    }
-
-    fun deleteItem(
-        metadataId: String,
-        rightId: String,
-    ): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
-            this.setString(1, rightId)
-            this.setString(2, metadataId)
-        }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun deleteItemByMetadata(
-        metadataId: String,
-    ): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
-            this.setString(1, metadataId)
-        }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun deleteItemByRight(
-        rightId: String,
-    ): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
-            this.setString(1, rightId)
-        }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
     fun deleteRights(rightIds: List<String>): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
             this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("deleteRights").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun deleteMetadata(metadataIds: List<String>): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
-            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
-        }
-        val span = tracer.spanBuilder("deleteMetadata").startSpan()
         return try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
@@ -531,21 +695,6 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
-    fun metadataContainsId(metadataId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
-            this.setString(1, metadataId)
-        }
-        val span = tracer.spanBuilder("metadataContainsId").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
-        rs.next()
-        return rs.getBoolean(1)
-    }
-
     fun rightContainsId(rightId: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
             this.setString(1, rightId)
@@ -559,36 +708,6 @@ class DatabaseConnector(
         }
         rs.next()
         return rs.getBoolean(1)
-    }
-
-    fun getMetadataRange(
-        limit: Int,
-        offset: Int,
-    ): List<ItemMetadata> {
-        val prepStmt: PreparedStatement = connection.prepareStatement(
-            STATEMENT_SELECT_ALL_METADATA +
-                " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
-        ).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
-        }
-        val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
-        return runMetadataStatement(prepStmt, span)
-    }
-
-    private fun runMetadataStatement(prepStmt: PreparedStatement, span: Span): List<ItemMetadata> {
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
-
-        return generateSequence {
-            if (rs.next()) {
-                extractMetadataRS(rs)
-            } else null
-        }.takeWhile { true }.toList()
     }
 
     fun getRightIdsByMetadata(metadataId: String): List<String> {
@@ -609,6 +728,9 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
+    /**
+     * USER related queries.
+     */
     fun userTableContainsName(username: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_USER_CONTAINS_NAME).apply {
             this.setString(1, username)
@@ -745,6 +867,9 @@ class DatabaseConnector(
         }
     }
 
+    /**
+     * Search related queries.
+     */
     fun countSearchMetadata(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
@@ -878,6 +1003,7 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM = "item"
         private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
+        private const val TABLE_NAME_RIGHT_GROUP = "right_group"
         private const val TABLE_NAME_USERS = "users"
 
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
@@ -939,6 +1065,10 @@ class DatabaseConnector(
             "collection_name = EXCLUDED.collection_name," +
             "community_name = EXCLUDED.community_name," +
             "storage_date = EXCLUDED.storage_date;"
+
+        const val STATEMENT_INSERT_GROUP = "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
+            " (name, description, ip_addresses)" +
+            " VALUES(?,?,?)"
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
             "(metadata_id,handle,ppn,title,title_journal," +
@@ -1030,6 +1160,10 @@ class DatabaseConnector(
             "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_PAKET_SIGEL, $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ZDB_ID" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
+        const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
+            " FROM $TABLE_NAME_RIGHT_GROUP" +
+            " WHERE name = ?"
+
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA +
             " WHERE metadata_id = ANY(?)"
 
@@ -1037,6 +1171,10 @@ class DatabaseConnector(
             "FROM $TABLE_NAME_ITEM i " +
             "WHERE i.right_id = ? " +
             "AND i.metadata_id = ?"
+
+        const val STATEMENT_DELETE_GROUP_BY_ID = "DELETE " +
+            "FROM $TABLE_NAME_RIGHT_GROUP" +
+            " WHERE name = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_METADATA = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +
@@ -1100,6 +1238,9 @@ class DatabaseConnector(
 
         const val STATEMENT_GET_ROLE_BY_USER =
             "SELECT role FROM $TABLE_NAME_USERS WHERE username=?"
+
+        const val STATEMENT_UPDATE_GROUP =
+            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=? WHERE name=?;"
 
         const val STATEMENT_UPDATE_USER =
             "UPDATE $TABLE_NAME_USERS SET password=? WHERE username=?"
@@ -1204,15 +1345,6 @@ class DatabaseConnector(
                 queryClause +
                 " GROUP BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_PAKET_SIGEL, $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ZDB_ID;"
         }
-
-        fun buildMetasearchWhereFilterWithRights(
-            metadataSearchFilter: List<MetadataSearchFilter>,
-            rightSearchFilter: List<RightSearchFilter>,
-        ): String = buildSearchQueryHelper(
-            emptyMap(),
-            metadataSearchFilter,
-            rightSearchFilter,
-        ) + " ORDER BY $TABLE_NAME_ITEM_METADATA.metadata_id ASC LIMIT ? OFFSET ?;"
 
         private fun buildSearchQueryHelper(
             searchKeyMap: Map<SearchKey, List<String>>,

@@ -19,7 +19,7 @@ metadata:
         description: Invalid input
         content: { }
       409:
-        description: Deletion not possible due to conflict
+        description: Insertion not possible due to conflict
         content: { }
       500:
         description: Internal error

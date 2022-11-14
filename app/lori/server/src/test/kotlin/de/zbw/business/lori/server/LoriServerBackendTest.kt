@@ -39,6 +39,7 @@ class LoriServerBackendTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            gson = mockk(),
         ),
         mockk(),
     )

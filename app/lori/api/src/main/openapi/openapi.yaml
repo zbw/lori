@@ -11,6 +11,12 @@ tags:
   - name: ItemRest
     description: A bibliographic item
 paths:
+  /group:
+    $ref: 'group.api.yaml#/group'
+  /group/{id}:
+    $ref: 'group.api.yaml#/group-id'
+  /group/list:
+    $ref: 'group.api.yaml#/group-list'
   /item:
     $ref: 'item.api.yaml#/item'
   /item/list:
