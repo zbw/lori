@@ -141,7 +141,9 @@ export default defineComponent({
       tempEventState.startDateOrEndDateValue = "";
       tempEventState.startDateOrEndDateOption = "";
 
-      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(() => false);
+      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
+        () => false
+      );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
     };
 
@@ -163,13 +165,15 @@ export default defineComponent({
 <template>
   <v-card height="100%">
     <v-row>
-      <v-col>
-        <v-card-title>Publikationsfilter</v-card-title>
-      </v-col>
-      <v-col>
+      <v-col cols="12">
         <v-btn color="warning" dark :disabled="!canReset" @click="resetFilter">
           Alle Filter löschen</v-btn
         >
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col>
+        <v-card-title>Publikationsfilter</v-card-title>
       </v-col>
     </v-row>
     <v-container fluid>
@@ -206,31 +210,36 @@ export default defineComponent({
               data-test="foobar"
             ></v-checkbox>
             <v-checkbox
-              label="Buchaufsatz/Book Part"
+              label="Buchaufsatz/
+              Book Part"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeBookPart"
             ></v-checkbox>
             <v-checkbox
-              label="Konferenzschrift/Conference Paper"
+              label="Konferenzschrift/
+              Conference Paper"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeConferencePaper"
             ></v-checkbox>
             <v-checkbox
-              label="Zeitschriftenband/Periodical Part"
+              label="Zeitschriftenband/
+              Periodical Part"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypePeriodicalPart"
             ></v-checkbox>
             <v-checkbox
-              label="Forschungsbericht/Research Report"
+              label="Forschungsbericht/
+              Research Report"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeResearchReport"
             ></v-checkbox>
             <v-checkbox
-              label="Konferenzband/Proceeding"
+              label="Konferenzband/
+              Proceeding"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeProceedings"
@@ -358,8 +367,8 @@ export default defineComponent({
           </v-list-group>
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>
-              <v-list-item-title
-                >Zeitliche Gütligkeit Ereignis
+              <v-list-item-title>
+                Zeitliche Gütligkeit Ereignis
               </v-list-item-title>
             </template>
             <v-menu
