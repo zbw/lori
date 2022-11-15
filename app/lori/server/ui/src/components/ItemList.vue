@@ -110,7 +110,8 @@ export default defineComponent({
       searchQuery();
     };
 
-    const setActiveItem = (metadata: MetadataRest) => {
+    const setActiveItem = (metadata: MetadataRest, row: any) => {
+      row.select(true);
       let item: ItemRest | undefined = items.value.find(
         (e) => e.metadata.metadataId === metadata.metadataId
       );
@@ -402,13 +403,18 @@ export default defineComponent({
 });
 </script>
 
+<style scoped>
+/deep/ tr.v-data-table__selected {
+  background: #7d92f5 !important;
+}
+</style>
 <template>
   <v-container>
     <v-row>
-      <v-col cols="3">
+      <v-col cols="2">
         <SearchFilter></SearchFilter>
       </v-col>
-      <v-col cols="9">
+      <v-col cols="6">
         <v-card>
           <v-card-title>
             <v-text-field
@@ -489,17 +495,17 @@ export default defineComponent({
             {{ loadAlertErrorMessage }}
           </v-alert>
         </v-card>
-        <v-col>
-          <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-            <RightsView
-              :rights="currentItem.rights"
-              :metadataId="currentItem.metadata.metadataId"
-            ></RightsView>
-            <MetadataView
-              :metadata="Object.assign({}, currentItem.metadata)"
-            ></MetadataView>
-          </v-card>
-        </v-col>
+      </v-col>
+      <v-col cols="4">
+        <v-card v-if="currentItem.metadata" class="mx-auto" tile>
+          <RightsView
+            :rights="currentItem.rights"
+            :metadataId="currentItem.metadata.metadataId"
+          ></RightsView>
+          <MetadataView
+            :metadata="Object.assign({}, currentItem.metadata)"
+          ></MetadataView>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
