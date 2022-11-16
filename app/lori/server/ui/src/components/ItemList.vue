@@ -422,9 +422,15 @@ export default defineComponent({
               append-icon="mdi-magnify"
               label="Suche"
               single-line
-              hide-details
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
+              outlined
+              persistent-hint
+              hint="Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:
+              com(Community),
+              col(Collection),
+              sig(Paket-Sigel),
+              zdb(ZDB-Id)"
             ></v-text-field>
           </v-card-title>
           <v-select
