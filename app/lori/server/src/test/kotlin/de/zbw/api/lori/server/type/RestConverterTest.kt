@@ -53,7 +53,7 @@ class RestConverterTest {
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
                 titleSeries = TEST_METADATA.titleSeries,
-                zbdId = TEST_METADATA.zdbId,
+                zdbId = TEST_METADATA.zdbId,
             ),
             rights = listOf(
                 RightRest(

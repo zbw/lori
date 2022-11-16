@@ -162,9 +162,9 @@ export default defineComponent({
               <v-col>{{ prettyPrint(currentMetadata.titleSeries) }}</v-col>
               <v-col></v-col>
             </v-row>
-            <v-row v-show="currentMetadata.zbdId">
-              <v-col>ZBD Id</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.zbdId) }}</v-col>
+            <v-row v-show="currentMetadata.zdbId">
+              <v-col>ZDB Id</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.zdbId) }}</v-col>
               <v-col></v-col>
             </v-row>
           </v-container>

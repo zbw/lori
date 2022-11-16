@@ -86,7 +86,7 @@ export default defineComponent({
       },
       {
         text: "ZDB-ID",
-        value: "zbdId",
+        value: "zdbId",
       },
     ] as Array<DataTableHeader>;
 
