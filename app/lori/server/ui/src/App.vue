@@ -1,21 +1,21 @@
 <script lang="ts">
-import Vue from "vue";
+import Vue, { computed, ref, watch } from "vue";
 import { useHistoryStore } from "@/stores/history";
 
 export default Vue.extend({
   name: "LoriApp",
 
   setup() {
+    const drawer = ref(false);
     const historyStore = useHistoryStore();
-    const items = [
-      { title: "Click Me" },
-      { title: "Click Me" },
-      { title: "Click Me" },
-      { title: "Click Me 2" },
+    const menuTopics = [
+      { title: "Gruppen" },
+      { title: "Einstellungen" },
     ];
 
     return {
-      items,
+      menuTopics,
+      drawer,
       historyStore,
     };
   },
@@ -35,6 +35,24 @@ export default Vue.extend({
           width="100"
         />
       </div>
+
+      <v-menu
+          bottom
+          left
+          :offset-y="true"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn dark icon v-bind="attrs" v-on="on">
+            <v-icon>mdi-view-headline</v-icon>
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item v-for="(topic, i) in menuTopics" :key="i" link>
+            <v-list-item-title>{{ topic.title }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
 
       <v-spacer></v-spacer>
       <v-menu offset-y>
@@ -64,13 +82,12 @@ export default Vue.extend({
             </v-list-item-action>
             <v-list-item-title
               >{{ item.type.toString() }}: Right-Id
-              {{ item.rightId }}</v-list-item-title
-            >
+              {{ item.rightId }}
+            </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
     </v-app-bar>
-
     <v-main>
       <router-view />
     </v-main>

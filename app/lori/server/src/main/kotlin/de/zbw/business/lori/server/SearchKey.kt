@@ -13,7 +13,7 @@ enum class SearchKey(
     COMMUNITY("ts_community"),
     COLLECTION("ts_collection"),
     PAKET_SIGEL("ts_sigel"),
-    ZBD_ID("ts_zbd_id");
+    ZDB_ID("ts_zbd_id");
 
     fun toWhereClause(): String =
         "${this.dbColumnName} @@ to_tsquery('english', ?)"
@@ -24,7 +24,7 @@ enum class SearchKey(
                 "com" -> COMMUNITY
                 "col" -> COLLECTION
                 "sig" -> PAKET_SIGEL
-                "zbd" -> ZBD_ID
+                "zdb" -> ZDB_ID
                 else -> null
             }
         }

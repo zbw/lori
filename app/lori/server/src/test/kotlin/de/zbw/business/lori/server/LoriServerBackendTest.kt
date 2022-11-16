@@ -199,10 +199,10 @@ class LoriServerBackendTest : DatabaseTest() {
                 "single case with whitespace"
             ),
             arrayOf(
-                "col:bar zbd:foo",
+                "col:bar zdb:foo",
                 mapOf(
                     SearchKey.COLLECTION to listOf("bar"),
-                    SearchKey.ZBD_ID to listOf("foo"),
+                    SearchKey.ZDB_ID to listOf("foo"),
                 ),
                 "two search keys"
             ),
@@ -253,7 +253,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (number, items) = backend.searchQuery(
-            "zbd:${givenMetadataEntries[0].zdbId!!}",
+            "zdb:${givenMetadataEntries[0].zdbId!!}",
             5,
             0
         )
@@ -278,7 +278,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (numberNoItem, itemsNoItem) = backend.searchQuery(
-            "zbd:NOT_IN_DATABASE_ID",
+            "zdb:NOT_IN_DATABASE_ID",
             5,
             0
         )

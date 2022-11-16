@@ -601,32 +601,32 @@ class DatabaseConnectorTest : DatabaseTest() {
     @Test
     fun searchMetadata() {
         // given
-        val testZBD = TEST_Metadata.copy(metadataId = "searchZBD", zdbId = "zbdId")
-        dbConnector.insertMetadata(testZBD)
+        val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbId = "zbdId")
+        dbConnector.insertMetadata(testZDB)
 
         // when
-        val searchTermsZBD = mapOf(Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)))
-        val resultZBD =
+        val searchTermsZDB = mapOf(Pair(SearchKey.ZDB_ID, listOf(testZDB.zdbId!!)))
+        val resultZDB =
             dbConnector.searchMetadata(
-                searchTerms = searchTermsZBD,
+                searchTerms = searchTermsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
             )
-        val numberResultZBD = dbConnector.countSearchMetadata(
-            searchTerms = searchTermsZBD,
+        val numberResultZDB = dbConnector.countSearchMetadata(
+            searchTerms = searchTermsZDB,
             metadataSearchFilter = emptyList(),
         )
         // then
-        assertThat(resultZBD[0], `is`(testZBD))
-        assertThat(numberResultZBD, `is`(1))
+        assertThat(resultZDB[0], `is`(testZDB))
+        assertThat(numberResultZDB, `is`(1))
         // when
         val searchTermsAll = mapOf(
-            Pair(SearchKey.COLLECTION, listOf(testZBD.collectionName!!)),
-            Pair(SearchKey.COMMUNITY, listOf(testZBD.communityName!!)),
-            Pair(SearchKey.PAKET_SIGEL, listOf(testZBD.paketSigel!!)),
-            Pair(SearchKey.ZBD_ID, listOf(testZBD.zdbId!!)),
+            Pair(SearchKey.COLLECTION, listOf(testZDB.collectionName!!)),
+            Pair(SearchKey.COMMUNITY, listOf(testZDB.communityName!!)),
+            Pair(SearchKey.PAKET_SIGEL, listOf(testZDB.paketSigel!!)),
+            Pair(SearchKey.ZDB_ID, listOf(testZDB.zdbId!!)),
         )
         val resultAll =
             dbConnector.searchMetadata(
@@ -641,40 +641,40 @@ class DatabaseConnectorTest : DatabaseTest() {
             metadataSearchFilter = emptyList(),
         )
         // then
-        assertThat(resultAll.toSet(), `is`(setOf(testZBD)))
+        assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
         assertThat(numberResultAll, `is`(1))
 
         // Add second metadata with same zbdID
-        val testZBD2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbId = "zbdId")
-        dbConnector.insertMetadata(testZBD2)
+        val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbId = "zbdId")
+        dbConnector.insertMetadata(testZDB2)
         // when
         val resultZBD2 =
             dbConnector.searchMetadata(
-                searchTerms = searchTermsZBD,
+                searchTerms = searchTermsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
             )
-        val numberResultZBD2 = dbConnector.countSearchMetadata(
+        val numberResultZDB2 = dbConnector.countSearchMetadata(
             searchTerms = searchTermsAll,
             metadataSearchFilter = emptyList(),
         )
         // then
-        assertThat(resultZBD2.toSet(), `is`(setOf(testZBD, testZBD2)))
-        assertThat(numberResultZBD2, `is`(2))
+        assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
+        assertThat(numberResultZDB2, `is`(2))
 
         // when
-        val resultZBD2Offset =
+        val resultZDB2Offset =
             dbConnector.searchMetadata(
-                searchTerms = searchTermsZBD,
+                searchTerms = searchTermsZDB,
                 limit = 5,
                 offset = 1,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
             )
         assertThat(
-            resultZBD2Offset.size, `is`(1)
+            resultZDB2Offset.size, `is`(1)
         )
     }
 
@@ -688,25 +688,25 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "query for one string in collection"
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 emptyList<MetadataSearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
                 "query for multiple searchkeys"
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar")),
                 emptyList<MetadataSearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
                 "query for multiple words in one searchkey"
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 emptyList<MetadataSearchFilter>(),
                 DatabaseConnector.STATEMENT_SELECT_ALL_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?) LIMIT ? OFFSET ?;",
                 "query for multiple words in multiple searchkeys"
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
@@ -714,7 +714,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "query for publication date filter"
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("bar")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -806,28 +806,28 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "count query filter with one searchkey",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
                 "count query filter with two searchkeys",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?);",
                 "count query filter with multiple words for one key",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 DatabaseConnector.STATEMENT_COUNT_METADATA + " WHERE ts_zbd_id @@ to_tsquery('english', ?) AND ts_sigel @@ to_tsquery('english', ?);",
                 "count query with multiple words for multiple keys",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
@@ -890,7 +890,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "count query without keys but with both filter",
             ),
             arrayOf(
-                mapOf(SearchKey.ZBD_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(

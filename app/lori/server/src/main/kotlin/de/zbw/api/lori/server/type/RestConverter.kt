@@ -86,7 +86,7 @@ fun MetadataRest.toBusiness() =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zdbId = zbdId,
+        zdbId = zdbId,
     )
 
 fun ItemMetadata.toRest(): MetadataRest =
@@ -113,7 +113,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zbdId = zdbId,
+        zdbId = zdbId,
     )
 
 fun RightRest.toBusiness(): ItemRight =
