@@ -144,6 +144,7 @@ export default defineComponent({
     const searchStore = useSearchStore();
 
     const startSearch = () => {
+      currentPage.value = 1;
       searchStore.lastSearchTerm = searchTerm.value;
       searchQuery();
     };
