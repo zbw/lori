@@ -30,6 +30,9 @@ abstract class DatabaseTest {
     }
 
     init {
+        dataSource.connection
+            .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
+            .execute()
         FlywayMigrator(dataSource).migrate()
     }
 }

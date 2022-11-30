@@ -228,6 +228,20 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "mutltiple and single words quoted with whitespaces"
             ),
+            arrayOf(
+                "col:col-foo-bar",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("col-foo-bar"),
+                ),
+                "multiple words minus"
+            ),
+            arrayOf(
+                "col:'col-foo-bar'",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("col-foo-bar"),
+                ),
+                "multiple words quoted minus"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)

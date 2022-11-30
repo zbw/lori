@@ -54,6 +54,10 @@ class DatabaseConnector(
 
     init {
         connection.autoCommit = false
+        connection
+            .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
+            .execute()
+        connection.commit()
     }
 
     /**
@@ -434,7 +438,7 @@ class DatabaseConnector(
         offset: Int,
     ): List<ItemMetadata> {
         val prepStmt: PreparedStatement = connection.prepareStatement(
-            STATEMENT_SELECT_ALL_METADATA +
+            STATEMENT_SELECT_ALL_METADATA_FROM +
                 " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
         ).apply {
             this.setInt(1, limit)
@@ -881,13 +885,11 @@ class DatabaseConnector(
         )
             .apply {
                 var counter = 1
-                if (rightSearchFilter.isNotEmpty()) {
-                    rightSearchFilter.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
-                    }
-                }
                 entries.forEach { entry ->
-                    this.setString(counter++, entry.value.joinToString(" & "))
+                    this.setString(counter++, entry.value.joinToString(" "))
+                }
+                rightSearchFilter.forEach { f ->
+                    counter = f.setSQLParameter(counter, this)
                 }
                 metadataSearchFilter.forEach { f ->
                     counter = f.setSQLParameter(counter, this)
@@ -921,11 +923,11 @@ class DatabaseConnector(
             )
         ).apply {
             var counter = 1
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" "))
+            }
             rightSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
-            }
-            entries.forEach { entry ->
-                this.setString(counter++, entry.value.joinToString(" & "))
             }
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
@@ -961,11 +963,11 @@ class DatabaseConnector(
             )
         ).apply {
             var counter = 1
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" "))
+            }
             rightSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
-            }
-            entries.forEach { entry ->
-                this.setString(counter++, entry.value.joinToString(" & "))
             }
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
@@ -1006,6 +1008,8 @@ class DatabaseConnector(
         private const val TABLE_NAME_RIGHT_GROUP = "right_group"
         private const val TABLE_NAME_USERS = "users"
 
+        const val COLUMN_METADATA_COLLECTION_NAME = "collection_name"
+        const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
@@ -1144,6 +1148,14 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
+                "author, collection_name, community_name, storage_date"
+
+        const val STATEMENT_SELECT_ALL_METADATA_FROM =
+            "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
+                "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
+                "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author, collection_name, community_name, storage_date " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
 
@@ -1153,18 +1165,24 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author, collection_name, community_name, storage_date " +
-                "FROM $TABLE_NAME_ITEM_METADATA"
+                "author, collection_name, community_name, storage_date"
+
+        const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
+            "SELECT metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
+                "created_on,last_updated_on," +
+                "created_by,last_updated_by," +
+                "author, collection_name, community_name, storage_date"
 
         const val STATEMENT_SELECT_SIGEL_ZDB =
-            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_PAKET_SIGEL, $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ZDB_ID" +
-                " FROM $TABLE_NAME_ITEM_METADATA"
+            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID"
 
         const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
             " WHERE name = ?"
 
-        const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA +
+        const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"
 
         const val STATEMENT_DELETE_ITEM = "DELETE " +
@@ -1273,35 +1291,47 @@ class DatabaseConnector(
 
         fun buildSearchQuery(
             searchKeyMap: Map<SearchKey, List<String>>,
-            searchFilter: List<MetadataSearchFilter>
-        ): String =
-            STATEMENT_SELECT_ALL_METADATA +
-                buildSearchQueryHelper(searchKeyMap, searchFilter) +
-                " LIMIT ? OFFSET ?;"
-
-        fun buildSearchQuery(
-            searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
+            withLimit: Boolean = true,
         ): String {
-            val suffix = if (searchKeyMap.isEmpty()) {
-                " ORDER BY item_metadata.metadata_id ASC LIMIT ? OFFSET ?;"
-            } else {
-                " LIMIT ? OFFSET ?;"
-            }
-            return if (rightSearchFilters.isEmpty()) {
-                STATEMENT_SELECT_ALL_METADATA +
+            val subquery = if (rightSearchFilters.isEmpty()) {
+                buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
-                        searchKeyMap,
                         metadataSearchFilters,
-                    ) + suffix
+                    )
             } else {
-                STATEMENT_SELECT_ALL_METADATA_DISTINCT +
+                buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
-                        searchKeyMap,
                         metadataSearchFilters,
                         rightSearchFilters,
-                    ) + suffix
+                    )
+            }
+
+            val limit = if (withLimit) {
+                " LIMIT ? OFFSET ?"
+            } else ""
+
+            return if (searchKeyMap.isEmpty()) {
+                "$subquery ORDER BY item_metadata.metadata_id ASC$limit"
+            } else {
+                val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
+                    entry.key.toWhereClause()
+                }
+                val coalesceScore = searchKeyMap.entries.joinToString(
+                    prefix = "(",
+                    postfix = ")",
+                    separator = " + ",
+                ) { entry ->
+                    "coalesce(${SearchKey.SUBQUERY_NAME}.${entry.key.distColumnName},1)"
+                } + "/${searchKeyMap.size} as score"
+                "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES, $coalesceScore" +
+                    " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
+                    " WHERE $trgmWhere" +
+                    " ORDER BY score" +
+                    limit
             }
         }
 
@@ -1309,109 +1339,89 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
-        ): String {
-            return if (rightSearchFilter.isNotEmpty()) {
-                buildCountMetadataQueryBothFilterNoSearchKey(
-                    searchKeyMap, metadataSearchFilter, rightSearchFilter
+        ): String =
+            "SELECT COUNT(*) FROM" +
+                " (${
+                buildSearchQuery(
+                    searchKeyMap,
+                    metadataSearchFilter,
+                    rightSearchFilter,
+                    false,
                 )
-            } else {
-                STATEMENT_COUNT_METADATA +
-                    buildSearchQueryHelper(
-                        searchKeyMap,
-                        metadataSearchFilter,
-                    ) + ";"
-            }
-        }
+                }) as foo"
 
         fun buildSearchQueryForPaketSigelAndZDBId(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
         ): String {
-            val queryClause =
-                if (rightSearchFilters.isNotEmpty()) {
+            val subquery = if (rightSearchFilters.isEmpty()) {
+                buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
-                        searchKeyMap,
+                        metadataSearchFilters,
+                    )
+            } else {
+                buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
+                    buildSearchQueryHelper(
                         metadataSearchFilters,
                         rightSearchFilters,
                     )
-                } else {
-                    buildSearchQueryHelper(
-                        searchKeyMap,
-                        metadataSearchFilters,
-                    )
+            }
+            val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
+                entry.key.toWhereClause()
+            }.takeIf { it.isNotBlank() }
+                ?.let {
+                    " WHERE $it"
                 }
+                ?: ""
+
             return STATEMENT_SELECT_SIGEL_ZDB +
-                queryClause +
-                " GROUP BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_PAKET_SIGEL, $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ZDB_ID;"
+                " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
+                trgmWhere +
+                " GROUP BY ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID;"
         }
 
         private fun buildSearchQueryHelper(
-            searchKeyMap: Map<SearchKey, List<String>>,
             searchFilter: List<MetadataSearchFilter>,
         ): String {
-            val searchKeys = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
-                entry.key.toWhereClause()
-            }
+
             val filter = searchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }.takeIf { it.isNotBlank() }
-                ?.let {
-                    if (searchKeyMap.isNotEmpty()) {
-                        " AND $it"
-                    } else {
-                        it
-                    }
-                }
                 ?: ""
-            return if (filter.isBlank() && searchKeys.isBlank()) {
+            return if (filter.isBlank()) {
                 ""
             } else {
-                " WHERE " +
-                    searchKeys +
-                    filter
+                " WHERE $filter"
             }
         }
 
-        internal fun buildCountMetadataQueryBothFilterNoSearchKey(
-            searchKeyMap: Map<SearchKey, List<String>> = emptyMap(),
+        private fun buildCountMetadataQueryBothFilterNoSearchKey(
             metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
             rightSearchFilter: List<RightSearchFilter> = emptyList(),
         ) =
             "SELECT COUNT(*) FROM" +
                 " (SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.*" +
                 " FROM $TABLE_NAME_ITEM_METADATA" +
-                buildSearchQueryHelper(searchKeyMap, metadataSearchFilter, rightSearchFilter) +
+                buildSearchQueryHelper(metadataSearchFilter, rightSearchFilter) +
                 ") a;"
 
         private fun buildSearchQueryHelper(
-            searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
         ): String {
-            val searchKeys = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
-                entry.key.toWhereClause()
-            }
             val metadataFilters = metadataSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
-            }.takeIf { it.isNotBlank() }
-                ?.let {
-                    if (searchKeyMap.isNotEmpty()) {
-                        " AND $it"
-                    } else {
-                        it
-                    }
-                }
-                ?: ""
+            }.takeIf { it.isNotBlank() } ?: ""
             val rightFilters = rightSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }
-            val whereClause = if (metadataFilters.isBlank() && searchKeys.isBlank()) {
+            val whereClause = if (metadataFilters.isBlank()) {
                 ""
             } else {
-                " WHERE " +
-                    searchKeys +
-                    metadataFilters
+                " WHERE $metadataFilters"
             }
             return " LEFT JOIN $TABLE_NAME_ITEM " +
                 "ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id " +
@@ -1419,6 +1429,23 @@ class DatabaseConnector(
                 "ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.right_id AND " +
                 rightFilters +
                 whereClause
+        }
+
+        fun buildSearchQuerySelect(
+            searchKeyMap: Map<SearchKey, List<String>>,
+            rightSearchFilters: List<RightSearchFilter>,
+        ): String {
+            val trgmSelect = searchKeyMap.entries.joinToString(separator = ", ") { entry ->
+                entry.key.toSelectClause()
+            }.takeIf { it.isNotBlank() }
+                ?.let {
+                    ", $it"
+                } ?: ""
+            return if (rightSearchFilters.isEmpty()) {
+                "$STATEMENT_SELECT_ALL_METADATA $trgmSelect"
+            } else {
+                "$STATEMENT_SELECT_ALL_METADATA_DISTINCT $trgmSelect"
+            }
         }
 
         private fun extractMetadataRS(rs: ResultSet) = ItemMetadata(

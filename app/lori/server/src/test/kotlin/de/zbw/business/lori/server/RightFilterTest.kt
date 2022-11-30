@@ -122,17 +122,21 @@ class RightFilterTest : DatabaseTest() {
         ),
         formalRuleLicenceContract to listOf(
             TEST_RIGHT.copy(
-                licenceContract = "licence"
+                licenceContract = "licence",
+                zbwUserAgreement = false,
             ),
         ),
         formalRuleUserAgreement to listOf(
             TEST_RIGHT.copy(
                 zbwUserAgreement = true,
+                licenceContract = null,
             ),
         ),
         formalRuleOCL to listOf(
             TEST_RIGHT.copy(
                 openContentLicence = "foobar",
+                licenceContract = null,
+                zbwUserAgreement = false,
             ),
         ),
     )
@@ -171,8 +175,8 @@ class RightFilterTest : DatabaseTest() {
             listOf(
                 AccessStateFilter(listOf(AccessState.RESTRICTED)),
             ),
-            setOf(itemRightRestricted),
-            1,
+            setOf(itemRightRestricted, itemRightRestrictedOpen),
+            2,
             "Filter for Access State Restricted for Item that has only one right"
         ),
         arrayOf(
@@ -187,9 +191,9 @@ class RightFilterTest : DatabaseTest() {
             listOf(
                 AccessStateFilter(listOf(AccessState.OPEN)),
             ),
-            emptySet<ItemMetadata>(),
-            0,
-            "Filter for Access State Open and expect no result",
+            setOf(itemRightRestrictedOpen),
+            1,
+            "Filter for Access State Open and expect one result with a similar collection name",
         ),
         arrayOf(
             "col:subject3",

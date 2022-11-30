@@ -76,15 +76,15 @@ class FilterSearchTest : DatabaseTest() {
         arrayOf(
             "col:'subject1 subject2'",
             listOf(PublicationDateFilter(2021, 2023)),
-            publicationDateFilter.toSet(),
-            1,
+            listOf(publicationDateFilter[0], publicationTypeFilter[0]).toSet(),
+            2,
             "search with filter in range",
         ),
         arrayOf(
             "col:'subject1 subject2'",
             listOf(PublicationDateFilter(2020, 2021)),
-            emptySet<ItemMetadata>(),
-            0,
+            setOf(publicationTypeFilter[1]),
+            1,
             "search with filter out of range",
         ),
         arrayOf(

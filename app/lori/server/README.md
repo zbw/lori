@@ -64,9 +64,9 @@ GRANT lori TO root;
 CREATE DATABASE loriinformation OWNER lori ENCODING UTF8;
 ```
 
-Be aware that this password and database name needs to be provided to Lori. See the the values file
-in the microservice helm chart. Passwords are read from Vault, while the table name is passed with a
-config map.
+Be aware that this password and database name and user needs to be provided to Lori at startup. The HelmChart repository
+contains for the lori microservice a _values_ file which passes all configuration variables
+to the microservice. Sensitive variables like passwords are read from a Vault store and need to be inserted there separately.
 
 Afterwards you can connect to the DB as following:
 ```
@@ -100,16 +100,14 @@ grpcurl -plaintext -d '{"ids":["test_no_rest"]}' localhost:9092 de.zbw.lori.api.
 
 ## REST
 
-We use OpenApi v3.0.1 to represent all REST endpoints. The definition of the endpoints
+We use OpenApi v3 to represent all REST endpoints. The definition of the endpoints
 can be found under `api/src/main/openapi`.
 
-1. Send a POST request to add a new item:
+Example: Send a POST request to add a new right entry:
 
 ```shell
- curl -H "Content-Type: application/json" \
+curl -vvv -H "Content-Type: application/json" \
 --request POST \
---data '{"id":"testId", "tenant": "www.zbw.eu", "usage_guide":"www.zbw.eu/licence", "mention":"true", "actions":[{"permission":"true", "actiontype":"read", "restrictions":[{"restrictiontype":"age", "attributetype":"fromdate", "attributevalues":["18"]}]}]}' \
-http://localhost:8082/api/v1/accessinformation
+--data '{"rightId":123, "startDate": "2022-01-01", "endDate":"2023-01-01", "licenseConditions":"somelicense", "provenanceLicense":"proven", "accessState":"open"}' \
+localhost:8082/api/v1/right
 ```
-
-2. TODO Get request

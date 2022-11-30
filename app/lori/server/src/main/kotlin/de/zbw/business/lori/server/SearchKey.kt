@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server
 
+import de.zbw.persistence.lori.server.DatabaseConnector
+
 /**
  * SearchKeys representing keynames of the search input.
  * Pattern for searchterms: keyname:value
@@ -9,16 +11,22 @@ package de.zbw.business.lori.server
  */
 enum class SearchKey(
     private val dbColumnName: String,
+    val distColumnName: String,
 ) {
-    COMMUNITY("ts_community"),
-    COLLECTION("ts_collection"),
-    PAKET_SIGEL("ts_sigel"),
-    ZDB_ID("ts_zbd_id");
+    COMMUNITY(DatabaseConnector.COLUMN_METADATA_COMMUNITY_NAME, "dist_com"),
+    COLLECTION(DatabaseConnector.COLUMN_METADATA_COLLECTION_NAME, "dist_col"),
+    PAKET_SIGEL(DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL, "dist_sig"),
+    ZDB_ID(DatabaseConnector.COLUMN_METADATA_ZDB_ID, "dist_zdb");
 
+    fun toSelectClause(): String =
+        "${this.dbColumnName} <-> ? as ${this.distColumnName}"
     fun toWhereClause(): String =
-        "${this.dbColumnName} @@ to_tsquery('english', ?)"
+        "$SUBQUERY_NAME.${this.distColumnName} < $DISTANCE_VALUE"
 
     companion object {
+        const val DISTANCE_VALUE = "0.9"
+        const val SUBQUERY_NAME = "sub"
+
         fun toEnum(s: String): SearchKey? {
             return when (s.lowercase()) {
                 "com" -> COMMUNITY

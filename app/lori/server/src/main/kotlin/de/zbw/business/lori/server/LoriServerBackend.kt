@@ -267,7 +267,7 @@ class LoriServerBackend(
         }
 
         fun parseSearchKeys(s: String): Map<SearchKey, List<String>> {
-            val iter = Regex("\\w+:\\w+|\\w+:'[\\w\\s]+'").findAll(s).iterator()
+            val iter = Regex("\\w+:[\\w-]+|\\w+:'[\\w\\s-]+'").findAll(s).iterator()
             val tokens: List<String> = generateSequence {
                 if (iter.hasNext()) {
                     iter.next().value.filter { it != '\'' }
