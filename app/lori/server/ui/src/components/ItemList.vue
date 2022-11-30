@@ -39,6 +39,16 @@ export default defineComponent({
         value: "handle",
       },
       {
+        text: "Community",
+        sortable: true,
+        value: "communityName",
+      },
+        {
+        text: "Collection",
+        sortable: true,
+        value: "collectionName",
+      },
+      {
         text: "Publikationstyp",
         sortable: true,
         value: "publicationType",
