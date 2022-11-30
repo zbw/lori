@@ -39,6 +39,16 @@ export default defineComponent({
         value: "handle",
       },
       {
+        text: "Community",
+        sortable: true,
+        value: "communityName",
+      },
+        {
+        text: "Collection",
+        sortable: true,
+        value: "collectionName",
+      },
+      {
         text: "Publikationstyp",
         sortable: true,
         value: "publicationType",
@@ -134,6 +144,7 @@ export default defineComponent({
     const searchStore = useSearchStore();
 
     const startSearch = () => {
+      currentPage.value = 1;
       searchStore.lastSearchTerm = searchTerm.value;
       searchQuery();
     };

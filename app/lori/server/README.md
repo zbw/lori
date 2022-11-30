@@ -64,6 +64,11 @@ GRANT lori TO root;
 CREATE DATABASE loriinformation OWNER lori ENCODING UTF8;
 ```
 
+and enable the required extension `pg_trgm`:
+```sql
+CREATE EXTENSION if not exists pg_trgm;
+```
+
 Be aware that this password and database name and user needs to be provided to Lori at startup. The HelmChart repository
 contains for the lori microservice a _values_ file which passes all configuration variables
 to the microservice. Sensitive variables like passwords are read from a Vault store and need to be inserted there separately.
