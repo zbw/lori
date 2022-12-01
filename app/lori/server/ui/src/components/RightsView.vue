@@ -15,6 +15,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    handle: {
+      type: String,
+      required: true,
+    },
   },
   components: {
     RightsEditDialog,
@@ -136,7 +140,9 @@ export default defineComponent({
     >
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>Rechteinformationen</v-toolbar-title>
+          <v-toolbar-title>Rechteinformationen
+            <a :href="handle">{{ handle.substring(22, 35) }}</a>
+          </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <v-btn @click="newRight()" color="primary" dark class="mb-2">

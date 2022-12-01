@@ -432,6 +432,7 @@ export default defineComponent({
               v-model="searchTerm"
               append-icon="mdi-magnify"
               label="Suche"
+              clearable
               single-line
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
@@ -518,6 +519,7 @@ export default defineComponent({
           <RightsView
             :rights="currentItem.rights"
             :metadataId="currentItem.metadata.metadataId"
+            :handle="currentItem.metadata.handle"
           ></RightsView>
           <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"
