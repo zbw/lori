@@ -432,6 +432,7 @@ export default defineComponent({
               v-model="searchTerm"
               append-icon="mdi-magnify"
               label="Suche"
+              clearable
               single-line
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
