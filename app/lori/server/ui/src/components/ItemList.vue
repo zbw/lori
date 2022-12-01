@@ -519,6 +519,7 @@ export default defineComponent({
           <RightsView
             :rights="currentItem.rights"
             :metadataId="currentItem.metadata.metadataId"
+            :handle="currentItem.metadata.handle"
           ></RightsView>
           <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"
