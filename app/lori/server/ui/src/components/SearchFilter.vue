@@ -73,15 +73,6 @@ export default defineComponent({
       return (
         searchStore.publicationDateFrom != "" ||
         searchStore.publicationDateTo != "" ||
-        searchStore.publicationTypeArticle ||
-        searchStore.publicationTypeBook ||
-        searchStore.publicationTypeBookPart ||
-        searchStore.publicationTypeConferencePaper ||
-        searchStore.publicationTypePeriodicalPart ||
-        searchStore.publicationTypeResearchReport ||
-        searchStore.publicationTypeProceedings ||
-        searchStore.publicationTypeWorkingPaper ||
-        searchStore.publicationTypeThesis ||
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.accessStateClosed ||
@@ -99,23 +90,14 @@ export default defineComponent({
         searchStore.temporalValidityFilterPast ||
         searchStore.temporalValidOn != "" ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
-        searchStore.zdbIdIdx.filter((element) => element).length > 0
+        searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
+        searchStore.publicationTypeIdx.filter((element) => element).length > 0
       );
     });
 
     const resetFilter: () => void = () => {
       searchStore.publicationDateFrom = "";
       searchStore.publicationDateTo = "";
-
-      searchStore.publicationTypeArticle = false;
-      searchStore.publicationTypeBook = false;
-      searchStore.publicationTypeBookPart = false;
-      searchStore.publicationTypeConferencePaper = false;
-      searchStore.publicationTypePeriodicalPart = false;
-      searchStore.publicationTypeResearchReport = false;
-      searchStore.publicationTypeProceedings = false;
-      searchStore.publicationTypeWorkingPaper = false;
-      searchStore.publicationTypeThesis = false;
 
       searchStore.accessStateOpen = false;
       searchStore.accessStateRestricted = false;
@@ -144,7 +126,35 @@ export default defineComponent({
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
         () => false
       );
+      searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
+        () => false
+      );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+    };
+
+    const parsePublicationType = (pubType: string) => {
+      switch (pubType) {
+        case "article":
+          return "Aufsatz/Article";
+        case "book":
+          return "Buch/Book";
+        case "bookPart":
+          return "Buchaufsatz/Book Part";
+        case "conferencePaper":
+          return "Konferenzschrift/\n Conference Paper";
+        case "periodicalPart":
+          return "Zeitschriftenband/\n Periodical Part";
+        case "proceedings":
+          return "Konferenzband/\n Proceeding";
+        case "researchReport":
+          return "Forschungsbericht/\n Research Report";
+        case "thesis":
+          return "Thesis";
+        case "workingPaper":
+          return "Working Paper";
+        default:
+          return "Unknown pub type:" + pubType;
+      }
     };
 
     return {
@@ -157,6 +167,7 @@ export default defineComponent({
       tempValidOnMenu,
       searchStore,
       v$,
+      parsePublicationType,
       resetFilter,
     };
   },
@@ -203,64 +214,12 @@ export default defineComponent({
               <v-list-item-title>Publikationstyp</v-list-item-title>
             </template>
             <v-checkbox
-              label="Aufsatz/Article"
+              v-for="(item, i) in searchStore.availablePublicationTypes"
+              :key="i"
+              :label="parsePublicationType(item)"
               hide-details
               class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeArticle"
-              data-test="foobar"
-            ></v-checkbox>
-            <v-checkbox
-              label="Buchaufsatz/
-              Book Part"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeBookPart"
-            ></v-checkbox>
-            <v-checkbox
-              label="Konferenzschrift/
-              Conference Paper"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeConferencePaper"
-            ></v-checkbox>
-            <v-checkbox
-              label="Zeitschriftenband/
-              Periodical Part"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypePeriodicalPart"
-            ></v-checkbox>
-            <v-checkbox
-              label="Forschungsbericht/
-              Research Report"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeResearchReport"
-            ></v-checkbox>
-            <v-checkbox
-              label="Konferenzband/
-              Proceeding"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeProceedings"
-            ></v-checkbox>
-            <v-checkbox
-              label="Working Paper"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeWorkingPaper"
-            ></v-checkbox>
-            <v-checkbox
-              label="Buch/Book"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeBook"
-            ></v-checkbox>
-            <v-checkbox
-              label="Thesis"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.publicationTypeThesis"
+              v-model="searchStore.publicationTypeIdx[i]"
             ></v-checkbox>
           </v-list-group>
           <v-list-group no-action sub-group eager>

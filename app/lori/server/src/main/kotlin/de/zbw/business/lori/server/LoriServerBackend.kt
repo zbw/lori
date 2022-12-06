@@ -12,7 +12,7 @@ import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.PaketSigelAndZDBIdSet
+import de.zbw.persistence.lori.server.PaketSigelZDBIdPubTypeSet
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
@@ -241,18 +241,17 @@ class LoriServerBackend(
                 }
                 ?: 0
 
-        // Acquire all zdbIds and paketSigels
-        val paketSigelAndZDBId: PaketSigelAndZDBIdSet = dbConnector.searchMetadataWithRightFilterForZDBAndSigel(
+        // Collect all publication types, zdbIds and paketSigels
+        val paketSigelAndZDBId: PaketSigelZDBIdPubTypeSet = dbConnector.searchMetadataWithRightFilterForZDBAndSigel(
             keys,
-            metadataSearchFilter.filter {
-                it !is ZDBIdFilter && it !is PaketSigelFilter
-            },
+            metadataSearchFilter,
             rightSearchFilter,
         )
         return SearchQueryResult(
             numberOfResults = numberOfResults,
             results = items,
             paketSigels = paketSigelAndZDBId.paketSigels,
+            publicationType = paketSigelAndZDBId.publicationType,
             zdbIds = paketSigelAndZDBId.zdbIds,
         )
     }

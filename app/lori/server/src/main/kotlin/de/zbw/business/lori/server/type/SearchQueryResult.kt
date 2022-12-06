@@ -10,5 +10,6 @@ data class SearchQueryResult(
     val numberOfResults: Int,
     val results: List<Item>,
     val paketSigels: Set<String>,
+    val publicationType: Set<PublicationType>,
     val zdbIds: Set<String>,
 )

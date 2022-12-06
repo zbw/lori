@@ -1,5 +1,9 @@
 <script lang="ts">
-import { ItemRest, MetadataRest } from "@/generated-sources/openapi";
+import {
+  ItemRest,
+  MetadataRest,
+  PublicationTypeRest,
+} from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
 import MetadataView from "@/components/MetadataView.vue";
@@ -43,7 +47,7 @@ export default defineComponent({
         sortable: true,
         value: "communityName",
       },
-        {
+      {
         text: "Collection",
         sortable: true,
         value: "collectionName",
@@ -175,9 +179,14 @@ export default defineComponent({
           if (response.paketSigels != undefined) {
             searchStore.availablePaketSigelIds = response.paketSigels;
           }
+          if (response.publicationType != undefined) {
+            searchStore.availablePublicationTypes =
+              response.publicationType.sort();
+          }
           if (response.zdbIds != undefined) {
             searchStore.availableZDBIds = response.zdbIds;
           }
+          resetDynamicFilter();
         })
         .catch((e) => {
           tableContentLoading.value = false;
@@ -185,6 +194,16 @@ export default defineComponent({
             e.statusText + " (Statuscode: " + e.status + ")";
           loadAlertError.value = true;
         });
+    };
+
+    const resetDynamicFilter = () => {
+      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
+        () => false
+      );
+      searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
+        () => false
+      );
+      searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
     };
 
     const buildPublicationDateFilter: () => string | undefined = () => {
@@ -304,33 +323,45 @@ export default defineComponent({
 
     const buildPublicationTypeFilter = () => {
       let types: Array<string> = [];
-      if (searchStore.publicationTypeArticle) {
-        types.push("ARTICLE");
-      }
-      if (searchStore.publicationTypeBook) {
-        types.push("BOOK");
-      }
-      if (searchStore.publicationTypeBookPart) {
-        types.push("BOOK_PART");
-      }
-      if (searchStore.publicationTypeConferencePaper) {
-        types.push("CONFERENCE_PAPER");
-      }
-      if (searchStore.publicationTypePeriodicalPart) {
-        types.push("PERIODICAL_PART");
-      }
-      if (searchStore.publicationTypeProceedings) {
-        types.push("PROCEEDINGS");
-      }
-      if (searchStore.publicationTypeResearchReport) {
-        types.push("RESEARCH_REPORT");
-      }
-      if (searchStore.publicationTypeThesis) {
-        types.push("THESIS");
-      }
-      if (searchStore.publicationTypeWorkingPaper) {
-        types.push("WORKING_PAPER");
-      }
+      searchStore.publicationTypeIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            let modifiedPubTypeFilter = "";
+            switch (searchStore.availablePublicationTypes[index]) {
+              case "article":
+                modifiedPubTypeFilter = "ARTICLE";
+                break;
+              case "book":
+                modifiedPubTypeFilter = "BOOK";
+                break;
+              case "bookPart":
+                modifiedPubTypeFilter = "BOOK_PART";
+                break;
+              case "conferencePaper":
+                modifiedPubTypeFilter = "CONFERENCE_PAPER";
+                break;
+              case "periodicalPart":
+                modifiedPubTypeFilter = "PERIODICAL_PART";
+                break;
+              case "proceedings":
+                modifiedPubTypeFilter = "PROCEEDING";
+                break;
+              case "researchReport":
+                modifiedPubTypeFilter = "RESEARCH_REPORT";
+                break;
+              case "thesis":
+                modifiedPubTypeFilter = "THESIS";
+                break;
+              case "workingPaper":
+                modifiedPubTypeFilter = "WORKING_PAPER";
+                break;
+              default:
+                modifiedPubTypeFilter = "ERROR";
+            }
+            types.push(modifiedPubTypeFilter);
+          }
+        }
+      );
       if (types.length == 0) {
         return undefined;
       } else {

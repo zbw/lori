@@ -1,3 +1,16 @@
+PublicationTypeRest:
+  type: string
+  enum:
+    - article
+    - book
+    - book_part
+    - conference_paper
+    - periodical_part
+    - proceedings
+    - research_report
+    - thesis
+    - working_paper
+
 MetadataRest:
   required:
     - handle
@@ -40,17 +53,7 @@ MetadataRest:
     ppn:
       type: string
     publicationType:
-      type: string
-      enum:
-        - article
-        - book
-        - book_part
-        - conference_paper
-        - periodical_part
-        - proceedings
-        - research_report
-        - thesis
-        - working_paper
+      $ref: 'metadata.model.yaml#/PublicationTypeRest'
     publicationDate:
       type: string
       format: date

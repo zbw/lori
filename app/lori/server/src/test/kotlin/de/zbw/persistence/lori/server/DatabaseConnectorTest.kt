@@ -1039,34 +1039,34 @@ class DatabaseConnectorTest : DatabaseTest() {
                 listOf(SearchKey.COLLECTION to "foo").toMap(),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "SELECT sub.paket_sigel, sub.zdb_id FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author, collection_name, community_name, storage_date , collection_name <-> ? as dist_col FROM item_metadata" +
+                "SELECT sub.paket_sigel, sub.zdb_id, sub.publication_type FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author, collection_name, community_name, storage_date , collection_name <-> ? as dist_col FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub" +
                     " WHERE sub.dist_col < 0.9" +
-                    " GROUP BY sub.paket_sigel, sub.zdb_id;",
+                    " GROUP BY sub.paket_sigel, sub.zdb_id, sub.publication_type;",
                 "query with search and right filter",
             ),
             arrayOf(
                 emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "SELECT sub.paket_sigel, sub.zdb_id FROM" +
+                "SELECT sub.paket_sigel, sub.zdb_id, sub.publication_type FROM" +
                     " (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author, collection_name, community_name, storage_date  FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub" +
-                    " GROUP BY sub.paket_sigel, sub.zdb_id;",
+                    " GROUP BY sub.paket_sigel, sub.zdb_id, sub.publication_type;",
                 "query with both filters and no searchkey",
             ),
             arrayOf(
                 emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 emptyList<RightSearchFilter>(),
-                "SELECT sub.paket_sigel, sub.zdb_id FROM" +
+                "SELECT sub.paket_sigel, sub.zdb_id, sub.publication_type FROM" +
                     " (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author, collection_name, community_name, storage_date" +
                     "  FROM item_metadata" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub" +
-                    " GROUP BY sub.paket_sigel, sub.zdb_id;",
+                    " GROUP BY sub.paket_sigel, sub.zdb_id, sub.publication_type;",
                 "query with metadata filter only",
             ),
         )

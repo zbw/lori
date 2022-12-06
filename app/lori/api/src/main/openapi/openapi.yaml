@@ -56,5 +56,7 @@ components:
       $ref: 'item.model.yaml#/ItemRest'
     MetadataRest:
       $ref: 'metadata.model.yaml#/MetadataRest'
+    PublicationTypeRest:
+      $ref: 'metadata.model.yaml#/PublicationTypeRest'
     RightRest:
       $ref: 'item.model.yaml#/RightRest'

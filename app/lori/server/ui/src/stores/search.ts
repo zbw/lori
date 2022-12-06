@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import {computed, Ref, ref} from "vue";
+import { Ref, ref } from "vue";
 
 export const useSearchStore = defineStore("search", () => {
   const lastSearchTerm = ref("");
@@ -9,6 +9,7 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateRestricted = ref(false);
 
   const availablePaketSigelIds: Ref<Array<string>> = ref([]);
+  const availablePublicationTypes: Ref<Array<string>> = ref([]);
   const availableZDBIds: Ref<Array<string>> = ref([]);
 
   const formalRuleLicenceContract = ref(false);
@@ -19,17 +20,8 @@ export const useSearchStore = defineStore("search", () => {
   const publicationDateTo = ref("");
 
   const paketSigelIdIdx: Ref<Array<boolean>> = ref([]);
+  const publicationTypeIdx: Ref<Array<boolean>> = ref([]);
   const zdbIdIdx: Ref<Array<boolean>> = ref([]);
-
-  const publicationTypeArticle = ref(false);
-  const publicationTypeBook = ref(false);
-  const publicationTypeBookPart = ref(false);
-  const publicationTypeConferencePaper = ref(false);
-  const publicationTypePeriodicalPart = ref(false);
-  const publicationTypeProceedings = ref(false);
-  const publicationTypeResearchReport = ref(false);
-  const publicationTypeThesis = ref(false);
-  const publicationTypeWorkingPaper = ref(false);
 
   const temporalEventInput = ref("");
   const temporalEventStartDateFilter = ref(false);
@@ -47,22 +39,15 @@ export const useSearchStore = defineStore("search", () => {
     accessStateRestricted,
     accessStateOpen,
     availablePaketSigelIds,
+    availablePublicationTypes,
     availableZDBIds,
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,
     paketSigelIdIdx,
+    publicationTypeIdx,
     publicationDateFrom,
     publicationDateTo,
-    publicationTypeArticle,
-    publicationTypeBook,
-    publicationTypeBookPart,
-    publicationTypeConferencePaper,
-    publicationTypePeriodicalPart,
-    publicationTypeProceedings,
-    publicationTypeResearchReport,
-    publicationTypeThesis,
-    publicationTypeWorkingPaper,
     temporalEventInput,
     temporalEventStartDateFilter,
     temporalEventEndDateFilter,
