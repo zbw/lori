@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import org.apache.logging.log4j.LogManager
@@ -220,30 +221,30 @@ internal fun BasisStorage.toRest(): RightRest.BasisStorage =
         BasisStorage.ZBW_POLICY_UNANSWERED -> RightRest.BasisStorage.zbwPolicyUnanswered
     }
 
-internal fun MetadataRest.PublicationType.toBusiness(): PublicationType =
+internal fun PublicationTypeRest.toBusiness(): PublicationType =
     when (this) {
-        MetadataRest.PublicationType.article -> PublicationType.ARTICLE
-        MetadataRest.PublicationType.book -> PublicationType.BOOK
-        MetadataRest.PublicationType.bookPart -> PublicationType.BOOK_PART
-        MetadataRest.PublicationType.periodicalPart -> PublicationType.PERIODICAL_PART
-        MetadataRest.PublicationType.workingPaper -> PublicationType.WORKING_PAPER
-        MetadataRest.PublicationType.researchReport -> PublicationType.RESEARCH_REPORT
-        MetadataRest.PublicationType.proceedings -> PublicationType.PROCEEDINGS
-        MetadataRest.PublicationType.thesis -> PublicationType.THESIS
-        MetadataRest.PublicationType.conferencePaper -> PublicationType.CONFERENCE_PAPER
+        PublicationTypeRest.article -> PublicationType.ARTICLE
+        PublicationTypeRest.book -> PublicationType.BOOK
+        PublicationTypeRest.bookPart -> PublicationType.BOOK_PART
+        PublicationTypeRest.periodicalPart -> PublicationType.PERIODICAL_PART
+        PublicationTypeRest.workingPaper -> PublicationType.WORKING_PAPER
+        PublicationTypeRest.researchReport -> PublicationType.RESEARCH_REPORT
+        PublicationTypeRest.proceedings -> PublicationType.PROCEEDINGS
+        PublicationTypeRest.thesis -> PublicationType.THESIS
+        PublicationTypeRest.conferencePaper -> PublicationType.CONFERENCE_PAPER
     }
 
-internal fun PublicationType.toRest(): MetadataRest.PublicationType =
+internal fun PublicationType.toRest(): PublicationTypeRest =
     when (this) {
-        PublicationType.ARTICLE -> MetadataRest.PublicationType.article
-        PublicationType.BOOK -> MetadataRest.PublicationType.book
-        PublicationType.BOOK_PART -> MetadataRest.PublicationType.bookPart
-        PublicationType.CONFERENCE_PAPER -> MetadataRest.PublicationType.conferencePaper
-        PublicationType.PERIODICAL_PART -> MetadataRest.PublicationType.periodicalPart
-        PublicationType.WORKING_PAPER -> MetadataRest.PublicationType.workingPaper
-        PublicationType.RESEARCH_REPORT -> MetadataRest.PublicationType.researchReport
-        PublicationType.PROCEEDINGS -> MetadataRest.PublicationType.proceedings
-        PublicationType.THESIS -> MetadataRest.PublicationType.thesis
+        PublicationType.ARTICLE -> PublicationTypeRest.article
+        PublicationType.BOOK -> PublicationTypeRest.book
+        PublicationType.BOOK_PART -> PublicationTypeRest.bookPart
+        PublicationType.CONFERENCE_PAPER -> PublicationTypeRest.conferencePaper
+        PublicationType.PERIODICAL_PART -> PublicationTypeRest.periodicalPart
+        PublicationType.WORKING_PAPER -> PublicationTypeRest.workingPaper
+        PublicationType.RESEARCH_REPORT -> PublicationTypeRest.researchReport
+        PublicationType.PROCEEDINGS -> PublicationTypeRest.proceedings
+        PublicationType.THESIS -> PublicationTypeRest.thesis
     }
 
 fun DAItem.toBusiness(): ItemMetadata? {

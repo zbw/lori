@@ -953,7 +953,7 @@ class DatabaseConnector(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
-    ): PaketSigelAndZDBIdSet {
+    ): PaketSigelZDBIdPubTypeSet {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
             buildSearchQueryForPaketSigelAndZDBId(
@@ -981,17 +981,19 @@ class DatabaseConnector(
             span.end()
         }
 
-        val received: List<PaketSigelAndZDBId> = generateSequence {
+        val received: List<PaketSigelZDBIdPubType> = generateSequence {
             if (rs.next()) {
-                PaketSigelAndZDBId(
+                PaketSigelZDBIdPubType(
                     paketSigel = rs.getString(1),
                     zdbId = rs.getString(2),
+                    publicationType = PublicationType.valueOf(rs.getString(3)),
                 )
             } else null
         }.takeWhile { true }.toList()
-        return PaketSigelAndZDBIdSet(
+        return PaketSigelZDBIdPubTypeSet(
             paketSigels = received.mapNotNull { it.paketSigel }.toSet(),
             zdbIds = received.mapNotNull { it.zdbId }.toSet(),
+            publicationType = received.map { it.publicationType }.toSet(),
         )
     }
 
@@ -1167,7 +1169,7 @@ class DatabaseConnector(
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author, collection_name, community_name, storage_date"
 
-        const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
+        private const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
@@ -1175,8 +1177,9 @@ class DatabaseConnector(
                 "created_by,last_updated_by," +
                 "author, collection_name, community_name, storage_date"
 
-        const val STATEMENT_SELECT_SIGEL_ZDB =
-            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID"
+        private const val STATEMENT_SELECT_SIGEL_ZDB =
+            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE"
 
         const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
@@ -1380,7 +1383,10 @@ class DatabaseConnector(
             return STATEMENT_SELECT_SIGEL_ZDB +
                 " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
                 trgmWhere +
-                " GROUP BY ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID;"
+                " GROUP BY" +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE;"
         }
 
         private fun buildSearchQueryHelper(

@@ -401,6 +401,7 @@ fun Routing.itemRoutes(
                             totalPages = totalPages,
                             numberOfResults = queryResult.numberOfResults,
                             paketSigels = queryResult.paketSigels.toList(),
+                            publicationType = queryResult.publicationType.map { it.toRest() }.toList(),
                             zdbIds = queryResult.zdbIds.toList(),
                         )
                     )

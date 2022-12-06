@@ -17,6 +17,10 @@ ItemInformation:
       type: array
       items:
         type: string
+    publicationType:
+      type: array
+      items:
+        $ref: 'metadata.model.yaml#/PublicationTypeRest'
     itemArray:
       type: array
       items:

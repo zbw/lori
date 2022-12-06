@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
@@ -141,15 +142,9 @@ class SigelAndZDBTest : DatabaseTest() {
                 ),
                 1,
                 setOf(
-                    itemZDB1.paketSigel,
                     itemSigel1.paketSigel,
-                    itemSigel2.paketSigel,
-                    itemSigel3.paketSigel,
                 ),
                 setOf(
-                    itemZDB1.zdbId,
-                    itemZDB2.zdbId,
-                    itemZDB3.zdbId,
                     itemSigel1.zdbId,
                 ),
                 "search for all items, filter by PaketSigel Id"
@@ -170,15 +165,9 @@ class SigelAndZDBTest : DatabaseTest() {
                 1,
                 setOf(
                     itemZDB1.paketSigel,
-                    itemSigel1.paketSigel,
-                    itemSigel2.paketSigel,
-                    itemSigel3.paketSigel,
                 ),
                 setOf(
                     itemZDB1.zdbId,
-                    itemZDB2.zdbId,
-                    itemZDB3.zdbId,
-                    itemSigel1.zdbId,
                 ),
                 "search for all items, filter by ZDB-Id"
             ),
@@ -199,18 +188,8 @@ class SigelAndZDBTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 emptySet<ItemMetadata>(),
                 0,
-                setOf(
-                    itemZDB1.paketSigel,
-                    itemSigel1.paketSigel,
-                    itemSigel2.paketSigel,
-                    itemSigel3.paketSigel,
-                ),
-                setOf(
-                    itemZDB1.zdbId,
-                    itemZDB2.zdbId,
-                    itemZDB3.zdbId,
-                    itemSigel1.zdbId,
-                ),
+                emptySet<String>(),
+                emptySet<String>(),
                 "search for all items, filter by ZDB-Id and PaketSigel"
             ),
         )
@@ -259,6 +238,13 @@ class SigelAndZDBTest : DatabaseTest() {
                 expectedZDBIds
             )
         )
+        // Test publication types
+        assertThat(
+            searchResult.publicationType,
+            `is`(
+                expectedResult.map { it.publicationType }.toSet(),
+            )
+        )
     }
 
     companion object {
@@ -277,12 +263,14 @@ class SigelAndZDBTest : DatabaseTest() {
             collectionName = "common zdb",
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
+            publicationType = PublicationType.BOOK,
         )
         val itemSigel1 = DatabaseConnectorTest.TEST_Metadata.copy(
             metadataId = "sigel1",
             collectionName = "common sigel",
             paketSigel = SIGEL_1,
             publicationDate = LocalDate.of(2011, 1, 1),
+            publicationType = PublicationType.BOOK_PART,
         )
 
         val itemZDB2 = DatabaseConnectorTest.TEST_Metadata.copy(
@@ -290,12 +278,14 @@ class SigelAndZDBTest : DatabaseTest() {
             collectionName = "common zdb",
             zdbId = ZDB_2,
             publicationDate = LocalDate.of(2012, 1, 1),
+            publicationType = PublicationType.CONFERENCE_PAPER,
         )
         val itemSigel2 = DatabaseConnectorTest.TEST_Metadata.copy(
             metadataId = "sigel2",
             collectionName = "common sigel",
             paketSigel = SIGEL_2,
             publicationDate = LocalDate.of(2013, 1, 1),
+            publicationType = PublicationType.PERIODICAL_PART,
         )
 
         val itemZDB3 = DatabaseConnectorTest.TEST_Metadata.copy(
@@ -303,12 +293,14 @@ class SigelAndZDBTest : DatabaseTest() {
             collectionName = "common zdb",
             zdbId = ZDB_3,
             publicationDate = LocalDate.of(2014, 1, 1),
+            publicationType = PublicationType.PROCEEDINGS,
         )
         val itemSigel3 = DatabaseConnectorTest.TEST_Metadata.copy(
             metadataId = "sigel3",
             collectionName = "common sigel",
             paketSigel = SIGEL_3,
             publicationDate = LocalDate.of(2015, 1, 1),
+            publicationType = PublicationType.THESIS,
         )
 
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT

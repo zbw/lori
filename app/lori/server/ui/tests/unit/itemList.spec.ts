@@ -191,18 +191,12 @@ describe("Test ItemList UI", () => {
     expect((wrapper.vm as any).buildPublicationTypeFilter()).toBeUndefined();
 
     // when
-    searchStore.publicationTypeArticle = true;
-    searchStore.publicationTypeBook = true;
-    searchStore.publicationTypeBookPart = true;
-    searchStore.publicationTypeConferencePaper = true;
-    searchStore.publicationTypePeriodicalPart = true;
-    searchStore.publicationTypeProceedings = true;
-    searchStore.publicationTypeResearchReport = true;
-    searchStore.publicationTypeThesis = true;
-    searchStore.publicationTypeWorkingPaper = true;
+
+    searchStore.availablePublicationTypes = ["article", "book", "bookPart"];
+    searchStore.publicationTypeIdx = [true, false, true];
     // then
     expect((wrapper.vm as any).buildPublicationTypeFilter()).toBe(
-      "ARTICLE,BOOK,BOOK_PART,CONFERENCE_PAPER,PERIODICAL_PART,PROCEEDINGS,RESEARCH_REPORT,THESIS,WORKING_PAPER"
+      "ARTICLE,BOOK_PART"
     );
   });
 

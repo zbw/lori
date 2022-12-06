@@ -11,6 +11,7 @@ import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import io.ktor.client.request.delete
@@ -556,6 +557,7 @@ class ItemRoutesKtTest {
                 ),
                 numberOfResults = 101,
                 paketSigels = emptyList(),
+                publicationType = emptyList(),
                 zdbIds = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -575,6 +577,7 @@ class ItemRoutesKtTest {
                         .map { it.toBusiness() },
                     paketSigels = emptySet(),
                     zdbIds = emptySet(),
+                    publicationType = emptySet(),
                 )
                 )
         }
@@ -612,6 +615,7 @@ class ItemRoutesKtTest {
                 numberOfResults = 1,
                 paketSigels = emptyList(),
                 zdbIds = emptyList(),
+                publicationType = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -629,6 +633,7 @@ class ItemRoutesKtTest {
                         .map { it.toBusiness() },
                     numberOfResults = 1,
                     paketSigels = emptySet(),
+                    publicationType = emptySet(),
                     zdbIds = emptySet(),
                 )
                 )
@@ -743,7 +748,7 @@ class ItemRoutesKtTest {
             issn = "123456",
             paketSigel = "sigel",
             ppn = "ppn",
-            publicationType = MetadataRest.PublicationType.book,
+            publicationType = PublicationTypeRest.book,
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
             storageDate = DatabaseConnectorTest.NOW.minusDays(3),

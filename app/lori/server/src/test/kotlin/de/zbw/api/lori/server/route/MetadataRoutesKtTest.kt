@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -508,7 +509,7 @@ class MetadataRoutesKtTest {
             issn = "123456",
             paketSigel = "sigel",
             ppn = "ppn",
-            publicationType = MetadataRest.PublicationType.book,
+            publicationType = PublicationTypeRest.book,
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
             storageDate = DatabaseConnectorTest.NOW.minusDays(3),
