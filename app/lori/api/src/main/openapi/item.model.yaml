@@ -7,6 +7,10 @@ ItemInformation:
   properties:
     totalPages:
       type: integer
+    accessState:
+      type: array
+      items:
+        $ref: 'right.model.yaml#/AccessStateRest'
     numberOfResults:
       type: integer
     paketSigels:

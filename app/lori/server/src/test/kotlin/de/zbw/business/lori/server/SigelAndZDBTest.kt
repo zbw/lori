@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -59,18 +60,21 @@ class SigelAndZDBTest : DatabaseTest() {
         ),
         itemSigel1 to listOf(
             TEST_RIGHT.copy(
+                accessState = AccessState.OPEN,
                 startDate = LocalDate.of(2003, 1, 1),
                 endDate = LocalDate.of(2003, 12, 31),
             )
         ),
         itemSigel2 to listOf(
             TEST_RIGHT.copy(
+                accessState = AccessState.RESTRICTED,
                 startDate = LocalDate.of(2004, 1, 1),
                 endDate = LocalDate.of(2004, 12, 31),
             )
         ),
         itemSigel3 to listOf(
             TEST_RIGHT.copy(
+                accessState = AccessState.CLOSED,
                 startDate = LocalDate.of(2005, 1, 1),
                 endDate = LocalDate.of(2005, 12, 31),
             )
@@ -125,6 +129,11 @@ class SigelAndZDBTest : DatabaseTest() {
                     itemZDB3.zdbId,
                     itemSigel1.zdbId,
                 ),
+                setOf(
+                    AccessState.OPEN,
+                    AccessState.RESTRICTED,
+                    AccessState.CLOSED,
+                ),
                 "search for all items, no filter"
             ),
             arrayOf(
@@ -147,6 +156,7 @@ class SigelAndZDBTest : DatabaseTest() {
                 setOf(
                     itemSigel1.zdbId,
                 ),
+                setOf(AccessState.OPEN),
                 "search for all items, filter by PaketSigel Id"
             ),
             arrayOf(
@@ -169,6 +179,7 @@ class SigelAndZDBTest : DatabaseTest() {
                 setOf(
                     itemZDB1.zdbId,
                 ),
+                setOf(AccessState.CLOSED),
                 "search for all items, filter by ZDB-Id"
             ),
             arrayOf(
@@ -190,6 +201,7 @@ class SigelAndZDBTest : DatabaseTest() {
                 0,
                 emptySet<String>(),
                 emptySet<String>(),
+                emptySet<AccessState>(),
                 "search for all items, filter by ZDB-Id and PaketSigel"
             ),
         )
@@ -203,6 +215,7 @@ class SigelAndZDBTest : DatabaseTest() {
         expectedNumberOfResults: Int,
         expectedPaketSigelIds: Set<String>,
         expectedZDBIds: Set<String>,
+        expectedAccessState: Set<AccessState>,
         description: String,
     ) {
         // when
@@ -243,6 +256,13 @@ class SigelAndZDBTest : DatabaseTest() {
             searchResult.publicationType,
             `is`(
                 expectedResult.map { it.publicationType }.toSet(),
+            )
+        )
+        // Test access state
+        assertThat(
+            searchResult.accessState,
+            `is`(
+                expectedAccessState
             )
         )
     }

@@ -399,6 +399,7 @@ fun Routing.itemRoutes(
                         ItemInformation(
                             itemArray = queryResult.results.map { it.toRest() },
                             totalPages = totalPages,
+                            accessState = queryResult.accessState.map { it.toRest() }.toList(),
                             numberOfResults = queryResult.numberOfResults,
                             paketSigels = queryResult.paketSigels.toList(),
                             publicationType = queryResult.publicationType.map { it.toRest() }.toList(),

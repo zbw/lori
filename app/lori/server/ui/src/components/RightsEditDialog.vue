@@ -4,7 +4,7 @@ import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
   ItemEntry,
   RightRest,
-  RightRestAccessStateEnum,
+  AccessStateRest,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
 } from "@/generated-sources/openapi";
@@ -258,15 +258,15 @@ export default defineComponent({
     };
 
     const accessStateToString = (
-      access: RightRestAccessStateEnum | undefined
+      access: AccessStateRest | undefined
     ) => {
       if (access == undefined) {
         return "Kein Wert";
       } else {
         switch (access) {
-          case RightRestAccessStateEnum.Open:
+          case AccessStateRest.Open:
             return "Open";
-          case RightRestAccessStateEnum.Closed:
+          case AccessStateRest.Closed:
             return "Closed";
           default:
             return "Restricted";
@@ -280,11 +280,11 @@ export default defineComponent({
       } else {
         switch (value) {
           case "Open":
-            return RightRestAccessStateEnum.Open;
+            return AccessStateRest.Open;
           case "Closed":
-            return RightRestAccessStateEnum.Closed;
+            return AccessStateRest.Closed;
           default:
-            return RightRestAccessStateEnum.Restricted;
+            return AccessStateRest.Restricted;
         }
       }
     };

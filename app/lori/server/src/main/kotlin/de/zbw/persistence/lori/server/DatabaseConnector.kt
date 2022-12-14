@@ -956,10 +956,11 @@ class DatabaseConnector(
     ): PaketSigelZDBIdPubTypeSet {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
-            buildSearchQueryForPaketSigelAndZDBId(
+            buildSearchQueryForFacets(
                 searchTerms,
                 metadataSearchFilter,
                 rightSearchFilter,
+                true,
             )
         ).apply {
             var counter = 1
@@ -984,16 +985,18 @@ class DatabaseConnector(
         val received: List<PaketSigelZDBIdPubType> = generateSequence {
             if (rs.next()) {
                 PaketSigelZDBIdPubType(
-                    paketSigel = rs.getString(1),
-                    zdbId = rs.getString(2),
+                    accessState = rs.getString(1)?.let { AccessState.valueOf(it) },
+                    paketSigel = rs.getString(2),
                     publicationType = PublicationType.valueOf(rs.getString(3)),
+                    zdbId = rs.getString(4),
                 )
             } else null
         }.takeWhile { true }.toList()
         return PaketSigelZDBIdPubTypeSet(
+            accessState = received.mapNotNull { it.accessState }.toSet(),
             paketSigels = received.mapNotNull { it.paketSigel }.toSet(),
-            zdbIds = received.mapNotNull { it.zdbId }.toSet(),
             publicationType = received.map { it.publicationType }.toSet(),
+            zdbIds = received.mapNotNull { it.zdbId }.toSet(),
         )
     }
 
@@ -1043,7 +1046,7 @@ class DatabaseConnector(
             "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
-            "author, collection_name, community_name, storage_date) " +
+            "author,collection_name,community_name,storage_date) " +
             "VALUES(?,?,?,?," +
             "?,?,?,?,?,?," +
             "?,?,?,?,?," +
@@ -1081,7 +1084,7 @@ class DatabaseConnector(
             "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
-            "author, collection_name, community_name, storage_date) " +
+            "author,collection_name,community_name,storage_date) " +
             "VALUES(?,?,?,?,?," +
             "?,?,?,?,?,?," +
             "?,?,?,?,?," +
@@ -1150,7 +1153,7 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author, collection_name, community_name, storage_date"
+                "author,collection_name,community_name,storage_date,$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE"
 
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
@@ -1167,7 +1170,7 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author, collection_name, community_name, storage_date"
+                "author,collection_name,community_name,storage_date"
 
         private const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
@@ -1175,11 +1178,13 @@ class DatabaseConnector(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "created_on,last_updated_on," +
                 "created_by,last_updated_by," +
-                "author, collection_name, community_name, storage_date"
+                "author,collection_name,community_name,storage_date"
 
         private const val STATEMENT_SELECT_SIGEL_ZDB =
-            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL, ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE"
+            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID"
 
         const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
@@ -1229,7 +1234,7 @@ class DatabaseConnector(
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "author, collection_name, community_name, storage_date " +
+                "author,collection_name,community_name,storage_date " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
@@ -1330,7 +1335,7 @@ class DatabaseConnector(
                 ) { entry ->
                     "coalesce(${SearchKey.SUBQUERY_NAME}.${entry.key.distColumnName},1)"
                 } + "/${searchKeyMap.size} as score"
-                "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES, $coalesceScore" +
+                "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES,$coalesceScore" +
                     " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
                     " WHERE $trgmWhere" +
                     " ORDER BY score" +
@@ -1353,23 +1358,25 @@ class DatabaseConnector(
                 )
                 }) as foo"
 
-        fun buildSearchQueryForPaketSigelAndZDBId(
+        fun buildSearchQueryForFacets(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
+            collectFacets: Boolean,
         ): String {
-            val subquery = if (rightSearchFilters.isEmpty()) {
+            val subquery = if (rightSearchFilters.isEmpty() && !collectFacets) {
                 buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
                     " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
                         metadataSearchFilters,
                     )
             } else {
-                buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
+                buildSearchQuerySelect(searchKeyMap, rightSearchFilters, collectFacets) +
                     " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
                         metadataSearchFilters,
                         rightSearchFilters,
+                        collectFacets,
                     )
             }
             val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
@@ -1384,9 +1391,10 @@ class DatabaseConnector(
                 " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
                 trgmWhere +
                 " GROUP BY" +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE;"
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID;"
         }
 
         private fun buildSearchQueryHelper(
@@ -1404,19 +1412,10 @@ class DatabaseConnector(
             }
         }
 
-        private fun buildCountMetadataQueryBothFilterNoSearchKey(
-            metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
-            rightSearchFilter: List<RightSearchFilter> = emptyList(),
-        ) =
-            "SELECT COUNT(*) FROM" +
-                " (SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.*" +
-                " FROM $TABLE_NAME_ITEM_METADATA" +
-                buildSearchQueryHelper(metadataSearchFilter, rightSearchFilter) +
-                ") a;"
-
         private fun buildSearchQueryHelper(
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
+            collectFacets: Boolean = false,
         ): String {
             val metadataFilters = metadataSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
@@ -1429,28 +1428,39 @@ class DatabaseConnector(
             } else {
                 " WHERE $metadataFilters"
             }
-            return " LEFT JOIN $TABLE_NAME_ITEM " +
-                "ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id " +
-                "JOIN $TABLE_NAME_ITEM_RIGHT " +
-                "ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.right_id AND " +
-                rightFilters +
+            val extendedRightFilter = if (rightFilters.isBlank()) {
+                rightFilters
+            } else {
+                " AND $rightFilters"
+            }
+            val joinItemRight = if (collectFacets && rightSearchFilter.isEmpty()) {
+                "LEFT JOIN"
+            } else {
+                "JOIN"
+            }
+            return " LEFT JOIN $TABLE_NAME_ITEM" +
+                " ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id" +
+                " $joinItemRight $TABLE_NAME_ITEM_RIGHT" +
+                " ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.right_id" +
+                extendedRightFilter +
                 whereClause
         }
 
-        fun buildSearchQuerySelect(
+        private fun buildSearchQuerySelect(
             searchKeyMap: Map<SearchKey, List<String>>,
             rightSearchFilters: List<RightSearchFilter>,
+            forceRightTableJoin: Boolean = false,
         ): String {
-            val trgmSelect = searchKeyMap.entries.joinToString(separator = ", ") { entry ->
+            val trgmSelect = searchKeyMap.entries.joinToString(separator = ",") { entry ->
                 entry.key.toSelectClause()
             }.takeIf { it.isNotBlank() }
                 ?.let {
-                    ", $it"
+                    ",$it"
                 } ?: ""
-            return if (rightSearchFilters.isEmpty()) {
-                "$STATEMENT_SELECT_ALL_METADATA $trgmSelect"
+            return if (rightSearchFilters.isEmpty() && !forceRightTableJoin) {
+                "$STATEMENT_SELECT_ALL_METADATA$trgmSelect"
             } else {
-                "$STATEMENT_SELECT_ALL_METADATA_DISTINCT $trgmSelect"
+                "$STATEMENT_SELECT_ALL_METADATA_DISTINCT$trgmSelect"
             }
         }
 

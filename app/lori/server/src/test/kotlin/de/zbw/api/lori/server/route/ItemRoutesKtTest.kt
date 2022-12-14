@@ -555,6 +555,7 @@ class ItemRoutesKtTest {
                         rights = emptyList(),
                     )
                 ),
+                accessState = emptyList(),
                 numberOfResults = 101,
                 paketSigels = emptyList(),
                 publicationType = emptyList(),
@@ -578,6 +579,7 @@ class ItemRoutesKtTest {
                     paketSigels = emptySet(),
                     zdbIds = emptySet(),
                     publicationType = emptySet(),
+                    accessState = emptySet(),
                 )
                 )
         }
@@ -612,6 +614,7 @@ class ItemRoutesKtTest {
                         rights = emptyList(),
                     )
                 ),
+                accessState = emptyList(),
                 numberOfResults = 1,
                 paketSigels = emptyList(),
                 zdbIds = emptyList(),
@@ -635,6 +638,7 @@ class ItemRoutesKtTest {
                     paketSigels = emptySet(),
                     publicationType = emptySet(),
                     zdbIds = emptySet(),
+                    accessState = emptySet(),
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

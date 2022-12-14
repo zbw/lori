@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.PublicationType
 
 /**
@@ -9,13 +10,15 @@ import de.zbw.business.lori.server.type.PublicationType
  * @author Christian Bay (c.bay@zbw.eu)
  */
 data class PaketSigelZDBIdPubType(
+    val accessState: AccessState?,
     val paketSigel: String?,
-    val zdbId: String?,
     val publicationType: PublicationType,
+    val zdbId: String?,
 )
 
 data class PaketSigelZDBIdPubTypeSet(
+    val accessState: Set<AccessState>,
     val paketSigels: Set<String>,
-    val zdbIds: Set<String>,
     val publicationType: Set<PublicationType>,
+    val zdbIds: Set<String>,
 )

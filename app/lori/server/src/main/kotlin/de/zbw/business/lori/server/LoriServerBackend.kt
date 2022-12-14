@@ -250,6 +250,7 @@ class LoriServerBackend(
         return SearchQueryResult(
             numberOfResults = numberOfResults,
             results = items,
+            accessState = paketSigelAndZDBId.accessState,
             paketSigels = paketSigelAndZDBId.paketSigels,
             publicationType = paketSigelAndZDBId.publicationType,
             zdbIds = paketSigelAndZDBId.zdbIds,

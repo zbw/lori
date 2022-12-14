@@ -176,6 +176,9 @@ export default defineComponent({
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
           numberOfResults.value = response.numberOfResults;
+          if (response.accessState != undefined) {
+            searchStore.availableAccessState = response.accessState;
+          }
           if (response.paketSigels != undefined) {
             searchStore.availablePaketSigelIds = response.paketSigels;
           }
@@ -197,6 +200,7 @@ export default defineComponent({
     };
 
     const resetDynamicFilter = () => {
+      searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
         () => false
       );
@@ -247,15 +251,16 @@ export default defineComponent({
 
     const buildAccessStateFilter = () => {
       let accessStates: Array<string> = [];
-      if (searchStore.accessStateOpen) {
-        accessStates.push("OPEN");
-      }
-      if (searchStore.accessStateRestricted) {
-        accessStates.push("RESTRICTED");
-      }
-      if (searchStore.accessStateClosed) {
-        accessStates.push("CLOSED");
-      }
+      searchStore.accessStateIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            accessStates.push(
+              searchStore.availableAccessState[index].toUpperCase()
+            );
+          }
+        }
+      );
+
       if (accessStates.length == 0) {
         return undefined;
       } else {
@@ -326,7 +331,7 @@ export default defineComponent({
       searchStore.publicationTypeIdx.forEach(
         (i: boolean | undefined, index: number): void => {
           if (i) {
-            let modifiedPubTypeFilter = "";
+            let modifiedPubTypeFilter: string;
             switch (searchStore.availablePublicationTypes[index]) {
               case "article":
                 modifiedPubTypeFilter = "ARTICLE";
