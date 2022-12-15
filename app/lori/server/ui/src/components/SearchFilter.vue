@@ -432,18 +432,21 @@ export default defineComponent({
               <v-list-item-title>Formale Regelung</v-list-item-title>
             </template>
             <v-checkbox
+              v-if="searchStore.hasLicenceContract"
               label="Lizenzvertrag"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.formalRuleLicenceContract"
             ></v-checkbox>
             <v-checkbox
+              v-if="searchStore.hasZbwUserAgreement"
               label="ZBW-Nutzungsvereinbarung"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.formalRuleUserAgreement"
             ></v-checkbox>
             <v-checkbox
+              v-if="searchStore.hasOpenContentLicence"
               label="Open-Content-Licence"
               hide-details
               class="pl-9 ml-4"

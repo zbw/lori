@@ -1,8 +1,8 @@
 <script lang="ts">
 import {
+  ItemInformation,
   ItemRest,
   MetadataRest,
-  PublicationTypeRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
@@ -171,7 +171,7 @@ export default defineComponent({
           buildPaketSigelIdFilter(),
           buildZDBIdFilter()
         )
-        .then((response) => {
+        .then((response: ItemInformation) => {
           items.value = response.itemArray;
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
@@ -188,6 +188,15 @@ export default defineComponent({
           }
           if (response.zdbIds != undefined) {
             searchStore.availableZDBIds = response.zdbIds;
+          }
+          if (response.hasLicenceContract != undefined) {
+            searchStore.hasLicenceContract = response.hasLicenceContract;
+          }
+          if (response.hasOpenContentLicence != undefined) {
+            searchStore.hasOpenContentLicence = response.hasOpenContentLicence;
+          }
+          if (response.hasZbwUserAgreement != undefined) {
+            searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
           }
           resetDynamicFilter();
         })

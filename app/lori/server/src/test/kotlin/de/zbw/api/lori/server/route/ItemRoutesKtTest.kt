@@ -560,6 +560,9 @@ class ItemRoutesKtTest {
                 paketSigels = emptyList(),
                 publicationType = emptyList(),
                 zdbIds = emptyList(),
+                hasOpenContentLicence = false,
+                hasLicenceContract = false,
+                hasZbwUserAgreement = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -580,6 +583,9 @@ class ItemRoutesKtTest {
                     zdbIds = emptySet(),
                     publicationType = emptySet(),
                     accessState = emptySet(),
+                    hasOpenContentLicence = false,
+                    hasLicenceContract = false,
+                    hasZbwUserAgreement = false,
                 )
                 )
         }
@@ -619,6 +625,9 @@ class ItemRoutesKtTest {
                 paketSigels = emptyList(),
                 zdbIds = emptyList(),
                 publicationType = emptyList(),
+                hasOpenContentLicence = false,
+                hasLicenceContract = false,
+                hasZbwUserAgreement = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -639,6 +648,9 @@ class ItemRoutesKtTest {
                     publicationType = emptySet(),
                     zdbIds = emptySet(),
                     accessState = emptySet(),
+                    hasOpenContentLicence = false,
+                    hasLicenceContract = false,
+                    hasZbwUserAgreement = false,
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

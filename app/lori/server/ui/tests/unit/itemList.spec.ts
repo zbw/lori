@@ -219,15 +219,12 @@ describe("Test ItemList UI", () => {
     });
     const searchStore = useSearchStore();
     // when + then
-    searchStore.accessStateOpen = false;
-    searchStore.accessStateRestricted = false;
-    searchStore.accessStateClosed = false;
     expect((wrapper.vm as any).buildAccessStateFilter()).toBeUndefined();
 
     // when
-    searchStore.accessStateOpen = true;
-    searchStore.accessStateRestricted = true;
-    searchStore.accessStateClosed = true;
+
+    searchStore.availableAccessState = ["open", "restricted", "closed"];
+    searchStore.accessStateIdx = [true, true, true];
     expect((wrapper.vm as any).buildAccessStateFilter()).toBe(
       "OPEN,RESTRICTED,CLOSED"
     );

@@ -949,11 +949,11 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
-    fun searchMetadataWithRightFilterForZDBAndSigel(
+    fun searchForFacets(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
-    ): PaketSigelZDBIdPubTypeSet {
+    ): FacetTransientSet {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
             buildSearchQueryForFacets(
@@ -982,21 +982,35 @@ class DatabaseConnector(
             span.end()
         }
 
-        val received: List<PaketSigelZDBIdPubType> = generateSequence {
+        val received: List<FacetTransient> = generateSequence {
             if (rs.next()) {
-                PaketSigelZDBIdPubType(
-                    accessState = rs.getString(1)?.let { AccessState.valueOf(it) },
-                    paketSigel = rs.getString(2),
-                    publicationType = PublicationType.valueOf(rs.getString(3)),
-                    zdbId = rs.getString(4),
+                FacetTransient(
+                    paketSigel = rs.getString(1),
+                    publicationType = PublicationType.valueOf(rs.getString(2)),
+                    zdbId = rs.getString(3),
+                    accessState = rs.getString(4)?.let { AccessState.valueOf(it) },
+                    licenceContract = rs.getString(5),
+                    nonStandardsOCL = rs.getBoolean(6),
+                    nonStandardsOCLUrl = rs.getString(7),
+                    oclRestricted = rs.getBoolean(8),
+                    ocl = rs.getString(9),
+                    zbwUserAgreement = rs.getBoolean(10),
                 )
             } else null
         }.takeWhile { true }.toList()
-        return PaketSigelZDBIdPubTypeSet(
+        return FacetTransientSet(
             accessState = received.mapNotNull { it.accessState }.toSet(),
             paketSigels = received.mapNotNull { it.paketSigel }.toSet(),
             publicationType = received.map { it.publicationType }.toSet(),
             zdbIds = received.mapNotNull { it.zdbId }.toSet(),
+            hasLicenceContract = received.any { it.licenceContract?.isNotBlank() ?: false },
+            hasZbwUserAgreement = received.any { it.zbwUserAgreement },
+            hasOpenContentLicence = listOf(
+                received.any { it.ocl?.isNotBlank() ?: false },
+                received.any { it.nonStandardsOCL },
+                received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
+                received.any { it.oclRestricted },
+            ).any { it }
         )
     }
 
@@ -1147,13 +1161,35 @@ class DatabaseConnector(
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
                 "notes_management_related = EXCLUDED.notes_management_related;"
 
+        const val STATEMENT_SELECT_ALL_FACETS =
+            "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
+                "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
+                "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
+                "author,collection_name,community_name,storage_date," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
+
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE"
+                "author,collection_name,community_name,storage_date," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
 
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
@@ -1172,7 +1208,7 @@ class DatabaseConnector(
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date"
 
-        private const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
+        const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
@@ -1180,11 +1216,18 @@ class DatabaseConnector(
                 "created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date"
 
-        private const val STATEMENT_SELECT_SIGEL_ZDB =
-            "SELECT ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+        private const val STATEMENT_SELECT_FACET =
+            "SELECT" +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID"
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
 
         const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
@@ -1387,13 +1430,19 @@ class DatabaseConnector(
                 }
                 ?: ""
 
-            return STATEMENT_SELECT_SIGEL_ZDB +
+            return STATEMENT_SELECT_FACET +
                 " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
                 trgmWhere +
                 " GROUP BY" +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID;"
         }
 
@@ -1459,6 +1508,8 @@ class DatabaseConnector(
                 } ?: ""
             return if (rightSearchFilters.isEmpty() && !forceRightTableJoin) {
                 "$STATEMENT_SELECT_ALL_METADATA$trgmSelect"
+            } else if (forceRightTableJoin) {
+                "$STATEMENT_SELECT_ALL_FACETS$trgmSelect"
             } else {
                 "$STATEMENT_SELECT_ALL_METADATA_DISTINCT$trgmSelect"
             }

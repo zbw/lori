@@ -104,7 +104,9 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col>Publikationsjahr</v-col>
-              <v-col>{{ currentMetadata.publicationDate.toLocaleDateString("de") }}</v-col>
+              <v-col>{{
+                currentMetadata.publicationDate.toLocaleDateString("de")
+              }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.doi">
@@ -125,11 +127,6 @@ export default defineComponent({
             <v-row v-show="currentMetadata.ppn">
               <v-col>PPN</v-col>
               <v-col>{{ prettyPrint(currentMetadata.ppn) }}</v-col>
-              <v-col></v-col>
-            </v-row>
-            <v-row v-show="currentMetadata.ppnEbook">
-              <v-col>PPN-Ebook</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.ppnEbook) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.rightsK10plus">

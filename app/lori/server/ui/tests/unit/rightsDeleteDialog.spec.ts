@@ -9,7 +9,7 @@ import { createTestingPinia } from "@pinia/testing";
 import { useHistoryStore } from "@/stores/history";
 import {
   RightRest,
-  RightRestAccessStateEnum,
+  AccessStateRest,
 } from "@/generated-sources/openapi";
 
 const localVue = createLocalVue();
@@ -41,7 +41,7 @@ describe("Test RightsDeleteDialog", () => {
       propsData: {
         right: {
           rightId: "12",
-          accessState: RightRestAccessStateEnum.Open,
+          accessState: AccessStateRest.Open,
           startDate: new Date(2022, 12, 12),
         } as RightRest,
         index: index,
@@ -76,7 +76,7 @@ describe("Test RightsDeleteDialog", () => {
       propsData: {
         right: {
           rightId: "12",
-          accessState: RightRestAccessStateEnum.Open,
+          accessState: AccessStateRest.Open,
           startDate: new Date(2022, 12, 12),
         } as RightRest,
         index: 4,

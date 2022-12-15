@@ -9,15 +9,24 @@ import de.zbw.business.lori.server.type.PublicationType
  * Created on 10-27-2022.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-data class PaketSigelZDBIdPubType(
+data class FacetTransient(
     val accessState: AccessState?,
+    val licenceContract: String?,
+    val nonStandardsOCL: Boolean,
+    val nonStandardsOCLUrl: String?,
     val paketSigel: String?,
     val publicationType: PublicationType,
+    val ocl: String?,
+    val oclRestricted: Boolean,
     val zdbId: String?,
+    val zbwUserAgreement: Boolean,
 )
 
-data class PaketSigelZDBIdPubTypeSet(
+data class FacetTransientSet(
     val accessState: Set<AccessState>,
+    val hasLicenceContract: Boolean,
+    val hasOpenContentLicence: Boolean,
+    val hasZbwUserAgreement: Boolean,
     val paketSigels: Set<String>,
     val publicationType: Set<PublicationType>,
     val zdbIds: Set<String>,

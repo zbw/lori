@@ -25,6 +25,13 @@ ItemInformation:
       type: array
       items:
         $ref: 'metadata.model.yaml#/PublicationTypeRest'
+    hasLicenceContract:
+      type: boolean
+    hasOpenContentLicence:
+      type: boolean
+    hasZbwUserAgreement:
+      type: boolean
+
     itemArray:
       type: array
       items:

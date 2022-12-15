@@ -13,6 +13,10 @@ export const useSearchStore = defineStore("search", () => {
   const availablePublicationTypes: Ref<Array<string>> = ref([]);
   const availableZDBIds: Ref<Array<string>> = ref([]);
 
+  const hasLicenceContract = ref(false);
+  const hasOpenContentLicence = ref(false);
+  const hasZbwUserAgreement = ref(false);
+
   const formalRuleLicenceContract = ref(false);
   const formalRuleOpenContentLicence = ref(false);
   const formalRuleUserAgreement = ref(false);
@@ -48,6 +52,9 @@ export const useSearchStore = defineStore("search", () => {
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,
+    hasLicenceContract,
+    hasOpenContentLicence,
+    hasZbwUserAgreement,
     paketSigelIdIdx,
     publicationTypeIdx,
     publicationDateFrom,

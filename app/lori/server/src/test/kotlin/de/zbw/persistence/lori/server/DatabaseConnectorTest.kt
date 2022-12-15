@@ -753,8 +753,13 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_col,1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state,collection_name <-> ? as dist_col FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
-                "right filter only"
+                "${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
+                    " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},collection_name <-> ? as dist_col" +
+                    " FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right" +
+                    " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub" +
+                    " WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
+                "right filter only",
             ),
             arrayOf(
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
@@ -767,8 +772,17 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_col,1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state,collection_name <-> ? as dist_col FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
-                "right filter combined with metadatafilter"
+                "${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
+                    " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},collection_name <-> ? as dist_col" +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right" +
+                    " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
+                    " WHERE publication_date >= ? AND publication_date <= ?" +
+                    " AND (publication_type = ? OR publication_type = ?)) as sub" +
+                    " WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
+                "right filter combined with metadatafilter",
             ),
         )
 
@@ -799,7 +813,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 "SELECT COUNT(*) FROM" +
-                    " (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_col,1))/1 as score" +
+                    " (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
                     " FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,collection_name <-> ? as dist_col FROM item_metadata) as sub WHERE sub.dist_col < 0.9 ORDER BY score) as foo",
                 "count query filter with one searchkey",
             ),
@@ -861,7 +875,14 @@ class DatabaseConnectorTest : DatabaseTest() {
                 emptyMap<SearchKey, List<String>>(),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
-                "SELECT COUNT(*) FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) ORDER BY item_metadata.metadata_id ASC) as foo",
+                "SELECT COUNT(*) FROM (" +
+                    DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right" +
+                    " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
+                    " ORDER BY item_metadata.metadata_id ASC) as foo",
                 "count query only with right search filter",
             ),
             arrayOf(
@@ -876,7 +897,14 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
-                "SELECT COUNT(*) FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) ORDER BY item_metadata.metadata_id ASC) as foo",
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT}" +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right" +
+                    " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
+                    " ORDER BY item_metadata.metadata_id ASC) as foo",
                 "count query without keys but with both filter",
             ),
             arrayOf(
@@ -891,7 +919,16 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES}," +
+                    "(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score" +
+                    " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},zdb_id <-> ? as dist_zdb," +
+                    "paket_sigel <-> ? as dist_sig FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?))" +
+                    " as sub" +
+                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
                 "count query with keys and with both filter",
             ),
         )
@@ -955,7 +992,9 @@ class DatabaseConnectorTest : DatabaseTest() {
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                     "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,item_right.access_state" +
+                    "storage_date,item_right.access_state,item_right.licence_contract," +
+                    "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
+                    "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -971,7 +1010,9 @@ class DatabaseConnectorTest : DatabaseTest() {
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                     "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,item_right.access_state" +
+                    "storage_date,item_right.access_state,item_right.licence_contract," +
+                    "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
+                    "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -1007,7 +1048,10 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
                     "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state" +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state," +
+                    "item_right.licence_contract," +
+                    "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
+                    "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -1020,7 +1064,10 @@ class DatabaseConnectorTest : DatabaseTest() {
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
                     "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state" +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,item_right.access_state," +
+                    "item_right.licence_contract," +
+                    "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
+                    "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -1055,49 +1102,72 @@ class DatabaseConnectorTest : DatabaseTest() {
                 listOf(SearchKey.COLLECTION to "foo").toMap(),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "SELECT sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id" +
-                    " FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title," +
+                "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state," +
+                    " sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement" +
+                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title," +
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                     "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,item_right.access_state,collection_name <-> ? as dist_col FROM item_metadata" +
+                    "storage_date,item_right.access_state," +
+                    "item_right.licence_contract,item_right.non_standard_open_content_licence," +
+                    "item_right.non_standard_open_content_licence_url,item_right.open_content_licence," +
+                    "item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
+                    "collection_name <-> ? as dist_col FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub" +
                     " WHERE sub.dist_col < 0.9" +
-                    " GROUP BY sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id;",
+                    " GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type," +
+                    " sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id;",
                 "query with search and right filter",
             ),
             arrayOf(
                 emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "SELECT sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id" +
-                    " FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title," +
+                "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state," +
+                    " sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement" +
+                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title," +
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                     "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,item_right.access_state FROM item_metadata" +
+                    "storage_date,item_right.access_state," +
+                    "item_right.licence_contract,item_right.non_standard_open_content_licence," +
+                    "item_right.non_standard_open_content_licence_url,item_right.open_content_licence," +
+                    "item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
+                    " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub" +
-                    " GROUP BY sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id;",
+                    " GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type," +
+                    " sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id;",
                 "query with both filters and no searchkey",
             ),
             arrayOf(
                 emptyMap<SearchKey, List<String>>(),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 emptyList<RightSearchFilter>(),
-                "SELECT sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id" +
-                    " FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title," +
+                "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state," +
+                    " sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement" +
+                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title," +
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                     "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,item_right.access_state" +
+                    "storage_date,item_right.access_state," +
+                    "item_right.licence_contract,item_right.non_standard_open_content_licence," +
+                    "item_right.non_standard_open_content_licence_url,item_right.open_content_licence," +
+                    "item_right.restricted_open_content_licence,item_right.zbw_user_agreement" +
                     " FROM item_metadata LEFT JOIN item" +
                     " ON item.metadata_id = item_metadata.metadata_id" +
                     " LEFT JOIN item_right ON item.right_id = item_right.right_id" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub" +
-                    " GROUP BY sub.access_state, sub.paket_sigel, sub.publication_type, sub.zdb_id;",
+                    " GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type," +
+                    " sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                    " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id;",
                 "query with metadata filter only",
             ),
         )
