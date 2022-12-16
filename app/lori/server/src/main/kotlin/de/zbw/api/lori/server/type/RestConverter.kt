@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.UserRole
+import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
@@ -167,18 +168,18 @@ fun ItemRight.toRest(): RightRest =
         zbwUserAgreement = zbwUserAgreement,
     )
 
-internal fun RightRest.AccessState.toBusiness(): AccessState =
+internal fun AccessStateRest.toBusiness(): AccessState =
     when (this) {
-        RightRest.AccessState.closed -> AccessState.CLOSED
-        RightRest.AccessState.open -> AccessState.OPEN
-        RightRest.AccessState.restricted -> AccessState.RESTRICTED
+        AccessStateRest.closed -> AccessState.CLOSED
+        AccessStateRest.open -> AccessState.OPEN
+        AccessStateRest.restricted -> AccessState.RESTRICTED
     }
 
-internal fun AccessState.toRest(): RightRest.AccessState =
+internal fun AccessState.toRest(): AccessStateRest =
     when (this) {
-        AccessState.CLOSED -> RightRest.AccessState.closed
-        AccessState.OPEN -> RightRest.AccessState.open
-        AccessState.RESTRICTED -> RightRest.AccessState.restricted
+        AccessState.CLOSED -> AccessStateRest.closed
+        AccessState.OPEN -> AccessStateRest.open
+        AccessState.RESTRICTED -> AccessStateRest.restricted
     }
 
 internal fun RightRest.BasisAccessState.toBusiness(): BasisAccessState =

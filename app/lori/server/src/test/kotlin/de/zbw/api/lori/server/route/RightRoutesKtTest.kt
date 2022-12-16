@@ -9,6 +9,7 @@ import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.RightRest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -343,7 +344,7 @@ class RightRoutesKtTest {
 
         val TEST_RIGHT = RightRest(
             rightId = "rightId",
-            accessState = RightRest.AccessState.open,
+            accessState = AccessStateRest.open,
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
                 2022,

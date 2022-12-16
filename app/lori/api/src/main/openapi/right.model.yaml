@@ -1,3 +1,10 @@
+AccessStateRest:
+  type: string
+  enum:
+    - open
+    - closed
+    - restricted
+
 RightRest:
   required:
     - startDate
@@ -6,11 +13,7 @@ RightRest:
     rightId:
       type: string
     accessState:
-      type: string
-      enum:
-        - open
-        - closed
-        - restricted
+      $ref: 'right.model.yaml#/AccessStateRest'
     authorRightException:
       type: boolean
     basisAccessState:

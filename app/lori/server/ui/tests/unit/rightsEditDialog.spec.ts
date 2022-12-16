@@ -10,7 +10,7 @@ import { ChangeType, HistoryEntry, useHistoryStore } from "@/stores/history";
 import {
   RightIdCreated,
   RightRest,
-  RightRestAccessStateEnum,
+  AccessStateRest,
 } from "@/generated-sources/openapi";
 
 const localVue = createLocalVue();
@@ -35,7 +35,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -91,7 +91,7 @@ describe("Test RightsEditDialog", () => {
       propsData: {
         right: {
           rightId: "12",
-          accessState: RightRestAccessStateEnum.Open,
+          accessState: AccessStateRest.Open,
           startDate: new Date(2022, 12, 12),
         } as RightRest,
         index: 4,
@@ -119,7 +119,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -171,7 +171,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -215,7 +215,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -263,7 +263,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -311,7 +311,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;
@@ -357,7 +357,7 @@ describe("Test RightsEditDialog", () => {
     const givenRightId = "123";
     const givenRight = {
       rightId: givenRightId,
-      accessState: RightRestAccessStateEnum.Open,
+      accessState: AccessStateRest.Open,
       startDate: new Date("2022-12-12"),
       endDate: undefined,
     } as RightRest;

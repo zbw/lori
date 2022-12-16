@@ -12,7 +12,7 @@ import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.PaketSigelZDBIdPubTypeSet
+import de.zbw.persistence.lori.server.FacetTransientSet
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import java.security.MessageDigest
@@ -242,7 +242,7 @@ class LoriServerBackend(
                 ?: 0
 
         // Collect all publication types, zdbIds and paketSigels
-        val paketSigelAndZDBId: PaketSigelZDBIdPubTypeSet = dbConnector.searchMetadataWithRightFilterForZDBAndSigel(
+        val facets: FacetTransientSet = dbConnector.searchForFacets(
             keys,
             metadataSearchFilter,
             rightSearchFilter,
@@ -250,9 +250,13 @@ class LoriServerBackend(
         return SearchQueryResult(
             numberOfResults = numberOfResults,
             results = items,
-            paketSigels = paketSigelAndZDBId.paketSigels,
-            publicationType = paketSigelAndZDBId.publicationType,
-            zdbIds = paketSigelAndZDBId.zdbIds,
+            accessState = facets.accessState,
+            hasLicenceContract = facets.hasLicenceContract,
+            hasOpenContentLicence = facets.hasOpenContentLicence,
+            hasZbwUserAgreement = facets.hasZbwUserAgreement,
+            paketSigels = facets.paketSigels,
+            publicationType = facets.publicationType,
+            zdbIds = facets.zdbIds,
         )
     }
 

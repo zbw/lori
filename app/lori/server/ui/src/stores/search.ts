@@ -8,9 +8,14 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateOpen = ref(false);
   const accessStateRestricted = ref(false);
 
+  const availableAccessState: Ref<Array<string>> = ref([]);
   const availablePaketSigelIds: Ref<Array<string>> = ref([]);
   const availablePublicationTypes: Ref<Array<string>> = ref([]);
   const availableZDBIds: Ref<Array<string>> = ref([]);
+
+  const hasLicenceContract = ref(false);
+  const hasOpenContentLicence = ref(false);
+  const hasZbwUserAgreement = ref(false);
 
   const formalRuleLicenceContract = ref(false);
   const formalRuleOpenContentLicence = ref(false);
@@ -19,6 +24,7 @@ export const useSearchStore = defineStore("search", () => {
   const publicationDateFrom = ref("");
   const publicationDateTo = ref("");
 
+  const accessStateIdx: Ref<Array<boolean>> = ref([]);
   const paketSigelIdIdx: Ref<Array<boolean>> = ref([]);
   const publicationTypeIdx: Ref<Array<boolean>> = ref([]);
   const zdbIdIdx: Ref<Array<boolean>> = ref([]);
@@ -35,15 +41,20 @@ export const useSearchStore = defineStore("search", () => {
 
   return {
     lastSearchTerm,
+    accessStateIdx,
     accessStateClosed,
     accessStateRestricted,
     accessStateOpen,
+    availableAccessState,
     availablePaketSigelIds,
     availablePublicationTypes,
     availableZDBIds,
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,
+    hasLicenceContract,
+    hasOpenContentLicence,
+    hasZbwUserAgreement,
     paketSigelIdIdx,
     publicationTypeIdx,
     publicationDateFrom,

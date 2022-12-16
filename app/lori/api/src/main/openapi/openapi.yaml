@@ -52,6 +52,8 @@ paths:
 
 components:
   schemas:
+    AccessStateRest:
+      $ref: 'right.model.yaml#/AccessStateRest'
     ItemRest:
       $ref: 'item.model.yaml#/ItemRest'
     MetadataRest:

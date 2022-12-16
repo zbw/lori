@@ -555,10 +555,14 @@ class ItemRoutesKtTest {
                         rights = emptyList(),
                     )
                 ),
+                accessState = emptyList(),
                 numberOfResults = 101,
                 paketSigels = emptyList(),
                 publicationType = emptyList(),
                 zdbIds = emptyList(),
+                hasOpenContentLicence = false,
+                hasLicenceContract = false,
+                hasZbwUserAgreement = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -578,6 +582,10 @@ class ItemRoutesKtTest {
                     paketSigels = emptySet(),
                     zdbIds = emptySet(),
                     publicationType = emptySet(),
+                    accessState = emptySet(),
+                    hasOpenContentLicence = false,
+                    hasLicenceContract = false,
+                    hasZbwUserAgreement = false,
                 )
                 )
         }
@@ -612,10 +620,14 @@ class ItemRoutesKtTest {
                         rights = emptyList(),
                     )
                 ),
+                accessState = emptyList(),
                 numberOfResults = 1,
                 paketSigels = emptyList(),
                 zdbIds = emptyList(),
                 publicationType = emptyList(),
+                hasOpenContentLicence = false,
+                hasLicenceContract = false,
+                hasZbwUserAgreement = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -635,6 +647,10 @@ class ItemRoutesKtTest {
                     paketSigels = emptySet(),
                     publicationType = emptySet(),
                     zdbIds = emptySet(),
+                    accessState = emptySet(),
+                    hasOpenContentLicence = false,
+                    hasLicenceContract = false,
+                    hasZbwUserAgreement = false,
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

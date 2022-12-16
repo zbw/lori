@@ -89,6 +89,7 @@ export default defineComponent({
         searchStore.temporalValidityFilterPresent ||
         searchStore.temporalValidityFilterPast ||
         searchStore.temporalValidOn != "" ||
+        searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
         searchStore.publicationTypeIdx.filter((element) => element).length > 0
@@ -123,6 +124,9 @@ export default defineComponent({
       tempEventState.startDateOrEndDateValue = "";
       tempEventState.startDateOrEndDateOption = "";
 
+      searchStore.accessStateIdx = searchStore.accessStateIdx.map(
+          () => false
+      );
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
         () => false
       );
@@ -130,6 +134,17 @@ export default defineComponent({
         () => false
       );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+    };
+
+    const parseAccessState = (accessState: string) => {
+      switch(accessState){
+        case "closed":
+          return "Closed Access";
+        case "open":
+          return "Open Access";
+        case "restricted":
+          return "Restricted Access";
+      }
     };
 
     const parsePublicationType = (pubType: string) => {
@@ -167,6 +182,7 @@ export default defineComponent({
       tempValidOnMenu,
       searchStore,
       v$,
+      parseAccessState,
       parsePublicationType,
       resetFilter,
     };
@@ -260,22 +276,12 @@ export default defineComponent({
               <v-list-item-title>Access-Status</v-list-item-title>
             </template>
             <v-checkbox
-              label="Open Access"
+              v-for="(item, i) in searchStore.availableAccessState"
+              :key="i"
+              :label="parseAccessState(item)"
               hide-details
               class="pl-9 ml-4"
-              v-model="searchStore.accessStateOpen"
-            ></v-checkbox>
-            <v-checkbox
-              label="Restricted Access"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.accessStateRestricted"
-            ></v-checkbox>
-            <v-checkbox
-              label="Closed Access"
-              hide-details
-              class="pl-9 ml-4"
-              v-model="searchStore.accessStateClosed"
+              v-model="searchStore.accessStateIdx[i]"
             ></v-checkbox>
           </v-list-group>
           <v-list-group no-action sub-group eager>
@@ -426,18 +432,21 @@ export default defineComponent({
               <v-list-item-title>Formale Regelung</v-list-item-title>
             </template>
             <v-checkbox
+              v-if="searchStore.hasLicenceContract"
               label="Lizenzvertrag"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.formalRuleLicenceContract"
             ></v-checkbox>
             <v-checkbox
+              v-if="searchStore.hasZbwUserAgreement"
               label="ZBW-Nutzungsvereinbarung"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.formalRuleUserAgreement"
             ></v-checkbox>
             <v-checkbox
+              v-if="searchStore.hasOpenContentLicence"
               label="Open-Content-Licence"
               hide-details
               class="pl-9 ml-4"
