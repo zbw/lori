@@ -1,4 +1,4 @@
-FROM docker:20.10.14-git AS docker-git
+FROM docker:20.10.15-git AS docker-git
 
 RUN apk add --no-cache curl \
     bash \
