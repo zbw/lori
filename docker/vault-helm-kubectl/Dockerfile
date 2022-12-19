@@ -1,4 +1,4 @@
-FROM docker:20.10.15-git AS docker-git
+FROM docker:20.10.21-git AS docker-git
 
 RUN apk add --no-cache curl \
     bash \
@@ -18,7 +18,7 @@ RUN apk --update add \
 
 ENV VERSION 0.7.0
 RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
-RUN cd /var/tmp/git-crypt-$VERSION && make && make install PREFIX=/usr/local
+RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local
 
 FROM gitcrypt as vault
 ARG VAULT_VERSION=1.12.1
