@@ -1,11 +1,11 @@
-FROM docker:20.10.10-git AS docker-git
+FROM docker:20.10.21-git AS docker-git
 RUN apk add --no-cache curl \
     bash \
     jq && \
     rm -rf /var/cache/apk/*
 
 FROM docker-git as vault
-ARG VAULT_VERSION=1.8.5
+ARG VAULT_VERSION=1.12.2
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
