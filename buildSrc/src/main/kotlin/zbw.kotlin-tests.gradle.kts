@@ -31,7 +31,8 @@ repositories {
 }
 
 dependencies {
+    val mockkVersion by System.getProperties()
     testImplementation(kotlin("test-testng"))
     testImplementation("org.hamcrest:hamcrest:2.2")
-    testImplementation("io.mockk:mockk:1.12.3")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 }
