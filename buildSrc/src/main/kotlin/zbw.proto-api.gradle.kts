@@ -1,8 +1,4 @@
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
 
 plugins {
     kotlin("jvm")
@@ -57,13 +53,15 @@ protobuf {
 dependencies {
     val grpcVersion by System.getProperties()
     val protobufVersion by System.getProperties()
+    val grpcKotlinStubVersion by System.getProperties()
+    val kotlinxCoroutinesVersion by System.getProperties()
     api("com.google.protobuf:protobuf-java-util:$protobufVersion")
     implementation("com.google.protobuf:protobuf-java:$protobufVersion")
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
-    api("io.grpc:grpc-kotlin-stub:1.2.1")
+    api("io.grpc:grpc-kotlin-stub:$grpcKotlinStubVersion")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
 val bufLint = task<Exec>("bufLint") {

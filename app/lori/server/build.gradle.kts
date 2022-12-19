@@ -15,8 +15,11 @@ repositories {
 }
 
 dependencies {
+    val flywayVersion by System.getProperties()
     val ktorVersion by System.getProperties()
     val openTelemetry by System.getProperties()
+    val postgresJDBCVersion by System.getProperties()
+    val zonkyVersion by System.getProperties()
     implementation(project(":app:lori:api"))
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
     implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
@@ -34,9 +37,9 @@ dependencies {
     implementation("com.mchange:c3p0:0.9.5.5")
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
-    implementation("io.zonky.test:embedded-postgres:2.0.1")
-    implementation("org.postgresql:postgresql:42.3.5")
-    implementation("org.flywaydb:flyway-core:9.3.0")
+    implementation("io.zonky.test:embedded-postgres:$zonkyVersion")
+    implementation("org.postgresql:postgresql:$postgresJDBCVersion")
+    implementation("org.flywaydb:flyway-core:$flywayVersion")
 }
 
 application {

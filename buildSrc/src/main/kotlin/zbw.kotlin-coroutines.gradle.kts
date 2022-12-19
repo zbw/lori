@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-    val kotlinVersion by System.getProperties()
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinVersion")
+    val kotlinxCoroutinesVersion by System.getProperties()
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
 repositories {
