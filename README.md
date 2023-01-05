@@ -34,3 +34,15 @@ docker build -t vault-terraform .
 docker tag vault-terraform swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-terraform:latest
 docker push swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-terraform:latest
 ```
+
+# Gitlab
+
+## Pushing images & personal token
+When changes in the last commit are detected for any microservice its image gets
+pushed to the cloud. To figure out the changes it is necessary to request the last
+commit from the Gitlab API. This request requires a valid token with read rights
+on that API. It can be generated in the UI or via Gitlabs API
+(https://docs.gitlab.com/ee/api/users.html#create-a-personal-access-token).
+
+If it ever happens that a pipeline prints a 401 error, an outdated token
+might be the issue.
