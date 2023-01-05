@@ -9,7 +9,7 @@ export default Vue.extend({
     const drawer = ref(false);
     const historyStore = useHistoryStore();
     const menuTopics = [
-      { title: "Gruppen" },
+      { title: "IP-Gruppen" },
       { title: "Einstellungen" },
     ];
 
