@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 ## Author   : Christian Bay
 ## About    : A small helper script to find all microservices
