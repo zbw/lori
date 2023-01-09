@@ -1,5 +1,5 @@
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk17:latest"
+  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:latest"
 
 default:
   image: openjdk:17.0.1-slim
