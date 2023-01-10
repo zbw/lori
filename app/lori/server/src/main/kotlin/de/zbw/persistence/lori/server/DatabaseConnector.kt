@@ -224,22 +224,34 @@ class DatabaseConnector(
         }
 
         return if (rs.next()) {
-            val groupListType: Type = object : TypeToken<ArrayList<GroupIpAddress>>() {}.type
-            val name = rs.getString(1)
-            val description = rs.getString(2)
-            val ipAddressJson: String? = rs
-                .getObject(3, PGobject::class.java)
-                .value
-            Group(
-                name = name,
-                description = description,
-                ipAddresses = ipAddressJson
-                    ?.let { gson.fromJson(it, groupListType) }
-                    ?: emptyList()
-            )
+            extractGroupRS(rs, gson)
         } else {
             null
         }
+    }
+
+    fun getGroupList(
+        limit: Int,
+        offset: Int,
+    ): List<Group> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_GROUP_LIST).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+
+        val span = tracer.spanBuilder("getGroupList").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                extractGroupRS(rs, gson)
+            } else null
+        }.takeWhile { true }.toList()
     }
 
     fun deleteGroupById(
@@ -1044,9 +1056,6 @@ class DatabaseConnector(
         const val COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL = "non_standard_open_content_licence_url"
         const val COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = "restricted_open_content_licence"
 
-        const val STATEMENT_COUNT_METADATA = "SELECT COUNT(*) " +
-            "FROM $TABLE_NAME_ITEM_METADATA"
-
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
             "WHERE right_id = ?;"
@@ -1232,6 +1241,10 @@ class DatabaseConnector(
         const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
             " WHERE name = ?"
+
+        const val STATEMENT_GET_GROUP_LIST = "SELECT name, description, ip_addresses" +
+            " FROM $TABLE_NAME_RIGHT_GROUP" +
+            " ORDER BY name ASC LIMIT ? OFFSET ?;"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"
@@ -1540,5 +1553,21 @@ class DatabaseConnector(
             communityName = rs.getString(22),
             storageDate = rs.getTimestamp(23).toOffsetDateTime(),
         )
+
+        private fun extractGroupRS(rs: ResultSet, gson: Gson): Group {
+            val groupListType: Type = object : TypeToken<ArrayList<GroupIpAddress>>() {}.type
+            val name = rs.getString(1)
+            val description = rs.getString(2)
+            val ipAddressJson: String? = rs
+                .getObject(3, PGobject::class.java)
+                .value
+            return Group(
+                name = name,
+                description = description,
+                ipAddresses = ipAddressJson
+                    ?.let { gson.fromJson(it, groupListType) }
+                    ?: emptyList()
+            )
+        }
     }
 }

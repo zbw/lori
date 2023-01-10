@@ -1,5 +1,7 @@
 import {
   Configuration,
+  GroupApi,
+  GroupRest,
   ItemApi,
   ItemCountByRight,
   ItemEntry,
@@ -7,7 +9,7 @@ import {
   RightApi,
   RightIdCreated,
   RightRest,
-} from "../generated-sources/openapi";
+} from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
   basePath: window.location.origin + "/api/v1",
@@ -15,17 +17,13 @@ const configuration = new Configuration({
 
 const loriItem = new ItemApi(configuration);
 const loriRightApi = new RightApi(configuration);
+const loriGroupApi = new GroupApi(configuration);
 
 export default {
-  getList(
-    offset: number,
-    limit: number,
-    pageSize: number
-  ): Promise<ItemInformation> {
-    return loriItem.getItemList({
+  getGroupList(offset: number, limit: number): Promise<Array<GroupRest>> {
+    return loriGroupApi.getGroupList({
       offset: offset,
       limit: limit,
-      pageSize: pageSize,
     });
   },
   getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {

@@ -14,6 +14,8 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.RightRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.Assert
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -178,7 +180,136 @@ class RestConverterTest {
         )
     }
 
+    @DataProvider(name = DATA_FOR_PARSE_TO_GROUP)
+    fun createDataForParseToGroup() =
+        arrayOf(
+            arrayOf(
+                false,
+                "organisation1,192.168.82.1",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "simple case one line",
+            ),
+            arrayOf(
+                false,
+                "organisation1,192.168.82.1\norganisation2,192.168.82.1",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                    GroupIpAddress(
+                        organisationName = "organisation2",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "simple case two lines",
+            ),
+            arrayOf(
+                false,
+                "\n\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                    GroupIpAddress(
+                        organisationName = "organisation2",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "empty newline at the end",
+            ),
+            arrayOf(
+                false,
+                "organisation1,",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = ""
+                    ),
+                ),
+                "IP address is missing",
+            ),
+            arrayOf(
+                false,
+                "",
+                false,
+                emptyList<GroupIpAddress>(),
+                "Nothing to parse",
+            ),
+            arrayOf(
+                false,
+                "organisation1,192.168.82.1\norganisation2,192.168.82.1,",
+                true,
+                emptyList<GroupIpAddress>(),
+                "error due to bad format",
+            ),
+            arrayOf(
+                true,
+                "\nOrganisation,IP-Address\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                    GroupIpAddress(
+                        organisationName = "organisation2",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "with header line",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_PARSE_TO_GROUP)
+    fun testParseToGroup(
+        hasCSVHeader: Boolean,
+        ipAddressesCSV: String,
+        expectsError: Boolean,
+        expected: List<GroupIpAddress>,
+        description: String,
+    ) {
+        if (expectsError) {
+            try {
+                assertThat(
+                    description,
+                    RestConverter.parseToGroup(
+                        hasCSVHeader,
+                        ipAddressesCSV,
+                    ),
+                    `is`(
+                        expected
+                    )
+                )
+                Assert.fail()
+            } catch (_: IllegalArgumentException) {
+            }
+        } else {
+            assertThat(
+                description,
+                RestConverter.parseToGroup(
+                    hasCSVHeader,
+                    ipAddressesCSV,
+                ),
+                `is`(
+                    expected
+                )
+            )
+        }
+    }
+
     companion object {
+        const val DATA_FOR_PARSE_TO_GROUP = "DATA_FOR_PARSE_TO_GROUP"
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA = ItemMetadata(
             metadataId = "that-test",

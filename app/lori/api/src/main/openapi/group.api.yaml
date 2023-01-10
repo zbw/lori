@@ -89,9 +89,7 @@ group-id:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'group.model.yaml#/GroupRest'
+              $ref: 'group.model.yaml#/GroupRest'
       400:
         description: Bad request
         content: { }
@@ -134,8 +132,7 @@ group-list:
             schema:
               type: array
               items:
-                name:
-                  type: string
+                $ref: 'group.model.yaml#/GroupRest'
       400:
         description: Bad request
         content: { }

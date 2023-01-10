@@ -336,7 +336,9 @@ object RestConverter {
         hasCSVHeader: Boolean,
         ipAddressesCSV: String
     ): List<GroupIpAddress> {
-        val rows = ipAddressesCSV.split("\n")
+        val rows = ipAddressesCSV
+            .split("\n")
+            .filter { it.isNotBlank() }
             .let {
                 if (hasCSVHeader) {
                     it.drop(1)
@@ -344,9 +346,11 @@ object RestConverter {
                     it
                 }
             }
-        return rows.map {
+        return rows.mapNotNull {
             val columns: List<String> = it.split(",")
-            if (columns.size != 2) {
+            if (columns.size == 1 && columns[0].isBlank()) {
+                null // empty line
+            } else if (columns.size != 2) {
                 throw IllegalArgumentException("Invalid number of columns.")
             } else {
                 GroupIpAddress(
