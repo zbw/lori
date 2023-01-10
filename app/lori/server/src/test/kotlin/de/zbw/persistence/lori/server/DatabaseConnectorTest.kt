@@ -183,6 +183,33 @@ class DatabaseConnectorTest : DatabaseTest() {
     }
 
     @Test
+    fun testGetGroupList() {
+        val group1 = TEST_GROUP.copy(name = "testGetGroupList")
+        dbConnector.insertGroup(group1)
+        assertThat(
+            dbConnector.getGroupList(50, 0),
+            `is`(
+                listOf(
+                    group1
+                )
+            )
+        )
+
+        val group2 = TEST_GROUP.copy(name = "testGetGroupList2")
+        dbConnector.insertGroup(group2)
+
+        assertThat(
+            dbConnector.getGroupList(50, 0),
+            `is`(
+                listOf(
+                    group1,
+                    group2,
+                )
+            )
+        )
+    }
+
+    @Test
     fun testBatchUpsert() {
         // given
         val id1 = "upsert1"

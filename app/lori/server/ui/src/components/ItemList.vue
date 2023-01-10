@@ -6,14 +6,16 @@ import {
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
+import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
 import SearchFilter from "@/components/SearchFilter.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
+import { useDialogsStore } from "@/stores/dialogs";
 
 export default defineComponent({
-  components: { RightsView, MetadataView, SearchFilter },
+  components: { GroupOverview, RightsView, MetadataView, SearchFilter },
 
   setup() {
     const items: Ref<Array<ItemRest>> = ref([]);
@@ -420,9 +422,19 @@ export default defineComponent({
       }
     };
 
+    /**
+     * Manage Group Dialog.
+     */
+    const dialogStore = useDialogsStore();
+
+    const closeGroupDialog = () => {
+      dialogStore.groupOverviewActivated = false;
+    };
+
     return {
       currentItem,
       currentPage,
+      dialogStore,
       headers,
       headersValueVSelect,
       items,
@@ -447,6 +459,7 @@ export default defineComponent({
       buildValidOnFilter,
       buildPaketSigelIdFilter,
       buildZDBIdFilter,
+      closeGroupDialog,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -466,6 +479,14 @@ export default defineComponent({
 </style>
 <template>
   <v-container>
+    <v-dialog
+      max-width="1000px"
+      v-model="dialogStore.groupOverviewActivated"
+      v-on:close="closeGroupDialog"
+      :retain-focus="false"
+    >
+      <GroupOverview></GroupOverview>
+    </v-dialog>
     <v-row>
       <v-col cols="2">
         <SearchFilter></SearchFilter>

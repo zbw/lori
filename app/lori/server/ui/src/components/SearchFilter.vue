@@ -229,7 +229,7 @@ export default defineComponent({
             <template v-slot:activator>
               <v-list-item-title>Publikationstyp</v-list-item-title>
             </template>
-            <h></h>
+            <h6></h6>
             <v-checkbox
               v-for="(item, i) in searchStore.availablePublicationTypes"
               :key="i"
@@ -243,7 +243,7 @@ export default defineComponent({
             <template v-slot:activator>
               <v-list-item-title>Paketsigel</v-list-item-title>
             </template>
-            <h></h>
+            <h6></h6>
             <v-checkbox
               v-for="(item, i) in searchStore.availablePaketSigelIds"
               :key="i"
@@ -259,7 +259,7 @@ export default defineComponent({
         <template v-slot:activator>
           <v-list-item-title>ZDB-IDs</v-list-item-title>
         </template>
-        <h></h>
+        <h6></h6>
         <v-checkbox
           v-for="(item, i) in searchStore.availableZDBIds"
           :key="i"
@@ -278,7 +278,7 @@ export default defineComponent({
             <template v-slot:activator>
               <v-list-item-title>Access-Status</v-list-item-title>
             </template>
-            <h></h>
+            <h6></h6>
             <v-checkbox
               v-for="(item, i) in searchStore.availableAccessState"
               :key="i"
@@ -435,7 +435,7 @@ export default defineComponent({
             <template v-slot:activator>
               <v-list-item-title>Formale Regelung</v-list-item-title>
             </template>
-            <h></h>
+            <h6></h6>
             <v-checkbox
               v-if="searchStore.hasLicenceContract"
               label="Lizenzvertrag"

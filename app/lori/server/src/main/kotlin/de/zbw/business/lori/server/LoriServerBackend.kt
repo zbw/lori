@@ -99,6 +99,12 @@ class LoriServerBackend(
 
     fun getGroupById(groupId: String): Group? = dbConnector.getGroupById(groupId)
 
+    fun getGroupList(
+        limit: Int,
+        offset: Int,
+    ): List<Group> =
+        dbConnector.getGroupList(limit, offset)
+
     fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
 
     fun getItemList(

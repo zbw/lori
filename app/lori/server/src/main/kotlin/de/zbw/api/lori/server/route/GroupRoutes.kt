@@ -166,5 +166,42 @@ fun Routing.groupRoutes(
                 }
             }
         }
+
+        route("/list") {
+            /**
+             * Receive a list of groups.
+             */
+            get {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/group/list")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
+                        val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                        if (limit < 1 || limit > 200) {
+                            span.setStatus(
+                                StatusCode.ERROR,
+                                "BadRequest: Limit parameter is expected to be between 1 and 200."
+                            )
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                "Limit parameter is expected to be between 1 and 200."
+                            )
+                            return@withContext
+                        }
+                        val receivedGroups: List<Group> = backend.getGroupList(limit, offset)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(receivedGroups.map { it.toRest() })
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred: ${e.message}")
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+        }
     }
 }

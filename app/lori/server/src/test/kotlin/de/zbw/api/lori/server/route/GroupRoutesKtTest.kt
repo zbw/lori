@@ -295,6 +295,67 @@ class GroupRoutesKtTest {
         }
     }
 
+    @Test
+    fun testGetGroupListOK() {
+        // given
+        val limit = 50
+        val offset = 0
+        val expected = listOf(TEST_GROUP.toRest())
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getGroupList(limit, offset) } returns listOf(TEST_GROUP)
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<GroupRest>>() {}.type
+            val received: ArrayList<GroupRest> = GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testGetGroupListBadRequest() {
+        // given
+        val limit = 0
+        val offset = 0
+        listOf(TEST_GROUP.toRest())
+        val backend = mockk<LoriServerBackend>(relaxed = true) { }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
+            assertThat(response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
+    fun testGetGroupListInternalError() {
+        // given
+        val limit = 5
+        val offset = 0
+        listOf(TEST_GROUP.toRest())
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getGroupList(limit, offset) } throws SQLException()
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
+            assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
     companion object {
         val TEST_GROUP = Group(
             name = "name",

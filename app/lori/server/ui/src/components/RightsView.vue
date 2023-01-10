@@ -4,6 +4,7 @@ import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsEditTabs from "@/components/RightsEditTabs.vue";
 import { computed, defineComponent, PropType, ref } from "vue";
+import { useDialogsStore } from "@/stores/dialogs";
 
 export default defineComponent({
   props: {
@@ -26,7 +27,6 @@ export default defineComponent({
   },
 
   setup(props) {
-    const editDialogActivated = ref(false);
     const tabDialogActivated = ref(false);
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
@@ -58,23 +58,23 @@ export default defineComponent({
       tabDialogActivated.value = false;
     };
 
+    const dialogStore = useDialogsStore();
     const newRight = () => {
-      editDialogActivated.value = true;
+      dialogStore.editRightActivated = true;
       currentRight.value = {} as RightRest;
       updateSuccessful.value = false;
       addSuccessful.value = false;
       currentIndex.value = -1;
       isNew.value = true;
     };
-
     const editRightClosed = () => {
-      editDialogActivated.value = false;
+      dialogStore.editRightActivated = false;
     };
 
     const addRight = (right: RightRest) => {
       currentRights.value.unshift(right);
       renderKey.value += 1;
-      editDialogActivated.value = false;
+      dialogStore.editRightActivated = false;
       addSuccessful.value = true;
     };
 
@@ -106,7 +106,7 @@ export default defineComponent({
       addSuccessful,
       currentRight,
       currentIndex,
-      editDialogActivated,
+      dialogStore,
       isNew,
       renderKey,
       selectedHeaders,
@@ -140,7 +140,8 @@ export default defineComponent({
     >
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>Rechteinformationen
+          <v-toolbar-title
+            >Rechteinformationen
             <a :href="handle">{{ handle.substring(22, 35) }}</a>
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
@@ -158,7 +159,7 @@ export default defineComponent({
       </template>
     </v-data-table>
     <v-dialog
-      v-model="editDialogActivated"
+      v-model="dialogStore.editRightActivated"
       max-width="1000px"
       v-on:close="editRightClosed"
       v-on:click:outside="editRightClosed"
