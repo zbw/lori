@@ -7,10 +7,7 @@ import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import { PiniaVuePlugin } from "pinia";
 import { createTestingPinia } from "@pinia/testing";
 import { useHistoryStore } from "@/stores/history";
-import {
-  RightRest,
-  AccessStateRest,
-} from "@/generated-sources/openapi";
+import { RightRest, AccessStateRest } from "@/generated-sources/openapi";
 
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
@@ -64,8 +61,10 @@ describe("Test RightsDeleteDialog", () => {
   it("deleteRight unsuccessful", async () => {
     // given
     mockedApi.deleteItemRelation.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(RightsDeleteDialog, {
       localVue: localVue,

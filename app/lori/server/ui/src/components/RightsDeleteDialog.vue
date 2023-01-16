@@ -55,7 +55,7 @@ export default defineComponent({
           })
           .catch((e) => {
             deleteErrorMessage.value =
-              e.statusText + "(Statuscode: " + e.status + ")";
+              e.response.statusText + "(Statuscode: " + e.response.status + ")";
             deleteError.value = true;
             deleteAlertError.value = true;
           })

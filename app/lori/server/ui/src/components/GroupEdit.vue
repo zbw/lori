@@ -1,6 +1,6 @@
 <script lang="ts">
 import { useDialogsStore } from "@/stores/dialogs";
-import { computed, defineComponent, PropType, reactive, ref, watch } from "vue";
+import {computed, defineComponent, onMounted, PropType, reactive, ref, watch} from "vue";
 import api from "@/api/api";
 import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
 import { required } from "@vuelidate/validators";
@@ -17,7 +17,7 @@ export default defineComponent({
       required: true,
     },
   },
-  emits: ["addGroupSuccessful"],
+  emits: ["addGroupSuccessful", "updateGroupSuccessful"],
   setup(props, { emit }) {
     /**
      * Vuelidate.
@@ -89,6 +89,8 @@ export default defineComponent({
     const close = () => {
       v$.value.$reset();
       dialogStore.groupEditActivated = false;
+      saveAlertError.value = false;
+      saveAlertErrorMessage.value = "";
     };
 
     /**
@@ -99,6 +101,7 @@ export default defineComponent({
     watch(computedGroup, (currentValue, oldValue) => {
       reinitializeGroup(currentValue);
     });
+    onMounted(() => reinitializeGroup(props.group));
 
     const reinitializeGroup = (newValue: GroupRest) => {
       groupTmp.value = Object.assign({}, newValue);
@@ -132,9 +135,28 @@ export default defineComponent({
           saveAlertError.value = true;
           saveAlertErrorMessage.value =
             "Speichern ist fehlgeschlagen: " +
-            e.statusText +
+            e.response.statusText +
             " (Statuscode: " +
-            e.status +
+            e.response.status +
+            ")";
+        });
+    };
+
+    const updateGroup = () => {
+      api
+        .updateGroup(groupTmp.value)
+        .then((r) => {
+          emit("updateGroupSuccessful", groupTmp.value);
+          close();
+        })
+        .catch((e) => {
+          console.log(e);
+          saveAlertError.value = true;
+          saveAlertErrorMessage.value =
+            "Speichern ist fehlgeschlagen: " +
+            e.response.statusText +
+            " (Statuscode: " +
+            e.response.status +
             ")";
         });
     };
@@ -161,9 +183,9 @@ export default defineComponent({
               saveAlertError.value = true;
               saveAlertErrorMessage.value =
                 "Auslesen von Datei ist fehlgeschlagen: " +
-                e.statusText +
+                e.response.statusText +
                 " (Statuscode: " +
-                e.status +
+                e.response.status +
                 ")";
             });
           return;
@@ -172,7 +194,7 @@ export default defineComponent({
         if (props.isNew) {
           createGroup();
         } else {
-          // TODO editGroup();
+          updateGroup();
         }
       });
     };
@@ -194,6 +216,7 @@ export default defineComponent({
       close,
       createGroup,
       save,
+      updateGroup,
     };
   },
 });
@@ -209,14 +232,23 @@ export default defineComponent({
         Speichern war nicht erfolgreich:
         {{ saveAlertErrorMessage }}
       </v-alert>
-      <v-card outlined>
+      <v-card>
         <v-row>
           <v-col>
             <v-text-field
+              v-if="isNew"
               outlined
               label="Name der Berechtigungsgruppe"
               v-model="formState.name"
               :error-messages="errorName"
+            ></v-text-field>
+            <v-text-field
+              v-if="!isNew"
+              outlined
+              label="Name der Berechtigungsgruppe"
+              v-model="formState.name"
+              :error-messages="errorName"
+              disabled
             ></v-text-field>
           </v-col>
         </v-row>
@@ -238,6 +270,7 @@ export default defineComponent({
               hint="Es wird ein CSV Format erwartet: <Name>,<IP-Adressbereich>"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
+              outlined
             ></v-textarea>
           </v-col>
           <v-col cols="2"> oder</v-col>
@@ -248,6 +281,7 @@ export default defineComponent({
               label="CSV-Datei"
               v-model="formState.ipAddressesFile"
               :error-messages="errorIpAddresses"
+              outlined
             ></v-file-input>
             Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
           </v-col>

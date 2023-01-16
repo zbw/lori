@@ -205,7 +205,7 @@ export default defineComponent({
         .catch((e) => {
           tableContentLoading.value = false;
           loadAlertErrorMessage.value =
-            e.statusText + " (Statuscode: " + e.status + ")";
+            e.response.statusText + " (Statuscode: " + e.response.status + ")";
           loadAlertError.value = true;
         });
     };

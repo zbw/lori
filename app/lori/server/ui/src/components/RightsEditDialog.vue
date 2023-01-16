@@ -197,7 +197,7 @@ export default defineComponent({
               console.log(e);
               saveAlertError.value = true;
               saveAlertErrorMessage.value =
-                e.statusText + " (Statuscode: " + e.status + ")";
+                e.response.statusText + " (Statuscode: " + e.response.status + ")";
               updateConfirmDialog.value = false;
             });
         })
@@ -205,7 +205,7 @@ export default defineComponent({
           console.log(e);
           saveAlertError.value = true;
           saveAlertErrorMessage.value =
-            e.statusText + " (Statuscode: " + e.status + ")";
+            e.response.statusText + " (Statuscode: " + e.response.status + ")";
           updateConfirmDialog.value = false;
         });
     };
@@ -228,7 +228,7 @@ export default defineComponent({
           console.log(e);
           saveAlertError.value = true;
           saveAlertErrorMessage.value =
-            e.statusText + " (Statuscode: " + e.status + ")";
+            e.response.statusText + " (Statuscode: " + e.response.status + ")";
           updateConfirmDialog.value = false;
         });
     };

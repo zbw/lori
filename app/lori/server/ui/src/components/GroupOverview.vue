@@ -21,12 +21,12 @@ export default defineComponent({
     const getGroupList = () => {
       api
         .getGroupList(0, 100)
-        .then((r) => {
+        .then((r: Array<GroupRest>) => {
           groupItems.value = r;
         })
         .catch((e) => {
           groupLoadErrorMsg.value =
-            e.statusText + " (Statuscode: " + e.status + ")";
+            e.response.statusText + " (Statuscode: " + e.response.status + ")";
         });
     };
 
@@ -39,6 +39,7 @@ export default defineComponent({
     const activateGroupEditDialog = () => {
       dialogStore.groupEditActivated = true;
       addSuccessfulNotification.value = false;
+      updateSuccessfulNotification.value = false;
     };
 
     const closeGroupEditDialog = () => {
@@ -46,10 +47,17 @@ export default defineComponent({
     };
 
     const isNew = ref(false);
+    const index = ref(-1);
     const currentGroup = ref({} as GroupRest);
     const createNewGroup = () => {
-      currentGroup.value = {} as GroupRest;
       isNew.value = true;
+      currentGroup.value = {} as GroupRest;
+      activateGroupEditDialog();
+    };
+    const editGroup = (group: GroupRest, row:any) => {
+      isNew.value = false;
+      currentGroup.value = group;
+      index.value = row.index;
       activateGroupEditDialog();
     };
 
@@ -57,12 +65,19 @@ export default defineComponent({
      * Update list of groups.
      */
     const addSuccessfulNotification = ref(false);
-    const lastAddedGroup = ref({} as GroupRest);
+    const updateSuccessfulNotification = ref(false);
+    const lastModifiedGroup = ref({} as GroupRest);
     const addGroupEntry = (group: GroupRest) => {
       groupItems.value.unshift(group);
       renderKey.value += 1;
       addSuccessfulNotification.value = true;
-      lastAddedGroup.value = group;
+      lastModifiedGroup.value = group;
+    };
+    const updateGroupEntry = (group: GroupRest) => {
+      groupItems.value[index.value] = group;
+      renderKey.value += 1;
+      updateSuccessfulNotification.value = true;
+      lastModifiedGroup.value = group;
     };
 
     return {
@@ -72,12 +87,15 @@ export default defineComponent({
       headers,
       isNew,
       items: groupItems,
-      lastAddedGroup,
+      lastModifiedGroup,
       renderKey,
+      updateSuccessfulNotification,
       activateGroupEditDialog,
       addGroupEntry,
       closeGroupEditDialog,
       createNewGroup,
+      editGroup,
+      updateGroupEntry,
     };
   },
 });
@@ -92,7 +110,15 @@ export default defineComponent({
       text
       type="success"
     >
-      Gruppe {{ lastAddedGroup.name }} erfolgreich hinzugefügt.
+      Gruppe {{ lastModifiedGroup.name }} erfolgreich hinzugefügt.
+    </v-alert>
+    <v-alert
+      v-model="updateSuccessfulNotification"
+      dismissible
+      text
+      type="success"
+    >
+      Gruppe {{ lastModifiedGroup.name }} erfolgreich geupdated.
     </v-alert>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -104,6 +130,7 @@ export default defineComponent({
       :headers="headers"
       :items="items"
       :key="renderKey"
+      @click:row="editGroup"
       loading-text="Daten werden geladen... Bitte warten."
       show-select
       item-key="groupName"
@@ -118,6 +145,7 @@ export default defineComponent({
         :isNew="isNew"
         :group="currentGroup"
         v-on:addGroupSuccessful="addGroupEntry"
+        v-on:updateGroupSuccessful="updateGroupEntry"
       ></GroupEdit>
     </v-dialog>
   </v-card>
