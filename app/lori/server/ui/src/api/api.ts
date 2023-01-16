@@ -1,6 +1,7 @@
 import {
   Configuration,
   GroupApi,
+  GroupIdCreated,
   GroupRest,
   ItemApi,
   ItemCountByRight,
@@ -20,6 +21,14 @@ const loriRightApi = new RightApi(configuration);
 const loriGroupApi = new GroupApi(configuration);
 
 export default {
+  /**
+   * Group related calls.
+   */
+  addGroup(newGroup: GroupRest): Promise<GroupIdCreated> {
+    return loriGroupApi.addGroup({
+      body: newGroup,
+    });
+  },
   getGroupList(offset: number, limit: number): Promise<Array<GroupRest>> {
     return loriGroupApi.getGroupList({
       offset: offset,
