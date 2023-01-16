@@ -20,7 +20,7 @@ import {
 
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
-import {ChangeType, useHistoryStore} from "@/stores/history";
+import { ChangeType, useHistoryStore } from "@/stores/history";
 
 export default defineComponent({
   props: {
@@ -257,9 +257,7 @@ export default defineComponent({
       deleteDialogActivated.value = true;
     };
 
-    const accessStateToString = (
-      access: AccessStateRest | undefined
-    ) => {
+    const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
         return "Kein Wert";
       } else {
@@ -374,14 +372,6 @@ export default defineComponent({
     };
 
     // Computed properties
-    const title = computed(() => {
-      if (props.isNew) {
-        return "Erstelle";
-      } else {
-        return "Editiere";
-      }
-    });
-
     onMounted(() => reinitializeRight(props.right));
     const computedRight = computed(() => props.right);
 
@@ -429,7 +419,6 @@ export default defineComponent({
       saveAlertError,
       saveAlertErrorMessage,
       updateConfirmDialog,
-      title,
       tmpRight,
       updateInProgress,
       // methods
