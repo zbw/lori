@@ -51,8 +51,10 @@ describe("Test ItemList UI", () => {
 
   it("initial table load fails", async () => {
     mockedApi.searchQuery.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },
@@ -115,8 +117,10 @@ describe("Test ItemList UI", () => {
       } as ItemInformation)
     );
     mockedApi.searchQuery.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(ItemList, {
       mocks: { api: mockedApi },

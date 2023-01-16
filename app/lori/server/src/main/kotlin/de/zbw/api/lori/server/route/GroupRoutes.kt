@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.postgresql.util.PSQLException
 
 /**
  * REST-API routes for groups.
@@ -55,6 +56,17 @@ fun Routing.groupRoutes(
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                } catch (iae: IllegalArgumentException) {
+                    span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
+                    call.respond(HttpStatusCode.BadRequest, "CSV has the wrong number of columns.")
+                } catch (pe: PSQLException) {
+                    if (pe.sqlState == "23505") {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                        call.respond(HttpStatusCode.Conflict, "A group with this name already exists.")
+                    } else {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")

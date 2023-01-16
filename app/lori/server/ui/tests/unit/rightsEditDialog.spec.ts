@@ -79,8 +79,10 @@ describe("Test RightsEditDialog", () => {
   it("updateRight unsuccessful", async () => {
     // given
     mockedApi.updateRight.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
@@ -177,8 +179,10 @@ describe("Test RightsEditDialog", () => {
     } as RightRest;
 
     mockedApi.addRight.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     mockedApi.addItemEntry.mockReturnValue(Promise.resolve());
     wrapper = shallowMount(RightsEditDialog, {
@@ -226,8 +230,10 @@ describe("Test RightsEditDialog", () => {
       } as RightIdCreated)
     );
     mockedApi.addItemEntry.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
@@ -316,8 +322,10 @@ describe("Test RightsEditDialog", () => {
       endDate: undefined,
     } as RightRest;
     mockedApi.updateRight.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
@@ -362,8 +370,10 @@ describe("Test RightsEditDialog", () => {
       endDate: undefined,
     } as RightRest;
     mockedApi.addRight.mockRejectedValue({
-      status: 500,
-      statusText: "Internal Server Error",
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
     });
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,

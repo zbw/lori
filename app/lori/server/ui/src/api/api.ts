@@ -35,6 +35,11 @@ export default {
       limit: limit,
     });
   },
+  updateGroup(g: GroupRest): Promise<void> {
+    return loriGroupApi.updateGroup({
+      body: g,
+    });
+  },
   getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {
     return loriItem.getItemCountByRightId({ rightId: rightId });
   },
