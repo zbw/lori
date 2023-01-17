@@ -15,6 +15,7 @@ repositories {
 }
 
 dependencies {
+    val apacheCommonsCSV by System.getProperties()
     val flywayVersion by System.getProperties()
     val ktorVersion by System.getProperties()
     val openTelemetry by System.getProperties()
@@ -40,6 +41,7 @@ dependencies {
     implementation("io.zonky.test:embedded-postgres:$zonkyVersion")
     implementation("org.postgresql:postgresql:$postgresJDBCVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
+    implementation("org.apache.commons:commons-csv:$apacheCommonsCSV")
 }
 
 application {

@@ -17,6 +17,8 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
+import org.apache.commons.csv.CSVFormat
+import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -336,29 +338,27 @@ object RestConverter {
         hasCSVHeader: Boolean,
         ipAddressesCSV: String
     ): List<GroupIpAddress> {
-        val rows = ipAddressesCSV
-            .split("\n")
-            .filter { it.isNotBlank() }
+        return CSVFormat.Builder.create(CSVFormat.DEFAULT).apply {
+            setIgnoreSurroundingSpaces(true)
+        }.build()
+            .let { CSVParser.parse(ipAddressesCSV, it) }
             .let {
                 if (hasCSVHeader) {
                     it.drop(1)
                 } else {
                     it
                 }
+            } // Dropping the header
+            .map {
+                try {
+                    GroupIpAddress(
+                        organisationName = it[0],
+                        ipAddress = it[1],
+                    )
+                } catch (ae: ArrayIndexOutOfBoundsException) {
+                    throw IllegalArgumentException()
+                }
             }
-        return rows.mapNotNull {
-            val columns: List<String> = it.split(",")
-            if (columns.size == 1 && columns[0].isBlank()) {
-                null // empty line
-            } else if (columns.size != 2) {
-                throw IllegalArgumentException("Invalid number of columns.")
-            } else {
-                GroupIpAddress(
-                    organisationName = columns[0],
-                    ipAddress = columns[1],
-                )
-            }
-        }
     }
 
     private val LOG = LogManager.getLogger(RestConverter::class.java)

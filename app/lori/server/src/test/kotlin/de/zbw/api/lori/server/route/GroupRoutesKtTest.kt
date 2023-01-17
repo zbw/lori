@@ -25,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.postgresql.util.PSQLException
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
@@ -185,6 +186,51 @@ class GroupRoutesKtTest {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_RIGHT))
+            }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
+    fun testPostGroupConflict() {
+        // given
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { insertGroup(any()) } throws mockk<PSQLException> {
+                every { sqlState } returns "23505"
+                every { message } returns "error"
+            }
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/group") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_GROUP.toRest()))
+            }
+            assertThat("Should return 409", response.status, `is`(HttpStatusCode.Conflict))
+        }
+    }
+
+    @Test
+    fun testPostGroupIAE() {
+        // given
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { insertGroup(any()) } throws IllegalArgumentException()
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/group") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(jsonAsString(TEST_GROUP.toRest()))
             }
             assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
         }
