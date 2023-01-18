@@ -50,7 +50,7 @@ fun Routing.groupRoutes(
                         .takeIf { it.name != null && it.ipAddresses != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("group", group.toString())
-                    val pk = backend.insertGroup(group.toBusiness(false))
+                    val pk = backend.insertGroup(group.toBusiness())
                     span.setStatus(StatusCode.OK)
                     call.respond(HttpStatusCode.Created, GroupIdCreated(pk))
                 } catch (e: BadRequestException) {
@@ -91,7 +91,7 @@ fun Routing.groupRoutes(
                         .takeIf { it.name != null && it.ipAddresses != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("group", group.toString())
-                    val insertedRows = backend.updateGroup(group.toBusiness(false))
+                    val insertedRows = backend.updateGroup(group.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
@@ -99,6 +99,9 @@ fun Routing.groupRoutes(
                         span.setStatus(StatusCode.ERROR)
                         call.respond(HttpStatusCode.NotFound)
                     }
+                } catch (iae: IllegalArgumentException) {
+                    span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
+                    call.respond(HttpStatusCode.BadRequest, "CSV has the wrong number of columns.")
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, "Invalid input")

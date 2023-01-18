@@ -29,6 +29,11 @@ export default {
       body: newGroup,
     });
   },
+  getGroupById(groupId: string): Promise<GroupRest> {
+    return loriGroupApi.getGroupById({
+      id: groupId,
+    });
+  },
   getGroupList(offset: number, limit: number): Promise<Array<GroupRest>> {
     return loriGroupApi.getGroupList({
       offset: offset,

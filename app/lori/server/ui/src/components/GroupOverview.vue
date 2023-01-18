@@ -17,6 +17,7 @@ export default defineComponent({
       },
     ];
     const groupItems: Ref<Array<GroupRest>> = ref([]);
+    const groupLoadError = ref(false);
     const groupLoadErrorMsg = ref("");
     const getGroupList = () => {
       api
@@ -26,7 +27,12 @@ export default defineComponent({
         })
         .catch((e) => {
           groupLoadErrorMsg.value =
-            e.response.statusText + " (Statuscode: " + e.response.status + ")";
+            "Fehler beim Abruf der Gruppenliste." +
+            e.response.statusText +
+            " (Statuscode: " +
+            e.response.status +
+            ")";
+          groupLoadError.value = true;
         });
     };
 
@@ -54,7 +60,7 @@ export default defineComponent({
       currentGroup.value = {} as GroupRest;
       activateGroupEditDialog();
     };
-    const editGroup = (group: GroupRest, row:any) => {
+    const editGroup = (group: GroupRest, row: any) => {
       isNew.value = false;
       currentGroup.value = group;
       index.value = row.index;
@@ -67,23 +73,61 @@ export default defineComponent({
     const addSuccessfulNotification = ref(false);
     const updateSuccessfulNotification = ref(false);
     const lastModifiedGroup = ref({} as GroupRest);
-    const addGroupEntry = (group: GroupRest) => {
-      groupItems.value.unshift(group);
-      renderKey.value += 1;
-      addSuccessfulNotification.value = true;
-      lastModifiedGroup.value = group;
+    const addGroupEntry = (groupId: string) => {
+      api
+        .getGroupById(groupId)
+        .then((group) => {
+          groupItems.value.unshift(group);
+          renderKey.value += 1;
+          addSuccessfulNotification.value = true;
+          lastModifiedGroup.value = group;
+        })
+        .catch((e) => {
+          groupLoadErrorMsg.value = createErrorMsg(
+            e,
+            "Fehler beim Abfragen der Gruppenliste."
+          );
+          groupLoadError.value = true;
+        });
     };
-    const updateGroupEntry = (group: GroupRest) => {
-      groupItems.value[index.value] = group;
-      renderKey.value += 1;
-      updateSuccessfulNotification.value = true;
-      lastModifiedGroup.value = group;
+    const updateGroupEntry = (groupId: string) => {
+      api
+        .getGroupById(groupId)
+        .then((group) => {
+          groupItems.value[index.value] = group;
+          renderKey.value += 1;
+          updateSuccessfulNotification.value = true;
+          lastModifiedGroup.value = group;
+        })
+        .catch((e) => {
+          groupLoadErrorMsg.value = createErrorMsg(
+            e,
+            "Fehler beim Abfragen der Gruppe mit Id " + groupId
+          );
+          groupLoadError.value = true;
+        });
+    };
+
+    const createErrorMsg: (e: any, customMsg: string) => string = (
+      e: any,
+      customMsg: string
+    ) => {
+      return (
+        customMsg +
+        " " +
+        e.response.statusText +
+        " (Statuscode: " +
+        e.response.status +
+        ")"
+      );
     };
 
     return {
       addSuccessfulNotification,
       currentGroup,
       dialogStore,
+      groupLoadError,
+      groupLoadErrorMsg,
       headers,
       isNew,
       items: groupItems,
@@ -111,6 +155,10 @@ export default defineComponent({
       type="success"
     >
       Gruppe {{ lastModifiedGroup.name }} erfolgreich hinzugefügt.
+    </v-alert>
+
+    <v-alert v-model="groupLoadError" dismissible text type="error">
+      {{ groupLoadErrorMsg }}
     </v-alert>
     <v-alert
       v-model="updateSuccessfulNotification"

@@ -175,7 +175,7 @@ class RestConverterTest {
             ),
         )
         assertThat(
-            (givenGroup.toRest()).toBusiness(false),
+            (givenGroup.toRest()).toBusiness(),
             `is`(givenGroup),
         )
     }
@@ -249,9 +249,18 @@ class RestConverterTest {
             arrayOf(
                 false,
                 "organisation1,192.168.82.1\norganisation2,192.168.82.1,",
-                true,
-                emptyList<GroupIpAddress>(),
-                "error due to bad format",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                    GroupIpAddress(
+                        organisationName = "organisation2",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "parse correct even with trailing comma",
             ),
             arrayOf(
                 true,
@@ -268,6 +277,29 @@ class RestConverterTest {
                     ),
                 ),
                 "with header line",
+            ),
+            arrayOf(
+                true,
+                "\nOrganisation;IP-Address\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
+                true,
+                emptyList<GroupIpAddress>(),
+                "error due to wrong separator",
+            ),
+            arrayOf(
+                true,
+                "\nOrganisation,IP-Address,Foobar\norganisation1,192.168.82.1,124\norganisation2,192.168.82.1,1234\n\n",
+                false,
+                listOf(
+                    GroupIpAddress(
+                        organisationName = "organisation1",
+                        ipAddress = "192.168.82.1"
+                    ),
+                    GroupIpAddress(
+                        organisationName = "organisation2",
+                        ipAddress = "192.168.82.1"
+                    ),
+                ),
+                "more columns than expected will be accepted as well.",
             ),
         )
 
