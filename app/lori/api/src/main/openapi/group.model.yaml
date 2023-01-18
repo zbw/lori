@@ -1,13 +1,17 @@
 GroupRest:
   required:
-    - name
+    - hasCSVHeader
     - ipAddresses
+    - name
   type: object
   properties:
     name:
       type: string
     description:
       type: string
+    hasCSVHeader:
+      type: boolean
+      default: false
     ipAddresses:
       type: string
 

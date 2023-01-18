@@ -1,6 +1,14 @@
 <script lang="ts">
 import { useDialogsStore } from "@/stores/dialogs";
-import {computed, defineComponent, onMounted, PropType, reactive, ref, watch} from "vue";
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  PropType,
+  reactive,
+  ref,
+  watch,
+} from "vue";
 import api from "@/api/api";
 import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
 import { required } from "@vuelidate/validators";
@@ -94,8 +102,9 @@ export default defineComponent({
     };
 
     /**
-     * Group object initialization
+     * Group object initialization.
      */
+    const hasNoCSVHeader = ref(false);
     const groupTmp = ref({} as GroupRest);
     const computedGroup = computed(() => props.group);
     watch(computedGroup, (currentValue, oldValue) => {
@@ -106,6 +115,7 @@ export default defineComponent({
     const reinitializeGroup = (newValue: GroupRest) => {
       groupTmp.value = Object.assign({}, newValue);
       if (props.isNew) {
+        hasNoCSVHeader.value = false;
         formState.name = "";
         formState.ipAddressesText = "";
         formState.ipAddressesFile = null;
@@ -115,6 +125,7 @@ export default defineComponent({
         formState.ipAddressesText = groupTmp.value.ipAddresses;
         formState.ipAddressesFile = null;
         formState.description = groupTmp.value.description;
+        hasNoCSVHeader.value = !groupTmp.value.hasCSVHeader;
       }
     };
     /**
@@ -127,18 +138,13 @@ export default defineComponent({
       api
         .addGroup(groupTmp.value)
         .then((r) => {
-          emit("addGroupSuccessful", groupTmp.value);
+          emit("addGroupSuccessful", groupTmp.value.name);
           close();
         })
         .catch((e) => {
-          console.log(e);
-          saveAlertError.value = true;
           saveAlertErrorMessage.value =
-            "Speichern ist fehlgeschlagen: " +
-            e.response.statusText +
-            " (Statuscode: " +
-            e.response.status +
-            ")";
+            "Speichern ist fehlgeschlagen: " + createErrorMsg(e);
+          saveAlertError.value = true;
         });
     };
 
@@ -146,19 +152,33 @@ export default defineComponent({
       api
         .updateGroup(groupTmp.value)
         .then((r) => {
-          emit("updateGroupSuccessful", groupTmp.value);
+          emit("updateGroupSuccessful", groupTmp.value.name);
           close();
         })
         .catch((e) => {
-          console.log(e);
-          saveAlertError.value = true;
           saveAlertErrorMessage.value =
-            "Speichern ist fehlgeschlagen: " +
-            e.response.statusText +
-            " (Statuscode: " +
-            e.response.status +
-            ")";
+            "Update ist fehlgeschlagen: " + createErrorMsg(e);
+          saveAlertError.value = true;
         });
+    };
+
+    const createErrorMsg: (e: any) => string = (e: any) => {
+      let errorExplain: string;
+      if (e.response.status == "409") {
+        errorExplain =
+          "Eine Gruppe mit diesem Namen existiert bereits (Fehlercode 409)";
+      } else if (e.response.status == "400") {
+        errorExplain =
+          "Das Format der CSV Eingabe ist nicht korrekt (Fehlercode 400)";
+      } else {
+        errorExplain =
+          "Unerwarteter Fehler. Bitte an Admin wenden: " +
+          e.response.statusText +
+          " (Statuscode: " +
+          e.response.status +
+          ")";
+      }
+      return errorExplain;
     };
 
     const save = () => {
@@ -166,6 +186,7 @@ export default defineComponent({
         if (!isValid) {
           return;
         }
+        groupTmp.value.hasCSVHeader = !hasNoCSVHeader.value;
         groupTmp.value.name = formState.name;
         groupTmp.value.description = formState.description;
         if (
@@ -179,7 +200,6 @@ export default defineComponent({
               createGroup();
             })
             .catch((e) => {
-              console.log(e);
               saveAlertError.value = true;
               saveAlertErrorMessage.value =
                 "Auslesen von Datei ist fehlgeschlagen: " +
@@ -210,6 +230,7 @@ export default defineComponent({
       fileContent,
       formState,
       groupTmp,
+      hasNoCSVHeader,
       saveAlertError,
       saveAlertErrorMessage,
       v$,
@@ -229,7 +250,6 @@ export default defineComponent({
     <v-card>
       <v-card-title>{{ dialogTitle }}</v-card-title>
       <v-alert v-model="saveAlertError" dismissible text type="error">
-        Speichern war nicht erfolgreich:
         {{ saveAlertErrorMessage }}
       </v-alert>
       <v-card>
@@ -257,7 +277,9 @@ export default defineComponent({
         Eine Neue Gruppe kann angelegt werden, indem die IP-Bereiche manuell
         hier eingegeben werden oder indem die entsprechenden IP-Bereiche per
         CSV-Datei hochgeladen werden. Beides gleichzeitig ist nicht möglich. Der
-        Freitext hat höhere Priorität.
+        Freitext hat höhere Priorität. Das erwartete CSV Format ist
+        kommasepariert und erwartet in den ersten beiden Spalten:
+        "organisation,ip-adressen"
       </v-alert>
       <v-card>
         <v-row justify="center">
@@ -272,6 +294,10 @@ export default defineComponent({
               :error-messages="errorIpAddresses"
               outlined
             ></v-textarea>
+            <v-checkbox
+              label="CSV Eingabe besitzt KEINEN Header"
+              v-model="hasNoCSVHeader"
+            ></v-checkbox>
           </v-col>
           <v-col cols="2"> oder</v-col>
           <v-col cols="5">
@@ -296,6 +322,7 @@ export default defineComponent({
             ></v-textarea>
           </v-col>
         </v-row>
+
         <v-row justify="end">
           <v-card tile outlined>
             <v-btn @click="save" color="blue darken-1" text>Speichern</v-btn>

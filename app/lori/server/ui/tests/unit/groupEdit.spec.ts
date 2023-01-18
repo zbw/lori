@@ -53,7 +53,7 @@ describe("Test GroupEdit", () => {
     await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     expect(wrapper.emitted("addGroupSuccessful")?.at(0)[0]).toStrictEqual(
-      givenGroup
+      givenGroup.name
     );
   });
 
@@ -118,7 +118,7 @@ describe("Test GroupEdit", () => {
     await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     expect(wrapper.emitted("updateGroupSuccessful")?.at(0)[0]).toStrictEqual(
-      givenGroup
+      givenGroup.name
     );
   });
 

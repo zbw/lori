@@ -48,20 +48,21 @@ fun Group.toRest() =
         description = this.description,
         ipAddresses = this.ipAddresses.joinToString(separator = "\n") {
             "${it.organisationName},${it.ipAddress}"
-        }
+        },
+        hasCSVHeader = false,
     )
 
 /**
- * Convertion throws an IllegalArgumentException if
+ * Conversion throws an IllegalArgumentException if
  * the string representing the CSV file does not satisfy
  * the expected format.
  */
-fun GroupRest.toBusiness(hasCSVHeader: Boolean) =
+fun GroupRest.toBusiness() =
     Group(
         name = this.name,
         description = this.description,
         ipAddresses = RestConverter.parseToGroup(
-            hasCSVHeader,
+            this.hasCSVHeader,
             this.ipAddresses
         )
     )

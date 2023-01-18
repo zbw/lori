@@ -175,7 +175,7 @@ class RestConverterTest {
             ),
         )
         assertThat(
-            (givenGroup.toRest()).toBusiness(false),
+            (givenGroup.toRest()).toBusiness(),
             `is`(givenGroup),
         )
     }
