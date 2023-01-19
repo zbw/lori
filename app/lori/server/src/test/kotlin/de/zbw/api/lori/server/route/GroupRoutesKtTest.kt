@@ -8,7 +8,7 @@ import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.jsonAsString
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Group
-import de.zbw.business.lori.server.type.GroupIpAddress
+import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.lori.model.GroupRest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -406,10 +406,10 @@ class GroupRoutesKtTest {
         val TEST_GROUP = Group(
             name = "name",
             description = "some description",
-            ipAddresses = listOf(
-                GroupIpAddress(
+            entry = listOf(
+                GroupEntry(
                     organisationName = "some organisation",
-                    ipAddress = "192.168.1.127",
+                    ipAddresses = "192.168.1.127",
                 )
             )
         )

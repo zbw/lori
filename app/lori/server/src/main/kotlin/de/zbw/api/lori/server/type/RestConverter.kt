@@ -4,7 +4,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Group
-import de.zbw.business.lori.server.type.GroupIpAddress
+import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -46,8 +46,8 @@ fun Group.toRest() =
     GroupRest(
         name = this.name,
         description = this.description,
-        ipAddresses = this.ipAddresses.joinToString(separator = "\n") {
-            "${it.organisationName},${it.ipAddress}"
+        ipAddresses = this.entry.joinToString(separator = "\n") {
+            "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
         },
         hasCSVHeader = false,
     )
@@ -61,7 +61,7 @@ fun GroupRest.toBusiness() =
     Group(
         name = this.name,
         description = this.description,
-        ipAddresses = RestConverter.parseToGroup(
+        entry = RestConverter.parseToGroup(
             this.hasCSVHeader,
             this.ipAddresses
         )
@@ -338,29 +338,34 @@ object RestConverter {
     fun parseToGroup(
         hasCSVHeader: Boolean,
         ipAddressesCSV: String
-    ): List<GroupIpAddress> {
-        return CSVFormat.Builder.create(CSVFormat.DEFAULT).apply {
-            setIgnoreSurroundingSpaces(true)
-        }.build()
-            .let { CSVParser.parse(ipAddressesCSV, it) }
-            .let {
-                if (hasCSVHeader) {
-                    it.drop(1)
-                } else {
-                    it
-                }
-            } // Dropping the header
-            .map {
-                try {
-                    GroupIpAddress(
+    ): List<GroupEntry> =
+        try {
+            val csvFormat: CSVFormat = CSVFormat.Builder.create()
+                .setDelimiter(';')
+                .setQuote(Character.valueOf('"'))
+                .setRecordSeparator("\r\n")
+                .build()
+            CSVFormat.Builder.create(csvFormat).apply {
+                setIgnoreSurroundingSpaces(true)
+            }.build()
+                .let { CSVParser.parse(ipAddressesCSV, it) }
+                .let {
+                    if (hasCSVHeader) {
+                        it.drop(1)
+                    } else {
+                        it
+                    }
+                } // Dropping the header
+                .map {
+                    GroupEntry(
                         organisationName = it[0],
-                        ipAddress = it[1],
+                        ipAddresses = it[1],
                     )
-                } catch (ae: ArrayIndexOutOfBoundsException) {
-                    throw IllegalArgumentException()
                 }
-            }
-    }
+        } catch (e: Exception) {
+            throw IllegalArgumentException()
+        }
 
     private val LOG = LogManager.getLogger(RestConverter::class.java)
+    const val CSV_DELIMITER = ";"
 }

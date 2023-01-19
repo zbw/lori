@@ -10,7 +10,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Group
-import de.zbw.business.lori.server.type.GroupIpAddress
+import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -193,7 +193,7 @@ class DatabaseConnector(
                     }
                     val jsonObj = PGobject()
                     jsonObj.type = "json"
-                    jsonObj.value = gson.toJson(group.ipAddresses)
+                    jsonObj.value = gson.toJson(group.entry)
                     this.setObject(3, jsonObj)
                 }
         val span = tracer.spanBuilder("insertGroup").startSpan()
@@ -278,7 +278,7 @@ class DatabaseConnector(
             }
             val jsonObj = PGobject()
             jsonObj.type = "json"
-            jsonObj.value = gson.toJson(group.ipAddresses)
+            jsonObj.value = gson.toJson(group.entry)
             this.setObject(2, jsonObj)
             this.setString(3, group.name)
         }
@@ -1555,7 +1555,7 @@ class DatabaseConnector(
         )
 
         private fun extractGroupRS(rs: ResultSet, gson: Gson): Group {
-            val groupListType: Type = object : TypeToken<ArrayList<GroupIpAddress>>() {}.type
+            val groupListType: Type = object : TypeToken<ArrayList<GroupEntry>>() {}.type
             val name = rs.getString(1)
             val description = rs.getString(2)
             val ipAddressJson: String? = rs
@@ -1564,7 +1564,7 @@ class DatabaseConnector(
             return Group(
                 name = name,
                 description = description,
-                ipAddresses = ipAddressJson
+                entry = ipAddressJson
                     ?.let { gson.fromJson(it, groupListType) }
                     ?: emptyList()
             )
