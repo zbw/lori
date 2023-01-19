@@ -10,11 +10,11 @@ package de.zbw.business.lori.server.type
 data class Group(
     val name: String,
     val description: String?,
-    val ipAddresses: List<GroupIpAddress>,
+    val entry: List<GroupEntry>,
 )
 
 @kotlinx.serialization.Serializable
-data class GroupIpAddress(
+data class GroupEntry(
     val organisationName: String,
-    val ipAddress: String,
+    val ipAddresses: String,
 )

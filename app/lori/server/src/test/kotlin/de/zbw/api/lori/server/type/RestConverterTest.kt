@@ -4,7 +4,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Group
-import de.zbw.business.lori.server.type.GroupIpAddress
+import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -167,10 +167,10 @@ class RestConverterTest {
         val givenGroup = Group(
             name = "some name",
             description = "description",
-            ipAddresses = listOf(
-                GroupIpAddress(
+            entry = listOf(
+                GroupEntry(
                     organisationName = "some orga",
-                    ipAddress = "123.456.1.127",
+                    ipAddresses = "123.456.1.127",
                 ),
             ),
         )
@@ -184,57 +184,64 @@ class RestConverterTest {
     fun createDataForParseToGroup() =
         arrayOf(
             arrayOf(
+                true,
+                "\"Organisation\",\"IP-Address\",\"Foobar\"\n\"organisation1\",\"192.168.82.1.124\"",
+                true,
+                emptyList<GroupEntry>(),
+                "wrong delimiter with headers leads to error",
+            ),
+            arrayOf(
                 false,
-                "organisation1,192.168.82.1",
+                "organisation1;192.168.82.1",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
                 ),
                 "simple case one line",
             ),
             arrayOf(
                 false,
-                "organisation1,192.168.82.1\norganisation2,192.168.82.1",
+                "organisation1;192.168.82.1\norganisation2;192.68.254.*,195.37.13.*,195.37.209.160-191,195.37.234.33-46",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation2",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.68.254.*,195.37.13.*,195.37.209.160-191,195.37.234.33-46"
                     ),
                 ),
                 "simple case two lines",
             ),
             arrayOf(
                 false,
-                "\n\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
+                "\n\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation2",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
                 ),
                 "empty newline at the end",
             ),
             arrayOf(
                 false,
-                "organisation1,",
+                "organisation1;",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = ""
+                        ipAddresses = ""
                     ),
                 ),
                 "IP address is missing",
@@ -243,60 +250,60 @@ class RestConverterTest {
                 false,
                 "",
                 false,
-                emptyList<GroupIpAddress>(),
+                emptyList<GroupEntry>(),
                 "Nothing to parse",
             ),
             arrayOf(
                 false,
-                "organisation1,192.168.82.1\norganisation2,192.168.82.1,",
+                "organisation1;192.168.82.1\norganisation2;192.168.82.1;",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation2",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
                 ),
                 "parse correct even with trailing comma",
             ),
             arrayOf(
                 true,
-                "\nOrganisation,IP-Address\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
+                "\nOrganisation;IP-Address\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation2",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
                 ),
                 "with header line",
             ),
             arrayOf(
                 true,
-                "\nOrganisation;IP-Address\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
+                "\nOrganisation,IP-Address\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
                 true,
-                emptyList<GroupIpAddress>(),
+                emptyList<GroupEntry>(),
                 "error due to wrong separator",
             ),
             arrayOf(
                 true,
-                "\nOrganisation,IP-Address,Foobar\norganisation1,192.168.82.1,124\norganisation2,192.168.82.1,1234\n\n",
+                "\nOrganisation;IP-Address;Foobar\norganisation1;192.168.82.1;124\norganisation2;192.168.82.1;1234\n\n",
                 false,
                 listOf(
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation1",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
-                    GroupIpAddress(
+                    GroupEntry(
                         organisationName = "organisation2",
-                        ipAddress = "192.168.82.1"
+                        ipAddresses = "192.168.82.1"
                     ),
                 ),
                 "more columns than expected will be accepted as well.",
@@ -308,7 +315,7 @@ class RestConverterTest {
         hasCSVHeader: Boolean,
         ipAddressesCSV: String,
         expectsError: Boolean,
-        expected: List<GroupIpAddress>,
+        expected: List<GroupEntry>,
         description: String,
     ) {
         if (expectsError) {

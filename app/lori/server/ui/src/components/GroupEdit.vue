@@ -197,7 +197,11 @@ export default defineComponent({
             .text()
             .then((r) => {
               groupTmp.value.ipAddresses = r;
-              createGroup();
+              if (props.isNew) {
+                createGroup();
+              } else {
+                updateGroup();
+              }
             })
             .catch((e) => {
               saveAlertError.value = true;
@@ -277,9 +281,8 @@ export default defineComponent({
         Eine Neue Gruppe kann angelegt werden, indem die IP-Bereiche manuell
         hier eingegeben werden oder indem die entsprechenden IP-Bereiche per
         CSV-Datei hochgeladen werden. Beides gleichzeitig ist nicht möglich. Der
-        Freitext hat höhere Priorität. Das erwartete CSV Format ist
-        kommasepariert und erwartet in den ersten beiden Spalten:
-        "organisation,ip-adressen"
+        Freitext hat höhere Priorität. Das erwartete CSV Format ist:
+        "organisation;ip-adressen"
       </v-alert>
       <v-card>
         <v-row justify="center">

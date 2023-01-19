@@ -11,7 +11,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Group
-import de.zbw.business.lori.server.type.GroupIpAddress
+import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -1246,10 +1246,10 @@ class DatabaseConnectorTest : DatabaseTest() {
         val TEST_GROUP = Group(
             name = "test group",
             description = "some description",
-            ipAddresses = listOf(
-                GroupIpAddress(
+            entry = listOf(
+                GroupEntry(
                     organisationName = "some organisation",
-                    ipAddress = "192.168.0.0",
+                    ipAddresses = "192.168.0.0",
                 ),
             ),
         )
