@@ -350,6 +350,7 @@ class LoriServerBackendTest : DatabaseTest() {
             createdBy = "user1",
             createdOn = NOW,
             endDate = TODAY,
+            groupIds = emptyList(),
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
             licenceContract = "some contract",

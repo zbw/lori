@@ -193,7 +193,7 @@ class DatabaseConnector(
                     }
                     val jsonObj = PGobject()
                     jsonObj.type = "json"
-                    jsonObj.value = gson.toJson(group.entry)
+                    jsonObj.value = gson.toJson(group.entries)
                     this.setObject(3, jsonObj)
                 }
         val span = tracer.spanBuilder("insertGroup").startSpan()
@@ -227,6 +227,100 @@ class DatabaseConnector(
             extractGroupRS(rs, gson)
         } else {
             null
+        }
+    }
+
+    fun deleteGroupPair(
+        groupId: String,
+        rightId: String
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR).apply {
+            this.setString(1, groupId)
+            this.setString(2, rightId)
+        }
+        val span = tracer.spanBuilder("deleteGroupPair").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteGroupPairsByRightId(
+        groupId: String,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID).apply {
+            this.setString(1, groupId)
+        }
+        val span = tracer.spanBuilder("deleteGroupPairsByRightId").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    /**
+     * Get the ids of all rights that use a given group-id.
+     */
+    fun getRightsByGroupId(groupId: String): List<String> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_GROUP_ID).apply {
+            this.setString(1, groupId)
+        }
+        val span = tracer.spanBuilder("getRightsByGroupId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getString(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    fun getGroupsByRightId(rightId: String): List<String> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_GROUPS_BY_RIGHT_ID).apply {
+            this.setString(1, rightId)
+        }
+        val span = tracer.spanBuilder("getGroupsByRightId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getString(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    fun insertGroupRightPair(rightId: String, groupId: String): String {
+        val prepStmt = connection
+            .prepareStatement(STATEMENT_INSERT_GROUP_RIGHT_PAIR, Statement.RETURN_GENERATED_KEYS)
+            .apply {
+                this.setString(1, groupId)
+                this.setString(2, rightId)
+            }
+        val span = tracer.spanBuilder("insertGroupRightPair").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getString(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
         }
     }
 
@@ -278,7 +372,7 @@ class DatabaseConnector(
             }
             val jsonObj = PGobject()
             jsonObj.type = "json"
-            jsonObj.value = gson.toJson(group.entry)
+            jsonObj.value = gson.toJson(group.entries)
             this.setObject(2, jsonObj)
             this.setString(3, group.name)
         }
@@ -674,8 +768,9 @@ class DatabaseConnector(
         }
         return generateSequence {
             if (rs.next()) {
+                val currentRightId = rs.getString(1)
                 ItemRight(
-                    rightId = rs.getString(1),
+                    rightId = currentRightId,
                     createdOn = rs.getTimestamp(2)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
@@ -706,6 +801,7 @@ class DatabaseConnector(
                     basisAccessState = rs.getString(19)?.let { BasisAccessState.valueOf(it) },
                     notesProcessDocumentation = rs.getString(20),
                     notesManagementRelated = rs.getString(21),
+                    groupIds = getGroupsByRightId(currentRightId),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -1038,6 +1134,7 @@ class DatabaseConnector(
         private const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_RIGHT_GROUP = "right_group"
         private const val TABLE_NAME_USERS = "users"
+        private const val TABLE_NAME_GROUP_RIGHT_MAP = "group_right_map"
 
         const val COLUMN_METADATA_COLLECTION_NAME = "collection_name"
         const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
@@ -1099,7 +1196,7 @@ class DatabaseConnector(
             "storage_date = EXCLUDED.storage_date;"
 
         const val STATEMENT_INSERT_GROUP = "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
-            " (name, description, ip_addresses)" +
+            " (group_id, description, ip_addresses)" +
             " VALUES(?,?,?)"
 
         const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
@@ -1238,13 +1335,13 @@ class DatabaseConnector(
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
 
-        const val STATEMENT_GET_GROUP_BY_ID = "SELECT name, description, ip_addresses" +
+        const val STATEMENT_GET_GROUP_BY_ID = "SELECT group_id, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
-            " WHERE name = ?"
+            " WHERE group_id = ?"
 
-        const val STATEMENT_GET_GROUP_LIST = "SELECT name, description, ip_addresses" +
+        const val STATEMENT_GET_GROUP_LIST = "SELECT group_id, description, ip_addresses" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
-            " ORDER BY name ASC LIMIT ? OFFSET ?;"
+            " ORDER BY group_id ASC LIMIT ? OFFSET ?;"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"
@@ -1254,9 +1351,22 @@ class DatabaseConnector(
             "WHERE i.right_id = ? " +
             "AND i.metadata_id = ?"
 
+        const val STATEMENT_INSERT_GROUP_RIGHT_PAIR = "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +
+            " (group_id, right_id)" +
+            " VALUES(?,?)"
+
+        const val STATEMENT_DELETE_GROUP_RIGHT_PAIR = "DELETE" +
+            " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+            " WHERE group_id = ? AND" +
+            " right_id = ?"
+
+        const val STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID = "DELETE" +
+            " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+            " WHERE right_id = ?"
+
         const val STATEMENT_DELETE_GROUP_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_RIGHT_GROUP" +
-            " WHERE name = ?"
+            " WHERE group_id = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_METADATA = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +
@@ -1284,6 +1394,16 @@ class DatabaseConnector(
                 "basis_access_state, notes_process_documentation, notes_management_related " +
                 "FROM $TABLE_NAME_ITEM_RIGHT " +
                 "WHERE right_id = ANY(?)"
+
+        const val STATEMENT_GET_RIGHTS_BY_GROUP_ID =
+            "SELECT right_id" +
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE group_id = ?"
+
+        const val STATEMENT_GET_GROUPS_BY_RIGHT_ID =
+            "SELECT group_id" +
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE right_id = ?"
 
         const val STATEMENT_GET_METADATA_RANGE =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
@@ -1322,7 +1442,7 @@ class DatabaseConnector(
             "SELECT role FROM $TABLE_NAME_USERS WHERE username=?"
 
         const val STATEMENT_UPDATE_GROUP =
-            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=? WHERE name=?;"
+            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=? WHERE group_id=?;"
 
         const val STATEMENT_UPDATE_USER =
             "UPDATE $TABLE_NAME_USERS SET password=? WHERE username=?"
@@ -1564,7 +1684,7 @@ class DatabaseConnector(
             return Group(
                 name = name,
                 description = description,
-                entry = ipAddressJson
+                entries = ipAddressJson
                     ?.let { gson.fromJson(it, groupListType) }
                     ?: emptyList()
             )

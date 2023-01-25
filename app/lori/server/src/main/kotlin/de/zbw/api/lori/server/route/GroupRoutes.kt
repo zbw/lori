@@ -1,9 +1,11 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Group
+import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.GroupIdCreated
 import de.zbw.lori.model.GroupRest
 import io.ktor.http.HttpStatusCode
@@ -173,6 +175,17 @@ fun Routing.groupRoutes(
                             call.respond(HttpStatusCode.NotFound, "No item found for given id.")
                         }
                     }
+                } catch (re: ResourceStillInUseException) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        ErrorRest(
+                            type = "/errors/resourcestillinuse",
+                            title = "Gruppe konnte nicht gelöscht werden.",
+                            detail = re.message,
+                            status = "409",
+                        ),
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, "An internal error occurred: ${e.message}.")

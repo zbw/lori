@@ -167,7 +167,7 @@ class RestConverterTest {
         val givenGroup = Group(
             name = "some name",
             description = "description",
-            entry = listOf(
+            entries = listOf(
                 GroupEntry(
                     organisationName = "some orga",
                     ipAddresses = "123.456.1.127",
@@ -412,6 +412,7 @@ class RestConverterTest {
                 ZoneOffset.UTC,
             ),
             endDate = TODAY,
+            groupIds = null,
             lastUpdatedBy = "user2",
             lastUpdatedOn = OffsetDateTime.of(
                 2022,

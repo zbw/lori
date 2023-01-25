@@ -3,6 +3,7 @@ package de.zbw.business.lori.server
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -25,7 +26,7 @@ import java.util.Date
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriServerBackend(
-    private val dbConnector: DatabaseConnector,
+    internal val dbConnector: DatabaseConnector,
     private val config: LoriConfiguration,
 ) {
     constructor(
@@ -60,11 +61,42 @@ class LoriServerBackend(
     fun insertMetadataElement(metadata: ItemMetadata): String =
         dbConnector.insertMetadata(metadata)
 
-    fun insertRight(right: ItemRight): String = dbConnector.insertRight(right)
+    fun insertRight(right: ItemRight): String {
+        val generatedRightId = dbConnector.insertRight(right)
+        right.groupIds?.forEach { gId ->
+            dbConnector.insertGroupRightPair(
+                rightId = generatedRightId,
+                groupId = gId,
+            )
+        }
+        return generatedRightId
+    }
 
     fun updateGroup(group: Group): Int = dbConnector.updateGroup(group)
 
-    fun upsertRight(right: ItemRight): Int = dbConnector.upsertRight(right)
+    fun upsertRight(right: ItemRight): Int {
+        val rightId = right.rightId!!
+        val oldGroupIds = dbConnector.getGroupsByRightId(rightId).toSet()
+        val newGroupIds = right.groupIds?.toSet() ?: emptySet()
+
+        val toAdd = newGroupIds.subtract(oldGroupIds)
+        toAdd.forEach { gId ->
+            dbConnector.insertGroupRightPair(
+                rightId = rightId,
+                groupId = gId,
+            )
+        }
+
+        val toRemove = oldGroupIds.subtract(newGroupIds)
+        toRemove.forEach { gId ->
+            dbConnector.deleteGroupPair(
+                rightId = rightId,
+                groupId = gId,
+            )
+        }
+
+        return dbConnector.upsertRight(right)
+    }
 
     fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
         dbConnector.upsertMetadataBatch(metadataElems.map { it })
@@ -156,11 +188,23 @@ class LoriServerBackend(
 
     fun deleteItemEntriesByRightId(rightId: String) = dbConnector.deleteItemByRight(rightId)
 
-    fun deleteGroup(groupId: String): Int = dbConnector.deleteGroupById(groupId)
+    fun deleteGroup(groupId: String): Int {
+        val receivedRights: List<String> = dbConnector.getRightsByGroupId(groupId)
+        return if (receivedRights.isEmpty()) {
+            dbConnector.deleteGroupById(groupId)
+        } else {
+            throw ResourceStillInUseException(
+                "Gruppe wird noch von folgenden Rechte-Ids verwendet: " + receivedRights.joinToString(separator = ",")
+            )
+        }
+    }
 
     fun deleteMetadata(metadataId: String): Int = dbConnector.deleteMetadata(listOf(metadataId))
 
-    fun deleteRight(rightId: String): Int = dbConnector.deleteRights(listOf(rightId))
+    fun deleteRight(rightId: String): Int {
+        dbConnector.deleteGroupPairsByRightId(rightId)
+        return dbConnector.deleteRights(listOf(rightId))
+    }
 
     fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
         dbConnector.getRightIdsByMetadata(metadataId).let {

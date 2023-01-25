@@ -406,7 +406,7 @@ class GroupRoutesKtTest {
         val TEST_GROUP = Group(
             name = "name",
             description = "some description",
-            entry = listOf(
+            entries = listOf(
                 GroupEntry(
                     organisationName = "some organisation",
                     ipAddresses = "192.168.1.127",

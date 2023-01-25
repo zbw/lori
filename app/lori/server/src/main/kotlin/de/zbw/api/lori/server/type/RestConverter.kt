@@ -46,7 +46,7 @@ fun Group.toRest() =
     GroupRest(
         name = this.name,
         description = this.description,
-        ipAddresses = this.entry.joinToString(separator = "\n") {
+        ipAddresses = this.entries.joinToString(separator = "\n") {
             "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
         },
         hasCSVHeader = false,
@@ -61,7 +61,7 @@ fun GroupRest.toBusiness() =
     Group(
         name = this.name,
         description = this.description,
-        entry = RestConverter.parseToGroup(
+        entries = RestConverter.parseToGroup(
             this.hasCSVHeader,
             this.ipAddresses
         )
@@ -131,6 +131,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
+        groupIds = groupIds,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
@@ -156,6 +157,7 @@ fun ItemRight.toRest(): RightRest =
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
+        groupIds = groupIds,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,

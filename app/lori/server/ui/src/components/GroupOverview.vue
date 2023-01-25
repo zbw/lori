@@ -108,6 +108,11 @@ export default defineComponent({
         });
     };
 
+    const deleteGroupEntry = () => {
+      groupItems.value.splice(index.value, 1);
+      renderKey.value += 1;
+    };
+
     const createErrorMsg: (e: any, customMsg: string) => string = (
       e: any,
       customMsg: string
@@ -138,6 +143,7 @@ export default defineComponent({
       addGroupEntry,
       closeGroupEditDialog,
       createNewGroup,
+      deleteGroupEntry,
       editGroup,
       updateGroupEntry,
     };
@@ -193,6 +199,7 @@ export default defineComponent({
         :isNew="isNew"
         :group="currentGroup"
         v-on:addGroupSuccessful="addGroupEntry"
+        v-on:deleteGroupSuccessful="deleteGroupEntry"
         v-on:updateGroupSuccessful="updateGroupEntry"
       ></GroupEdit>
     </v-dialog>
