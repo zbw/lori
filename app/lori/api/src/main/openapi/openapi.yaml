@@ -62,3 +62,5 @@ components:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
     RightRest:
       $ref: 'item.model.yaml#/RightRest'
+    ErrorRest:
+      $ref: 'errorhandling.model.yaml#/ErrorRest'

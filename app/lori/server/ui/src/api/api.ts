@@ -29,6 +29,11 @@ export default {
       body: newGroup,
     });
   },
+  deleteGroup(groupId: string): Promise<void> {
+    return loriGroupApi.deleteGroupById({
+      id: groupId,
+    });
+  },
   getGroupById(groupId: string): Promise<GroupRest> {
     return loriGroupApi.getGroupById({
       id: groupId,

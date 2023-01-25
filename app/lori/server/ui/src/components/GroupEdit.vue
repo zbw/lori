@@ -13,8 +13,10 @@ import api from "@/api/api";
 import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 
 export default defineComponent({
+  components: { GroupDeleteDialog },
   props: {
     isNew: {
       type: Boolean,
@@ -25,7 +27,11 @@ export default defineComponent({
       required: true,
     },
   },
-  emits: ["addGroupSuccessful", "updateGroupSuccessful"],
+  emits: [
+    "addGroupSuccessful",
+    "deleteGroupSuccessful",
+    "updateGroupSuccessful",
+  ],
   setup(props, { emit }) {
     /**
      * Vuelidate.
@@ -226,6 +232,17 @@ export default defineComponent({
     // Upload CSV-File
     const fileContent = ref({} as File);
 
+    // Delete Group
+    const initiateDeleteDialog = () => {
+      groupTmp.value.name = formState.name;
+      dialogStore.groupDeleteActivated = true;
+    };
+
+    const deleteGroupSuccessful = () => {
+      emit("deleteGroupSuccessful");
+      close();
+    };
+
     return {
       dialogStore,
       dialogTitle,
@@ -240,6 +257,8 @@ export default defineComponent({
       v$,
       close,
       createGroup,
+      deleteGroupSuccessful,
+      initiateDeleteDialog,
       save,
       updateGroup,
     };
@@ -250,12 +269,20 @@ export default defineComponent({
 <style scoped></style>
 
 <template>
-  <v-container class="grey lighten-5 mb-6" fluid>
-    <v-card>
+  <v-card>
+    <v-container>
       <v-card-title>{{ dialogTitle }}</v-card-title>
       <v-alert v-model="saveAlertError" dismissible text type="error">
         {{ saveAlertErrorMessage }}
       </v-alert>
+      <v-dialog
+          v-model="dialogStore.groupDeleteActivated"
+          max-width="500px">
+        <GroupDeleteDialog
+          :group-id="groupTmp.name"
+          v-on:deleteGroupSuccessful="deleteGroupSuccessful"
+        ></GroupDeleteDialog>
+      </v-dialog>
       <v-card>
         <v-row>
           <v-col>
@@ -292,7 +319,6 @@ export default defineComponent({
           <v-col cols="5">
             <v-textarea
               label="IP-Adressen"
-              hint="Es wird ein CSV Format erwartet: <Name>,<IP-Adressbereich>"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
               outlined
@@ -322,17 +348,22 @@ export default defineComponent({
             <v-textarea
               label="Beschreibung"
               v-model="formState.description"
+              outlined
             ></v-textarea>
           </v-col>
         </v-row>
-
-        <v-row justify="end">
-          <v-card tile outlined>
-            <v-btn @click="save" color="blue darken-1" text>Speichern</v-btn>
-            <v-btn @click="close" color="blue darken-1" text>Zurück</v-btn>
-          </v-card>
-        </v-row>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn @click="save" color="blue darken-1" text>Speichern</v-btn>
+          <v-btn @click="close" color="blue darken-1" text>Zurück</v-btn>
+          <v-btn v-if="!isNew" icon @click="initiateDeleteDialog">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+          <v-btn v-if="isNew" icon disabled>
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </v-card-actions>
       </v-card>
-    </v-card>
-  </v-container>
+    </v-container>
+  </v-card>
 </template>

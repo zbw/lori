@@ -1246,7 +1246,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         val TEST_GROUP = Group(
             name = "test group",
             description = "some description",
-            entry = listOf(
+            entries = listOf(
                 GroupEntry(
                     organisationName = "some organisation",
                     ipAddresses = "192.168.0.0",
@@ -1289,6 +1289,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             createdBy = "user1",
             createdOn = NOW,
             endDate = TODAY,
+            groupIds = emptyList(),
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
             licenceContract = "some contract",

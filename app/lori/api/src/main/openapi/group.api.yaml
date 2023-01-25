@@ -67,11 +67,17 @@ group-id:
           type: string
     responses:
       200:
-        description: Deletion of the group was successfull
+        description: Deletion of the group was successful
         content: { }
       404:
         description: Id does not exist
         content: { }
+      409:
+        description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
   get:
     tags:
       - group

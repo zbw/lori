@@ -6,11 +6,13 @@ import { ref } from "vue";
  */
 export const useDialogsStore = defineStore("dialog", () => {
   const groupOverviewActivated = ref(false);
+  const groupDeleteActivated = ref(false);
   const groupEditActivated = ref(false);
   const editRightActivated = ref(false);
 
   return {
     editRightActivated,
+    groupDeleteActivated,
     groupEditActivated,
     groupOverviewActivated,
   };

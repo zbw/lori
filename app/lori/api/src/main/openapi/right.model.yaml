@@ -42,6 +42,10 @@ RightRest:
     endDate:
       type: string
       format: date
+    groupIds:
+      type: array
+      items:
+        type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
