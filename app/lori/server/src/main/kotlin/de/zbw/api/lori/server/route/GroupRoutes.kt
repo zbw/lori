@@ -57,21 +57,46 @@ fun Routing.groupRoutes(
                     call.respond(HttpStatusCode.Created, GroupIdCreated(pk))
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                        )
+                    )
                 } catch (iae: IllegalArgumentException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
-                    call.respond(HttpStatusCode.BadRequest, "CSV has the wrong number of columns.")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = "Das CSV File hat die falsche Anzahl an Spalten.",
+                        )
+                    )
                 } catch (pe: PSQLException) {
                     if (pe.sqlState == "23505") {
                         span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                        call.respond(HttpStatusCode.Conflict, "A group with this name already exists.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(
+                                detail = "Eine Gruppe mit diesem Namen existiert bereits.",
+                            )
+                        )
                     } else {
                         span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                            )
+                        )
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(
+                            detail = "Ein interner Fehler ist aufgetreten.",
+                        ),
+                    )
                 } finally {
                     span.end()
                 }
@@ -99,17 +124,35 @@ fun Routing.groupRoutes(
                         call.respond(HttpStatusCode.NoContent)
                     } else {
                         span.setStatus(StatusCode.ERROR)
-                        call.respond(HttpStatusCode.NotFound)
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            ApiError.notFoundError(
+                                detail = "Für die Gruppe ${group.name} existiert kein Eintrag.",
+                            )
+                        )
                     }
                 } catch (iae: IllegalArgumentException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
-                    call.respond(HttpStatusCode.BadRequest, "CSV has the wrong number of columns.")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = "Das CSV File hat die falsche Anzahl an Spalten.",
+                        ),
+                    )
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                        ),
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
                 } finally {
                     span.end()
                 }
@@ -138,12 +181,20 @@ fun Routing.groupRoutes(
                             call.respond(group.toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
-                            call.respond(HttpStatusCode.NotFound, "No item found for given id.")
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(
+                                    detail = "Für die Gruppe $groupId existiert kein Eintrag.",
+                                )
+                            )
                         }
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
                 } finally {
                     span.end()
                 }
@@ -172,23 +223,30 @@ fun Routing.groupRoutes(
                             call.respond(HttpStatusCode.OK)
                         } else {
                             span.setStatus(StatusCode.ERROR)
-                            call.respond(HttpStatusCode.NotFound, "No item found for given id.")
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(
+                                    detail = "Für die Gruppe $groupId existiert kein Eintrag.",
+                                ),
+                            )
                         }
                     }
                 } catch (re: ResourceStillInUseException) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
                     call.respond(
                         HttpStatusCode.Conflict,
-                        ErrorRest(
-                            type = "/errors/resourcestillinuse",
-                            title = "Gruppe konnte nicht gelöscht werden.",
+                        ApiError.conflictError(
                             detail = re.message,
-                            status = "409",
                         ),
                     )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred: ${e.message}.")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(
+                            detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                        ),
+                    )
                 } finally {
                     span.end()
                 }
@@ -215,16 +273,36 @@ fun Routing.groupRoutes(
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
-                                "Limit parameter is expected to be between 1 and 200."
+                                ErrorRest(
+                                    type = "/errors/badrequest",
+                                    title = "Ungültiger Query Parameter.",
+                                    detail = "Der Limit Parameter muss zwischen 1 und 500 sein..",
+                                    status = "400",
+                                ),
                             )
                             return@withContext
                         }
-                        val receivedGroups: List<Group> = backend.getGroupList(limit, offset)
-                        span.setStatus(StatusCode.OK)
-                        call.respond(receivedGroups.map { it.toRest() })
+                        val idsOnly: Boolean = call.request.queryParameters["idOnly"]?.toBoolean() ?: false
+                        if (idsOnly) {
+                            val receivedGroups: List<Group> = backend.getGroupListIdsOnly(limit, offset)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(receivedGroups.map { it.toRest() })
+                        } else {
+                            val receivedGroups: List<Group> = backend.getGroupList(limit, offset)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(receivedGroups.map { it.toRest() })
+                        }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ErrorRest(
+                                type = "/errors/internalservererror",
+                                title = "Unerwarteter Fehler.",
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                                status = "500",
+                            ),
+                        )
                     } finally {
                         span.end()
                     }

@@ -348,6 +348,30 @@ class DatabaseConnector(
         }.takeWhile { true }.toList()
     }
 
+    fun getGroupListIdsOnly(
+        limit: Int,
+        offset: Int,
+    ): List<String> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_GROUP_LIST_ID_ONLY).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+
+        val span = tracer.spanBuilder("getGroupListIdOnly").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getString(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
     fun deleteGroupById(
         groupId: String,
     ): Int {
@@ -754,7 +778,6 @@ class DatabaseConnector(
     }
 
     fun getRights(rightsIds: List<String>): List<ItemRight> {
-
         val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
             this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
         }
@@ -1340,6 +1363,10 @@ class DatabaseConnector(
             " WHERE group_id = ?"
 
         const val STATEMENT_GET_GROUP_LIST = "SELECT group_id, description, ip_addresses" +
+            " FROM $TABLE_NAME_RIGHT_GROUP" +
+            " ORDER BY group_id ASC LIMIT ? OFFSET ?;"
+
+        const val STATEMENT_GET_GROUP_LIST_ID_ONLY = "SELECT group_id" +
             " FROM $TABLE_NAME_RIGHT_GROUP" +
             " ORDER BY group_id ASC LIMIT ? OFFSET ?;"
 

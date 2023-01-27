@@ -365,6 +365,34 @@ class GroupRoutesKtTest {
     }
 
     @Test
+    fun testGetGroupListOKIdsOnly() {
+        // given
+        val limit = 50
+        val offset = 0
+        val givenGroup = Group(
+            name = "foo",
+            entries = emptyList(),
+            description = null,
+        )
+        val expected = listOf(givenGroup.toRest())
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getGroupListIdsOnly(limit, offset) } returns listOf(givenGroup)
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset&idOnly=True")
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ArrayList<GroupRest>>() {}.type
+            val received: ArrayList<GroupRest> = GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
     fun testGetGroupListBadRequest() {
         // given
         val limit = 0

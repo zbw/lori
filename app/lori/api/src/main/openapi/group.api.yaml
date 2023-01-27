@@ -20,13 +20,22 @@ group:
               $ref: 'group.model.yaml#/GroupIdCreated'
       405:
         description: Invalid input
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Insertion not possible due to conflict
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
     tags:
@@ -43,13 +52,19 @@ group:
     responses:
       204:
         description: Successfully updated
-        content: { }
+        content:
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
 group-id:
@@ -68,10 +83,13 @@ group-id:
     responses:
       200:
         description: Deletion of the group was successful
-        content: { }
+        content:
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Deletion not possible due to conflict
         content:
@@ -98,13 +116,22 @@ group-id:
               $ref: 'group.model.yaml#/GroupRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 group-list:
   get:
@@ -123,13 +150,18 @@ group-list:
           default: 0
       - name: limit
         in: query
-        description: The number of items to return.
+        description: "The number of items to return."
         schema:
           type: integer
           minimum: 1
           maximum: 100
           default: 25
         required: false
+      - name: idOnly
+        in: query
+        description: "Return only the Group-Ids."
+        schema:
+          type: boolean
     responses:
       200:
         description: Successful operation
@@ -141,7 +173,13 @@ group-list:
                 $ref: 'group.model.yaml#/GroupRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

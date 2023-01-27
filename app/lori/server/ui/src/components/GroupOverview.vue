@@ -1,9 +1,10 @@
 <script lang="ts">
 import api from "@/api/api";
 import { defineComponent, onMounted, ref, Ref } from "vue";
-import { GroupRest } from "@/generated-sources/openapi";
+import { ErrorRest, GroupRest } from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
+import error from "@/utils/error";
 
 export default defineComponent({
   components: { GroupEdit },
@@ -21,18 +22,15 @@ export default defineComponent({
     const groupLoadErrorMsg = ref("");
     const getGroupList = () => {
       api
-        .getGroupList(0, 100)
+        .getGroupList(0, 100, false)
         .then((r: Array<GroupRest>) => {
           groupItems.value = r;
         })
         .catch((e) => {
-          groupLoadErrorMsg.value =
-            "Fehler beim Abruf der Gruppenliste." +
-            e.response.statusText +
-            " (Statuscode: " +
-            e.response.status +
-            ")";
-          groupLoadError.value = true;
+          e.response.json().then((err: ErrorRest) => {
+            groupLoadErrorMsg.value = error.createErrorMsg(err);
+            groupLoadError.value = true;
+          });
         });
     };
 
@@ -83,11 +81,10 @@ export default defineComponent({
           lastModifiedGroup.value = group;
         })
         .catch((e) => {
-          groupLoadErrorMsg.value = createErrorMsg(
-            e,
-            "Fehler beim Abfragen der Gruppenliste."
-          );
-          groupLoadError.value = true;
+          e.response.json().then((err: ErrorRest) => {
+            groupLoadErrorMsg.value = error.createErrorMsg(err);
+            groupLoadError.value = true;
+          });
         });
     };
     const updateGroupEntry = (groupId: string) => {
@@ -100,31 +97,16 @@ export default defineComponent({
           lastModifiedGroup.value = group;
         })
         .catch((e) => {
-          groupLoadErrorMsg.value = createErrorMsg(
-            e,
-            "Fehler beim Abfragen der Gruppe mit Id " + groupId
-          );
-          groupLoadError.value = true;
+          e.response.json().then((err: ErrorRest) => {
+            groupLoadErrorMsg.value = error.createErrorMsg(err);
+            groupLoadError.value = true;
+          });
         });
     };
 
     const deleteGroupEntry = () => {
       groupItems.value.splice(index.value, 1);
       renderKey.value += 1;
-    };
-
-    const createErrorMsg: (e: any, customMsg: string) => string = (
-      e: any,
-      customMsg: string
-    ) => {
-      return (
-        customMsg +
-        " " +
-        e.response.statusText +
-        " (Statuscode: " +
-        e.response.status +
-        ")"
-      );
     };
 
     return {

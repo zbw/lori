@@ -137,7 +137,22 @@ class LoriServerBackend(
     ): List<Group> =
         dbConnector.getGroupList(limit, offset)
 
-    fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.getRights(rightIds)
+    fun getGroupListIdsOnly(
+        limit: Int,
+        offset: Int,
+    ): List<Group> =
+        dbConnector.getGroupListIdsOnly(limit, offset)
+            .map {
+                Group(
+                    name = it,
+                    entries = emptyList(),
+                    description = null,
+                )
+            }
+
+    fun getRightsByIds(rightIds: List<String>): List<ItemRight> {
+        return dbConnector.getRights(rightIds)
+    }
 
     fun getItemList(
         limit: Int,
