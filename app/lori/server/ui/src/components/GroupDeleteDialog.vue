@@ -3,6 +3,7 @@ import { defineComponent, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import api from "@/api/api";
 import { ErrorRest } from "@/generated-sources/openapi";
+import error from "@/utils/error";
 
 export default defineComponent({
   props: {
@@ -33,14 +34,8 @@ export default defineComponent({
           close();
         })
         .catch((e) => {
-          e.response.json().then((body: ErrorRest) => {
-            deleteAlertErrorMessage.value =
-              body.title +
-              ": " +
-              body.detail +
-              " ( Status: " +
-              body.status +
-              ")";
+          e.response.json().then((err: ErrorRest) => {
+            deleteAlertErrorMessage.value = error.createErrorMsg(err);
             deleteAlertError.value = true;
           });
         })

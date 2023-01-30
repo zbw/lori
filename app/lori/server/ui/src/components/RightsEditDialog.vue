@@ -2,25 +2,27 @@
 import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
+  AccessStateRest, ErrorRest,
+  GroupRest,
   ItemEntry,
   RightRest,
-  AccessStateRest,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
 } from "@/generated-sources/openapi";
 import {
   computed,
+  defineComponent,
   onMounted,
-  reactive,
+  PropType,
+  reactive, Ref,
   ref,
   watch,
-  defineComponent,
-  PropType,
 } from "vue";
 
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import { ChangeType, useHistoryStore } from "@/stores/history";
+import error from "@/utils/error";
 
 export default defineComponent({
   props: {
@@ -147,6 +149,10 @@ export default defineComponent({
     };
 
     const close = () => {
+      groupAlertError.value = false;
+      groupAlertErrorMessage.value = "";
+      saveAlertError.value = false;
+      saveAlertErrorMessage.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
       v$.value.$reset();
@@ -197,7 +203,10 @@ export default defineComponent({
               console.log(e);
               saveAlertError.value = true;
               saveAlertErrorMessage.value =
-                e.response.statusText + " (Statuscode: " + e.response.status + ")";
+                e.response.statusText +
+                " (Statuscode: " +
+                e.response.status +
+                ")";
               updateConfirmDialog.value = false;
             });
         })
@@ -382,6 +391,7 @@ export default defineComponent({
     const reinitializeRight = (newValue: RightRest) => {
       updateInProgress.value = false;
       tmpRight.value = Object.assign({}, newValue);
+      getGroupList();
       if (!props.isNew) {
         formState.accessState = accessStateToString(newValue.accessState);
         formState.basisStorage = basisStorageToString(newValue.basisStorage);
@@ -400,6 +410,23 @@ export default defineComponent({
       }
     };
 
+    // Groups
+    const groupAlertError = ref(false);
+    const groupAlertErrorMessage = ref("");
+    const groupItems: Ref<Array<string>> = ref([]);
+    const getGroupList = () => {
+      api
+        .getGroupList(0, 100, true)
+        .then((r: Array<GroupRest>) => {
+          groupItems.value = r.map((value) => value.name);
+        })
+        .catch((e) => {
+          e.response.json().then((err: ErrorRest) => {
+            groupAlertErrorMessage.value = error.createErrorMsg(err);
+            groupAlertError.value = true;
+          });
+        });
+    };
     return {
       formState,
       v$,
@@ -411,6 +438,9 @@ export default defineComponent({
       errorAccessState,
       errorEndDate,
       errorStartDate,
+      groupAlertError,
+      groupAlertErrorMessage,
+      groupItems,
       historyStore,
       menuStartDate,
       menuEndDate,
@@ -470,8 +500,8 @@ export default defineComponent({
     <v-expansion-panels focusable multiple v-model="openPanelsDefault">
       <v-expansion-panel>
         <v-expansion-panel-header
-          >Steuerungsrelevante Elemente</v-expansion-panel-header
-        >
+          >Steuerungsrelevante Elemente
+        </v-expansion-panel-header>
         <v-expansion-panel-content eager>
           <v-container fluid>
             <v-row>
@@ -614,15 +644,19 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col cols="4">
-                <v-subheader>Group</v-subheader>
+                <v-subheader>Gruppen</v-subheader>
               </v-col>
               <v-col cols="8">
-                <v-text-field
+                <v-select
+                  :items="groupItems"
+                  v-model="tmpRight.groupIds"
+                  hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
+                  multiple
                   outlined
-                  hint="Einschränkung des Zugriffs auf eine Berechtigungsgruppe"
                   counter
-                  maxlength="256"
-                ></v-text-field>
+                  chips
+                >
+                </v-select>
               </v-col>
             </v-row>
             <v-row>
@@ -714,9 +748,8 @@ export default defineComponent({
             <v-row>
               <v-col cols="4">
                 <v-subheader
-                  >Nicht-standardisierte Open-Content-Lizenz (keine
-                  URL)</v-subheader
-                >
+                  >Nicht-standardisierte Open-Content-Lizenz (keine URL)
+                </v-subheader>
               </v-col>
               <v-col cols="8">
                 <v-switch
@@ -761,8 +794,8 @@ export default defineComponent({
       </v-expansion-panel>
       <v-expansion-panel>
         <v-expansion-panel-header
-          >Prozessdokumentierende Elemente</v-expansion-panel-header
-        >
+          >Prozessdokumentierende Elemente
+        </v-expansion-panel-header>
         <v-expansion-panel-content eager>
           <v-container fluid>
             <v-row>
@@ -868,6 +901,9 @@ export default defineComponent({
     <v-alert v-model="saveAlertError" dismissible text type="error">
       Speichern war nicht erfolgreich:
       {{ saveAlertErrorMessage }}
+    </v-alert>
+    <v-alert v-model="groupAlertError" dismissible text type="error">
+      {{ groupAlertErrorMessage }}
     </v-alert>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>

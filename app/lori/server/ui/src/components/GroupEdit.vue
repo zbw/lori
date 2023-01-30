@@ -14,6 +14,8 @@ import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
+import { ErrorRest } from "@/generated-sources/openapi";
+import error from "@/utils/error";
 
 export default defineComponent({
   components: { GroupDeleteDialog },
@@ -148,9 +150,25 @@ export default defineComponent({
           close();
         })
         .catch((e) => {
-          saveAlertErrorMessage.value =
-            "Speichern ist fehlgeschlagen: " + createErrorMsg(e);
-          saveAlertError.value = true;
+          try {
+            e.response
+              .json()
+              .then((err: ErrorRest) => {
+                saveAlertErrorMessage.value = error.createErrorMsg(err);
+                saveAlertError.value = true;
+              })
+              .catch((_: any) => {
+                saveAlertErrorMessage.value =
+                  "Ein Fehler ist aufgetreten." +
+                  " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+                saveAlertError.value = true;
+              });
+          } catch (_: any) {
+            saveAlertErrorMessage.value =
+              "Ein Fehler ist aufgetreten." +
+              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+            saveAlertError.value = true;
+          }
         });
     };
 
@@ -162,29 +180,18 @@ export default defineComponent({
           close();
         })
         .catch((e) => {
-          saveAlertErrorMessage.value =
-            "Update ist fehlgeschlagen: " + createErrorMsg(e);
-          saveAlertError.value = true;
+          try {
+            e.response.json().then((err: ErrorRest) => {
+              saveAlertErrorMessage.value = error.createErrorMsg(err);
+              saveAlertError.value = true;
+            });
+          } catch (_: any) {
+            saveAlertErrorMessage.value =
+              "Ein Fehler ist aufgetreten." +
+              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+            saveAlertError.value = true;
+          }
         });
-    };
-
-    const createErrorMsg: (e: any) => string = (e: any) => {
-      let errorExplain: string;
-      if (e.response.status == "409") {
-        errorExplain =
-          "Eine Gruppe mit diesem Namen existiert bereits (Fehlercode 409)";
-      } else if (e.response.status == "400") {
-        errorExplain =
-          "Das Format der CSV Eingabe ist nicht korrekt (Fehlercode 400)";
-      } else {
-        errorExplain =
-          "Unerwarteter Fehler. Bitte an Admin wenden: " +
-          e.response.statusText +
-          " (Statuscode: " +
-          e.response.status +
-          ")";
-      }
-      return errorExplain;
     };
 
     const save = () => {
@@ -275,9 +282,7 @@ export default defineComponent({
       <v-alert v-model="saveAlertError" dismissible text type="error">
         {{ saveAlertErrorMessage }}
       </v-alert>
-      <v-dialog
-          v-model="dialogStore.groupDeleteActivated"
-          max-width="500px">
+      <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
         <GroupDeleteDialog
           :group-id="groupTmp.name"
           v-on:deleteGroupSuccessful="deleteGroupSuccessful"

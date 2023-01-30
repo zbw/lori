@@ -11,6 +11,7 @@ import {
   RightIdCreated,
   RightRest,
   AccessStateRest,
+  GroupRest,
 } from "@/generated-sources/openapi";
 
 const localVue = createLocalVue();
@@ -44,6 +45,13 @@ describe("Test RightsEditDialog", () => {
       rightId: givenRightId,
     };
     mockedApi.updateRight.mockReturnValue(Promise.resolve());
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
+    );
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
       mocks: { api: mockedApi },
@@ -84,6 +92,13 @@ describe("Test RightsEditDialog", () => {
         statusText: "Internal Server Error",
       },
     });
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
+    );
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
       mocks: { api: mockedApi },
@@ -133,6 +148,13 @@ describe("Test RightsEditDialog", () => {
       Promise.resolve({
         rightId: givenRightId,
       } as RightIdCreated)
+    );
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
     );
     mockedApi.addItemEntry.mockReturnValue(Promise.resolve());
     wrapper = shallowMount(RightsEditDialog, {
@@ -184,6 +206,13 @@ describe("Test RightsEditDialog", () => {
         statusText: "Internal Server Error",
       },
     });
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
+    );
     mockedApi.addItemEntry.mockReturnValue(Promise.resolve());
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
@@ -228,6 +257,13 @@ describe("Test RightsEditDialog", () => {
       Promise.resolve({
         rightId: givenRightId,
       } as RightIdCreated)
+    );
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
     );
     mockedApi.addItemEntry.mockRejectedValue({
       response: {
@@ -327,6 +363,13 @@ describe("Test RightsEditDialog", () => {
         statusText: "Internal Server Error",
       },
     });
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
+    );
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
       mocks: { api: mockedApi },
@@ -375,6 +418,13 @@ describe("Test RightsEditDialog", () => {
         statusText: "Internal Server Error",
       },
     });
+    mockedApi.getGroupList.mockReturnValue(
+      Promise.resolve([
+        {
+          name: "foo",
+        },
+      ] as Array<GroupRest>)
+    );
     wrapper = shallowMount(RightsEditDialog, {
       localVue: localVue,
       mocks: { api: mockedApi },
