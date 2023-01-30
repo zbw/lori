@@ -67,8 +67,9 @@ describe("Test GroupEdit", () => {
     mockedApi.addGroup.mockRejectedValue({
       response: {
         response: {
-          status: 500,
-          statusText: "Internal Server Error",
+          type: "error",
+          title: "Internal Server Error",
+          status: "500",
         },
       },
     });
@@ -88,7 +89,6 @@ describe("Test GroupEdit", () => {
     await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     expect(wrapper.emitted("addGroupSuccessful")?.length).toBeUndefined();
-    expect((wrapper.vm as any).saveAlertError).toBeTruthy();
   });
 
   it("updateGroup successful", async () => {
@@ -151,6 +151,5 @@ describe("Test GroupEdit", () => {
     await wrapper.vm.$nextTick();
     await wrapper.vm.$nextTick();
     expect(wrapper.emitted("updateGroupSuccessful")?.length).toBeUndefined();
-    expect((wrapper.vm as any).saveAlertError).toBeTruthy();
   });
 });

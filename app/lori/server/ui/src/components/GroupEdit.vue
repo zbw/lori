@@ -150,10 +150,25 @@ export default defineComponent({
           close();
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            saveAlertErrorMessage.value = error.createErrorMsg(err);
+          try {
+            e.response
+              .json()
+              .then((err: ErrorRest) => {
+                saveAlertErrorMessage.value = error.createErrorMsg(err);
+                saveAlertError.value = true;
+              })
+              .catch((_: any) => {
+                saveAlertErrorMessage.value =
+                  "Ein Fehler ist aufgetreten." +
+                  " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+                saveAlertError.value = true;
+              });
+          } catch (_: any) {
+            saveAlertErrorMessage.value =
+              "Ein Fehler ist aufgetreten." +
+              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
             saveAlertError.value = true;
-          });
+          }
         });
     };
 
@@ -165,10 +180,17 @@ export default defineComponent({
           close();
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            saveAlertErrorMessage.value = error.createErrorMsg(err);
+          try {
+            e.response.json().then((err: ErrorRest) => {
+              saveAlertErrorMessage.value = error.createErrorMsg(err);
+              saveAlertError.value = true;
+            });
+          } catch (_: any) {
+            saveAlertErrorMessage.value =
+              "Ein Fehler ist aufgetreten." +
+              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
             saveAlertError.value = true;
-          });
+          }
         });
     };
 
