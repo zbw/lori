@@ -51,7 +51,12 @@ fun Routing.usersRoutes(
                     span.setAttribute("name", user.username)
                     if (backend.userContainsName(user.username)) {
                         span.setStatus(StatusCode.ERROR, "Conflict: An user with this name already exists.")
-                        call.respond(HttpStatusCode.Conflict, "Username already exists.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(
+                                "Username existiert bereits."
+                            ),
+                        )
                     } else {
                         backend.insertNewUser(user)
                         span.setStatus(StatusCode.OK)
@@ -59,10 +64,13 @@ fun Routing.usersRoutes(
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(ApiError.INVALID_JSON)
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -85,11 +93,14 @@ fun Routing.usersRoutes(
                     if (isValidUser) {
                         call.respond(AuthTokenRest(backend.generateJWT(user.username)))
                     } else {
-                        call.respond(HttpStatusCode.Unauthorized)
+                        call.respond(
+                            HttpStatusCode.Unauthorized,
+                            ApiError.unauthorizedError("Credentials sind ungültig.")
+                        )
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -119,13 +130,13 @@ fun Routing.usersRoutes(
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
                         if (LoriServerBackend.isJWTExpired(principal)) {
-                            call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError(ApiError.EXPIRED_JWT))
                             return@withContext
                         }
                         val isAuthorized =
                             username == usernameToken || backend.getCurrentUserRole(usernameToken) == UserRole.ADMIN
                         if (!isAuthorized) {
-                            call.respond(HttpStatusCode.Unauthorized, "User is not authorized to perform this action.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError())
                             return@withContext
                         }
                         backend.updateUserNonRoleProperties(user)
@@ -133,10 +144,13 @@ fun Routing.usersRoutes(
                         call.respond(HttpStatusCode.NoContent)
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                        call.respond(HttpStatusCode.BadRequest, "${e.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(ApiError.INVALID_JSON)
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -156,13 +170,13 @@ fun Routing.usersRoutes(
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
                         if (LoriServerBackend.isJWTExpired(principal)) {
-                            call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError(ApiError.EXPIRED_JWT))
                             return@withContext
                         }
                         val isAuthorized =
                             username == usernameToken || backend.getCurrentUserRole(usernameToken) == UserRole.ADMIN
                         if (!isAuthorized) {
-                            call.respond(HttpStatusCode.Unauthorized, "User is not authorized to perform this action.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError())
                             return@withContext
                         }
                         backend.deleteUser(username)
@@ -170,10 +184,10 @@ fun Routing.usersRoutes(
                         call.respond(HttpStatusCode.OK)
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                        call.respond(HttpStatusCode.BadRequest, "${e.message}")
+                        call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("User Id fehlt."))
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -190,11 +204,11 @@ fun Routing.usersRoutes(
                         val principal = call.principal<JWTPrincipal>()
                         val usernameToken = principal!!.payload.getClaim("username").asString()
                         if (LoriServerBackend.isJWTExpired(principal)) {
-                            call.respond(HttpStatusCode.Unauthorized, "Expire date of JWT is not valid anymore.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError(ApiError.EXPIRED_JWT))
                             return@withContext
                         }
                         if (backend.getCurrentUserRole(usernameToken) != UserRole.ADMIN) {
-                            call.respond(HttpStatusCode.Unauthorized, "User is not authorized to perform this action.")
+                            call.respond(HttpStatusCode.Unauthorized, ApiError.unauthorizedError())
                             return@withContext
                         }
                         @Suppress("SENSELESS_COMPARISON")
@@ -209,10 +223,10 @@ fun Routing.usersRoutes(
                         call.respond(HttpStatusCode.OK)
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                        call.respond(HttpStatusCode.BadRequest, "${e.message}")
+                        call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.INVALID_JSON))
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }

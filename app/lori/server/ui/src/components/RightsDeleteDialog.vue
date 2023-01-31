@@ -3,6 +3,7 @@ import api from "@/api/api";
 import { defineComponent, PropType, ref } from "vue";
 import { RightRest } from "@/generated-sources/openapi";
 import { ChangeType, useHistoryStore } from "@/stores/history";
+import error from "@/utils/error";
 
 export default defineComponent({
   props: {
@@ -54,10 +55,11 @@ export default defineComponent({
             close();
           })
           .catch((e) => {
-            deleteErrorMessage.value =
-              e.response.statusText + "(Statuscode: " + e.response.status + ")";
-            deleteError.value = true;
-            deleteAlertError.value = true;
+            error.errorHandling(e, (errMsg: string) => {
+              deleteErrorMessage.value = errMsg;
+              deleteError.value = true;
+              deleteAlertError.value = true;
+            });
           })
           .finally(() => {
             deleteInProgress.value = false;

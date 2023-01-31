@@ -2,7 +2,7 @@
 import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
-  AccessStateRest, ErrorRest,
+  AccessStateRest,
   GroupRest,
   ItemEntry,
   RightRest,
@@ -14,7 +14,8 @@ import {
   defineComponent,
   onMounted,
   PropType,
-  reactive, Ref,
+  reactive,
+  Ref,
   ref,
   watch,
 } from "vue";
@@ -200,22 +201,19 @@ export default defineComponent({
               close();
             })
             .catch((e) => {
-              console.log(e);
-              saveAlertError.value = true;
-              saveAlertErrorMessage.value =
-                e.response.statusText +
-                " (Statuscode: " +
-                e.response.status +
-                ")";
-              updateConfirmDialog.value = false;
+              error.errorHandling(e, (errMsg: string) => {
+                saveAlertError.value = true;
+                saveAlertErrorMessage.value = errMsg;
+                updateConfirmDialog.value = false;
+              });
             });
         })
         .catch((e) => {
-          console.log(e);
-          saveAlertError.value = true;
-          saveAlertErrorMessage.value =
-            e.response.statusText + " (Statuscode: " + e.response.status + ")";
-          updateConfirmDialog.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            saveAlertError.value = true;
+            saveAlertErrorMessage.value = errMsg;
+            updateConfirmDialog.value = false;
+          });
         });
     };
 
@@ -234,11 +232,11 @@ export default defineComponent({
           emit("updateSuccessful", tmpRight.value, props.index);
         })
         .catch((e) => {
-          console.log(e);
-          saveAlertError.value = true;
-          saveAlertErrorMessage.value =
-            e.response.statusText + " (Statuscode: " + e.response.status + ")";
-          updateConfirmDialog.value = false;
+          error.errorHandling(e, (errMsg: string) => {
+            saveAlertError.value = true;
+            saveAlertErrorMessage.value = errMsg;
+            updateConfirmDialog.value = false;
+          });
         });
     };
 
@@ -421,8 +419,8 @@ export default defineComponent({
           groupItems.value = r.map((value) => value.name);
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            groupAlertErrorMessage.value = error.createErrorMsg(err);
+          error.errorHandling(e, (errMsg: string) => {
+            groupAlertErrorMessage.value = errMsg;
             groupAlertError.value = true;
           });
         });

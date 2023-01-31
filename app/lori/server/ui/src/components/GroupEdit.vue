@@ -196,13 +196,10 @@ export default defineComponent({
               }
             })
             .catch((e) => {
-              saveAlertError.value = true;
-              saveAlertErrorMessage.value =
-                "Auslesen von Datei ist fehlgeschlagen: " +
-                e.response.statusText +
-                " (Statuscode: " +
-                e.response.status +
-                ")";
+              error.errorHandling(e, (errMsg: string) => {
+                saveAlertError.value = true;
+                saveAlertErrorMessage.value = errMsg;
+              });
             });
           return;
         }

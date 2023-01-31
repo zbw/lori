@@ -13,6 +13,7 @@ import SearchFilter from "@/components/SearchFilter.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useDialogsStore } from "@/stores/dialogs";
+import error from "@/utils/error";
 
 export default defineComponent({
   components: { GroupOverview, RightsView, MetadataView, SearchFilter },
@@ -203,10 +204,11 @@ export default defineComponent({
           resetDynamicFilter();
         })
         .catch((e) => {
-          tableContentLoading.value = false;
-          loadAlertErrorMessage.value =
-            e.response.statusText + " (Statuscode: " + e.response.status + ")";
-          loadAlertError.value = true;
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            loadAlertErrorMessage.value = errMsg;
+            loadAlertError.value = true;
+          });
         });
     };
 

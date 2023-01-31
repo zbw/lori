@@ -40,4 +40,18 @@ object ApiError {
             detail = detail,
             status = "500",
         )
+
+    fun unauthorizedError(detail: String? = "Benutzter ist nicht berechtigt."): ErrorRest =
+        ErrorRest(
+            type = "/errors/unauthorized",
+            title = "User und/oder Passwort ungültig.",
+            detail = detail,
+            status = "401",
+        )
+
+    const val EXPIRED_JWT = "Authentifizierung ist nicht mehr gültig.."
+    const val INVALID_JSON = "Das JSON Format ist ungültig und konnte nicht gelesen werden."
+    const val NO_VALID_ID = "Die URL enthält keine gültige Id."
+    const val NO_RESOURCE_FOR_ID = "Für die Id wurde keine Resource gefunden."
+    const val RESOURCE_STILL_IN_USE = "Diese Resource wird noch benutzt und kann nicht gelöscht werden."
 }

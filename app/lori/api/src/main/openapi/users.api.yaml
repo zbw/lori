@@ -17,13 +17,22 @@ users-register:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Username already exists
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 users-login:
   post:
@@ -47,13 +56,22 @@ users-login:
               $ref: 'users.model.yaml#/AuthTokenRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       401:
         description: Login failed
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
 users-id:
@@ -75,13 +93,22 @@ users-id:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       401:
         description: Update request denied
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   delete:
     tags:
@@ -101,13 +128,22 @@ users-id:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       401:
         description: Delete request denied
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: User does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 users-admin-role:
   put:
     tags:
@@ -127,10 +163,19 @@ users-admin-role:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       401:
         description: Update request denied
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

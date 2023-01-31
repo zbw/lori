@@ -49,7 +49,10 @@ fun Routing.metadataRoutes(
                     span.setAttribute("metadata", metadata.toString())
                     if (backend.metadataContainsId(metadata.metadataId)) {
                         span.setStatus(StatusCode.ERROR, "Conflict: Resource with this id already exists.")
-                        call.respond(HttpStatusCode.Conflict, "Resource with this id already exists.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(ApiError.RESOURCE_STILL_IN_USE)
+                        )
                     } else {
                         backend.insertMetadataElement(metadata.toBusiness())
                         span.setStatus(StatusCode.OK)
@@ -57,10 +60,16 @@ fun Routing.metadataRoutes(
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(ApiError.INVALID_JSON)
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError()
+                    )
                 } finally {
                     span.end()
                 }
@@ -78,13 +87,21 @@ fun Routing.metadataRoutes(
                     span.setAttribute("metadataId", metadataId ?: "null")
                     if (metadataId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(ApiError.NO_VALID_ID)
+                        )
                     } else if (backend.itemContainsMetadata(metadataId)) {
                         span.setStatus(
                             StatusCode.ERROR,
                             "Conflict: Metadata-Id $metadataId is still in use. Can't be deleted."
                         )
-                        call.respond(HttpStatusCode.Conflict, "The Metadata-Id is still in use and can't be deleted.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(
+                                ApiError.RESOURCE_STILL_IN_USE
+                            )
+                        )
                     } else {
                         backend.deleteMetadata(metadataId)
                         span.setStatus(StatusCode.OK)
@@ -92,7 +109,7 @@ fun Routing.metadataRoutes(
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -110,7 +127,10 @@ fun Routing.metadataRoutes(
                     span.setAttribute("metadataId", metadataId ?: "null")
                     if (metadataId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(ApiError.NO_VALID_ID)
+                        )
                     } else {
                         val metadataElements: List<ItemMetadata> = backend.getMetadataElementsByIds(listOf(metadataId))
                         metadataElements.takeIf { it.isNotEmpty() }?.let {
@@ -118,12 +138,15 @@ fun Routing.metadataRoutes(
                             call.respond(metadataElements.first().toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
-                            call.respond(HttpStatusCode.NotFound, "No item found for given id.")
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID)
+                            )
                         }
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -153,10 +176,10 @@ fun Routing.metadataRoutes(
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.INVALID_JSON))
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -173,7 +196,10 @@ fun Routing.metadataRoutes(
                 val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                 if (limit < 1 || limit > 100) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between (0,100]")
-                    call.respond(HttpStatusCode.BadRequest, "Limit parameter is expected to be between (0,100]")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError("Limit parameter is expected to be between 1 and 100")
+                    )
                     return@get
                 } else if (offset < 0) {
                     span.setStatus(
@@ -182,7 +208,7 @@ fun Routing.metadataRoutes(
                     )
                     call.respond(
                         HttpStatusCode.BadRequest,
-                        "Offset parameter is expected to be larger or equal zero"
+                        ApiError.badRequestError("Offset parameter is expected to be larger or equal zero")
                     )
                     return@get
                 } else {
@@ -192,10 +218,10 @@ fun Routing.metadataRoutes(
                 }
             } catch (e: NumberFormatException) {
                 span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
-                call.respond(HttpStatusCode.BadRequest, "Parameters have a bad format")
+                call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("Parameters have a bad format"))
             } catch (e: Exception) {
                 span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
             } finally {
                 span.end()
             }

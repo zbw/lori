@@ -82,7 +82,6 @@ class ItemRoutesKtTest {
                 servicePool.application()
             )
             val response = client.post("/api/v1/item") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_ITEM_ENTRY))
             }

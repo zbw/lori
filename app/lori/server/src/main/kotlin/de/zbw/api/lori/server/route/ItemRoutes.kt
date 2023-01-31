@@ -57,7 +57,12 @@ fun Routing.itemRoutes(
                     span.setAttribute("item", item.toString())
                     if (backend.itemContainsEntry(item.metadataId, item.rightId)) {
                         span.setStatus(StatusCode.ERROR, "Conflict: Resource with this primary key already exists.")
-                        call.respond(HttpStatusCode.Conflict, "Resource with this relation already exists.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(
+                                ApiError.RESOURCE_STILL_IN_USE
+                            ),
+                        )
                     } else {
                         backend.insertItemEntry(item.metadataId, item.rightId)
                         span.setStatus(StatusCode.OK)
@@ -65,10 +70,13 @@ fun Routing.itemRoutes(
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(ApiError.INVALID_JSON)
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError)
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -98,7 +106,7 @@ fun Routing.itemRoutes(
                         }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -118,10 +126,13 @@ fun Routing.itemRoutes(
                                 StatusCode.ERROR,
                                 "BadRequest: No valid id has been provided in the url."
                             )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
                             if (!backend.metadataContainsId(metadataId)) {
-                                call.respond(HttpStatusCode.NotFound)
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID)
+                                )
                             } else {
                                 val rights = backend.getRightEntriesByMetadataId(metadataId)
                                 span.setStatus(StatusCode.OK)
@@ -130,7 +141,7 @@ fun Routing.itemRoutes(
                         }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -153,7 +164,7 @@ fun Routing.itemRoutes(
                                 StatusCode.ERROR,
                                 "BadRequest: No valid id has been provided in the url."
                             )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
                             backend.deleteItemEntriesByRightId(rightId)
                             span.setStatus(StatusCode.OK)
@@ -161,7 +172,7 @@ fun Routing.itemRoutes(
                         }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -184,7 +195,7 @@ fun Routing.itemRoutes(
                                 StatusCode.ERROR,
                                 "BadRequest: No valid id has been provided in the url."
                             )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
                             val count = backend.countItemByRightId(rightId)
                             span.setStatus(StatusCode.OK)
@@ -197,7 +208,7 @@ fun Routing.itemRoutes(
                         }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -218,7 +229,7 @@ fun Routing.itemRoutes(
                     span.setAttribute("rightId", rightId ?: "null")
                     if (metadataId == null || rightId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                     } else {
                         backend.deleteItemEntry(metadataId, rightId)
                         if (backend.countItemByRightId(rightId) == 0) {
@@ -229,7 +240,7 @@ fun Routing.itemRoutes(
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -252,7 +263,10 @@ fun Routing.itemRoutes(
                                 StatusCode.ERROR,
                                 "BadRequest: Limit parameter is expected to be between (0,100]"
                             )
-                            call.respond(HttpStatusCode.BadRequest, "Limit parameter is expected to be between (0,100]")
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Limit parameter is expected to be between (0,100]")
+                            )
                         } else if (offset < 0) {
                             span.setStatus(
                                 StatusCode.ERROR,
@@ -260,7 +274,9 @@ fun Routing.itemRoutes(
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
-                                "Offset parameter is expected to be larger or equal zero"
+                                ApiError.badRequestError(
+                                    "Offset parameter is expected to be larger or equal zero"
+                                )
                             )
                         } else if (pageSize < 0) {
                             span.setStatus(
@@ -269,7 +285,9 @@ fun Routing.itemRoutes(
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
-                                "PageSize parameter is expected to be between (0,100]"
+                                ApiError.badRequestError(
+                                    "PageSize parameter is expected to be between (0,100]"
+                                )
                             )
                         } else {
                             val items = backend.getItemList(limit, offset)
@@ -286,10 +304,15 @@ fun Routing.itemRoutes(
                         }
                     } catch (e: NumberFormatException) {
                         span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
-                        call.respond(HttpStatusCode.BadRequest, "Parameters have a bad format")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                "Parameters have a bad format"
+                            )
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
                     }
@@ -346,7 +369,12 @@ fun Routing.itemRoutes(
                             StatusCode.ERROR,
                             "BadRequest: Limit parameter is expected to be between (0,100]"
                         )
-                        call.respond(HttpStatusCode.BadRequest, "Limit parameter is expected to be between (0,100]")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                "Limit parameter is expected to be between 1 and 100"
+                            )
+                        )
                         return@withContext
                     }
                     if (offset < 0) {
@@ -356,7 +384,9 @@ fun Routing.itemRoutes(
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "Offset parameter is expected to be larger or equal zero"
+                            ApiError.badRequestError(
+                                "Offset parameter is expected to be larger or equal zero"
+                            )
                         )
                         return@withContext
                     }
@@ -367,7 +397,9 @@ fun Routing.itemRoutes(
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            "PageSize parameter is expected to be between (0,100]"
+                            ApiError.badRequestError(
+                                "PageSize parameter is expected to be between 1 and 100"
+                            )
                         )
                         return@withContext
                     }
@@ -411,10 +443,10 @@ fun Routing.itemRoutes(
                     )
                 } catch (e: NumberFormatException) {
                     span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Parameters have a bad format")
+                    call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("Parameters have a bad format"))
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }

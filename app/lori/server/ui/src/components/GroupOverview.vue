@@ -1,7 +1,7 @@
 <script lang="ts">
 import api from "@/api/api";
 import { defineComponent, onMounted, ref, Ref } from "vue";
-import { ErrorRest, GroupRest } from "@/generated-sources/openapi";
+import { GroupRest } from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import error from "@/utils/error";
@@ -81,8 +81,8 @@ export default defineComponent({
           lastModifiedGroup.value = group;
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            groupLoadErrorMsg.value = error.createErrorMsg(err);
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
             groupLoadError.value = true;
           });
         });
