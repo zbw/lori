@@ -136,6 +136,7 @@ export default defineComponent({
         hasNoCSVHeader.value = !groupTmp.value.hasCSVHeader;
       }
     };
+
     /**
      * Save Group.
      */
@@ -145,52 +146,30 @@ export default defineComponent({
     const createGroup = () => {
       api
         .addGroup(groupTmp.value)
-        .then((r) => {
+        .then(() => {
           emit("addGroupSuccessful", groupTmp.value.name);
           close();
         })
         .catch((e) => {
-          try {
-            e.response
-              .json()
-              .then((err: ErrorRest) => {
-                saveAlertErrorMessage.value = error.createErrorMsg(err);
-                saveAlertError.value = true;
-              })
-              .catch((_: any) => {
-                saveAlertErrorMessage.value =
-                  "Ein Fehler ist aufgetreten." +
-                  " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
-                saveAlertError.value = true;
-              });
-          } catch (_: any) {
-            saveAlertErrorMessage.value =
-              "Ein Fehler ist aufgetreten." +
-              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+          error.errorHandling(e, (errMsg: string) => {
+            saveAlertErrorMessage.value = errMsg;
             saveAlertError.value = true;
-          }
+          });
         });
     };
 
     const updateGroup = () => {
       api
         .updateGroup(groupTmp.value)
-        .then((r) => {
+        .then(() => {
           emit("updateGroupSuccessful", groupTmp.value.name);
           close();
         })
         .catch((e) => {
-          try {
-            e.response.json().then((err: ErrorRest) => {
-              saveAlertErrorMessage.value = error.createErrorMsg(err);
-              saveAlertError.value = true;
-            });
-          } catch (_: any) {
-            saveAlertErrorMessage.value =
-              "Ein Fehler ist aufgetreten." +
-              " Die Fehlernachricht vom Backend kann nicht gelesen werdeDie Fehlernachricht vom Backend kann nicht gelesen werden.";
+          error.errorHandling(e, (errMsg: string) => {
+            saveAlertErrorMessage.value = errMsg;
             saveAlertError.value = true;
-          }
+          });
         });
     };
 

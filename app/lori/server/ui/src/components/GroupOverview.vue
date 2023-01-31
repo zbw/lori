@@ -27,8 +27,8 @@ export default defineComponent({
           groupItems.value = r;
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            groupLoadErrorMsg.value = error.createErrorMsg(err);
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
             groupLoadError.value = true;
           });
         });
@@ -97,8 +97,8 @@ export default defineComponent({
           lastModifiedGroup.value = group;
         })
         .catch((e) => {
-          e.response.json().then((err: ErrorRest) => {
-            groupLoadErrorMsg.value = error.createErrorMsg(err);
+          error.errorHandling(e, (errMsg: string) => {
+            groupLoadErrorMsg.value = errMsg;
             groupLoadError.value = true;
           });
         });
@@ -168,7 +168,6 @@ export default defineComponent({
       :key="renderKey"
       @click:row="editGroup"
       loading-text="Daten werden geladen... Bitte warten."
-      show-select
       item-key="groupName"
     ></v-data-table>
     <v-dialog
