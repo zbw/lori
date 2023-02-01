@@ -20,13 +20,22 @@ right:
               $ref: 'right.model.yaml#/RightIdCreated'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflicting resources
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
     tags:
@@ -49,10 +58,16 @@ right:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
 right-id:
@@ -70,14 +85,20 @@ right-id:
           type: string
     responses:
       200:
-        description: Deletion of right was successfull
+        description: Deletion of right was successful
         content: { }
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Deletion not possible due to conflict
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
   get:
     tags:
       - right
@@ -91,7 +112,7 @@ right-id:
           type: string
     responses:
       200:
-        description: Successfull operation
+        description: Successful operation
         content:
           application/json:
             schema:
@@ -100,10 +121,19 @@ right-id:
                 $ref: 'right.model.yaml#/RightRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

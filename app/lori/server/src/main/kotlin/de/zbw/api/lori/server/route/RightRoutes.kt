@@ -45,7 +45,12 @@ fun Routing.rightRoutes(
                     span.setAttribute("rightId", rightId ?: "null")
                     if (rightId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = ApiError.NO_VALID_ID,
+                            )
+                        )
                     } else {
                         val rightElements: List<ItemRight> = backend.getRightsByIds(listOf(rightId))
                         rightElements.takeIf { it.isNotEmpty() }?.let {
@@ -53,12 +58,18 @@ fun Routing.rightRoutes(
                             call.respond(rightElements.first().toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
-                            call.respond(HttpStatusCode.NotFound, "No item found for given id.")
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID)
+                            )
                         }
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError()
+                    )
                 } finally {
                     span.end()
                 }
@@ -82,10 +93,18 @@ fun Routing.rightRoutes(
                     call.respond(RightIdCreated(pk))
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = ApiError.INVALID_JSON,
+                        )
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError()
+                    )
                 } finally {
                     span.end()
                 }
@@ -116,10 +135,15 @@ fun Routing.rightRoutes(
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(HttpStatusCode.BadRequest, "Invalid input")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            ApiError.INVALID_JSON
+                        )
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }
@@ -137,13 +161,16 @@ fun Routing.rightRoutes(
                     span.setAttribute("rightId", rightId ?: "null")
                     if (rightId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                     } else if (backend.itemContainsRight(rightId)) {
                         span.setStatus(
                             StatusCode.ERROR,
                             "Conflict: Right id $rightId is still in use. Can't be deleted."
                         )
-                        call.respond(HttpStatusCode.Conflict, "The right id is still in use and can't be deleted.")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(ApiError.RESOURCE_STILL_IN_USE)
+                        )
                     } else {
                         backend.deleteRight(rightId)
                         span.setStatus(StatusCode.OK)
@@ -151,7 +178,7 @@ fun Routing.rightRoutes(
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(HttpStatusCode.InternalServerError, "An internal error occurred.")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
                 }

@@ -72,7 +72,6 @@ class MetadataRoutesKtTest {
                 servicePool.application()
             )
             val response = client.post("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_METADATA))
             }

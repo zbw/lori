@@ -17,13 +17,22 @@ item:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflict resource exists already
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
 item-deletion:
@@ -51,10 +60,16 @@ item-deletion:
         content: { }
       404:
         description: Relation does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 item-metadata:
   delete:
@@ -75,10 +90,16 @@ item-metadata:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
   get:
     tags:
       - item
@@ -102,10 +123,16 @@ item-metadata:
                 $ref: 'right.model.yaml#/RightRest'
       404:
         description: Not found
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 item-list:
   get:
@@ -149,10 +176,16 @@ item-list:
               $ref: 'item.model.yaml#/ItemInformation'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 item-right:
   delete:
@@ -173,10 +206,16 @@ item-right:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 item-count-right:
   get:
@@ -200,10 +239,16 @@ item-count-right:
               $ref: 'item.model.yaml#/ItemCountByRight'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 item-search:
   get:
     tags:
@@ -294,7 +339,13 @@ item-search:
               $ref: 'item.model.yaml#/ItemInformation'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

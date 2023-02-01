@@ -71,7 +71,6 @@ class UsersRoutesKtTest {
                 servicePool.application()
             )
             val response = client.post("/api/v1/users/register") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_USER))
             }
@@ -168,7 +167,6 @@ class UsersRoutesKtTest {
                 servicePool.application()
             )
             val response = client.post("/api/v1/users/login") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(jsonAsString(TEST_USER))
             }

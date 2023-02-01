@@ -17,13 +17,22 @@ metadata:
         content: { }
       405:
         description: Invalid input
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Insertion not possible due to conflict
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
     tags:
@@ -46,10 +55,16 @@ metadata:
         content: { }
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
 metadata-list:
@@ -88,10 +103,16 @@ metadata-list:
                 $ref: 'metadata.model.yaml#/MetadataRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 metadata-id:
   delete:
@@ -112,13 +133,22 @@ metadata-id:
         content: { }
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Deletion not possible due to conflict
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
   get:
     tags:
       - right
@@ -141,10 +171,19 @@ metadata-id:
                 $ref: 'metadata.model.yaml#/MetadataRest'
       400:
         description: Bad request
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id does not exist
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
-        content: { }
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
