@@ -136,7 +136,8 @@ fun Routing.rightRoutes(
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                     call.respond(
-                        HttpStatusCode.BadRequest, ApiError.badRequestError(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
                             ApiError.INVALID_JSON
                         )
                     )
