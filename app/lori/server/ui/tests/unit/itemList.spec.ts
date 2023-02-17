@@ -196,7 +196,7 @@ describe("Test ItemList UI", () => {
 
     // when
 
-    searchStore.availablePublicationTypes = ["article", "book", "bookPart"];
+    searchStore.publicationTypeReceived = ["article", "book", "bookPart"];
     searchStore.publicationTypeIdx = [true, false, true];
     // then
     expect((wrapper.vm as any).buildPublicationTypeFilter()).toBe(
@@ -227,7 +227,7 @@ describe("Test ItemList UI", () => {
 
     // when
 
-    searchStore.availableAccessState = ["open", "restricted", "closed"];
+    searchStore.accessStateReceived = ["open", "restricted", "closed"];
     searchStore.accessStateIdx = [true, true, true];
     expect((wrapper.vm as any).buildAccessStateFilter()).toBe(
       "OPEN,RESTRICTED,CLOSED"
@@ -384,7 +384,7 @@ describe("Test ItemList UI", () => {
     });
 
     const searchStore = useSearchStore();
-    searchStore.availablePaketSigelIds = ["foo", "bar", "baz"];
+    searchStore.paketSigelIdReceived = ["foo", "bar", "baz"];
     searchStore.paketSigelIdIdx = [true, false, true];
 
     // when + then
@@ -414,13 +414,13 @@ describe("Test ItemList UI", () => {
     });
 
     const searchStore = useSearchStore();
-    searchStore.availableZDBIds = ["foo", "bar", "baz"];
+    searchStore.zdbIdReceived = ["foo", "bar", "baz"];
     searchStore.zdbIdIdx = [true, false, true];
 
     // when + then
     expect((wrapper.vm as any).buildZDBIdFilter()).toBe("foo,baz");
 
-    searchStore.availableZDBIds = [];
+    searchStore.zdbIdReceived = [];
     // when + then
     expect((wrapper.vm as any).buildPaketSigelIdFilter()).toBeUndefined();
   });
