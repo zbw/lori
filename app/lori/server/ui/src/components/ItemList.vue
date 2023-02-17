@@ -179,18 +179,8 @@ export default defineComponent({
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
           numberOfResults.value = response.numberOfResults;
-          if (response.accessState != undefined) {
-            searchStore.availableAccessState = response.accessState;
-          }
           if (response.paketSigels != undefined) {
-            searchStore.availablePaketSigelIds = response.paketSigels;
-          }
-          if (response.publicationType != undefined) {
-            searchStore.availablePublicationTypes =
-              response.publicationType.sort();
-          }
-          if (response.zdbIds != undefined) {
-            searchStore.availableZDBIds = response.zdbIds;
+            searchStore.paketSigelIdReceived = response.paketSigels;
           }
           if (response.hasLicenceContract != undefined) {
             searchStore.hasLicenceContract = response.hasLicenceContract;
@@ -201,7 +191,54 @@ export default defineComponent({
           if (response.hasZbwUserAgreement != undefined) {
             searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
           }
-          resetDynamicFilter();
+          // AccessState
+          searchStore.accessStateReceived =
+            response.accessState != undefined ? response.accessState : Array(0);
+          searchStore.accessStateIdx = Array(
+            searchStore.accessStateReceived.length
+          ).fill(false);
+          resetDynamicFilter(
+            searchStore.accessStateReceived,
+            searchStore.accessStateSelectedLastSearch,
+            searchStore.accessStateIdx
+          );
+          // Paket Sigel
+          searchStore.paketSigelIdReceived =
+            response.paketSigels != undefined
+              ? response.paketSigels
+              : Array(0);
+          searchStore.paketSigelIdIdx = Array(
+            searchStore.paketSigelIdReceived.length
+          ).fill(false);
+          resetDynamicFilter(
+            searchStore.paketSigelIdReceived,
+            searchStore.paketSigelSelectedLastSearch,
+            searchStore.paketSigelIdIdx
+          );
+          // Publication Type
+          searchStore.publicationTypeReceived =
+            response.publicationType != undefined
+              ? response.publicationType.sort()
+              : Array(0);
+          searchStore.publicationTypeIdx = Array(
+            searchStore.publicationTypeReceived.length
+          ).fill(false);
+          resetDynamicFilter(
+            searchStore.publicationTypeReceived,
+            searchStore.publicationTypeSelectedLastSearch,
+            searchStore.publicationTypeIdx
+          );
+          // ZDB
+          searchStore.zdbIdReceived =
+            response.zdbIds != undefined ? response.zdbIds : Array(0);
+          searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
+            false
+          );
+          resetDynamicFilter(
+            searchStore.zdbIdReceived,
+            searchStore.zdbIdSelectedLastSearch,
+            searchStore.zdbIdIdx
+          );
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -212,15 +249,16 @@ export default defineComponent({
         });
     };
 
-    const resetDynamicFilter = () => {
-      searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
-      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
-        () => false
-      );
-      searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
-        () => false
-      );
-      searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+    const resetDynamicFilter = (
+      receivedFilters: Array<string>,
+      savedFilters: Array<string>,
+      idxMap: Array<boolean>
+    ) => {
+      receivedFilters.forEach((elem: string, index: number): void => {
+        if (savedFilters.includes(elem)) {
+          idxMap[index] = true;
+        }
+      });
     };
 
     const buildPublicationDateFilter: () => string | undefined = () => {
@@ -235,10 +273,12 @@ export default defineComponent({
       searchStore.paketSigelIdIdx.forEach(
         (i: boolean | undefined, index: number): void => {
           if (i) {
-            paketSigelIds.push(searchStore.availablePaketSigelIds[index]);
+            paketSigelIds.push(searchStore.paketSigelIdReceived[index]);
           }
         }
       );
+      // Remind selected ids, for resetting the filter afterwards correctly.
+      searchStore.paketSigelSelectedLastSearch = paketSigelIds;
       if (paketSigelIds.length == 0) {
         return undefined;
       } else {
@@ -251,10 +291,12 @@ export default defineComponent({
       searchStore.zdbIdIdx.forEach(
         (i: boolean | undefined, index: number): void => {
           if (i) {
-            zdbIds.push(searchStore.availableZDBIds[index]);
+            zdbIds.push(searchStore.zdbIdReceived[index]);
           }
         }
       );
+      // Remind selected ids, for resetting the filter afterwards correctly.
+      searchStore.zdbIdSelectedLastSearch = zdbIds;
       if (zdbIds.length == 0) {
         return undefined;
       } else {
@@ -268,12 +310,14 @@ export default defineComponent({
         (i: boolean | undefined, index: number): void => {
           if (i) {
             accessStates.push(
-              searchStore.availableAccessState[index].toUpperCase()
+              searchStore.accessStateReceived[index].toUpperCase()
             );
           }
         }
       );
 
+      // Remind selected ids, for resetting the filter afterwards correctly.
+      searchStore.accessStateSelectedLastSearch = accessStates.map((value) => value.toLowerCase());
       if (accessStates.length == 0) {
         return undefined;
       } else {
@@ -341,11 +385,12 @@ export default defineComponent({
 
     const buildPublicationTypeFilter = () => {
       let types: Array<string> = [];
+      let typesFrontend: Array<string> = [];
       searchStore.publicationTypeIdx.forEach(
         (i: boolean | undefined, index: number): void => {
           if (i) {
             let modifiedPubTypeFilter: string;
-            switch (searchStore.availablePublicationTypes[index]) {
+            switch (searchStore.publicationTypeReceived[index]) {
               case "article":
                 modifiedPubTypeFilter = "ARTICLE";
                 break;
@@ -377,9 +422,12 @@ export default defineComponent({
                 modifiedPubTypeFilter = "ERROR";
             }
             types.push(modifiedPubTypeFilter);
+            typesFrontend.push(searchStore.publicationTypeReceived[index]);
           }
         }
       );
+      // Remind selected ids, for resetting the filter afterwards correctly.
+      searchStore.publicationTypeSelectedLastSearch = typesFrontend;
       if (types.length == 0) {
         return undefined;
       } else {

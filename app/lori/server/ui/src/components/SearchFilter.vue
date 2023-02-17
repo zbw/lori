@@ -231,7 +231,7 @@ export default defineComponent({
             </template>
             <h6></h6>
             <v-checkbox
-              v-for="(item, i) in searchStore.availablePublicationTypes"
+              v-for="(item, i) in searchStore.publicationTypeReceived"
               :key="i"
               :label="parsePublicationType(item)"
               hide-details
@@ -245,7 +245,7 @@ export default defineComponent({
             </template>
             <h6></h6>
             <v-checkbox
-              v-for="(item, i) in searchStore.availablePaketSigelIds"
+              v-for="(item, i) in searchStore.paketSigelIdReceived"
               :key="i"
               :label="item"
               hide-details
@@ -261,7 +261,7 @@ export default defineComponent({
         </template>
         <h6></h6>
         <v-checkbox
-          v-for="(item, i) in searchStore.availableZDBIds"
+          v-for="(item, i) in searchStore.zdbIdReceived"
           :key="i"
           :label="item"
           hide-details
@@ -280,7 +280,7 @@ export default defineComponent({
             </template>
             <h6></h6>
             <v-checkbox
-              v-for="(item, i) in searchStore.availableAccessState"
+              v-for="(item, i) in searchStore.accessStateReceived"
               :key="i"
               :label="parseAccessState(item)"
               hide-details
