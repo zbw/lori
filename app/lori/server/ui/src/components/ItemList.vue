@@ -22,6 +22,7 @@ export default defineComponent({
     const items: Ref<Array<ItemRest>> = ref([]);
     const currentItem = ref({} as ItemRest);
     const headersValueVSelect = ref([]);
+    const selectedItems = ref([]);
     const loadAlertError = ref(false);
     const loadAlertErrorMessage = ref("");
     const searchTerm = ref("");
@@ -127,7 +128,12 @@ export default defineComponent({
       searchQuery();
     };
 
-    const setActiveItem = (metadata: MetadataRest, row: any) => {
+    /**
+     * Row selection management.
+     *
+     * Single Click
+     */
+    const addActiveItem = (metadata: MetadataRest, row: any) => {
       row.select(true);
       let item: ItemRest | undefined = items.value.find(
         (e) => e.metadata.metadataId === metadata.metadataId
@@ -135,6 +141,20 @@ export default defineComponent({
       if (item !== undefined) {
         currentItem.value = item;
       }
+    };
+
+    /** Double Click **/
+    const setActiveItem = (clickevent: any, row: any) => {
+      row.select(true);
+      let item: ItemRest | undefined = items.value.find(
+        (e) => e.metadata.metadataId === row.item.metadataId
+      );
+      if (item !== undefined) {
+        currentItem.value = item;
+      }
+      selectedItems.value = selectedItems.value.filter(
+        (e: MetadataRest) => e.metadataId == row.item.metadataId
+      );
     };
 
     const getAlertLoad = () => {
@@ -204,9 +224,7 @@ export default defineComponent({
           );
           // Paket Sigel
           searchStore.paketSigelIdReceived =
-            response.paketSigels != undefined
-              ? response.paketSigels
-              : Array(0);
+            response.paketSigels != undefined ? response.paketSigels : Array(0);
           searchStore.paketSigelIdIdx = Array(
             searchStore.paketSigelIdReceived.length
           ).fill(false);
@@ -317,7 +335,9 @@ export default defineComponent({
       );
 
       // Remind selected ids, for resetting the filter afterwards correctly.
-      searchStore.accessStateSelectedLastSearch = accessStates.map((value) => value.toLowerCase());
+      searchStore.accessStateSelectedLastSearch = accessStates.map((value) =>
+        value.toLowerCase()
+      );
       if (accessStates.length == 0) {
         return undefined;
       } else {
@@ -496,9 +516,11 @@ export default defineComponent({
       searchTerm,
       searchStore,
       selectedHeaders,
+      selectedItems,
       tableContentLoading,
       totalPages,
       // Methods
+      addActiveItem,
       buildPublicationDateFilter,
       buildPublicationTypeFilter,
       buildAccessStateFilter,
@@ -584,11 +606,13 @@ export default defineComponent({
             :hide-default-footer="true"
             :headers="selectedHeaders"
             :items="items.map((value) => value.metadata)"
-            @click:row="setActiveItem"
+            @click:row="addActiveItem"
+            @dblclick:row="setActiveItem"
             loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             item-key="metadataId"
+            v-model="selectedItems"
           >
             <template v-slot:item.handle="{ item }">
               <td>
