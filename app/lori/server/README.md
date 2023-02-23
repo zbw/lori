@@ -3,12 +3,12 @@ LORI-Service
 
 ## About
 
-This service manages rights for bibliographic items. It provides a (g)rpc and REST interface to
+The LORI (Library of Rights) service  manages rights for bibliographic items. It provides a (g)rpc and REST interface to
 read, update and delete these right information.
 
 ## Local setup
 
-Prerequisite: Setting up a local postgres.
+**Prerequisites**: Docker
 
 First create a postgres docker container and start it.
 
@@ -25,33 +25,50 @@ CREATE USER lori WITH PASSWORD '1qay2wsx' CREATEDB;
 CREATE DATABASE loridb OWNER lori ENCODING UTF8;
 \q
 ```
+and enable the required extension `pg_trgm`:
+```sql
+CREATE EXTENSION if not exists pg_trgm;
+```
 
-Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database.
+Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database
+and extension.
 You can connect yourself then via pgadmin or `psql`:
 ```
 docker exec -it postgres_lori_9.6 psql -U lori -d loriinformation
 ```
 
-Finally, start the service:
+Set the chosen password and database name in `src/main/resources/lori.properties` or as environment
+variable.
+
+Finally, start the service from the projects root directory:
 
 ```shell
 ./gradlew :app:lori:server:run
 ```
 
+Afterwards the service should be accessible under: `localhost:8082/ui`
+
 ## Setup in Cloud environment
 
-Due to OTC restrictions to configure databases via terraform (for more details see
+**Prerequisites**: Having access to a cloud environment with kubernetes.
+We use the [Open Telekom Cloud (OTC)](https://open-telekom-cloud.com/en).
+
+
+### Database Setup
+Due to restrictions with the OTC to configure databases via terraform (for more details see
 [here](https://github.com/opentelekomcloud/terraform-provider-opentelekomcloud/issues/1513)) the
-initial setup of the database is done manually.
-There exist two possible ways to accomplish this right now:
+initial setup of the database is done manually. If your cloud provider allows that, feel free
+to skip this section and apply this setup in terraform directly.
+
+There exist two possible ways to accomplish the manual setup:
 1. Run a postgres image in the k8s cluster (recommenend):
-    - `kubectl run -n apps -i --tty --rm debug3 --image=library/postgres --restart=Never -- sh`
-2. Remote Login via the jumphost:
+    - `kubectl run -n <YOUR_NAMESPACE> -i --tty --rm dbSetup --image=library/postgres --restart=Never -- sh`
+2. Remote Login via a jumphost (here is described how this can be achieved for the OTC):
     - Login into OTC console, select **Elastic Cloud Server**
     - Search for **jumphost** and press the **Remote Login** button
 
 Either way, from their you are able to connect to the database for the first time (password
-should be saved in vault):
+should be saved in somewhere secure, for example in [vault](https://www.vaultproject.io/)):
 
 ```
 psql --no-readline -U root -h <FLOATING_IP_ADDRESS_POSTGRES> -p 5432 postgres
@@ -69,15 +86,46 @@ and enable the required extension `pg_trgm`:
 CREATE EXTENSION if not exists pg_trgm;
 ```
 
-Be aware that this password and database name and user needs to be provided to Lori at startup. The HelmChart repository
-contains for the lori microservice a _values_ file which passes all configuration variables
-to the microservice. Sensitive variables like passwords are read from a Vault store and need to be inserted there separately.
+Afterwards you should be able to connect to the DB as following:
+```
+psql -U lori -h <FLOATING_IP_ADDRESS_POSTGRES> -p 5432 loriinformation
+```
 
-Afterwards you can connect to the DB as following:
+Be aware that this password and database name and user needs to be provided to Lori at startup. We
+use a HelmChart repository that contains a _values_ file for lori with all information. Sensitive
+variables like passwords are read from a Vault store and then provided as secrets. Our tool of
+choice for the whole Helm setup is [Helmfile](https://github.com/roboll/helmfile).
+
+
+### Docker Login
+To be able to upload images to the OTC cloud a user needs to login
+to its Docker Registry. This can be done by generating a longterm token
+with the Access and Secret Key (see IAM in OTC).
+
+```shell
+export ACCESS_KEY=<YOUR-ACCESS-KEYS>
+export SECRET_KEY=<YOUR-SECRET-KEYS>
+
+# Get the longterm token
+export LONGTERM_TOKEN=$(printf $ACCESS_KEY | openssl dgst -binary -sha256 -hmac $SECRET_KEY | od -An -vtx1 | sed 's/[ \n]//g' | sed 'N;s/\n//')
+
+# Login
+docker login -u eu-nl_dev-nl@"$ACCESS_KEY" -p "$LONGTERM_TOKEN" swr.eu-nl.otc.t-systems.com
 ```
-psql -U lori -h 192.168.225.165 -p 5432 loriinformation
+
+There exists a helper script for the above commands in our terraform repository.
+
+### Build & Push microservice image
+
+```shell
+./gradlew :app:lori:server:jib
+docker push swr.eu-nl.otc.t-systems.com/zbw-dev/app-lori-server:latest
 ```
-And then enter the chosen password (in this example `1qay2wsx`)
+
+### Run in cloud
+Since we use a HelmCharts for the whole cloud setup, there doesn't exist any yaml files in the
+repository. Basically this instruction showed you how to setup the Database and how to build the
+image. How to apply these in a cloud environment is out of scope.
 
 ## (G)RPC
 
