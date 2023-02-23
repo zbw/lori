@@ -1,43 +1,39 @@
 # About
-This repository contains the microservice source code.
+This repository is a project by the [ZBW](www.zbw.eu). It provides a frontend and backend for managing
+the access status of bibliographic items.
 
-# Docker Login
-To be able to upload images to the OTC cloud a user needs to login
-to its Docker Registry. This can be done by generating a longterm token
-with the Access and Secret Key (see IAM in OTC).
+The main component is the LORI (Library of Rights) service (see `app/lori/server/` for more
+detailed information about the application). In general LORIs task is it to manage access information that are stored in
+[DSpace](https://dspace.lyrasis.org/) instances (at least for now).
 
-```shell
-export ACCESS_KEY=<YOUR-ACCESS-KEYS>
-export SECRET_KEY=<YOUR-SECRET-KEYS>
+## Why
+DSpace is a widespread repository system used in libraries to store metadata and the actual
+data, like thesis, books etc.
+The access can be managed on a community level, representing an organisation or publisher, or on a
+collection level, which may represent a specific package from a publisher containing several
+publications. With the OpenAccess transformation the access rights of specific publications in packages
+may change over time. For example, some papers might be restricted to read for a few years, until they eventually
+will become open access. When it comes to this fine grained right management issues, DSpace has its limitations.
+LORI aims to be a service which harvests metadata information and provide their access right
+information.
 
-# Get the longterm token
-export LONGTERM_TOKEN=$(printf $ACCESS_KEY | openssl dgst -binary -sha256 -hmac $SECRET_KEY | od -An -vtx1 | sed 's/[ \n]//g' | sed 'N;s/\n//')
+## Setup
+See `app/lori/server/` for how to setup the service.
 
-# Login
-docker login -u eu-nl_dev-nl@"$ACCESS_KEY" -p "$LONGTERM_TOKEN" swr.eu-nl.otc.t-systems.com
-```
-
-There exists a helper script for the above commands in the terraform repository.
-
-## Build & Push microservice image
-
-```shell
-./gradlew :app:access:server:jib
-docker push swr.eu-nl.otc.t-systems.com/zbw-dev/app-access-server:latest
-```
-
-## Build & push CI/CD image
+# Build & push CI/CD images
 
 ```shell
-cd docker/vault-terraform
-docker build -t vault-terraform .
-docker tag vault-terraform swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-terraform:latest
-docker push swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-terraform:latest
+cd docker/<IMAGE_DIR>
+docker build -t <IMAGE_TAG> .
+docker tag <IMAGE_TAG> swr.eu-nl.otc.t-systems.com/zbw-tools-nl/<IMAGE_TAG>:latest
+docker push swr.eu-nl.otc.t-systems.com/zbw-tools-nl/<IMAGE_TAG>:latest
 ```
 
-# Gitlab
+# Troubleshooting
 
-## Pushing images & personal token
+## Gitlab
+
+### Pushing images & personal token
 When changes in the last commit are detected for any microservice its image gets
 pushed to the cloud. To figure out the changes it is necessary to request the last
 commit from the Gitlab API. This request requires a valid token with read rights
