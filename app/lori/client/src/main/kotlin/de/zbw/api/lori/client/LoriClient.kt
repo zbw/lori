@@ -15,7 +15,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 
 /**
- * A client for the HelloWorld-Service.
+ * A client for the Lori-Service.
  *
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)

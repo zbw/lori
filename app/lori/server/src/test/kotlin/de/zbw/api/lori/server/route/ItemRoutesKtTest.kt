@@ -37,6 +37,12 @@ import java.lang.reflect.Type
 import java.sql.SQLException
 import java.time.LocalDate
 
+/**
+ * Test [ItemRoutes].
+ *
+ * Created on 02-08-2021.
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
 class ItemRoutesKtTest {
 
     @Test
@@ -562,6 +568,8 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
+                invalidSearchKey = listOf("cor"),
+                hasSearchTokenWithNoKey = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -585,6 +593,8 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
+                    invalidSearchKey = listOf("cor"),
+                    hasSearchTokenWithNoKey = false,
                 )
                 )
         }
@@ -627,6 +637,8 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
+                invalidSearchKey = listOf("cor"),
+                hasSearchTokenWithNoKey = false,
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -650,6 +662,8 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
+                    invalidSearchKey = listOf("cor"),
+                    hasSearchTokenWithNoKey = false,
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

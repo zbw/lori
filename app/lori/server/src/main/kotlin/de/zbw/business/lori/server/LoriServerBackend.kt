@@ -20,7 +20,7 @@ import java.security.MessageDigest
 import java.util.Date
 
 /**
- * Backend for the Access-Server.
+ * Backend for the Lori-Server.
  *
  * Created on 07-15-2021.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -276,8 +276,19 @@ class LoriServerBackend(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
     ): SearchQueryResult {
         val keys = searchTerm
-            ?.let { parseSearchKeys(searchTerm) }
+            ?.let { parseValidSearchKeys(it) }
             ?: emptyMap()
+
+        val invalidSearchKeys = searchTerm
+            ?.let { parseInvalidSearchKeys(it) }
+            ?: emptyList()
+
+        val hasSearchTokenWithNoKey = searchTerm
+            ?.takeIf {
+                searchTerm.isNotEmpty()
+            }?.let {
+                it.trim().split("\\s+".toRegex()).size - keys.size - invalidSearchKeys.size > 0
+            } ?: false
 
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
@@ -318,7 +329,9 @@ class LoriServerBackend(
             accessState = facets.accessState,
             hasLicenceContract = facets.hasLicenceContract,
             hasOpenContentLicence = facets.hasOpenContentLicence,
+            hasSearchTokenWithNoKey = hasSearchTokenWithNoKey,
             hasZbwUserAgreement = facets.hasZbwUserAgreement,
+            invalidSearchKey = invalidSearchKeys,
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
             zdbIds = facets.zdbIds,
@@ -334,16 +347,18 @@ class LoriServerBackend(
             return expiresAt == null || expiresAt < 0
         }
 
-        fun parseSearchKeys(s: String): Map<SearchKey, List<String>> {
-            val iter = Regex("\\w+:[\\w-]+|\\w+:'[\\w\\s-]+'").findAll(s).iterator()
-            val tokens: List<String> = generateSequence {
-                if (iter.hasNext()) {
-                    iter.next().value.filter { it != '\'' }
+        fun parseInvalidSearchKeys(s: String): List<String> =
+            tokenizeSearchInput(s).mapNotNull {
+                val keyname = it.substringBefore(":")
+                if (SearchKey.toEnum(keyname) == null) {
+                    keyname
                 } else {
                     null
                 }
-            }.takeWhile { true }.toList()
-            return tokens.mapNotNull {
+            }
+
+        fun parseValidSearchKeys(s: String): Map<SearchKey, List<String>> =
+            tokenizeSearchInput(s).mapNotNull {
                 val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
                 if (key == null) {
                     null
@@ -351,6 +366,20 @@ class LoriServerBackend(
                     key to it.substringAfter(":").trim().split("\\s+".toRegex())
                 }
             }.toMap()
+
+        private fun tokenizeSearchInput(s: String): List<String> {
+            /**
+             * Valid patterns: key:value or key:'value1 value2 ...'.
+             * Valid special characters: '-:;'
+             */
+            val iter = Regex("\\w+:[\\w-:;]+|\\w+:'[\\w\\s-:;]+'").findAll(s).iterator()
+            return generateSequence {
+                if (iter.hasNext()) {
+                    iter.next().value.filter { it != '\'' }
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
         }
 
         fun hashString(type: String, input: String): String {
