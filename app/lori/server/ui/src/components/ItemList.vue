@@ -23,10 +23,18 @@ export default defineComponent({
     const currentItem = ref({} as ItemRest);
     const headersValueVSelect = ref([]);
     const selectedItems = ref([]);
-    const loadAlertError = ref(false);
-    const loadAlertErrorMessage = ref("");
     const searchTerm = ref("");
     const tableContentLoading = ref(true);
+
+    /**
+     * Error handling>
+     */
+    const hasSearchTokenWithNoKeyError = ref(false);
+    const hasSearchTokenWithNoKeyErrorMsg = ref("");
+    const invalidSearchKeyError = ref(false);
+    const invalidSearchKeyErrorMsg = ref("");
+    const loadAlertError = ref(false);
+    const loadAlertErrorMessage = ref("");
 
     const headers = [
       {
@@ -199,6 +207,20 @@ export default defineComponent({
           tableContentLoading.value = false;
           totalPages.value = response.totalPages;
           numberOfResults.value = response.numberOfResults;
+          if (response.invalidSearchKey?.length || 0 > 0) {
+            invalidSearchKeyErrorMsg.value =
+              "Die folgenden Suchkeys sind ungültig: " +
+                response.invalidSearchKey?.join(", ") || "";
+            invalidSearchKeyError.value = true;
+          }
+
+          if (response.hasSearchTokenWithNoKey == true) {
+            console.log('hihihe')
+            hasSearchTokenWithNoKeyErrorMsg.value =
+              "Mindestens ein Wort enthält keinen Suchkey." +
+              " Dieser Teil wird bei der Suche ignoriert.";
+            hasSearchTokenWithNoKeyError.value = true;
+          }
           if (response.paketSigels != undefined) {
             searchStore.paketSigelIdReceived = response.paketSigels;
           }
@@ -211,7 +233,7 @@ export default defineComponent({
           if (response.hasZbwUserAgreement != undefined) {
             searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
           }
-          // AccessState
+          // Reset AccessState
           searchStore.accessStateReceived =
             response.accessState != undefined ? response.accessState : Array(0);
           searchStore.accessStateIdx = Array(
@@ -222,7 +244,7 @@ export default defineComponent({
             searchStore.accessStateSelectedLastSearch,
             searchStore.accessStateIdx
           );
-          // Paket Sigel
+          // Reset Paket Sigel
           searchStore.paketSigelIdReceived =
             response.paketSigels != undefined ? response.paketSigels : Array(0);
           searchStore.paketSigelIdIdx = Array(
@@ -233,7 +255,7 @@ export default defineComponent({
             searchStore.paketSigelSelectedLastSearch,
             searchStore.paketSigelIdIdx
           );
-          // Publication Type
+          // Reset Publication Type
           searchStore.publicationTypeReceived =
             response.publicationType != undefined
               ? response.publicationType.sort()
@@ -246,7 +268,7 @@ export default defineComponent({
             searchStore.publicationTypeSelectedLastSearch,
             searchStore.publicationTypeIdx
           );
-          // ZDB
+          // Reset ZDB Id
           searchStore.zdbIdReceived =
             response.zdbIds != undefined ? response.zdbIds : Array(0);
           searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
@@ -505,9 +527,13 @@ export default defineComponent({
       currentItem,
       currentPage,
       dialogStore,
+      hasSearchTokenWithNoKeyError,
+      hasSearchTokenWithNoKeyErrorMsg,
       headers,
       headersValueVSelect,
       items,
+      invalidSearchKeyError,
+      invalidSearchKeyErrorMsg,
       loadAlertError,
       loadAlertErrorMessage,
       numberOfResults,
@@ -583,6 +609,22 @@ export default defineComponent({
               zdb(ZDB-Id)"
             ></v-text-field>
           </v-card-title>
+          <v-alert
+            v-model="invalidSearchKeyError"
+            dismissible
+            text
+            type="error"
+          >
+            {{ invalidSearchKeyErrorMsg }}
+          </v-alert>
+          <v-alert
+            v-model="hasSearchTokenWithNoKeyError"
+            dismissible
+            text
+            type="error"
+          >
+            {{ hasSearchTokenWithNoKeyErrorMsg }}
+          </v-alert>
           <v-select
             v-model="headersValueVSelect"
             :items="headers"

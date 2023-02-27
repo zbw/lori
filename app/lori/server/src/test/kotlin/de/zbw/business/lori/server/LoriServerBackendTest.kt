@@ -242,6 +242,13 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "multiple words quoted minus"
             ),
+            arrayOf(
+                "col:'col-;:'",
+                mapOf(
+                    SearchKey.COLLECTION to listOf("col-;:"),
+                ),
+                "handle special characters"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
@@ -250,7 +257,31 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedKeys: Map<SearchKey, List<String>>,
         description: String,
     ) {
-        assertThat(description, LoriServerBackend.parseSearchKeys(searchTerm), `is`(expectedKeys))
+        assertThat(description, LoriServerBackend.parseValidSearchKeys(searchTerm), `is`(expectedKeys))
+    }
+
+    @DataProvider(name = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
+    fun createDataForInvalidSearchKeyParsing() =
+        arrayOf(
+            arrayOf(
+                "bllaaaa",
+                emptyList<String>(),
+                "no search key pair"
+            ),
+            arrayOf(
+                "moo:koo col:foobar cro:moobar",
+                listOf("moo", "cro"),
+                "two invalid keys"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
+    fun testParseInvalidSearchKeys(
+        searchTerm: String,
+        expectedKeys: List<String>,
+        description: String,
+    ) {
+        assertThat(description, LoriServerBackend.parseInvalidSearchKeys(searchTerm), `is`(expectedKeys))
     }
 
     @Test
@@ -301,6 +332,7 @@ class LoriServerBackendTest : DatabaseTest() {
     }
 
     companion object {
+        const val DATA_FOR_INVALID_SEARCH_KEY_PARSING = "DATA_FOR_INVALID_SEARCH_KEY_PARSING"
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
 
         val NOW: OffsetDateTime = OffsetDateTime.of(
