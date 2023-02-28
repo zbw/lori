@@ -609,6 +609,7 @@ export default defineComponent({
               com(Community),
               col(Collection),
               sig(Paket-Sigel),
+              tit(Titel),
               zdb(ZDB-Id)"
             ></v-text-field>
           </v-card-title>
