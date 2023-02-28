@@ -331,9 +331,52 @@ class LoriServerBackendTest : DatabaseTest() {
         assertThat(itemsNoItem, `is`(emptyList()))
     }
 
+    @DataProvider(name = DATA_FOR_REMOVE_VALID_SEARCH_TOKEN)
+    fun createDataForRemoveValidSearchToken() =
+        arrayOf(
+            arrayOf(
+                "",
+                false,
+            ),
+            arrayOf(
+                "  foo:'bar baz' abc  bcd\t",
+                true,
+            ),
+            arrayOf(
+                "  col:'bar'  \t  ",
+                false,
+            ),
+            arrayOf(
+                "  baaaa col:'bar'  \t  ",
+                true,
+            ),
+            arrayOf(
+                "  col:bar \t  ",
+                false,
+            ),
+            arrayOf(
+                "  col:bar foooo\t  ",
+                true,
+            ),
+            arrayOf(
+                "  col:'bar baz'  \t  ",
+                false,
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_REMOVE_VALID_SEARCH_TOKEN)
+    fun testRemoveValidSearchToken(input: String, expected: Boolean) {
+        assertThat(
+            "$input was not correctly identified",
+            LoriServerBackend.hasSearchTokensWithNoKey(input),
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_INVALID_SEARCH_KEY_PARSING = "DATA_FOR_INVALID_SEARCH_KEY_PARSING"
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
+        const val DATA_FOR_REMOVE_VALID_SEARCH_TOKEN = "DATA_FOR_REMOVE_VALID_SEARCH_TOKEN"
 
         val NOW: OffsetDateTime = OffsetDateTime.of(
             2022,

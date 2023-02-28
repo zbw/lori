@@ -16,6 +16,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
+import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.util.Date
 
@@ -287,7 +288,7 @@ class LoriServerBackend(
             ?.takeIf {
                 searchTerm.isNotEmpty()
             }?.let {
-                it.trim().split("\\s+".toRegex()).size - keys.size - invalidSearchKeys.size > 0
+                hasSearchTokensWithNoKey(it)
             } ?: false
 
         // Acquire search results
@@ -339,6 +340,12 @@ class LoriServerBackend(
     }
 
     companion object {
+        /**
+         * Valid patterns: key:value or key:'value1 value2 ...'.
+         * Valid special characters: '-:;'
+         */
+        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;]+|\\w+:'[\\w\\s-:;]+'")
+
         fun isJWTExpired(principal: JWTPrincipal): Boolean {
             val expiresAt: Long? = principal
                 .expiresAt
@@ -368,11 +375,7 @@ class LoriServerBackend(
             }.toMap()
 
         private fun tokenizeSearchInput(s: String): List<String> {
-            /**
-             * Valid patterns: key:value or key:'value1 value2 ...'.
-             * Valid special characters: '-:;'
-             */
-            val iter = Regex("\\w+:[\\w-:;]+|\\w+:'[\\w\\s-:;]+'").findAll(s).iterator()
+            val iter = SEARCH_KEY_REGEX.findAll(s).iterator()
             return generateSequence {
                 if (iter.hasNext()) {
                     iter.next().value.filter { it != '\'' }
@@ -381,6 +384,18 @@ class LoriServerBackend(
                 }
             }.takeWhile { true }.toList()
         }
+
+        fun hasSearchTokensWithNoKey(s: String): Boolean =
+            s.takeIf {
+                it.isNotEmpty()
+            }?.let {
+                val tmp = s.trim().replace(SEARCH_KEY_REGEX, Strings.EMPTY).trim().split("\\s+".toRegex())
+                if (tmp.size == 1 && tmp[0].isEmpty()) {
+                    return false
+                } else {
+                    true
+                }
+            } ?: false
 
         fun hashString(type: String, input: String): String {
             val bytes = MessageDigest
