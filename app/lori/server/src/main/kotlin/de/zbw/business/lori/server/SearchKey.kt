@@ -16,6 +16,7 @@ enum class SearchKey(
     COMMUNITY(DatabaseConnector.COLUMN_METADATA_COMMUNITY_NAME, "dist_com"),
     COLLECTION(DatabaseConnector.COLUMN_METADATA_COLLECTION_NAME, "dist_col"),
     PAKET_SIGEL(DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL, "dist_sig"),
+    TITLE(DatabaseConnector.COLUMN_METADATA_TITLE, "dist_title"),
     ZDB_ID(DatabaseConnector.COLUMN_METADATA_ZDB_ID, "dist_zdb");
 
     fun toSelectClause(): String =
@@ -32,6 +33,7 @@ enum class SearchKey(
                 "com" -> COMMUNITY
                 "col" -> COLLECTION
                 "sig" -> PAKET_SIGEL
+                "tit" -> TITLE
                 "zdb" -> ZDB_ID
                 else -> null
             }

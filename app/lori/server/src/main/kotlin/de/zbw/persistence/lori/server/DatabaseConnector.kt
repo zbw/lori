@@ -1164,6 +1164,7 @@ class DatabaseConnector(
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
+        const val COLUMN_METADATA_TITLE = "title"
         const val COLUMN_METADATA_ZDB_ID = "zdb_id"
 
         const val COLUMN_RIGHT_START_DATE = "start_date"

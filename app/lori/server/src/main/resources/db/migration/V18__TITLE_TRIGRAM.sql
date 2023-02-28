@@ -1,0 +1,1 @@
+CREATE INDEX trgm_title_idx ON item_metadata USING GIST (title gist_trgm_ops);
