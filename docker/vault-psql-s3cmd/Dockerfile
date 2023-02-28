@@ -9,8 +9,12 @@ RUN apk add --no-cache curl jq && \
     rm vault* && \
     apk del curl
 
+#install psql
+FROM vault AS psql
+RUN apk add --no-cache postgresql-client
+
 # install s3cmd
-FROM vault AS s3cmd
+FROM psql AS s3cmd
 RUN apk add --no-cache python3 py3-pip py3-setuptools libmagic && \
     pip3 install --no-cache-dir python-dateutil python-magic s3cmd
 
