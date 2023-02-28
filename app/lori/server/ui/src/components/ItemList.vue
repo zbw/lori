@@ -181,6 +181,9 @@ export default defineComponent({
     const startSearch = () => {
       currentPage.value = 1;
       searchStore.lastSearchTerm = searchTerm.value;
+      invalidSearchKeyError.value = false;
+      hasSearchTokenWithNoKeyError.value = false;
+
       searchQuery();
     };
 
