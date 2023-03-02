@@ -329,6 +329,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterNoRightInformation
+        in: query
+        schema:
+          type: string
 
     responses:
       200:

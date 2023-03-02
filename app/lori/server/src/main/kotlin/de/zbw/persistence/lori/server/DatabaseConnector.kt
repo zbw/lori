@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.MetadataSearchFilter
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchKey
 import de.zbw.business.lori.server.type.AccessState
@@ -1009,10 +1010,16 @@ class DatabaseConnector(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
+        noRightInformationFilter: NoRightInformationFilter?,
     ): Int {
         val entries = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
-            buildCountSearchQuery(searchTerms, metadataSearchFilter, rightSearchFilter)
+            buildCountSearchQuery(
+                searchTerms,
+                metadataSearchFilter,
+                rightSearchFilter,
+                noRightInformationFilter,
+            )
         )
             .apply {
                 var counter = 1
@@ -1044,6 +1051,7 @@ class DatabaseConnector(
         offset: Int,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
     ): List<ItemMetadata> {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
@@ -1051,6 +1059,7 @@ class DatabaseConnector(
                 searchTerms,
                 metadataSearchFilter,
                 rightSearchFilter,
+                noRightInformationFilter,
             )
         ).apply {
             var counter = 1
@@ -1084,6 +1093,7 @@ class DatabaseConnector(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
     ): FacetTransientSet {
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
@@ -1091,6 +1101,7 @@ class DatabaseConnector(
                 searchTerms,
                 metadataSearchFilter,
                 rightSearchFilter,
+                noRightInformationFilter,
                 true,
             )
         ).apply {
@@ -1154,7 +1165,7 @@ class DatabaseConnector(
     companion object {
         private const val TABLE_NAME_ITEM = "item"
         private const val TABLE_NAME_ITEM_METADATA = "item_metadata"
-        private const val TABLE_NAME_ITEM_RIGHT = "item_right"
+        const val TABLE_NAME_ITEM_RIGHT = "item_right"
         private const val TABLE_NAME_RIGHT_GROUP = "right_group"
         private const val TABLE_NAME_USERS = "users"
         private const val TABLE_NAME_GROUP_RIGHT_MAP = "group_right_map"
@@ -1167,15 +1178,16 @@ class DatabaseConnector(
         const val COLUMN_METADATA_TITLE = "title"
         const val COLUMN_METADATA_ZDB_ID = "zdb_id"
 
-        const val COLUMN_RIGHT_START_DATE = "start_date"
-        const val COLUMN_RIGHT_END_DATE = "end_date"
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
+        const val COLUMN_RIGHT_END_DATE = "end_date"
         const val COLUMN_RIGHT_LICENCE_CONTRACT = "licence_contract"
-        const val COLUMN_RIGHT_ZBW_USER_AGREEMENT = "zbw_user_agreement"
-        const val COLUMN_RIGHT_OPEN_CONTENT_LICENCE = "open_content_licence"
         const val COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE = "non_standard_open_content_licence"
         const val COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL = "non_standard_open_content_licence_url"
+        const val COLUMN_RIGHT_OPEN_CONTENT_LICENCE = "open_content_licence"
         const val COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = "restricted_open_content_licence"
+        const val COLUMN_RIGHT_ID = "right_id"
+        const val COLUMN_RIGHT_START_DATE = "start_date"
+        const val COLUMN_RIGHT_ZBW_USER_AGREEMENT = "zbw_user_agreement"
 
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
@@ -1257,7 +1269,7 @@ class DatabaseConnector(
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
-                "(right_id, created_on, last_updated_on," +
+                "($COLUMN_RIGHT_ID, created_on, last_updated_on," +
                 "created_by, last_updated_by, $COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date, end_date, notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
@@ -1271,7 +1283,7 @@ class DatabaseConnector(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?)" +
-                " ON CONFLICT (right_id) " +
+                " ON CONFLICT ($COLUMN_RIGHT_ID) " +
                 "DO UPDATE SET " +
                 "last_updated_on = EXCLUDED.last_updated_on," +
                 "last_updated_by = EXCLUDED.last_updated_by," +
@@ -1406,7 +1418,7 @@ class DatabaseConnector(
 
         const val STATEMENT_DELETE_RIGHTS = "DELETE " +
             "FROM $TABLE_NAME_ITEM_RIGHT r " +
-            "WHERE r.right_id = ANY(?)"
+            "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_DELETE_METADATA =
             "DELETE " +
@@ -1421,7 +1433,7 @@ class DatabaseConnector(
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related " +
                 "FROM $TABLE_NAME_ITEM_RIGHT " +
-                "WHERE right_id = ANY(?)"
+                "WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_GET_RIGHTS_BY_GROUP_ID =
             "SELECT right_id" +
@@ -1505,9 +1517,10 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
+            noRightInformationFilter: NoRightInformationFilter?,
             withLimit: Boolean = true,
         ): String {
-            val subquery = if (rightSearchFilters.isEmpty()) {
+            val subquery = if (rightSearchFilters.isEmpty() && noRightInformationFilter == null) {
                 buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
                     " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
@@ -1519,6 +1532,7 @@ class DatabaseConnector(
                     buildSearchQueryHelper(
                         metadataSearchFilters,
                         rightSearchFilters,
+                        noRightInformationFilter,
                     )
             }
 
@@ -1551,6 +1565,7 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
+            noRightInformationFilter: NoRightInformationFilter?,
         ): String =
             "SELECT COUNT(*) FROM" +
                 " (${
@@ -1558,6 +1573,7 @@ class DatabaseConnector(
                     searchKeyMap,
                     metadataSearchFilter,
                     rightSearchFilter,
+                    noRightInformationFilter,
                     false,
                 )
                 }) as foo"
@@ -1566,6 +1582,7 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
+            noRightInformationFilter: NoRightInformationFilter?,
             collectFacets: Boolean,
         ): String {
             val subquery = if (rightSearchFilters.isEmpty() && !collectFacets) {
@@ -1580,6 +1597,7 @@ class DatabaseConnector(
                     buildSearchQueryHelper(
                         metadataSearchFilters,
                         rightSearchFilters,
+                        noRightInformationFilter,
                         collectFacets,
                     )
             }
@@ -1625,11 +1643,20 @@ class DatabaseConnector(
         private fun buildSearchQueryHelper(
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
+            noRightInformationFilter: NoRightInformationFilter?,
             collectFacets: Boolean = false,
         ): String {
+
             val metadataFilters = metadataSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }.takeIf { it.isNotBlank() } ?: ""
+            val noRightInformationFilterClause = noRightInformationFilter?.let {
+                if (metadataFilters.isBlank()) {
+                    " WHERE " + noRightInformationFilter.toWhereClause()
+                } else {
+                    " AND " + noRightInformationFilter.toWhereClause()
+                }
+            } ?: ""
             val rightFilters = rightSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }
@@ -1643,17 +1670,20 @@ class DatabaseConnector(
             } else {
                 " AND $rightFilters"
             }
-            val joinItemRight = if (collectFacets && rightSearchFilter.isEmpty()) {
-                "LEFT JOIN"
-            } else {
-                "JOIN"
-            }
+
+            val joinItemRight =
+                if (collectFacets && rightSearchFilter.isEmpty() || noRightInformationFilterClause.isNotBlank()) {
+                    "LEFT JOIN"
+                } else {
+                    "JOIN"
+                }
             return " LEFT JOIN $TABLE_NAME_ITEM" +
                 " ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id" +
                 " $joinItemRight $TABLE_NAME_ITEM_RIGHT" +
-                " ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.right_id" +
+                " ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
                 extendedRightFilter +
-                whereClause
+                whereClause +
+                noRightInformationFilterClause
         }
 
         private fun buildSearchQuerySelect(

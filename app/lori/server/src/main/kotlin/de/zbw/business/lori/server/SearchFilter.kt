@@ -19,6 +19,13 @@ abstract class SearchFilter(
     val dbColumnName: String,
 ) {
     abstract fun toWhereClause(): String
+
+    /**
+     * @param preparedStatement: The prepared statement.
+     * @param counter: Tracks the index of the next placeholder that should be set in the prepared statement.
+     *
+     * @return Updated counter.
+     */
     abstract fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int
 }
 
@@ -212,6 +219,12 @@ class FormalRuleFilter(
                         " ${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true)"
             }
         }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
+}
+
+class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
+    override fun toWhereClause(): String = "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName IS NULL"
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
 }
