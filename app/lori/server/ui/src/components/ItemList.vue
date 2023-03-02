@@ -203,7 +203,8 @@ export default defineComponent({
           buildFormalRuleFilter(),
           buildValidOnFilter(),
           buildPaketSigelIdFilter(),
-          buildZDBIdFilter()
+          buildZDBIdFilter(),
+          buildNoRightInformation()
         )
         .then((response: ItemInformation) => {
           items.value = response.itemArray;
@@ -218,7 +219,7 @@ export default defineComponent({
           }
 
           if (response.hasSearchTokenWithNoKey == true) {
-            console.log('hihihe')
+            console.log("hihihe");
             hasSearchTokenWithNoKeyErrorMsg.value =
               "Mindestens ein Wort enthält keinen Suchkey." +
               " Dieser Teil wird bei der Suche ignoriert.";
@@ -486,6 +487,14 @@ export default defineComponent({
         searchStore.temporalValidOn != ""
       ) {
         return searchStore.temporalValidOn;
+      } else {
+        return undefined;
+      }
+    };
+
+    const buildNoRightInformation = () => {
+      if (searchStore.noRightInformation) {
+        return "true";
       } else {
         return undefined;
       }

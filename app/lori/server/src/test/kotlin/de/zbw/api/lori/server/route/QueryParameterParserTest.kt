@@ -13,6 +13,7 @@ import org.hamcrest.core.Is.`is`
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDate
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
@@ -220,6 +221,16 @@ class QueryParameterParserTest {
         assertNull(
             QueryParameterParser.parseFormalRuleFilter("2000101Fobbar!"),
         )
+    }
+
+    @Test
+    fun testParseNoRightInformationFilter() {
+        assertNull(QueryParameterParser.parseNoRightInformationFilter("fooo"))
+        assertNull(QueryParameterParser.parseNoRightInformationFilter("false"))
+        assertNull(QueryParameterParser.parseNoRightInformationFilter(""))
+        assertNotNull(QueryParameterParser.parseNoRightInformationFilter("tRue"))
+        assertNotNull(QueryParameterParser.parseNoRightInformationFilter("true"))
+        assertNotNull(QueryParameterParser.parseNoRightInformationFilter("TRUE"))
     }
 
     companion object {

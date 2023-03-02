@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -137,5 +138,14 @@ object QueryParameterParser {
                 }
             }
             return formalRules.takeIf { it.isNotEmpty() }?.let { FormalRuleFilter(it) }
+        }
+
+    fun parseNoRightInformationFilter(s: String?): NoRightInformationFilter? =
+        s?.let { input ->
+            if (input.lowercase().toBoolean()) {
+                NoRightInformationFilter()
+            } else {
+                null
+            }
         }
 }

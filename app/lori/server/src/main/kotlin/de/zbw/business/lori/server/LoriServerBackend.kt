@@ -194,6 +194,7 @@ class LoriServerBackend(
             emptyMap(),
             emptyList(),
             emptyList(),
+            null,
         )
 
     fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
@@ -275,6 +276,7 @@ class LoriServerBackend(
         offset: Int,
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
+        noRightInformationFilter: NoRightInformationFilter? = null,
     ): SearchQueryResult {
         val keys = searchTerm
             ?.let { parseValidSearchKeys(it) }
@@ -298,7 +300,8 @@ class LoriServerBackend(
                 limit,
                 offset,
                 metadataSearchFilter,
-                rightSearchFilter,
+                rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                noRightInformationFilter,
             )
 
         // Combine Metadata entries with their rights
@@ -314,7 +317,12 @@ class LoriServerBackend(
             items
                 .takeIf { it.isNotEmpty() }
                 ?.let {
-                    dbConnector.countSearchMetadata(keys, metadataSearchFilter, rightSearchFilter)
+                    dbConnector.countSearchMetadata(
+                        keys,
+                        metadataSearchFilter,
+                        rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                        noRightInformationFilter,
+                    )
                 }
                 ?: 0
 
@@ -323,6 +331,7 @@ class LoriServerBackend(
             keys,
             metadataSearchFilter,
             rightSearchFilter,
+            noRightInformationFilter,
         )
         return SearchQueryResult(
             numberOfResults = numberOfResults,

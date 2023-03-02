@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import com.google.gson.Gson
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
@@ -640,10 +641,12 @@ class DatabaseConnectorTest : DatabaseTest() {
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
+                noRightInformationFilter = null,
             )
         val numberResultZDB = dbConnector.countSearchMetadata(
             searchTerms = searchTermsZDB,
             metadataSearchFilter = emptyList(),
+            noRightInformationFilter = null,
         )
         // then
         assertThat(resultZDB[0], `is`(testZDB))
@@ -662,10 +665,12 @@ class DatabaseConnectorTest : DatabaseTest() {
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
+                noRightInformationFilter = null,
             )
         val numberResultAll = dbConnector.countSearchMetadata(
             searchTerms = searchTermsAll,
             metadataSearchFilter = emptyList(),
+            noRightInformationFilter = null,
         )
         // then
         assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
@@ -682,10 +687,12 @@ class DatabaseConnectorTest : DatabaseTest() {
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
+                noRightInformationFilter = null,
             )
         val numberResultZDB2 = dbConnector.countSearchMetadata(
             searchTerms = searchTermsAll,
             metadataSearchFilter = emptyList(),
+            noRightInformationFilter = null,
         )
         // then
         assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
@@ -699,6 +706,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 offset = 1,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
+                noRightInformationFilter = null,
             )
         assertThat(
             resultZDB2Offset.size, `is`(1)
@@ -768,6 +776,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchKeys,
                 metadataSearchFilter,
                 emptyList(),
+                null,
             ),
             `is`(expectedWhereClause)
         )
@@ -780,6 +789,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
+                null,
                 "${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
                     " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},collection_name <-> ? as dist_col" +
                     " FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
@@ -799,6 +809,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
+                null,
                 "${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
                     " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},collection_name <-> ? as dist_col" +
                     " FROM item_metadata" +
@@ -811,6 +822,31 @@ class DatabaseConnectorTest : DatabaseTest() {
                     " WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
                 "right filter combined with metadatafilter",
             ),
+            arrayOf(
+                mapOf(SearchKey.COLLECTION to listOf("foo")),
+                listOf(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
+                        )
+                    )
+                ),
+                emptyList<RightSearchFilter>(),
+                NoRightInformationFilter(),
+                "${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
+                    " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA},collection_name <-> ? as dist_col" +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item_right" +
+                    " ON item.right_id = item_right.right_id" +
+                    " WHERE publication_date >= ? AND publication_date <= ?" +
+                    " AND (publication_type = ? OR publication_type = ?)" +
+                    " AND item_right.right_id IS NULL) as sub" +
+                    " WHERE sub.dist_col < 0.9 ORDER BY score LIMIT ? OFFSET ?",
+                "return only items without any right information",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY)
@@ -818,6 +854,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         searchKeys: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
         expectedWhereClause: String,
         description: String,
     ) {
@@ -827,6 +864,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchKeys,
                 metadataSearchFilter,
                 rightSearchFilter,
+                noRightInformationFilter,
             ),
             `is`(expectedWhereClause)
         )
@@ -839,6 +877,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.COLLECTION to listOf("foo")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM" +
                     " (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
                     " FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,collection_name <-> ? as dist_col FROM item_metadata) as sub WHERE sub.dist_col < 0.9 ORDER BY score) as foo",
@@ -848,13 +887,15 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.ZDB_ID to listOf("foo"), SearchKey.PAKET_SIGEL to listOf("foo")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                null,
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
                 "count query filter with two searchkeys",
             ),
             arrayOf(
                 mapOf(SearchKey.ZDB_ID to listOf("foo", "bar")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 ORDER BY score) as foo",
                 "count query filter with multiple words for one key",
             ),
@@ -862,6 +903,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
                 "count query with multiple words for multiple keys",
             ),
@@ -871,6 +913,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
                 "count query with one filter",
             ),
@@ -880,6 +923,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? ORDER BY item_metadata.metadata_id ASC) as foo",
                 "count query without keys but with filter",
             ),
@@ -895,6 +939,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 emptyList<RightSearchFilter>(),
+                null,
                 "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) ORDER BY item_metadata.metadata_id ASC) as foo",
                 "count query without keys but with filter",
             ),
@@ -902,6 +947,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 emptyMap<SearchKey, List<String>>(),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
+                null,
                 "SELECT COUNT(*) FROM (" +
                     DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT +
                     " FROM item_metadata" +
@@ -924,6 +970,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
+                null,
                 "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT}" +
                     " FROM item_metadata" +
                     " LEFT JOIN item" +
@@ -933,6 +980,71 @@ class DatabaseConnectorTest : DatabaseTest() {
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
                     " ORDER BY item_metadata.metadata_id ASC) as foo",
                 "count query without keys but with both filter",
+            ),
+            arrayOf(
+                emptyMap<SearchKey, List<String>>(),
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                NoRightInformationFilter(),
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA}" +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item_right" +
+                    " ON item.right_id = item_right.right_id" +
+                    " WHERE item_right.right_id IS NULL" +
+                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                "count query without keys, metadata filter and norightinformation filter",
+            ),
+            arrayOf(
+                emptyMap<SearchKey, List<String>>(),
+                listOf(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        )
+                    )
+                ),
+                emptyList<RightSearchFilter>(),
+                NoRightInformationFilter(),
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA}" +
+                    " FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item_right" +
+                    " ON item.right_id = item_right.right_id" +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
+                    " AND item_right.right_id IS NULL" +
+                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                "count query without keys, metadata and right filter. Only norightinformation filter",
+            ),
+            arrayOf(
+                mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
+                listOf(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        )
+                    )
+                ),
+                emptyList<RightSearchFilter>(),
+                NoRightInformationFilter(),
+                "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES}," +
+                    "(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score" +
+                    " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA},zdb_id <-> ? as dist_zdb," +
+                    "paket_sigel <-> ? as dist_sig FROM item_metadata" +
+                    " LEFT JOIN item" +
+                    " ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item_right ON item.right_id = item_right.right_id" +
+                    " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
+                    " AND item_right.right_id IS NULL)" +
+                    " as sub" +
+                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                "count query with keys and metadata filter and norightinformation filter",
             ),
             arrayOf(
                 mapOf(SearchKey.ZDB_ID to listOf("foo", "bar"), SearchKey.PAKET_SIGEL to listOf("baz")),
@@ -946,6 +1058,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                     )
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
+                null,
                 "SELECT COUNT(*) FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES}," +
                     "(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score" +
                     " FROM (${DatabaseConnector.STATEMENT_SELECT_ALL_METADATA_DISTINCT},zdb_id <-> ? as dist_zdb," +
@@ -965,6 +1078,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         searchKeys: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
         expectedWhereClause: String,
         description: String,
     ) {
@@ -973,7 +1087,8 @@ class DatabaseConnectorTest : DatabaseTest() {
             DatabaseConnector.buildCountSearchQuery(
                 searchKeys,
                 metadataSearchFilter,
-                rightSearchFilter
+                rightSearchFilter,
+                noRightInformationFilter,
             ),
             `is`(expectedWhereClause)
         )
@@ -1061,6 +1176,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 emptyMap(),
                 metadataSearchFilter,
                 rightSearchFilter,
+                null,
             ),
             `is`(expectedSQLQuery)
         )
@@ -1117,6 +1233,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 emptyMap(),
                 metadataSearchFilter,
                 rightSearchFilter,
+                null,
             ),
             `is`(expectedSQLQuery)
         )
@@ -1213,6 +1330,7 @@ class DatabaseConnectorTest : DatabaseTest() {
                 searchKeys,
                 metadataSearchFilter,
                 rightSearchFilter,
+                null,
                 true,
             ),
             `is`(expectedSQLQuery)

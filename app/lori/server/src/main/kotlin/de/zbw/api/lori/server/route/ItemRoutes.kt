@@ -358,6 +358,10 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseRightValidOnFilter(
                             call.request.queryParameters["filterValidOn"]
                         )
+                    val noRightInformationFilter =
+                        QueryParameterParser.parseNoRightInformationFilter(
+                            call.request.queryParameters["filterNoRightInformation"]
+                        )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
@@ -411,10 +415,10 @@ fun Routing.itemRoutes(
                     )
                     val rightFilters = listOfNotNull(
                         accessStateFilter,
-                        temporalValidityFilter,
-                        startDateFilter,
                         endDateFilter,
                         formalRuleFilter,
+                        startDateFilter,
+                        temporalValidityFilter,
                         validOnFilter,
                     )
 
@@ -424,6 +428,7 @@ fun Routing.itemRoutes(
                         offset,
                         metadataFilters,
                         rightFilters,
+                        noRightInformationFilter,
                     )
                     val totalPages = ceil(queryResult.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)

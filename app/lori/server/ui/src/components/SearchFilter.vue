@@ -92,7 +92,8 @@ export default defineComponent({
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
-        searchStore.publicationTypeIdx.filter((element) => element).length > 0
+        searchStore.publicationTypeIdx.filter((element) => element).length > 0 ||
+        searchStore.noRightInformation
       );
     });
 
@@ -124,9 +125,7 @@ export default defineComponent({
       tempEventState.startDateOrEndDateValue = "";
       tempEventState.startDateOrEndDateOption = "";
 
-      searchStore.accessStateIdx = searchStore.accessStateIdx.map(
-          () => false
-      );
+      searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
         () => false
       );
@@ -134,10 +133,11 @@ export default defineComponent({
         () => false
       );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+      searchStore.noRightInformation = false;
     };
 
     const parseAccessState = (accessState: string) => {
-      switch(accessState){
+      switch (accessState) {
         case "closed":
           return "Closed Access";
         case "open":
@@ -456,6 +456,18 @@ export default defineComponent({
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.formalRuleOpenContentLicence"
+            ></v-checkbox>
+          </v-list-group>
+          <v-list-group no-action sub-group eager>
+            <template v-slot:activator>
+              <v-list-item-title>Allgemein</v-list-item-title>
+            </template>
+            <h6></h6>
+            <v-checkbox
+              label="Keine Rechteeintrag"
+              hide-details
+              class="pl-9 ml-4"
+              v-model="searchStore.noRightInformation"
             ></v-checkbox>
           </v-list-group>
         </v-col>

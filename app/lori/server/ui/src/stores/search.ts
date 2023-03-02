@@ -13,6 +13,7 @@ export const useSearchStore = defineStore("search", () => {
 
   const hasLicenceContract = ref(false);
   const hasOpenContentLicence = ref(false);
+  const noRightInformation = ref(false);
   const hasZbwUserAgreement = ref(false);
 
   const formalRuleLicenceContract = ref(false);
@@ -57,6 +58,7 @@ export const useSearchStore = defineStore("search", () => {
     hasLicenceContract,
     hasOpenContentLicence,
     hasZbwUserAgreement,
+    noRightInformation,
     paketSigelIdIdx,
     paketSigelIdReceived,
     paketSigelSelectedLastSearch,
