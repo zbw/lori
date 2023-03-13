@@ -1386,7 +1386,8 @@ class DatabaseConnectorTest : DatabaseTest() {
                 metadataSearchFilters,
                 rightSearchFilters,
                 noRightInformationFilter,
-            ), `is`(expectedQuery)
+            ),
+            `is`(expectedQuery)
         )
     }
 
