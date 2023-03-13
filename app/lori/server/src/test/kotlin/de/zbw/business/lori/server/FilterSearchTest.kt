@@ -15,6 +15,7 @@ import org.hamcrest.core.Is.`is`
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.lang.Integer.max
 import java.time.Instant
 import java.time.LocalDate
 
@@ -190,6 +191,19 @@ class FilterSearchTest : DatabaseTest() {
             description,
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
+        )
+    }
+
+    @Test
+    fun testHelperAddDefaultEntriesToMap() {
+        val expected1 = mapOf(Pair("foobar", 1), Pair("baz", 0))
+        assertThat(
+            DatabaseConnector.addDefaultEntriesToMap(
+                mapOf(Pair("foobar", 1)),
+                setOf("foobar", "baz"),
+                0
+            ) { a, b -> max(a, b) },
+            `is`(expected1)
         )
     }
 

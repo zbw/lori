@@ -9,13 +9,13 @@ package de.zbw.business.lori.server.type
 data class SearchQueryResult(
     val numberOfResults: Int,
     val results: List<Item>,
-    val accessState: Set<AccessState>,
+    val accessState: Map<AccessState, Int>,
     val invalidSearchKey: List<String>,
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
     val hasSearchTokenWithNoKey: Boolean,
     val hasZbwUserAgreement: Boolean,
-    val paketSigels: Set<String>,
-    val publicationType: Set<PublicationType>,
-    val zdbIds: Set<String>,
+    val paketSigels: Map<String, Int>,
+    val publicationType: Map<PublicationType, Int>,
+    val zdbIds: Map<String, Int>,
 )

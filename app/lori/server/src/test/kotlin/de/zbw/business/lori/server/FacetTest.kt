@@ -29,7 +29,7 @@ import java.time.LocalDate
  * Created on 10-28-2022.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class SigelAndZDBTest : DatabaseTest() {
+class FacetTest : DatabaseTest() {
     private val backend = LoriServerBackend(
         DatabaseConnector(
             connection = dataSource.connection,
@@ -77,6 +77,11 @@ class SigelAndZDBTest : DatabaseTest() {
                 accessState = AccessState.CLOSED,
                 startDate = LocalDate.of(2005, 1, 1),
                 endDate = LocalDate.of(2005, 12, 31),
+            ),
+            TEST_RIGHT.copy(
+                accessState = AccessState.OPEN,
+                startDate = LocalDate.of(2003, 1, 1),
+                endDate = LocalDate.of(2003, 12, 31),
             )
         ),
     )
@@ -117,23 +122,31 @@ class SigelAndZDBTest : DatabaseTest() {
                     itemZDB3,
                 ),
                 6,
-                setOf(
-                    itemZDB1.paketSigel,
-                    itemSigel1.paketSigel,
-                    itemSigel2.paketSigel,
-                    itemSigel3.paketSigel,
-                ),
-                setOf(
-                    itemZDB1.zdbId,
-                    itemZDB2.zdbId,
-                    itemZDB3.zdbId,
-                    itemSigel1.zdbId,
-                ),
-                setOf(
-                    AccessState.OPEN,
-                    AccessState.RESTRICTED,
-                    AccessState.CLOSED,
-                ),
+                listOf(
+                    itemSigel1.publicationType to 1,
+                    itemSigel2.publicationType to 1,
+                    itemSigel3.publicationType to 1,
+                    itemZDB1.publicationType to 1,
+                    itemZDB2.publicationType to 1,
+                    itemZDB3.publicationType to 1,
+                ).toMap(),
+                listOf(
+                    itemZDB1.paketSigel to 3,
+                    itemSigel1.paketSigel to 1,
+                    itemSigel2.paketSigel to 1,
+                    itemSigel3.paketSigel to 1,
+                ).toMap(),
+                listOf(
+                    itemZDB1.zdbId to 1,
+                    itemZDB2.zdbId to 1,
+                    itemZDB3.zdbId to 1,
+                    itemSigel1.zdbId to 3,
+                ).toMap(),
+                listOf(
+                    AccessState.OPEN to 2,
+                    AccessState.RESTRICTED to 1,
+                    AccessState.CLOSED to 4,
+                ).toMap(),
                 "search for all items, no filter"
             ),
             arrayOf(
@@ -150,13 +163,16 @@ class SigelAndZDBTest : DatabaseTest() {
                     itemSigel1,
                 ),
                 1,
-                setOf(
-                    itemSigel1.paketSigel,
-                ),
-                setOf(
-                    itemSigel1.zdbId,
-                ),
-                setOf(AccessState.OPEN),
+                listOf(
+                    itemSigel1.publicationType to 1,
+                ).toMap(),
+                listOf(
+                    itemSigel1.paketSigel to 1,
+                ).toMap(),
+                listOf(
+                    itemSigel1.zdbId to 1,
+                ).toMap(),
+                listOf(AccessState.OPEN to 1).toMap(),
                 "search for all items, filter by PaketSigel Id"
             ),
             arrayOf(
@@ -173,13 +189,16 @@ class SigelAndZDBTest : DatabaseTest() {
                     itemZDB1,
                 ),
                 1,
-                setOf(
-                    itemZDB1.paketSigel,
-                ),
-                setOf(
-                    itemZDB1.zdbId,
-                ),
-                setOf(AccessState.CLOSED),
+                listOf(
+                    itemZDB1.publicationType to 1,
+                ).toMap(),
+                listOf(
+                    itemZDB1.paketSigel to 1,
+                ).toMap(),
+                listOf(
+                    itemZDB1.zdbId to 1,
+                ).toMap(),
+                listOf(AccessState.CLOSED to 1).toMap(),
                 "search for all items, filter by ZDB-Id"
             ),
             arrayOf(
@@ -199,23 +218,25 @@ class SigelAndZDBTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 emptySet<ItemMetadata>(),
                 0,
-                emptySet<String>(),
-                emptySet<String>(),
-                emptySet<AccessState>(),
+                emptyMap<PublicationType, Int>(),
+                emptyMap<String, Int>(),
+                emptyMap<String, Int>(),
+                emptyMap<AccessState, Int>(),
                 "search for all items, filter by ZDB-Id and PaketSigel"
             ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_SIGEL_ZDB_WITH_SEARCHTERM)
-    fun testSearchWithRightFilter(
+    fun testFacets(
         givenSearchTerm: String,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightsSearchFilter: List<RightSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         expectedNumberOfResults: Int,
-        expectedPaketSigelIds: Set<String>,
-        expectedZDBIds: Set<String>,
-        expectedAccessState: Set<AccessState>,
+        expectedPublicationType: Map<PublicationType, Int>,
+        expectedPaketSigelIds: Map<String, Int>,
+        expectedZDBIds: Map<String, Int>,
+        expectedAccessState: Map<AccessState, Int>,
         description: String,
     ) {
         // when
@@ -255,7 +276,7 @@ class SigelAndZDBTest : DatabaseTest() {
         assertThat(
             searchResult.publicationType,
             `is`(
-                expectedResult.map { it.publicationType }.toSet(),
+                expectedPublicationType,
             )
         )
         // Test access state

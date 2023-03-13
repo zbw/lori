@@ -5,6 +5,7 @@ import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
 import {
+  AccessStateRest,
   ItemInformation,
   ItemRest,
   MetadataRest,
@@ -195,8 +196,11 @@ describe("Test ItemList UI", () => {
     expect((wrapper.vm as any).buildPublicationTypeFilter()).toBeUndefined();
 
     // when
-
-    searchStore.publicationTypeReceived = ["article", "book", "bookPart"];
+    searchStore.publicationTypeReceived = [
+      { count: 2, publicationType: "article" },
+      { count: 2, publicationType: "book" },
+      { count: 2, publicationType: "book_part" },
+    ];
     searchStore.publicationTypeIdx = [true, false, true];
     // then
     expect((wrapper.vm as any).buildPublicationTypeFilter()).toBe(
@@ -227,7 +231,11 @@ describe("Test ItemList UI", () => {
 
     // when
 
-    searchStore.accessStateReceived = ["open", "restricted", "closed"];
+    searchStore.accessStateReceived = [
+      { accessState: AccessStateRest.Open, count: 1 },
+      { accessState: AccessStateRest.Restricted, count: 1 },
+      { accessState: AccessStateRest.Closed, count: 1 },
+    ];
     searchStore.accessStateIdx = [true, true, true];
     expect((wrapper.vm as any).buildAccessStateFilter()).toBe(
       "OPEN,RESTRICTED,CLOSED"
@@ -384,7 +392,11 @@ describe("Test ItemList UI", () => {
     });
 
     const searchStore = useSearchStore();
-    searchStore.paketSigelIdReceived = ["foo", "bar", "baz"];
+    searchStore.paketSigelIdReceived = [
+      { paketSigel: "foo", count: 1 },
+      { paketSigel: "bar", count: 1 },
+      { paketSigel: "baz", count: 1 },
+    ];
     searchStore.paketSigelIdIdx = [true, false, true];
 
     // when + then
@@ -414,7 +426,11 @@ describe("Test ItemList UI", () => {
     });
 
     const searchStore = useSearchStore();
-    searchStore.zdbIdReceived = ["foo", "bar", "baz"];
+    searchStore.zdbIdReceived = [
+      { zdbId: "foo", count: 1 },
+      { zdbId: "bar", count: 1 },
+      { zdbId: "baz", count: 1 },
+    ];
     searchStore.zdbIdIdx = [true, false, true];
 
     // when + then

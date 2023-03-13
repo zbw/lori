@@ -1317,7 +1317,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SIGEL_AND_ZDB)
-    fun testBuildMetadataQueryForSigelAndZDB(
+    fun testBuildQueryForFacetSearch(
         searchKeys: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
@@ -1337,10 +1337,65 @@ class DatabaseConnectorTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_BUILD_OCCURRENCE_QUERY)
+    fun createDataForOccurrenceQuery() =
+        arrayOf(
+            arrayOf(
+                setOf(
+                    PublicationType.ARTICLE.toString(),
+                    PublicationType.PROCEEDINGS.toString(),
+                    PublicationType.PERIODICAL_PART.toString()
+                ),
+                DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
+                listOf(SearchKey.COLLECTION to "foo").toMap(),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                null,
+                "SELECT A.publication_type, COUNT(sub.publication_type) FROM(VALUES ('ARTICLE'),('PROCEEDINGS'),('PERIODICAL_PART')) as A(publication_type) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,collection_name <-> ? as dist_col FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.publication_type = sub.publication_type  WHERE sub.dist_col < 0.9 GROUP BY A.publication_type"
+            ),
+            arrayOf(
+                setOf(
+                    AccessState.OPEN.toString(),
+                    AccessState.CLOSED.toString(),
+                    AccessState.RESTRICTED.toString(),
+                ),
+                DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE,
+                listOf(SearchKey.COLLECTION to "foo").toMap(),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                null,
+                "SELECT A.access_state, COUNT(sub.access_state) FROM(VALUES ('OPEN'),('CLOSED'),('RESTRICTED')) as A(access_state) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.access_state) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,collection_name <-> ? as dist_col FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.access_state = sub.access_state  WHERE sub.dist_col < 0.9 GROUP BY A.access_state"
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BUILD_OCCURRENCE_QUERY)
+    fun testBuildOccurrenceQuery(
+        values: Set<String>,
+        columnName: String,
+        searchKeyMap: Map<SearchKey, List<String>>,
+        metadataSearchFilters: List<MetadataSearchFilter>,
+        rightSearchFilters: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        expectedQuery: String,
+    ) {
+        assertThat(
+            DatabaseConnector.buildSearchQueryOccurrence(
+                DatabaseConnector.createValuesForSql(values),
+                columnName,
+                searchKeyMap,
+                metadataSearchFilters,
+                rightSearchFilters,
+                noRightInformationFilter,
+            ),
+            `is`(expectedQuery)
+        )
+    }
+
     companion object {
         const val DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
+        const val DATA_FOR_BUILD_OCCURRENCE_QUERY = "DATA_FOR_BUILD_OCCURENCE_QUERY"
         const val DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH =
             "DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH "
         const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
