@@ -1,11 +1,16 @@
 import { defineStore } from "pinia";
 import { Ref, ref } from "vue";
+import {
+    AccessStateWithCountRest,
+    PaketSigelWithCountRest,
+    PublicationTypeWithCountRest, ZdbIdWithCountRest
+} from "@/generated-sources/openapi";
 
 export const useSearchStore = defineStore("search", () => {
   const lastSearchTerm = ref("");
 
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
-  const accessStateReceived: Ref<Array<string>> = ref([]);
+  const accessStateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
   const accessStateSelectedLastSearch: Ref<Array<string>> = ref([]);
   const accessStateClosed = ref(false);
   const accessStateOpen = ref(false);
@@ -24,11 +29,11 @@ export const useSearchStore = defineStore("search", () => {
   const publicationDateTo = ref("");
 
   const paketSigelIdIdx: Ref<Array<boolean>> = ref([]);
-  const paketSigelIdReceived: Ref<Array<string>> = ref([]);
+  const paketSigelIdReceived: Ref<Array<PaketSigelWithCountRest>> = ref([]);
   const paketSigelSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const publicationTypeIdx: Ref<Array<boolean>> = ref([]);
-  const publicationTypeReceived: Ref<Array<string>> = ref([]);
+  const publicationTypeReceived: Ref<Array<PublicationTypeWithCountRest>> = ref([]);
   const publicationTypeSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const temporalEventInput = ref("");
@@ -41,7 +46,7 @@ export const useSearchStore = defineStore("search", () => {
   const temporalValidOn = ref("");
 
   const zdbIdIdx: Ref<Array<boolean>> = ref([]);
-  const zdbIdReceived: Ref<Array<string>> = ref([]);
+  const zdbIdReceived: Ref<Array<ZdbIdWithCountRest>> = ref([]);
   const zdbIdSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   return {

@@ -92,7 +92,8 @@ export default defineComponent({
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
-        searchStore.publicationTypeIdx.filter((element) => element).length > 0 ||
+        searchStore.publicationTypeIdx.filter((element) => element).length >
+          0 ||
         searchStore.noRightInformation
       );
     });
@@ -136,40 +137,48 @@ export default defineComponent({
       searchStore.noRightInformation = false;
     };
 
-    const parseAccessState = (accessState: string) => {
+    const parseAccessState = (accessState: string, count: number) => {
       switch (accessState) {
         case "closed":
-          return "Closed Access";
+          return "Closed Access " + "(" + count + ")";
         case "open":
-          return "Open Access";
+          return "Open Access " + "(" + count + ")";
         case "restricted":
-          return "Restricted Access";
+          return "Restricted Access " + "(" + count + ")";
       }
     };
 
-    const parsePublicationType = (pubType: string) => {
+    const parsePublicationType = (pubType: string, count: number) => {
       switch (pubType) {
         case "article":
-          return "Aufsatz/Article";
+          return "Aufsatz/Article " + "(" + count + ")";
         case "book":
-          return "Buch/Book";
+          return "Buch/Book " + "(" + count + ")";
         case "bookPart":
-          return "Buchaufsatz/Book Part";
+          return "Buchaufsatz/Book Part " + "(" + count + ")";
         case "conferencePaper":
-          return "Konferenzschrift/\n Conference Paper";
+          return "Konferenzschrift/\n Conference Paper " + "(" + count + ")";
         case "periodicalPart":
-          return "Zeitschriftenband/\n Periodical Part";
+          return "Zeitschriftenband/\n Periodical Part " + "(" + count + ")";
         case "proceedings":
-          return "Konferenzband/\n Proceeding";
+          return "Konferenzband/\n Proceeding " + "(" + count + ")";
         case "researchReport":
-          return "Forschungsbericht/\n Research Report";
+          return "Forschungsbericht/\n Research Report " + "(" + count + ")";
         case "thesis":
-          return "Thesis";
+          return "Thesis " + "(" + count + ")";
         case "workingPaper":
-          return "Working Paper";
+          return "Working Paper " + "(" + count + ")";
         default:
           return "Unknown pub type:" + pubType;
       }
+    };
+
+    const ppPaketSigel = (paketSigel: string, count: number) =>{
+      return paketSigel + " (" + count + ")";
+    };
+
+    const ppZDBId = (zdbId: string, count: number) =>{
+      return zdbId + " (" + count + ")";
     };
 
     return {
@@ -184,6 +193,8 @@ export default defineComponent({
       v$,
       parseAccessState,
       parsePublicationType,
+      ppPaketSigel,
+      ppZDBId,
       resetFilter,
     };
   },
@@ -233,7 +244,7 @@ export default defineComponent({
             <v-checkbox
               v-for="(item, i) in searchStore.publicationTypeReceived"
               :key="i"
-              :label="parsePublicationType(item)"
+              :label="parsePublicationType(item.publicationType, item.count)"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.publicationTypeIdx[i]"
@@ -247,7 +258,7 @@ export default defineComponent({
             <v-checkbox
               v-for="(item, i) in searchStore.paketSigelIdReceived"
               :key="i"
-              :label="item"
+              :label="ppPaketSigel(item.paketSigel, item.count)"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.paketSigelIdIdx[i]"
@@ -263,7 +274,7 @@ export default defineComponent({
         <v-checkbox
           v-for="(item, i) in searchStore.zdbIdReceived"
           :key="i"
-          :label="item"
+          :label="ppZDBId(item.zdbId, item.count)"
           hide-details
           class="pl-9 ml-4"
           v-model="searchStore.zdbIdIdx[i]"
@@ -282,7 +293,7 @@ export default defineComponent({
             <v-checkbox
               v-for="(item, i) in searchStore.accessStateReceived"
               :key="i"
-              :label="parseAccessState(item)"
+              :label="parseAccessState(item.accessState,item.count)"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.accessStateIdx[i]"

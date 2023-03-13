@@ -23,11 +23,11 @@ data class FacetTransient(
 )
 
 data class FacetTransientSet(
-    val accessState: Set<AccessState>,
+    val accessState: Map<AccessState, Int>,
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
-    val paketSigels: Set<String>,
-    val publicationType: Set<PublicationType>,
-    val zdbIds: Set<String>,
+    val paketSigels: Map<String, Int>,
+    val publicationType: Map<PublicationType, Int>,
+    val zdbIds: Map<String, Int>,
 )

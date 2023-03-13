@@ -32,6 +32,8 @@ import java.sql.Types
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.function.BiFunction
+import kotlin.math.max
 
 /**
  * Connector for interacting with the postgres database.
@@ -1141,10 +1143,36 @@ class DatabaseConnector(
             } else null
         }.takeWhile { true }.toList()
         return FacetTransientSet(
-            accessState = received.mapNotNull { it.accessState }.toSet(),
-            paketSigels = received.mapNotNull { it.paketSigel }.toSet(),
-            publicationType = received.map { it.publicationType }.toSet(),
-            zdbIds = received.mapNotNull { it.zdbId }.toSet(),
+            accessState = getAccessStateOccurrences(
+                givenAccessState = received.mapNotNull { it.accessState }.toSet(),
+                searchTerms = searchTerms,
+                metadataSearchFilter = metadataSearchFilter,
+                rightSearchFilter = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+            ),
+            paketSigels = searchOccurrences(
+                givenValues = received.mapNotNull { it.paketSigel }.toSet(),
+                occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
+                searchTerms = searchTerms,
+                metadataSearchFilter = metadataSearchFilter,
+                rightSearchFilter = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+            ),
+            publicationType = getPublicationTypeOccurrences(
+                givenPublicationType = received.map { it.publicationType }.toSet(),
+                searchTerms = searchTerms,
+                metadataSearchFilter = metadataSearchFilter,
+                rightSearchFilter = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+            ),
+            zdbIds = searchOccurrences(
+                givenValues = received.mapNotNull { it.zdbId }.toSet(),
+                occurrenceForColumn = COLUMN_METADATA_ZDB_ID,
+                searchTerms = searchTerms,
+                metadataSearchFilter = metadataSearchFilter,
+                rightSearchFilter = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+            ),
             hasLicenceContract = received.any { it.licenceContract?.isNotBlank() ?: false },
             hasZbwUserAgreement = received.any { it.zbwUserAgreement },
             hasOpenContentLicence = listOf(
@@ -1154,6 +1182,96 @@ class DatabaseConnector(
                 received.any { it.oclRestricted },
             ).any { it }
         )
+    }
+
+    private fun getAccessStateOccurrences(
+        searchTerms: Map<SearchKey, List<String>>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        givenAccessState: Set<AccessState>,
+    ): Map<AccessState, Int> {
+        return searchOccurrences(
+            givenValues = givenAccessState.map { it.toString() }.toSet(),
+            occurrenceForColumn = COLUMN_RIGHT_ACCESS_STATE,
+            searchTerms = searchTerms,
+            metadataSearchFilter = metadataSearchFilter,
+            rightSearchFilter = rightSearchFilter,
+            noRightInformationFilter = noRightInformationFilter,
+        ).toList().associate { Pair(AccessState.valueOf(it.first), it.second) }
+    }
+
+    private fun getPublicationTypeOccurrences(
+        searchTerms: Map<SearchKey, List<String>>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        givenPublicationType: Set<PublicationType>,
+    ): Map<PublicationType, Int> {
+        return searchOccurrences(
+            givenValues = givenPublicationType.map { it.toString() }.toSet(),
+            occurrenceForColumn = COLUMN_METADATA_PUBLICATION_TYPE,
+            searchTerms = searchTerms,
+            metadataSearchFilter = metadataSearchFilter,
+            rightSearchFilter = rightSearchFilter,
+            noRightInformationFilter = noRightInformationFilter,
+        ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
+    }
+
+    internal fun searchOccurrences(
+        searchTerms: Map<SearchKey, List<String>>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        givenValues: Set<String>,
+        occurrenceForColumn: String,
+    ): Map<String, Int> {
+        if (givenValues.isEmpty()) {
+            return emptyMap()
+        }
+        val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
+        val prepStmt = connection.prepareStatement(
+            buildSearchQueryOccurrence(
+                createValuesForSql(givenValues),
+                occurrenceForColumn,
+                searchTerms,
+                metadataSearchFilter,
+                rightSearchFilter,
+                noRightInformationFilter,
+            )
+        ).apply {
+            var counter = 1
+            entries.forEach { entry ->
+                this.setString(counter++, entry.value.joinToString(" "))
+            }
+            rightSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            metadataSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+        }
+        val span = tracer.spanBuilder("searchForOccurrence").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+
+        val received: List<Pair<String, Int>> = generateSequence {
+            if (rs.next()) {
+                Pair(
+                    rs.getString(1),
+                    rs.getInt(2),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+        val occurrenceMap = received.toMap().toMutableMap()
+        // Make sure that every given value still exist in the resulting map. That should
+        // never be necessary but in case of any expected value has no counts, the frontend
+        // will still display it.
+        return addDefaultEntriesToMap(occurrenceMap, givenValues, 0) { a, b -> max(a, b) }
     }
 
     private fun <T> PreparedStatement.setIfNotNull(
@@ -1332,6 +1450,18 @@ class DatabaseConnector(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
+
+        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+                "$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE"
+
+        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id, $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+                "$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE"
 
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
@@ -1672,7 +1802,9 @@ class DatabaseConnector(
             }
 
             val joinItemRight =
-                if (collectFacets && rightSearchFilter.isEmpty() || noRightInformationFilterClause.isNotBlank()) {
+                if (
+                    (collectFacets && rightSearchFilter.isEmpty()) || noRightInformationFilterClause.isNotBlank()
+                ) {
                     "LEFT JOIN"
                 } else {
                     "JOIN"
@@ -1690,6 +1822,8 @@ class DatabaseConnector(
             searchKeyMap: Map<SearchKey, List<String>>,
             rightSearchFilters: List<RightSearchFilter>,
             forceRightTableJoin: Boolean = false,
+            collectOccurrences: Boolean = false,
+            collectOccurrencesAccessRight: Boolean = false,
         ): String {
             val trgmSelect = searchKeyMap.entries.joinToString(separator = ",") { entry ->
                 entry.key.toSelectClause()
@@ -1697,14 +1831,57 @@ class DatabaseConnector(
                 ?.let {
                     ",$it"
                 } ?: ""
-            return if (rightSearchFilters.isEmpty() && !forceRightTableJoin) {
-                "$STATEMENT_SELECT_ALL_METADATA$trgmSelect"
+            return if (collectOccurrencesAccessRight) {
+                "$STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS$trgmSelect"
+            } else if (collectOccurrences) {
+                "$STATEMENT_SELECT_OCCURRENCE_DISTINCT$trgmSelect"
             } else if (forceRightTableJoin) {
                 "$STATEMENT_SELECT_ALL_FACETS$trgmSelect"
+            } else if (rightSearchFilters.isEmpty()) {
+                "$STATEMENT_SELECT_ALL_METADATA$trgmSelect"
             } else {
                 "$STATEMENT_SELECT_ALL_METADATA_DISTINCT$trgmSelect"
             }
         }
+
+        fun buildSearchQueryOccurrence(
+            values: String,
+            columnName: String,
+            searchKeyMap: Map<SearchKey, List<String>>,
+            metadataSearchFilters: List<MetadataSearchFilter>,
+            rightSearchFilters: List<RightSearchFilter>,
+            noRightInformationFilter: NoRightInformationFilter?,
+        ): String {
+            val subquery = buildSearchQuerySelect(
+                searchKeyMap = searchKeyMap,
+                rightSearchFilters = rightSearchFilters,
+                collectOccurrences = true,
+                collectOccurrencesAccessRight = columnName == COLUMN_RIGHT_ACCESS_STATE,
+            ) + " FROM $TABLE_NAME_ITEM_METADATA" +
+                buildSearchQueryHelper(
+                    metadataSearchFilter = metadataSearchFilters,
+                    rightSearchFilter = rightSearchFilters,
+                    noRightInformationFilter = noRightInformationFilter,
+                    collectFacets = true,
+                )
+            val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
+                entry.key.toWhereClause()
+            }.takeIf { it.isNotBlank() }
+                ?.let {
+                    " WHERE $it"
+                }
+                ?: ""
+
+            return "SELECT A.$columnName, COUNT(${SearchKey.SUBQUERY_NAME}.$columnName)" +
+                " FROM($values) as A($columnName)" +
+                " LEFT JOIN ($subquery) AS ${SearchKey.SUBQUERY_NAME}" +
+                " ON A.$columnName = ${SearchKey.SUBQUERY_NAME}.$columnName " +
+                trgmWhere +
+                " GROUP BY A.$columnName"
+        }
+
+        internal fun createValuesForSql(given: Set<String>): String =
+            "VALUES " + given.joinToString(separator = ",") { "('$it')" }
 
         private fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
             metadataId = rs.getString(1),
@@ -1746,6 +1923,21 @@ class DatabaseConnector(
                     ?.let { gson.fromJson(it, groupListType) }
                     ?: emptyList()
             )
+        }
+
+        internal fun <K, V : Any> addDefaultEntriesToMap(
+            givenMap: Map<K, V>,
+            keys: Set<K>,
+            defaultValue: V,
+            remappingFunction: BiFunction<V, V, V>,
+        ): Map<K, V> {
+            val mMap = givenMap.toMutableMap()
+            val defaultEntries = keys.toList().map { Pair(it, defaultValue) }
+            defaultEntries.fold(mMap) { acc, elem ->
+                acc.merge(elem.first, elem.second, remappingFunction)
+                acc
+            }
+            return mMap.toMap()
         }
     }
 }

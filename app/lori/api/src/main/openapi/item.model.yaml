@@ -7,24 +7,24 @@ ItemInformation:
   properties:
     totalPages:
       type: integer
-    accessState:
+    accessStateWithCount:
       type: array
       items:
-        $ref: 'right.model.yaml#/AccessStateRest'
+        $ref: 'item.model.yaml#/AccessStateWithCountRest'
     numberOfResults:
       type: integer
-    paketSigels:
+    paketSigelWithCount:
       type: array
       items:
-        type: string
-    zdbIds:
+        $ref: 'item.model.yaml#/PaketSigelWithCountRest'
+    zdbIdWithCount:
       type: array
       items:
-        type: string
-    publicationType:
+        $ref: 'item.model.yaml#/ZdbIdWithCountRest'
+    publicationTypeWithCount:
       type: array
       items:
-        $ref: 'metadata.model.yaml#/PublicationTypeRest'
+        $ref: 'item.model.yaml#/PublicationTypeWithCountRest'
     hasLicenceContract:
       type: boolean
     hasOpenContentLicence:
@@ -75,3 +75,47 @@ ItemCountByRight:
       type: string
     count:
       type: integer
+
+AccessStateWithCountRest:
+  required:
+    - count
+    - accessState
+  type: object
+  properties:
+    accessState:
+      $ref: 'right.model.yaml#/AccessStateRest'
+    count:
+      type: integer
+
+PaketSigelWithCountRest:
+  required:
+    - count
+    - paketSigel
+  type: object
+  properties:
+    count:
+      type: integer
+    paketSigel:
+      type: string
+
+ZdbIdWithCountRest:
+  required:
+    - count
+    - zdbId
+  type: object
+  properties:
+    count:
+      type: integer
+    zdbId:
+      type: string
+
+PublicationTypeWithCountRest:
+  required:
+    - count
+    - publicationType
+  type: object
+  properties:
+    count:
+      type: integer
+    publicationType:
+      $ref: 'metadata.model.yaml#/PublicationTypeRest'
