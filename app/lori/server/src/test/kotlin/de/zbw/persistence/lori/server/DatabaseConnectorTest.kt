@@ -294,7 +294,7 @@ class DatabaseConnectorTest : DatabaseTest() {
         // Insert
         // when
         val generatedRightId = dbConnector.insertRight(initialRight)
-        val receivedRights: List<ItemRight> = dbConnector.getRights(listOf(generatedRightId))
+        val receivedRights: List<ItemRight> = dbConnector.getRightsByIds(listOf(generatedRightId))
 
         // then
         assertThat(receivedRights.first(), `is`(initialRight.copy(rightId = generatedRightId)))
@@ -313,18 +313,18 @@ class DatabaseConnectorTest : DatabaseTest() {
 
         // then
         assertThat(updatedRights, `is`(1))
-        val receivedUpdatedRights: List<ItemRight> = dbConnector.getRights(listOf(generatedRightId))
+        val receivedUpdatedRights: List<ItemRight> = dbConnector.getRightsByIds(listOf(generatedRightId))
         assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1))))
 
         // delete
         // when
-        val deletedItems = dbConnector.deleteRights(listOf(generatedRightId))
+        val deletedItems = dbConnector.deleteRightsByIds(listOf(generatedRightId))
 
         // then
         assertThat(deletedItems, `is`(1))
 
         // when + then
-        assertThat(dbConnector.getRights(listOf(generatedRightId)), `is`(emptyList()))
+        assertThat(dbConnector.getRightsByIds(listOf(generatedRightId)), `is`(emptyList()))
         assertFalse(dbConnector.rightContainsId(generatedRightId))
     }
 
@@ -349,7 +349,7 @@ class DatabaseConnectorTest : DatabaseTest() {
             tracer,
             mockk(),
         )
-        dbConnector.getRights(listOf("1"))
+        dbConnector.getRightsByIds(listOf("1"))
     }
 
     @Test

@@ -45,6 +45,7 @@ class DatabaseConnector(
     val connection: Connection,
     private val tracer: Tracer,
     private val gson: Gson,
+    internal val bookmarkDB: BookmarkDB = BookmarkDB(connection, tracer),
 ) {
     constructor(
         config: LoriConfiguration,
@@ -767,11 +768,11 @@ class DatabaseConnector(
         }
     }
 
-    fun deleteRights(rightIds: List<String>): Int {
+    fun deleteRightsByIds(rightIds: List<String>): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
             this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
         }
-        val span = tracer.spanBuilder("deleteRights").startSpan()
+        val span = tracer.spanBuilder("deleteRightsByIds").startSpan()
         return try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
@@ -780,12 +781,12 @@ class DatabaseConnector(
         }
     }
 
-    fun getRights(rightsIds: List<String>): List<ItemRight> {
+    fun getRightsByIds(rightsIds: List<String>): List<ItemRight> {
         val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
             this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
         }
 
-        val span = tracer.spanBuilder("getRights").startSpan()
+        val span = tracer.spanBuilder("getRightsByIds").startSpan()
         val rs = try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.executeQuery() }
@@ -1218,7 +1219,7 @@ class DatabaseConnector(
         ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
     }
 
-    internal fun searchOccurrences(
+    private fun searchOccurrences(
         searchTerms: Map<SearchKey, List<String>>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
@@ -1273,12 +1274,6 @@ class DatabaseConnector(
         // will still display it.
         return addDefaultEntriesToMap(occurrenceMap, givenValues, 0) { a, b -> max(a, b) }
     }
-
-    private fun <T> PreparedStatement.setIfNotNull(
-        idx: Int,
-        element: T?,
-        setter: (T, Int, PreparedStatement) -> Unit,
-    ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
 
     companion object {
         private const val TABLE_NAME_ITEM = "item"
@@ -1556,7 +1551,7 @@ class DatabaseConnector(
                 "WHERE h.metadata_id = ANY(?)"
 
         const val STATEMENT_GET_RIGHTS =
-            "SELECT right_id, created_on, last_updated_on, created_by," +
+            "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
@@ -1939,5 +1934,15 @@ class DatabaseConnector(
             }
             return mMap.toMap()
         }
+
+        /**
+         * Helper function which adds a parameter to a prepared query.
+         * Inserts NULL if the given if the parameter is null.
+         */
+        fun <T> PreparedStatement.setIfNotNull(
+            idx: Int,
+            element: T?,
+            setter: (T, Int, PreparedStatement) -> Unit,
+        ) = element?.let { setter(element, idx, this) } ?: this.setNull(idx, Types.NULL)
     }
 }

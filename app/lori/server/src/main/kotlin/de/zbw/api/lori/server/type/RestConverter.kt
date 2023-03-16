@@ -307,8 +307,8 @@ fun RoleRest.Role.toBusiness(): UserRole =
     }
 
 /**
- * Utility functions helping to perform convert
- * REST to Business Object and vice versa.
+ * Utility functions helping to convert
+ * REST to Business Objects and vice versa.
  */
 object RestConverter {
     fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =

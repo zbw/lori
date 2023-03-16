@@ -30,6 +30,8 @@ abstract class DatabaseTest {
     }
 
     init {
+        // TODO: This doesn't work for some reason
+        dataSource.connection.autoCommit = false
         dataSource.connection
             .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
             .execute()
