@@ -6,8 +6,9 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -34,7 +35,6 @@ class FacetTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-            gson = mockk(),
         ),
         mockk(),
     )
@@ -89,7 +89,7 @@ class FacetTest : DatabaseTest() {
     @BeforeClass
     fun fillDB() {
         mockkStatic(Instant::class)
-        every { Instant.now() } returns DatabaseConnectorTest.NOW.toInstant()
+        every { Instant.now() } returns NOW.toInstant()
         mockkStatic(LocalDate::class)
         every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
         getInitialMetadata().forEach { entry ->
@@ -291,22 +291,22 @@ class FacetTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_SEARCH_SIGEL_ZDB_WITH_SEARCHTERM = "DATA_FOR_SEARCH_SIGEL_ZDB_WITH_SEARCHTERM"
 
-        const val SIGEL_1 = "sigel_1"
-        const val SIGEL_2 = "sigel_2"
-        const val SIGEL_3 = "sigel_3"
+        private const val SIGEL_1 = "sigel_1"
+        private const val SIGEL_2 = "sigel_2"
+        private const val SIGEL_3 = "sigel_3"
 
-        const val ZDB_1 = "zdb1"
-        const val ZDB_2 = "zdb2"
-        const val ZDB_3 = "zdb3"
+        private const val ZDB_1 = "zdb1"
+        private const val ZDB_2 = "zdb2"
+        private const val ZDB_3 = "zdb3"
 
-        val itemZDB1 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemZDB1 = TEST_Metadata.copy(
             metadataId = "zdb1",
             collectionName = "common zdb",
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
-        val itemSigel1 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemSigel1 = TEST_Metadata.copy(
             metadataId = "sigel1",
             collectionName = "common sigel",
             paketSigel = SIGEL_1,
@@ -314,14 +314,14 @@ class FacetTest : DatabaseTest() {
             publicationType = PublicationType.BOOK_PART,
         )
 
-        val itemZDB2 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemZDB2 = TEST_Metadata.copy(
             metadataId = "zdb2",
             collectionName = "common zdb",
             zdbId = ZDB_2,
             publicationDate = LocalDate.of(2012, 1, 1),
             publicationType = PublicationType.CONFERENCE_PAPER,
         )
-        val itemSigel2 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemSigel2 = TEST_Metadata.copy(
             metadataId = "sigel2",
             collectionName = "common sigel",
             paketSigel = SIGEL_2,
@@ -329,14 +329,14 @@ class FacetTest : DatabaseTest() {
             publicationType = PublicationType.PERIODICAL_PART,
         )
 
-        val itemZDB3 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemZDB3 = TEST_Metadata.copy(
             metadataId = "zdb3",
             collectionName = "common zdb",
             zdbId = ZDB_3,
             publicationDate = LocalDate.of(2014, 1, 1),
             publicationType = PublicationType.PROCEEDINGS,
         )
-        val itemSigel3 = DatabaseConnectorTest.TEST_Metadata.copy(
+        val itemSigel3 = TEST_Metadata.copy(
             metadataId = "sigel3",
             collectionName = "common sigel",
             paketSigel = SIGEL_3,

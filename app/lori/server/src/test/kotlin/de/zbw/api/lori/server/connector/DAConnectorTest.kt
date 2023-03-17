@@ -10,7 +10,6 @@ import de.zbw.api.lori.server.type.DAMetadata
 import de.zbw.api.lori.server.type.DAObject
 import de.zbw.api.lori.server.type.DAResourcePolicy
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.persistence.lori.server.DatabaseConnector
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -107,8 +106,8 @@ class DAConnectorTest {
             // given
             val backend = spyk(
                 LoriServerBackend(
-                    mockk<DatabaseConnector>() {
-                        every { upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
+                    mockk() {
+                        every { metadataDB.upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
                     },
                     mockk<LoriConfiguration>(),
                 )

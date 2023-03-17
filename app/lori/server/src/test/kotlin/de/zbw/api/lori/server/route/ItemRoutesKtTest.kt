@@ -13,7 +13,7 @@ import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
-import de.zbw.persistence.lori.server.DatabaseConnectorTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -780,7 +780,7 @@ class ItemRoutesKtTest {
             publicationType = PublicationTypeRest.book,
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
-            storageDate = DatabaseConnectorTest.NOW.minusDays(3),
+            storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,

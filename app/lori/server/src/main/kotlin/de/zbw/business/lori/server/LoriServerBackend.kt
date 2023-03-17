@@ -46,27 +46,27 @@ class LoriServerBackend(
         right: ItemRight,
         metadataIds: List<String>,
     ): String {
-        val pkRight = dbConnector.insertRight(right)
+        val pkRight = dbConnector.rightDB.insertRight(right)
         metadataIds.forEach {
-            dbConnector.insertItem(it, pkRight)
+            dbConnector.itemDB.insertItem(it, pkRight)
         }
         return pkRight
     }
 
-    fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.insertItem(metadataId, rightId)
+    fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.itemDB.insertItem(metadataId, rightId)
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
 
-    fun insertGroup(group: Group): String = dbConnector.insertGroup(group)
+    fun insertGroup(group: Group): String = dbConnector.groupDB.insertGroup(group)
 
     fun insertMetadataElement(metadata: ItemMetadata): String =
-        dbConnector.insertMetadata(metadata)
+        dbConnector.metadataDB.insertMetadata(metadata)
 
     fun insertRight(right: ItemRight): String {
-        val generatedRightId = dbConnector.insertRight(right)
+        val generatedRightId = dbConnector.rightDB.insertRight(right)
         right.groupIds?.forEach { gId ->
-            dbConnector.insertGroupRightPair(
+            dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
                 groupId = gId,
             )
@@ -74,16 +74,16 @@ class LoriServerBackend(
         return generatedRightId
     }
 
-    fun updateGroup(group: Group): Int = dbConnector.updateGroup(group)
+    fun updateGroup(group: Group): Int = dbConnector.groupDB.updateGroup(group)
 
     fun upsertRight(right: ItemRight): Int {
         val rightId = right.rightId!!
-        val oldGroupIds = dbConnector.getGroupsByRightId(rightId).toSet()
+        val oldGroupIds = dbConnector.groupDB.getGroupsByRightId(rightId).toSet()
         val newGroupIds = right.groupIds?.toSet() ?: emptySet()
 
         val toAdd = newGroupIds.subtract(oldGroupIds)
         toAdd.forEach { gId ->
-            dbConnector.insertGroupRightPair(
+            dbConnector.groupDB.insertGroupRightPair(
                 rightId = rightId,
                 groupId = gId,
             )
@@ -91,39 +91,39 @@ class LoriServerBackend(
 
         val toRemove = oldGroupIds.subtract(newGroupIds)
         toRemove.forEach { gId ->
-            dbConnector.deleteGroupPair(
+            dbConnector.groupDB.deleteGroupPair(
                 rightId = rightId,
                 groupId = gId,
             )
         }
 
-        return dbConnector.upsertRight(right)
+        return dbConnector.rightDB.upsertRight(right)
     }
 
     fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
-        dbConnector.upsertMetadataBatch(metadataElems.map { it })
+        dbConnector.metadataDB.upsertMetadataBatch(metadataElems.map { it })
 
-    fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.upsertMetadataBatch(metadata)
+    fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
 
     fun getMetadataList(limit: Int, offset: Int): List<ItemMetadata> =
-        dbConnector.getMetadataRange(limit, offset).takeIf {
+        dbConnector.metadataDB.getMetadataRange(limit, offset).takeIf {
             it.isNotEmpty()
         }?.let { metadataList ->
             metadataList.sortedBy { it.metadataId }
         } ?: emptyList()
 
-    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.getMetadata(metadataIds)
+    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(metadataIds)
 
-    fun metadataContainsId(id: String): Boolean = dbConnector.metadataContainsId(id)
+    fun metadataContainsId(id: String): Boolean = dbConnector.metadataDB.metadataContainsId(id)
 
-    fun rightContainsId(rightId: String): Boolean = dbConnector.rightContainsId(rightId)
+    fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
 
     fun getItemByMetadataId(metadataId: String): Item? =
-        dbConnector.getMetadata(listOf(metadataId)).takeIf { it.isNotEmpty() }
+        dbConnector.metadataDB.getMetadata(listOf(metadataId)).takeIf { it.isNotEmpty() }
             ?.first()
             ?.let { meta ->
-                val rights = dbConnector.getRightIdsByMetadata(metadataId).let {
-                    dbConnector.getRightsByIds(it)
+                val rights = dbConnector.rightDB.getRightIdsByMetadata(metadataId).let {
+                    dbConnector.rightDB.getRightsByIds(it)
                 }
                 Item(
                     meta,
@@ -131,19 +131,19 @@ class LoriServerBackend(
                 )
             }
 
-    fun getGroupById(groupId: String): Group? = dbConnector.getGroupById(groupId)
+    fun getGroupById(groupId: String): Group? = dbConnector.groupDB.getGroupById(groupId)
 
     fun getGroupList(
         limit: Int,
         offset: Int,
     ): List<Group> =
-        dbConnector.getGroupList(limit, offset)
+        dbConnector.groupDB.getGroupList(limit, offset)
 
     fun getGroupListIdsOnly(
         limit: Int,
         offset: Int,
     ): List<Group> =
-        dbConnector.getGroupListIdsOnly(limit, offset)
+        dbConnector.groupDB.getGroupListIdsOnly(limit, offset)
             .map {
                 Group(
                     name = it,
@@ -153,14 +153,14 @@ class LoriServerBackend(
             }
 
     fun getRightsByIds(rightIds: List<String>): List<ItemRight> {
-        return dbConnector.getRightsByIds(rightIds)
+        return dbConnector.rightDB.getRightsByIds(rightIds)
     }
 
     fun getItemList(
         limit: Int,
         offset: Int,
     ): List<Item> {
-        val receivedMetadata = dbConnector.getMetadataRange(limit, offset)
+        val receivedMetadata = dbConnector.metadataDB.getMetadataRange(limit, offset)
         return receivedMetadata
             .takeIf {
                 it.isNotEmpty()
@@ -173,43 +173,43 @@ class LoriServerBackend(
         metadataList: List<ItemMetadata>,
     ): List<Item> {
         val metadataToRights = metadataList.map { metadata ->
-            metadata to dbConnector.getRightIdsByMetadata(metadata.metadataId)
+            metadata to dbConnector.rightDB.getRightIdsByMetadata(metadata.metadataId)
         }
         return metadataToRights.map { p ->
             Item(
                 p.first,
-                dbConnector.getRightsByIds(p.second)
+                dbConnector.rightDB.getRightsByIds(p.second)
             )
         }
     }
 
-    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemContainsRight(rightId)
+    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemDB.itemContainsRight(rightId)
 
-    fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.itemContainsMetadata(metadataId)
+    fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
 
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
-        dbConnector.itemContainsEntry(metadataId, rightId)
+        dbConnector.itemDB.itemContainsEntry(metadataId, rightId)
 
     fun countMetadataEntries(): Int =
-        dbConnector.countSearchMetadata(
+        dbConnector.searchDB.countSearchMetadata(
             emptyMap(),
             emptyList(),
             emptyList(),
             null,
         )
 
-    fun countItemByRightId(rightId: String) = dbConnector.countItemByRightId(rightId)
+    fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
 
-    fun deleteItemEntry(metadataId: String, rightId: String) = dbConnector.deleteItem(metadataId, rightId)
+    fun deleteItemEntry(metadataId: String, rightId: String) = dbConnector.itemDB.deleteItem(metadataId, rightId)
 
-    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.deleteItemByMetadata(metadataId)
+    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadata(metadataId)
 
-    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.deleteItemByRight(rightId)
+    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRight(rightId)
 
     fun deleteGroup(groupId: String): Int {
-        val receivedRights: List<String> = dbConnector.getRightsByGroupId(groupId)
+        val receivedRights: List<String> = dbConnector.groupDB.getRightsByGroupId(groupId)
         return if (receivedRights.isEmpty()) {
-            dbConnector.deleteGroupById(groupId)
+            dbConnector.groupDB.deleteGroupById(groupId)
         } else {
             throw ResourceStillInUseException(
                 "Gruppe wird noch von folgenden Rechte-Ids verwendet: " + receivedRights.joinToString(separator = ",")
@@ -217,22 +217,22 @@ class LoriServerBackend(
         }
     }
 
-    fun deleteMetadata(metadataId: String): Int = dbConnector.deleteMetadata(listOf(metadataId))
+    fun deleteMetadata(metadataId: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(metadataId))
 
     fun deleteRight(rightId: String): Int {
-        dbConnector.deleteGroupPairsByRightId(rightId)
-        return dbConnector.deleteRightsByIds(listOf(rightId))
+        dbConnector.groupDB.deleteGroupPairsByRightId(rightId)
+        return dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
     }
 
     fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
-        dbConnector.getRightIdsByMetadata(metadataId).let {
-            dbConnector.getRightsByIds(it)
+        dbConnector.rightDB.getRightIdsByMetadata(metadataId).let {
+            dbConnector.rightDB.getRightsByIds(it)
         }
 
-    fun userContainsName(name: String): Boolean = dbConnector.userTableContainsName(name)
+    fun userContainsName(name: String): Boolean = dbConnector.userDB.userTableContainsName(name)
 
     fun insertNewUser(user: UserRest): String =
-        dbConnector.insertUser(
+        dbConnector.userDB.insertUser(
             User(
                 name = user.username,
                 passwordHash = hashString("SHA-256", user.password),
@@ -241,16 +241,16 @@ class LoriServerBackend(
         )
 
     fun checkCredentials(user: UserRest): Boolean =
-        dbConnector.userExistsByNameAndPassword(
+        dbConnector.userDB.userExistsByNameAndPassword(
             user.username,
             hashString("SHA-256", user.password),
         )
 
     fun getCurrentUserRole(username: String): UserRole? =
-        dbConnector.getRoleByUsername(username)
+        dbConnector.userDB.getRoleByUsername(username)
 
     fun updateUserNonRoleProperties(user: UserRest): Int =
-        dbConnector.updateUserNonRoleProperties(
+        dbConnector.userDB.updateUserNonRoleProperties(
             User(
                 name = user.username,
                 passwordHash = hashString("SHA-256", user.password),
@@ -259,10 +259,10 @@ class LoriServerBackend(
         )
 
     fun updateUserRoleProperty(username: String, role: UserRole): Int =
-        dbConnector.updateUserRoleProperty(username, role)
+        dbConnector.userDB.updateUserRoleProperty(username, role)
 
     fun deleteUser(username: String): Int =
-        dbConnector.deleteUser(username)
+        dbConnector.userDB.deleteUser(username)
 
     fun generateJWT(username: String): String = JWT.create()
         .withAudience(config.jwtAudience)
@@ -296,7 +296,7 @@ class LoriServerBackend(
 
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
-            dbConnector.searchMetadata(
+            dbConnector.searchDB.searchMetadata(
                 keys,
                 limit,
                 offset,
@@ -318,7 +318,7 @@ class LoriServerBackend(
             items
                 .takeIf { it.isNotEmpty() }
                 ?.let {
-                    dbConnector.countSearchMetadata(
+                    dbConnector.searchDB.countSearchMetadata(
                         keys,
                         metadataSearchFilter,
                         rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
@@ -328,7 +328,7 @@ class LoriServerBackend(
                 ?: 0
 
         // Collect all publication types, zdbIds and paketSigels
-        val facets: FacetTransientSet = dbConnector.searchForFacets(
+        val facets: FacetTransientSet = dbConnector.searchDB.searchForFacets(
             keys,
             metadataSearchFilter,
             rightSearchFilter,

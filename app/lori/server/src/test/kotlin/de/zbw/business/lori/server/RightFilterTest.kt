@@ -11,8 +11,9 @@ import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -40,52 +41,51 @@ class RightFilterTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-            gson = mockk(),
         ),
         mockk(),
     )
 
-    private val itemRightRestricted = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val itemRightRestricted = TEST_Metadata.copy(
         metadataId = "restricted right",
         collectionName = "subject1 subject2",
         publicationType = PublicationType.PROCEEDINGS,
     )
-    private val itemRightRestrictedOpen = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val itemRightRestrictedOpen = TEST_Metadata.copy(
         metadataId = "restricted and open right",
         collectionName = "subject3",
         publicationType = PublicationType.PROCEEDINGS,
     )
-    private val tempValFilterPresent = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val tempValFilterPresent = TEST_Metadata.copy(
         metadataId = "validity filter present",
         collectionName = "validity",
     )
 
-    private val tempValFilterPast = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val tempValFilterPast = TEST_Metadata.copy(
         metadataId = "validity filter post",
         collectionName = "validity",
     )
 
-    private val tempValFilterFuture = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val tempValFilterFuture = TEST_Metadata.copy(
         metadataId = "validity filter future",
         collectionName = "validity",
     )
 
-    private val startEndDateFilter = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val startEndDateFilter = TEST_Metadata.copy(
         metadataId = "start and end date At",
         collectionName = "startAndEnd",
     )
 
-    private val formalRuleLicenceContract = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val formalRuleLicenceContract = TEST_Metadata.copy(
         metadataId = "formal rule filter licence contract",
         collectionName = "formalRuleLicence formal",
     )
 
-    private val formalRuleUserAgreement = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val formalRuleUserAgreement = TEST_Metadata.copy(
         metadataId = "formal rule filter user agreement",
         collectionName = "formalRuleUserAgreement formal",
     )
 
-    private val formalRuleOCL = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val formalRuleOCL = TEST_Metadata.copy(
         metadataId = "formal rule filter ocl",
         collectionName = "ocl formal",
     )
@@ -144,7 +144,7 @@ class RightFilterTest : DatabaseTest() {
     @BeforeClass
     fun fillDB() {
         mockkStatic(Instant::class)
-        every { Instant.now() } returns DatabaseConnectorTest.NOW.toInstant()
+        every { Instant.now() } returns NOW.toInstant()
         mockkStatic(LocalDate::class)
         every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
         getInitialMetadata().forEach { entry ->
