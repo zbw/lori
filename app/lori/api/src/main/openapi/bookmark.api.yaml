@@ -1,0 +1,144 @@
+bookmark:
+
+  post:
+    tags:
+      - bookmark
+    summary: Save a bookmark representing a search query.
+    operationId: addBookmark
+    requestBody:
+      description: Save a search query
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmark.model.yaml#/BookmarkRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              $ref: 'bookmark.model.yaml#/BookmarkIdCreated'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Conflict resource exists already
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+  put:
+    tags:
+      - bookmark
+    summary: Update an existing Bookmark
+    operationId: updateBookmark
+    requestBody:
+      description: Bookmark object
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmark.model.yaml#/BookmarkRest'
+      required: true
+    responses:
+      204:
+        description: Successfully updated
+        content:
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+bookmark-id:
+  get:
+    tags:
+      - bookmark
+    summary: Receive the bookmark for a given id
+    operationId: getBookmarkById
+    parameters:
+      - name: id
+        in: path
+        description: Bookmark Id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmark.model.yaml#/BookmarkRest'
+      404:
+        description: Id does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+  delete:
+    tags:
+      - bookmark
+    summary: Delete a bookmark
+    operationId: deleteBookmarkById
+    parameters:
+      - name: id
+        in: path
+        description: Bookmark id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of the bookmark was successful
+        content:
+      404:
+        description: Id does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

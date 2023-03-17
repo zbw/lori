@@ -72,7 +72,7 @@ fun Routing.groupRoutes(
                         )
                     )
                 } catch (pe: PSQLException) {
-                    if (pe.sqlState == "23505") {
+                    if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                         call.respond(
                             HttpStatusCode.Conflict,

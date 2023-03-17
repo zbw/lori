@@ -11,6 +11,8 @@ tags:
   - name: ItemRest
     description: A bibliographic item
 paths:
+  /bookmark:
+    $ref: 'bookmark.api.yaml#/bookmark'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -64,3 +66,5 @@ components:
       $ref: 'item.model.yaml#/RightRest'
     ErrorRest:
       $ref: 'errorhandling.model.yaml#/ErrorRest'
+    BookmarkRest:
+      $ref: 'bookmark.model.yaml#/BookmarkRest'

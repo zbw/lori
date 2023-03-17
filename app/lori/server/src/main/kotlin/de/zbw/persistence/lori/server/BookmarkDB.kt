@@ -1,0 +1,177 @@
+package de.zbw.persistence.lori.server
+
+import de.zbw.lori.model.BookmarkRest
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import io.opentelemetry.api.trace.Tracer
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Statement
+
+/**
+ * Execute SQL queries strongly related to bookmarks.
+ *
+ * Created on 03-15-2023.
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
+class BookmarkDB(
+    val connection: Connection,
+    private val tracer: Tracer,
+) {
+
+    fun deleteBookmarkById(bookmarkId: Int): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
+            this.setInt(1, bookmarkId)
+        }
+        val span = tracer.spanBuilder("deleteBookmarkById").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun insertBookmark(bookmarkRest: BookmarkRest): Int {
+        val prepStmt = insertUpdateSetParameters(
+            bookmarkRest,
+            connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS)
+        )
+        val span = tracer.spanBuilder("insertBookmark").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getInt(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
+    }
+
+    fun getBookmarksByIds(bookmarkIds: List<Int>): List<BookmarkRest> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
+            this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
+        }
+        val span = tracer.spanBuilder("getBookmarksByIds").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                BookmarkRest(
+                    bookmarkId = rs.getInt(1),
+                    bookmarkName = rs.getString(2),
+                    searchTerm = rs.getString(3),
+                    filterPublicationDate = rs.getString(4),
+                    filterAccessState = rs.getString(5),
+                    filterTemporalValidity = rs.getString(6),
+                    filterStartDate = rs.getString(7),
+                    filterEndDate = rs.getString(8),
+                    filterFormalRule = rs.getString(9),
+                    filterValidOn = rs.getString(10),
+                    filterPaketSigel = rs.getString(11),
+                    filterZDBId = rs.getString(12),
+                    filterNoRightInformation = rs.getBoolean(13),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    fun updateBookmarksById(bookmarkId: Int, bookmarkRest: BookmarkRest): Int {
+        val prepStmt = insertUpdateSetParameters(
+            bookmarkRest,
+            connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK)
+        ).apply {
+            this.setInt(13, bookmarkId)
+        }
+        val span = tracer.spanBuilder("updateBookmarkById").startSpan()
+        try {
+            span.makeCurrent()
+            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    companion object {
+        private const val TABLE_NAME_BOOKMARK = "bookmark"
+        private const val COLUMN_BOOKMARK_ID = "bookmark_id"
+
+        const val STATEMENT_GET_BOOKMARKS = "SELECT " +
+            "bookmark_id,bookmark_name,search_term,filter_publication_date," +
+            "filter_access_state,filter_temporal_validity,filter_start_date," +
+            "filter_end_date,filter_formal_rule,filter_valid_on," +
+            "filter_paket_sigel,filter_zdb_id,filter_no_right_information" +
+            " FROM $TABLE_NAME_BOOKMARK" +
+            " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
+        const val STATEMENT_INSERT_BOOKMARK = "INSERT INTO $TABLE_NAME_BOOKMARK" +
+            "(bookmark_name,search_term,filter_publication_date," +
+            "filter_access_state,filter_temporal_validity,filter_start_date," +
+            "filter_end_date,filter_formal_rule,filter_valid_on," +
+            "filter_paket_sigel,filter_zdb_id,filter_no_right_information)" +
+            " VALUES(?,?,?," +
+            "?,?,?," +
+            "?,?,?," +
+            "?,?,?)"
+        const val STATEMENT_DELETE_BOOKMARK_BY_ID = "DELETE " +
+            "FROM $TABLE_NAME_BOOKMARK" +
+            " WHERE $COLUMN_BOOKMARK_ID = ?"
+        const val STATEMENT_UPDATE_BOOKMARK =
+            "UPDATE $TABLE_NAME_BOOKMARK" +
+                " SET bookmark_name=?,search_term=?,filter_publication_date=?," +
+                "filter_access_state=?,filter_temporal_validity=?,filter_start_date=?," +
+                "filter_end_date=?,filter_formal_rule=?,filter_valid_on=?," +
+                "filter_paket_sigel=?,filter_zdb_id=?,filter_no_right_information=?" +
+                " WHERE $COLUMN_BOOKMARK_ID = ?"
+
+        private fun insertUpdateSetParameters(
+            bookmarkRest: BookmarkRest,
+            prepStmt: PreparedStatement,
+        ): PreparedStatement {
+            return prepStmt.apply {
+                this.setString(1, bookmarkRest.bookmarkName)
+                this.setIfNotNull(2, bookmarkRest.searchTerm) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(3, bookmarkRest.filterPublicationDate) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(4, bookmarkRest.filterAccessState) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(5, bookmarkRest.filterTemporalValidity) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(6, bookmarkRest.filterStartDate) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(7, bookmarkRest.filterEndDate) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(8, bookmarkRest.filterFormalRule) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(9, bookmarkRest.filterValidOn) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(10, bookmarkRest.filterPaketSigel) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(11, bookmarkRest.filterZDBId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(12, bookmarkRest.filterNoRightInformation) { value, idx, prepStmt ->
+                    prepStmt.setBoolean(idx, value)
+                }
+            }
+        }
+    }
+}

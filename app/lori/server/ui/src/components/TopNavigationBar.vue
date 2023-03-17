@@ -49,7 +49,15 @@ export default defineComponent({
           >
         </v-list-item>
         <v-list-item link>
-          <v-list-item-title>Einstellungen</v-list-item-title>
+          <v-list-item-title>Templates</v-list-item-title>
+        </v-list-item>
+        <v-list-item link>
+          <v-list-item-title>Bookmarks</v-list-item-title>
+        </v-list-item>
+        <v-list-item link>
+          <v-list-item-title
+            >Templates mit Bookmarks verknüpfen</v-list-item-title
+          >
         </v-list-item>
       </v-list>
     </v-menu>

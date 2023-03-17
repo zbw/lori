@@ -196,7 +196,7 @@ class GroupRoutesKtTest {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { insertGroup(any()) } throws mockk<PSQLException> {
-                every { sqlState } returns "23505"
+                every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                 every { message } returns "error"
             }
         }

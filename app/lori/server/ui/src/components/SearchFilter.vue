@@ -348,7 +348,7 @@ export default defineComponent({
           <v-list-group no-action sub-group eager>
             <template v-slot:activator>
               <v-list-item-title>
-                Zeitliche Gütligkeit Ereignis
+                Zeitliche Gültigkeit Ereignis
               </v-list-item-title>
             </template>
             <v-menu

@@ -11,6 +11,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
+import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
@@ -122,7 +123,7 @@ class LoriServerBackend(
             ?.first()
             ?.let { meta ->
                 val rights = dbConnector.getRightIdsByMetadata(metadataId).let {
-                    dbConnector.getRights(it)
+                    dbConnector.getRightsByIds(it)
                 }
                 Item(
                     meta,
@@ -152,7 +153,7 @@ class LoriServerBackend(
             }
 
     fun getRightsByIds(rightIds: List<String>): List<ItemRight> {
-        return dbConnector.getRights(rightIds)
+        return dbConnector.getRightsByIds(rightIds)
     }
 
     fun getItemList(
@@ -177,7 +178,7 @@ class LoriServerBackend(
         return metadataToRights.map { p ->
             Item(
                 p.first,
-                dbConnector.getRights(p.second)
+                dbConnector.getRightsByIds(p.second)
             )
         }
     }
@@ -220,12 +221,12 @@ class LoriServerBackend(
 
     fun deleteRight(rightId: String): Int {
         dbConnector.deleteGroupPairsByRightId(rightId)
-        return dbConnector.deleteRights(listOf(rightId))
+        return dbConnector.deleteRightsByIds(listOf(rightId))
     }
 
     fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
         dbConnector.getRightIdsByMetadata(metadataId).let {
-            dbConnector.getRights(it)
+            dbConnector.getRightsByIds(it)
         }
 
     fun userContainsName(name: String): Boolean = dbConnector.userTableContainsName(name)
@@ -347,6 +348,16 @@ class LoriServerBackend(
             zdbIds = facets.zdbIds,
         )
     }
+
+    fun insertBookmark(bookmark: BookmarkRest): Int =
+        dbConnector.bookmarkDB.insertBookmark(bookmark)
+
+    fun deleteBookmark(bookmarkId: Int): Int = dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
+    fun updateBookmark(bookmarkId: Int, bookmark: BookmarkRest): Int =
+        dbConnector.bookmarkDB.updateBookmarksById(bookmarkId, bookmark)
+
+    fun getBookmarkById(bookmarkId: Int): BookmarkRest? =
+        dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
     companion object {
         /**

@@ -54,4 +54,7 @@ object ApiError {
     const val NO_VALID_ID = "Die URL enthält keine gültige Id."
     const val NO_RESOURCE_FOR_ID = "Für die Id wurde keine Resource gefunden."
     const val RESOURCE_STILL_IN_USE = "Diese Resource wird noch benutzt und kann nicht gelöscht werden."
+
+    // Postgres Error code when inserting a duplicate (primary key) into the database.
+    const val PSQL_CONFLICT_ERR_CODE = "23505"
 }

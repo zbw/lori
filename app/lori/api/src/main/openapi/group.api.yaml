@@ -96,6 +96,12 @@ group-id:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
   get:
     tags:
       - group

@@ -1,0 +1,39 @@
+BookmarkRest:
+  required:
+    - bookmarkName
+  type: object
+  properties:
+    bookmarkId:
+      type: integer
+    bookmarkName:
+      type: string
+    searchTerm:
+      type: string
+    filterPublicationDate:
+      type: string
+    filterAccessState:
+      type: string
+    filterTemporalValidity:
+      type: string
+    filterStartDate:
+      type: string
+    filterEndDate:
+      type: string
+    filterFormalRule:
+      type: string
+    filterValidOn:
+      type: string
+    filterPaketSigel:
+      type: string
+    filterZDBId:
+      type: string
+    filterNoRightInformation:
+      type: boolean
+
+BookmarkIdCreated:
+  required:
+    - bookmarkId
+  type: object
+  properties:
+    bookmarkId:
+      type: integer
