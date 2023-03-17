@@ -7,8 +7,9 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -35,16 +36,15 @@ class NoRightFilterTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-            gson = mockk(),
         ),
         mockk(),
     )
-    private val itemRightRestricted = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val itemRightRestricted = TEST_Metadata.copy(
         metadataId = "restricted right",
         collectionName = "subject1",
         publicationType = PublicationType.PROCEEDINGS,
     )
-    private val itemNoRight = DatabaseConnectorTest.TEST_Metadata.copy(
+    private val itemNoRight = TEST_Metadata.copy(
         metadataId = "no rights",
         collectionName = "subject1",
         publicationType = PublicationType.PROCEEDINGS,
@@ -52,13 +52,13 @@ class NoRightFilterTest : DatabaseTest() {
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
-        itemNoRight to emptyList<ItemRight>(),
+        itemNoRight to emptyList(),
     )
 
     @BeforeClass
     fun fillDB() {
         mockkStatic(Instant::class)
-        every { Instant.now() } returns DatabaseConnectorTest.NOW.toInstant()
+        every { Instant.now() } returns NOW.toInstant()
         mockkStatic(LocalDate::class)
         every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
         getInitialMetadata().forEach { entry ->

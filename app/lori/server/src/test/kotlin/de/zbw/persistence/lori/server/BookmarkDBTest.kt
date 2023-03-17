@@ -1,6 +1,5 @@
 package de.zbw.persistence.lori.server
 
-import com.google.gson.Gson
 import de.zbw.lori.model.BookmarkRest
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
@@ -17,7 +16,6 @@ class BookmarkDBTest : DatabaseTest() {
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
         tracer = OpenTelemetry.noop().getTracer("foo"),
-        gson = Gson().newBuilder().create(),
     ).bookmarkDB
 
     @Test

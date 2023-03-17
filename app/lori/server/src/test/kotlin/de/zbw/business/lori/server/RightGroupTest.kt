@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server
 
-import com.google.gson.Gson
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.RestConverterTest
 import de.zbw.business.lori.server.type.Group
@@ -26,7 +25,6 @@ class RightGroupTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("foo"),
-            gson = Gson().newBuilder().create(),
         ),
         mockk(),
     )
@@ -68,7 +66,7 @@ class RightGroupTest : DatabaseTest() {
         )
 
         assertThat(
-            backend.dbConnector.getGroupsByRightId(rightId1),
+            backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
             `is`(
                 listOf(groupName1),
             )
@@ -97,7 +95,7 @@ class RightGroupTest : DatabaseTest() {
 
         // Verify group update was successful
         assertThat(
-            backend.dbConnector.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
             `is`(
                 setOf(groupId1, groupId2),
             )
@@ -112,7 +110,7 @@ class RightGroupTest : DatabaseTest() {
 
         // Verify update again
         assertThat(
-            backend.dbConnector.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
             `is`(
                 setOf(groupId2),
             )
@@ -129,7 +127,7 @@ class RightGroupTest : DatabaseTest() {
         // Delete Right
         backend.deleteRight(rightId1)
         assertThat(
-            backend.dbConnector.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
             `is`(emptySet()),
         )
 

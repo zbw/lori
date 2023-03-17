@@ -4,8 +4,9 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnectorTest
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -30,13 +31,12 @@ class FilterSearchTest : DatabaseTest() {
         DatabaseConnector(
             connection = dataSource.connection,
             tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-            gson = mockk(),
         ),
         mockk(),
     )
 
     private val publicationDateFilter = listOf(
-        DatabaseConnectorTest.TEST_Metadata.copy(
+        TEST_Metadata.copy(
             collectionName = "subject1 subject2 subject3",
             metadataId = "publicationDate2022",
             publicationDate = LocalDate.of(2022, 1, 1)
@@ -44,13 +44,13 @@ class FilterSearchTest : DatabaseTest() {
     )
 
     private val publicationTypeFilter = listOf(
-        DatabaseConnectorTest.TEST_Metadata.copy(
+        TEST_Metadata.copy(
             collectionName = "subject4",
             metadataId = "publicationTypeArticle",
             publicationType = PublicationType.PROCEEDINGS,
             publicationDate = LocalDate.of(2022, 1, 1)
         ),
-        DatabaseConnectorTest.TEST_Metadata.copy(
+        TEST_Metadata.copy(
             collectionName = "subject4",
             metadataId = "publicationTypeWorkingPaper",
             publicationType = PublicationType.WORKING_PAPER,
@@ -66,7 +66,7 @@ class FilterSearchTest : DatabaseTest() {
     @BeforeClass
     fun fillDB() {
         mockkStatic(Instant::class)
-        every { Instant.now() } returns DatabaseConnectorTest.NOW.toInstant()
+        every { Instant.now() } returns NOW.toInstant()
         getInitialMetadata().forEach {
             backend.insertMetadataElement(it)
         }
