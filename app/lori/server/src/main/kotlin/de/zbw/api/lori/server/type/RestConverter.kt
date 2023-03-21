@@ -1,8 +1,11 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
@@ -11,12 +14,16 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
+import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.BookmarkSemanticRest
+import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
+import de.zbw.lori.model.SearchKeyRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
@@ -305,6 +312,47 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.readWrite -> UserRole.READWRITE
         RoleRest.Role.admin -> UserRole.ADMIN
     }
+
+fun BookmarkRest.toBusiness(): Bookmark =
+    Bookmark(
+        bookmarkName = this.bookmarkName,
+        bookmarkId = this.bookmarkId,
+        searchKeys = this.searchTerm?.let { LoriServerBackend.parseValidSearchKeys(it) },
+        publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
+        publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPublicationType),
+        zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
+        accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
+        temporalValidityFilter = QueryParameterParser.parseTemporalValidity(this.filterTemporalValidity),
+        formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule),
+        startDateFilter = QueryParameterParser.parseStartDateFilter(this.filterStartDate),
+        endDateFilter = QueryParameterParser.parseEndDateFilter(this.filterEndDate),
+        validOnFilter = QueryParameterParser.parseRightValidOnFilter(this.filterValidOn),
+        noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
+    )
+
+fun Bookmark.toRest(): BookmarkSemanticRest =
+    BookmarkSemanticRest(
+        bookmarkName = this.bookmarkName,
+        bookmarkId = this.bookmarkId,
+        searchKeys = this.searchKeys?.entries?.map { entry ->
+            SearchKeyRest(entry.key.toString(), entry.value)
+        },
+        filterPublicationDate = FilterPublicationDateRest(
+            fromYear = this.publicationDateFilter?.fromYear,
+            toYear = this.publicationDateFilter?.toYear,
+        ),
+        filterPublicationType = this.publicationTypeFilter?.publicationTypes?.map { it.toString() },
+        filterAccessState = this.accessStateFilter?.accessStates?.map { it.toString() },
+        filterTemporalValidity = this.temporalValidityFilter?.temporalValidity?.map { it.toString() },
+        filterStartDate = this.startDateFilter?.date,
+        filterEndDate = this.endDateFilter?.date,
+        filterFormalRule = this.formalRuleFilter?.formalRules?.map { it.toString() },
+        filterValidOn = this.validOnFilter?.date,
+        filterPaketSigel = this.paketSigelFilter?.paketSigels,
+        filterZDBId = this.zdbIdFilter?.zdbIds,
+        filterNoRightInformation = this.noRightInformationFilter?.let { true } ?: false
+    )
 
 /**
  * Utility functions helping to convert

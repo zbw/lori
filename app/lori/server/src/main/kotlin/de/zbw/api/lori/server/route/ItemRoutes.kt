@@ -3,10 +3,13 @@ package de.zbw.api.lori.server.route
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
+import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
@@ -347,7 +350,7 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
                         QueryParameterParser.parseTemporalValidity(call.request.queryParameters["filterTemporalValidity"])
-                    val formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(
+                    val formalRuleFilter: FormalRuleFilter? = QueryParameterParser.parseFormalRuleFilter(
                         call.request.queryParameters["filterFormalRule"]
                     )
                     val startDateFilter: StartDateFilter? =
@@ -358,11 +361,11 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseEndDateFilter(
                             call.request.queryParameters["filterEndDate"]
                         )
-                    val validOnFilter =
+                    val validOnFilter: RightValidOnFilter? =
                         QueryParameterParser.parseRightValidOnFilter(
                             call.request.queryParameters["filterValidOn"]
                         )
-                    val noRightInformationFilter =
+                    val noRightInformationFilter: NoRightInformationFilter? =
                         QueryParameterParser.parseNoRightInformationFilter(
                             call.request.queryParameters["filterNoRightInformation"]
                         )

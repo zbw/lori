@@ -6,13 +6,15 @@ info:
     email: c.bay@zbw.eu
   license:
     name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
 tags:
   - name: ItemRest
     description: A bibliographic item
 paths:
   /bookmark:
     $ref: 'bookmark.api.yaml#/bookmark'
+  /bookmark/{id}:
+    $ref: 'bookmark.api.yaml#/bookmark-id'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -68,3 +70,5 @@ components:
       $ref: 'errorhandling.model.yaml#/ErrorRest'
     BookmarkRest:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
+    BookmarkSemanticRest:
+      $ref: 'bookmark.model.yaml#/BookmarkSemanticRest'
