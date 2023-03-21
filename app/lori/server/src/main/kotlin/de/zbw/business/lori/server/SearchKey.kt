@@ -21,8 +21,19 @@ enum class SearchKey(
 
     fun toSelectClause(): String =
         "${this.dbColumnName} <-> ? as ${this.distColumnName}"
+
     fun toWhereClause(): String =
         "$SUBQUERY_NAME.${this.distColumnName} < $DISTANCE_VALUE"
+
+    fun fromEnum(): String {
+        return when (this) {
+            COMMUNITY -> "com"
+            COLLECTION -> "col"
+            PAKET_SIGEL -> "sig"
+            TITLE -> "tit"
+            ZDB_ID -> "zdb"
+        }
+    }
 
     companion object {
         const val DISTANCE_VALUE = "0.9"

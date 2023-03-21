@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -11,7 +12,6 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
-import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
@@ -112,7 +112,8 @@ class LoriServerBackend(
             metadataList.sortedBy { it.metadataId }
         } ?: emptyList()
 
-    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(metadataIds)
+    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> =
+        dbConnector.metadataDB.getMetadata(metadataIds)
 
     fun metadataContainsId(id: String): Boolean = dbConnector.metadataDB.metadataContainsId(id)
 
@@ -349,14 +350,14 @@ class LoriServerBackend(
         )
     }
 
-    fun insertBookmark(bookmark: BookmarkRest): Int =
+    fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 
     fun deleteBookmark(bookmarkId: Int): Int = dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
-    fun updateBookmark(bookmarkId: Int, bookmark: BookmarkRest): Int =
+    fun updateBookmark(bookmarkId: Int, bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.updateBookmarksById(bookmarkId, bookmark)
 
-    fun getBookmarkById(bookmarkId: Int): BookmarkRest? =
+    fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
     companion object {
@@ -374,6 +375,7 @@ class LoriServerBackend(
             return expiresAt == null || expiresAt < 0
         }
 
+        // TODO: Move these functions to QueryParameterParser
         fun parseInvalidSearchKeys(s: String): List<String> =
             tokenizeSearchInput(s).mapNotNull {
                 val keyname = it.substringBefore(":")
@@ -384,15 +386,20 @@ class LoriServerBackend(
                 }
             }
 
-        fun parseValidSearchKeys(s: String): Map<SearchKey, List<String>> =
-            tokenizeSearchInput(s).mapNotNull {
+        fun parseValidSearchKeys(s: String?): Map<SearchKey, List<String>> =
+            s?.let { tokenizeSearchInput(it) }?.mapNotNull {
                 val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
                 if (key == null) {
                     null
                 } else {
                     key to it.substringAfter(":").trim().split("\\s+".toRegex())
                 }
-            }.toMap()
+            }?.toMap() ?: emptyMap()
+
+        fun searchKeysToString(keys: Map<SearchKey, List<String>>): String =
+            keys.entries.joinToString(separator = " ") { e ->
+                "${e.key.fromEnum()}:${e.value.joinToString(prefix = "'", postfix = "'", separator = " ")}"
+            }
 
         private fun tokenizeSearchInput(s: String): List<String> {
             val iter = SEARCH_KEY_REGEX.findAll(s).iterator()

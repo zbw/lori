@@ -1,0 +1,1 @@
+alter table bookmark add column filter_publication_type text;

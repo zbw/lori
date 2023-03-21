@@ -4,8 +4,9 @@ import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.GSON
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.jsonAsString
+import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.BookmarkSemanticRest
 import de.zbw.persistence.lori.server.BookmarkDBTest.Companion.TEST_BOOKMARK
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -219,7 +220,7 @@ class BookmarkRoutesKtTest {
     fun testGetBookmarkByIdOK() {
         // given
         val bookmarkId = 45
-        val expected = TEST_BOOKMARK
+        val expected = TEST_BOOKMARK.toRest()
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { getBookmarkById(bookmarkId) } returns TEST_BOOKMARK
         }
@@ -231,8 +232,8 @@ class BookmarkRoutesKtTest {
             )
             val response = client.get("/api/v1/bookmark/$bookmarkId")
             val content: String = response.bodyAsText()
-            val bookmarkListType: Type = object : TypeToken<BookmarkRest>() {}.type
-            val received: BookmarkRest = GSON.fromJson(content, bookmarkListType)
+            val bookmarkListType: Type = object : TypeToken<BookmarkSemanticRest>() {}.type
+            val received: BookmarkSemanticRest = GSON.fromJson(content, bookmarkListType)
             assertThat(received, `is`(expected))
         }
     }

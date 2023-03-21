@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
@@ -27,6 +28,8 @@ abstract class SearchFilter(
      * @return Updated counter.
      */
     abstract fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int
+
+    abstract override fun toString(): String
 }
 
 abstract class MetadataSearchFilter(
@@ -51,9 +54,13 @@ class PublicationDateFilter(
         return counter + 2
     }
 
+    override fun toString(): String = "$fromYear-$toYear"
+
     companion object {
         const val MIN_YEAR = 1800
         const val MAX_YEAR = 2200
+
+        fun fromString(s: String?): PublicationDateFilter? = QueryParameterParser.parsePublicationDateFilter(s)
     }
 }
 
@@ -74,6 +81,12 @@ class PublicationTypeFilter(
         }
         return localCounter
     }
+
+    override fun toString(): String = publicationTypes.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): PublicationTypeFilter? = QueryParameterParser.parsePublicationTypeFilter(s)
+    }
 }
 
 class PaketSigelFilter(
@@ -93,6 +106,12 @@ class PaketSigelFilter(
         }
         return localCounter
     }
+
+    override fun toString(): String = paketSigels.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): PaketSigelFilter? = QueryParameterParser.parsePaketSigelFilter(s)
+    }
 }
 
 class ZDBIdFilter(
@@ -111,6 +130,12 @@ class ZDBIdFilter(
             preparedStatement.setString(localCounter++, it)
         }
         return localCounter
+    }
+
+    override fun toString(): String = zdbIds.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): ZDBIdFilter? = QueryParameterParser.parseZDBIdFilter(s)
     }
 }
 
@@ -136,6 +161,12 @@ class AccessStateFilter(
         }
         return localCounter
     }
+
+    override fun toString(): String = accessStates.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): AccessStateFilter? = QueryParameterParser.parseAccessStateFilter(s)
+    }
 }
 
 class TemporalValidityFilter(
@@ -160,6 +191,12 @@ class TemporalValidityFilter(
         }
         return localCounter
     }
+
+    override fun toString(): String = temporalValidity.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): TemporalValidityFilter? = QueryParameterParser.parseTemporalValidity(s)
+    }
 }
 
 /**
@@ -178,6 +215,12 @@ class RightValidOnFilter(
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         return localCounter
     }
+
+    override fun toString(): String = date.toString()
+
+    companion object {
+        fun fromString(s: String?) = QueryParameterParser.parseRightValidOnFilter(s)
+    }
 }
 
 class StartDateFilter(
@@ -190,6 +233,12 @@ class StartDateFilter(
         preparedStatement.setDate(counter, Date.valueOf(date))
         return counter + 1
     }
+
+    override fun toString(): String = date.toString()
+
+    companion object {
+        fun fromString(s: String?): StartDateFilter? = QueryParameterParser.parseStartDateFilter(s)
+    }
 }
 
 class EndDateFilter(
@@ -201,6 +250,12 @@ class EndDateFilter(
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
         preparedStatement.setDate(counter, Date.valueOf(date))
         return counter + 1
+    }
+
+    override fun toString(): String = date.toString()
+
+    companion object {
+        fun fromString(s: String?): EndDateFilter? = QueryParameterParser.parseEndDateFilter(s)
     }
 }
 
@@ -221,10 +276,20 @@ class FormalRuleFilter(
         }
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
+    override fun toString(): String = formalRules.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): FormalRuleFilter? = QueryParameterParser.parseFormalRuleFilter(s)
+    }
 }
 
 class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String = "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName IS NULL"
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
+    override fun toString(): String = "true"
+
+    companion object {
+        fun fromString(s: String?): NoRightInformationFilter? = QueryParameterParser.parseNoRightInformationFilter(s)
+    }
 }

@@ -1,6 +1,9 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.lori.model.BookmarkIdCreated
 import de.zbw.lori.model.BookmarkRest
 import io.ktor.http.HttpStatusCode
@@ -49,10 +52,10 @@ fun Routing.bookmarkRoutes(
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
-                        val bookmark: BookmarkRest? = backend.getBookmarkById(bookmarkId)
+                        val bookmark: Bookmark? = backend.getBookmarkById(bookmarkId)
                         bookmark?.let {
                             span.setStatus(StatusCode.OK)
-                            call.respond(bookmark)
+                            call.respond(bookmark.toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
                             call.respond(
@@ -83,7 +86,7 @@ fun Routing.bookmarkRoutes(
                 try {
                     val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
                     span.setAttribute("bookmark", bookmark.toString())
-                    val pk = backend.insertBookmark(bookmark)
+                    val pk = backend.insertBookmark(bookmark.toBusiness())
                     span.setStatus(StatusCode.OK)
                     call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
                 } catch (pe: PSQLException) {
@@ -132,7 +135,7 @@ fun Routing.bookmarkRoutes(
                         .takeIf { it.bookmarkName != null && it.bookmarkId != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("bookmark", bookmark.toString())
-                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId!!, bookmark)
+                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId!!, bookmark.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)

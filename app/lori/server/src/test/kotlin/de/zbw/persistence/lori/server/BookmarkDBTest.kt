@@ -1,6 +1,9 @@
 package de.zbw.persistence.lori.server
 
-import de.zbw.lori.model.BookmarkRest
+import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.NoRightInformationFilter
+import de.zbw.business.lori.server.type.Bookmark
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -25,16 +28,16 @@ class BookmarkDBTest : DatabaseTest() {
         val generatedId = dbConnector.insertBookmark(TEST_BOOKMARK)
         val receivedBookmarks = dbConnector.getBookmarksByIds(listOf(generatedId))
         // then
-        assertThat(receivedBookmarks.first(), `is`(TEST_BOOKMARK.copy(bookmarkId = generatedId)))
+        assertThat(receivedBookmarks.first().toString(), `is`(TEST_BOOKMARK.copy(bookmarkId = generatedId).toString()))
 
         // Case: Update
-        val expectedBMUpdated = TEST_BOOKMARK.copy(filterNoRightInformation = true)
+        val expectedBMUpdated = TEST_BOOKMARK.copy(noRightInformationFilter = NoRightInformationFilter())
         val updatedBMs = dbConnector.updateBookmarksById(generatedId, expectedBMUpdated)
         assertThat(updatedBMs, `is`(1))
         assertThat(
-            expectedBMUpdated.copy(bookmarkId = generatedId),
+            expectedBMUpdated.copy(bookmarkId = generatedId).toString(),
             `is`(
-                dbConnector.getBookmarksByIds(listOf(generatedId)).first()
+                dbConnector.getBookmarksByIds(listOf(generatedId)).first().toString()
             )
         )
         // Case: Delete
@@ -46,19 +49,21 @@ class BookmarkDBTest : DatabaseTest() {
     }
 
     companion object {
-        val TEST_BOOKMARK = BookmarkRest(
+        val TEST_BOOKMARK = Bookmark(
             bookmarkId = 1,
             bookmarkName = "test",
-            searchTerm = "tit:someTitle",
-            filterPublicationDate = "BOOK,ARTICLE",
-            filterAccessState = "OPEN,RESTRICTED",
-            filterTemporalValidity = "True",
-            filterStartDate = "2020-01-01",
-            filterEndDate = "2021-12-31",
-            filterFormalRule = "someRule",
-            filterPaketSigel = "sigel",
-            filterZDBId = "zdbId1,zdbId2",
-            filterNoRightInformation = false,
+            searchKeys = LoriServerBackend.parseValidSearchKeys("tit:someTitle"),
+            publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
+            publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
+            accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
+            temporalValidityFilter = QueryParameterParser.parseTemporalValidity("FUTURE,PAST"),
+            validOnFilter = QueryParameterParser.parseRightValidOnFilter("2018-04-01"),
+            startDateFilter = QueryParameterParser.parseStartDateFilter("2020-01-01"),
+            endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
+            formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
+            paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
+            zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
+            noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
         )
     }
 }

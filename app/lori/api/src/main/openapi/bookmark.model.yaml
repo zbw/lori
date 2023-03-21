@@ -11,6 +11,8 @@ BookmarkRest:
       type: string
     filterPublicationDate:
       type: string
+    filterPublicationType:
+      type: string
     filterAccessState:
       type: string
     filterTemporalValidity:
@@ -28,7 +30,7 @@ BookmarkRest:
     filterZDBId:
       type: string
     filterNoRightInformation:
-      type: boolean
+      type: string
 
 BookmarkIdCreated:
   required:
@@ -37,3 +39,75 @@ BookmarkIdCreated:
   properties:
     bookmarkId:
       type: integer
+
+BookmarkSemanticRest:
+  required:
+    - bookmarkName
+  type: object
+  properties:
+    bookmarkId:
+      type: integer
+    bookmarkName:
+      type: string
+    searchKeys:
+      type: array
+      items:
+        $ref: 'bookmark.model.yaml#/SearchKeyRest'
+    filterPublicationDate:
+      $ref: 'bookmark.model.yaml#/FilterPublicationDateRest'
+    filterPublicationType:
+      type: array
+      items:
+        type: string
+    filterAccessState:
+      type: array
+      items:
+        type: string
+    filterTemporalValidity:
+      type: array
+      items:
+        type: string
+    filterStartDate:
+      type: string
+      format: date
+    filterEndDate:
+      type: string
+      format: date
+    filterFormalRule:
+      type: array
+      items:
+        type: string
+    filterValidOn:
+      type: string
+      format: date
+    filterPaketSigel:
+      type: array
+      items:
+        type: string
+    filterZDBId:
+      type: array
+      items:
+        type: string
+    filterNoRightInformation:
+      type: boolean
+
+FilterPublicationDateRest:
+  type: object
+  properties:
+    fromYear:
+      type: integer
+    toYear:
+      type: integer
+
+SearchKeyRest:
+  required:
+    - key
+    - value
+  type: object
+  properties:
+    key:
+      type: string
+    values:
+      type: array
+      items:
+        type: string
