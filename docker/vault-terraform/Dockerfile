@@ -1,4 +1,4 @@
-FROM docker:20.10.23-git AS docker-git
+FROM docker:23.0.1-git AS docker-git
 RUN apk add --no-cache curl \
     bash \
     jq && \
