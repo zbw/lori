@@ -1,11 +1,11 @@
-FROM docker:20.10.21-git AS docker-git
+FROM docker:20.10.23-git AS docker-git
 RUN apk add --no-cache curl \
     bash \
     jq && \
     rm -rf /var/cache/apk/*
 
 FROM docker-git as vault
-ARG VAULT_VERSION=1.12.2
+ARG VAULT_VERSION=1.13.0
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
@@ -16,7 +16,7 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
 
 # install terraform
 FROM vault AS terraform
-ARG TERRAFORM_VERSION=1.3.6
+ARG TERRAFORM_VERSION=1.4.2
 RUN curl -LO https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip && \
     unzip terra* && \
     chmod +x ./terraform && \
