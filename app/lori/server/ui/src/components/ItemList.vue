@@ -635,6 +635,12 @@ export default defineComponent({
               zdb(ZDB-Id)"
             ></v-text-field>
           </v-card-title>
+          <v-spacer></v-spacer>
+          <v-row>
+            <v-col offset-md="9">
+              <v-btn color="blue darken-1">Suche Speichern</v-btn>
+            </v-col>
+          </v-row>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible

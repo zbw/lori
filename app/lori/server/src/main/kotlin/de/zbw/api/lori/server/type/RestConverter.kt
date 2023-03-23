@@ -1,7 +1,13 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.NoRightInformationFilter
+import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.RightValidOnFilter
+import de.zbw.business.lori.server.SearchKey
+import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
@@ -14,8 +20,8 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
+import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
-import de.zbw.lori.model.BookmarkSemanticRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
@@ -313,10 +319,11 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.admin -> UserRole.ADMIN
     }
 
-fun BookmarkRest.toBusiness(): Bookmark =
+fun BookmarkRawRest.toBusiness(): Bookmark =
     Bookmark(
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
+        description = this.description,
         searchKeys = this.searchTerm?.let { LoriServerBackend.parseValidSearchKeys(it) },
         publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
@@ -331,12 +338,45 @@ fun BookmarkRest.toBusiness(): Bookmark =
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
     )
 
-fun Bookmark.toRest(): BookmarkSemanticRest =
-    BookmarkSemanticRest(
+fun BookmarkRest.toBusiness(): Bookmark =
+    Bookmark(
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
+        description = this.description,
+        searchKeys = this.searchKeys?.map {
+            Pair(SearchKey.toEnum(it.key), it.propertyValues)
+        }?.filter { it.first != null && it.second != null }?.associate { Pair(it.first!!, it.second!!) },
+        publicationDateFilter = PublicationDateFilter(
+            fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
+            toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
+        ),
+        publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(
+            this.filterPublicationType?.joinToString(
+                separator = ","
+            )
+        ),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
+        zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId?.joinToString(separator = ",")),
+        accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
+        temporalValidityFilter = QueryParameterParser.parseTemporalValidity(
+            this.filterTemporalValidity?.joinToString(
+                separator = ","
+            )
+        ),
+        formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
+        startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
+        endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
+        validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
+        noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() }
+    )
+
+fun Bookmark.toRest(): BookmarkRest =
+    BookmarkRest(
+        bookmarkName = this.bookmarkName,
+        bookmarkId = this.bookmarkId,
+        description = this.description,
         searchKeys = this.searchKeys?.entries?.map { entry ->
-            SearchKeyRest(entry.key.toString(), entry.value)
+            SearchKeyRest(entry.key.fromEnum(), entry.value)
         },
         filterPublicationDate = FilterPublicationDateRest(
             fromYear = this.publicationDateFilter?.fromYear,

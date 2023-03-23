@@ -52,6 +52,7 @@ class BookmarkDBTest : DatabaseTest() {
         val TEST_BOOKMARK = Bookmark(
             bookmarkId = 1,
             bookmarkName = "test",
+            description = "some description",
             searchKeys = LoriServerBackend.parseValidSearchKeys("tit:someTitle"),
             publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
             publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),

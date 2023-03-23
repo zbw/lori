@@ -1,4 +1,4 @@
-BookmarkRest:
+BookmarkRawRest:
   required:
     - bookmarkName
   type: object
@@ -6,6 +6,8 @@ BookmarkRest:
     bookmarkId:
       type: integer
     bookmarkName:
+      type: string
+    description:
       type: string
     searchTerm:
       type: string
@@ -40,7 +42,7 @@ BookmarkIdCreated:
     bookmarkId:
       type: integer
 
-BookmarkSemanticRest:
+BookmarkRest:
   required:
     - bookmarkName
   type: object
@@ -48,6 +50,8 @@ BookmarkSemanticRest:
     bookmarkId:
       type: integer
     bookmarkName:
+      type: string
+    description:
       type: string
     searchKeys:
       type: array

@@ -1,8 +1,11 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
@@ -347,6 +350,14 @@ class RestConverterTest {
         }
     }
 
+    @Test
+    fun testBookmarkConversion() {
+        assertThat(
+            TEST_BOOKMARK.toString(),
+            `is`(TEST_BOOKMARK.toRest().toBusiness().toString())
+        )
+    }
+
     companion object {
         const val DATA_FOR_PARSE_TO_GROUP = "DATA_FOR_PARSE_TO_GROUP"
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
@@ -528,6 +539,24 @@ class RestConverterTest {
             bitstreams = emptyList(),
             archived = "archived",
             withdrawn = "withdrawn",
+        )
+
+        val TEST_BOOKMARK = Bookmark(
+            bookmarkId = 1,
+            bookmarkName = "test",
+            description = "some description",
+            searchKeys = LoriServerBackend.parseValidSearchKeys("tit:someTitle"),
+            publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
+            publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
+            accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
+            temporalValidityFilter = QueryParameterParser.parseTemporalValidity("FUTURE,PAST"),
+            validOnFilter = QueryParameterParser.parseRightValidOnFilter("2018-04-01"),
+            startDateFilter = QueryParameterParser.parseStartDateFilter("2020-01-01"),
+            endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
+            formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
+            paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
+            zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
+            noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
         )
     }
 }
