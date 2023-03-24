@@ -19,8 +19,3 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     chmod +x ./vault && \
     mv ./vault /usr/local/bin/vault && \
     rm vault*
-
-FROM vault AS certificate
-COPY ./crt/vault-zbw-eu.crt /usr/local/share/ca-certificates/mycert.crt
-RUN chmod 644 /usr/local/share/ca-certificates/mycert.crt
-RUN update-ca-certificates

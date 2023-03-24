@@ -1,11 +1,11 @@
-FROM docker:20.10.21-git AS docker-git
+FROM docker:23.0.1-git AS docker-git
 RUN apk add --no-cache curl \
     bash \
     jq && \
     rm -rf /var/cache/apk/*
 
 FROM docker-git as vault
-ARG VAULT_VERSION=1.12.2
+ARG VAULT_VERSION=1.13.0
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
@@ -16,18 +16,13 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
 
 # install terraform
 FROM vault AS terraform
-ARG TERRAFORM_VERSION=1.3.6
+ARG TERRAFORM_VERSION=1.4.2
 RUN curl -LO https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip && \
     unzip terra* && \
     chmod +x ./terraform && \
     mv ./terraform /usr/local/bin/terraform
 
-FROM terraform AS certificate
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-COPY ./crt/vault-zbw-eu.crt /usr/local/share/ca-certificates/mycert.crt
-RUN update-ca-certificates
-
-FROM certificate
+FROM terraform
 ARG IMAGE_USER=vault-terraform
 RUN addgroup -S $IMAGE_USER && \
     adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER && \
