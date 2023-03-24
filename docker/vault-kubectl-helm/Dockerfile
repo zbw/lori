@@ -30,18 +30,14 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     mv ./vault /usr/local/bin/vault && \
     rm vault*
 
-# install terraform
-FROM vault AS certificate
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-COPY ./crt/vault-zbw-eu.crt /usr/local/share/ca-certificates/mycert.crt
-RUN update-ca-certificates
-
-FROM certificate AS VaultK8s
+# install kubectl
+FROM vault AS VaultK8s
 ARG KUBECTL_VERSION=1.24.12
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECTL_VERSION"/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
+# install helm
 FROM VaultK8s AS DownloadHelm
 ARG HELM_VERSION=3.11.2
 ENV HELM_EXPERIMENTAL_OCI=1

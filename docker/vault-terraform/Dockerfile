@@ -22,12 +22,7 @@ RUN curl -LO https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terra
     chmod +x ./terraform && \
     mv ./terraform /usr/local/bin/terraform
 
-FROM terraform AS certificate
-RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
-COPY ./crt/vault-zbw-eu.crt /usr/local/share/ca-certificates/mycert.crt
-RUN update-ca-certificates
-
-FROM certificate
+FROM terraform
 ARG IMAGE_USER=vault-terraform
 RUN addgroup -S $IMAGE_USER && \
     adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER && \
