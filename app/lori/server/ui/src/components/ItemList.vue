@@ -13,10 +13,18 @@ import SearchFilter from "@/components/SearchFilter.vue";
 import { defineComponent, onMounted, Ref, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useDialogsStore } from "@/stores/dialogs";
+import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
+import BookmarkSave from "@/components/BookmarkSave.vue";
 
 export default defineComponent({
-  components: { GroupOverview, RightsView, MetadataView, SearchFilter },
+  components: {
+    BookmarkSave,
+    GroupOverview,
+    RightsView,
+    MetadataView,
+    SearchFilter,
+  },
 
   setup() {
     const items: Ref<Array<ItemRest>> = ref([]);
@@ -194,17 +202,17 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
-          buildPublicationDateFilter(),
-          buildPublicationTypeFilter(),
-          buildAccessStateFilter(),
-          buildTempValFilter(),
-          buildStartDateAtFilter(),
-          buildEndDateAtFilter(),
-          buildFormalRuleFilter(),
-          buildValidOnFilter(),
-          buildPaketSigelIdFilter(),
-          buildZDBIdFilter(),
-          buildNoRightInformation()
+          searchquerybuilder.buildPublicationDateFilter(searchStore),
+          searchquerybuilder.buildPublicationTypeFilter(searchStore),
+          searchquerybuilder.buildAccessStateFilter(searchStore),
+          searchquerybuilder.buildTempValFilter(searchStore),
+          searchquerybuilder.buildStartDateAtFilter(searchStore),
+          searchquerybuilder.buildEndDateAtFilter(searchStore),
+          searchquerybuilder.buildFormalRuleFilter(searchStore),
+          searchquerybuilder.buildValidOnFilter(searchStore),
+          searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+          searchquerybuilder.buildZDBIdFilter(searchStore),
+          searchquerybuilder.buildNoRightInformation(searchStore)
         )
         .then((response: ItemInformation) => {
           items.value = response.itemArray;
@@ -280,7 +288,9 @@ export default defineComponent({
           );
           // Reset ZDB Id
           searchStore.zdbIdReceived =
-            response.zdbIdWithCount != undefined ? response.zdbIdWithCount : Array(0);
+            response.zdbIdWithCount != undefined
+              ? response.zdbIdWithCount
+              : Array(0);
           searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
             false
           );
@@ -309,206 +319,6 @@ export default defineComponent({
           idxMap[index] = true;
         }
       });
-    };
-
-    const buildPublicationDateFilter: () => string | undefined = () => {
-      return searchStore.publicationDateFrom == "" &&
-        searchStore.publicationDateTo == ""
-        ? undefined
-        : searchStore.publicationDateFrom + "-" + searchStore.publicationDateTo;
-    };
-
-    const buildPaketSigelIdFilter: () => string | undefined = () => {
-      let paketSigelIds: Array<string> = [];
-      searchStore.paketSigelIdIdx.forEach(
-        (i: boolean | undefined, index: number): void => {
-          if (i) {
-            paketSigelIds.push(searchStore.paketSigelIdReceived[index].paketSigel);
-          }
-        }
-      );
-      // Remind selected ids, for resetting the filter afterwards correctly.
-      searchStore.paketSigelSelectedLastSearch = paketSigelIds;
-      if (paketSigelIds.length == 0) {
-        return undefined;
-      } else {
-        return paketSigelIds.join(",");
-      }
-    };
-
-    const buildZDBIdFilter: () => string | undefined = () => {
-      let zdbIds: Array<string> = [];
-      searchStore.zdbIdIdx.forEach(
-        (i: boolean | undefined, index: number): void => {
-          if (i) {
-            zdbIds.push(searchStore.zdbIdReceived[index].zdbId);
-          }
-        }
-      );
-      // Remind selected ids, for resetting the filter afterwards correctly.
-      searchStore.zdbIdSelectedLastSearch = zdbIds;
-      if (zdbIds.length == 0) {
-        return undefined;
-      } else {
-        return zdbIds.join(",");
-      }
-    };
-
-    const buildAccessStateFilter = () => {
-      let accessStates: Array<string> = [];
-      searchStore.accessStateIdx.forEach(
-        (i: boolean | undefined, index: number): void => {
-          if (i) {
-            accessStates.push(
-              searchStore.accessStateReceived[index].accessState.toUpperCase()
-            );
-          }
-        }
-      );
-
-      // Remind selected ids, for resetting the filter afterwards correctly.
-      searchStore.accessStateSelectedLastSearch = accessStates.map((value) =>
-        value.toLowerCase()
-      );
-      if (accessStates.length == 0) {
-        return undefined;
-      } else {
-        return accessStates.join(",");
-      }
-    };
-
-    const buildFormalRuleFilter = () => {
-      let formalRule: Array<string> = [];
-      if (searchStore.formalRuleLicenceContract) {
-        formalRule.push("LICENCE_CONTRACT");
-      }
-      if (searchStore.formalRuleOpenContentLicence) {
-        formalRule.push("OPEN_CONTENT_LICENCE");
-      }
-      if (searchStore.formalRuleUserAgreement) {
-        formalRule.push("ZBW_USER_AGREEMENT");
-      }
-      if (formalRule.length == 0) {
-        return undefined;
-      } else {
-        return formalRule.join(",");
-      }
-    };
-
-    const buildTempValFilter = () => {
-      let tempVal: Array<string> = [];
-      if (searchStore.temporalValidityFilterFuture) {
-        tempVal.push("FUTURE");
-      }
-      if (searchStore.temporalValidityFilterPast) {
-        tempVal.push("PAST");
-      }
-      if (searchStore.temporalValidityFilterPresent) {
-        tempVal.push("PRESENT");
-      }
-      if (tempVal.length == 0) {
-        return undefined;
-      } else {
-        return tempVal.join(",");
-      }
-    };
-
-    const buildStartDateAtFilter = () => {
-      if (
-        searchStore.temporalEventStartDateFilter &&
-        searchStore.temporalEventInput != ""
-      ) {
-        return searchStore.temporalEventInput;
-      } else {
-        return undefined;
-      }
-    };
-
-    const buildEndDateAtFilter = () => {
-      if (
-        searchStore.temporalEventEndDateFilter &&
-        searchStore.temporalEventInput != ""
-      ) {
-        return searchStore.temporalEventInput;
-      } else {
-        return undefined;
-      }
-    };
-
-    const buildPublicationTypeFilter = () => {
-      let types: Array<string> = [];
-      let typesFrontend: Array<string> = [];
-      searchStore.publicationTypeIdx.forEach(
-        (i: boolean | undefined, index: number): void => {
-          if (i) {
-            let modifiedPubTypeFilter: string;
-            switch (
-              searchStore.publicationTypeReceived[index].publicationType.toString()
-            ) {
-              case "article":
-                modifiedPubTypeFilter = "ARTICLE";
-                break;
-              case "book":
-                modifiedPubTypeFilter = "BOOK";
-                break;
-              case "bookPart":
-                modifiedPubTypeFilter = "BOOK_PART";
-                break;
-              case "book_part":
-                modifiedPubTypeFilter = "BOOK_PART";
-                break;
-              case "conferencePaper":
-                modifiedPubTypeFilter = "CONFERENCE_PAPER";
-                break;
-              case "periodicalPart":
-                modifiedPubTypeFilter = "PERIODICAL_PART";
-                break;
-              case "proceedings":
-                modifiedPubTypeFilter = "PROCEEDING";
-                break;
-              case "researchReport":
-                modifiedPubTypeFilter = "RESEARCH_REPORT";
-                break;
-              case "thesis":
-                modifiedPubTypeFilter = "THESIS";
-                break;
-              case "workingPaper":
-                modifiedPubTypeFilter = "WORKING_PAPER";
-                break;
-              default:
-                modifiedPubTypeFilter = "ERROR";
-            }
-            types.push(modifiedPubTypeFilter);
-            typesFrontend.push(searchStore.publicationTypeReceived[index].publicationType);
-          }
-        }
-      );
-      // Remind selected ids, for resetting the filter afterwards correctly.
-      searchStore.publicationTypeSelectedLastSearch = typesFrontend;
-      if (types.length == 0) {
-        return undefined;
-      } else {
-        return types.join(",");
-      }
-    };
-
-    const buildValidOnFilter = () => {
-      if (
-        searchStore.temporalValidOn != undefined &&
-        searchStore.temporalValidOn != ""
-      ) {
-        return searchStore.temporalValidOn;
-      } else {
-        return undefined;
-      }
-    };
-
-    const buildNoRightInformation = () => {
-      if (searchStore.noRightInformation) {
-        return "true";
-      } else {
-        return undefined;
-      }
     };
 
     // parse publication type
@@ -540,7 +350,7 @@ export default defineComponent({
     };
 
     /**
-     * Manage Group Dialog.
+     * Manage Dialogs.
      */
     const dialogStore = useDialogsStore();
 
@@ -548,7 +358,27 @@ export default defineComponent({
       dialogStore.groupOverviewActivated = false;
     };
 
+    /**
+     * Bookmark settings.
+     */
+    const activateBookmarkSaveDialog = () => {
+      bookmarkSuccessfulMsg.value = false;
+      dialogStore.bookmarkSaveActivated = true;
+    };
+
+    const closeBookmarkSaveDialog = () => {
+      dialogStore.bookmarkSaveActivated = false;
+    };
+
+    const bookmarkSuccessfulMsg = ref(false);
+    const newBookmarkId = ref(-1);
+    const addBookmarkSuccessful = (bookmarkId: number) => {
+      newBookmarkId.value = bookmarkId;
+      bookmarkSuccessfulMsg.value = true;
+    };
+
     return {
+      bookmarkSuccessfulMsg,
       currentItem,
       currentPage,
       dialogStore,
@@ -561,6 +391,7 @@ export default defineComponent({
       invalidSearchKeyErrorMsg,
       loadAlertError,
       loadAlertErrorMessage,
+      newBookmarkId,
       numberOfResults,
       pageSize,
       pageSizes,
@@ -571,17 +402,10 @@ export default defineComponent({
       tableContentLoading,
       totalPages,
       // Methods
+      activateBookmarkSaveDialog,
       addActiveItem,
-      buildPublicationDateFilter,
-      buildPublicationTypeFilter,
-      buildAccessStateFilter,
-      buildTempValFilter,
-      buildStartDateAtFilter,
-      buildEndDateAtFilter,
-      buildFormalRuleFilter,
-      buildValidOnFilter,
-      buildPaketSigelIdFilter,
-      buildZDBIdFilter,
+      addBookmarkSuccessful,
+      closeBookmarkSaveDialog,
       closeGroupDialog,
       getAlertLoad,
       handlePageChange,
@@ -610,6 +434,16 @@ export default defineComponent({
     >
       <GroupOverview></GroupOverview>
     </v-dialog>
+    <v-dialog
+      max-width="1000px"
+      v-model="dialogStore.bookmarkSaveActivated"
+      v-on:close="closeBookmarkSaveDialog"
+      :retain-focus="false"
+    >
+      <BookmarkSave
+        v-on:addBookmarkSuccessful="addBookmarkSuccessful"
+      ></BookmarkSave>
+    </v-dialog>
     <v-row>
       <v-col cols="2">
         <SearchFilter></SearchFilter>
@@ -635,6 +469,14 @@ export default defineComponent({
               zdb(ZDB-Id)"
             ></v-text-field>
           </v-card-title>
+          <v-spacer></v-spacer>
+          <v-row>
+            <v-col offset-md="9">
+              <v-btn color="blue darken-1" @click="activateBookmarkSaveDialog"
+                >Suche Speichern</v-btn
+              >
+            </v-col>
+          </v-row>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible
@@ -650,6 +492,14 @@ export default defineComponent({
             type="error"
           >
             {{ hasSearchTokenWithNoKeyErrorMsg }}
+          </v-alert>
+          <v-alert
+            v-model="bookmarkSuccessfulMsg"
+            dismissible
+            text
+            type="success"
+          >
+            Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId }}.
           </v-alert>
           <v-select
             v-model="headersValueVSelect"

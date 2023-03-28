@@ -81,18 +81,19 @@ class BookmarkDB(
                 Bookmark(
                     bookmarkId = rs.getInt(1),
                     bookmarkName = rs.getString(2),
-                    searchKeys = LoriServerBackend.parseValidSearchKeys(rs.getString(3)),
-                    publicationDateFilter = PublicationDateFilter.fromString(rs.getString(4)),
-                    accessStateFilter = AccessStateFilter.fromString(rs.getString(5)),
-                    temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(6)),
-                    startDateFilter = StartDateFilter.fromString(rs.getString(7)),
-                    endDateFilter = EndDateFilter.fromString(rs.getString(8)),
-                    formalRuleFilter = FormalRuleFilter.fromString(rs.getString(9)),
-                    validOnFilter = RightValidOnFilter.fromString(rs.getString(10)),
-                    paketSigelFilter = PaketSigelFilter.fromString(rs.getString(11)),
-                    zdbIdFilter = ZDBIdFilter.fromString(rs.getString(12)),
-                    noRightInformationFilter = NoRightInformationFilter.fromString(rs.getBoolean(13).toString()),
-                    publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(14))
+                    description = rs.getString(3),
+                    searchKeys = LoriServerBackend.parseValidSearchKeys(rs.getString(4)),
+                    publicationDateFilter = PublicationDateFilter.fromString(rs.getString(5)),
+                    accessStateFilter = AccessStateFilter.fromString(rs.getString(6)),
+                    temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(7)),
+                    startDateFilter = StartDateFilter.fromString(rs.getString(8)),
+                    endDateFilter = EndDateFilter.fromString(rs.getString(9)),
+                    formalRuleFilter = FormalRuleFilter.fromString(rs.getString(10)),
+                    validOnFilter = RightValidOnFilter.fromString(rs.getString(11)),
+                    paketSigelFilter = PaketSigelFilter.fromString(rs.getString(12)),
+                    zdbIdFilter = ZDBIdFilter.fromString(rs.getString(13)),
+                    noRightInformationFilter = NoRightInformationFilter.fromString(rs.getBoolean(14).toString()),
+                    publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(15))
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -103,7 +104,7 @@ class BookmarkDB(
             bookmark,
             connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK)
         ).apply {
-            this.setInt(14, bookmarkId)
+            this.setInt(15, bookmarkId)
         }
         val span = tracer.spanBuilder("updateBookmarkById").startSpan()
         try {
@@ -119,15 +120,15 @@ class BookmarkDB(
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
 
         const val STATEMENT_GET_BOOKMARKS = "SELECT " +
-            "bookmark_id,bookmark_name,search_term,filter_publication_date," +
-            "filter_access_state,filter_temporal_validity,filter_start_date," +
-            "filter_end_date,filter_formal_rule,filter_valid_on," +
-            "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
-            "filter_publication_type" +
+            "bookmark_id,bookmark_name,description,search_term," +
+            "filter_publication_date,filter_access_state,filter_temporal_validity," +
+            "filter_start_date,filter_end_date,filter_formal_rule," +
+            "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+            "filter_no_right_information,filter_publication_type" +
             " FROM $TABLE_NAME_BOOKMARK" +
             " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
         const val STATEMENT_INSERT_BOOKMARK = "INSERT INTO $TABLE_NAME_BOOKMARK" +
-            "(bookmark_name,search_term,filter_publication_date," +
+            "(bookmark_name,search_term,description,filter_publication_date," +
             "filter_access_state,filter_temporal_validity,filter_start_date," +
             "filter_end_date,filter_formal_rule,filter_valid_on," +
             "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
@@ -136,13 +137,13 @@ class BookmarkDB(
             "?,?,?," +
             "?,?,?," +
             "?,?,?," +
-            "?)"
+            "?,?)"
         const val STATEMENT_DELETE_BOOKMARK_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_BOOKMARK" +
             " WHERE $COLUMN_BOOKMARK_ID = ?"
         const val STATEMENT_UPDATE_BOOKMARK =
             "UPDATE $TABLE_NAME_BOOKMARK" +
-                " SET bookmark_name=?,search_term=?,filter_publication_date=?," +
+                " SET bookmark_name=?,search_term=?,description=?,filter_publication_date=?," +
                 "filter_access_state=?,filter_temporal_validity=?,filter_start_date=?," +
                 "filter_end_date=?,filter_formal_rule=?,filter_valid_on=?," +
                 "filter_paket_sigel=?,filter_zdb_id=?,filter_no_right_information=?," +
@@ -158,37 +159,40 @@ class BookmarkDB(
                 this.setIfNotNull(2, bookmark.searchKeys) { value, idx, prepStmt ->
                     prepStmt.setString(idx, LoriServerBackend.searchKeysToString(value))
                 }
-                this.setIfNotNull(3, bookmark.publicationDateFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(3, bookmark.description) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(4, bookmark.accessStateFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(4, bookmark.publicationDateFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(5, bookmark.temporalValidityFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(5, bookmark.accessStateFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(6, bookmark.startDateFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(6, bookmark.temporalValidityFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(7, bookmark.endDateFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(7, bookmark.startDateFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(8, bookmark.formalRuleFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(8, bookmark.endDateFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(9, bookmark.validOnFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(9, bookmark.formalRuleFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(10, bookmark.paketSigelFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(10, bookmark.validOnFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(11, bookmark.zdbIdFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(11, bookmark.paketSigelFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())
                 }
-                this.setIfNotNull(12, bookmark.noRightInformationFilter) { _, idx, prepStmt ->
+                this.setIfNotNull(12, bookmark.zdbIdFilter) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value.toString())
+                }
+                this.setIfNotNull(13, bookmark.noRightInformationFilter) { _, idx, prepStmt ->
                     prepStmt.setBoolean(idx, true)
                 }
-                this.setIfNotNull(13, bookmark.publicationTypeFilter?.toString()) { value, idx, prepStmt ->
+                this.setIfNotNull(14, bookmark.publicationTypeFilter?.toString()) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
             }

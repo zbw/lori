@@ -14,7 +14,6 @@ import { GroupRest } from "@/generated-sources/openapi/models/GroupRest";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
-import { ErrorRest } from "@/generated-sources/openapi";
 import error from "@/utils/error";
 
 export default defineComponent({

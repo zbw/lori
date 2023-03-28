@@ -15,6 +15,8 @@ paths:
     $ref: 'bookmark.api.yaml#/bookmark'
   /bookmark/{id}:
     $ref: 'bookmark.api.yaml#/bookmark-id'
+  /bookmarkraw:
+    $ref: 'bookmark.api.yaml#/bookmarkraw'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -70,5 +72,5 @@ components:
       $ref: 'errorhandling.model.yaml#/ErrorRest'
     BookmarkRest:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
-    BookmarkSemanticRest:
-      $ref: 'bookmark.model.yaml#/BookmarkSemanticRest'
+    BookmarkRawRest:
+      $ref: 'bookmark.model.yaml#/BookmarkRawRest'

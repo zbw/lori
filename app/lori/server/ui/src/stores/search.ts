@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
 import { Ref, ref } from "vue";
 import {
-    AccessStateWithCountRest,
-    PaketSigelWithCountRest,
-    PublicationTypeWithCountRest, ZdbIdWithCountRest
+  AccessStateWithCountRest,
+  PaketSigelWithCountRest,
+  PublicationTypeWithCountRest,
+  ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 
 export const useSearchStore = defineStore("search", () => {
@@ -33,7 +34,9 @@ export const useSearchStore = defineStore("search", () => {
   const paketSigelSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const publicationTypeIdx: Ref<Array<boolean>> = ref([]);
-  const publicationTypeReceived: Ref<Array<PublicationTypeWithCountRest>> = ref([]);
+  const publicationTypeReceived: Ref<Array<PublicationTypeWithCountRest>> = ref(
+    []
+  );
   const publicationTypeSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const temporalEventInput = ref("");
