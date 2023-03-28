@@ -4,6 +4,7 @@ import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
+import searchquerybulder from "@/utils/searchquerybuilder";
 import {
   AccessStateRest,
   ItemInformation,
@@ -12,6 +13,7 @@ import {
 } from "@/generated-sources/openapi";
 import { createTestingPinia } from "@pinia/testing";
 import { useSearchStore } from "@/stores/search";
+import searchquerybuilder from "@/utils/searchquerybuilder";
 
 Vue.use(Vuetify);
 
@@ -156,22 +158,22 @@ describe("Test ItemList UI", () => {
 
     // when + then
     searchStore.publicationDateFrom = "";
-    expect((wrapper.vm as any).buildPublicationDateFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBeUndefined();
 
     // when + then
     searchStore.publicationDateFrom = "2022";
     searchStore.publicationDateTo = "";
-    expect((wrapper.vm as any).buildPublicationDateFilter()).toBe("2022-");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("2022-");
 
     // when + then
     searchStore.publicationDateFrom = "";
     searchStore.publicationDateTo = "2023";
-    expect((wrapper.vm as any).buildPublicationDateFilter()).toBe("-2023");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("-2023");
 
     // when + then
     searchStore.publicationDateFrom = "2022";
     searchStore.publicationDateTo = "2023";
-    expect((wrapper.vm as any).buildPublicationDateFilter()).toBe("2022-2023");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("2022-2023");
   });
 
   it("testPublicationTypeFilter", async () => {
@@ -193,7 +195,7 @@ describe("Test ItemList UI", () => {
     });
     const searchStore = useSearchStore();
     // when + then
-    expect((wrapper.vm as any).buildPublicationTypeFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildPublicationTypeFilter(searchStore)).toBeUndefined();
 
     // when
     searchStore.publicationTypeReceived = [
@@ -203,7 +205,7 @@ describe("Test ItemList UI", () => {
     ];
     searchStore.publicationTypeIdx = [true, false, true];
     // then
-    expect((wrapper.vm as any).buildPublicationTypeFilter()).toBe(
+    expect(searchquerybuilder.buildPublicationTypeFilter(searchStore)).toBe(
       "ARTICLE,BOOK_PART"
     );
   });
@@ -227,7 +229,7 @@ describe("Test ItemList UI", () => {
     });
     const searchStore = useSearchStore();
     // when + then
-    expect((wrapper.vm as any).buildAccessStateFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildAccessStateFilter(searchStore)).toBeUndefined();
 
     // when
 
@@ -237,7 +239,7 @@ describe("Test ItemList UI", () => {
       { accessState: AccessStateRest.Closed, count: 1 },
     ];
     searchStore.accessStateIdx = [true, true, true];
-    expect((wrapper.vm as any).buildAccessStateFilter()).toBe(
+    expect(searchquerybuilder.buildAccessStateFilter(searchStore)).toBe(
       "OPEN,RESTRICTED,CLOSED"
     );
   });
@@ -264,13 +266,13 @@ describe("Test ItemList UI", () => {
     searchStore.temporalValidityFilterFuture = false;
     searchStore.temporalValidityFilterPast = false;
     searchStore.temporalValidityFilterPresent = false;
-    expect((wrapper.vm as any).buildTempValFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildTempValFilter(searchStore)).toBeUndefined();
 
     // when
     searchStore.temporalValidityFilterFuture = true;
     searchStore.temporalValidityFilterPast = true;
     searchStore.temporalValidityFilterPresent = true;
-    expect((wrapper.vm as any).buildTempValFilter()).toBe(
+    expect(searchquerybuilder.buildTempValFilter(searchStore)).toBe(
       "FUTURE,PAST,PRESENT"
     );
   });
@@ -296,21 +298,21 @@ describe("Test ItemList UI", () => {
     const searchStore = useSearchStore();
     // when + then
     searchStore.temporalEventStartDateFilter = false;
-    expect((wrapper.vm as any).buildStartDateAtFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBeUndefined();
     searchStore.temporalEventStartDateFilter = true;
     searchStore.temporalEventInput = "";
-    expect((wrapper.vm as any).buildStartDateAtFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBeUndefined();
     searchStore.temporalEventInput = "2022-01-01";
-    expect((wrapper.vm as any).buildStartDateAtFilter()).toBe("2022-01-01");
+    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBe("2022-01-01");
 
     // when + then
     searchStore.temporalEventEndDateFilter = false;
-    expect((wrapper.vm as any).buildEndDateAtFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBeUndefined();
     searchStore.temporalEventEndDateFilter = true;
     searchStore.temporalEventInput = "";
-    expect((wrapper.vm as any).buildEndDateAtFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBeUndefined();
     searchStore.temporalEventInput = "2022-01-01";
-    expect((wrapper.vm as any).buildEndDateAtFilter()).toBe("2022-01-01");
+    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBe("2022-01-01");
   });
 
   it("testFormalRuleFilter", async () => {
@@ -335,13 +337,13 @@ describe("Test ItemList UI", () => {
     searchStore.formalRuleLicenceContract = false;
     searchStore.formalRuleOpenContentLicence = false;
     searchStore.formalRuleUserAgreement = false;
-    expect((wrapper.vm as any).buildFormalRuleFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildFormalRuleFilter(searchStore)).toBeUndefined();
 
     // when
     searchStore.formalRuleLicenceContract = true;
     searchStore.formalRuleOpenContentLicence = true;
     searchStore.formalRuleUserAgreement = true;
-    expect((wrapper.vm as any).buildFormalRuleFilter()).toBe(
+    expect(searchquerybuilder.buildFormalRuleFilter(searchStore)).toBe(
       "LICENCE_CONTRACT,OPEN_CONTENT_LICENCE,ZBW_USER_AGREEMENT"
     );
   });
@@ -366,11 +368,11 @@ describe("Test ItemList UI", () => {
     const searchStore = useSearchStore();
     // when + then
     searchStore.temporalValidOn = "";
-    expect((wrapper.vm as any).buildValidOnFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildValidOnFilter(searchStore)).toBeUndefined();
 
     // when
     searchStore.temporalValidOn = "2022-01-01";
-    expect((wrapper.vm as any).buildValidOnFilter()).toBe("2022-01-01");
+    expect(searchquerybuilder.buildValidOnFilter(searchStore)).toBe("2022-01-01");
   });
 
   it("testPaketSigelIdFilter", async () => {
@@ -400,11 +402,11 @@ describe("Test ItemList UI", () => {
     searchStore.paketSigelIdIdx = [true, false, true];
 
     // when + then
-    expect((wrapper.vm as any).buildPaketSigelIdFilter()).toBe("foo,baz");
+    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBe("foo,baz");
 
     searchStore.paketSigelIdIdx = [];
     // when + then
-    expect((wrapper.vm as any).buildPaketSigelIdFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBeUndefined();
   });
 
   it("testZDBIdFilter", async () => {
@@ -434,10 +436,10 @@ describe("Test ItemList UI", () => {
     searchStore.zdbIdIdx = [true, false, true];
 
     // when + then
-    expect((wrapper.vm as any).buildZDBIdFilter()).toBe("foo,baz");
+    expect(searchquerybuilder.buildZDBIdFilter(searchStore)).toBe("foo,baz");
 
     searchStore.zdbIdReceived = [];
     // when + then
-    expect((wrapper.vm as any).buildPaketSigelIdFilter()).toBeUndefined();
+    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBeUndefined();
   });
 });
