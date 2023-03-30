@@ -1,8 +1,13 @@
 <script lang="ts">
 import {
+  AccessStateRest,
+  AccessStateWithCountRest,
   ItemInformation,
   ItemRest,
   MetadataRest,
+  PaketSigelWithCountRest,
+  PublicationTypeWithCountRest,
+  ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import { DataTableHeader } from "vuetify";
@@ -227,7 +232,6 @@ export default defineComponent({
           }
 
           if (response.hasSearchTokenWithNoKey == true) {
-            console.log("hihihe");
             hasSearchTokenWithNoKeyErrorMsg.value =
               "Mindestens ein Wort enthält keinen Suchkey." +
               " Dieser Teil wird bei der Suche ignoriert.";
@@ -245,60 +249,11 @@ export default defineComponent({
           if (response.hasZbwUserAgreement != undefined) {
             searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
           }
-          // Reset AccessState
-          searchStore.accessStateReceived =
-            response.accessStateWithCount != undefined
-              ? response.accessStateWithCount
-              : Array(0);
-          searchStore.accessStateIdx = Array(
-            searchStore.accessStateReceived.length
-          ).fill(false);
-          resetDynamicFilter(
-            searchStore.accessStateReceived.map((e) => e.accessState),
-            searchStore.accessStateSelectedLastSearch,
-            searchStore.accessStateIdx
-          );
-          // Reset Paket Sigel
-          searchStore.paketSigelIdReceived =
-            response.paketSigelWithCount != undefined
-              ? response.paketSigelWithCount
-              : Array(0);
-          searchStore.paketSigelIdIdx = Array(
-            searchStore.paketSigelIdReceived.length
-          ).fill(false);
-          resetDynamicFilter(
-            searchStore.paketSigelIdReceived.map((e) => e.paketSigel),
-            searchStore.paketSigelSelectedLastSearch,
-            searchStore.paketSigelIdIdx
-          );
-          // Reset Publication Type
-          searchStore.publicationTypeReceived =
-            response.publicationTypeWithCount != undefined
-              ? response.publicationTypeWithCount.sort((a, b) =>
-                  b.publicationType.localeCompare(a.publicationType)
-                )
-              : Array(0);
-          searchStore.publicationTypeIdx = Array(
-            searchStore.publicationTypeReceived.length
-          ).fill(false);
-          resetDynamicFilter(
-            searchStore.publicationTypeReceived.map((e) => e.publicationType),
-            searchStore.publicationTypeSelectedLastSearch,
-            searchStore.publicationTypeIdx
-          );
-          // Reset ZDB Id
-          searchStore.zdbIdReceived =
-            response.zdbIdWithCount != undefined
-              ? response.zdbIdWithCount
-              : Array(0);
-          searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
-            false
-          );
-          resetDynamicFilter(
-            searchStore.zdbIdReceived.map((e) => e.zdbId),
-            searchStore.zdbIdSelectedLastSearch,
-            searchStore.zdbIdIdx
-          );
+          if (response.itemArray.length == 0) {
+            reduceToSelectedFilters();
+          } else {
+            resetAllDynamicFilter(response);
+          }
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -307,6 +262,114 @@ export default defineComponent({
             loadAlertError.value = true;
           });
         });
+    };
+
+    const reduceToSelectedFilters = () => {
+      searchStore.accessStateReceived =
+        searchStore.accessStateSelectedLastSearch.map((elem: string) => {
+          let foo: AccessStateWithCountRest = {
+            count: 0,
+            accessState: searchquerybuilder.accessStateToType(elem),
+          };
+          return foo;
+        });
+      searchStore.accessStateIdx = reduceIdx(searchStore.accessStateIdx);
+
+      searchStore.paketSigelIdReceived =
+        searchStore.paketSigelSelectedLastSearch.map((elem: string) => {
+          let foo: PaketSigelWithCountRest = {
+            count: 0,
+            paketSigel: elem,
+          };
+          return foo;
+        });
+      searchStore.paketSigelIdIdx = reduceIdx(searchStore.paketSigelIdIdx);
+
+      searchStore.publicationTypeReceived =
+        searchStore.publicationTypeSelectedLastSearch.map((elem: string) => {
+          let foo: PublicationTypeWithCountRest = {
+            count: 0,
+            publicationType: searchquerybuilder.publicationTypeToType(elem),
+          };
+          return foo;
+        });
+      searchStore.publicationTypeIdx = reduceIdx(
+        searchStore.publicationTypeIdx
+      );
+
+      searchStore.zdbIdReceived = searchStore.zdbIdSelectedLastSearch.map(
+        (elem: string) => {
+          let foo: ZdbIdWithCountRest = {
+            count: 0,
+            zdbId: elem,
+          };
+          return foo;
+        }
+      );
+      searchStore.zdbIdIdx = reduceIdx(searchStore.zdbIdIdx);
+    };
+
+    const reduceIdx = (idxMap: Array<boolean>): Array<boolean> => {
+      return idxMap.filter((elem: boolean): boolean => {
+        return elem;
+      });
+    };
+
+    const resetAllDynamicFilter = (response: ItemInformation) => {
+      // Reset AccessState
+      searchStore.accessStateReceived =
+        response.accessStateWithCount != undefined
+          ? response.accessStateWithCount
+          : Array(0);
+      searchStore.accessStateIdx = Array(
+        searchStore.accessStateReceived.length
+      ).fill(false);
+      resetDynamicFilter(
+        searchStore.accessStateReceived.map((e) => e.accessState),
+        searchStore.accessStateSelectedLastSearch,
+        searchStore.accessStateIdx
+      );
+      // Reset Paket Sigel
+      searchStore.paketSigelIdReceived =
+        response.paketSigelWithCount != undefined
+          ? response.paketSigelWithCount
+          : Array(0);
+      searchStore.paketSigelIdIdx = Array(
+        searchStore.paketSigelIdReceived.length
+      ).fill(false);
+      resetDynamicFilter(
+        searchStore.paketSigelIdReceived.map((e) => e.paketSigel),
+        searchStore.paketSigelSelectedLastSearch,
+        searchStore.paketSigelIdIdx
+      );
+      // Reset Publication Type
+      searchStore.publicationTypeReceived =
+        response.publicationTypeWithCount != undefined
+          ? response.publicationTypeWithCount.sort((a, b) =>
+              b.publicationType.localeCompare(a.publicationType)
+            )
+          : Array(0);
+      searchStore.publicationTypeIdx = Array(
+        searchStore.publicationTypeReceived.length
+      ).fill(false);
+      resetDynamicFilter(
+        searchStore.publicationTypeReceived.map((e) => e.publicationType),
+        searchStore.publicationTypeSelectedLastSearch,
+        searchStore.publicationTypeIdx
+      );
+      // Reset ZDB Id
+      searchStore.zdbIdReceived =
+        response.zdbIdWithCount != undefined
+          ? response.zdbIdWithCount
+          : Array(0);
+      searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
+        false
+      );
+      resetDynamicFilter(
+        searchStore.zdbIdReceived.map((e) => e.zdbId),
+        searchStore.zdbIdSelectedLastSearch,
+        searchStore.zdbIdIdx
+      );
     };
 
     const resetDynamicFilter = (
@@ -334,15 +397,23 @@ export default defineComponent({
           return "Book Part";
         case "conferencePaper":
           return "Conference Paper";
+        case "conference_paper":
+          return "Conference Paper";
         case "periodicalPart":
+          return "Periodical Part";
+        case "periodical_part":
           return "Periodical Part";
         case "proceedings":
           return "Proceedings";
         case "researchReport":
           return "Research Report";
+        case "research_report":
+          return "Research Report";
         case "thesis":
           return "Thesis";
         case "workingPaper":
+          return "Working Paper";
+        case "working_paper":
           return "Working Paper";
         default:
           return "Unknown pub type:" + pubType;
@@ -356,14 +427,6 @@ export default defineComponent({
 
     const closeGroupDialog = () => {
       dialogStore.groupOverviewActivated = false;
-    };
-
-    /**
-     * Bookmark settings.
-     */
-    const activateBookmarkSaveDialog = () => {
-      bookmarkSuccessfulMsg.value = false;
-      dialogStore.bookmarkSaveActivated = true;
     };
 
     const closeBookmarkSaveDialog = () => {
@@ -402,7 +465,6 @@ export default defineComponent({
       tableContentLoading,
       totalPages,
       // Methods
-      activateBookmarkSaveDialog,
       addActiveItem,
       addBookmarkSuccessful,
       closeBookmarkSaveDialog,
@@ -470,13 +532,6 @@ export default defineComponent({
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
-          <v-row>
-            <v-col offset-md="9">
-              <v-btn color="blue darken-1" @click="activateBookmarkSaveDialog"
-                >Suche Speichern</v-btn
-              >
-            </v-col>
-          </v-row>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible
