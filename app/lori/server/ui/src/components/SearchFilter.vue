@@ -2,6 +2,7 @@
 import { computed, defineComponent, reactive, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useVuelidate } from "@vuelidate/core";
+import { useDialogsStore } from "@/stores/dialogs";
 
 export default defineComponent({
   setup() {
@@ -147,7 +148,6 @@ export default defineComponent({
           return "Restricted Access " + "(" + count + ")";
       }
     };
-
     const parsePublicationType = (pubType: string, count: number) => {
       switch (pubType) {
         case "article":
@@ -156,16 +156,31 @@ export default defineComponent({
           return "Buch/Book " + "(" + count + ")";
         case "bookPart":
           return "Buchaufsatz/Book Part " + "(" + count + ")";
+        /**
+         * IMPORTANT NOTE: Openapis conversion of enums between frontend and backend
+         * has issues with multiple word entries. The entries aren't always
+         * encoded as the interface suggest, for instance 'periodicalPart' is
+         * sometimes encoded as 'periodical_part'. That's the reason why all
+         * these conversions contain both variants.
+         */
+        case "conference_paper":
+          return "Konferenzschrift/\n Conference Paper " + "(" + count + ")";
         case "conferencePaper":
           return "Konferenzschrift/\n Conference Paper " + "(" + count + ")";
+        case "periodical_part":
+          return "Zeitschriftenband/\n Periodical Part " + "(" + count + ")";
         case "periodicalPart":
           return "Zeitschriftenband/\n Periodical Part " + "(" + count + ")";
         case "proceedings":
           return "Konferenzband/\n Proceeding " + "(" + count + ")";
+        case "research_report":
+          return "Forschungsbericht/\n Research Report " + "(" + count + ")";
         case "researchReport":
           return "Forschungsbericht/\n Research Report " + "(" + count + ")";
         case "thesis":
           return "Thesis " + "(" + count + ")";
+        case "working_paper":
+          return "Working Paper " + "(" + count + ")";
         case "workingPaper":
           return "Working Paper " + "(" + count + ")";
         default:
@@ -173,12 +188,20 @@ export default defineComponent({
       }
     };
 
-    const ppPaketSigel = (paketSigel: string, count: number) =>{
+    const ppPaketSigel = (paketSigel: string, count: number) => {
       return paketSigel + " (" + count + ")";
     };
 
-    const ppZDBId = (zdbId: string, count: number) =>{
+    const ppZDBId = (zdbId: string, count: number) => {
       return zdbId + " (" + count + ")";
+    };
+
+    /**
+     * Bookmark settings.
+     */
+    const dialogStore = useDialogsStore();
+    const activateBookmarkSaveDialog = () => {
+      dialogStore.bookmarkSaveActivated = true;
     };
 
     return {
@@ -191,6 +214,7 @@ export default defineComponent({
       tempValidOnMenu,
       searchStore,
       v$,
+      activateBookmarkSaveDialog,
       parseAccessState,
       parsePublicationType,
       ppPaketSigel,
@@ -203,10 +227,17 @@ export default defineComponent({
 <template>
   <v-card height="100%">
     <v-row>
-      <v-col cols="12">
-        <v-btn color="warning" dark :disabled="!canReset" @click="resetFilter">
-          Alle Filter löschen</v-btn
+      <v-col cols="4">
+        <v-btn color="warning" :disabled="!canReset" @click="resetFilter">
+          Alle Filter resetten</v-btn
         >
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col cols="4">
+        <v-btn color="blue darken-1" @click="activateBookmarkSaveDialog">
+          Suchfilter speichern
+        </v-btn>
       </v-col>
     </v-row>
     <v-row>
@@ -293,7 +324,7 @@ export default defineComponent({
             <v-checkbox
               v-for="(item, i) in searchStore.accessStateReceived"
               :key="i"
-              :label="parseAccessState(item.accessState,item.count)"
+              :label="parseAccessState(item.accessState, item.count)"
               hide-details
               class="pl-9 ml-4"
               v-model="searchStore.accessStateIdx[i]"

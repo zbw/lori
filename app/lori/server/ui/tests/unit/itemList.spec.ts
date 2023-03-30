@@ -158,22 +158,30 @@ describe("Test ItemList UI", () => {
 
     // when + then
     searchStore.publicationDateFrom = "";
-    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildPublicationDateFilter(searchStore)
+    ).toBeUndefined();
 
     // when + then
     searchStore.publicationDateFrom = "2022";
     searchStore.publicationDateTo = "";
-    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("2022-");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe(
+      "2022-"
+    );
 
     // when + then
     searchStore.publicationDateFrom = "";
     searchStore.publicationDateTo = "2023";
-    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("-2023");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe(
+      "-2023"
+    );
 
     // when + then
     searchStore.publicationDateFrom = "2022";
     searchStore.publicationDateTo = "2023";
-    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe("2022-2023");
+    expect(searchquerybuilder.buildPublicationDateFilter(searchStore)).toBe(
+      "2022-2023"
+    );
   });
 
   it("testPublicationTypeFilter", async () => {
@@ -195,7 +203,9 @@ describe("Test ItemList UI", () => {
     });
     const searchStore = useSearchStore();
     // when + then
-    expect(searchquerybuilder.buildPublicationTypeFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildPublicationTypeFilter(searchStore)
+    ).toBeUndefined();
 
     // when
     searchStore.publicationTypeReceived = [
@@ -229,7 +239,9 @@ describe("Test ItemList UI", () => {
     });
     const searchStore = useSearchStore();
     // when + then
-    expect(searchquerybuilder.buildAccessStateFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildAccessStateFilter(searchStore)
+    ).toBeUndefined();
 
     // when
 
@@ -298,21 +310,33 @@ describe("Test ItemList UI", () => {
     const searchStore = useSearchStore();
     // when + then
     searchStore.temporalEventStartDateFilter = false;
-    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildStartDateAtFilter(searchStore)
+    ).toBeUndefined();
     searchStore.temporalEventStartDateFilter = true;
     searchStore.temporalEventInput = "";
-    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildStartDateAtFilter(searchStore)
+    ).toBeUndefined();
     searchStore.temporalEventInput = "2022-01-01";
-    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBe("2022-01-01");
+    expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBe(
+      "2022-01-01"
+    );
 
     // when + then
     searchStore.temporalEventEndDateFilter = false;
-    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildEndDateAtFilter(searchStore)
+    ).toBeUndefined();
     searchStore.temporalEventEndDateFilter = true;
     searchStore.temporalEventInput = "";
-    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildEndDateAtFilter(searchStore)
+    ).toBeUndefined();
     searchStore.temporalEventInput = "2022-01-01";
-    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBe("2022-01-01");
+    expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBe(
+      "2022-01-01"
+    );
   });
 
   it("testFormalRuleFilter", async () => {
@@ -337,7 +361,9 @@ describe("Test ItemList UI", () => {
     searchStore.formalRuleLicenceContract = false;
     searchStore.formalRuleOpenContentLicence = false;
     searchStore.formalRuleUserAgreement = false;
-    expect(searchquerybuilder.buildFormalRuleFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildFormalRuleFilter(searchStore)
+    ).toBeUndefined();
 
     // when
     searchStore.formalRuleLicenceContract = true;
@@ -372,7 +398,9 @@ describe("Test ItemList UI", () => {
 
     // when
     searchStore.temporalValidOn = "2022-01-01";
-    expect(searchquerybuilder.buildValidOnFilter(searchStore)).toBe("2022-01-01");
+    expect(searchquerybuilder.buildValidOnFilter(searchStore)).toBe(
+      "2022-01-01"
+    );
   });
 
   it("testPaketSigelIdFilter", async () => {
@@ -402,11 +430,15 @@ describe("Test ItemList UI", () => {
     searchStore.paketSigelIdIdx = [true, false, true];
 
     // when + then
-    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBe("foo,baz");
+    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBe(
+      "foo,baz"
+    );
 
     searchStore.paketSigelIdIdx = [];
     // when + then
-    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildPaketSigelIdFilter(searchStore)
+    ).toBeUndefined();
   });
 
   it("testZDBIdFilter", async () => {
@@ -440,6 +472,8 @@ describe("Test ItemList UI", () => {
 
     searchStore.zdbIdReceived = [];
     // when + then
-    expect(searchquerybuilder.buildPaketSigelIdFilter(searchStore)).toBeUndefined();
+    expect(
+      searchquerybuilder.buildPaketSigelIdFilter(searchStore)
+    ).toBeUndefined();
   });
 });

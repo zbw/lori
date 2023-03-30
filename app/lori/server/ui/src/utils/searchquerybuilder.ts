@@ -1,3 +1,8 @@
+import {
+  AccessStateRest,
+  PublicationTypeRest,
+} from "@/generated-sources/openapi";
+
 export default {
   buildPublicationDateFilter(searchStore: any): string | undefined {
     return searchStore.publicationDateFrom == "" &&
@@ -151,7 +156,13 @@ export default {
             case "conferencePaper":
               modifiedPubTypeFilter = "CONFERENCE_PAPER";
               break;
+            case "conference_paper":
+              modifiedPubTypeFilter = "CONFERENCE_PAPER";
+              break;
             case "periodicalPart":
+              modifiedPubTypeFilter = "PERIODICAL_PART";
+              break;
+            case "periodical_part":
               modifiedPubTypeFilter = "PERIODICAL_PART";
               break;
             case "proceedings":
@@ -160,10 +171,16 @@ export default {
             case "researchReport":
               modifiedPubTypeFilter = "RESEARCH_REPORT";
               break;
+            case "research_report":
+              modifiedPubTypeFilter = "RESEARCH_REPORT";
+              break;
             case "thesis":
               modifiedPubTypeFilter = "THESIS";
               break;
             case "workingPaper":
+              modifiedPubTypeFilter = "WORKING_PAPER";
+              break;
+            case "working_paper":
               modifiedPubTypeFilter = "WORKING_PAPER";
               break;
             default:
@@ -201,6 +218,39 @@ export default {
       return "true";
     } else {
       return undefined;
+    }
+  },
+
+  accessStateToType(a: string): AccessStateRest {
+    switch (a) {
+      case "open":
+        return AccessStateRest.Open;
+      case "closed":
+        return AccessStateRest.Closed;
+      default:
+        return AccessStateRest.Restricted;
+    }
+  },
+
+  publicationTypeToType(t: string): PublicationTypeRest {
+    console.log(t);
+    switch (t) {
+      case "article":
+        return PublicationTypeRest.Article;
+      case "book":
+        return PublicationTypeRest.Book;
+      case "bookPart":
+        return PublicationTypeRest.BookPart;
+      case "conferencePaper":
+        return PublicationTypeRest.ConferencePaper;
+      case "periodicalPart":
+        return PublicationTypeRest.PeriodicalPart;
+      case "researchReport":
+        return PublicationTypeRest.ResearchReport;
+      case "thesis":
+        return PublicationTypeRest.Thesis;
+      default:
+        return PublicationTypeRest.WorkingPaper;
     }
   },
 };
