@@ -2,10 +2,6 @@ plugins {
     `kotlin-dsl`
 }
 
-kotlinDslPluginOptions {
-    experimentalWarning.set(false)
-}
-
 repositories {
     mavenCentral()
     gradlePluginPortal()
@@ -22,16 +18,16 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
     kotlinOptions {
         jvmTarget = "17"
-        languageVersion = "1.6"
+        languageVersion = "1.8.0"
     }
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.22")
+    val kotlinVersion by System.getProperties()
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:11.0.0")
     implementation("com.parmet:buf-gradle-plugin:0.8.2")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.1")

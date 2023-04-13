@@ -33,7 +33,8 @@ protobuf {
         // the identifier, which can be referred to in the "plugins"
         // container of the "generateProtoTasks" closure.
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.43.2"
+            val grpcVersion by System.getProperties()
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
         }
         id("grpckt") {
             val grpcKotlinVersion by System.getProperties()

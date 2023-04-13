@@ -18,7 +18,8 @@ LORI aims to be a service which harvests metadata information and provide their 
 information.
 
 ## Setup
-See `app/lori/server/` for how to setup the service.
+See `app/lori/server/` for how to setup the service. In general it is required to have a `java`
+version of version 17 in `$PATH`.
 
 # Build & push CI/CD images
 

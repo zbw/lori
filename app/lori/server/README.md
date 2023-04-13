@@ -10,10 +10,10 @@ read, update and delete these right information.
 
 **Prerequisites**: Docker
 
-First create a postgres docker container and start it.
+[First](First) create a postgres docker container and start it.
 
 ```shell
-docker run --name <CONTAINER_NAME> -p <LOCAL_PORT>:5432 -e POSTGRES_PASSWORD=somepassword -d postgres
+docker run --name <CONTAINER_NAME> -p <LOCAL_PORT>:5432 -e POSTGRES_PASSWORD=somepassword -d postgres:<tag>
 docker start <CONTAINER_NAME>
 ```
 
@@ -23,22 +23,21 @@ Then create a role, and a new database as follows with `psql`:
 docker exec -it <CONTAINER_NAME> psql -U postgres
 CREATE USER lori WITH PASSWORD '1qay2wsx' CREATEDB;
 CREATE DATABASE loridb OWNER lori ENCODING UTF8;
-\q
 ```
 and enable the required extension `pg_trgm`:
 ```sql
 CREATE EXTENSION if not exists pg_trgm;
+\q
 ```
 
 Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database
 and extension.
-You can connect yourself then via pgadmin or `psql`:
-```
-docker exec -it postgres_lori_9.6 psql -U lori -d loriinformation
-```
 
-Set the chosen password and database name in `src/main/resources/lori.properties` or as environment
-variable.
+Set the chosen password, database name and port in `src/main/resources/lori.properties` or set
+these values as environment variable.
+
+Make sure that your local `java` executable links to Java/Openjdk 17. Check via:
+`java --version`. If it is not the case install the version and check on the internet how to change the version for your OS.
 
 Finally, start the service from the projects root directory:
 
@@ -47,6 +46,7 @@ Finally, start the service from the projects root directory:
 ```
 
 Afterwards the service should be accessible under: `localhost:8082/ui`
+Port may vary here as well, depending on the properties file.
 
 ## Setup in Cloud environment
 
