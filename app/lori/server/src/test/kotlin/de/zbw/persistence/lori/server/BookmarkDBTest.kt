@@ -32,7 +32,7 @@ class BookmarkDBTest : DatabaseTest() {
 
         // Case: Update
         val expectedBMUpdated = TEST_BOOKMARK.copy(noRightInformationFilter = NoRightInformationFilter())
-        val updatedBMs = dbConnector.updateBookmarksById(generatedId, expectedBMUpdated)
+        val updatedBMs = dbConnector.updateBookmarkById(generatedId, expectedBMUpdated)
         assertThat(updatedBMs, `is`(1))
         assertThat(
             expectedBMUpdated.copy(bookmarkId = generatedId).toString(),

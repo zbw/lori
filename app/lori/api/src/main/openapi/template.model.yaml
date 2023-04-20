@@ -1,0 +1,25 @@
+TemplateRest:
+  required:
+    - templateName
+    - right
+  type: object
+  properties:
+    templateId:
+      type: integer
+    templateName:
+      type: string
+    description:
+      type: string
+    right:
+      $ref: 'right.model.yaml#/RightRest'
+
+TemplateIdCreated:
+  required:
+    - templateId
+    - rightId
+  type: object
+  properties:
+    templateId:
+      type: integer
+    rightId:
+      type: string

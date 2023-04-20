@@ -21,6 +21,11 @@ information.
 See `app/lori/server/` for how to setup the service. In general it is required to have a `java`
 version of version 17 in `$PATH`.
 
+To build the project run:
+```shell
+./gradlew build
+```
+
 # Build & push CI/CD images
 
 ```shell

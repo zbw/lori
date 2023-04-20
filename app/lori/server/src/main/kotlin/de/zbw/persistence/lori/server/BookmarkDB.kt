@@ -99,7 +99,7 @@ class BookmarkDB(
         }.takeWhile { true }.toList()
     }
 
-    fun updateBookmarksById(bookmarkId: Int, bookmark: Bookmark): Int {
+    fun updateBookmarkById(bookmarkId: Int, bookmark: Bookmark): Int {
         val prepStmt = insertUpdateSetParameters(
             bookmark,
             connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK)
@@ -127,6 +127,7 @@ class BookmarkDB(
             "filter_no_right_information,filter_publication_type" +
             " FROM $TABLE_NAME_BOOKMARK" +
             " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
+
         const val STATEMENT_INSERT_BOOKMARK = "INSERT INTO $TABLE_NAME_BOOKMARK" +
             "(bookmark_name,search_term,description,filter_publication_date," +
             "filter_access_state,filter_temporal_validity,filter_start_date," +
@@ -138,9 +139,11 @@ class BookmarkDB(
             "?,?,?," +
             "?,?,?," +
             "?,?)"
+
         const val STATEMENT_DELETE_BOOKMARK_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_BOOKMARK" +
             " WHERE $COLUMN_BOOKMARK_ID = ?"
+
         const val STATEMENT_UPDATE_BOOKMARK =
             "UPDATE $TABLE_NAME_BOOKMARK" +
                 " SET bookmark_name=?,search_term=?,description=?,filter_publication_date=?," +
@@ -160,7 +163,7 @@ class BookmarkDB(
                     prepStmt.setString(idx, LoriServerBackend.searchKeysToString(value))
                 }
                 this.setIfNotNull(3, bookmark.description) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(4, bookmark.publicationDateFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toString())

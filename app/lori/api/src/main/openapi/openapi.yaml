@@ -55,6 +55,10 @@ paths:
     $ref: 'users.api.yaml#/users-id'
   /users/admin/role:
     $ref: 'users.api.yaml#/users-admin-role'
+  /template:
+    $ref: 'template.api.yaml#/template'
+  /template/{id}:
+    $ref: 'template.api.yaml#/template-id'
 
 components:
   schemas:
@@ -74,3 +78,5 @@ components:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
     BookmarkRawRest:
       $ref: 'bookmark.model.yaml#/BookmarkRawRest'
+    TemplateRest:
+      $ref: 'template.model.yaml#/TemplateRest'

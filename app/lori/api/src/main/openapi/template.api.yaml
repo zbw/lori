@@ -1,0 +1,143 @@
+template:
+  post:
+    tags:
+      - template
+    summary: Save a template representing a generic right information
+    operationId: addTemplate
+    requestBody:
+      description: Template representation
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/TemplateRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              $ref: 'template.model.yaml#/TemplateIdCreated'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Conflict resource exists already
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+  put:
+    tags:
+      - template
+    summary: Update an existing Template
+    operationId: updateTemplate
+    requestBody:
+      description: Template object
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/TemplateRest'
+      required: true
+    responses:
+      204:
+        description: Successfully updated
+        content:
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+template-id:
+  get:
+    tags:
+      - template
+    summary: Receive the template for a given id
+    operationId: getTemplateById
+    parameters:
+      - name: id
+        in: path
+        description: Template Id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'template.model.yaml#/TemplateRest'
+      404:
+        description: Id does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+  delete:
+    tags:
+      - template
+    summary: Delete a template
+    operationId: deleteTemplateById
+    parameters:
+      - name: id
+        in: path
+        description: Template id to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of the template was successful
+        content:
+      04:
+        description: Id does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

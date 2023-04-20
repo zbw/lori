@@ -5,7 +5,7 @@ bookmark:
     summary: Save a bookmark representing a search query.
     operationId: addBookmark
     requestBody:
-      description: Save a search query
+      description: Bookmark representation
       content:
         application/json:
           schema:
