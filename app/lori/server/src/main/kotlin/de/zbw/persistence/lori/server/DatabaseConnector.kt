@@ -41,6 +41,7 @@ class DatabaseConnector(
         groupDB,
     ),
     internal val searchDB: SearchDB = SearchDB(connection, tracer),
+    internal val templateDB: TemplateDB = TemplateDB(connection, tracer, rightDB),
     internal val userDB: UserDB = UserDB(connection, tracer),
 ) {
     constructor(

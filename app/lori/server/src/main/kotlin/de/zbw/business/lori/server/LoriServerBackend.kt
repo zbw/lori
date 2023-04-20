@@ -10,11 +10,13 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
+import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
@@ -355,10 +357,21 @@ class LoriServerBackend(
 
     fun deleteBookmark(bookmarkId: Int): Int = dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
     fun updateBookmark(bookmarkId: Int, bookmark: Bookmark): Int =
-        dbConnector.bookmarkDB.updateBookmarksById(bookmarkId, bookmark)
+        dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
 
     fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
+
+    fun insertTemplate(template: Template): TemplateRightIdCreated =
+        dbConnector.templateDB.insertTemplate(template)
+
+    fun deleteTemplate(templateId: Int): Int = dbConnector.templateDB.deleteTemplateById(templateId)
+
+    fun updateTemplate(templateId: Int, template: Template): Int =
+        dbConnector.templateDB.updateTemplateById(templateId, template)
+
+    fun getTemplateById(templateId: Int): Template? =
+        dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
 
     companion object {
         /**
@@ -375,7 +388,6 @@ class LoriServerBackend(
             return expiresAt == null || expiresAt < 0
         }
 
-        // TODO: Move these functions to QueryParameterParser
         fun parseInvalidSearchKeys(s: String): List<String> =
             tokenizeSearchInput(s).mapNotNull {
                 val keyname = it.substringBefore(":")
