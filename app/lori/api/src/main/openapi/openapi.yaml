@@ -59,6 +59,8 @@ paths:
     $ref: 'template.api.yaml#/template'
   /template/{id}:
     $ref: 'template.api.yaml#/template-id'
+  /template/list:
+    $ref: 'template.api.yaml#/template-list'
 
 components:
   schemas:
@@ -71,7 +73,7 @@ components:
     PublicationTypeRest:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
     RightRest:
-      $ref: 'item.model.yaml#/RightRest'
+      $ref: 'right.model.yaml#/RightRest'
     ErrorRest:
       $ref: 'errorhandling.model.yaml#/ErrorRest'
     BookmarkRest:

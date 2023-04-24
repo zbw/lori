@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
@@ -68,7 +69,9 @@ class TemplateDB(
 
     fun insertTemplate(template: Template): TemplateRightIdCreated {
         // First insert a right entry
-        val newRightId: String = rightDB.insertRight(template.right)
+        val newRightId: String = template.right.let {
+            rightDB.insertRight(it)
+        }
         val prepStmt = connection.prepareStatement(STATEMENT_INSERT_TEMPLATE, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, template.templateName)
             this.setIfNotNull(2, template.description) { value, idx, prepStmt ->
@@ -140,6 +143,50 @@ class TemplateDB(
         return changedTemplates
     }
 
+    fun getTemplateList(
+        limit: Int,
+        offset: Int,
+    ): List<Template> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATE_LIST).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+
+        val span = tracer.spanBuilder("getTemplateList").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            DatabaseConnector.runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        val templates = generateSequence {
+            if (rs.next()) {
+                TemplateTransient(
+                    templateId = rs.getInt(1),
+                    templateName = rs.getString(2),
+                    description = rs.getString(3),
+                    rightId = rs.getString(4),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+
+        val rights = rightDB.getRightsByIds(templates.map { it.rightId })
+        return templates.map {
+            val assRight: ItemRight? = rights.firstOrNull { r -> it.rightId == r.rightId }
+            if (assRight == null) {
+                throw IllegalStateException("No right was found for template. This should not happen!")
+            } else {
+                Template(
+                    templateId = it.templateId,
+                    templateName = it.templateName,
+                    description = it.description,
+                    right = assRight,
+                )
+            }
+        }
+    }
+
     companion object {
         private const val TABLE_NAME_TEMPLATE = "template"
         private const val COLUMN_TEMPLATE_ID = "template_id"
@@ -153,8 +200,13 @@ class TemplateDB(
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ?"
 
-        const val STATEMENT_GET_TEMPLATES = "SELECT " +
-            "template_id,template_name,template_description,right_id" +
+        const val STATEMENT_GET_TEMPLATE_LIST = "SELECT" +
+            " template_id,template_name,template_description,right_id" +
+            " FROM $TABLE_NAME_TEMPLATE" +
+            " ORDER BY template_name ASC LIMIT ? OFFSET ?;"
+
+        const val STATEMENT_GET_TEMPLATES = "SELECT" +
+            " template_id,template_name,template_description,right_id" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ANY(?)"
 

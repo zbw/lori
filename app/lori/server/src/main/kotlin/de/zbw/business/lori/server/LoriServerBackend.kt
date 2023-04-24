@@ -362,6 +362,9 @@ class LoriServerBackend(
     fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
+    /**
+     * Template list.
+     */
     fun insertTemplate(template: Template): TemplateRightIdCreated =
         dbConnector.templateDB.insertTemplate(template)
 
@@ -372,6 +375,12 @@ class LoriServerBackend(
 
     fun getTemplateById(templateId: Int): Template? =
         dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+
+    fun getTemplateList(
+        limit: Int,
+        offset: Int,
+    ): List<Template> =
+        dbConnector.templateDB.getTemplateList(limit, offset)
 
     companion object {
         /**

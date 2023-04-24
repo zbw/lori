@@ -92,9 +92,7 @@ template-id:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'template.model.yaml#/TemplateRest'
+              $ref: 'template.model.yaml#/TemplateRest'
       404:
         description: Id does not exist
         content:
@@ -131,6 +129,52 @@ template-id:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+template-list:
+  get:
+    tags:
+      - template
+    summary: Get list of existing templates
+    operationId: getTemplateList
+    parameters:
+      - name: offset
+        in: query
+        description: An offset.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: "The number of templates to return."
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        required: false
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'template.model.yaml#/TemplateRest'
+      400:
+        description: Bad request
         content:
           application/json:
             schema:
