@@ -45,6 +45,7 @@ ItemInformation:
 ItemRest:
   required:
     - metadata
+    - rights
   type: object
   properties:
     metadata:

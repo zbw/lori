@@ -55,6 +55,7 @@ class TemplateDBTest : DatabaseTest() {
         // Case: Update
         // when
         val expectedUpdated = TEST_TEMPLATE.copy(
+            templateId = generatedIds.templateId,
             description = "fooo",
             right = expected.right.copy(licenceContract = "bar")
         )

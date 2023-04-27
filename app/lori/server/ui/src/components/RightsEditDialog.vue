@@ -8,6 +8,8 @@ import {
   RightRest,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
+  TemplateIdCreated,
+  TemplateRest,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -24,6 +26,7 @@ import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
+import templateApi from "@/api/templateApi";
 
 export default defineComponent({
   props: {
@@ -43,12 +46,29 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    isTemplate: {
+      type: Boolean,
+    },
+    templateId: {
+      type: Number,
+      required: false,
+    },
+    templateName: {
+      type: String,
+      required: false,
+    },
+    templateDescription: {
+      type: String,
+      required: false,
+    },
   },
   // Emits
   emits: [
     "addSuccessful",
+    "addTemplateSuccessful",
+    "updateTemplateSuccessful",
     "deleteSuccessful",
-    "editDialogClosed",
+    "editRightClosed",
     "updateSuccessful",
   ],
 
@@ -60,11 +80,14 @@ export default defineComponent({
   setup(props, { emit }) {
     // Stores
     const historyStore = useHistoryStore();
-    // Vuelidate
+    /**
+     * Vuelidate.
+     */
     type FormState = {
       accessState: string;
       startDate: string;
       endDate: string;
+      formTemplateName: string;
     };
 
     const formState = reactive({
@@ -73,6 +96,7 @@ export default defineComponent({
       basisAccessState: "",
       startDate: "",
       endDate: "",
+      formTemplateName: "",
     });
 
     const endDateCheck = (value: string, siblings: FormState) => {
@@ -89,10 +113,14 @@ export default defineComponent({
       accessState: { required },
       startDate: { required },
       endDate: { endDateCheck },
+      formTemplateName: { required },
     };
 
     const v$ = useVuelidate(rules, formState);
 
+    /**
+     * Vuelidate Errors:
+     */
     const errorAccessState = computed(() => {
       const errors: Array<string> = [];
       if (
@@ -117,7 +145,26 @@ export default defineComponent({
       }
       return errors;
     });
+    const errorTemplateName = computed(() => {
+      const errors: Array<string> = [];
+      if (
+        v$.value.formTemplateName.$invalid &&
+        v$.value.formTemplateName.$dirty
+      ) {
+        errors.push("Es wird ein Template-Name benötigt.");
+      }
+      return errors;
+    });
 
+    /**
+     * Template related:
+     */
+    const tmpTemplateId = ref(-1);
+    const tmpTemplateDescription = ref("");
+
+    /**
+     * Constants:
+     */
     const openPanelsDefault = [0];
     const accessStatusSelect = ["Open", "Closed", "Restricted"];
     const basisAccessState = ref([
@@ -144,9 +191,10 @@ export default defineComponent({
     const updateInProgress = ref(false);
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
+    const tmpTemplate = ref({} as TemplateRest);
 
     const emitClosedDialog = () => {
-      emit("editDialogClosed");
+      emit("editRightClosed");
     };
 
     const close = () => {
@@ -156,6 +204,8 @@ export default defineComponent({
       saveAlertErrorMessage.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
+      tmpTemplateDescription.value = "";
+      formState.formTemplateName = "";
       v$.value.$reset();
       emitClosedDialog();
     };
@@ -177,12 +227,11 @@ export default defineComponent({
       deleteDialogActivated.value = false;
     };
 
+    /**
+     * Create/Update Right/Template:
+     */
     const createRight = () => {
-      updateInProgress.value = true;
       tmpRight.value.rightId = "unset";
-      tmpRight.value.startDate = new Date(formState.startDate);
-      tmpRight.value.endDate =
-        formState.endDate == "" ? undefined : new Date(formState.endDate);
       api
         .addRight(tmpRight.value)
         .then((r) => {
@@ -218,10 +267,6 @@ export default defineComponent({
     };
 
     const updateRight = () => {
-      updateInProgress.value = true;
-      tmpRight.value.startDate = new Date(formState.startDate);
-      tmpRight.value.endDate =
-        formState.endDate == "" ? undefined : new Date(formState.endDate);
       api
         .updateRight(tmpRight.value)
         .then(() => {
@@ -240,6 +285,47 @@ export default defineComponent({
         });
     };
 
+    const createTemplate = () => {
+      tmpRight.value.rightId = "unset";
+      tmpTemplate.value.templateId = -1;
+      tmpTemplate.value.templateName = formState.formTemplateName;
+      tmpTemplate.value.description = tmpTemplateDescription.value;
+      tmpTemplate.value.right = tmpRight.value;
+      templateApi
+        .addTemplate(tmpTemplate.value)
+        .then((r: TemplateIdCreated) => {
+          // TODO: history add template create
+          emit("addTemplateSuccessful", formState.formTemplateName);
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            groupAlertErrorMessage.value = errMsg;
+            groupAlertError.value = true;
+          });
+        });
+    };
+
+    const updateTemplate = () => {
+      tmpTemplate.value.templateId = tmpTemplateId.value;
+      tmpTemplate.value.templateName = formState.formTemplateName;
+      tmpTemplate.value.description = tmpTemplateDescription.value;
+      tmpTemplate.value.right = tmpRight.value;
+      templateApi
+        .updateTemplate(tmpTemplate.value)
+        .then(() => {
+          // TODO: history add template create
+          emit("updateTemplateSuccessful", formState.formTemplateName);
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            groupAlertErrorMessage.value = errMsg;
+            groupAlertError.value = true;
+          });
+        });
+    };
+
     const save: () => Promise<void> = () => {
       return v$.value.$validate().then((isValid) => {
         if (!isValid) {
@@ -252,7 +338,15 @@ export default defineComponent({
         tmpRight.value.basisAccessState = stringToBasisAccessState(
           formState.basisAccessState
         );
-        if (props.isNew) {
+        updateInProgress.value = true;
+        tmpRight.value.startDate = new Date(formState.startDate);
+        tmpRight.value.endDate =
+          formState.endDate == "" ? undefined : new Date(formState.endDate);
+        if (props.isNew && props.isTemplate) {
+          createTemplate();
+        } else if (props.isTemplate) {
+          updateTemplate();
+        } else if (props.isNew) {
           createRight();
         } else {
           updateRight();
@@ -391,6 +485,14 @@ export default defineComponent({
       tmpRight.value = Object.assign({}, newValue);
       getGroupList();
       if (!props.isNew) {
+        formState.formTemplateName =
+          props.templateName == undefined ? "" : props.templateName;
+        tmpTemplateId.value =
+          props.templateId == undefined ? -1 : props.templateId;
+        tmpTemplateDescription.value =
+          props.templateDescription == undefined
+            ? ""
+            : props.templateDescription;
         formState.accessState = accessStateToString(newValue.accessState);
         formState.basisStorage = basisStorageToString(newValue.basisStorage);
         formState.basisAccessState = basisAccessStateToString(
@@ -405,6 +507,9 @@ export default defineComponent({
       } else {
         formState.endDate = "";
         formState.startDate = "";
+        tmpTemplateId.value = -1;
+        tmpTemplateDescription.value = "";
+        formState.formTemplateName = "";
       }
     };
 
@@ -435,6 +540,7 @@ export default defineComponent({
       deleteDialogActivated,
       errorAccessState,
       errorEndDate,
+      errorTemplateName,
       errorStartDate,
       groupAlertError,
       groupAlertErrorMessage,
@@ -448,6 +554,7 @@ export default defineComponent({
       saveAlertErrorMessage,
       updateConfirmDialog,
       tmpRight,
+      tmpTemplateDescription,
       updateInProgress,
       // methods
       cancel,
@@ -470,32 +577,89 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn
+        :disabled="updateInProgress"
         color="blue darken-1"
         text
         @click="save"
-        :disabled="updateInProgress"
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
-      <v-btn icon @click="initiateDeleteDialog">
+      <v-btn :disabled="isNew" icon @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
 
       <v-dialog
         v-model="deleteDialogActivated"
-        max-width="500px"
         :retain-focus="false"
+        max-width="500px"
       >
         <RightsDeleteDialog
-          :right="right"
           :index="index"
           :metadataId="metadataId"
-          v-on:deleteSuccessful="deleteSuccessful"
+          :right="right"
           v-on:deleteDialogClosed="deleteDialogClosed"
+          v-on:deleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-    <v-expansion-panels focusable multiple v-model="openPanelsDefault">
+    <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
+      <v-expansion-panel :disabled="!isTemplate">
+        <v-expansion-panel-header>
+          Template Informationen
+        </v-expansion-panel-header>
+        <v-expansion-panel-content eager>
+          <v-container fluid>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Template-Id</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-if="isNew"
+                  ref="templateId"
+                  disabled
+                  hint="Template Id"
+                  label="Wird automatisch generiert"
+                  outlined
+                ></v-text-field>
+                <v-text-field
+                  v-if="!isNew"
+                  ref="templateId"
+                  v-model="templateId"
+                  disabled
+                  hint="Template Id"
+                  outlined
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Template Name</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="formState.formTemplateName"
+                  :error-messages="errorTemplateName"
+                  hint="Name des Templates"
+                  outlined
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col cols="4">
+                <v-subheader>Beschreibung</v-subheader>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpTemplateDescription"
+                  hint="Beschreibung des Templates"
+                  outlined
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-expansion-panel-content>
+      </v-expansion-panel>
       <v-expansion-panel>
         <v-expansion-panel-header
           >Steuerungsrelevante Elemente
@@ -510,18 +674,18 @@ export default defineComponent({
                 <v-text-field
                   v-if="isNew"
                   ref="rightId"
-                  label="Wird automatisch generiert"
                   disabled
-                  outlined
                   hint="Rechte Id"
+                  label="Wird automatisch generiert"
+                  outlined
                 ></v-text-field>
                 <v-text-field
                   v-if="!isNew"
                   ref="rightId"
                   v-model="tmpRight.rightId"
-                  outlined
-                  hint="Rechte Id"
                   disabled
+                  hint="Rechte Id"
+                  outlined
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -531,12 +695,12 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-select
-                  :items="accessStatusSelect"
                   v-model="formState.accessState"
+                  :error-messages="errorAccessState"
+                  :items="accessStatusSelect"
                   outlined
                   @blur="v$.accessState.$touch()"
                   @change="v$.accessState.$touch()"
-                  :error-messages="errorAccessState"
                 ></v-select>
               </v-col>
             </v-row>
@@ -550,24 +714,24 @@ export default defineComponent({
                   v-model="menuStartDate"
                   :close-on-content-click="false"
                   :return-value.sync="formState.startDate"
-                  transition="scale-transition"
-                  offset-y
                   min-width="auto"
+                  offset-y
+                  transition="scale-transition"
                 >
                   <template v-slot:activator="{ on, attrs }">
                     <v-text-field
-                      v-model="formState.startDate"
                       ref="startDate"
+                      v-model="formState.startDate"
+                      :error-messages="errorStartDate"
                       label="Start-Datum"
+                      outlined
                       prepend-icon="mdi-calendar"
                       readonly
-                      outlined
-                      v-bind="attrs"
-                      v-on="on"
                       required
-                      @change="v$.startDate.$touch()"
+                      v-bind="attrs"
                       @blur="v$.startDate.$touch()"
-                      :error-messages="errorStartDate"
+                      @change="v$.startDate.$touch()"
+                      v-on="on"
                     ></v-text-field>
                   </template>
                   <v-date-picker
@@ -576,12 +740,12 @@ export default defineComponent({
                     scrollable
                   >
                     <v-spacer></v-spacer>
-                    <v-btn text color="primary" @click="menuStartDate = false">
+                    <v-btn color="primary" text @click="menuStartDate = false">
                       Cancel
                     </v-btn>
                     <v-btn
-                      text
                       color="primary"
+                      text
                       @click="$refs.menuStart.save(formState.startDate)"
                     >
                       OK
@@ -600,24 +764,24 @@ export default defineComponent({
                   v-model="menuEndDate"
                   :close-on-content-click="false"
                   :return-value.sync="formState.endDate"
-                  transition="scale-transition"
-                  offset-y
                   min-width="auto"
+                  offset-y
+                  transition="scale-transition"
                 >
                   <template v-slot:activator="{ on, attrs }">
                     <v-text-field
-                      v-model="formState.endDate"
                       ref="endDate"
+                      v-model="formState.endDate"
+                      :error-messages="errorEndDate"
                       label="End-Datum"
+                      outlined
                       prepend-icon="mdi-calendar"
                       readonly
-                      outlined
-                      v-bind="attrs"
-                      v-on="on"
                       required
-                      @change="v$.endDate.$touch()"
+                      v-bind="attrs"
                       @blur="v$.endDate.$touch()"
-                      :error-messages="errorEndDate"
+                      @change="v$.endDate.$touch()"
+                      v-on="on"
                     ></v-text-field>
                   </template>
                   <v-date-picker
@@ -626,12 +790,12 @@ export default defineComponent({
                     scrollable
                   >
                     <v-spacer></v-spacer>
-                    <v-btn text color="primary" @click="menuEndDate = false">
+                    <v-btn color="primary" text @click="menuEndDate = false">
                       Cancel
                     </v-btn>
                     <v-btn
-                      text
                       color="primary"
+                      text
                       @click="$refs.menuEnd.save(formState.endDate)"
                     >
                       OK
@@ -646,13 +810,13 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-select
-                  :items="groupItems"
                   v-model="tmpRight.groupIds"
+                  :items="groupItems"
+                  chips
+                  counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
                   multiple
                   outlined
-                  counter
-                  chips
                 >
                 </v-select>
               </v-col>
@@ -664,8 +828,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
-                  hint="Allgemeine Bemerkungen"
                   counter
+                  hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   outlined
                 ></v-textarea>
@@ -685,8 +849,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
-                  outlined
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
+                  outlined
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -698,8 +862,8 @@ export default defineComponent({
                 <v-switch
                   v-model="tmpRight.authorRightException"
                   color="indigo"
-                  label="Ja"
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
+                  label="Ja"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -712,8 +876,8 @@ export default defineComponent({
                 <v-switch
                   v-model="tmpRight.zbwUserAgreement"
                   color="indigo"
-                  label="Ja"
                   hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
+                  label="Ja"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -724,8 +888,8 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-text-field
-                  outlined
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                  outlined
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -738,8 +902,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                  outlined
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
+                  outlined
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -753,8 +917,8 @@ export default defineComponent({
                 <v-switch
                   v-model="tmpRight.nonStandardOpenContentLicence"
                   color="indigo"
-                  label="Ja"
                   hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
+                  label="Ja"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -767,8 +931,8 @@ export default defineComponent({
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
                   color="indigo"
-                  label="Ja"
                   hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
+                  label="Ja"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -781,8 +945,8 @@ export default defineComponent({
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
                   counter
-                  maxlength="256"
                   hint="Bemerkungen für formale Regelungen"
+                  maxlength="256"
                   outlined
                 ></v-textarea>
               </v-col>
@@ -802,8 +966,8 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-select
-                  :items="basisStorage"
                   v-model="formState.basisStorage"
+                  :items="basisStorage"
                   outlined
                 ></v-select>
               </v-col>
@@ -814,8 +978,8 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-select
-                  :items="basisAccessState"
                   v-model="formState.basisAccessState"
+                  :items="basisAccessState"
                   outlined
                 ></v-select>
               </v-col>
@@ -827,8 +991,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
-                  hint="Bemerkungen für prozessdokumentierende Elemente"
                   counter
+                  hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
                   outlined
                 ></v-textarea>
@@ -850,8 +1014,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedOn"
-                  readonly
                   outlined
+                  readonly
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -862,8 +1026,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedBy"
-                  readonly
                   outlined
+                  readonly
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -874,8 +1038,8 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"
-                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   counter
+                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
                   outlined
                 ></v-textarea>
@@ -889,10 +1053,10 @@ export default defineComponent({
       <v-spacer></v-spacer>
       <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
       <v-btn
+        :disabled="updateInProgress"
         color="blue darken-1"
         text
         @click="save"
-        :disabled="updateInProgress"
         >Speichern
       </v-btn>
     </v-card-actions>

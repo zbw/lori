@@ -11,11 +11,15 @@ export default defineComponent({
     const activateGroupDialog = () => {
       dialogStore.groupOverviewActivated = true;
     };
+    const activateTemplateDialog = () => {
+      dialogStore.templateOverviewActivated = true;
+    };
     return {
       dialogStore,
       historyStore,
       menuTopics,
       activateGroupDialog,
+      activateTemplateDialog,
     };
   },
 });
@@ -35,7 +39,7 @@ export default defineComponent({
       />
     </div>
 
-    <v-menu bottom left :offset-y="true">
+    <v-menu :offset-y="true" bottom left>
       <template v-slot:activator="{ on, attrs }">
         <v-btn dark icon v-bind="attrs" v-on="on">
           <v-icon>mdi-view-headline</v-icon>
@@ -49,7 +53,9 @@ export default defineComponent({
           >
         </v-list-item>
         <v-list-item link>
-          <v-list-item-title>Templates</v-list-item-title>
+          <v-list-item-title @click="activateTemplateDialog"
+            >Templates</v-list-item-title
+          >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title>Bookmarks</v-list-item-title>
@@ -72,7 +78,7 @@ export default defineComponent({
           v-bind="attrs"
           v-on="on"
         >
-          <v-avatar left class="green darken-4">
+          <v-avatar class="green darken-4" left>
             {{ historyStore.numberEntries }}
           </v-avatar>
           Änderungen
@@ -81,7 +87,7 @@ export default defineComponent({
       <v-list>
         <v-list-item v-for="(item, index) in historyStore.history" :key="index">
           <v-list-item-action>
-            <v-btn fab small depressed color="primary">
+            <v-btn color="primary" depressed fab small>
               {{ index }}
             </v-btn>
           </v-list-item-action>

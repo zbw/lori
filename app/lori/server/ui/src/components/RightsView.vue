@@ -133,9 +133,9 @@ export default defineComponent({
     </v-alert>
     <v-divider></v-divider>
     <v-data-table
+      :key="renderKey"
       :headers="selectedHeaders"
       :items="rights"
-      :key="renderKey"
       @click:row="activateTabEdit"
     >
       <template v-slot:top>
@@ -146,7 +146,7 @@ export default defineComponent({
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>
-          <v-btn @click="newRight()" color="primary" dark class="mb-2">
+          <v-btn class="mb-2" color="primary" dark @click="newRight()">
             Neu
           </v-btn>
         </v-toolbar>
@@ -160,31 +160,31 @@ export default defineComponent({
     </v-data-table>
     <v-dialog
       v-model="dialogStore.editRightActivated"
+      :retain-focus="false"
       max-width="1000px"
       v-on:close="editRightClosed"
       v-on:click:outside="editRightClosed"
-      :retain-focus="false"
     >
       <RightsEditDialog
-        :right="currentRight"
         :index="currentIndex"
         :isNew="isNew"
         :metadataId="metadataId"
+        :right="currentRight"
         v-on:addSuccessful="addRight"
-        v-on:editDialogClosed="editRightClosed"
+        v-on:editRightClosed="editRightClosed"
       ></RightsEditDialog>
     </v-dialog>
     <v-dialog
       v-model="tabDialogActivated"
-      v-on:close="tabDialogClosed"
-      v-on:click:outside="tabDialogClosed"
-      v-on:updateSuccessful="updateRight"
-      v-on:deleteSuccessful="deleteSuccessful"
       :retain-focus="false"
+      v-on:close="tabDialogClosed"
+      v-on:deleteSuccessful="deleteSuccessful"
+      v-on:updateSuccessful="updateRight"
+      v-on:click:outside="tabDialogClosed"
     >
       <RightsEditTabs
-        :rights="rights"
         :metadata-id="metadataId"
+        :rights="rights"
         v-on:tabDialogClosed="tabDialogClosed"
         v-on:updateSuccessful="updateRight"
       ></RightsEditTabs>
