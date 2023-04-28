@@ -665,63 +665,65 @@ export default defineComponent({
       </v-dialog>
     </v-card-actions>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
-      <v-expansion-panel :disabled="!isTemplate">
-        <v-expansion-panel-header>
-          Template Informationen
-        </v-expansion-panel-header>
-        <v-expansion-panel-content eager>
-          <v-container fluid>
-            <v-row>
-              <v-col cols="4">
-                <v-subheader>Template-Id</v-subheader>
-              </v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-if="isNew"
-                  ref="templateId"
-                  disabled
-                  hint="Template Id"
-                  label="Wird automatisch generiert"
-                  outlined
-                ></v-text-field>
-                <v-text-field
-                  v-if="!isNew"
-                  ref="templateId"
-                  v-model="templateId"
-                  disabled
-                  hint="Template Id"
-                  outlined
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4">
-                <v-subheader>Template Name</v-subheader>
-              </v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-model="formState.formTemplateName"
-                  :error-messages="errorTemplateName"
-                  hint="Name des Templates"
-                  outlined
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4">
-                <v-subheader>Beschreibung</v-subheader>
-              </v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-model="tmpTemplateDescription"
-                  hint="Beschreibung des Templates"
-                  outlined
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-content>
-      </v-expansion-panel>
+      <template v-if="isTemplate">
+        <v-expansion-panel>
+          <v-expansion-panel-header>
+            Template Informationen
+          </v-expansion-panel-header>
+          <v-expansion-panel-content eager>
+            <v-container fluid>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Template-Id</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-if="isNew"
+                    ref="templateId"
+                    disabled
+                    hint="Template Id"
+                    label="Wird automatisch generiert"
+                    outlined
+                  ></v-text-field>
+                  <v-text-field
+                    v-if="!isNew"
+                    ref="templateId"
+                    v-model="computedTemplateId"
+                    disabled
+                    hint="Template Id"
+                    outlined
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Template Name</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="formState.formTemplateName"
+                    :error-messages="errorTemplateName"
+                    hint="Name des Templates"
+                    outlined
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Beschreibung</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="tmpTemplateDescription"
+                    hint="Beschreibung des Templates"
+                    outlined
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </template>
       <v-expansion-panel>
         <v-expansion-panel-header
           >Steuerungsrelevante Elemente
