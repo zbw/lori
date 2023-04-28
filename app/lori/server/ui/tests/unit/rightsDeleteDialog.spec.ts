@@ -7,7 +7,7 @@ import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import { PiniaVuePlugin } from "pinia";
 import { createTestingPinia } from "@pinia/testing";
 import { useHistoryStore } from "@/stores/history";
-import { RightRest, AccessStateRest } from "@/generated-sources/openapi";
+import templateApi from "@/api/templateApi";
 
 const localVue = createLocalVue();
 localVue.use(PiniaVuePlugin);
@@ -16,8 +16,9 @@ Vue.use(Vuetify);
 
 let wrapper: Wrapper<RightsDeleteDialog, Element>;
 jest.mock("@/api/api");
-
+jest.mock("@/api/templateApi");
 const mockedApi = mocked(api, true);
+const mockedTemplateApi = mocked(templateApi, true);
 
 afterEach(() => {
   wrapper.destroy();
@@ -36,11 +37,7 @@ describe("Test RightsDeleteDialog", () => {
         stubActions: false,
       }),
       propsData: {
-        right: {
-          rightId: "12",
-          accessState: AccessStateRest.Open,
-          startDate: new Date(2022, 12, 12),
-        } as RightRest,
+        rightId: "12",
         index: index,
         metadataId: "400",
       },
@@ -73,11 +70,7 @@ describe("Test RightsDeleteDialog", () => {
         stubActions: false,
       }),
       propsData: {
-        right: {
-          rightId: "12",
-          accessState: AccessStateRest.Open,
-          startDate: new Date(2022, 12, 12),
-        } as RightRest,
+        rightId: "12",
         index: 4,
         metadataId: "400",
       },
@@ -91,6 +84,63 @@ describe("Test RightsDeleteDialog", () => {
     // then
     expect(historyStore.numberEntries).toBe(0);
     expect(wrapper.emitted("deleteSuccessful")?.length).toBeUndefined();
+    await wrapper.vm.$nextTick();
+    // Just wait another time 'cause then it works
+    await wrapper.vm.$nextTick();
+    expect((wrapper.vm as any).deleteAlertError).toBeTruthy();
+  });
+
+  it("deleteTemplate successful", async () => {
+    // given
+    const index = 5;
+    mockedTemplateApi.deleteTemplate.mockReturnValue(Promise.resolve());
+    wrapper = shallowMount(RightsDeleteDialog, {
+      localVue: localVue,
+      mocks: { api: mockedApi },
+      pinia: createTestingPinia({
+        stubActions: false,
+      }),
+      propsData: {
+        rightId: "12",
+        index: index,
+        metadataId: "400",
+        isTemplate: true,
+      },
+    });
+    // when
+    (wrapper.vm as any).deleteTemplate();
+    await wrapper.vm.$nextTick();
+
+    // Verify emit of event
+    expect(wrapper.emitted("templateDeleteSuccessful")).toStrictEqual([[]]);
+  });
+
+  it("deleteTemplate unsuccessful", async () => {
+    // given
+    mockedTemplateApi.deleteTemplate.mockRejectedValue({
+      response: {
+        status: 500,
+        statusText: "Internal Server Error",
+      },
+    });
+    wrapper = shallowMount(RightsDeleteDialog, {
+      localVue: localVue,
+      mocks: { api: mockedApi },
+      pinia: createTestingPinia({
+        stubActions: false,
+      }),
+      propsData: {
+        rightId: "12",
+        index: 4,
+        metadataId: "400",
+        isTemplate: true,
+      },
+    });
+    // when
+    (wrapper.vm as any).deleteEntity();
+
+    // then
+    expect(wrapper.emitted("templateDeleteSuccessful")?.length).toBeUndefined();
     await wrapper.vm.$nextTick();
     // Just wait another time 'cause then it works
     await wrapper.vm.$nextTick();

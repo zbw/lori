@@ -115,6 +115,8 @@ export default defineComponent({
       historyStore,
       // methods
       deleteEntity,
+      deleteRight,
+      deleteTemplate,
       close,
     };
   },

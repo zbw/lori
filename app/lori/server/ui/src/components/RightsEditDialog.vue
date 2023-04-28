@@ -353,6 +353,10 @@ export default defineComponent({
     };
 
     const save: () => Promise<void> = () => {
+      // Vuelidate expects this field to be filled. When editing rights it is not required.
+      if (!props.isTemplate) {
+        formState.formTemplateName = "foo";
+      }
       return v$.value.$validate().then((isValid) => {
         if (!isValid) {
           return;
