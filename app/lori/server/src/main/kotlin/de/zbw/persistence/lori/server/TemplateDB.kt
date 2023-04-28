@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.ResultSet
@@ -20,16 +21,25 @@ class TemplateDB(
     private val rightDB: RightDB,
 ) {
     fun deleteTemplateById(templateId: Int): Int {
+        val span = tracer.spanBuilder("deleteTemplateById").startSpan()
+
+        // Get Right-Id first
+        val rightId: String? = getTemplateTransientById(templateId, span)?.rightId
+
+        // Delete Template
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BY_ID).apply {
             this.setInt(1, templateId)
         }
-        val span = tracer.spanBuilder("deleteTemplateById").startSpan()
-        return try {
+        val deleteTemplates = try {
             span.makeCurrent()
             DatabaseConnector.runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
+
+        // Delete right information
+        rightDB.deleteRightsByIds(listOfNotNull(rightId))
+        return deleteTemplates
     }
 
     fun getTemplatesByIds(templateIds: List<Int>): List<Template> {
@@ -117,25 +127,8 @@ class TemplateDB(
         }
 
         // Get Right Id
-        val prepStmtGetTemplate = connection.prepareStatement(STATEMENT_GET_TEMPLATE).apply {
-            this.setInt(1, templateId)
-        }
-        val rsTemplate = try {
-            span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmtGetTemplate.executeQuery() }
-        } finally {
-            span.end()
-        }
-        val updatedTemplate: TemplateTransient? = if (rsTemplate.next()) {
-            TemplateTransient(
-                templateId = rsTemplate.getInt(1),
-                templateName = rsTemplate.getString(2),
-                description = rsTemplate.getString(3),
-                rightId = rsTemplate.getString(4),
-            )
-        } else {
-            null
-        }
+        val updatedTemplate = getTemplateTransientById(templateId, span)
+
         // Update Right Table
         updatedTemplate?.let {
             rightDB.upsertRight(template.right.copy(rightId = it.rightId))
@@ -184,6 +177,28 @@ class TemplateDB(
                     right = assRight,
                 )
             }
+        }
+    }
+
+    private fun getTemplateTransientById(templateId: Int, span: Span): TemplateTransient? {
+        val prepStmtGetTemplate = connection.prepareStatement(STATEMENT_GET_TEMPLATE).apply {
+            this.setInt(1, templateId)
+        }
+        val rsTemplate = try {
+            span.makeCurrent()
+            DatabaseConnector.runInTransaction(connection) { prepStmtGetTemplate.executeQuery() }
+        } finally {
+            span.end()
+        }
+        return if (rsTemplate.next()) {
+            TemplateTransient(
+                templateId = rsTemplate.getInt(1),
+                templateName = rsTemplate.getString(2),
+                description = rsTemplate.getString(3),
+                rightId = rsTemplate.getString(4),
+            )
+        } else {
+            null
         }
     }
 

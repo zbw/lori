@@ -61,11 +61,16 @@ export default defineComponent({
       type: String,
       required: false,
     },
+    reinitCounter: {
+      type: Number,
+      required: false,
+    },
   },
   // Emits
   emits: [
     "addSuccessful",
     "addTemplateSuccessful",
+    "deleteTemplateSuccessful",
     "updateTemplateSuccessful",
     "deleteSuccessful",
     "editRightClosed",
@@ -182,7 +187,8 @@ export default defineComponent({
       "ZBW-Policy (Eingeschränkte OCL)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
-    const deleteDialogActivated = ref(false);
+    const dialogDeleteRight = ref(false);
+    const dialogDeleteTemplate = ref(false);
     const menuEndDate = ref(false);
     const menuStartDate = ref(false);
     const saveAlertError = ref(false);
@@ -219,12 +225,32 @@ export default defineComponent({
       updateConfirmDialog.value = false;
     };
 
+    /**
+     * Deletion:
+     */
     const deleteSuccessful = (index: number) => {
-      emit("deleteSuccessful", index, props.right.rightId);
+      if (props.isTemplate) {
+        emit("deleteTemplateSuccessful", formState.formTemplateName);
+      } else {
+        emit("deleteSuccessful", index, props.right.rightId);
+      }
     };
 
     const deleteDialogClosed = () => {
-      deleteDialogActivated.value = false;
+      if (props.isTemplate) {
+        dialogDeleteTemplate.value = false;
+        close();
+      } else {
+        dialogDeleteRight.value = false;
+      }
+    };
+
+    const initiateDeleteDialog = () => {
+      if (props.isTemplate) {
+        dialogDeleteTemplate.value = true;
+      } else {
+        dialogDeleteRight.value = true;
+      }
     };
 
     /**
@@ -354,10 +380,6 @@ export default defineComponent({
       });
     };
 
-    const initiateDeleteDialog = () => {
-      deleteDialogActivated.value = true;
-    };
-
     const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
         return "Kein Wert";
@@ -475,16 +497,37 @@ export default defineComponent({
     // Computed properties
     onMounted(() => reinitializeRight(props.right));
     const computedRight = computed(() => props.right);
+    const computedReinitCounter = computed(() => props.reinitCounter);
+    const computedRightId = computed(() =>
+      props.right == undefined ? "" : props.right.rightId
+    );
+    const computedTemplateId = computed(() =>
+      props.templateId == undefined ? "" : props.templateId
+    );
 
     watch(computedRight, (currentValue, oldValue) => {
       reinitializeRight(currentValue);
     });
+    watch(computedReinitCounter, (currentValue, oldValue) => {
+      updateInProgress.value = false;
+      resetAllValues();
+    });
+
+    const resetAllValues = () => {
+      tmpRight.value = Object.assign({} as RightRest);
+      formState.endDate = "";
+      formState.startDate = "";
+      tmpTemplateId.value = -1;
+      tmpTemplateDescription.value = "";
+      formState.formTemplateName = "";
+      formState.accessState = "";
+    };
 
     const reinitializeRight = (newValue: RightRest) => {
       updateInProgress.value = false;
-      tmpRight.value = Object.assign({}, newValue);
       getGroupList();
       if (!props.isNew) {
+        tmpRight.value = Object.assign({}, newValue);
         formState.formTemplateName =
           props.templateName == undefined ? "" : props.templateName;
         tmpTemplateId.value =
@@ -505,11 +548,7 @@ export default defineComponent({
           formState.endDate = "";
         }
       } else {
-        formState.endDate = "";
-        formState.startDate = "";
-        tmpTemplateId.value = -1;
-        tmpTemplateDescription.value = "";
-        formState.formTemplateName = "";
+        resetAllValues();
       }
     };
 
@@ -537,7 +576,10 @@ export default defineComponent({
       accessStatusSelect,
       basisAccessState,
       basisStorage,
-      deleteDialogActivated,
+      computedRightId,
+      computedTemplateId,
+      dialogDeleteRight,
+      dialogDeleteTemplate,
       errorAccessState,
       errorEndDate,
       errorTemplateName,
@@ -589,16 +631,32 @@ export default defineComponent({
       </v-btn>
 
       <v-dialog
-        v-model="deleteDialogActivated"
+        v-model="dialogDeleteRight"
         :retain-focus="false"
         max-width="500px"
       >
         <RightsDeleteDialog
           :index="index"
+          :is-template="isTemplate"
           :metadataId="metadataId"
-          :right="right"
+          :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:deleteSuccessful="deleteSuccessful"
+        ></RightsDeleteDialog>
+      </v-dialog>
+
+      <v-dialog
+        v-model="dialogDeleteTemplate"
+        :retain-focus="false"
+        max-width="500pxi"
+      >
+        <RightsDeleteDialog
+          :index="index"
+          :is-template="isTemplate"
+          :metadataId="metadataId"
+          :right-id="computedTemplateId.toString()"
+          v-on:deleteDialogClosed="deleteDialogClosed"
+          v-on:templateDeleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>

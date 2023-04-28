@@ -22,6 +22,17 @@ export default defineComponent({
         text: "Template Name",
         align: "start",
         value: "templateName",
+        sortable: true,
+      },
+      {
+        text: "Items verknüpfen",
+        value: "displayConnectedItems",
+        sortable: true,
+      },
+      {
+        text: "Template anwenden",
+        value: "applyTemplate",
+        sortable: true,
       },
     ];
     const templateItems: Ref<Array<TemplateRest>> = ref([]);
@@ -35,6 +46,7 @@ export default defineComponent({
      * Template properties.
      */
     const isNew = ref(true);
+    const reinitCounter = ref(0);
     const currentTemplate = ref({} as TemplateRest);
     const getTemplateList = () => {
       templateApi
@@ -53,10 +65,12 @@ export default defineComponent({
     const activateTemplateEditDialog = () => {
       alertSuccessfulAdd.value = false;
       alertSuccessfulUpdate.value = false;
+      alertSuccessfulDeletion.value = false;
       dialogStore.templateEditActivated = true;
     };
     const createNewTemplate = () => {
       isNew.value = true;
+      reinitCounter.value = reinitCounter.value + 1;
       activateTemplateEditDialog();
     };
 
@@ -74,6 +88,7 @@ export default defineComponent({
      * Alerts:
      */
     const alertSuccessfulAdd = ref(false);
+    const alertSuccessfulDeletion = ref(false);
     const alertSuccessfulUpdate = ref(false);
 
     /**
@@ -83,6 +98,12 @@ export default defineComponent({
     const childTemplateAdded = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
       alertSuccessfulAdd.value = true;
+      updateTemplateOverview();
+    };
+
+    const childTemplateDeleted = (templateName: string) => {
+      lastModifiedTemplateName.value = templateName;
+      alertSuccessfulDeletion.value = true;
       updateTemplateOverview();
     };
 
@@ -101,17 +122,20 @@ export default defineComponent({
 
     return {
       alertSuccessfulAdd,
+      alertSuccessfulDeletion,
       alertSuccessfulUpdate,
       currentTemplate,
       dialogStore,
       headers,
       lastModifiedTemplateName,
       isNew,
+      reinitCounter,
       renderKey,
       templateLoadError,
       templateLoadErrorMsg,
       templateItems,
       childTemplateAdded,
+      childTemplateDeleted,
       childTemplateUpdated,
       closeTemplateEditDialog,
       createNewTemplate,
@@ -129,6 +153,15 @@ export default defineComponent({
     <v-container>
       <v-alert v-model="alertSuccessfulAdd" dismissible text type="success">
         Template {{ lastModifiedTemplateName }} erfolgreich hinzugefügt.
+      </v-alert>
+
+      <v-alert
+        v-model="alertSuccessfulDeletion"
+        dismissible
+        text
+        type="success"
+      >
+        Template {{ lastModifiedTemplateName }} erfolgreich gelöscht.
       </v-alert>
 
       <v-alert v-model="templateLoadError" dismissible text type="error">
@@ -151,7 +184,16 @@ export default defineComponent({
         item-key="templateName"
         loading-text="Daten werden geladen... Bitte warten."
         @click:row="editTemplate"
-      ></v-data-table>
+      >
+        <template v-slot:item.displayConnectedItems="{ item }">
+          <v-btn color="blue darken-1" text
+            >Alle verknüpften Items anzeigen</v-btn
+          >
+        </template>
+        <template v-slot:item.applyTemplate="{ item }">
+          <v-btn color="blue darken-1" text>Template anwenden</v-btn>
+        </template>
+      </v-data-table>
       <v-dialog
         v-model="dialogStore.templateEditActivated"
         :retain-focus="false"
@@ -162,12 +204,14 @@ export default defineComponent({
           :index="-1"
           :isNew="isNew"
           :isTemplate="true"
+          :reinit-counter="reinitCounter"
           :right="currentTemplate.right"
           :template-description="currentTemplate.description"
           :template-id="currentTemplate.templateId"
           :template-name="currentTemplate.templateName"
           metadataId=""
           v-on:addTemplateSuccessful="childTemplateAdded"
+          v-on:deleteTemplateSuccessful="childTemplateDeleted"
           v-on:editRightClosed="closeTemplateEditDialog"
           v-on:updateTemplateSuccessful="childTemplateUpdated"
         ></RightsEditDialog>

@@ -1,14 +1,14 @@
 <script lang="ts">
 import api from "@/api/api";
-import { defineComponent, PropType, ref } from "vue";
-import { RightRest } from "@/generated-sources/openapi";
+import { defineComponent, ref } from "vue";
 import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
+import templateApi from "@/api/templateApi";
 
 export default defineComponent({
   props: {
-    right: {
-      type: {} as PropType<RightRest>,
+    rightId: {
+      type: String,
       required: true,
     },
     index: {
@@ -19,9 +19,13 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    isTemplate: {
+      type: Boolean,
+      required: false,
+    },
   },
   // Emits
-  emits: ["deleteDialogClosed", "deleteSuccessful"],
+  emits: ["deleteDialogClosed", "deleteSuccessful", "templateDeleteSuccessful"],
 
   setup(props, { emit }) {
     const deleteAlertError = ref(false);
@@ -39,17 +43,17 @@ export default defineComponent({
       deleteAlertError.value = false;
       deleteError.value = false;
 
-      if (props.right.rightId == undefined) {
-        deleteErrorMessage.value = "A right-id is missing!";
+      if (props.rightId == "") {
+        deleteErrorMessage.value = "Es fehlt eine valide Rechte-Id!";
         deleteError.value = true;
         deleteAlertError.value = true;
       } else {
         api
-          .deleteItemRelation(props.metadataId, props.right.rightId)
+          .deleteItemRelation(props.metadataId, props.rightId)
           .then(() => {
             historyStore.addEntry({
               type: ChangeType.DELETED,
-              rightId: props.right.rightId,
+              rightId: props.rightId,
             });
             emit("deleteSuccessful", props.index);
             close();
@@ -67,6 +71,42 @@ export default defineComponent({
       }
     };
 
+    const deleteTemplate = () => {
+      deleteInProgress.value = true;
+      deleteAlertError.value = false;
+      deleteError.value = false;
+      if (props.rightId == "") {
+        deleteErrorMessage.value = "Es fehlt eine valide Rechte-Id!";
+        deleteError.value = true;
+        deleteAlertError.value = true;
+      } else {
+        templateApi
+          .deleteTemplate(props.rightId)
+          .then(() => {
+            emit("templateDeleteSuccessful");
+            close();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              deleteErrorMessage.value = errMsg;
+              deleteError.value = true;
+              deleteAlertError.value = true;
+            });
+          })
+          .finally(() => {
+            deleteInProgress.value = false;
+          });
+      }
+    };
+
+    const deleteEntity = () => {
+      if (props.isTemplate) {
+        deleteTemplate();
+      } else {
+        deleteRight();
+      }
+    };
+
     return {
       // variables
       deleteAlertError,
@@ -74,7 +114,7 @@ export default defineComponent({
       deleteInProgress,
       historyStore,
       // methods
-      deleteRight,
+      deleteEntity,
       close,
     };
   },
@@ -97,7 +137,7 @@ export default defineComponent({
       <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
         >Abbrechen
       </v-btn>
-      <v-btn :loading="deleteInProgress" color="error" @click="deleteRight">
+      <v-btn :loading="deleteInProgress" color="error" @click="deleteEntity">
         Löschen
       </v-btn>
       <v-spacer></v-spacer>
