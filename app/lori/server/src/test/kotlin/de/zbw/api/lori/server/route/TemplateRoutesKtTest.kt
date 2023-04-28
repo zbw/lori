@@ -254,6 +254,65 @@ class TemplateRoutesKtTest {
         }
     }
 
+    @Test
+    fun testGetTemplateListOK() {
+        // given
+        val limit = 50
+        val offset = 0
+        val expected = listOf(TEST_TEMPLATE)
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getTemplateList(limit, offset) } returns listOf(TEST_TEMPLATE.toBusiness())
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
+            val content: String = response.bodyAsText()
+            val templateListType: Type = object : TypeToken<ArrayList<TemplateRest>>() {}.type
+            val received: ArrayList<TemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testGetTemplateListBadRequest() {
+        // given
+        val limit = 0
+        val offset = 0
+        val backend = mockk<LoriServerBackend>(relaxed = true) { }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
+            assertThat(response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
+    fun testGetTemplateListInternalError() {
+        // given
+        val limit = 5
+        val offset = 0
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getTemplateList(limit, offset) } throws SQLException()
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
+            assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
     companion object {
         val TEST_TEMPLATE = TemplateRest(
             templateName = "name",

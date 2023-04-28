@@ -10,6 +10,8 @@ export const useDialogsStore = defineStore("dialog", () => {
   const groupDeleteActivated = ref(false);
   const groupEditActivated = ref(false);
   const editRightActivated = ref(false);
+  const templateEditActivated = ref(false);
+  const templateOverviewActivated = ref(false);
 
   return {
     bookmarkSaveActivated,
@@ -17,5 +19,7 @@ export const useDialogsStore = defineStore("dialog", () => {
     groupDeleteActivated,
     groupEditActivated,
     groupOverviewActivated,
+    templateEditActivated,
+    templateOverviewActivated,
   };
 });

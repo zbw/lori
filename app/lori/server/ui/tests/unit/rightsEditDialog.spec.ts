@@ -8,10 +8,10 @@ import { PiniaVuePlugin } from "pinia";
 import { createTestingPinia } from "@pinia/testing";
 import { ChangeType, HistoryEntry, useHistoryStore } from "@/stores/history";
 import {
-  RightIdCreated,
-  RightRest,
   AccessStateRest,
   GroupRest,
+  RightIdCreated,
+  RightRest,
 } from "@/generated-sources/openapi";
 
 const localVue = createLocalVue();
@@ -381,6 +381,7 @@ describe("Test RightsEditDialog", () => {
         index: givenIndex,
         metadataId: "400",
         isNew: false,
+        isTemplate: false,
       },
     });
     // when
@@ -436,6 +437,7 @@ describe("Test RightsEditDialog", () => {
         index: givenIndex,
         metadataId: "400",
         isNew: true,
+        isTemplate: false,
       },
     });
     // when

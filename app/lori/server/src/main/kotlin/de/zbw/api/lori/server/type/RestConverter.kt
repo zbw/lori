@@ -48,7 +48,7 @@ import java.time.format.DateTimeFormatter
 fun ItemRest.toBusiness() =
     Item(
         metadata = metadata.toBusiness(),
-        rights = rights?.map { it.toBusiness() } ?: emptyList(),
+        rights = rights.map { it.toBusiness() },
     )
 
 fun Item.toRest() =

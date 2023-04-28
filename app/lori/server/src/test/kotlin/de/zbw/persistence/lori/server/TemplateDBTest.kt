@@ -55,6 +55,7 @@ class TemplateDBTest : DatabaseTest() {
         // Case: Update
         // when
         val expectedUpdated = TEST_TEMPLATE.copy(
+            templateId = generatedIds.templateId,
             description = "fooo",
             right = expected.right.copy(licenceContract = "bar")
         )
@@ -76,6 +77,33 @@ class TemplateDBTest : DatabaseTest() {
         assertThat(
             dbConnector.getTemplatesByIds(listOf(generatedIds.templateId)),
             `is`(emptyList())
+        )
+    }
+
+    @Test
+    fun testTemplateGetList() {
+        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "aa"))
+        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ab"))
+        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ac"))
+        val ids4 = dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ad"))
+        val ids5 = dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ae"))
+        val expected = listOf(
+            TEST_TEMPLATE.copy(
+                templateName = "ad",
+                templateId = ids4.templateId,
+                right = TEST_RIGHT.copy(rightId = ids4.rightId)
+            ),
+            TEST_TEMPLATE.copy(
+                templateName = "ae",
+                templateId = ids5.templateId,
+                right = TEST_RIGHT.copy(rightId = ids5.rightId)
+            ),
+        )
+
+        val received: List<Template> = dbConnector.getTemplateList(2, 3)
+        assertThat(
+            received,
+            `is`(expected),
         )
     }
 
