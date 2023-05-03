@@ -15,6 +15,8 @@ paths:
     $ref: 'bookmark.api.yaml#/bookmark'
   /bookmark/{id}:
     $ref: 'bookmark.api.yaml#/bookmark-id'
+  /bookmark/list:
+    $ref: 'bookmark.api.yaml#/bookmark-list'
   /bookmarkraw:
     $ref: 'bookmark.api.yaml#/bookmarkraw'
   /group:

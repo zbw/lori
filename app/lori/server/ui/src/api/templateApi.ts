@@ -11,19 +11,6 @@ const configuration = new Configuration({
 const templateApi = new TemplateApi(configuration);
 
 export default {
-  //addTemplate(
-  //  templateName: string,
-  //  description: string | undefined,
-  //  right: RightRest
-  //): Promise<TemplateIdCreated> {
-  //  return templateApi.addTemplate({
-  //    body: {
-  //      templateName: templateName,
-  //      description: description,
-  //      right: right,
-  //    },
-  //  });
-  //},
   addTemplate(template: TemplateRest): Promise<TemplateIdCreated> {
     return templateApi.addTemplate({ body: template });
   },
