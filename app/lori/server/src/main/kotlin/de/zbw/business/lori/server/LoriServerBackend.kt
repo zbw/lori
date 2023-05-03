@@ -362,6 +362,12 @@ class LoriServerBackend(
     fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
+    fun getBookmarkList(
+        limit: Int,
+        offset: Int,
+    ): List<Bookmark> =
+        dbConnector.bookmarkDB.getBookmarkList(limit, offset)
+
     /**
      * Template list.
      */

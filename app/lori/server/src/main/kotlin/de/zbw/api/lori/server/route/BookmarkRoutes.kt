@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.lori.model.BookmarkIdCreated
 import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.ErrorRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
@@ -306,6 +307,50 @@ fun Routing.bookmarkRoutes(
                     )
                 } finally {
                     span.end()
+                }
+            }
+        }
+
+        route("/list") {
+            get {
+                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/bookmark/list").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
+                        val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                        if (limit < 1 || limit > 200) {
+                            span.setStatus(
+                                StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between 1 and 200."
+                            )
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                ErrorRest(
+                                    type = "/errors/badrequest",
+                                    title = "Ungültiger Query Parameter.",
+                                    detail = "Der Limit Parameter muss zwischen 1 und 500 sein..",
+                                    status = "400",
+                                ),
+                            )
+                            return@withContext
+                        }
+                        val receivedBookmarks: List<Bookmark> = backend.getBookmarkList(limit, offset)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(receivedBookmarks.map { it.toRest() })
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ErrorRest(
+                                type = "/errors/internalservererror",
+                                title = "Unerwarteter Fehler.",
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                                status = "500",
+                            ),
+                        )
+                    } finally {
+                        span.end()
+                    }
                 }
             }
         }

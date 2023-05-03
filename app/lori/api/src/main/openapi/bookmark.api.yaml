@@ -118,7 +118,7 @@ bookmark-id:
         description: Bookmark id to delete
         required: true
         schema:
-          type: string
+          type: integer
     responses:
       200:
         description: Deletion of the bookmark was successful
@@ -216,3 +216,49 @@ bookmarkraw:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
+
+bookmark-list:
+  get:
+    tags:
+      - bookmark
+    summary: Get list of existing bookmarks
+    operationId: getBookmarkList
+    parameters:
+      - name: offset
+        in: query
+        description: An offset.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: "The number of bookmarks to return."
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        required: false
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmark.model.yaml#/BookmarkRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
