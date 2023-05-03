@@ -80,6 +80,7 @@ export default defineComponent({
 
     const editTemplate = (template: TemplateRest, row: any) => {
       isNew.value = false;
+      reinitCounter.value = reinitCounter.value + 1;
       currentTemplate.value = template;
       activateTemplateEditDialog();
     };
@@ -187,8 +188,8 @@ export default defineComponent({
       >
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn color="blue darken-1" text
-            >Alle verknüpften Items anzeigen</v-btn
-          >
+            >Alle verknüpften Items anzeigen
+          </v-btn>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn color="blue darken-1" text>Template anwenden</v-btn>

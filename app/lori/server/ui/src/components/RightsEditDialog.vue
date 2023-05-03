@@ -499,7 +499,7 @@ export default defineComponent({
     };
 
     // Computed properties
-    onMounted(() => reinitializeRight(props.right));
+    onMounted(() => reinitializeRight());
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() =>
@@ -510,13 +510,37 @@ export default defineComponent({
     );
 
     watch(computedRight, (currentValue, oldValue) => {
-      reinitializeRight(currentValue);
+      reinitializeRight();
     });
     watch(computedReinitCounter, (currentValue, oldValue) => {
       updateInProgress.value = false;
-      resetAllValues();
+      if (props.isNew) {
+        resetAllValues();
+      } else {
+        setGivenValues();
+      }
     });
 
+    const setGivenValues = () => {
+      tmpRight.value = Object.assign({}, props.right);
+      formState.formTemplateName =
+        props.templateName == undefined ? "" : props.templateName;
+      tmpTemplateId.value =
+        props.templateId == undefined ? -1 : props.templateId;
+      tmpTemplateDescription.value =
+        props.templateDescription == undefined ? "" : props.templateDescription;
+      formState.accessState = accessStateToString(props.right.accessState);
+      formState.basisStorage = basisStorageToString(props.right.basisStorage);
+      formState.basisAccessState = basisAccessStateToString(
+        props.right.basisAccessState
+      );
+      formState.startDate = props.right.startDate.toISOString().slice(0, 10);
+      if (props.right.endDate !== undefined) {
+        formState.endDate = props.right.endDate.toISOString().slice(0, 10);
+      } else {
+        formState.endDate = "";
+      }
+    };
     const resetAllValues = () => {
       tmpRight.value = Object.assign({} as RightRest);
       formState.endDate = "";
@@ -527,30 +551,11 @@ export default defineComponent({
       formState.accessState = "";
     };
 
-    const reinitializeRight = (newValue: RightRest) => {
+    const reinitializeRight = () => {
       updateInProgress.value = false;
       getGroupList();
       if (!props.isNew) {
-        tmpRight.value = Object.assign({}, newValue);
-        formState.formTemplateName =
-          props.templateName == undefined ? "" : props.templateName;
-        tmpTemplateId.value =
-          props.templateId == undefined ? -1 : props.templateId;
-        tmpTemplateDescription.value =
-          props.templateDescription == undefined
-            ? ""
-            : props.templateDescription;
-        formState.accessState = accessStateToString(newValue.accessState);
-        formState.basisStorage = basisStorageToString(newValue.basisStorage);
-        formState.basisAccessState = basisAccessStateToString(
-          newValue.basisAccessState
-        );
-        formState.startDate = newValue.startDate.toISOString().slice(0, 10);
-        if (newValue.endDate !== undefined) {
-          formState.endDate = newValue.endDate.toISOString().slice(0, 10);
-        } else {
-          formState.endDate = "";
-        }
+        setGivenValues();
       } else {
         resetAllValues();
       }
