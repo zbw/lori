@@ -81,7 +81,7 @@ export default defineComponent({
         deleteAlertError.value = true;
       } else {
         templateApi
-          .deleteTemplate(props.rightId)
+          .deleteTemplate(parseInt(props.rightId))
           .then(() => {
             emit("templateDeleteSuccessful");
             close();

@@ -1,4 +1,5 @@
 import {
+  BookmarkRest,
   Configuration,
   TemplateApi,
   TemplateIdCreated,
@@ -14,7 +15,7 @@ export default {
   addTemplate(template: TemplateRest): Promise<TemplateIdCreated> {
     return templateApi.addTemplate({ body: template });
   },
-  deleteTemplate(templateId: string): Promise<void> {
+  deleteTemplate(templateId: number): Promise<void> {
     return templateApi.deleteTemplateById({
       id: templateId,
     });
@@ -32,5 +33,10 @@ export default {
   },
   updateTemplate(template: TemplateRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
+  },
+  getBookmarksByTemplateId(templateId: number): Promise<Array<BookmarkRest>> {
+    return templateApi.getBookmarksByTemplateId({
+      id: templateId,
+    });
   },
 };

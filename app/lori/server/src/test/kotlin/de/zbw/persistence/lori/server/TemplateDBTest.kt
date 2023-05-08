@@ -1,6 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Template
+import de.zbw.persistence.lori.server.BookmarkDBTest.Companion.TEST_BOOKMARK
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -23,7 +24,9 @@ class TemplateDBTest : DatabaseTest() {
     private val dbConnector = DatabaseConnector(
         connection = dataSource.connection,
         tracer = OpenTelemetry.noop().getTracer("foo"),
-    ).templateDB
+    )
+    private val templateDB = dbConnector.templateDB
+    private val bookmarkDB = dbConnector.bookmarkDB
 
     @BeforeClass
     fun beforeTests() {
@@ -40,8 +43,8 @@ class TemplateDBTest : DatabaseTest() {
     fun testTemplateRoundtrip() {
         // Case: Create and Read
         // when
-        val generatedIds = dbConnector.insertTemplate(TEST_TEMPLATE)
-        val receivedTemplates = dbConnector.getTemplatesByIds(listOf(generatedIds.templateId))
+        val generatedIds = templateDB.insertTemplate(TEST_TEMPLATE)
+        val receivedTemplates = templateDB.getTemplatesByIds(listOf(generatedIds.templateId))
         val expected = TEST_TEMPLATE.copy(
             templateId = generatedIds.templateId,
             right = TEST_RIGHT.copy(rightId = generatedIds.rightId)
@@ -59,34 +62,34 @@ class TemplateDBTest : DatabaseTest() {
             description = "fooo",
             right = expected.right.copy(licenceContract = "bar")
         )
-        val updatedNumber: Int = dbConnector.updateTemplateById(
+        val updatedNumber: Int = templateDB.updateTemplateById(
             generatedIds.templateId, expectedUpdated
         )
         // then
         assertThat(updatedNumber, `is`(1))
         assertThat(
-            dbConnector.getTemplatesByIds(listOf(generatedIds.templateId)).first().toString(),
+            templateDB.getTemplatesByIds(listOf(generatedIds.templateId)).first().toString(),
             `is`(expectedUpdated.toString())
         )
 
         // Case: Delete
         // when
-        val countDeleted = dbConnector.deleteTemplateById(generatedIds.templateId)
+        val countDeleted = templateDB.deleteTemplateById(generatedIds.templateId)
         // then
         assertThat(countDeleted, `is`(1))
         assertThat(
-            dbConnector.getTemplatesByIds(listOf(generatedIds.templateId)),
+            templateDB.getTemplatesByIds(listOf(generatedIds.templateId)),
             `is`(emptyList())
         )
     }
 
     @Test
     fun testTemplateGetList() {
-        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "aa"))
-        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ab"))
-        dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ac"))
-        val ids4 = dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ad"))
-        val ids5 = dbConnector.insertTemplate(TEST_TEMPLATE.copy(templateName = "ae"))
+        templateDB.insertTemplate(TEST_TEMPLATE.copy(templateName = "aa"))
+        templateDB.insertTemplate(TEST_TEMPLATE.copy(templateName = "ab"))
+        templateDB.insertTemplate(TEST_TEMPLATE.copy(templateName = "ac"))
+        val ids4 = templateDB.insertTemplate(TEST_TEMPLATE.copy(templateName = "ad"))
+        val ids5 = templateDB.insertTemplate(TEST_TEMPLATE.copy(templateName = "ae"))
         val expected = listOf(
             TEST_TEMPLATE.copy(
                 templateName = "ad",
@@ -100,11 +103,41 @@ class TemplateDBTest : DatabaseTest() {
             ),
         )
 
-        val received: List<Template> = dbConnector.getTemplateList(2, 3)
+        val received: List<Template> = templateDB.getTemplateList(2, 3)
         assertThat(
             received,
             `is`(expected),
         )
+    }
+
+    @Test
+    fun testTemplateBookmarkPairRoundtrip() {
+        // Create a Bookmark and Template
+        val templateId = templateDB.insertTemplate(TEST_TEMPLATE).templateId
+        val bookmarkId = bookmarkDB.insertBookmark(TEST_BOOKMARK)
+
+        // Create Entry in Pair column
+        templateDB.insertTemplateBookmarkPair(templateId, bookmarkId)
+
+        // Query Table
+        assertThat(
+            templateDB.getBookmarkIdsByTemplateId(templateId),
+            `is`(listOf(bookmarkId))
+        )
+
+        // Delete Pair
+        assertThat(
+            templateDB.deleteTemplateBookmarkPair(templateId, bookmarkId),
+            `is`(1)
+        )
+        assertThat(
+            templateDB.getBookmarkIdsByTemplateId(templateId),
+            `is`(emptyList())
+        )
+
+        // Delete Template and Bookmark
+        templateDB.deleteTemplateById(templateId)
+        bookmarkDB.deleteBookmarkById(bookmarkId)
     }
 
     companion object {

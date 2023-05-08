@@ -388,6 +388,26 @@ class LoriServerBackend(
     ): List<Template> =
         dbConnector.templateDB.getTemplateList(limit, offset)
 
+    /**
+     * Template-Bookmark Pair.
+     */
+    fun getBookmarksByTemplateId(
+        templateId: Int,
+    ): List<Bookmark> {
+        val bookmarkIds = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+    }
+
+    fun deleteBookmarkTemplatePair(
+        templateId: Int,
+        bookmarkId: Int,
+    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(templateId, bookmarkId)
+
+    fun insertBookmarkTemplatePair(
+        bookmarkId: Int,
+        templateId: Int,
+    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(templateId, bookmarkId)
+
     companion object {
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.

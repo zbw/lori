@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Template
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.TemplateIdCreated
@@ -127,7 +128,39 @@ fun Routing.templateRoutes(
     }
     route("/api/v1/template") {
         /**
-         * Return Template for a given id.
+         * Return all bookmarks connected to Templated Id.
+         */
+        get("{id}/bookmarks") {
+
+            val span =
+                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(bookmarks.map { it.toRest() })
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
+                } finally {
+                    span.end()
+                }
+            }
+        }
+
+        /**
+         * Return Template for a given Id.
          */
         get("{id}") {
             val span =

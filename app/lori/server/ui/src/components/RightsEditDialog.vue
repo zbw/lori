@@ -27,6 +27,7 @@ import { required } from "@vuelidate/validators";
 import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
+import TemplateBookmark from "@/components/TemplateBookmark.vue";
 
 export default defineComponent({
   props: {
@@ -79,6 +80,7 @@ export default defineComponent({
 
   // Components
   components: {
+    TemplateBookmark,
     RightsDeleteDialog,
   },
 
@@ -352,6 +354,13 @@ export default defineComponent({
         });
     };
 
+    const bookmarkDialogOn = ref(false);
+    const openBookmarkSearch = ref(0);
+    const selectBookmark = () => {
+      bookmarkDialogOn.value = true;
+      openBookmarkSearch.value += 1;
+    };
+
     const save: () => Promise<void> = () => {
       // Vuelidate expects this field to be filled. When editing rights it is not required.
       if (!props.isTemplate) {
@@ -503,6 +512,7 @@ export default defineComponent({
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() =>
+      // The check for undefined is required here!
       props.right == undefined ? "" : props.right.rightId
     );
     const computedTemplateId = computed(() =>
@@ -585,6 +595,7 @@ export default defineComponent({
       accessStatusSelect,
       basisAccessState,
       basisStorage,
+      bookmarkDialogOn,
       computedRightId,
       computedTemplateId,
       dialogDeleteRight,
@@ -601,6 +612,7 @@ export default defineComponent({
       menuEndDate,
       metadataCount,
       openPanelsDefault,
+      openBookmarkSearch,
       saveAlertError,
       saveAlertErrorMessage,
       updateConfirmDialog,
@@ -614,8 +626,9 @@ export default defineComponent({
       initiateDeleteDialog,
       deleteDialogClosed,
       deleteSuccessful,
-      updateRight,
+      selectBookmark,
       save,
+      updateRight,
     };
   },
 });
@@ -723,6 +736,23 @@ export default defineComponent({
                     hint="Beschreibung des Templates"
                     outlined
                   ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">Verknüpfte Suchen</v-col>
+                <v-col cols="8">
+                  <v-btn color="blue darken-1" text @click="selectBookmark"
+                    >Suche Bookmark</v-btn
+                  >
+                  <v-dialog
+                    v-model="bookmarkDialogOn"
+                    :retain-focus="false"
+                    max-width="500px"
+                  >
+                    <TemplateBookmark
+                      :reinit-counter="openBookmarkSearch"
+                    ></TemplateBookmark>
+                  </v-dialog>
                 </v-col>
               </v-row>
             </v-container>

@@ -1,0 +1,10 @@
+BookmarkTemplateRest:
+  required:
+    - bookmarkId
+    - templateId
+  type: object
+  properties:
+    bookmarkId:
+      type: integer
+    templateId:
+      type: integer

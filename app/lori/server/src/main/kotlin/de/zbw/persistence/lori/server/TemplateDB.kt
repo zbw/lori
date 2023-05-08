@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.Template
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
@@ -32,7 +33,7 @@ class TemplateDB(
         }
         val deleteTemplates = try {
             span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -52,7 +53,7 @@ class TemplateDB(
         val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
         val rs = try {
             span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmt.executeQuery() }
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -94,7 +95,7 @@ class TemplateDB(
         val span = tracer.spanBuilder("insertTemplate").startSpan()
         try {
             span.makeCurrent()
-            val affectedRows = DatabaseConnector.runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
@@ -118,7 +119,7 @@ class TemplateDB(
         val span = tracer.spanBuilder("updateTemplateById").startSpan()
         val changedTemplates: Int = try {
             span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
         } finally {
             span.end()
         }
@@ -148,7 +149,7 @@ class TemplateDB(
         val span = tracer.spanBuilder("getTemplateList").startSpan()
         val rs = try {
             span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmt.executeQuery() }
+            runInTransaction(connection) { prepStmt.executeQuery() }
         } finally {
             span.end()
         }
@@ -180,13 +181,77 @@ class TemplateDB(
         }
     }
 
+    /**
+     * Queries on Template-Bookmark Pairs Table.
+     */
+
+    /**
+     * Get all bookmark ids that are a connected to a given template-id.
+     */
+    fun getBookmarkIdsByTemplateId(templateId: Int): List<Int> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID).apply {
+            this.setInt(1, templateId)
+        }
+        val span = tracer.spanBuilder("getBookmarkIdsByTemplateId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getInt(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    fun insertTemplateBookmarkPair(templateId: Int, bookmarkId: Int): Int {
+        val prepStmt = connection
+            .prepareStatement(STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
+            .apply {
+                this.setInt(1, templateId)
+                this.setInt(2, bookmarkId)
+            }
+        val span = tracer.spanBuilder("insertTemplateBookmarkPair").startSpan()
+        try {
+            span.makeCurrent()
+            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            return if (affectedRows > 0) {
+                val rs: ResultSet = prepStmt.generatedKeys
+                rs.next()
+                rs.getInt(1)
+            } else throw IllegalStateException("No row has been inserted.")
+        } finally {
+            span.end()
+        }
+    }
+
+    fun deleteTemplateBookmarkPair(
+        templateId: Int,
+        bookmarkId: Int,
+    ): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR).apply {
+            this.setInt(1, templateId)
+            this.setInt(2, bookmarkId)
+        }
+        val span = tracer.spanBuilder("deleteTemplateBookmarkPair").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
     private fun getTemplateTransientById(templateId: Int, span: Span): TemplateTransient? {
         val prepStmtGetTemplate = connection.prepareStatement(STATEMENT_GET_TEMPLATE).apply {
             this.setInt(1, templateId)
         }
         val rsTemplate = try {
             span.makeCurrent()
-            DatabaseConnector.runInTransaction(connection) { prepStmtGetTemplate.executeQuery() }
+            runInTransaction(connection) { prepStmtGetTemplate.executeQuery() }
         } finally {
             span.end()
         }
@@ -204,6 +269,7 @@ class TemplateDB(
 
     companion object {
         private const val TABLE_NAME_TEMPLATE = "template"
+        private const val TABLE_NAME_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map"
         private const val COLUMN_TEMPLATE_ID = "template_id"
 
         const val STATEMENT_DELETE_TEMPLATE_BY_ID = "DELETE " +
@@ -230,5 +296,19 @@ class TemplateDB(
 
         const val STATEMENT_UPDATE_TEMPLATE =
             "UPDATE $TABLE_NAME_TEMPLATE SET template_name=?,template_description=? WHERE $COLUMN_TEMPLATE_ID = ?"
+
+        const val STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID =
+            "SELECT bookmark_id" +
+                " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+                " WHERE template_id = ?"
+
+        const val STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR =
+            "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+                " (template_id, bookmark_id)" +
+                " VALUES(?,?)"
+
+        const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR = "DELETE" +
+            " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+            " WHERE template_id = ? AND bookmark_id = ?"
     }
 }

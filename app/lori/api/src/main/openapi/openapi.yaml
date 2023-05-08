@@ -19,6 +19,8 @@ paths:
     $ref: 'bookmark.api.yaml#/bookmark-list'
   /bookmarkraw:
     $ref: 'bookmark.api.yaml#/bookmarkraw'
+  /bookmarktemplates:
+    $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -61,6 +63,8 @@ paths:
     $ref: 'template.api.yaml#/template'
   /template/{id}:
     $ref: 'template.api.yaml#/template-id'
+  /template/{id}/bookmarks:
+    $ref: 'template.api.yaml#/template-bookmarks'
   /template/list:
     $ref: 'template.api.yaml#/template-list'
 
