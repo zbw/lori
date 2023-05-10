@@ -1,6 +1,8 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.model.BookmarkTemplateBatchRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -139,6 +141,64 @@ fun Routing.bookmarkTemplateRoutes(
                     )
                 } finally {
                     span.end()
+                }
+            }
+        }
+
+        route("/batch") {
+            delete {
+                val span: Span = tracer
+                    .spanBuilder("lori.LoriService.DELETE/api/v1/bookmarktemplates/batch")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val bookmarkTemplatePairs: BookmarkTemplateBatchRest =
+                            call.receive(BookmarkTemplateBatchRest::class)
+                        span.setAttribute("BookmarkTemplate Pairs", bookmarkTemplatePairs.toString())
+                        val deletedItems: Int =
+                            backend.deleteBookmarkTemplatePairs(
+                                bookmarkTemplatePairs.batch?.map { it.toBusiness() }
+                                    ?: emptyList()
+                            )
+                        call.respond(HttpStatusCode.OK, deletedItems)
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                            ),
+                        )
+                    }
+                }
+            }
+
+            post {
+                val span: Span = tracer
+                    .spanBuilder("lori.LoriService.POST/api/v1/bookmarktemplates/batch")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val bookmarkTemplatePairs: BookmarkTemplateBatchRest =
+                            call.receive(BookmarkTemplateBatchRest::class)
+                        span.setAttribute("BookmarkTemplate Pairs", bookmarkTemplatePairs.toString())
+                        val createdEntries: Int =
+                            backend.upsertBookmarkTemplatePairs(
+                                bookmarkTemplatePairs.batch?.map { it.toBusiness() }
+                                    ?: emptyList()
+                            )
+                        call.respond(HttpStatusCode.Created, createdEntries)
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                            ),
+                        )
+                    }
                 }
             }
         }

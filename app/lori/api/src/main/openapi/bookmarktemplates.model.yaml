@@ -8,3 +8,11 @@ BookmarkTemplateRest:
       type: integer
     templateId:
       type: integer
+
+BookmarkTemplateBatchRest:
+  type: object
+  properties:
+    batch:
+      type: array
+      items:
+        $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'

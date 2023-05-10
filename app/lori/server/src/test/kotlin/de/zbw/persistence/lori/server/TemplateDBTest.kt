@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.BookmarkDBTest.Companion.TEST_BOOKMARK
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
@@ -117,7 +118,12 @@ class TemplateDBTest : DatabaseTest() {
         val bookmarkId = bookmarkDB.insertBookmark(TEST_BOOKMARK)
 
         // Create Entry in Pair column
-        templateDB.insertTemplateBookmarkPair(templateId, bookmarkId)
+        templateDB.insertTemplateBookmarkPair(
+            BookmarkTemplate(
+                templateId = templateId,
+                bookmarkId = bookmarkId,
+            )
+        )
 
         // Query Table
         assertThat(
@@ -127,7 +133,12 @@ class TemplateDBTest : DatabaseTest() {
 
         // Delete Pair
         assertThat(
-            templateDB.deleteTemplateBookmarkPair(templateId, bookmarkId),
+            templateDB.deleteTemplateBookmarkPair(
+                BookmarkTemplate(
+                    templateId = templateId,
+                    bookmarkId = bookmarkId,
+                )
+            ),
             `is`(1)
         )
         assertThat(
@@ -138,6 +149,48 @@ class TemplateDBTest : DatabaseTest() {
         // Delete Template and Bookmark
         templateDB.deleteTemplateById(templateId)
         bookmarkDB.deleteBookmarkById(bookmarkId)
+    }
+
+    @Test
+    fun testBatchInsertOperation() {
+        // Initial insert
+        val templateId1 = templateDB.insertTemplate(TEST_TEMPLATE).templateId
+        val bookmarkId1 = bookmarkDB.insertBookmark(TEST_BOOKMARK)
+
+        val templateId2 = templateDB.insertTemplate(TEST_TEMPLATE).templateId
+        val bookmarkId2 = bookmarkDB.insertBookmark(TEST_BOOKMARK)
+
+        val given = listOf(
+            BookmarkTemplate(
+                templateId = templateId1,
+                bookmarkId = bookmarkId1,
+            ),
+            BookmarkTemplate(
+                templateId = templateId2,
+                bookmarkId = bookmarkId2,
+            ),
+        )
+        val received1: Int = templateDB.upsertTemplateBookmarkBatch(given)
+        assertThat(
+            received1,
+            `is`(given.size),
+        )
+
+        // Upsert entries
+        val templateId3 = templateDB.insertTemplate(TEST_TEMPLATE).templateId
+        val bookmarkId3 = bookmarkDB.insertBookmark(TEST_BOOKMARK)
+        val given2: List<BookmarkTemplate> = given +
+            listOf(
+                BookmarkTemplate(
+                    templateId = templateId3,
+                    bookmarkId = bookmarkId3,
+                )
+            )
+        val received2: Int = templateDB.upsertTemplateBookmarkBatch(given2)
+        assertThat(
+            received2,
+            `is`(given2.size - given.size),
+        )
     }
 
     companion object {

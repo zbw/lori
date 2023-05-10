@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -401,12 +402,30 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePair(
         templateId: Int,
         bookmarkId: Int,
-    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(templateId, bookmarkId)
+    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
 
     fun insertBookmarkTemplatePair(
         bookmarkId: Int,
         templateId: Int,
-    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(templateId, bookmarkId)
+    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
+
+    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+        dbConnector.templateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
+
+    fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+        bookmarkTemplates.sumOf {
+            dbConnector.templateDB.deleteTemplateBookmarkPair(it)
+        }
 
     companion object {
         /**

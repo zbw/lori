@@ -21,6 +21,8 @@ paths:
     $ref: 'bookmark.api.yaml#/bookmarkraw'
   /bookmarktemplates:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
+  /bookmarktemplates/batch:
+    $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates-batch'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:

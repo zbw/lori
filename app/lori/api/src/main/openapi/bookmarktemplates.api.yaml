@@ -69,3 +69,70 @@ bookmarktemplates:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+bookmarktemplates-batch:
+  post:
+    tags:
+      - bookmarktemplates
+    summary: Upsert a batch of bookmark template pairs.
+    operationId: addBookmarkTemplateBatch
+    requestBody:
+      description: Object containing all Bookmark-Ids and Template-Ids
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateBatchRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              type: integer
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Conflict resource exists already
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+  delete:
+    tags:
+      - bookmarktemplates
+    summary: Delete a batch of bookmark template pairs
+    operationId: deleteBookmarkTemplateBatch
+    requestBody:
+      description: Object containing all Bookmark-Ids and Template-Ids
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateBatchRest'
+      required: true
+    responses:
+      200:
+        description: Deletion of the bookmark template pairs was successful
+        content:
+          application/json:
+            schema:
+              type: integer
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

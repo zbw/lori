@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -11,7 +12,7 @@ import java.sql.ResultSet
 import java.sql.Statement
 
 /**
- * Execute SQL queries strongly related to templates.
+ * Execute SQL queries related to templates.
  *
  * Created on 04-19-2023.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -207,12 +208,14 @@ class TemplateDB(
         }.takeWhile { true }.toList()
     }
 
-    fun insertTemplateBookmarkPair(templateId: Int, bookmarkId: Int): Int {
+    fun insertTemplateBookmarkPair(
+        bookmarkTemplate: BookmarkTemplate,
+    ): Int {
         val prepStmt = connection
             .prepareStatement(STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
             .apply {
-                this.setInt(1, templateId)
-                this.setInt(2, bookmarkId)
+                this.setInt(1, bookmarkTemplate.templateId)
+                this.setInt(2, bookmarkTemplate.bookmarkId)
             }
         val span = tracer.spanBuilder("insertTemplateBookmarkPair").startSpan()
         try {
@@ -228,18 +231,35 @@ class TemplateDB(
         }
     }
 
-    fun deleteTemplateBookmarkPair(
-        templateId: Int,
-        bookmarkId: Int,
-    ): Int {
+    fun deleteTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR).apply {
-            this.setInt(1, templateId)
-            this.setInt(2, bookmarkId)
+            this.setInt(1, bookmarkTemplate.templateId)
+            this.setInt(2, bookmarkTemplate.bookmarkId)
         }
         val span = tracer.spanBuilder("deleteTemplateBookmarkPair").startSpan()
         return try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
+    fun upsertTemplateBookmarkBatch(
+        bookmarkTemplates: List<BookmarkTemplate>
+    ): Int {
+        val span = tracer.spanBuilder("upsertBookmarkTemplateBatch").startSpan()
+        val prep = connection.prepareStatement(STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR)
+        bookmarkTemplates.map { bookmarkTemplate ->
+            val p = prep.apply {
+                this.setInt(1, bookmarkTemplate.bookmarkId)
+                this.setInt(2, bookmarkTemplate.templateId)
+            }
+            p.addBatch()
+        }
+        try {
+            span.makeCurrent()
+            return runInTransaction(connection) { prep.executeBatch() }.sum()
         } finally {
             span.end()
         }
@@ -271,6 +291,8 @@ class TemplateDB(
         private const val TABLE_NAME_TEMPLATE = "template"
         private const val TABLE_NAME_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map"
         private const val COLUMN_TEMPLATE_ID = "template_id"
+        private const val COLUMN_BOOKMARK_ID = "bookmark_id"
+        private const val CONSTRAINT_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map_pkey"
 
         const val STATEMENT_DELETE_TEMPLATE_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_TEMPLATE" +
@@ -310,5 +332,11 @@ class TemplateDB(
         const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR = "DELETE" +
             " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
             " WHERE template_id = ? AND bookmark_id = ?"
+
+        const val STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR = "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+            " ($COLUMN_BOOKMARK_ID, $COLUMN_TEMPLATE_ID)" +
+            " VALUES(?,?)" +
+            " ON CONFLICT ON CONSTRAINT $CONSTRAINT_TEMPLATE_BOOKMARK_MAP" +
+            " DO NOTHING"
     }
 }
