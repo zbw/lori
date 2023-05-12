@@ -3,7 +3,10 @@ package de.zbw.api.lori.server.route
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Template
+import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.TemplateIdCreated
 import de.zbw.lori.model.TemplateRest
@@ -127,7 +130,81 @@ fun Routing.templateRoutes(
     }
     route("/api/v1/template") {
         /**
-         * Return Template for a given id.
+         * Return all bookmarks connected to Templated Id.
+         */
+        get("{id}/bookmarks") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(bookmarks.map { it.toRest() })
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
+                } finally {
+                    span.end()
+                }
+            }
+        }
+
+        post("{id}/bookmarks") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
+                    val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    span.setAttribute("deleteOld", deleteOld)
+                    span.setAttribute("bookmarkIds", bookmarkIds?.toString() ?: "null")
+                    if (templateId == null || bookmarkIds == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        if (deleteOld) {
+                            backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
+                        }
+                        val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
+                            bookmarkIds.map {
+                                BookmarkTemplate(
+                                    bookmarkId = it,
+                                    templateId = templateId,
+                                )
+                            }
+                        )
+                        call.respond(
+                            HttpStatusCode.Created, generatedPairs.map { it.toRest() }
+                        )
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(
+                            detail = "Ein interner Fehler ist aufgetreten.",
+                        ),
+                    )
+                }
+            }
+        }
+
+        /**
+         * Return Template for a given Id.
          */
         get("{id}") {
             val span =

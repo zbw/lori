@@ -78,23 +78,7 @@ class BookmarkDB(
 
         return generateSequence {
             if (rs.next()) {
-                Bookmark(
-                    bookmarkId = rs.getInt(1),
-                    bookmarkName = rs.getString(2),
-                    description = rs.getString(3),
-                    searchKeys = LoriServerBackend.parseValidSearchKeys(rs.getString(4)),
-                    publicationDateFilter = PublicationDateFilter.fromString(rs.getString(5)),
-                    accessStateFilter = AccessStateFilter.fromString(rs.getString(6)),
-                    temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(7)),
-                    startDateFilter = StartDateFilter.fromString(rs.getString(8)),
-                    endDateFilter = EndDateFilter.fromString(rs.getString(9)),
-                    formalRuleFilter = FormalRuleFilter.fromString(rs.getString(10)),
-                    validOnFilter = RightValidOnFilter.fromString(rs.getString(11)),
-                    paketSigelFilter = PaketSigelFilter.fromString(rs.getString(12)),
-                    zdbIdFilter = ZDBIdFilter.fromString(rs.getString(13)),
-                    noRightInformationFilter = NoRightInformationFilter.fromString(rs.getBoolean(14).toString()),
-                    publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(15))
-                )
+                extractBookmark(rs)
             } else null
         }.takeWhile { true }.toList()
     }
@@ -113,6 +97,30 @@ class BookmarkDB(
         } finally {
             span.end()
         }
+    }
+
+    fun getBookmarkList(
+        limit: Int,
+        offset: Int,
+    ): List<Bookmark> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
+            this.setInt(1, limit)
+            this.setInt(2, offset)
+        }
+
+        val span = tracer.spanBuilder("getBookmarkList").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                extractBookmark(rs)
+            } else null
+        }.takeWhile { true }.toList()
     }
 
     companion object {
@@ -152,6 +160,34 @@ class BookmarkDB(
                 "filter_paket_sigel=?,filter_zdb_id=?,filter_no_right_information=?," +
                 "filter_publication_type=?" +
                 " WHERE $COLUMN_BOOKMARK_ID = ?"
+
+        const val STATEMENT_GET_BOOKMARK_LIST = "SELECT" +
+            " bookmark_id,bookmark_name,description,search_term," +
+            "filter_publication_date,filter_access_state,filter_temporal_validity," +
+            "filter_start_date,filter_end_date,filter_formal_rule," +
+            "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+            "filter_no_right_information,filter_publication_type" +
+            " FROM $TABLE_NAME_BOOKMARK" +
+            " ORDER BY $COLUMN_BOOKMARK_ID ASC LIMIT ? OFFSET ?;"
+
+        private fun extractBookmark(rs: ResultSet): Bookmark =
+            Bookmark(
+                bookmarkId = rs.getInt(1),
+                bookmarkName = rs.getString(2),
+                description = rs.getString(3),
+                searchKeys = LoriServerBackend.parseValidSearchKeys(rs.getString(4)),
+                publicationDateFilter = PublicationDateFilter.fromString(rs.getString(5)),
+                accessStateFilter = AccessStateFilter.fromString(rs.getString(6)),
+                temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(7)),
+                startDateFilter = StartDateFilter.fromString(rs.getString(8)),
+                endDateFilter = EndDateFilter.fromString(rs.getString(9)),
+                formalRuleFilter = FormalRuleFilter.fromString(rs.getString(10)),
+                validOnFilter = RightValidOnFilter.fromString(rs.getString(11)),
+                paketSigelFilter = PaketSigelFilter.fromString(rs.getString(12)),
+                zdbIdFilter = ZDBIdFilter.fromString(rs.getString(13)),
+                noRightInformationFilter = NoRightInformationFilter.fromString(rs.getBoolean(14).toString()),
+                publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(15))
+            )
 
         private fun insertUpdateSetParameters(
             bookmark: Bookmark,

@@ -5,6 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -362,6 +363,12 @@ class LoriServerBackend(
     fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
+    fun getBookmarkList(
+        limit: Int,
+        offset: Int,
+    ): List<Bookmark> =
+        dbConnector.bookmarkDB.getBookmarkList(limit, offset)
+
     /**
      * Template list.
      */
@@ -381,6 +388,47 @@ class LoriServerBackend(
         offset: Int,
     ): List<Template> =
         dbConnector.templateDB.getTemplateList(limit, offset)
+
+    /**
+     * Template-Bookmark Pair.
+     */
+    fun getBookmarksByTemplateId(
+        templateId: Int,
+    ): List<Bookmark> {
+        val bookmarkIds = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+    }
+
+    fun deleteBookmarkTemplatePair(
+        templateId: Int,
+        bookmarkId: Int,
+    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
+
+    fun insertBookmarkTemplatePair(
+        bookmarkId: Int,
+        templateId: Int,
+    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
+
+    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
+        dbConnector.templateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
+
+    fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+        bookmarkTemplates.sumOf {
+            dbConnector.templateDB.deleteTemplateBookmarkPair(it)
+        }
+
+    fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
+        dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
     companion object {
         /**

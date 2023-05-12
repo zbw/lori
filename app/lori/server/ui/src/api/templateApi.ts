@@ -1,4 +1,6 @@
 import {
+  BookmarkRest,
+  BookmarkTemplateRest,
   Configuration,
   TemplateApi,
   TemplateIdCreated,
@@ -11,23 +13,10 @@ const configuration = new Configuration({
 const templateApi = new TemplateApi(configuration);
 
 export default {
-  //addTemplate(
-  //  templateName: string,
-  //  description: string | undefined,
-  //  right: RightRest
-  //): Promise<TemplateIdCreated> {
-  //  return templateApi.addTemplate({
-  //    body: {
-  //      templateName: templateName,
-  //      description: description,
-  //      right: right,
-  //    },
-  //  });
-  //},
   addTemplate(template: TemplateRest): Promise<TemplateIdCreated> {
     return templateApi.addTemplate({ body: template });
   },
-  deleteTemplate(templateId: string): Promise<void> {
+  deleteTemplate(templateId: number): Promise<void> {
     return templateApi.deleteTemplateById({
       id: templateId,
     });
@@ -45,5 +34,23 @@ export default {
   },
   updateTemplate(template: TemplateRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
+  },
+  getBookmarksByTemplateId(templateId: number): Promise<Array<BookmarkRest>> {
+    return templateApi.getBookmarksByTemplateId({
+      id: templateId,
+    });
+  },
+  addBookmarksByTemplateId(
+    templateId: number,
+    bookmarkIds: Array<number>,
+    deleteOld: boolean
+  ): Promise<Array<BookmarkTemplateRest>> {
+    return templateApi.addBookmarksByTemplateId({
+      id: templateId,
+      deleteOld: deleteOld,
+      body: {
+        bookmarkIds: bookmarkIds,
+      },
+    });
   },
 };

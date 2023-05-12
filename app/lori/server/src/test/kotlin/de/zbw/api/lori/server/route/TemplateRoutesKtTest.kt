@@ -1,9 +1,15 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
 import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.lori.model.BookmarkIdsRest
+import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.TemplateRest
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.client.request.delete
@@ -19,6 +25,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.postgresql.util.PSQLException
@@ -310,6 +317,109 @@ class TemplateRoutesKtTest {
             )
             val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
+    fun testGetBookmarksByTemplateIdOK() {
+        val givenTemplateId = 5
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getBookmarksByTemplateId(5) } returns listOf(TEST_BOOKMARK)
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/template/$givenTemplateId/bookmarks")
+            val content: String = response.bodyAsText()
+            val bookmarkListType: Type = object : TypeToken<ArrayList<BookmarkRest>>() {}.type
+            val received: ArrayList<BookmarkRest> = ItemRoutesKtTest.GSON.fromJson(content, bookmarkListType)
+            assertThat(received, `is`(listOf(TEST_BOOKMARK.toRest())))
+        }
+    }
+
+    @Test
+    fun testGetBookmarksByTemplateIdInternalError() {
+        val givenTemplateId = 5
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { getBookmarksByTemplateId(5) } throws SQLException()
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.get("/api/v1/template/$givenTemplateId/bookmarks")
+            assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
+    fun testPostBookmarksByTemplateIdCreated() {
+        val givenTemplateId = 5
+        val givenBookmarkId = TEST_BOOKMARK.bookmarkId!!
+        val givenBookmarkTemplate = BookmarkTemplate(bookmarkId = givenBookmarkId, templateId = givenTemplateId)
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every {
+                upsertBookmarkTemplatePairs(
+                    listOf(givenBookmarkTemplate)
+                )
+            } returns listOf(givenBookmarkTemplate)
+            every { deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) } returns 0
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+
+            // Case w/ deleteOld=true
+            val response = client.post("/api/v1/template/$givenTemplateId/bookmarks?deleteOld=true") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        BookmarkIdsRest(
+                            bookmarkIds = listOf(givenBookmarkId)
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
+            val content: String = response.bodyAsText()
+            val pairsCreated: Type = object : TypeToken<Array<BookmarkTemplateRest>>() {}.type
+            val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
+            assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
+            verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) }
+        }
+
+        testApplication {
+            application(
+                servicePool.application()
+            )
+
+            // Case w/ deleteOld=true
+            val response = client.post("/api/v1/template/$givenTemplateId/bookmarks") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        BookmarkIdsRest(
+                            bookmarkIds = listOf(givenBookmarkId)
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
+            val content: String = response.bodyAsText()
+            val pairsCreated: Type = object : TypeToken<Array<BookmarkTemplateRest>>() {}.type
+            val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
+            assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
+            verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) }
         }
     }
 

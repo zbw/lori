@@ -3,6 +3,7 @@ import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import {
   AccessStateRest,
+  BookmarkRest,
   GroupRest,
   ItemEntry,
   RightRest,
@@ -27,6 +28,9 @@ import { required } from "@vuelidate/validators";
 import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
+import TemplateBookmark from "@/components/TemplateBookmark.vue";
+import isEqual from "lodash.isequal";
+import { uniqWith } from "lodash";
 
 export default defineComponent({
   props: {
@@ -79,6 +83,7 @@ export default defineComponent({
 
   // Components
   components: {
+    TemplateBookmark,
     RightsDeleteDialog,
   },
 
@@ -204,8 +209,8 @@ export default defineComponent({
     };
 
     const close = () => {
-      groupAlertError.value = false;
-      groupAlertErrorMessage.value = "";
+      generalAlertError.value = false;
+      generalAlertErrorMessage.value = "";
       saveAlertError.value = false;
       saveAlertErrorMessage.value = "";
       updateConfirmDialog.value = false;
@@ -320,14 +325,15 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpTemplate.value)
         .then((r: TemplateIdCreated) => {
-          // TODO: history add template create
-          emit("addTemplateSuccessful", formState.formTemplateName);
-          close();
+          updateBookmarks(() => {
+            emit("addTemplateSuccessful", formState.formTemplateName);
+            close();
+          });
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            groupAlertErrorMessage.value = errMsg;
-            groupAlertError.value = true;
+            generalAlertErrorMessage.value = errMsg;
+            generalAlertError.value = true;
           });
         });
     };
@@ -340,14 +346,39 @@ export default defineComponent({
       templateApi
         .updateTemplate(tmpTemplate.value)
         .then(() => {
-          // TODO: history add template create
-          emit("updateTemplateSuccessful", formState.formTemplateName);
-          close();
+          // TODO: refactor this with callbacks
+          updateBookmarks(() => {
+            emit("updateTemplateSuccessful", formState.formTemplateName);
+            close();
+          });
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            groupAlertErrorMessage.value = errMsg;
-            groupAlertError.value = true;
+            generalAlertErrorMessage.value = errMsg;
+            generalAlertError.value = true;
+          });
+        });
+    };
+
+    /**
+     * Delete and Create Bookmarks compared to last save:
+     */
+    const updateBookmarks = (callback: () => void) => {
+      templateApi
+        .addBookmarksByTemplateId(
+          computedTemplateId.value,
+          bookmarkItems.value
+            .map((elem) => elem.bookmarkId)
+            .filter((elem): elem is number => !!elem),
+          true
+        )
+        .then(() => {
+          callback();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            generalAlertErrorMessage.value = errMsg;
+            generalAlertError.value = true;
           });
         });
     };
@@ -499,23 +530,53 @@ export default defineComponent({
     };
 
     // Computed properties
-    onMounted(() => reinitializeRight(props.right));
+    onMounted(() => {
+      reinitializeRight();
+      loadBookmarks();
+    });
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() =>
+      // The check for undefined is required here!
       props.right == undefined ? "" : props.right.rightId
     );
     const computedTemplateId = computed(() =>
-      props.templateId == undefined ? "" : props.templateId
+      props.templateId == undefined ? -1 : props.templateId
     );
 
     watch(computedRight, (currentValue, oldValue) => {
-      reinitializeRight(currentValue);
+      reinitializeRight();
     });
     watch(computedReinitCounter, (currentValue, oldValue) => {
       updateInProgress.value = false;
-      resetAllValues();
+      if (props.isNew) {
+        resetAllValues();
+      } else {
+        setGivenValues();
+        loadBookmarks();
+      }
     });
+
+    const setGivenValues = () => {
+      tmpRight.value = Object.assign({}, props.right);
+      formState.formTemplateName =
+        props.templateName == undefined ? "" : props.templateName;
+      tmpTemplateId.value =
+        props.templateId == undefined ? -1 : props.templateId;
+      tmpTemplateDescription.value =
+        props.templateDescription == undefined ? "" : props.templateDescription;
+      formState.accessState = accessStateToString(props.right.accessState);
+      formState.basisStorage = basisStorageToString(props.right.basisStorage);
+      formState.basisAccessState = basisAccessStateToString(
+        props.right.basisAccessState
+      );
+      formState.startDate = props.right.startDate.toISOString().slice(0, 10);
+      if (props.right.endDate !== undefined) {
+        formState.endDate = props.right.endDate.toISOString().slice(0, 10);
+      } else {
+        formState.endDate = "";
+      }
+    };
 
     const resetAllValues = () => {
       tmpRight.value = Object.assign({} as RightRest);
@@ -525,40 +586,89 @@ export default defineComponent({
       tmpTemplateDescription.value = "";
       formState.formTemplateName = "";
       formState.accessState = "";
+      bookmarkItems.value = [];
     };
 
-    const reinitializeRight = (newValue: RightRest) => {
+    const reinitializeRight = () => {
       updateInProgress.value = false;
       getGroupList();
       if (!props.isNew) {
-        tmpRight.value = Object.assign({}, newValue);
-        formState.formTemplateName =
-          props.templateName == undefined ? "" : props.templateName;
-        tmpTemplateId.value =
-          props.templateId == undefined ? -1 : props.templateId;
-        tmpTemplateDescription.value =
-          props.templateDescription == undefined
-            ? ""
-            : props.templateDescription;
-        formState.accessState = accessStateToString(newValue.accessState);
-        formState.basisStorage = basisStorageToString(newValue.basisStorage);
-        formState.basisAccessState = basisAccessStateToString(
-          newValue.basisAccessState
-        );
-        formState.startDate = newValue.startDate.toISOString().slice(0, 10);
-        if (newValue.endDate !== undefined) {
-          formState.endDate = newValue.endDate.toISOString().slice(0, 10);
-        } else {
-          formState.endDate = "";
-        }
+        setGivenValues();
       } else {
         resetAllValues();
       }
     };
 
+    /**
+     * Bookmarks related to given Template.
+     */
+    const bookmarkDialogOn = ref(false);
+    const openBookmarkSearch = ref(0);
+    const renderBookmarkKey = ref(0);
+    const selectBookmark = () => {
+      bookmarkDialogOn.value = true;
+      openBookmarkSearch.value += 1;
+      // TODO:
+    };
+    const templateBookmarkClosed = () => {
+      bookmarkDialogOn.value = false;
+    };
+
+    const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
+    const bookmarkHeaders = [
+      {
+        text: "Id",
+        align: "start",
+        value: "bookmarkId",
+        sortable: true,
+      },
+      {
+        text: "Name",
+        align: "start",
+        value: "bookmarkName",
+        sortable: true,
+      },
+      {
+        text: "Beschreibung",
+        align: "start",
+        value: "description",
+        sortable: true,
+      },
+      { text: "Actions", value: "actions", sortable: false },
+    ];
+
+    // Load Bookmarks
+    const loadBookmarks = () => {
+      templateApi
+        .getBookmarksByTemplateId(computedTemplateId.value)
+        .then((bookmarks: Array<BookmarkRest>) => {
+          bookmarkItems.value = bookmarks;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            generalAlertErrorMessage.value = errMsg;
+            generalAlertError.value = true;
+          });
+        });
+    };
+
+    const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
+      // Unionise
+      bookmarkItems.value = bookmarkItems.value.concat(bookmarks);
+      bookmarkItems.value = uniqWith(bookmarkItems.value, isEqual).sort(
+        (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1)
+      );
+      renderBookmarkKey.value += 1;
+    };
+
+    const deleteBookmarkEntry = (bookmark: BookmarkRest) => {
+      const editedIndex = bookmarkItems.value.indexOf(bookmark);
+      bookmarkItems.value.splice(editedIndex, 1);
+    };
+
     // Groups
-    const groupAlertError = ref(false);
-    const groupAlertErrorMessage = ref("");
+    const generalAlertError = ref(false);
+    const generalAlertErrorMessage = ref("");
     const groupItems: Ref<Array<string>> = ref([]);
     const getGroupList = () => {
       api
@@ -568,8 +678,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            groupAlertErrorMessage.value = errMsg;
-            groupAlertError.value = true;
+            generalAlertErrorMessage.value = errMsg;
+            generalAlertError.value = true;
           });
         });
     };
@@ -580,6 +690,9 @@ export default defineComponent({
       accessStatusSelect,
       basisAccessState,
       basisStorage,
+      bookmarkDialogOn,
+      bookmarkItems,
+      bookmarkHeaders,
       computedRightId,
       computedTemplateId,
       dialogDeleteRight,
@@ -588,14 +701,16 @@ export default defineComponent({
       errorEndDate,
       errorTemplateName,
       errorStartDate,
-      groupAlertError,
-      groupAlertErrorMessage,
+      generalAlertError,
+      generalAlertErrorMessage,
       groupItems,
       historyStore,
       menuStartDate,
       menuEndDate,
       metadataCount,
       openPanelsDefault,
+      openBookmarkSearch,
+      renderBookmarkKey,
       saveAlertError,
       saveAlertErrorMessage,
       updateConfirmDialog,
@@ -607,10 +722,14 @@ export default defineComponent({
       cancelConfirm,
       createRight,
       initiateDeleteDialog,
+      deleteBookmarkEntry,
       deleteDialogClosed,
       deleteSuccessful,
-      updateRight,
+      selectBookmark,
+      setSelectedBookmarks,
       save,
+      templateBookmarkClosed,
+      updateRight,
     };
   },
 });
@@ -718,6 +837,40 @@ export default defineComponent({
                     hint="Beschreibung des Templates"
                     outlined
                   ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Verknüpfte Suchen</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-data-table
+                    :key="renderBookmarkKey"
+                    :headers="bookmarkHeaders"
+                    :items="bookmarkItems"
+                    item-key="bookmarkId"
+                    loading-text="Daten werden geladen... Bitte warten."
+                  >
+                    <template v-slot:item.actions="{ item }">
+                      <v-icon small @click="deleteBookmarkEntry(item)">
+                        mdi-delete
+                      </v-icon>
+                    </template>
+                  </v-data-table>
+                  <v-btn color="blue darken-1" text @click="selectBookmark"
+                    >Suche Bookmark</v-btn
+                  >
+                  <v-dialog
+                    v-model="bookmarkDialogOn"
+                    :retain-focus="false"
+                    max-width="500px"
+                  >
+                    <TemplateBookmark
+                      :reinit-counter="openBookmarkSearch"
+                      v-on:bookmarksSelected="setSelectedBookmarks"
+                      v-on:templateBookmarkClosed="templateBookmarkClosed"
+                    ></TemplateBookmark>
+                  </v-dialog>
                 </v-col>
               </v-row>
             </v-container>
@@ -1128,8 +1281,8 @@ export default defineComponent({
       Speichern war nicht erfolgreich:
       {{ saveAlertErrorMessage }}
     </v-alert>
-    <v-alert v-model="groupAlertError" dismissible text type="error">
-      {{ groupAlertErrorMessage }}
+    <v-alert v-model="generalAlertError" dismissible text type="error">
+      {{ generalAlertErrorMessage }}
     </v-alert>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>

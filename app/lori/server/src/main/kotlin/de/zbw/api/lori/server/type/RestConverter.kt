@@ -12,6 +12,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
@@ -23,6 +24,7 @@ import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
@@ -329,7 +331,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         searchKeys = this.searchTerm?.let { LoriServerBackend.parseValidSearchKeys(it) },
         publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPublicationType),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
         temporalValidityFilter = QueryParameterParser.parseTemporalValidity(this.filterTemporalValidity),
@@ -410,6 +412,18 @@ fun Template.toRest(): TemplateRest =
         templateId = this.templateId,
         description = this.description,
         right = this.right.toRest(),
+    )
+
+fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
+    BookmarkTemplate(
+        bookmarkId = this.bookmarkId,
+        templateId = this.templateId,
+    )
+
+fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
+    BookmarkTemplateRest(
+        bookmarkId = this.bookmarkId,
+        templateId = this.templateId,
     )
 
 /**
