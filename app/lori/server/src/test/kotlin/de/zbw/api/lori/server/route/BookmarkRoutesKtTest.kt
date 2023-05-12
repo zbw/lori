@@ -178,29 +178,10 @@ class BookmarkRoutesKtTest {
     }
 
     @Test
-    fun testPutBookmarkBadRequest() {
-        // given
-        val backend = mockk<LoriServerBackend>(relaxed = true) { }
-        val servicePool = getServicePool(backend)
-        // when + then
-        testApplication {
-            application(
-                servicePool.application()
-            )
-            val response = client.put("/api/v1/bookmark") {
-                header(HttpHeaders.Accept, ContentType.Application.Json)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_BOOKMARK.copy(bookmarkId = null)))
-            }
-            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
-        }
-    }
-
-    @Test
     fun testPutBookmarkInternalError() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateBookmark(TEST_BOOKMARK.bookmarkId!!, any()) } throws SQLException()
+            every { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
         // when + then
@@ -359,25 +340,6 @@ class BookmarkRoutesKtTest {
                 setBody(jsonAsString(TEST_BOOKMARKRAW))
             }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
-        }
-    }
-
-    @Test
-    fun testPutBookmarkRawBadRequest() {
-        // given
-        val backend = mockk<LoriServerBackend>(relaxed = true) { }
-        val servicePool = getServicePool(backend)
-        // when + then
-        testApplication {
-            application(
-                servicePool.application()
-            )
-            val response = client.put("/api/v1/bookmarkraw") {
-                header(HttpHeaders.Accept, ContentType.Application.Json)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_BOOKMARKRAW.copy(bookmarkId = null)))
-            }
-            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 

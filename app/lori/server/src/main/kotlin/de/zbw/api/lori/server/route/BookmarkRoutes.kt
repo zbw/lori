@@ -91,12 +91,9 @@ fun Routing.bookmarkRoutes(
                 .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    @Suppress("SENSELESS_COMPARISON")
                     val bookmark: BookmarkRawRest = call.receive(BookmarkRawRest::class)
-                        .takeIf { it.bookmarkName != null && it.bookmarkId != null }
-                        ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("bookmark", bookmark.toString())
-                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId!!, bookmark.toBusiness())
+                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
@@ -224,12 +221,9 @@ fun Routing.bookmarkRoutes(
                 .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    @Suppress("SENSELESS_COMPARISON")
                     val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
-                        .takeIf { it.bookmarkName != null && it.bookmarkId != null }
-                        ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("bookmark", bookmark.toString())
-                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId!!, bookmark.toBusiness())
+                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
