@@ -89,7 +89,9 @@ bookmarktemplates-batch:
         content:
           application/json:
             schema:
-              type: integer
+              type: array
+              items:
+                $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'
       400:
         description: Bad request
         content:

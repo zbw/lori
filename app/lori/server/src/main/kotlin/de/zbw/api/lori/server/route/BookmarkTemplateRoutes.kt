@@ -1,7 +1,9 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.lori.model.BookmarkTemplateBatchRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import io.ktor.http.HttpStatusCode
@@ -184,12 +186,12 @@ fun Routing.bookmarkTemplateRoutes(
                         val bookmarkTemplatePairs: BookmarkTemplateBatchRest =
                             call.receive(BookmarkTemplateBatchRest::class)
                         span.setAttribute("BookmarkTemplate Pairs", bookmarkTemplatePairs.toString())
-                        val createdEntries: Int =
+                        val createdEntries: List<BookmarkTemplate> =
                             backend.upsertBookmarkTemplatePairs(
                                 bookmarkTemplatePairs.batch?.map { it.toBusiness() }
                                     ?: emptyList()
                             )
-                        call.respond(HttpStatusCode.Created, createdEntries)
+                        call.respond(HttpStatusCode.Created, createdEntries.map { it.toRest() })
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(

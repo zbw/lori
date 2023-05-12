@@ -21,7 +21,7 @@ import de.zbw.business.lori.server.ZDBIdFilter
  */
 data class Bookmark(
     val bookmarkName: String,
-    val bookmarkId: Int?,
+    val bookmarkId: Int,
     val description: String?,
     val searchKeys: Map<SearchKey, List<String>>?,
     val publicationDateFilter: PublicationDateFilter?,

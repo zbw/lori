@@ -11,10 +11,8 @@ export default defineComponent({
       required: false,
     },
   },
-  setup(props) {
-    /**
-     * Stores.
-     */
+  emits: ["bookmarksSelected", "templateBookmarkClosed"],
+  setup(props, { emit }) {
     const headers = [
       {
         text: "Name",
@@ -47,6 +45,18 @@ export default defineComponent({
     };
 
     /**
+     * On Close & Save
+     */
+    const close = () => {
+      emit("templateBookmarkClosed");
+    };
+
+    const save = () => {
+      emit("bookmarksSelected", selectedBookmarks.value);
+      close();
+    };
+
+    /**
      * Error messages.
      */
     const bookmarkLoadError = ref(false);
@@ -56,8 +66,8 @@ export default defineComponent({
     const computedReinitCounter = computed(() => props.reinitCounter);
     watch(computedReinitCounter, () => {
       // Actions executed when the window is displayed:
+      selectedBookmarks.value = [];
       getBookmarkList();
-      // TODO: probably reset previously selected bookmarks
     });
 
     return {
@@ -67,6 +77,8 @@ export default defineComponent({
       bookmarkLoadErrorMsg,
       searchTerm,
       selectedBookmarks,
+      close,
+      save,
       getBookmarkList,
     };
   },
@@ -97,6 +109,17 @@ export default defineComponent({
         show-select
       >
       </v-data-table>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="close">Zurück</v-btn>
+        <v-btn
+          :disabled="selectedBookmarks.length == 0"
+          color="blue darken-1"
+          text
+          @click="save"
+          >Speichern
+        </v-btn>
+      </v-card-actions>
     </v-container>
   </v-card>
 </template>

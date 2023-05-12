@@ -419,13 +419,16 @@ class LoriServerBackend(
         )
     )
 
-    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
         dbConnector.templateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
 
     fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
         bookmarkTemplates.sumOf {
             dbConnector.templateDB.deleteTemplateBookmarkPair(it)
         }
+
+    fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
+        dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
     companion object {
         /**

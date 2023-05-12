@@ -185,6 +185,18 @@ class TemplateDB(
     /**
      * Queries on Template-Bookmark Pairs Table.
      */
+    fun deletePairsByTemplateId(templateId: Int): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP).apply {
+            this.setInt(1, templateId)
+        }
+        val span = tracer.spanBuilder("deleteTemplateBookmarkPairByTempId").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
 
     /**
      * Get all bookmark ids that are a connected to a given template-id.
@@ -247,9 +259,9 @@ class TemplateDB(
 
     fun upsertTemplateBookmarkBatch(
         bookmarkTemplates: List<BookmarkTemplate>
-    ): Int {
+    ): List<BookmarkTemplate> {
         val span = tracer.spanBuilder("upsertBookmarkTemplateBatch").startSpan()
-        val prep = connection.prepareStatement(STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR)
+        val prep = connection.prepareStatement(STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
         bookmarkTemplates.map { bookmarkTemplate ->
             val p = prep.apply {
                 this.setInt(1, bookmarkTemplate.bookmarkId)
@@ -259,10 +271,19 @@ class TemplateDB(
         }
         try {
             span.makeCurrent()
-            return runInTransaction(connection) { prep.executeBatch() }.sum()
+            runInTransaction(connection) { prep.executeBatch() }.sum()
         } finally {
             span.end()
         }
+        val rs: ResultSet = prep.generatedKeys
+        return generateSequence {
+            if (rs.next()) {
+                BookmarkTemplate(
+                    bookmarkId = rs.getInt(1),
+                    templateId = rs.getInt(2),
+                )
+            } else null
+        }.takeWhile { true }.toList()
     }
 
     private fun getTemplateTransientById(templateId: Int, span: Span): TemplateTransient? {
@@ -331,7 +352,11 @@ class TemplateDB(
 
         const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR = "DELETE" +
             " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-            " WHERE template_id = ? AND bookmark_id = ?"
+            " WHERE $COLUMN_TEMPLATE_ID = ? AND $COLUMN_BOOKMARK_ID = ?"
+
+        const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP = "DELETE " +
+            "FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+            " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR = "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
             " ($COLUMN_BOOKMARK_ID, $COLUMN_TEMPLATE_ID)" +

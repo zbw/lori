@@ -203,7 +203,7 @@ class BookmarkTemplateRoutesKtTest {
         var backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
                 upsertBookmarkTemplatePairs(TEST_BOOKMARK_TEMPLATE_BATCH.batch!!.map { it.toBusiness() })
-            } returns 1
+            } returns listOf(TEST_BOOKMARK_TEMPLATE.toBusiness())
         }
         var servicePool = ItemRoutesKtTest.getServicePool(backend)
 
@@ -219,9 +219,19 @@ class BookmarkTemplateRoutesKtTest {
             }
             assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
             val content: String = response.bodyAsText()
-            val itemsCreated: Type = object : TypeToken<Int>() {}.type
-            val received: Int = ItemRoutesKtTest.GSON.fromJson(content, itemsCreated)
-            assertThat(received, `is`(1))
+            val pairsCreated: Type = object : TypeToken<Array<BookmarkTemplateRest>>() {}.type
+            val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
+            assertThat(
+                received.toList(),
+                `is`(
+                    listOf(
+                        BookmarkTemplateRest(
+                            bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
+                            templateId = TEST_BOOKMARK_TEMPLATE.templateId
+                        )
+                    )
+                )
+            )
         }
 
         backend = mockk<LoriServerBackend>(relaxed = true) {

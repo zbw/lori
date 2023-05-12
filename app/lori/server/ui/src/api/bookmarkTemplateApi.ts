@@ -1,4 +1,5 @@
 import {
+  BookmarkTemplateRest,
   BookmarktemplatesApi,
   Configuration,
 } from "@/generated-sources/openapi";
@@ -20,6 +21,15 @@ export default {
       body: {
         bookmarkId: bookmarkId,
         templateId: templateId,
+      },
+    });
+  },
+  addBookmarkTemplateBatch(
+    batch: Array<BookmarkTemplateRest>
+  ): Promise<Array<BookmarkTemplateRest>> {
+    return bookmarkTemplateApi.addBookmarkTemplateBatch({
+      body: {
+        batch: batch,
       },
     });
   },

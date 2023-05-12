@@ -146,6 +146,36 @@ class TemplateDBTest : DatabaseTest() {
             `is`(emptyList())
         )
 
+        // Insert second bookmark  and test if deleting by template id works
+        val bookmarkId2 = bookmarkDB.insertBookmark(TEST_BOOKMARK)
+        templateDB.insertTemplateBookmarkPair(
+            BookmarkTemplate(
+                templateId = templateId,
+                bookmarkId = bookmarkId,
+            )
+        )
+        templateDB.insertTemplateBookmarkPair(
+            BookmarkTemplate(
+                templateId = templateId,
+                bookmarkId = bookmarkId2,
+            )
+        )
+        assertThat(
+            templateDB.getBookmarkIdsByTemplateId(templateId),
+            `is`(listOf(bookmarkId, bookmarkId2))
+        )
+
+        val deleted = templateDB.deletePairsByTemplateId(templateId)
+        assertThat(
+            deleted,
+            `is`(2),
+        )
+
+        assertThat(
+            templateDB.getBookmarkIdsByTemplateId(templateId),
+            `is`(emptyList())
+        )
+
         // Delete Template and Bookmark
         templateDB.deleteTemplateById(templateId)
         bookmarkDB.deleteBookmarkById(bookmarkId)
@@ -160,7 +190,7 @@ class TemplateDBTest : DatabaseTest() {
         val templateId2 = templateDB.insertTemplate(TEST_TEMPLATE).templateId
         val bookmarkId2 = bookmarkDB.insertBookmark(TEST_BOOKMARK)
 
-        val given = listOf(
+        val given: List<BookmarkTemplate> = listOf(
             BookmarkTemplate(
                 templateId = templateId1,
                 bookmarkId = bookmarkId1,
@@ -170,10 +200,10 @@ class TemplateDBTest : DatabaseTest() {
                 bookmarkId = bookmarkId2,
             ),
         )
-        val received1: Int = templateDB.upsertTemplateBookmarkBatch(given)
+        val received1: List<BookmarkTemplate> = templateDB.upsertTemplateBookmarkBatch(given)
         assertThat(
             received1,
-            `is`(given.size),
+            `is`(given),
         )
 
         // Upsert entries
@@ -186,10 +216,10 @@ class TemplateDBTest : DatabaseTest() {
                     bookmarkId = bookmarkId3,
                 )
             )
-        val received2: Int = templateDB.upsertTemplateBookmarkBatch(given2)
+        val received2: List<BookmarkTemplate> = templateDB.upsertTemplateBookmarkBatch(given2)
         assertThat(
             received2,
-            `is`(given2.size - given.size),
+            `is`(given2.minus(given)),
         )
     }
 

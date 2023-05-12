@@ -187,6 +187,52 @@ template-list:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 template-bookmarks:
+  post:
+    tags:
+      - template
+    summary: For a given Template-Id connect all given Bookmark-Ids to it
+    operationId: addBookmarksByTemplateId
+    parameters:
+      - name: id
+        in: path
+        description: Template Id
+        required: true
+        schema:
+          type: integer
+      - name: deleteOld
+        in: query
+        description: "Delete all old connections first"
+        schema:
+          type: boolean
+    requestBody:
+      description: Template representation
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/BookmarkIdsRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
   get:
     tags:
       - template

@@ -36,6 +36,7 @@ export default defineComponent({
       },
     ];
     const templateItems: Ref<Array<TemplateRest>> = ref([]);
+
     /**
      * Error messages.
      */

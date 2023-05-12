@@ -34,6 +34,7 @@ export default {
   ): Promise<BookmarkIdCreated> {
     return bookmarkRawApi.addBookmarkRaw({
       body: {
+        bookmarkId: -1,
         bookmarkName: bookmarkName,
         description: bookmarkDescription,
         searchTerm: searchTerm,
@@ -70,6 +71,7 @@ export default {
   ): Promise<BookmarkIdCreated> {
     return bookmarkApi.addBookmark({
       body: {
+        bookmarkId: -1,
         bookmarkName: bookmarkName,
         description: bookmarkDescription,
         searchKeys: searchKeys,
@@ -95,7 +97,7 @@ export default {
   },
 
   updateBookmark(
-    bookmarkId: number | undefined,
+    bookmarkId: number,
     bookmarkName: string,
     bookmarkDescription: string | undefined,
     searchKeys: SearchKeyRest[] | undefined,

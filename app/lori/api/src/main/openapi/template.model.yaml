@@ -23,3 +23,11 @@ TemplateIdCreated:
       type: integer
     rightId:
       type: string
+
+BookmarkIdsRest:
+  type: object
+  properties:
+    bookmarkIds:
+      type: array
+      items:
+        type: integer
