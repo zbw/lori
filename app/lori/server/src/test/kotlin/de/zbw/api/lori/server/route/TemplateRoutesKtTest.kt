@@ -397,7 +397,6 @@ class TemplateRoutesKtTest {
             verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) }
         }
 
-
         testApplication {
             application(
                 servicePool.application()
@@ -422,8 +421,6 @@ class TemplateRoutesKtTest {
             assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
             verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) }
         }
-
-
     }
 
     companion object {

@@ -179,12 +179,14 @@ fun Routing.templateRoutes(
                         if (deleteOld) {
                             backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
                         }
-                        val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(bookmarkIds.map {
-                            BookmarkTemplate(
-                                bookmarkId = it,
-                                templateId = templateId,
-                            )
-                        })
+                        val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
+                            bookmarkIds.map {
+                                BookmarkTemplate(
+                                    bookmarkId = it,
+                                    templateId = templateId,
+                                )
+                            }
+                        )
                         call.respond(
                             HttpStatusCode.Created, generatedPairs.map { it.toRest() }
                         )
