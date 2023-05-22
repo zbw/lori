@@ -356,7 +356,17 @@ class LoriServerBackend(
     fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 
-    fun deleteBookmark(bookmarkId: Int): Int = dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
+    fun deleteBookmark(bookmarkId: Int): Int {
+        val receivedTemplateIds = dbConnector.templateDB.getTemplateIdsByBookmarkId(bookmarkId)
+        return if (receivedTemplateIds.isEmpty()) {
+            dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
+        } else {
+            throw ResourceStillInUseException(
+                "Bookmark wird noch von folgenden Template-Ids verwendet: " + receivedTemplateIds.joinToString(separator = ",")
+            )
+        }
+    }
+
     fun updateBookmark(bookmarkId: Int, bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
 

@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.GSON
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.jsonAsString
@@ -117,6 +118,24 @@ class BookmarkRoutesKtTest {
             )
             val response = client.delete("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.OK))
+        }
+    }
+
+    @Test
+    fun testDeleteResourceStillInUse() {
+        // given
+        val bookmarkId = 4
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteBookmark(bookmarkId) } throws ResourceStillInUseException("foo")
+        }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.delete("/api/v1/bookmark/$bookmarkId")
+            assertThat(response.status, `is`(HttpStatusCode.Conflict))
         }
     }
 

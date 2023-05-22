@@ -220,6 +220,28 @@ class TemplateDB(
         }.takeWhile { true }.toList()
     }
 
+    /**
+     * Get all bookmark ids that are a connected to a given template-id.
+     */
+    fun getTemplateIdsByBookmarkId(bookmarkId: Int): List<Int> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID).apply {
+            this.setInt(1, bookmarkId)
+        }
+        val span = tracer.spanBuilder("getTemplateIdsByBookmarkId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getInt(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
     fun insertTemplateBookmarkPair(
         bookmarkTemplate: BookmarkTemplate,
     ): Int {
@@ -341,9 +363,14 @@ class TemplateDB(
             "UPDATE $TABLE_NAME_TEMPLATE SET template_name=?,template_description=? WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID =
-            "SELECT bookmark_id" +
+            "SELECT $COLUMN_BOOKMARK_ID" +
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-                " WHERE template_id = ?"
+                " WHERE $COLUMN_TEMPLATE_ID = ?"
+
+        const val STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID =
+            "SELECT $COLUMN_TEMPLATE_ID" +
+                " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+                " WHERE $COLUMN_BOOKMARK_ID = ?"
 
         const val STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR =
             "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +

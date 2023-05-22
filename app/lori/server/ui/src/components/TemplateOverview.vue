@@ -156,7 +156,6 @@ export default defineComponent({
       <v-alert v-model="alertSuccessfulAdd" dismissible text type="success">
         Template {{ lastModifiedTemplateName }} erfolgreich hinzugefügt.
       </v-alert>
-
       <v-alert
         v-model="alertSuccessfulDeletion"
         dismissible
@@ -165,7 +164,6 @@ export default defineComponent({
       >
         Template {{ lastModifiedTemplateName }} erfolgreich gelöscht.
       </v-alert>
-
       <v-alert v-model="templateLoadError" dismissible text type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>

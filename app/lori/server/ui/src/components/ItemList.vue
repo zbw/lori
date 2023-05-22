@@ -21,9 +21,11 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import TemplateOverview from "@/components/TemplateOverview.vue";
+import BookmarkOverview from "@/components/BookmarkOverview.vue";
 
 export default defineComponent({
   components: {
+    BookmarkOverview,
     TemplateOverview,
     BookmarkSave,
     GroupOverview,
@@ -426,6 +428,9 @@ export default defineComponent({
      */
     const dialogStore = useDialogsStore();
 
+    const closeBookmarkOverviewDialog = () => {
+      dialogStore.bookmarkOverviewActivated = false;
+    };
     const closeGroupDialog = () => {
       dialogStore.groupOverviewActivated = false;
     };
@@ -472,6 +477,7 @@ export default defineComponent({
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
+      closeBookmarkOverviewDialog,
       closeBookmarkSaveDialog,
       closeGroupDialog,
       closeTemplateDialog,
@@ -519,6 +525,14 @@ export default defineComponent({
       v-on:close="closeTemplateDialog"
     >
       <TemplateOverview></TemplateOverview>
+    </v-dialog>
+    <v-dialog
+      v-model="dialogStore.bookmarkOverviewActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeBookmarkOverviewDialog"
+    >
+      <BookmarkOverview></BookmarkOverview>
     </v-dialog>
     <v-row>
       <v-col cols="2">

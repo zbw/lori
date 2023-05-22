@@ -14,10 +14,15 @@ export default defineComponent({
     const activateTemplateDialog = () => {
       dialogStore.templateOverviewActivated = true;
     };
+
+    const activateBookmarkOverviewDialog = () => {
+      dialogStore.bookmarkOverviewActivated = true;
+    };
     return {
       dialogStore,
       historyStore,
       menuTopics,
+      activateBookmarkOverviewDialog,
       activateGroupDialog,
       activateTemplateDialog,
     };
@@ -58,7 +63,9 @@ export default defineComponent({
           >
         </v-list-item>
         <v-list-item link>
-          <v-list-item-title>Bookmarks</v-list-item-title>
+          <v-list-item-title @click="activateBookmarkOverviewDialog"
+            >Bookmarks</v-list-item-title
+          >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title
