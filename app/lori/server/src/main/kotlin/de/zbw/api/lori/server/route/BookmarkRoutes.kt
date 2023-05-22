@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -291,6 +292,14 @@ fun Routing.bookmarkRoutes(
                             )
                         }
                     }
+                } catch (re: ResourceStillInUseException) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
+                    call.respond(
+                        HttpStatusCode.Conflict,
+                        ApiError.conflictError(
+                            detail = re.message,
+                        ),
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(

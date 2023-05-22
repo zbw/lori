@@ -165,6 +165,11 @@ class TemplateDBTest : DatabaseTest() {
             `is`(listOf(bookmarkId, bookmarkId2))
         )
 
+        assertThat(
+            templateDB.getTemplateIdsByBookmarkId(bookmarkId),
+            `is`(listOf(templateId))
+        )
+
         val deleted = templateDB.deletePairsByTemplateId(templateId)
         assertThat(
             deleted,
@@ -173,6 +178,11 @@ class TemplateDBTest : DatabaseTest() {
 
         assertThat(
             templateDB.getBookmarkIdsByTemplateId(templateId),
+            `is`(emptyList())
+        )
+
+        assertThat(
+            templateDB.getTemplateIdsByBookmarkId(bookmarkId),
             `is`(emptyList())
         )
 
