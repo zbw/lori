@@ -649,6 +649,7 @@ class RightFilterTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             zbwUserAgreement = true,
+            templateId = null,
             groupIds = null,
         )
     }

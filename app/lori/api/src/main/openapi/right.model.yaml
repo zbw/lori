@@ -72,6 +72,8 @@ RightRest:
     startDate:
       type: string
       format: date
+    templateId:
+      type: integer
     zbwUserAgreement:
       type: boolean
 

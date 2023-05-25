@@ -437,6 +437,7 @@ class LoriServerBackendTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
+            templateId = null,
             zbwUserAgreement = true,
         )
     }
