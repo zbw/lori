@@ -34,6 +34,7 @@ export default defineComponent({
         value: "applyTemplate",
         sortable: true,
       },
+      { text: "Actions", value: "actions", sortable: false },
     ];
     const templateItems: Ref<Array<TemplateRest>> = ref([]);
 
@@ -79,7 +80,7 @@ export default defineComponent({
       dialogStore.templateEditActivated = false;
     };
 
-    const editTemplate = (template: TemplateRest, row: any) => {
+    const editTemplate = (template: TemplateRest) => {
       isNew.value = false;
       reinitCounter.value = reinitCounter.value + 1;
       currentTemplate.value = template;
@@ -183,7 +184,6 @@ export default defineComponent({
         :items="templateItems"
         item-key="templateName"
         loading-text="Daten werden geladen... Bitte warten."
-        @click:row="editTemplate"
       >
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn color="blue darken-1" text
@@ -192,6 +192,9 @@ export default defineComponent({
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn color="blue darken-1" text>Template anwenden</v-btn>
+        </template>
+        <template v-slot:item.actions="{ item }">
+          <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
         </template>
       </v-data-table>
       <v-dialog
