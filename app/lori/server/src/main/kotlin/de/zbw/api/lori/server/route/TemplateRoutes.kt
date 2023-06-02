@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.type.Template
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.TemplateIdCreated
+import de.zbw.lori.model.TemplateIdsRest
 import de.zbw.lori.model.TemplateRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -129,6 +130,20 @@ fun Routing.templateRoutes(
         }
     }
     route("/api/v1/template") {
+        /**
+         * Apply given templates.
+         */
+        post("/applications") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.POST/api/v1/template/applications").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                val templateIds: List<Int> = call.receive(TemplateIdsRest::class).templateIds?:emptyList()
+                span.setAttribute("templateIds", templateIds.toString())
+                backend.applyTemplates(templateIds)
+            }
+        }
+
         /**
          * Return all bookmarks connected to Templated Id.
          */

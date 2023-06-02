@@ -31,3 +31,11 @@ BookmarkIdsRest:
       type: array
       items:
         type: integer
+
+TemplateIdsRest:
+  type: object
+  properties:
+    templateIds:
+      type: array
+      items:
+        type: integer

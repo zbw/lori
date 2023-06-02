@@ -28,6 +28,8 @@ class TemplateDB(
         // Get Right-Id first
         val rightId: String? = getTemplateTransientById(templateId, span)?.rightId
 
+        // TODO: Remove Foreign-Key from Right Entry
+
         // Delete Template
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BY_ID).apply {
             this.setInt(1, templateId)
@@ -101,6 +103,7 @@ class TemplateDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 val newTemplateId = rs.getInt(1)
+                rightDB.upsertRight(template.right.copy(rightId = newRightId, templateId = newTemplateId))
                 TemplateRightIdCreated(templateId = newTemplateId, rightId = newRightId)
             } else throw IllegalStateException("No row has been inserted.")
         } finally {

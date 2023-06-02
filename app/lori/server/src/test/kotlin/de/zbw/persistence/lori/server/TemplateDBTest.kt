@@ -48,7 +48,7 @@ class TemplateDBTest : DatabaseTest() {
         val receivedTemplates = templateDB.getTemplatesByIds(listOf(generatedIds.templateId))
         val expected = TEST_TEMPLATE.copy(
             templateId = generatedIds.templateId,
-            right = TEST_RIGHT.copy(rightId = generatedIds.rightId)
+            right = TEST_RIGHT.copy(rightId = generatedIds.rightId, templateId = generatedIds.templateId)
         )
         // then
         assertThat(
@@ -95,12 +95,12 @@ class TemplateDBTest : DatabaseTest() {
             TEST_TEMPLATE.copy(
                 templateName = "ad",
                 templateId = ids4.templateId,
-                right = TEST_RIGHT.copy(rightId = ids4.rightId)
+                right = TEST_RIGHT.copy(rightId = ids4.rightId, templateId = ids4.templateId)
             ),
             TEST_TEMPLATE.copy(
                 templateName = "ae",
                 templateId = ids5.templateId,
-                right = TEST_RIGHT.copy(rightId = ids5.rightId)
+                right = TEST_RIGHT.copy(rightId = ids5.rightId, templateId = ids5.templateId)
             ),
         )
 

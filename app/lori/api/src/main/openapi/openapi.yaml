@@ -65,6 +65,8 @@ paths:
     $ref: 'template.api.yaml#/template'
   /template/{id}:
     $ref: 'template.api.yaml#/template-id'
+  /template/applications:
+    $ref: 'template.api.yaml#/template-applications'
   /template/{id}/bookmarks:
     $ref: 'template.api.yaml#/template-bookmarks'
   /template/list:

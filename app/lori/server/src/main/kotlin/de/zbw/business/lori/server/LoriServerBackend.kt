@@ -440,6 +440,21 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
+    fun applyTemplates(templateIds: List<Int>) {
+        templateIds.map {
+            applyTemplate(it)
+        }
+    }
+
+    fun applyTemplate(templateId: Int) {
+        // Receive all bookmark ids
+        val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        // TODO: Get Right_Id
+        // TODO: Get all Bookmark-Searches
+        // TODO: Execute each search
+        // Apply Template to all results
+    }
+
     companion object {
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.
