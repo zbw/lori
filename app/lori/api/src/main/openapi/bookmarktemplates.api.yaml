@@ -1,0 +1,140 @@
+bookmarktemplates:
+  post:
+    tags:
+      - bookmarktemplates
+    summary: Connect a Bookmark-Id and Template-Id with each other
+    operationId: addBookmarkTemplate
+    requestBody:
+      description: Bookmark and Template Id
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Conflict resource exists already
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+  delete:
+    tags:
+      - bookmarktemplates
+    summary: Delete a bookmark template pair
+    operationId: deleteBookmarkTemplate
+    parameters:
+      - name: bookmarkId
+        in: query
+        description: Bookmark Id
+        required: true
+        schema:
+          type: integer
+      - name: templateId
+        in: query
+        description: Template Id
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Deletion of bookmark template pair was successful
+        content:
+      404:
+        description: Id combination does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+bookmarktemplates-batch:
+  post:
+    tags:
+      - bookmarktemplates
+    summary: Upsert a batch of bookmark template pairs.
+    operationId: addBookmarkTemplateBatch
+    requestBody:
+      description: Object containing all Bookmark-Ids and Template-Ids
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateBatchRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Conflict resource exists already
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+  delete:
+    tags:
+      - bookmarktemplates
+    summary: Delete a batch of bookmark template pairs
+    operationId: deleteBookmarkTemplateBatch
+    requestBody:
+      description: Object containing all Bookmark-Ids and Template-Ids
+      content:
+        application/json:
+          schema:
+            $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateBatchRest'
+      required: true
+    responses:
+      200:
+        description: Deletion of the bookmark template pairs was successful
+        content:
+          application/json:
+            schema:
+              type: integer
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

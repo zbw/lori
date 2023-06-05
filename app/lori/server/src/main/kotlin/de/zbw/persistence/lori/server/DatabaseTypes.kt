@@ -31,3 +31,15 @@ data class FacetTransientSet(
     val publicationType: Map<PublicationType, Int>,
     val zdbIds: Map<String, Int>,
 )
+
+data class TemplateTransient(
+    val templateId: Int,
+    val templateName: String,
+    val description: String?,
+    val rightId: String,
+)
+
+data class TemplateRightIdCreated(
+    val templateId: Int,
+    val rightId: String,
+)

@@ -15,8 +15,14 @@ paths:
     $ref: 'bookmark.api.yaml#/bookmark'
   /bookmark/{id}:
     $ref: 'bookmark.api.yaml#/bookmark-id'
+  /bookmark/list:
+    $ref: 'bookmark.api.yaml#/bookmark-list'
   /bookmarkraw:
     $ref: 'bookmark.api.yaml#/bookmarkraw'
+  /bookmarktemplates:
+    $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
+  /bookmarktemplates/batch:
+    $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates-batch'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -55,6 +61,14 @@ paths:
     $ref: 'users.api.yaml#/users-id'
   /users/admin/role:
     $ref: 'users.api.yaml#/users-admin-role'
+  /template:
+    $ref: 'template.api.yaml#/template'
+  /template/{id}:
+    $ref: 'template.api.yaml#/template-id'
+  /template/{id}/bookmarks:
+    $ref: 'template.api.yaml#/template-bookmarks'
+  /template/list:
+    $ref: 'template.api.yaml#/template-list'
 
 components:
   schemas:
@@ -67,10 +81,12 @@ components:
     PublicationTypeRest:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
     RightRest:
-      $ref: 'item.model.yaml#/RightRest'
+      $ref: 'right.model.yaml#/RightRest'
     ErrorRest:
       $ref: 'errorhandling.model.yaml#/ErrorRest'
     BookmarkRest:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
     BookmarkRawRest:
       $ref: 'bookmark.model.yaml#/BookmarkRawRest'
+    TemplateRest:
+      $ref: 'template.model.yaml#/TemplateRest'

@@ -1,14 +1,15 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Bookmark
-import de.zbw.lori.model.BookmarkIdCreated
-import de.zbw.lori.model.BookmarkRawRest
-import de.zbw.lori.model.BookmarkRest
+import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.Template
+import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.TemplateIdCreated
+import de.zbw.lori.model.TemplateRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
@@ -29,35 +30,35 @@ import kotlinx.coroutines.withContext
 import org.postgresql.util.PSQLException
 
 /**
- * REST-API routes for search bookmarks.
+ * REST-API routes for templates.
  *
- * Created on 03-15-2023.
+ * Created on 04-18-2023.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-fun Routing.bookmarkRoutes(
+fun Routing.templateRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
 ) {
-    route("/api/v1/bookmarkraw") {
+    route("/api/v1/template") {
         post {
-            val span: Span = tracer
-                .spanBuilder("lori.LoriService.POST/api/v1/bookmarkraw")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
+            val span: Span =
+                tracer.spanBuilder("lori.LoriService.POST/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val bookmark: BookmarkRawRest = call.receive(BookmarkRawRest::class)
-                    span.setAttribute("bookmark", bookmark.toString())
-                    val pk = backend.insertBookmark(bookmark.toBusiness())
+                    val template: TemplateRest = call.receive(TemplateRest::class)
+                    span.setAttribute("template", template.toString())
+                    val pk = backend.insertTemplate(template.toBusiness())
                     span.setStatus(StatusCode.OK)
-                    call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
+                    call.respond(
+                        HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)
+                    )
                 } catch (pe: PSQLException) {
                     if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                         call.respond(
                             HttpStatusCode.Conflict,
                             ApiError.conflictError(
-                                detail = "Ein Bookmark mit diesem Namen existiert bereits.",
+                                detail = "Ein Template mit diesem Namen existiert bereits.",
                             )
                         )
                     } else {
@@ -83,18 +84,18 @@ fun Routing.bookmarkRoutes(
             }
         }
         /**
-         * Update an existing Bookmark.
+         * Update an existing Template.
          */
         put {
-            val span = tracer
-                .spanBuilder("lori.LoriService.PUT/api/v1/bookmarkraw")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
+            val span =
+                tracer.spanBuilder("lori.LoriService.PUT/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val bookmark: BookmarkRawRest = call.receive(BookmarkRawRest::class)
-                    span.setAttribute("bookmark", bookmark.toString())
-                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
+                    @Suppress("SENSELESS_COMPARISON") val template: TemplateRest =
+                        call.receive(TemplateRest::class).takeIf { it.templateName != null && it.templateId != null }
+                            ?: throw BadRequestException("Invalid Json has been provided")
+                    span.setAttribute("template", template.toString())
+                    val insertedRows = backend.updateTemplate(template.templateId!!, template.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
@@ -103,7 +104,7 @@ fun Routing.bookmarkRoutes(
                         call.respond(
                             HttpStatusCode.NotFound,
                             ApiError.notFoundError(
-                                detail = "Für das Bookmark mit Id ${bookmark.bookmarkId} existiert kein Eintrag.",
+                                detail = "Für das Template mit Id ${template.templateId} existiert kein Eintrag.",
                             )
                         )
                     }
@@ -127,33 +128,105 @@ fun Routing.bookmarkRoutes(
             }
         }
     }
-    route("/api/v1/bookmark") {
+    route("/api/v1/template") {
         /**
-         * Return Bookmark for a given id.
+         * Return all bookmarks connected to Templated Id.
          */
-        get("{id}") {
-            val span = tracer
-                .spanBuilder("lori.LoriService.GET/api/v1/bookmark/{id}")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
+        get("{id}/bookmarks") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val bookmarkId = call.parameters["id"]?.toInt()
-                    span.setAttribute("bookmarkId", bookmarkId?.toString() ?: "null")
-                    if (bookmarkId == null) {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
-                        val bookmark: Bookmark? = backend.getBookmarkById(bookmarkId)
-                        bookmark?.let {
+                        val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(bookmarks.map { it.toRest() })
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
+                } finally {
+                    span.end()
+                }
+            }
+        }
+
+        post("{id}/bookmarks") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
+                    val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    span.setAttribute("deleteOld", deleteOld)
+                    span.setAttribute("bookmarkIds", bookmarkIds?.toString() ?: "null")
+                    if (templateId == null || bookmarkIds == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        if (deleteOld) {
+                            backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
+                        }
+                        val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
+                            bookmarkIds.map {
+                                BookmarkTemplate(
+                                    bookmarkId = it,
+                                    templateId = templateId,
+                                )
+                            }
+                        )
+                        call.respond(
+                            HttpStatusCode.Created, generatedPairs.map { it.toRest() }
+                        )
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(
+                            detail = "Ein interner Fehler ist aufgetreten.",
+                        ),
+                    )
+                }
+            }
+        }
+
+        /**
+         * Return Template for a given Id.
+         */
+        get("{id}") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}").setSpanKind(SpanKind.SERVER).startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        val template: Template? = backend.getTemplateById(templateId)
+                        template?.let {
                             span.setStatus(StatusCode.OK)
-                            call.respond(bookmark.toRest())
+                            call.respond(template.toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
                             call.respond(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
-                                    detail = "Für das Bookmark mit Id: $bookmarkId existiert kein Eintrag.",
+                                    detail = "Für das Template mit Id: $templateId existiert kein Eintrag.",
                                 )
                             )
                         }
@@ -169,107 +242,18 @@ fun Routing.bookmarkRoutes(
                 }
             }
         }
-        post {
-            val span: Span = tracer
-                .spanBuilder("lori.LoriService.POST/api/v1/bookmark")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
-                    span.setAttribute("bookmark", bookmark.toString())
-                    val pk = backend.insertBookmark(bookmark.toBusiness())
-                    span.setStatus(StatusCode.OK)
-                    call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
-                } catch (pe: PSQLException) {
-                    if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                        call.respond(
-                            HttpStatusCode.Conflict,
-                            ApiError.conflictError(
-                                detail = "Ein Bookmark mit diesem Namen existiert bereits.",
-                            )
-                        )
-                    } else {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiError.internalServerError(
-                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                            )
-                        )
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Fehler ist aufgetreten.",
-                        ),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
-        /**
-         * Update an existing Bookmark.
-         */
-        put {
-            val span = tracer
-                .spanBuilder("lori.LoriService.PUT/api/v1/bookmark")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
-                    span.setAttribute("bookmark", bookmark.toString())
-                    val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
-                    if (insertedRows == 1) {
-                        span.setStatus(StatusCode.OK)
-                        call.respond(HttpStatusCode.NoContent)
-                    } else {
-                        span.setStatus(StatusCode.ERROR)
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            ApiError.notFoundError(
-                                detail = "Für das Bookmark mit Id ${bookmark.bookmarkId} existiert kein Eintrag.",
-                            )
-                        )
-                    }
-                } catch (e: BadRequestException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
-                        ),
-                    )
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
 
         /**
-         * Delete Bookmark by Id.
+         * Delete Template by Id.
          */
         delete("{id}") {
-            val span = tracer
-                .spanBuilder("lori.LoriService.DELETE/api/v1/bookmark/{id}")
-                .setSpanKind(SpanKind.SERVER)
+            val span = tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
                 .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val bookmarkId = call.parameters["id"]?.toInt()
-                    span.setAttribute("bookmarkId", bookmarkId?.toString() ?: "null")
-                    if (bookmarkId == null) {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -278,7 +262,7 @@ fun Routing.bookmarkRoutes(
                             ),
                         )
                     } else {
-                        val entriesDeleted = backend.deleteBookmark(bookmarkId)
+                        val entriesDeleted = backend.deleteTemplate(templateId)
                         if (entriesDeleted == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.OK)
@@ -287,19 +271,11 @@ fun Routing.bookmarkRoutes(
                             call.respond(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
-                                    detail = "Für die BookmarkId $bookmarkId existiert kein Eintrag.",
+                                    detail = "Für die TemplateId $templateId existiert kein Eintrag.",
                                 ),
                             )
                         }
                     }
-                } catch (re: ResourceStillInUseException) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        ApiError.conflictError(
-                            detail = re.message,
-                        ),
-                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(
@@ -316,7 +292,7 @@ fun Routing.bookmarkRoutes(
 
         route("/list") {
             get {
-                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/bookmark/list").setSpanKind(SpanKind.SERVER)
+                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/template/list").setSpanKind(SpanKind.SERVER)
                     .startSpan()
                 withContext(span.asContextElement()) {
                     try {
@@ -337,9 +313,9 @@ fun Routing.bookmarkRoutes(
                             )
                             return@withContext
                         }
-                        val receivedBookmarks: List<Bookmark> = backend.getBookmarkList(limit, offset)
+                        val receivedTemplates: List<Template> = backend.getTemplateList(limit, offset)
                         span.setStatus(StatusCode.OK)
-                        call.respond(receivedBookmarks.map { it.toRest() })
+                        call.respond(receivedTemplates.map { it.toRest() })
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(

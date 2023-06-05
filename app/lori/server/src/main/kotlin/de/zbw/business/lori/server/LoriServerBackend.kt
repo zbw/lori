@@ -5,16 +5,19 @@ import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
+import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
@@ -353,12 +356,89 @@ class LoriServerBackend(
     fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 
-    fun deleteBookmark(bookmarkId: Int): Int = dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
+    fun deleteBookmark(bookmarkId: Int): Int {
+        val receivedTemplateIds = dbConnector.templateDB.getTemplateIdsByBookmarkId(bookmarkId)
+        return if (receivedTemplateIds.isEmpty()) {
+            dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
+        } else {
+            throw ResourceStillInUseException(
+                "Bookmark wird noch von folgenden Template-Ids verwendet: " + receivedTemplateIds.joinToString(separator = ",")
+            )
+        }
+    }
+
     fun updateBookmark(bookmarkId: Int, bookmark: Bookmark): Int =
-        dbConnector.bookmarkDB.updateBookmarksById(bookmarkId, bookmark)
+        dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
 
     fun getBookmarkById(bookmarkId: Int): Bookmark? =
         dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
+
+    fun getBookmarkList(
+        limit: Int,
+        offset: Int,
+    ): List<Bookmark> =
+        dbConnector.bookmarkDB.getBookmarkList(limit, offset)
+
+    /**
+     * Template list.
+     */
+    fun insertTemplate(template: Template): TemplateRightIdCreated =
+        dbConnector.templateDB.insertTemplate(template)
+
+    fun deleteTemplate(templateId: Int): Int = dbConnector.templateDB.deleteTemplateById(templateId)
+
+    fun updateTemplate(templateId: Int, template: Template): Int =
+        dbConnector.templateDB.updateTemplateById(templateId, template)
+
+    fun getTemplateById(templateId: Int): Template? =
+        dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+
+    fun getTemplateList(
+        limit: Int,
+        offset: Int,
+    ): List<Template> =
+        dbConnector.templateDB.getTemplateList(limit, offset)
+
+    /**
+     * Template-Bookmark Pair.
+     */
+    fun getBookmarksByTemplateId(
+        templateId: Int,
+    ): List<Bookmark> {
+        val bookmarkIds = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+    }
+
+    fun deleteBookmarkTemplatePair(
+        templateId: Int,
+        bookmarkId: Int,
+    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
+
+    fun insertBookmarkTemplatePair(
+        bookmarkId: Int,
+        templateId: Int,
+    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(
+        BookmarkTemplate(
+            bookmarkId = bookmarkId,
+            templateId = templateId
+        )
+    )
+
+    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
+        dbConnector.templateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
+
+    fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+        bookmarkTemplates.sumOf {
+            dbConnector.templateDB.deleteTemplateBookmarkPair(it)
+        }
+
+    fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
+        dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
     companion object {
         /**
@@ -375,7 +455,6 @@ class LoriServerBackend(
             return expiresAt == null || expiresAt < 0
         }
 
-        // TODO: Move these functions to QueryParameterParser
         fun parseInvalidSearchKeys(s: String): List<String> =
             tokenizeSearchInput(s).mapNotNull {
                 val keyname = it.substringBefore(":")

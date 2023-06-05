@@ -12,16 +12,19 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
+import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemRest
@@ -30,6 +33,7 @@ import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
+import de.zbw.lori.model.TemplateRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
@@ -46,7 +50,7 @@ import java.time.format.DateTimeFormatter
 fun ItemRest.toBusiness() =
     Item(
         metadata = metadata.toBusiness(),
-        rights = rights?.map { it.toBusiness() } ?: emptyList(),
+        rights = rights.map { it.toBusiness() },
     )
 
 fun Item.toRest() =
@@ -327,7 +331,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         searchKeys = this.searchTerm?.let { LoriServerBackend.parseValidSearchKeys(it) },
         publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPublicationType),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
         temporalValidityFilter = QueryParameterParser.parseTemporalValidity(this.filterTemporalValidity),
@@ -392,6 +396,34 @@ fun Bookmark.toRest(): BookmarkRest =
         filterPaketSigel = this.paketSigelFilter?.paketSigels,
         filterZDBId = this.zdbIdFilter?.zdbIds,
         filterNoRightInformation = this.noRightInformationFilter?.let { true } ?: false
+    )
+
+fun TemplateRest.toBusiness(): Template =
+    Template(
+        templateName = this.templateName,
+        templateId = this.templateId,
+        description = this.description,
+        right = this.right.toBusiness(),
+    )
+
+fun Template.toRest(): TemplateRest =
+    TemplateRest(
+        templateName = this.templateName,
+        templateId = this.templateId,
+        description = this.description,
+        right = this.right.toRest(),
+    )
+
+fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
+    BookmarkTemplate(
+        bookmarkId = this.bookmarkId,
+        templateId = this.templateId,
+    )
+
+fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
+    BookmarkTemplateRest(
+        bookmarkId = this.bookmarkId,
+        templateId = this.templateId,
     )
 
 /**

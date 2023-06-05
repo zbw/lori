@@ -1,6 +1,7 @@
 import { ErrorRest } from "@/generated-sources/openapi";
 
-const unexpectedError = "Ein unerwarteter Fehler ist aufgetreten. Die Fehlernachricht vom Backend kann nicht gelesen werden."
+const unexpectedError =
+  "Ein unerwarteter Fehler ist aufgetreten. Die Fehlernachricht vom Backend kann nicht gelesen werden.";
 export default {
   createErrorMsg(error: ErrorRest): string {
     return (

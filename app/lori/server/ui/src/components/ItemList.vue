@@ -1,6 +1,5 @@
 <script lang="ts">
 import {
-  AccessStateRest,
   AccessStateWithCountRest,
   ItemInformation,
   ItemRest,
@@ -21,9 +20,13 @@ import { useDialogsStore } from "@/stores/dialogs";
 import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import BookmarkSave from "@/components/BookmarkSave.vue";
+import TemplateOverview from "@/components/TemplateOverview.vue";
+import BookmarkOverview from "@/components/BookmarkOverview.vue";
 
 export default defineComponent({
   components: {
+    BookmarkOverview,
+    TemplateOverview,
     BookmarkSave,
     GroupOverview,
     RightsView,
@@ -425,8 +428,15 @@ export default defineComponent({
      */
     const dialogStore = useDialogsStore();
 
+    const closeBookmarkOverviewDialog = () => {
+      dialogStore.bookmarkOverviewActivated = false;
+    };
     const closeGroupDialog = () => {
       dialogStore.groupOverviewActivated = false;
+    };
+
+    const closeTemplateDialog = () => {
+      dialogStore.templateOverviewActivated = false;
     };
 
     const closeBookmarkSaveDialog = () => {
@@ -467,8 +477,10 @@ export default defineComponent({
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
+      closeBookmarkOverviewDialog,
       closeBookmarkSaveDialog,
       closeGroupDialog,
+      closeTemplateDialog,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -489,22 +501,38 @@ export default defineComponent({
 <template>
   <v-container>
     <v-dialog
-      max-width="1000px"
       v-model="dialogStore.groupOverviewActivated"
-      v-on:close="closeGroupDialog"
       :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeGroupDialog"
     >
       <GroupOverview></GroupOverview>
     </v-dialog>
     <v-dialog
-      max-width="1000px"
       v-model="dialogStore.bookmarkSaveActivated"
-      v-on:close="closeBookmarkSaveDialog"
       :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeBookmarkSaveDialog"
     >
       <BookmarkSave
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
+    </v-dialog>
+    <v-dialog
+      v-model="dialogStore.templateOverviewActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeTemplateDialog"
+    >
+      <TemplateOverview></TemplateOverview>
+    </v-dialog>
+    <v-dialog
+      v-model="dialogStore.bookmarkOverviewActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeBookmarkOverviewDialog"
+    >
+      <BookmarkOverview></BookmarkOverview>
     </v-dialog>
     <v-row>
       <v-col cols="2">
@@ -516,19 +544,19 @@ export default defineComponent({
             <v-text-field
               v-model="searchTerm"
               append-icon="mdi-magnify"
-              label="Suche"
               clearable
-              single-line
-              @click:append="startSearch"
-              @keydown.enter.prevent="startSearch"
-              outlined
-              persistent-hint
               hint="Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:
               com(Community),
               col(Collection),
               sig(Paket-Sigel),
               tit(Titel),
               zdb(ZDB-Id)"
+              label="Suche"
+              outlined
+              persistent-hint
+              single-line
+              @click:append="startSearch"
+              @keydown.enter.prevent="startSearch"
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
@@ -575,17 +603,17 @@ export default defineComponent({
 
           <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }}</v-col>
           <v-data-table
-            disable-pagination
-            :hide-default-footer="true"
+            v-model="selectedItems"
             :headers="selectedHeaders"
+            :hide-default-footer="true"
             :items="items.map((value) => value.metadata)"
-            @click:row="addActiveItem"
-            @dblclick:row="setActiveItem"
+            dblclick:row="setActiveItem"
+            disable-pagination
+            item-key="metadataId"
             loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
             show-select
-            item-key="metadataId"
-            v-model="selectedItems"
+            @click:row="addActiveItem"
           >
             <template v-slot:item.handle="{ item }">
               <td>
@@ -612,10 +640,10 @@ export default defineComponent({
               <v-col cols="10" sm="9">
                 <v-pagination
                   v-model="currentPage"
-                  total-visible="7"
                   :length="totalPages"
                   next-icon="mdi-menu-right"
                   prev-icon="mdi-menu-left"
+                  total-visible="7"
                   @input="handlePageChange"
                 ></v-pagination>
               </v-col>
@@ -630,9 +658,9 @@ export default defineComponent({
       <v-col cols="4">
         <v-card v-if="currentItem.metadata" class="mx-auto" tile>
           <RightsView
-            :rights="currentItem.rights"
-            :metadataId="currentItem.metadata.metadataId"
             :handle="currentItem.metadata.handle"
+            :metadataId="currentItem.metadata.metadataId"
+            :rights="currentItem.rights"
           ></RightsView>
           <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"

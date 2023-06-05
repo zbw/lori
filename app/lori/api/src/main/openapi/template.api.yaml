@@ -1,15 +1,15 @@
-bookmark:
+template:
   post:
     tags:
-      - bookmark
-    summary: Save a bookmark representing a search query.
-    operationId: addBookmark
+      - template
+    summary: Save a template representing a generic right information
+    operationId: addTemplate
     requestBody:
-      description: Bookmark representation
+      description: Template representation
       content:
         application/json:
           schema:
-            $ref: 'bookmark.model.yaml#/BookmarkRest'
+            $ref: 'template.model.yaml#/TemplateRest'
       required: true
     responses:
       201:
@@ -17,7 +17,7 @@ bookmark:
         content:
           application/json:
             schema:
-              $ref: 'bookmark.model.yaml#/BookmarkIdCreated'
+              $ref: 'template.model.yaml#/TemplateIdCreated'
       400:
         description: Bad request
         content:
@@ -39,15 +39,15 @@ bookmark:
     x-codegen-request-body-name: body
   put:
     tags:
-      - bookmark
-    summary: Update an existing Bookmark
-    operationId: updateBookmark
+      - template
+    summary: Update an existing Template
+    operationId: updateTemplate
     requestBody:
-      description: Bookmark object
+      description: Template object
       content:
         application/json:
           schema:
-            $ref: 'bookmark.model.yaml#/BookmarkRest'
+            $ref: 'template.model.yaml#/TemplateRest'
       required: true
     responses:
       204:
@@ -73,16 +73,16 @@ bookmark:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
-bookmark-id:
+template-id:
   get:
     tags:
-      - bookmark
-    summary: Receive the bookmark for a given id
-    operationId: getBookmarkById
+      - template
+    summary: Receive the template for a given id
+    operationId: getTemplateById
     parameters:
       - name: id
         in: path
-        description: Bookmark Id
+        description: Template Id
         required: true
         schema:
           type: string
@@ -92,9 +92,7 @@ bookmark-id:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'bookmark.model.yaml#/BookmarkRest'
+              $ref: 'template.model.yaml#/TemplateRest'
       404:
         description: Id does not exist
         content:
@@ -109,19 +107,19 @@ bookmark-id:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
   delete:
     tags:
-      - bookmark
-    summary: Delete a bookmark
-    operationId: deleteBookmarkById
+      - template
+    summary: Delete a template
+    operationId: deleteTemplateById
     parameters:
       - name: id
         in: path
-        description: Bookmark id to delete
+        description: Template id to delete
         required: true
         schema:
           type: integer
     responses:
       200:
-        description: Deletion of the bookmark was successful
+        description: Deletion of the template was successful
         content:
       404:
         description: Id does not exist
@@ -142,87 +140,12 @@ bookmark-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
-bookmarkraw:
-  post:
-    tags:
-      - bookmarkRaw
-    summary: Save a bookmark representing a search query.
-    operationId: addBookmarkRaw
-    requestBody:
-      description: Bookmark information have the same representation as in query parameters.
-      content:
-        application/json:
-          schema:
-            $ref: 'bookmark.model.yaml#/BookmarkRawRest'
-      required: true
-    responses:
-      201:
-        description: Successfully created
-        content:
-          application/json:
-            schema:
-              $ref: 'bookmark.model.yaml#/BookmarkIdCreated'
-      400:
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      409:
-        description: Conflict resource exists already
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-    x-codegen-request-body-name: body
-  put:
-    tags:
-      - bookmarkRaw
-    summary: Update an existing Bookmark
-    operationId: updateBookmarkRaw
-    requestBody:
-      description: Bookmark information have the same representation as in query parameters.
-      content:
-        application/json:
-          schema:
-            $ref: 'bookmark.model.yaml#/BookmarkRawRest'
-      required: true
-    responses:
-      204:
-        description: Successfully updated
-        content:
-      400:
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      404:
-        description: Not found
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-    x-codegen-request-body-name: body
-
-bookmark-list:
+template-list:
   get:
     tags:
-      - bookmark
-    summary: Get list of existing bookmarks
-    operationId: getBookmarkList
+      - template
+    summary: Get list of existing templates
+    operationId: getTemplateList
     parameters:
       - name: offset
         in: query
@@ -234,7 +157,7 @@ bookmark-list:
           default: 0
       - name: limit
         in: query
-        description: "The number of bookmarks to return."
+        description: "The number of templates to return."
         schema:
           type: integer
           minimum: 1
@@ -249,13 +172,88 @@ bookmark-list:
             schema:
               type: array
               items:
-                $ref: 'bookmark.model.yaml#/BookmarkRest'
+                $ref: 'template.model.yaml#/TemplateRest'
       400:
         description: Bad request
         content:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+template-bookmarks:
+  post:
+    tags:
+      - template
+    summary: For a given Template-Id connect all given Bookmark-Ids to it
+    operationId: addBookmarksByTemplateId
+    parameters:
+      - name: id
+        in: path
+        description: Template Id
+        required: true
+        schema:
+          type: integer
+      - name: deleteOld
+        in: query
+        description: "Delete all old connections first"
+        schema:
+          type: boolean
+    requestBody:
+      description: Template representation
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/BookmarkIdsRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+  get:
+    tags:
+      - template
+    summary: Receive all bookmarks that are connected to the given template id
+    operationId: getBookmarksByTemplateId
+    parameters:
+      - name: id
+        in: path
+        description: Template Id
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'bookmark.model.yaml#/BookmarkRest'
       500:
         description: Internal error
         content:

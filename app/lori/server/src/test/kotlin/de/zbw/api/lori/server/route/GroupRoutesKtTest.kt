@@ -397,7 +397,6 @@ class GroupRoutesKtTest {
         // given
         val limit = 0
         val offset = 0
-        listOf(TEST_GROUP.toRest())
         val backend = mockk<LoriServerBackend>(relaxed = true) { }
         val servicePool = getServicePool(backend)
         // when + then
@@ -415,7 +414,6 @@ class GroupRoutesKtTest {
         // given
         val limit = 5
         val offset = 0
-        listOf(TEST_GROUP.toRest())
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { getGroupList(limit, offset) } throws SQLException()
         }

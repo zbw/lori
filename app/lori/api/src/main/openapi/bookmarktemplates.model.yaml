@@ -1,0 +1,18 @@
+BookmarkTemplateRest:
+  required:
+    - bookmarkId
+    - templateId
+  type: object
+  properties:
+    bookmarkId:
+      type: integer
+    templateId:
+      type: integer
+
+BookmarkTemplateBatchRest:
+  type: object
+  properties:
+    batch:
+      type: array
+      items:
+        $ref: 'bookmarktemplates.model.yaml#/BookmarkTemplateRest'

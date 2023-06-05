@@ -20,6 +20,7 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
+    // TODO: index in template has type string|number but expected is number'
     const renderKey = ref(0);
     const tab = ref(null);
     const lastDeletedRight = ref("");
@@ -89,7 +90,7 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
-    <v-toolbar color="cyan" dark flat :key="renderKey">
+    <v-toolbar :key="renderKey" color="cyan" dark flat>
       <v-toolbar-title> Editiere Rechte für {{ metadataId }} </v-toolbar-title>
       <v-spacer></v-spacer>
       <template v-slot:extension>
@@ -105,21 +106,21 @@ export default defineComponent({
 
     <v-tabs-items v-model="tab">
       <v-alert
-        @close="resetLastUpdateSuccessful"
         v-model="lastUpdateSuccessful"
         dismissible
         text
         type="success"
+        @close="resetLastUpdateSuccessful"
       >
         Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item
         {{ metadataId }}.
       </v-alert>
       <v-alert
-        @close="resetLastDeletionSuccessful"
         v-model="lastDeletionSuccessful"
         dismissible
         text
         type="success"
+        @close="resetLastDeletionSuccessful"
       >
         Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
         {{ metadataId }}.
@@ -127,12 +128,12 @@ export default defineComponent({
       <v-tab-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
           :activated="true"
-          :right="item"
           :index="index"
           :isNew="false"
           :metadataId="metadataId"
+          :right="item"
           v-on:deleteSuccessful="deleteSuccessful"
-          v-on:editDialogClosed="tabDialogClosed"
+          v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"
         ></RightsEditDialog>
       </v-tab-item>

@@ -1,6 +1,7 @@
 BookmarkRawRest:
   required:
     - bookmarkName
+    - bookmarkId
   type: object
   properties:
     bookmarkId:
@@ -45,6 +46,7 @@ BookmarkIdCreated:
 BookmarkRest:
   required:
     - bookmarkName
+    - bookmarkId
   type: object
   properties:
     bookmarkId:
