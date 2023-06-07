@@ -1,5 +1,5 @@
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:latest"
+  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:cloudgitlab"
 
 default:
   image: openjdk:17.0.1-slim
@@ -37,18 +37,18 @@ pushImages:
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - app/lori/**/*
   dependencies:
     - test
-  only:
-    - main
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - export GITLAB_API_ACCESS_TOKEN="$(vault kv get --field=token secret/gitlab-cloud/api_access_gitlabcloud)"
-    - ./scripts/pushServiceImages.sh
-    - ./scripts/pushJobImages.sh
+    - ./gradlew :app:lori:server:jib
     - rm -rf ~/.docker/config.json
 
 after_script:
