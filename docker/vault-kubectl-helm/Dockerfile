@@ -49,8 +49,7 @@ ARG HELMFILE_VERSION=0.151.0
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz && \
     chmod +x helmfile && \
-    mv helmfile /usr/local/bin/helmfile && rm -rf helmfile && \
-    helm plugin install https://github.com/databus23/helm-diff
+    mv helmfile /usr/local/bin/helmfile && rm -rf helmfile
 
 FROM DownloadHelm AS AddUser
 ARG IMAGE_USER=vault-kubectl-helm-user
@@ -58,6 +57,10 @@ RUN addgroup -S $IMAGE_USER && \
     adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER
 USER $IMAGE_USER
 
-FROM AddUser AS AddHelmRepos
+# install helm-diff in user context
+FROM AddUser AS HelmDiff
+RUN helm plugin install https://github.com/databus23/helm-diff
+
+FROM HelmDiff AS AddHelmRepos
 RUN helm repo add prometheus-community https://prometheus-community.github.io/helm-charts  && \
     helm repo add hashicorp https://helm.releases.hashicorp.com
