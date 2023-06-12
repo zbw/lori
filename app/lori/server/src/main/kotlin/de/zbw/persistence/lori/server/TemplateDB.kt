@@ -28,8 +28,6 @@ class TemplateDB(
         // Get Right-Id first
         val rightId: String? = getTemplateTransientById(templateId, span)?.rightId
 
-        // TODO: Remove Foreign-Key from Right Entry
-
         // Delete Template
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BY_ID).apply {
             this.setInt(1, templateId)
@@ -83,7 +81,7 @@ class TemplateDB(
 
     fun insertTemplate(template: Template): TemplateRightIdCreated {
         // First insert a right entry
-        // TODO: Move this one level up to backend
+        // TODO: Refactoring: Move this one level up to backend
         val newRightId: String = template.right.let {
             rightDB.insertRight(it)
         }

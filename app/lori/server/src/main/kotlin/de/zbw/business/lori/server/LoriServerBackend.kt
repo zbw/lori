@@ -511,6 +511,7 @@ class LoriServerBackend(
                 }
             }
 
+        // parseValidSearchKeys . searchKeysToString == id
         fun parseValidSearchKeys(s: String?): Map<SearchKey, List<String>> =
             s?.let { tokenizeSearchInput(it) }?.mapNotNull {
                 val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
@@ -521,7 +522,6 @@ class LoriServerBackend(
                 }
             }?.toMap() ?: emptyMap()
 
-        // TODO: write test that verifies: parseValidSearchKeys . searchKeysToString == id
         fun searchKeysToString(keys: Map<SearchKey, List<String>>): String =
             keys.entries.joinToString(separator = " ") { e ->
                 "${e.key.fromEnum()}:${e.value.joinToString(prefix = "'", postfix = "'", separator = " ")}"
