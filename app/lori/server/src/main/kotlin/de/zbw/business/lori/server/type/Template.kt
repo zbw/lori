@@ -8,7 +8,7 @@ package de.zbw.business.lori.server.type
  */
 data class Template(
     val templateName: String,
-    val templateId: Int?,
-    val description: String?,
+    val templateId: Int? = null,
+    val description: String? = null,
     val right: ItemRight,
 )

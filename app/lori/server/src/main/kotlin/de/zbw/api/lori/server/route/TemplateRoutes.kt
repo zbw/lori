@@ -8,6 +8,8 @@ import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Template
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.TemplateApplicationRest
+import de.zbw.lori.model.TemplateApplicationsRest
 import de.zbw.lori.model.TemplateIdCreated
 import de.zbw.lori.model.TemplateIdsRest
 import de.zbw.lori.model.TemplateRest
@@ -138,9 +140,40 @@ fun Routing.templateRoutes(
                 tracer.spanBuilder("lori.LoriService.POST/api/v1/template/applications").setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
-                val templateIds: List<Int> = call.receive(TemplateIdsRest::class).templateIds?:emptyList()
-                span.setAttribute("templateIds", templateIds.toString())
-                backend.applyTemplates(templateIds)
+                try {
+                    val templateIds: List<Int> =
+                        call.receive(TemplateIdsRest::class).takeIf { it.templateIds != null }?.templateIds
+                            ?: throw BadRequestException("Invalid Json has been provided")
+                    span.setAttribute("templateIds", templateIds.toString())
+                    val appliedMap: Map<Int, List<String>> = backend.applyTemplates(templateIds)
+                    val result = TemplateApplicationsRest(
+                        templateApplication =
+                        appliedMap.entries.map { e ->
+                            TemplateApplicationRest(
+                                templateId = e.key,
+                                metadataIds = e.value,
+                                numberOfAppliedEntries = e.value.size
+                            )
+                        }
+                    )
+                    call.respond(result)
+                } catch (e: BadRequestException) {
+                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError(
+                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                        ),
+                    )
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
+                } finally {
+                    span.end()
+                }
             }
         }
 

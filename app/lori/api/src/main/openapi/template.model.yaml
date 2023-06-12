@@ -39,3 +39,23 @@ TemplateIdsRest:
       type: array
       items:
         type: integer
+
+TemplateApplicationRest:
+  type: object
+  properties:
+    metadataIds:
+      type: array
+      items:
+        type: string
+    numberOfAppliedEntries:
+      type: integer
+    templateId:
+      type: integer
+
+TemplateApplicationsRest:
+  type: object
+  properties:
+    templateApplication:
+      type: array
+      items:
+        $ref: 'template.model.yaml#/TemplateApplicationRest'

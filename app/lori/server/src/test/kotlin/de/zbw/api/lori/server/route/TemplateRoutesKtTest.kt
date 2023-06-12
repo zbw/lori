@@ -10,6 +10,9 @@ import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
+import de.zbw.lori.model.TemplateApplicationRest
+import de.zbw.lori.model.TemplateApplicationsRest
+import de.zbw.lori.model.TemplateIdsRest
 import de.zbw.lori.model.TemplateRest
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.client.request.delete
@@ -360,7 +363,7 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostBookmarksByTemplateIdCreated() {
         val givenTemplateId = 5
-        val givenBookmarkId = TEST_BOOKMARK.bookmarkId!!
+        val givenBookmarkId = TEST_BOOKMARK.bookmarkId
         val givenBookmarkTemplate = BookmarkTemplate(bookmarkId = givenBookmarkId, templateId = givenTemplateId)
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -420,6 +423,93 @@ class TemplateRoutesKtTest {
             val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
             assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
             verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByTemplateId(givenTemplateId) }
+        }
+    }
+
+    @Test
+    fun testPostApplications() {
+        val givenTemplateId = 11
+        val expectedMetadataIds = listOf("metadataId1", "metadataId2")
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to expectedMetadataIds)
+        }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // Test OK Path
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/template/applications") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        TemplateIdsRest(
+                            templateIds = listOf(givenTemplateId)
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
+            val content: String = response.bodyAsText()
+            val receivedJSON: Type = object : TypeToken<TemplateApplicationsRest>() {}.type
+            val received: TemplateApplicationsRest = ItemRoutesKtTest.GSON.fromJson(content, receivedJSON)
+            assertThat(
+                received,
+                `is`(
+                    TemplateApplicationsRest(
+                        templateApplication = listOf(
+                            TemplateApplicationRest(
+                                templateId = givenTemplateId,
+                                metadataIds = expectedMetadataIds,
+                                numberOfAppliedEntries = expectedMetadataIds.size
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        // Test Bad Request Path
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/template/applications") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        TemplateIdsRest(
+                            templateIds = null,
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+
+        // Internal Service Error Path
+        val backend2 = mockk<LoriServerBackend>(relaxed = true) {
+            every { applyTemplates(listOf(givenTemplateId)) } throws SQLException()
+        }
+        val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
+        testApplication {
+            application(
+                servicePool2.application()
+            )
+            val response = client.post("/api/v1/template/applications") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        TemplateIdsRest(
+                            templateIds = listOf(givenTemplateId)
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 

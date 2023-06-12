@@ -276,8 +276,11 @@ template-applications:
       required: true
     responses:
       200:
-        description: Successfully created
-        content: {}
+        description: Applied templates successfully
+        content:
+          application/json:
+            schema:
+              $ref: 'template.model.yaml#/TemplateApplicationsRest'
       500:
         description: Internal error
         content:

@@ -440,19 +440,50 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
-    fun applyTemplates(templateIds: List<Int>) {
-        templateIds.map {
-            applyTemplate(it)
+    fun applyTemplates(templateIds: List<Int>): Map<Int, List<String>> =
+        templateIds.associateWith { templateId ->
+            applyTemplate(templateId)
         }
-    }
 
-    fun applyTemplate(templateId: Int) {
+    internal fun applyTemplate(templateId: Int): List<String> {
+        // Get Right_Id
+        val template = dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+        val rightId = template?.right?.rightId ?: return emptyList()
         // Receive all bookmark ids
         val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
-        // TODO: Get Right_Id
-        // TODO: Get all Bookmark-Searches
-        // TODO: Execute each search
-        // Apply Template to all results
+        // Get search results for each bookmark
+        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+        val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
+            searchQuery(
+                searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
+                limit = 10, //
+                offset = 0,
+                metadataSearchFilter = listOfNotNull(
+                    b.paketSigelFilter,
+                    b.publicationDateFilter,
+                    b.publicationTypeFilter,
+                    b.zdbIdFilter,
+                ),
+                rightSearchFilter = listOfNotNull(
+                    b.accessStateFilter,
+                    b.temporalValidityFilter,
+                    b.validOnFilter,
+                    b.startDateFilter,
+                    b.endDateFilter,
+                    b.formalRuleFilter,
+                ),
+                noRightInformationFilter = b.noRightInformationFilter,
+            ).results
+        }.toSet()
+
+        // Connect Template to all results
+        return searchResults.map { result ->
+            dbConnector.itemDB.insertItem(
+                metadataId = result.metadata.metadataId,
+                rightId = rightId,
+            )
+            result.metadata.metadataId
+        }
     }
 
     companion object {
@@ -490,6 +521,7 @@ class LoriServerBackend(
                 }
             }?.toMap() ?: emptyMap()
 
+        // TODO: write test that verifies: parseValidSearchKeys . searchKeysToString == id
         fun searchKeysToString(keys: Map<SearchKey, List<String>>): String =
             keys.entries.joinToString(separator = " ") { e ->
                 "${e.key.fromEnum()}:${e.value.joinToString(prefix = "'", postfix = "'", separator = " ")}"
