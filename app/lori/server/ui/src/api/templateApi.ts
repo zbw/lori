@@ -3,6 +3,7 @@ import {
   BookmarkTemplateRest,
   Configuration,
   TemplateApi,
+  TemplateApplicationsRest,
   TemplateIdCreated,
   TemplateRest,
 } from "@/generated-sources/openapi";
@@ -15,6 +16,15 @@ const templateApi = new TemplateApi(configuration);
 export default {
   addTemplate(template: TemplateRest): Promise<TemplateIdCreated> {
     return templateApi.addTemplate({ body: template });
+  },
+  applyTemplates(
+    templateIds: Array<number>
+  ): Promise<TemplateApplicationsRest> {
+    return templateApi.applyTemplateIds({
+      body: {
+        templateIds: templateIds,
+      },
+    });
   },
   deleteTemplate(templateId: number): Promise<void> {
     return templateApi.deleteTemplateById({

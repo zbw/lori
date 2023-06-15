@@ -41,6 +41,10 @@ TemplateIdsRest:
         type: integer
 
 TemplateApplicationRest:
+  required:
+    - metadataIds
+    - numberOfAppliedEntries
+    - templateId
   type: object
   properties:
     metadataIds:
@@ -53,6 +57,8 @@ TemplateApplicationRest:
       type: integer
 
 TemplateApplicationsRest:
+  required:
+    - templateApplication
   type: object
   properties:
     templateApplication:
