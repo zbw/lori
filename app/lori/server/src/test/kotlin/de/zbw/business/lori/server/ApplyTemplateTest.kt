@@ -106,6 +106,13 @@ class ApplyTemplateTest : DatabaseTest() {
         // Verify that new right is assigned to metadata id
         val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
         assertTrue(rightIds.contains(templateRightId.rightId))
+
+        // Repeat Apply Operation without duplicate entries errors
+        val received2: List<String> = backend.applyTemplate(templateRightId.templateId)
+        assertThat(
+            received2,
+            `is`(listOf(item1ZDB1.metadataId))
+        )
     }
 
     companion object {

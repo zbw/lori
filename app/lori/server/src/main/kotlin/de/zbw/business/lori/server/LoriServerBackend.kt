@@ -56,7 +56,7 @@ class LoriServerBackend(
         return pkRight
     }
 
-    fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.itemDB.insertItem(metadataId, rightId)
+    fun insertItemEntry(metadataId: String, rightId: String): String? = dbConnector.itemDB.insertItem(metadataId, rightId)
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }

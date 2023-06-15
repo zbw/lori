@@ -97,7 +97,7 @@ export default defineComponent({
         .then((r: TemplateApplicationsRest) => {
           alertSuccessful.value = true;
           alertSuccessfulMsg.value =
-            "Template wurde für " +
+            "Template '" + template.templateName + "' wurde für " +
             r.templateApplication[0].numberOfAppliedEntries +
             " Einträge angewandt.";
         })
