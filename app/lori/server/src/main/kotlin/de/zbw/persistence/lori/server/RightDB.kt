@@ -137,6 +137,9 @@ class RightDB(
             this.setIfNotNull(21, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(22, right.templateId) { value, idx, prepStmt ->
+                prepStmt.setInt(idx, value)
+            }
         }
     }
 
@@ -203,6 +206,9 @@ class RightDB(
             this.setIfNotNull(20, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(21, right.templateId) { value, idx, prepStmt ->
+                prepStmt.setInt(idx, value)
+            }
         }
     }
 
@@ -266,6 +272,7 @@ class RightDB(
                     basisAccessState = rs.getString(19)?.let { BasisAccessState.valueOf(it) },
                     notesProcessDocumentation = rs.getString(20),
                     notesManagementRelated = rs.getString(21),
+                    templateId = rs.getInt(22).takeIf { it != 0 },
                     groupIds = groupDB.getGroupsByRightId(currentRightId),
                 )
             } else null
@@ -312,9 +319,10 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-                "basis_access_state, notes_process_documentation, notes_management_related " +
-                "FROM $TABLE_NAME_ITEM_RIGHT " +
-                "WHERE $COLUMN_RIGHT_ID = ANY(?)"
+                "basis_access_state, notes_process_documentation, notes_management_related," +
+                "template_id" +
+                " FROM $TABLE_NAME_ITEM_RIGHT " +
+                " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
             " FROM $TABLE_NAME_ITEM" +
@@ -330,14 +338,16 @@ class RightDB(
             "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
             "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
             "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-            "basis_access_state, notes_process_documentation, notes_management_related) " +
+            "basis_access_state, notes_process_documentation, notes_management_related," +
+            "template_id) " +
             "VALUES(?,?," +
             "?,?,?," +
             "?,?,?," +
             "?,?,?," +
             "?,?,?," +
             "?,?,?," +
-            "?,?,?)"
+            "?,?,?," +
+            "?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -347,14 +357,16 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-                "basis_access_state, notes_process_documentation, notes_management_related) " +
+                "basis_access_state, notes_process_documentation, notes_management_related," +
+                "template_id) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?,?)" +
+                "?,?,?," +
+                "?)" +
                 " ON CONFLICT ($COLUMN_RIGHT_ID) " +
                 "DO UPDATE SET " +
                 "last_updated_on = EXCLUDED.last_updated_on," +
@@ -373,7 +385,8 @@ class RightDB(
                 "basis_storage = EXCLUDED.basis_storage," +
                 "basis_access_state = EXCLUDED.basis_access_state," +
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
-                "notes_management_related = EXCLUDED.notes_management_related;"
+                "notes_management_related = EXCLUDED.notes_management_related," +
+                "template_id = EXCLUDED.template_id;"
 
         const val STATEMENT_DELETE_RIGHTS = "DELETE " +
             "FROM $TABLE_NAME_ITEM_RIGHT r " +

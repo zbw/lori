@@ -161,6 +161,7 @@ fun RightRest.toBusiness(): ItemRight =
         openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
+        templateId = templateId,
         zbwUserAgreement = zbwUserAgreement,
     )
 
@@ -187,6 +188,7 @@ fun ItemRight.toRest(): RightRest =
         openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
+        templateId = templateId,
         zbwUserAgreement = zbwUserAgreement,
     )
 

@@ -260,3 +260,31 @@ template-bookmarks:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+template-applications:
+  post:
+    tags:
+      - template
+    summary: Apply templates to all their bookmark results.
+    operationId: applyTemplateIds
+    requestBody:
+      description: Template-Ids
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/TemplateIdsRest'
+      required: true
+    responses:
+      200:
+        description: Applied templates successfully
+        content:
+          application/json:
+            schema:
+              $ref: 'template.model.yaml#/TemplateApplicationsRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

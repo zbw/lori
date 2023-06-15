@@ -31,3 +31,37 @@ BookmarkIdsRest:
       type: array
       items:
         type: integer
+
+TemplateIdsRest:
+  type: object
+  properties:
+    templateIds:
+      type: array
+      items:
+        type: integer
+
+TemplateApplicationRest:
+  required:
+    - metadataIds
+    - numberOfAppliedEntries
+    - templateId
+  type: object
+  properties:
+    metadataIds:
+      type: array
+      items:
+        type: string
+    numberOfAppliedEntries:
+      type: integer
+    templateId:
+      type: integer
+
+TemplateApplicationsRest:
+  required:
+    - templateApplication
+  type: object
+  properties:
+    templateApplication:
+      type: array
+      items:
+        $ref: 'template.model.yaml#/TemplateApplicationRest'

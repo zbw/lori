@@ -2,7 +2,10 @@
 import { defineComponent, onMounted, Ref, ref } from "vue";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
-import { TemplateRest } from "@/generated-sources/openapi";
+import {
+  TemplateApplicationsRest,
+  TemplateRest,
+} from "@/generated-sources/openapi";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
@@ -34,6 +37,7 @@ export default defineComponent({
         value: "applyTemplate",
         sortable: true,
       },
+      { text: "Actions", value: "actions", sortable: false },
     ];
     const templateItems: Ref<Array<TemplateRest>> = ref([]);
 
@@ -64,9 +68,7 @@ export default defineComponent({
     };
 
     const activateTemplateEditDialog = () => {
-      alertSuccessfulAdd.value = false;
-      alertSuccessfulUpdate.value = false;
-      alertSuccessfulDeletion.value = false;
+      alertSuccessful.value = false;
       dialogStore.templateEditActivated = true;
     };
     const createNewTemplate = () => {
@@ -79,19 +81,39 @@ export default defineComponent({
       dialogStore.templateEditActivated = false;
     };
 
-    const editTemplate = (template: TemplateRest, row: any) => {
+    const editTemplate = (template: TemplateRest) => {
       isNew.value = false;
       reinitCounter.value = reinitCounter.value + 1;
       currentTemplate.value = template;
       activateTemplateEditDialog();
     };
 
+    const applyTemplate = (template: TemplateRest) => {
+      if (template.templateId == undefined) {
+        return;
+      }
+      templateApi
+        .applyTemplates([template.templateId])
+        .then((r: TemplateApplicationsRest) => {
+          alertSuccessful.value = true;
+          alertSuccessfulMsg.value =
+            "Template '" + template.templateName + "' wurde für " +
+            r.templateApplication[0].numberOfAppliedEntries +
+            " Einträge angewandt.";
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            templateLoadErrorMsg.value = errMsg;
+            templateLoadError.value = true;
+          });
+        });
+    };
+
     /**
      * Alerts:
      */
-    const alertSuccessfulAdd = ref(false);
-    const alertSuccessfulDeletion = ref(false);
-    const alertSuccessfulUpdate = ref(false);
+    const alertSuccessful = ref(false);
+    const alertSuccessfulMsg = ref("");
 
     /**
      * Child events:
@@ -99,19 +121,27 @@ export default defineComponent({
     const lastModifiedTemplateName = ref("");
     const childTemplateAdded = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
-      alertSuccessfulAdd.value = true;
+      alertSuccessful.value = true;
+      alertSuccessfulMsg.value =
+        "Template " +
+        lastModifiedTemplateName.value +
+        " erfolgreich hinzugefügt.";
       updateTemplateOverview();
     };
 
     const childTemplateDeleted = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
-      alertSuccessfulDeletion.value = true;
+      alertSuccessful.value = true;
+      alertSuccessfulMsg.value =
+        "Template " + lastModifiedTemplateName.value + " erfolgreich gelöscht.";
       updateTemplateOverview();
     };
 
     const childTemplateUpdated = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
-      alertSuccessfulUpdate.value = true;
+      alertSuccessful.value = true;
+      alertSuccessfulMsg.value =
+        "Template " + lastModifiedTemplateName.value + " erfolgreich editiert.";
       updateTemplateOverview();
     };
 
@@ -123,9 +153,8 @@ export default defineComponent({
     onMounted(() => getTemplateList());
 
     return {
-      alertSuccessfulAdd,
-      alertSuccessfulDeletion,
-      alertSuccessfulUpdate,
+      alertSuccessful,
+      alertSuccessfulMsg,
       currentTemplate,
       dialogStore,
       headers,
@@ -136,6 +165,7 @@ export default defineComponent({
       templateLoadError,
       templateLoadErrorMsg,
       templateItems,
+      applyTemplate,
       childTemplateAdded,
       childTemplateDeleted,
       childTemplateUpdated,
@@ -153,22 +183,11 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessfulAdd" dismissible text type="success">
-        Template {{ lastModifiedTemplateName }} erfolgreich hinzugefügt.
-      </v-alert>
-      <v-alert
-        v-model="alertSuccessfulDeletion"
-        dismissible
-        text
-        type="success"
-      >
-        Template {{ lastModifiedTemplateName }} erfolgreich gelöscht.
+      <v-alert v-model="alertSuccessful" dismissible text type="success">
+        {{ alertSuccessfulMsg }}
       </v-alert>
       <v-alert v-model="templateLoadError" dismissible text type="error">
         {{ templateLoadErrorMsg }}
-      </v-alert>
-      <v-alert v-model="alertSuccessfulUpdate" dismissible text type="success">
-        Template {{ lastModifiedTemplateName }} erfolgreich geupdated.
       </v-alert>
       <v-card-title>Template Übersicht</v-card-title>
       <v-card-actions>
@@ -183,7 +202,6 @@ export default defineComponent({
         :items="templateItems"
         item-key="templateName"
         loading-text="Daten werden geladen... Bitte warten."
-        @click:row="editTemplate"
       >
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn color="blue darken-1" text
@@ -191,7 +209,12 @@ export default defineComponent({
           </v-btn>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
-          <v-btn color="blue darken-1" text>Template anwenden</v-btn>
+          <v-btn color="blue darken-1" text @click="applyTemplate(item)"
+            >Template anwenden</v-btn
+          >
+        </template>
+        <template v-slot:item.actions="{ item }">
+          <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
         </template>
       </v-data-table>
       <v-dialog

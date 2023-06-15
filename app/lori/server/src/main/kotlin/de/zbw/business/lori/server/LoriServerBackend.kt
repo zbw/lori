@@ -56,7 +56,7 @@ class LoriServerBackend(
         return pkRight
     }
 
-    fun insertItemEntry(metadataId: String, rightId: String) = dbConnector.itemDB.insertItem(metadataId, rightId)
+    fun insertItemEntry(metadataId: String, rightId: String): String? = dbConnector.itemDB.insertItem(metadataId, rightId)
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
@@ -440,6 +440,52 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
+    fun applyTemplates(templateIds: List<Int>): Map<Int, List<String>> =
+        templateIds.associateWith { templateId ->
+            applyTemplate(templateId)
+        }
+
+    internal fun applyTemplate(templateId: Int): List<String> {
+        // Get Right_Id
+        val template = dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+        val rightId = template?.right?.rightId ?: return emptyList()
+        // Receive all bookmark ids
+        val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        // Get search results for each bookmark
+        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+        val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
+            searchQuery(
+                searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
+                limit = 10, //
+                offset = 0,
+                metadataSearchFilter = listOfNotNull(
+                    b.paketSigelFilter,
+                    b.publicationDateFilter,
+                    b.publicationTypeFilter,
+                    b.zdbIdFilter,
+                ),
+                rightSearchFilter = listOfNotNull(
+                    b.accessStateFilter,
+                    b.temporalValidityFilter,
+                    b.validOnFilter,
+                    b.startDateFilter,
+                    b.endDateFilter,
+                    b.formalRuleFilter,
+                ),
+                noRightInformationFilter = b.noRightInformationFilter,
+            ).results
+        }.toSet()
+
+        // Connect Template to all results
+        return searchResults.map { result ->
+            dbConnector.itemDB.insertItem(
+                metadataId = result.metadata.metadataId,
+                rightId = rightId,
+            )
+            result.metadata.metadataId
+        }
+    }
+
     companion object {
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.
@@ -465,6 +511,7 @@ class LoriServerBackend(
                 }
             }
 
+        // parseValidSearchKeys . searchKeysToString == id
         fun parseValidSearchKeys(s: String?): Map<SearchKey, List<String>> =
             s?.let { tokenizeSearchInput(it) }?.mapNotNull {
                 val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))

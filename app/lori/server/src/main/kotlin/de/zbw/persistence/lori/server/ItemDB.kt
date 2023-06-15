@@ -51,7 +51,7 @@ class ItemDB(
         return rs.getBoolean(1)
     }
 
-    fun insertItem(metadataId: String, rightId: String): String {
+    fun insertItem(metadataId: String, rightId: String): String? {
         val prepStmt = connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, metadataId)
             this.setString(2, rightId)
@@ -61,11 +61,11 @@ class ItemDB(
         try {
             span.makeCurrent()
             val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            return if (affectedRows > 0) {
+            return affectedRows.takeIf { it > 0 }?.let {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 rs.getString(1)
-            } else throw IllegalStateException("No row has been inserted.")
+            }
         } finally {
             span.end()
         }
@@ -135,13 +135,16 @@ class ItemDB(
     }
 
     companion object {
+        const val CONSTRAINT_ITEM_PKEY = "item_pkey"
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
             "WHERE right_id = ?;"
 
         const val STATEMENT_INSERT_ITEM = "INSERT INTO $TABLE_NAME_ITEM" +
-            "(metadata_id, right_id) " +
-            "VALUES(?,?)"
+            "(metadata_id, right_id)" +
+            " VALUES(?,?)" +
+            " ON CONFLICT ON CONSTRAINT $CONSTRAINT_ITEM_PKEY" +
+            " DO NOTHING;"
 
         const val STATEMENT_DELETE_ITEM = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +

@@ -325,7 +325,7 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpTemplate.value)
         .then((r: TemplateIdCreated) => {
-          updateBookmarks(() => {
+          updateBookmarks(r.templateId, () => {
             emit("addTemplateSuccessful", formState.formTemplateName);
             close();
           });
@@ -347,7 +347,7 @@ export default defineComponent({
         .updateTemplate(tmpTemplate.value)
         .then(() => {
           // TODO: refactor this with callbacks
-          updateBookmarks(() => {
+          updateBookmarks(tmpTemplateId.value, () => {
             emit("updateTemplateSuccessful", formState.formTemplateName);
             close();
           });
@@ -363,10 +363,10 @@ export default defineComponent({
     /**
      * Delete and Create Bookmarks compared to last save:
      */
-    const updateBookmarks = (callback: () => void) => {
+    const updateBookmarks = (templateId: number, callback: () => void) => {
       templateApi
         .addBookmarksByTemplateId(
-          computedTemplateId.value,
+          templateId,
           bookmarkItems.value
             .map((elem) => elem.bookmarkId)
             .filter((elem): elem is number => !!elem),

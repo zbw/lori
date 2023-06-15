@@ -98,6 +98,7 @@ data class ItemRight(
     val openContentLicence: String?,
     val restrictedOpenContentLicence: Boolean?,
     val startDate: LocalDate,
+    val templateId: Int?,
     val zbwUserAgreement: Boolean?,
 )
 

@@ -372,6 +372,23 @@ class LoriServerBackendTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testSearchKeyConversion() {
+        val given = mapOf(
+            SearchKey.TITLE to listOf("foobar", "baz"),
+            SearchKey.COLLECTION to listOf("col1"),
+            SearchKey.COMMUNITY to listOf("com1"),
+            SearchKey.ZDB_ID to listOf("zdb1"),
+        )
+
+        assertThat(
+            LoriServerBackend.parseValidSearchKeys(
+                LoriServerBackend.searchKeysToString(given)
+            ),
+            `is`(given)
+        )
+    }
+
     companion object {
         const val DATA_FOR_INVALID_SEARCH_KEY_PARSING = "DATA_FOR_INVALID_SEARCH_KEY_PARSING"
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
@@ -437,6 +454,7 @@ class LoriServerBackendTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
+            templateId = null,
             zbwUserAgreement = true,
         )
     }

@@ -81,6 +81,7 @@ class TemplateDB(
 
     fun insertTemplate(template: Template): TemplateRightIdCreated {
         // First insert a right entry
+        // TODO: Refactoring: Move this one level up to backend
         val newRightId: String = template.right.let {
             rightDB.insertRight(it)
         }
@@ -101,6 +102,7 @@ class TemplateDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 val newTemplateId = rs.getInt(1)
+                rightDB.upsertRight(template.right.copy(rightId = newRightId, templateId = newTemplateId))
                 TemplateRightIdCreated(templateId = newTemplateId, rightId = newRightId)
             } else throw IllegalStateException("No row has been inserted.")
         } finally {

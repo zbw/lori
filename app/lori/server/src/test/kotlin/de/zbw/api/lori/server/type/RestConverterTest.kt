@@ -445,6 +445,7 @@ class RestConverterTest {
             notesManagementRelated = "Some management related notes",
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
+            templateId = null,
             zbwUserAgreement = true,
         )
 
