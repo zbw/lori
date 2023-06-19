@@ -113,12 +113,53 @@ class ApplyTemplateTest : DatabaseTest() {
             received2,
             `is`(listOf(item1ZDB1.metadataId))
         )
+
+        // Add two new items to database matching bookmark
+        backend.insertMetadataElements(
+            listOf(
+                item2ZDB1,
+                item3ZDB1
+            )
+        )
+        // Update old item from database so it no longer matches for bookmark
+        backend.upsertMetaData(listOf(item1ZDB1.copy(zdbId = "foobar")))
+
+        // Apply Template
+        val received3: List<String> = backend.applyTemplate(templateRightId.templateId)
+        assertThat(
+            received3,
+            `is`(
+                listOf(
+                    item2ZDB1.metadataId,
+                    item3ZDB1.metadataId,
+                )
+            )
+        )
+        // Verify that only the new items are connected to template
+        assertThat(
+            backend.dbConnector.itemDB.countItemByRightId(templateRightId.rightId),
+            `is`(2),
+        )
     }
 
     companion object {
         const val ZDB_1 = "zdb1"
         val item1ZDB1 = TEST_Metadata.copy(
             metadataId = "zdb1",
+            collectionName = "common zdb",
+            zdbId = ZDB_1,
+            publicationDate = LocalDate.of(2010, 1, 1),
+            publicationType = PublicationType.BOOK,
+        )
+        val item2ZDB1 = TEST_Metadata.copy(
+            metadataId = "zdb2",
+            collectionName = "common zdb",
+            zdbId = ZDB_1,
+            publicationDate = LocalDate.of(2010, 1, 1),
+            publicationType = PublicationType.BOOK,
+        )
+        val item3ZDB1 = TEST_Metadata.copy(
+            metadataId = "zdb3",
             collectionName = "common zdb",
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
