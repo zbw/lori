@@ -476,6 +476,9 @@ class LoriServerBackend(
             ).results
         }.toSet()
 
+        // Delete all template connections
+        dbConnector.itemDB.deleteItemByRight(rightId)
+
         // Connect Template to all results
         return searchResults.map { result ->
             dbConnector.itemDB.insertItem(
