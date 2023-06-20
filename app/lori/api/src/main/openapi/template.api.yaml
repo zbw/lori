@@ -296,3 +296,37 @@ template-applications:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
+
+template-bookmarks-entries:
+  get:
+    tags:
+      - template
+    summary: Return all items that are associated to the bookmarks connected to the given template id
+    operationId: getItemsByTemplateId
+    parameters:
+      - name: id
+        in: path
+        description: Template Id
+        required: true
+        schema:
+          type: integer
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              $ref: 'item.model.yaml#/ItemInformation'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

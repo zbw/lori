@@ -18,4 +18,44 @@ data class SearchQueryResult(
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
     val zdbIds: Map<String, Int>,
-)
+) {
+    companion object {
+        fun reduceResults(results: List<SearchQueryResult>): SearchQueryResult {
+            val uniqueResults: Set<Item> = results.flatMap { it.results }.toSet()
+            val paketSigel: Map<String, Int> =
+                uniqueResults
+                    .filter { it.metadata.paketSigel != null }
+                    .groupBy { it.metadata.paketSigel!! }
+                    .mapValues { it.value.size }
+
+            val publicationTypes: Map<PublicationType, Int> =
+                uniqueResults.groupBy { it.metadata.publicationType }
+                    .mapValues { it.value.size }
+
+            val zdbIds: Map<String, Int> =
+                uniqueResults
+                    .filter { it.metadata.paketSigel != null }
+                    .groupBy { it.metadata.zdbId!! }
+                    .mapValues { it.value.size }
+
+            val accessState = results.foldRight(false){elem, acc ->
+                acc
+            }
+
+            return SearchQueryResult(
+                numberOfResults = uniqueResults.size,
+                results = uniqueResults.toList(),
+                accessState = emptyMap(), // TODO
+                invalidSearchKey = emptyList(), // TODO
+                hasLicenceContract = false, // TODO
+                hasOpenContentLicence = false, // TODO
+                hasSearchTokenWithNoKey = false, // TODO
+                hasZbwUserAgreement = false, // TODO
+                paketSigels = paketSigel,
+                publicationType = publicationTypes,
+                zdbIds = zdbIds,
+            )
+
+        }
+    }
+}

@@ -410,6 +410,39 @@ class LoriServerBackend(
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
+    fun getSearchResultsForTemplateId(
+        templateId: Int,
+    ): SearchQueryResult {
+        val template = dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+        val rightId = template?.right?.rightId ?: return emptyList()
+        // Receive all bookmark ids
+        val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        // Get search results for each bookmark
+        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+        val searchResults: List<SearchQueryResult> = bookmarks.asSequence().map { b ->
+            searchQuery(
+                searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
+                limit = 10, //
+                offset = 0,
+                metadataSearchFilter = listOfNotNull(
+                    b.paketSigelFilter,
+                    b.publicationDateFilter,
+                    b.publicationTypeFilter,
+                    b.zdbIdFilter,
+                ),
+                rightSearchFilter = listOfNotNull(
+                    b.accessStateFilter,
+                    b.temporalValidityFilter,
+                    b.validOnFilter,
+                    b.startDateFilter,
+                    b.endDateFilter,
+                    b.formalRuleFilter,
+                ),
+                noRightInformationFilter = b.noRightInformationFilter,
+            )
+        }.toList()
+    }
+
     fun deleteBookmarkTemplatePair(
         templateId: Int,
         bookmarkId: Int,

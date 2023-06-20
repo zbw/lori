@@ -215,6 +215,35 @@ fun Routing.templateRoutes(
             }
         }
 
+        get("{id}/bookmarks/entries") {
+            val span =
+                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks/entries")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val templateId = call.parameters["id"]?.toInt()
+                    span.setAttribute("templateId", templateId?.toString() ?: "null")
+                    if (templateId == null) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                    } else {
+                        val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(bookmarks.map { it.toRest() })
+                    }
+                } catch (e: Exception) {
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ApiError.internalServerError(),
+                    )
+                } finally {
+                    span.end()
+                }
+            }
+        }
+
         post("{id}/bookmarks") {
             val span =
                 tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
