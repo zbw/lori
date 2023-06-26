@@ -36,7 +36,7 @@ export default defineComponent({
   props: {
     right: {
       type: {} as PropType<RightRest>,
-      required: true,
+      required: false,
     },
     index: {
       type: Number,
@@ -48,7 +48,7 @@ export default defineComponent({
     },
     metadataId: {
       type: String,
-      required: true,
+      required: true, // TODO: refactor to required:false
     },
     isTemplate: {
       type: Boolean,
@@ -67,6 +67,10 @@ export default defineComponent({
     },
     reinitCounter: {
       type: Number,
+      required: false,
+    },
+    initialBookmark: {
+      type: {} as PropType<BookmarkRest>,
       required: false,
     },
   },
@@ -237,7 +241,9 @@ export default defineComponent({
       if (props.isTemplate) {
         emit("deleteTemplateSuccessful", formState.formTemplateName);
       } else {
-        emit("deleteSuccessful", index, props.right.rightId);
+        if (props.right != undefined) {
+          emit("deleteSuccessful", index, props.right.rightId);
+        }
       }
     };
 
@@ -544,13 +550,17 @@ export default defineComponent({
       props.templateId == undefined ? -1 : props.templateId
     );
 
-    watch(computedRight, (currentValue, oldValue) => {
+    watch(computedRight, () => {
       reinitializeRight();
     });
-    watch(computedReinitCounter, (currentValue, oldValue) => {
+    watch(computedReinitCounter, () => {
       updateInProgress.value = false;
+      // TODO: if bookmark prop exists, then add it to bookmarkItems
       if (props.isNew) {
         resetAllValues();
+        if (props.initialBookmark != undefined) {
+          bookmarkItems.value = Array(props.initialBookmark);
+        }
       } else {
         setGivenValues();
         loadBookmarks();
@@ -558,6 +568,10 @@ export default defineComponent({
     });
 
     const setGivenValues = () => {
+      if (props.right == undefined) {
+        // This sould never happen
+        return;
+      }
       tmpRight.value = Object.assign({}, props.right);
       formState.formTemplateName =
         props.templateName == undefined ? "" : props.templateName;

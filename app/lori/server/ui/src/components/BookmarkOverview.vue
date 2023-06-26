@@ -4,14 +4,22 @@ import { BookmarkRest } from "@/generated-sources/openapi";
 import bookmarkApi from "@/api/bookmarkApi";
 import error from "@/utils/error";
 import { useDialogsStore } from "@/stores/dialogs";
+import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
 export default defineComponent({
+  components: { RightsEditDialog },
   setup() {
     /**
      * Error messages.
      */
     const bookmarkError = ref(false);
     const bookmarkErrorMsg = ref("");
+
+    /**
+     * Alerts:
+     */
+    const alertSuccessful = ref(false);
+    const alertSuccessfulMsg = ref("");
 
     /**
      * Data-Table related.
@@ -99,29 +107,62 @@ export default defineComponent({
       confirmationDialog.value = false;
       editBookmark.value = {} as BookmarkRest;
       editIndex.value = -1;
+      alertSuccessful.value = false;
+      templateDialogActivated.value = false;
     };
 
-    // Mounted, computed and watch
+    /**
+     * Template.
+     */
+    const templateDialogActivated = ref(false);
+    const templateReinitCounter = ref(0);
+    const currentBookmark = ref({} as BookmarkRest);
+
+    const activateTemplateDialog = (bookmark: BookmarkRest) => {
+      currentBookmark.value = bookmark;
+      templateReinitCounter.value += 1;
+      templateDialogActivated.value = true;
+    };
+    const closeTemplateDialog = () => {
+      templateDialogActivated.value = false;
+    };
+
+    const childTemplateAdded = () => {
+      alertSuccessful.value = true;
+      alertSuccessfulMsg.value = "Template has been created."; // TODO: Display Id
+    };
+
+    /**
+     * Mounted, computed and watch.
+     */
     onMounted(() => getBookmarkList());
 
     const computedBookmarkOverview = computed(
       () => dialogStore.bookmarkOverviewActivated
     );
-    watch(computedBookmarkOverview, (currentValue, oldValue) => {
+    watch(computedBookmarkOverview, (currentValue) => {
       if (currentValue) {
         getBookmarkList();
       }
     });
 
     return {
+      alertSuccessful,
+      alertSuccessfulMsg,
       bookmarkError,
       bookmarkErrorMsg,
       bookmarkItems,
       confirmationDialog,
+      currentBookmark,
       headers,
       renderKey,
+      templateDialogActivated,
+      templateReinitCounter,
+      activateTemplateDialog,
+      childTemplateAdded,
       close,
       closeDeleteDialog,
+      closeTemplateDialog,
       deleteBookmarkEntry,
       openDeleteDialog,
     };
@@ -133,6 +174,9 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
+      <v-alert v-model="alertSuccessful" dismissible text type="success">
+        {{ alertSuccessfulMsg }}
+      </v-alert>
       <v-alert v-model="bookmarkError" dismissible text type="error">
         {{ bookmarkErrorMsg }}
       </v-alert>
@@ -160,7 +204,12 @@ export default defineComponent({
         loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.createTemplate="{ item }">
-          <v-btn color="blue darken-1" text>Template anlegen </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="activateTemplateDialog(item)"
+            >Template anlegen</v-btn
+          >
         </template>
         <template v-slot:item.executeSearch="{ item }">
           <v-btn color="blue darken-1" text>Suchanfrage ausführen</v-btn>
@@ -173,6 +222,23 @@ export default defineComponent({
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="close">Zurück</v-btn>
       </v-card-actions>
+      <v-dialog
+        v-model="templateDialogActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        v-on:close="closeTemplateDialog"
+      >
+        <RightsEditDialog
+          :index="-1"
+          :initial-bookmark="currentBookmark"
+          :isNew="true"
+          :isTemplate="true"
+          :reinit-counter="templateReinitCounter"
+          metadataId=""
+          v-on:addTemplateSuccessful="childTemplateAdded"
+          v-on:editRightClosed="closeTemplateDialog"
+        ></RightsEditDialog>
+      </v-dialog>
     </v-container>
   </v-card>
 </template>
