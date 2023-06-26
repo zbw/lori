@@ -1,6 +1,6 @@
 # install vault
 FROM alpine:latest AS vault
-ARG VAULT_VERSION=1.13.0
+ARG VAULT_VERSION=1.13.1
 RUN apk add --no-cache curl jq && \
     curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
