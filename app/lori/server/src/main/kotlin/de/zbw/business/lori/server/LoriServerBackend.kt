@@ -56,7 +56,8 @@ class LoriServerBackend(
         return pkRight
     }
 
-    fun insertItemEntry(metadataId: String, rightId: String): String? = dbConnector.itemDB.insertItem(metadataId, rightId)
+    fun insertItemEntry(metadataId: String, rightId: String): String? =
+        dbConnector.itemDB.insertItem(metadataId, rightId)
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
@@ -277,8 +278,8 @@ class LoriServerBackend(
 
     fun searchQuery(
         searchTerm: String?,
-        limit: Int,
-        offset: Int,
+        limit: Int?,
+        offset: Int?,
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
@@ -456,8 +457,8 @@ class LoriServerBackend(
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
             searchQuery(
                 searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
-                limit = 10, //
-                offset = 0,
+                limit = null,
+                offset = null,
                 metadataSearchFilter = listOfNotNull(
                     b.paketSigelFilter,
                     b.publicationDateFilter,
