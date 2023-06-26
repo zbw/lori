@@ -447,7 +447,7 @@ class SearchDB(
                     noRightInformationFilter,
                     false,
                     false,
-                ) + ") as foo"
+                ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(
             values: String,
