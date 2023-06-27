@@ -1,7 +1,8 @@
 FROM alpine:latest AS docker-git
 RUN apk add --no-cache curl \
     bash \
-    jq && \
+    jq \
+    git && \
     rm -rf /var/cache/apk/*
 
 FROM docker-git as vault
