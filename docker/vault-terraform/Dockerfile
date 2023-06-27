@@ -1,4 +1,4 @@
-FROM docker:24.0.2-git AS docker-git
+FROM alpine:latest AS docker-git
 RUN apk add --no-cache curl \
     bash \
     jq && \
