@@ -307,7 +307,7 @@ class SearchDBTest : DatabaseTest() {
                 null,
                 "SELECT COUNT(*) FROM" +
                     " (${SearchDB.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_col,1))/1 as score" +
-                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,collection_name <-> ? as dist_col FROM item_metadata) as sub WHERE sub.dist_col < 0.9 ORDER BY score) as foo",
+                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,collection_name <-> ? as dist_col FROM item_metadata) as sub WHERE sub.dist_col < 0.9 ORDER BY score) as countsearch",
                 "count query filter with one searchkey",
             ),
             arrayOf(
@@ -315,7 +315,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (${SearchDB.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                "SELECT COUNT(*) FROM (${SearchDB.STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES},(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as countsearch",
                 "count query filter with two searchkeys",
             ),
             arrayOf(
@@ -323,7 +323,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 ORDER BY score) as foo",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 ORDER BY score) as countsearch",
                 "count query filter with multiple words for one key",
             ),
             arrayOf(
@@ -331,7 +331,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as countsearch",
                 "count query with multiple words for multiple keys",
             ),
             arrayOf(
@@ -341,7 +341,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,(coalesce(sub.dist_zdb,1) + coalesce(sub.dist_sig,1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,zdb_id <-> ? as dist_zdb,paket_sigel <-> ? as dist_sig FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as countsearch",
                 "count query with one filter",
             ),
             arrayOf(
@@ -351,7 +351,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? ORDER BY item_metadata.metadata_id ASC) as foo",
+                "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys but with filter",
             ),
             arrayOf(
@@ -367,7 +367,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) ORDER BY item_metadata.metadata_id ASC) as foo",
+                "SELECT COUNT(*) FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys but with filter",
             ),
             arrayOf(
@@ -382,7 +382,7 @@ class SearchDBTest : DatabaseTest() {
                     " ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right" +
                     " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query only with right search filter",
             ),
             arrayOf(
@@ -405,7 +405,7 @@ class SearchDBTest : DatabaseTest() {
                     " JOIN item_right" +
                     " ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys but with both filter",
             ),
             arrayOf(
@@ -420,7 +420,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item_right" +
                     " ON item.right_id = item_right.right_id" +
                     " WHERE item_right.right_id IS NULL" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys, metadata filter and norightinformation filter",
             ),
             arrayOf(
@@ -444,7 +444,7 @@ class SearchDBTest : DatabaseTest() {
                     " ON item.right_id = item_right.right_id" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
                     " AND item_right.right_id IS NULL" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys, metadata and right filter. Only norightinformation filter",
             ),
             arrayOf(
@@ -470,7 +470,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)" +
                     " AND item_right.right_id IS NULL)" +
                     " as sub" +
-                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as countsearch",
                 "count query with keys and metadata filter and norightinformation filter",
             ),
             arrayOf(
@@ -495,7 +495,7 @@ class SearchDBTest : DatabaseTest() {
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?))" +
                     " as sub" +
-                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as foo",
+                    " WHERE sub.dist_zdb < 0.9 AND sub.dist_sig < 0.9 ORDER BY score) as countsearch",
                 "count query with keys and with both filter",
             ),
         )
@@ -568,7 +568,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "both filter"
             ),
             arrayOf(
@@ -585,7 +585,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
-                    " ORDER BY item_metadata.metadata_id ASC) as foo",
+                    " ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "only right filter"
             ),
         )

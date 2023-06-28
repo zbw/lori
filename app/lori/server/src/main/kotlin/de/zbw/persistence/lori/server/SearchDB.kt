@@ -267,8 +267,8 @@ class SearchDB(
 
     fun searchMetadata(
         searchTerms: Map<SearchKey, List<String>>,
-        limit: Int,
-        offset: Int,
+        limit: Int?,
+        offset: Int?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -276,10 +276,12 @@ class SearchDB(
         val entries: List<Map.Entry<SearchKey, List<String>>> = searchTerms.entries.toList()
         val prepStmt = connection.prepareStatement(
             buildSearchQuery(
-                searchTerms,
-                metadataSearchFilter,
-                rightSearchFilter,
-                noRightInformationFilter,
+                searchKeyMap = searchTerms,
+                metadataSearchFilters = metadataSearchFilter,
+                rightSearchFilters = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+                withLimit = limit != null,
+                withOffset = offset != null,
             )
         ).apply {
             var counter = 1
@@ -292,8 +294,13 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
-            this.setInt(counter++, limit)
-            this.setInt(counter, offset)
+            if (limit != null) {
+                this.setInt(counter++, limit)
+            }
+
+            if (offset != null) {
+                this.setInt(counter, offset)
+            }
         }
         val span = tracer.spanBuilder("searchMetadataWithRightsFilter").startSpan()
         val rs = try {
@@ -379,6 +386,7 @@ class SearchDB(
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
             withLimit: Boolean = true,
+            withOffset: Boolean = true,
         ): String {
             val subquery = if (rightSearchFilters.isEmpty() && noRightInformationFilter == null) {
                 buildSearchQuerySelect(searchKeyMap, rightSearchFilters) +
@@ -397,11 +405,14 @@ class SearchDB(
             }
 
             val limit = if (withLimit) {
-                " LIMIT ? OFFSET ?"
+                " LIMIT ?"
+            } else ""
+            val offset = if (withOffset) {
+                " OFFSET ?"
             } else ""
 
             return if (searchKeyMap.isEmpty()) {
-                "$subquery ORDER BY item_metadata.metadata_id ASC$limit"
+                "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
                 val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
                     entry.key.toWhereClause()
@@ -417,7 +428,8 @@ class SearchDB(
                     " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
                     " WHERE $trgmWhere" +
                     " ORDER BY score" +
-                    limit
+                    limit +
+                    offset
             }
         }
 
@@ -427,16 +439,15 @@ class SearchDB(
             rightSearchFilter: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String =
-            "SELECT COUNT(*) FROM" +
-                " (${
+            "SELECT COUNT(*) FROM (" +
                 buildSearchQuery(
                     searchKeyMap,
                     metadataSearchFilter,
                     rightSearchFilter,
                     noRightInformationFilter,
                     false,
-                )
-                }) as foo"
+                    false,
+                ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(
             values: String,
