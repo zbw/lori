@@ -538,7 +538,9 @@ export default defineComponent({
     // Computed properties
     onMounted(() => {
       reinitializeRight();
-      loadBookmarks();
+      if (!props.isNew) {
+        loadBookmarks();
+      }
     });
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
@@ -555,17 +557,20 @@ export default defineComponent({
     });
     watch(computedReinitCounter, () => {
       updateInProgress.value = false;
-      // TODO: if bookmark prop exists, then add it to bookmarkItems
       if (props.isNew) {
         resetAllValues();
-        if (props.initialBookmark != undefined) {
-          bookmarkItems.value = Array(props.initialBookmark);
-        }
+        addInitialBookmark();
       } else {
         setGivenValues();
         loadBookmarks();
       }
     });
+
+    const addInitialBookmark = () => {
+      if (props.initialBookmark != undefined) {
+        bookmarkItems.value = Array(props.initialBookmark);
+      }
+    };
 
     const setGivenValues = () => {
       if (props.right == undefined) {
@@ -610,6 +615,7 @@ export default defineComponent({
         setGivenValues();
       } else {
         resetAllValues();
+        addInitialBookmark();
       }
     };
 
