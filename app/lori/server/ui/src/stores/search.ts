@@ -42,6 +42,7 @@ export const useSearchStore = defineStore("search", () => {
   const temporalEventInput = ref("");
   const temporalEventStartDateFilter = ref(false);
   const temporalEventEndDateFilter = ref(false);
+  const triggerTemporalEventSync = ref(0);
 
   const temporalValidityFilterFuture = ref(false);
   const temporalValidityFilterPresent = ref(false);

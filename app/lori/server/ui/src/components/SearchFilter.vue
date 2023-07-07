@@ -40,6 +40,7 @@ export default defineComponent({
     const v$ = useVuelidate(rules, tempEventState);
 
     watch(tempEventState, (currentValue, oldValue) => {
+      // TODO: How to modify tempEvenState when BookmarkSearch is executed?
       searchStore.temporalEventStartDateFilter =
         currentValue.startDateOrEndDateOption == "startDate";
       searchStore.temporalEventEndDateFilter =

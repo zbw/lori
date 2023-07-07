@@ -1,14 +1,44 @@
 import {
-  AccessStateRest,
-  PublicationTypeRest,
+  AccessStateRest, AccessStateWithCountRest, BookmarkRest, PaketSigelWithCountRest,
+  PublicationTypeRest, PublicationTypeWithCountRest, ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 
 export default {
+
+  setPublicationDateFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterPublicationDate == undefined){
+      return;
+    }
+    if (bookmark.filterPublicationDate.fromYear !== undefined){
+      searchStore.publicationDateFrom = bookmark.filterPublicationDate.fromYear
+    }
+    if (bookmark.filterPublicationDate.toYear !== undefined){
+      searchStore.publicationDateTo = bookmark.filterPublicationDate.toYear
+    }
+  },
+
   buildPublicationDateFilter(searchStore: any): string | undefined {
     return searchStore.publicationDateFrom == "" &&
       searchStore.publicationDateTo == ""
       ? undefined
       : searchStore.publicationDateFrom + "-" + searchStore.publicationDateTo;
+  },
+
+  setPaketSigelFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterPaketSigel == undefined ||
+        bookmark.filterPaketSigel.length == 0){
+      return;
+    }
+    searchStore.paketSigelIdIdx = Array(bookmark.filterPaketSigel.length).fill(true);
+    searchStore.paketSigelIdReceived = Array(bookmark.filterPaketSigel.length);
+    bookmark.filterPaketSigel.forEach(
+        (v: string, index:number): void => {
+          searchStore.paketSigelIdReceived[index] = {
+            count: 0,
+            paketSigel: v,
+          } as PaketSigelWithCountRest;
+        }
+    )
   },
 
   buildPaketSigelIdFilter(searchStore: any): string | undefined {
@@ -31,6 +61,22 @@ export default {
     }
   },
 
+  setZDBFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterZDBId == undefined || bookmark.filterZDBId.length == 0){
+      return;
+    }
+    searchStore.zdbIdIdx = Array(bookmark.filterZDBId.length).fill(true);
+    searchStore.zdbIdReceived = Array(bookmark.filterZDBId.length);
+    bookmark.filterZDBId.forEach(
+        (v: string, index:number): void => {
+          searchStore.zdbIdReceived[index] = {
+            count: 0,
+            zdbId: v,
+          } as ZdbIdWithCountRest;
+        }
+    )
+  },
+
   buildZDBIdFilter(searchStore: any): string | undefined {
     const zdbIds: Array<string> = [];
     searchStore.zdbIdIdx.forEach(
@@ -47,6 +93,22 @@ export default {
     } else {
       return zdbIds.join(",");
     }
+  },
+
+  setAccessStateFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterAccessState == undefined || bookmark.filterAccessState.length == 0){
+      return;
+    }
+    searchStore.accessStateIdx = Array(bookmark.filterAccessState.length).fill(true);
+    searchStore.accessStateReceived = Array(bookmark.filterAccessState.length);
+    bookmark.filterAccessState.forEach(
+        (v: string, index:number): void => {
+          searchStore.accessStateReceived[index] = {
+            count: 0,
+            accessState: v,
+          } as AccessStateWithCountRest;
+        }
+    )
   },
 
   buildAccessStateFilter(searchStore: any): string | undefined {
@@ -72,6 +134,24 @@ export default {
     }
   },
 
+  setFormalRuleFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if(bookmark.filterFormalRule == undefined ||
+        bookmark.filterFormalRule.length == 0){
+      return;
+    }
+    bookmark.filterFormalRule.forEach(
+        (v: string, index:number):void => {
+          if (v == "LICENCE_CONTRACT"){
+            searchStore.formalRuleLicenceContract = true;
+          } else if (v == "OPEN_CONTENT_LICENCE"){
+            searchStore.formalRuleOpenContentLicence = true;
+          } else {
+            searchStore.formalRuleUserAgreement = true;
+          }
+        }
+    );
+  },
+
   buildFormalRuleFilter(searchStore: any): string | undefined {
     const formalRule: Array<string> = [];
     if (searchStore.formalRuleLicenceContract) {
@@ -88,6 +168,23 @@ export default {
     } else {
       return formalRule.join(",");
     }
+  },
+
+  setTempValFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterTemporalValidity == undefined || bookmark.filterTemporalValidity.length == 0){
+      return;
+    }
+    bookmark.filterTemporalValidity.forEach(
+        (v: string):void => {
+          if (v == "FUTURE"){
+            searchStore.temporalValidityFilterFuture = v;
+          } else if (v == "PAST"){
+            searchStore.temporalValidityFilterPast = v;
+          } else {
+            searchStore.temporalValidityFilterPresent = v;
+          }
+        }
+    );
   },
 
   buildTempValFilter(searchStore: any): string | undefined {
@@ -107,6 +204,15 @@ export default {
       return tempVal.join(",");
     }
   },
+
+  setStartDateAtFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterStartDate == undefined){
+      return;
+    }
+    searchStore.temporalEventStartDateFilter = true;
+    searchStore.temporalEventInput = bookmark.filterStartDate;
+  },
+
   buildStartDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventStartDateFilter &&
@@ -118,6 +224,14 @@ export default {
     }
   },
 
+  setEndDateAtFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterEndDate == undefined){
+      return;
+    }
+    searchStore.temporalEventEndDateFilter = true;
+    searchStore.temporalEventInput = bookmark.filterEndDate;
+  },
+
   buildEndDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventEndDateFilter &&
@@ -127,6 +241,22 @@ export default {
     } else {
       return undefined;
     }
+  },
+
+  setPublicationTypeFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterPublicationType == undefined || bookmark.filterPublicationType.length == 0){
+      return;
+    }
+    searchStore.publicationTypeIdx = Array(bookmark.filterPublicationType.length).fill(true);
+    searchStore.publicationTypeReceived = Array (bookmark.filterPublicationType.length);
+    bookmark.filterPublicationType.forEach(
+        (v: string, index:number): void => {
+          searchStore.publicationTypeReceived[index] = {
+            count: 0,
+            publicationType: v.toLowerCase(),
+          } as PublicationTypeWithCountRest
+        }
+    )
   },
 
   buildPublicationTypeFilter(searchStore: any): string | undefined {
@@ -152,18 +282,21 @@ export default {
               break;
             case "book_part":
               modifiedPubTypeFilter = "BOOK_PART";
+              searchStore.publicationTypeReceived[index].publicationType = "bookPart";
               break;
             case "conferencePaper":
               modifiedPubTypeFilter = "CONFERENCE_PAPER";
               break;
             case "conference_paper":
               modifiedPubTypeFilter = "CONFERENCE_PAPER";
+              searchStore.publicationTypeReceived[index].publicationType = "conferencePaper";
               break;
             case "periodicalPart":
               modifiedPubTypeFilter = "PERIODICAL_PART";
               break;
             case "periodical_part":
               modifiedPubTypeFilter = "PERIODICAL_PART";
+              searchStore.publicationTypeReceived[index].publicationType = "periodicalPart";
               break;
             case "proceedings":
               modifiedPubTypeFilter = "PROCEEDING";
@@ -173,6 +306,7 @@ export default {
               break;
             case "research_report":
               modifiedPubTypeFilter = "RESEARCH_REPORT";
+              searchStore.publicationTypeReceived[index].publicationType = "researchReport";
               break;
             case "thesis":
               modifiedPubTypeFilter = "THESIS";
@@ -182,6 +316,7 @@ export default {
               break;
             case "working_paper":
               modifiedPubTypeFilter = "WORKING_PAPER";
+              searchStore.publicationTypeReceived[index].publicationType = "workingPaper";
               break;
             default:
               modifiedPubTypeFilter = "ERROR";
@@ -202,6 +337,13 @@ export default {
     }
   },
 
+  setValidOnFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if(bookmark.filterValidOn == undefined){
+      return;
+    }
+    searchStore.temporalValidOn = bookmark.filterValidOn;
+  },
+
   buildValidOnFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalValidOn != undefined &&
@@ -211,6 +353,13 @@ export default {
     } else {
       return undefined;
     }
+  },
+
+  setNoRightInformationFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterNoRightInformation == undefined){
+      return;
+    }
+    searchStore.noRightInformation = bookmark.filterNoRightInformation;
   },
 
   buildNoRightInformation(searchStore: any): string | undefined {

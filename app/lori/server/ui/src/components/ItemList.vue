@@ -1,6 +1,6 @@
 <script lang="ts">
 import {
-  AccessStateWithCountRest,
+  AccessStateWithCountRest, BookmarkRest,
   ItemInformation,
   ItemRest,
   MetadataRest,
@@ -187,19 +187,34 @@ export default defineComponent({
 
     onMounted(() => startSearch());
 
-    watch(headersValueVSelect, (currentValue, oldValue) => {
+    watch(headersValueVSelect, (currentValue) => {
       selectedHeaders.value = currentValue;
     });
 
     // Search
     const searchStore = useSearchStore();
 
+    const executeBookmarkSearch = (bookmark: BookmarkRest) => {
+      searchquerybuilder.setPublicationDateFilter(searchStore, bookmark);
+      searchquerybuilder.setPaketSigelFilter(searchStore, bookmark);
+      searchquerybuilder.setPublicationTypeFilter(searchStore, bookmark);
+      searchquerybuilder.setZDBFilter(searchStore, bookmark);
+      searchquerybuilder.setAccessStateFilter(searchStore, bookmark);
+      searchquerybuilder.setFormalRuleFilter(searchStore, bookmark);
+      searchquerybuilder.setTempValFilter(searchStore, bookmark);
+      searchquerybuilder.setStartDateAtFilter(searchStore, bookmark);
+      searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
+      searchquerybuilder.setValidOnFilter(searchStore, bookmark);
+      searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
+      closeBookmarkOverviewDialog();
+      startSearch();
+    };
+
     const startSearch = () => {
       currentPage.value = 1;
       searchStore.lastSearchTerm = searchTerm.value;
       invalidSearchKeyError.value = false;
       hasSearchTokenWithNoKeyError.value = false;
-
       searchQuery();
     };
 
@@ -223,40 +238,7 @@ export default defineComponent({
           searchquerybuilder.buildNoRightInformation(searchStore)
         )
         .then((response: ItemInformation) => {
-          items.value = response.itemArray;
-          tableContentLoading.value = false;
-          totalPages.value = response.totalPages;
-          numberOfResults.value = response.numberOfResults;
-          if (response.invalidSearchKey?.length || 0 > 0) {
-            invalidSearchKeyErrorMsg.value =
-              "Die folgenden Suchkeys sind ungültig: " +
-                response.invalidSearchKey?.join(", ") || "";
-            invalidSearchKeyError.value = true;
-          }
-
-          if (response.hasSearchTokenWithNoKey == true) {
-            hasSearchTokenWithNoKeyErrorMsg.value =
-              "Mindestens ein Wort enthält keinen Suchkey." +
-              " Dieser Teil wird bei der Suche ignoriert.";
-            hasSearchTokenWithNoKeyError.value = true;
-          }
-          if (response.paketSigelWithCount != undefined) {
-            searchStore.paketSigelIdReceived = response.paketSigelWithCount;
-          }
-          if (response.hasLicenceContract != undefined) {
-            searchStore.hasLicenceContract = response.hasLicenceContract;
-          }
-          if (response.hasOpenContentLicence != undefined) {
-            searchStore.hasOpenContentLicence = response.hasOpenContentLicence;
-          }
-          if (response.hasZbwUserAgreement != undefined) {
-            searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
-          }
-          if (response.itemArray.length == 0) {
-            reduceToSelectedFilters();
-          } else {
-            resetAllDynamicFilter(response);
-          }
+           processSearchResult(response);
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -267,34 +249,69 @@ export default defineComponent({
         });
     };
 
+    const processSearchResult = (response: ItemInformation) => {
+      items.value = response.itemArray;
+      tableContentLoading.value = false;
+      totalPages.value = response.totalPages;
+      numberOfResults.value = response.numberOfResults;
+      if (response.invalidSearchKey?.length || 0 > 0) {
+        invalidSearchKeyErrorMsg.value =
+            "Die folgenden Suchkeys sind ungültig: " +
+            response.invalidSearchKey?.join(", ") || "";
+        invalidSearchKeyError.value = true;
+      }
+
+      if (response.hasSearchTokenWithNoKey == true) {
+        hasSearchTokenWithNoKeyErrorMsg.value =
+            "Mindestens ein Wort enthält keinen Suchkey." +
+            " Dieser Teil wird bei der Suche ignoriert.";
+        hasSearchTokenWithNoKeyError.value = true;
+      }
+      // TODO: wird nur in abhängigkeit von ergebnis angezeigt
+      if (response.paketSigelWithCount != undefined) {
+        searchStore.paketSigelIdReceived = response.paketSigelWithCount;
+      }
+      if (response.hasLicenceContract != undefined) {
+        searchStore.hasLicenceContract = response.hasLicenceContract;
+      }
+      if (response.hasOpenContentLicence != undefined) {
+        searchStore.hasOpenContentLicence = response.hasOpenContentLicence;
+      }
+      if (response.hasZbwUserAgreement != undefined) {
+        searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
+      }
+      if (response.itemArray.length == 0) {
+        reduceToSelectedFilters();
+      } else {
+        resetAllDynamicFilter(response);
+      }
+    };
+
     const reduceToSelectedFilters = () => {
       searchStore.accessStateReceived =
         searchStore.accessStateSelectedLastSearch.map((elem: string) => {
-          let foo: AccessStateWithCountRest = {
+          return {
             count: 0,
             accessState: searchquerybuilder.accessStateToType(elem),
-          };
-          return foo;
+          } as AccessStateWithCountRest;
         });
       searchStore.accessStateIdx = reduceIdx(searchStore.accessStateIdx);
 
       searchStore.paketSigelIdReceived =
         searchStore.paketSigelSelectedLastSearch.map((elem: string) => {
-          let foo: PaketSigelWithCountRest = {
+          return {
             count: 0,
             paketSigel: elem,
-          };
-          return foo;
+          } as PaketSigelWithCountRest;
         });
       searchStore.paketSigelIdIdx = reduceIdx(searchStore.paketSigelIdIdx);
 
       searchStore.publicationTypeReceived =
         searchStore.publicationTypeSelectedLastSearch.map((elem: string) => {
-          let foo: PublicationTypeWithCountRest = {
+          return {
             count: 0,
             publicationType: searchquerybuilder.publicationTypeToType(elem),
-          };
-          return foo;
+          } as PublicationTypeWithCountRest;
         });
       searchStore.publicationTypeIdx = reduceIdx(
         searchStore.publicationTypeIdx
@@ -302,11 +319,10 @@ export default defineComponent({
 
       searchStore.zdbIdReceived = searchStore.zdbIdSelectedLastSearch.map(
         (elem: string) => {
-          let foo: ZdbIdWithCountRest = {
+          return {
             count: 0,
             zdbId: elem,
-          };
-          return foo;
+          } as ZdbIdWithCountRest;
         }
       );
       searchStore.zdbIdIdx = reduceIdx(searchStore.zdbIdIdx);
@@ -481,6 +497,7 @@ export default defineComponent({
       closeBookmarkSaveDialog,
       closeGroupDialog,
       closeTemplateDialog,
+      executeBookmarkSearch,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -532,7 +549,9 @@ export default defineComponent({
       max-width="1000px"
       v-on:close="closeBookmarkOverviewDialog"
     >
-      <BookmarkOverview></BookmarkOverview>
+      <BookmarkOverview
+          v-on:executeBookmarkSearch="executeBookmarkSearch"
+      ></BookmarkOverview>
     </v-dialog>
     <v-row>
       <v-col cols="2">

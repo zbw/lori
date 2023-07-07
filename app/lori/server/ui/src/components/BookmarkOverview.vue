@@ -8,7 +8,11 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
 export default defineComponent({
   components: { RightsEditDialog },
-  setup() {
+  props: {},
+  emits: [
+      "executeBookmarkSearch"
+  ],
+  setup(props, { emit }) {
     /**
      * Error messages.
      */
@@ -133,6 +137,13 @@ export default defineComponent({
     };
 
     /**
+     * Search.
+     */
+    const executeBookmarkSearch = (bookmark: BookmarkRest) => {
+      emit("executeBookmarkSearch", bookmark)
+    };
+
+    /**
      * Mounted, computed and watch.
      */
     onMounted(() => getBookmarkList());
@@ -164,6 +175,7 @@ export default defineComponent({
       closeDeleteDialog,
       closeTemplateDialog,
       deleteBookmarkEntry,
+      executeBookmarkSearch,
       openDeleteDialog,
     };
   },
@@ -212,7 +224,7 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.executeSearch="{ item }">
-          <v-btn color="blue darken-1" text>Suchanfrage ausführen</v-btn>
+          <v-btn color="blue darken-1" text @click="executeBookmarkSearch(item)">Suchanfrage ausführen</v-btn>
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
