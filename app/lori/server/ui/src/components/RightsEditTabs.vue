@@ -20,7 +20,6 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    // TODO: index in template has type string|number but expected is number'
     const renderKey = ref(0);
     const tab = ref(null);
     const lastDeletedRight = ref("");

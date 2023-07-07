@@ -622,7 +622,6 @@ export default defineComponent({
     const selectBookmark = () => {
       bookmarkDialogOn.value = true;
       openBookmarkSearch.value += 1;
-      // TODO:
     };
     const templateBookmarkClosed = () => {
       bookmarkDialogOn.value = false;
