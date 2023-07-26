@@ -3,6 +3,7 @@ import { computed, defineComponent, reactive, ref, watch } from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useVuelidate } from "@vuelidate/core";
 import { useDialogsStore } from "@/stores/dialogs";
+import searchquerybuilder from "@/utils/searchquerybuilder";
 
 export default defineComponent({
   setup() {
@@ -14,7 +15,7 @@ export default defineComponent({
     type FormState = {
       tempEventInput: string;
       tempEventStart: boolean;
-      temEventEnd: boolean;
+      tempEventEnd: boolean;
     };
 
     const tempEventCheckForInput: (
@@ -28,31 +29,18 @@ export default defineComponent({
       );
     };
 
-    const tempEventState = reactive({
-      startDateOrEndDateValue: "",
-      startDateOrEndDateOption: "",
-    });
     const rules = {
       startDateOrEndDateValue: {},
       startDateOrEndDateOption: { tempEventCheckForInput },
     };
 
-    const v$ = useVuelidate(rules, tempEventState);
-
-    watch(tempEventState, (currentValue, oldValue) => {
-      // TODO: How to modify tempEvenState when BookmarkSearch is executed?
-      searchStore.temporalEventStartDateFilter =
-        currentValue.startDateOrEndDateOption == "startDate";
-      searchStore.temporalEventEndDateFilter =
-        currentValue.startDateOrEndDateOption == "endDate";
-      searchStore.temporalEventInput = currentValue.startDateOrEndDateValue;
-    });
+    const v$ = useVuelidate(rules, searchStore.temporalEventState);
 
     const errorTempEventInput = computed(() => {
       const errors: Array<string> = [];
       if (
         v$.value.startDateOrEndDateOption.$invalid &&
-        tempEventState.startDateOrEndDateValue == ""
+        searchStore.temporalEventState.startDateOrEndDateValue == ""
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -63,7 +51,7 @@ export default defineComponent({
       const errors: Array<string> = [];
       if (
         !v$.value.startDateOrEndDateOption.$invalid &&
-        tempEventState.startDateOrEndDateValue != ""
+        searchStore.temporalEventState.startDateOrEndDateValue != ""
       ) {
         errors.push("Wähle eine dieser Optionen aus");
       }
@@ -78,9 +66,8 @@ export default defineComponent({
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.accessStateClosed ||
-        searchStore.temporalEventInput != "" ||
-        searchStore.temporalEventStartDateFilter ||
-        searchStore.temporalEventEndDateFilter ||
+        searchStore.temporalEventState.startDateOrEndDateValue != "" ||
+        searchStore.temporalEventState.startDateOrEndDateOption != "" ||
         searchStore.accessStateClosed ||
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
@@ -108,9 +95,8 @@ export default defineComponent({
       searchStore.accessStateRestricted = false;
       searchStore.accessStateClosed = false;
 
-      searchStore.temporalEventInput = "";
-      searchStore.temporalEventStartDateFilter = false;
-      searchStore.temporalEventEndDateFilter = false;
+      searchStore.temporalEventState.startDateOrEndDateValue = "";
+      searchStore.temporalEventState.startDateOrEndDateOption = "";
 
       searchStore.accessStateClosed = false;
       searchStore.accessStateOpen = false;
@@ -125,8 +111,8 @@ export default defineComponent({
       searchStore.temporalValidityFilterPast = false;
 
       searchStore.temporalValidOn = "";
-      tempEventState.startDateOrEndDateValue = "";
-      tempEventState.startDateOrEndDateOption = "";
+      searchStore.temporalEventState.startDateOrEndDateValue = "";
+      searchStore.temporalEventState.startDateOrEndDateOption = "";
 
       searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
@@ -209,7 +195,6 @@ export default defineComponent({
       canReset,
       errorTempEventStartEnd,
       errorTempEventInput,
-      tempEventState,
       temporalEvent,
       tempEventMenu,
       tempValidOnMenu,
@@ -388,7 +373,7 @@ export default defineComponent({
               transition="scale-transition"
               offset-y
               min-width="auto"
-              :return-value.sync="tempEventState.startDateOrEndDateValue"
+              :return-value.sync="searchStore.temporalEventState.startDateOrEndDateValue"
               :close-on-content-click="false"
             >
               <template v-slot:activator="{ on, attrs }">
@@ -401,14 +386,14 @@ export default defineComponent({
                   v-on="on"
                   required
                   class="pl-7"
-                  v-model="tempEventState.startDateOrEndDateValue"
+                  v-model="searchStore.temporalEventState.startDateOrEndDateValue"
                   @change="v$.startDateOrEndDateValue.$touch()"
                   @blur="v$.startDateOrEndDateValue.$touch()"
                   :error-messages="errorTempEventInput"
                 ></v-text-field>
               </template>
               <v-date-picker
-                v-model="tempEventState.startDateOrEndDateValue"
+                v-model="searchStore.temporalEventState.startDateOrEndDateValue"
                 no-title
                 scrollable
               >
@@ -421,7 +406,7 @@ export default defineComponent({
                   color="primary"
                   @click="
                     $refs.tempEventMenu.save(
-                      tempEventState.startDateOrEndDateValue
+                      searchStore.temporalEventState.startDateOrEndDateValue
                     )
                   "
                 >
@@ -435,7 +420,7 @@ export default defineComponent({
                   label="Startdatum"
                   class="pl-9 ml-4"
                   hide-details
-                  v-model="tempEventState.startDateOrEndDateOption"
+                  v-model="searchStore.temporalEventState.startDateOrEndDateOption"
                   value="startDate"
                   :error-messages="errorTempEventStartEnd"
                 ></v-checkbox>
@@ -444,7 +429,7 @@ export default defineComponent({
                 <v-checkbox
                   label="Enddatum"
                   class="pl-9 ml-4"
-                  v-model="tempEventState.startDateOrEndDateOption"
+                  v-model="searchStore.temporalEventState.startDateOrEndDateOption"
                   :error-messages="errorTempEventStartEnd"
                   value="endDate"
                 ></v-checkbox>
