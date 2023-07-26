@@ -209,16 +209,16 @@ export default {
     if (bookmark.filterStartDate == undefined){
       return;
     }
-    searchStore.temporalEventStartDateFilter = true;
-    searchStore.temporalEventInput = bookmark.filterStartDate;
+    searchStore.temporalEventState.startDateOrEndDateOption = "startDate";
+    searchStore.temporalEventState.startDateOrEndDateValue = bookmark.filterStartDate.toISOString().split('T')[0];
   },
 
   buildStartDateAtFilter(searchStore: any): string | undefined {
     if (
-      searchStore.temporalEventStartDateFilter &&
-      searchStore.temporalEventInput != ""
+      searchStore.temporalEventState.startDateOrEndDateOption == "startDate" &&
+      searchStore.temporalEventState.startDateOrEndDateValue != ""
     ) {
-      return searchStore.temporalEventInput;
+      return searchStore.temporalEventState.startDateOrEndDateValue;
     } else {
       return undefined;
     }
@@ -228,16 +228,17 @@ export default {
     if (bookmark.filterEndDate == undefined){
       return;
     }
-    searchStore.temporalEventEndDateFilter = true;
-    searchStore.temporalEventInput = bookmark.filterEndDate;
+    searchStore.temporalEventState.startDateOrEndDateOption = "endDate";
+    searchStore.temporalEventState.startDateOrEndDateValue = bookmark.filterEndDate.toISOString().split('T')[0];
+
   },
 
   buildEndDateAtFilter(searchStore: any): string | undefined {
     if (
-      searchStore.temporalEventEndDateFilter &&
-      searchStore.temporalEventInput != ""
+      searchStore.temporalEventState.startDateOrEndDateOption == "endDate" &&
+      searchStore.temporalEventState.startDateOrEndDateValue != ""
     ) {
-      return searchStore.temporalEventInput;
+      return searchStore.temporalEventState.startDateOrEndDateValue;
     } else {
       return undefined;
     }
@@ -341,7 +342,7 @@ export default {
     if(bookmark.filterValidOn == undefined){
       return;
     }
-    searchStore.temporalValidOn = bookmark.filterValidOn;
+    searchStore.temporalValidOn = bookmark.filterValidOn.toISOString().split('T')[0];
   },
 
   buildValidOnFilter(searchStore: any): string | undefined {
