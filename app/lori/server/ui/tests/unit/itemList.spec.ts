@@ -4,7 +4,6 @@ import ItemList from "@/components/ItemList.vue";
 import Vuetify from "vuetify";
 import Vue from "vue";
 import api from "@/api/api";
-import searchquerybulder from "@/utils/searchquerybuilder";
 import {
   AccessStateRest,
   ItemInformation,
@@ -309,31 +308,31 @@ describe("Test ItemList UI", () => {
 
     const searchStore = useSearchStore();
     // when + then
-    searchStore.temporalEventStartDateFilter = false;
+    searchStore.temporalEventState.startDateOrEndDateOption = "foo";
     expect(
       searchquerybuilder.buildStartDateAtFilter(searchStore)
     ).toBeUndefined();
-    searchStore.temporalEventStartDateFilter = true;
-    searchStore.temporalEventInput = "";
+    searchStore.temporalEventState.startDateOrEndDateOption = "startDate";
+    searchStore.temporalEventState.startDateOrEndDateValue = "";
     expect(
       searchquerybuilder.buildStartDateAtFilter(searchStore)
     ).toBeUndefined();
-    searchStore.temporalEventInput = "2022-01-01";
+    searchStore.temporalEventState.startDateOrEndDateValue = "2022-01-01";
     expect(searchquerybuilder.buildStartDateAtFilter(searchStore)).toBe(
       "2022-01-01"
     );
 
     // when + then
-    searchStore.temporalEventEndDateFilter = false;
+    searchStore.temporalEventState.startDateOrEndDateOption = "foo";
     expect(
       searchquerybuilder.buildEndDateAtFilter(searchStore)
     ).toBeUndefined();
-    searchStore.temporalEventEndDateFilter = true;
-    searchStore.temporalEventInput = "";
+    searchStore.temporalEventState.startDateOrEndDateOption = "endDate";
+    searchStore.temporalEventState.startDateOrEndDateValue = "";
     expect(
       searchquerybuilder.buildEndDateAtFilter(searchStore)
     ).toBeUndefined();
-    searchStore.temporalEventInput = "2022-01-01";
+    searchStore.temporalEventState.startDateOrEndDateValue = "2022-01-01";
     expect(searchquerybuilder.buildEndDateAtFilter(searchStore)).toBe(
       "2022-01-01"
     );
