@@ -194,6 +194,8 @@ export default defineComponent({
     // Search
     const searchStore = useSearchStore();
 
+    const alertBookmarkExecuted = ref(false);
+    const alertBookmarkExecutedMsg = ref("");
     const executeBookmarkSearch = (bookmark: BookmarkRest) => {
       searchquerybuilder.setPublicationDateFilter(searchStore, bookmark);
       searchquerybuilder.setPaketSigelFilter(searchStore, bookmark);
@@ -207,6 +209,8 @@ export default defineComponent({
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       closeBookmarkOverviewDialog();
+      alertBookmarkExecutedMsg.value = "Bookmark mit ID " + bookmark.bookmarkId + " wird ausgeführt.";
+      alertBookmarkExecuted.value = true;
       startSearch();
     };
 
@@ -467,6 +471,8 @@ export default defineComponent({
     };
 
     return {
+      alertBookmarkExecuted,
+      alertBookmarkExecutedMsg,
       bookmarkSuccessfulMsg,
       currentItem,
       currentPage,
@@ -602,6 +608,14 @@ export default defineComponent({
             type="success"
           >
             Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId }}.
+          </v-alert>
+          <v-alert
+              v-model="alertBookmarkExecuted"
+              dismissible
+              text
+              type="success"
+          >
+            {{ alertBookmarkExecutedMsg }}
           </v-alert>
           <v-select
             v-model="headersValueVSelect"
