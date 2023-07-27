@@ -209,7 +209,7 @@ export default defineComponent({
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       closeBookmarkOverviewDialog();
-      alertBookmarkExecutedMsg.value = "Bookmark mit ID " + bookmark.bookmarkId + " wird ausgeführt.";
+      alertBookmarkExecutedMsg.value = "Eine gespeicherte Suche mit ID " + bookmark.bookmarkId + " wurde ausgeführt.";
       alertBookmarkExecuted.value = true;
       startSearch();
     };
