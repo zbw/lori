@@ -429,9 +429,11 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostApplications() {
         val givenTemplateId = 11
+        val givenTemplateId2 = 12
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to expectedMetadataIds)
+            every { applyAllTemplates() } returns listOf(givenTemplateId to expectedMetadataIds, givenTemplateId2 to expectedMetadataIds).toMap()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // Test OK Path
@@ -461,6 +463,47 @@ class TemplateRoutesKtTest {
                         templateApplication = listOf(
                             TemplateApplicationRest(
                                 templateId = givenTemplateId,
+                                metadataIds = expectedMetadataIds,
+                                numberOfAppliedEntries = expectedMetadataIds.size
+                            )
+                        )
+                    )
+                )
+            )
+        }
+
+        // Test OK when all templates are applied
+        testApplication {
+            application(
+                servicePool.application()
+            )
+            val response = client.post("/api/v1/template/applications?all=true") {
+                header(HttpHeaders.Accept, ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        TemplateIdsRest(
+                            templateIds = listOf(givenTemplateId)
+                        )
+                    )
+                )
+            }
+            assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
+            val content: String = response.bodyAsText()
+            val receivedJSON: Type = object : TypeToken<TemplateApplicationsRest>() {}.type
+            val received: TemplateApplicationsRest = ItemRoutesKtTest.GSON.fromJson(content, receivedJSON)
+            assertThat(
+                received,
+                `is`(
+                    TemplateApplicationsRest(
+                        templateApplication = listOf(
+                            TemplateApplicationRest(
+                                templateId = givenTemplateId,
+                                metadataIds = expectedMetadataIds,
+                                numberOfAppliedEntries = expectedMetadataIds.size
+                            ),
+                            TemplateApplicationRest(
+                                templateId = givenTemplateId2,
                                 metadataIds = expectedMetadataIds,
                                 numberOfAppliedEntries = expectedMetadataIds.size
                             )

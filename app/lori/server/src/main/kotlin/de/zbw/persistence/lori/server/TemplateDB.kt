@@ -48,7 +48,7 @@ class TemplateDB(
         if (templateIds.isEmpty()) {
             return emptyList()
         }
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES_BY_IDS).apply {
             this.setArray(1, connection.createArrayOf("integer", templateIds.toTypedArray()))
         }
         val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
@@ -223,6 +223,26 @@ class TemplateDB(
     }
 
     /**
+     * Get all Template Ids.
+     */
+    fun getAllTemplateIds(): List<Int> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_ALL_TEMPLATE_IDS)
+        val span = tracer.spanBuilder("getAllTemplateIDs").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getInt(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
+    /**
      * Get all bookmark ids that are a connected to a given template-id.
      */
     fun getTemplateIdsByBookmarkId(bookmarkId: Int): List<Int> {
@@ -344,17 +364,21 @@ class TemplateDB(
             " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_TEMPLATE = "SELECT " +
-            "template_id,template_name,template_description,right_id" +
+            "$COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_TEMPLATE_LIST = "SELECT" +
-            " template_id,template_name,template_description,right_id" +
+            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " ORDER BY template_name ASC LIMIT ? OFFSET ?;"
 
-        const val STATEMENT_GET_TEMPLATES = "SELECT" +
-            " template_id,template_name,template_description,right_id" +
+        const val STATEMENT_GET_ALL_TEMPLATE_IDS = "SELECT" +
+            " $COLUMN_TEMPLATE_ID" +
+            " FROM $TABLE_NAME_TEMPLATE"
+
+        const val STATEMENT_GET_TEMPLATES_BY_IDS = "SELECT" +
+            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ANY(?)"
 
@@ -376,7 +400,7 @@ class TemplateDB(
 
         const val STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR =
             "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-                " (template_id, bookmark_id)" +
+                " ($COLUMN_TEMPLATE_ID, $COLUMN_BOOKMARK_ID)" +
                 " VALUES(?,?)"
 
         const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR = "DELETE" +

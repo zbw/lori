@@ -4,9 +4,12 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.api.ApplyTemplatesRequest
+import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
+import de.zbw.lori.api.TemplateApplication
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.opentelemetry.api.trace.SpanKind
@@ -56,6 +59,40 @@ class LoriGrpcServer(
                 )
             } finally {
                 span.end()
+            }
+        }
+    }
+
+    override suspend fun applyTemplates(request: ApplyTemplatesRequest): ApplyTemplatesResponse {
+        val span = tracer
+            .spanBuilder("lori.LoriService/ApplyTemplates")
+            .setSpanKind(SpanKind.SERVER)
+            .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                val backendResponse: Map<Int, List<String>> = if (request.all) {
+                    daConnector.backend.applyAllTemplates()
+                } else {
+                    daConnector.backend.applyTemplates(request.templateIdsList)
+                }
+                val templateApplications: List<TemplateApplication> = backendResponse.entries.map { e ->
+                    TemplateApplication
+                        .newBuilder()
+                        .setTemplateId(e.key)
+                        .setNumberAppliedEntries(e.value.size)
+                        .addAllMetadataIds(e.value)
+                        .build()
+                }
+                ApplyTemplatesResponse
+                    .newBuilder()
+                    .addAllTemplateApplications(templateApplications)
+                    .build()
+            } catch (e: Throwable) {
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL.withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+                )
             }
         }
     }

@@ -2,8 +2,12 @@ package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
+import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.lori.api.ApplyTemplatesRequest
+import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
+import de.zbw.lori.api.TemplateApplication
 import io.grpc.StatusRuntimeException
 import io.mockk.coEvery
 import io.mockk.every
@@ -23,6 +27,95 @@ import java.nio.channels.UnresolvedAddressException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriGrpcServerTest {
+
+    @Test
+    fun testApplyTemplatesAll() {
+        runBlocking {
+            // given
+            val expectedResult = listOf(1 to listOf("2")).toMap()
+            val expectedResponse = ApplyTemplatesResponse
+                .newBuilder()
+                .addAllTemplateApplications(
+                    listOf(
+                        TemplateApplication
+                            .newBuilder()
+                            .addMetadataIds("2")
+                            .setTemplateId(1)
+                            .setNumberAppliedEntries(1)
+                            .build()
+                    )
+                )
+                .build()
+
+            val request = ApplyTemplatesRequest
+                .newBuilder()
+                .setAll(true)
+                .build()
+            val backendMock = mockk<LoriServerBackend>() {
+                every {
+                    applyAllTemplates()
+                } returns expectedResult
+            }
+            // when
+            val grpcServer = LoriGrpcServer(
+                config = mockk(),
+                backend = backendMock,
+                daConnector = mockk() {
+                    every { backend } returns backendMock
+                },
+                tracer = tracer,
+            )
+            val response = grpcServer.applyTemplates(request)
+
+            // then
+            assertThat(response, `is`(expectedResponse))
+        }
+    }
+
+    @Test
+    fun testApplyTemplatesIds() {
+        runBlocking {
+            // given
+            val expectedResult = listOf(1 to listOf("2")).toMap()
+            val expectedResponse = ApplyTemplatesResponse
+                .newBuilder()
+                .addAllTemplateApplications(
+                    listOf(
+                        TemplateApplication
+                            .newBuilder()
+                            .addMetadataIds("2")
+                            .setTemplateId(1)
+                            .setNumberAppliedEntries(1)
+                            .build()
+                    )
+                )
+                .build()
+
+            val request = ApplyTemplatesRequest
+                .newBuilder()
+                .setAll(false)
+                .addAllTemplateIds(listOf(1))
+                .build()
+            val backendMock = mockk<LoriServerBackend>() {
+                every {
+                    applyTemplates(any())
+                } returns expectedResult
+            }
+            // when
+            val grpcServer = LoriGrpcServer(
+                config = mockk(),
+                backend = backendMock,
+                daConnector = mockk() {
+                    every { backend } returns backendMock
+                },
+                tracer = tracer,
+            )
+            val response = grpcServer.applyTemplates(request)
+
+            // then
+            assertThat(response, `is`(expectedResponse))
+        }
+    }
 
     @Test
     fun testFullImport() {
