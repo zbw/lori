@@ -11,3 +11,18 @@ message FullImportRequest {
 message FullImportResponse {
   int32 items_imported = 1;
 }
+
+message ApplyTemplatesRequest {
+  bool all = 1;
+  repeated int32 template_ids = 2;
+}
+
+message TemplateApplication {
+  repeated string metadata_ids = 1;
+  int32 template_id = 2;
+  int32 number_applied_entries = 3;
+}
+
+message ApplyTemplatesResponse {
+  repeated TemplateApplication template_applications = 1;
+}

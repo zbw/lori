@@ -274,6 +274,14 @@ template-applications:
           schema:
             $ref: 'template.model.yaml#/TemplateIdsRest'
       required: true
+    parameters:
+      - name: all
+        in: query
+        description: Defines if all templates should be applied
+        required: false
+        schema:
+          type: boolean
+          default: false
     responses:
       200:
         description: Applied templates successfully

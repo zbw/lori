@@ -1,6 +1,8 @@
 package de.zbw.api.lori.client
 
 import de.zbw.api.lori.client.config.LoriClientConfiguration
+import de.zbw.lori.api.ApplyTemplatesRequest
+import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
@@ -30,6 +32,11 @@ class LoriClient(
     private val openTelemetry: OpenTelemetry,
     private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient")
 ) {
+
+    suspend fun applyTemplates(request: ApplyTemplatesRequest): ApplyTemplatesResponse =
+        runWithTracing("client_applyTemplates") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
+            s.applyTemplates(request)
+        }
 
     suspend fun fullImport(request: FullImportRequest): FullImportResponse =
         runWithTracing("client_fullImport") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->

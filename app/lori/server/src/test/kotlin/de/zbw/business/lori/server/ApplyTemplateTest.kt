@@ -1,7 +1,6 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.FacetTest.Companion.TEST_RIGHT
-import de.zbw.business.lori.server.LoriServerBackendTest.Companion.NOW
 import de.zbw.business.lori.server.LoriServerBackendTest.Companion.TEST_Metadata
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -10,9 +9,7 @@ import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
@@ -20,7 +17,6 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
-import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertTrue
 
@@ -50,10 +46,6 @@ class ApplyTemplateTest : DatabaseTest() {
 
     @BeforeClass
     fun fillDB() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns NOW.toInstant()
-        mockkStatic(LocalDate::class)
-        every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
         getInitialMetadata().forEach { entry ->
             backend.insertMetadataElement(entry.key)
             entry.value.forEach { right ->
@@ -139,6 +131,17 @@ class ApplyTemplateTest : DatabaseTest() {
         assertThat(
             backend.dbConnector.itemDB.countItemByRightId(templateRightId.rightId),
             `is`(2),
+        )
+
+        val applyAllReceived: Map<Int, List<String>> = backend.applyAllTemplates()
+        assertThat(
+            applyAllReceived.values.flatten().toSet(),
+            `is`(
+                setOf(
+                    item2ZDB1.metadataId,
+                    item3ZDB1.metadataId,
+                )
+            )
         )
     }
 

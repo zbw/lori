@@ -441,6 +441,10 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.templateDB.deletePairsByTemplateId(templateId)
 
+    fun applyAllTemplates(): Map<Int, List<String>> =
+        dbConnector.templateDB.getAllTemplateIds()
+            .let { applyTemplates(it) }
+
     fun applyTemplates(templateIds: List<Int>): Map<Int, List<String>> =
         templateIds.associateWith { templateId ->
             applyTemplate(templateId)
