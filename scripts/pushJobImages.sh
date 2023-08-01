@@ -9,7 +9,7 @@ regex="job\/(\w*)\/\S*"
 # Test: Use a local commithash and comment the 'Production' section
 # MR_BRANCH_LAST_COMMIT_SHA=0686d557afb76933f18cc99105e4c1057f809f6e
 
-changedFiles=$(git diff-tree --no-commit-id --name-only -r "${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}".."${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}")
+changedFiles=$(git diff-tree --no-commit-id --name-only -r "${CI_COMMIT_BEFORE_SHA}".."${CI_COMMIT_SHA}")
 echo "Changed files: $changedFiles"
 changedServices=()
 for f in $changedFiles    # unquoted in order to allow the glob to expand
