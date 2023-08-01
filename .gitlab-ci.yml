@@ -32,7 +32,7 @@ test:
     reports:
       junit: app/*/**/TEST-*.xml
 
-pushImages:
+pushLoriImage:
   stage: push
   image: $VAULT_OPENJDK_IMAGE
   variables:
@@ -51,7 +51,7 @@ pushImages:
     - ./gradlew :app:lori:server:jib
     - rm -rf ~/.docker/config.json
 
-pushJobs:
+pushLoriImportJob:
   stage: push
   image: $VAULT_OPENJDK_IMAGE
   variables:
@@ -59,7 +59,7 @@ pushJobs:
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
-        - job/**/*
+        - job/lori_import/**/*
   dependencies:
     - test
   script:
@@ -67,7 +67,26 @@ pushJobs:
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - ./scripts/pushJobImages.sh
+    - ./gradlew :job:lori_import:jib
+    - rm -rf ~/.docker/config.json
+
+pushTemplateApplyJob:
+  stage: push
+  image: $VAULT_OPENJDK_IMAGE
+  variables:
+    VAULT_ROLE_ID: ci-zbw-dev
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/template_apply/**/*
+  dependencies:
+    - test
+  script:
+    - export VAULT_ADDR=https://vault-nl.zbw.eu
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - mkdir -p ~/.docker
+    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
+    - ./gradlew :job:lori_import:jib
     - rm -rf ~/.docker/config.json
 
 after_script:
