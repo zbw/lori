@@ -30,7 +30,7 @@ build_dockerfiles:
     - git rev-parse HEAD
     - git rev-parse HEAD^1
     - git rev-parse origin/main^1
-    - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
+    - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} #
     - git diff --no-commit-id --name-only origin/main^1
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
