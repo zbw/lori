@@ -62,7 +62,7 @@ to skip this section and apply this setup in terraform directly.
 
 There exist two possible ways to accomplish the manual setup:
 1. Run a postgres image in the k8s cluster (recommenend):
-    - `kubectl run -n <YOUR_NAMESPACE> -i --tty --rm dbSetup --image=library/postgres --restart=Never -- sh`
+    - `kubectl run -n <YOUR_NAMESPACE> -i --tty --rm dbsetup --image=library/postgres --restart=Never -- sh`
 2. Remote Login via a jumphost (here is described how this can be achieved for the OTC):
     - Login into OTC console, select **Elastic Cloud Server**
     - Search for **jumphost** and press the **Remote Login** button
