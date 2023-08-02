@@ -5,6 +5,8 @@ default:
   image: openjdk:17.0.1-slim
 
 stages:
+  - build_dockerfiles
+  - push_dockerfiles
   - build
   - test
   - push
@@ -12,6 +14,72 @@ stages:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
+build_dockerfiles:
+  stage: build_dockerfiles
+  only:
+    changes:
+      - "docker/**/Dockerfile"
+  image: docker:24.0.5-git
+  script:
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_COMMIT_SHA
+    - echo $CI_DEFAULT_BRANCH
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_SHA
+    - >
+      if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
+        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only origin/main | grep Dockerfile)
+        else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
+      fi
+    - echo $CHANGED_DOCKERFILES
+    - >
+      for dockerfile in $CHANGED_DOCKERFILES; do
+        echo $dockerfile
+        export IMAGE_VERSION_TAG=$(sed -n 's/LABEL IMAGE_VERSION_TAG.*= *//p' $dockerfile | awk '{print $1}')
+        export IMAGE_NAME=$(sed -n 's/LABEL IMAGE_NAME.*= *//p' $dockerfile | awk '{print $1}')
+        export OTC_STAGE=$(sed -n 's/LABEL OTC_STAGE.*= *//p' $dockerfile | awk '{print $1}')
+        docker build -t $IMAGE_NAME $(dirname $dockerfile)
+        echo docker tag $IMAGE_NAME swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
+        docker tag $IMAGE_NAME swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
+        echo "docker image ls"
+        docker image ls
+      done
+
+push_dockerfiles:
+  stage: push_dockerfiles
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - "docker/**/Dockerfile"
+  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-dind:0.0.1
+  variables:
+    VAULT_ROLE_ID: ci-zbw-dev
+  script:
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_COMMIT_SHA
+    - echo $CI_DEFAULT_BRANCH
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_SHA
+    - export VAULT_ADDR=https://vault-nl.zbw.eu
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - mkdir -p ~/.docker
+    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
+    - export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only origin/main | grep Dockerfile)
+    - echo $CHANGED_DOCKERFILES
+    - >
+      for dockerfile in $CHANGED_DOCKERFILES; do
+        echo $dockerfile
+        export IMAGE_VERSION_TAG=$(sed -n 's/LABEL IMAGE_VERSION_TAG.*= *//p' $dockerfile | awk '{print $1}')
+        export IMAGE_NAME=$(sed -n 's/LABEL IMAGE_NAME.*= *//p' $dockerfile | awk '{print $1}')
+        export OTC_STAGE=$(sed -n 's/LABEL OTC_STAGE.*= *//p' $dockerfile | awk '{print $1}')
+        echo "docker image ls"
+        docker image ls
+        echo docker push swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
+        docker push swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
+      done
+      
 build:
   stage: build
   script:
