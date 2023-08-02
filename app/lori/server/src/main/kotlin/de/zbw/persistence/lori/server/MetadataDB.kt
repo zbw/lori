@@ -313,7 +313,7 @@ class MetadataDB(
             author = rs.getString(20),
             collectionName = rs.getString(21),
             communityName = rs.getString(22),
-            storageDate = rs.getTimestamp(23).toOffsetDateTime(),
+            storageDate = rs.getTimestamp(23)?.toOffsetDateTime(),
         )
     }
 }
