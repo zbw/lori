@@ -69,6 +69,11 @@ push_dockerfiles:
     - echo $CI_COMMIT_BRANCH
     - echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
     - echo $CI_MERGE_REQUEST_TARGET_BRANCH_SHA
+    - git rev-parse HEAD
+    - git rev-parse HEAD^1
+    - git rev-parse origin/main^1
+    - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
+    - git diff --no-commit-id --name-only origin/main^1    
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
     - mkdir -p ~/.docker
