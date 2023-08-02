@@ -30,7 +30,7 @@ build_dockerfiles:
     - git rev-parse HEAD
     - git rev-parse HEAD^1
     - git rev-parse origin/main^1
-    - git rev-list --ancestry-path 23_KW31_auto_build_dockerfiles..main
+    - git rev-list --ancestry-path $CI_COMMIT_BRANCH..main
     - git rev-list origin..HEAD --max-parents=1 --max-count=1
     - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
     - git diff --no-commit-id --name-only origin/main^1
