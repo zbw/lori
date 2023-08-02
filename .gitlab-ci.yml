@@ -30,13 +30,11 @@ build_dockerfiles:
     - git rev-parse HEAD
     - git rev-parse HEAD^1
     - git rev-parse origin/main^1
-  #  - git rev-list --ancestry-path $CI_COMMIT_BRANCH..main
-  #  - git rev-list origin..HEAD --max-parents=1 --max-count=1
     - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
     - git diff --no-commit-id --name-only origin/main^1
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
-        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only origin/main | grep Dockerfile)
+        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
         else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
       fi
     - echo $CHANGED_DOCKERFILES
@@ -78,7 +76,7 @@ push_dockerfiles:
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only $CI_COMMIT_SHA | grep Dockerfile)
+    - export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
     - echo $CHANGED_DOCKERFILES
     - >
       for dockerfile in $CHANGED_DOCKERFILES; do
