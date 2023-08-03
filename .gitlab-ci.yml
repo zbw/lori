@@ -93,7 +93,7 @@ push_dockerfiles:
 build:
   stage: build
   rules:
-    changes:
+    - changes:
       - "**/!(Dockerfile)"
   script:
     - ./gradlew assemble --parallel
