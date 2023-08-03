@@ -1,6 +1,11 @@
 # install vault
-FROM alpine:latest AS vault
-ARG VAULT_VERSION=1.13.1
+FROM alpine:3.18.2 AS vault
+
+LABEL IMAGE_VERSION_TAG=0.0.2
+LABEL IMAGE_NAME=vault-psql-s3cmd
+LABEL OTC_STAGE=zbw-dev-nl
+
+ARG VAULT_VERSION=1.14.0
 RUN apk add --no-cache curl jq && \
     curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
@@ -11,12 +16,15 @@ RUN apk add --no-cache curl jq && \
 
 #install psql
 FROM vault AS psql
-RUN apk add --no-cache postgresql-client
+ARG POSTGRES_CLIENT_VERSION=15.3-r0
+ARG POSTGRES_CLIENT_MAJOR_VERSION=15
+RUN apk add --no-cache postgresql"$POSTGRES_CLIENT_MAJOR_VERSION"-client="$POSTGRES_CLIENT_VERSION"
 
 # install s3cmd
 FROM psql AS s3cmd
+ARG S3CMD_VERSION=2.3.0
 RUN apk add --no-cache python3 py3-pip py3-setuptools libmagic && \
-    pip3 install --no-cache-dir python-dateutil python-magic s3cmd
+    pip3 install --no-cache-dir python-dateutil python-magic s3cmd=="$S3CMD_VERSION"
 
 # use standard user
 FROM s3cmd
