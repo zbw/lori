@@ -16,22 +16,11 @@ before_script:
 
 build_dockerfiles:
   stage: build_dockerfiles
-  only:
-    changes:
-      - "docker/**/Dockerfile"
+  rules:
+    - changes:
+      - docker/**/Dockerfile
   image: docker:24.0.5-git
   script:
-    - echo $CI_PIPELINE_SOURCE
-    - echo $CI_COMMIT_SHA
-    - echo $CI_DEFAULT_BRANCH
-    - echo $CI_COMMIT_BRANCH
-    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_SHA
-    - git rev-parse HEAD
-    - git rev-parse HEAD^1
-    - git rev-parse origin/main^1
-    - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
-    - git diff --no-commit-id --name-only origin/main^1
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
         then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
@@ -56,22 +45,11 @@ push_dockerfiles:
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
-        - "docker/**/Dockerfile"
+        - docker/**/Dockerfile
   image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-dind:0.0.1
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
   script:
-    - echo $CI_PIPELINE_SOURCE
-    - echo $CI_COMMIT_SHA
-    - echo $CI_DEFAULT_BRANCH
-    - echo $CI_COMMIT_BRANCH
-    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
-    - echo $CI_MERGE_REQUEST_TARGET_BRANCH_SHA
-    - git rev-parse HEAD
-    - git rev-parse HEAD^1
-    - git rev-parse origin/main^1
-    - git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA}
-    - git diff --no-commit-id --name-only origin/main^1    
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
     - mkdir -p ~/.docker
@@ -105,8 +83,8 @@ build:
 
 test:
   stage: test
-  only:
-    changes:
+  rules:
+    - changes:
       - app/**/*
       - buildSrc/**/*
   dependencies:
