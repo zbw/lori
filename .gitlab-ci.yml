@@ -94,7 +94,8 @@ build:
   stage: build
   rules:
     - changes:
-      - "**/*!(Dockerfile)"
+      - app/**/*
+      - buildSrc/**/*
   script:
     - ./gradlew assemble --parallel
   artifacts:
@@ -106,8 +107,8 @@ test:
   stage: test
   only:
     changes:
-      - "docker/handle/**/*"
-      - "[!d][!o][!c][!k][!e][!r]*/**/*"
+      - app/**/*
+      - buildSrc/**/*
   dependencies:
     - build
   script:
