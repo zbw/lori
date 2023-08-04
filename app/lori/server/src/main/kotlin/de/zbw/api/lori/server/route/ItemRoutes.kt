@@ -437,36 +437,9 @@ fun Routing.itemRoutes(
                         rightFilters,
                         noRightInformationFilter,
                     )
-                    val totalPages = ceil(queryResult.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
                     span.setStatus(StatusCode.OK)
                     call.respond(
-                        ItemInformation(
-                            itemArray = queryResult.results.map { it.toRest() },
-                            totalPages = totalPages,
-                            accessStateWithCount = queryResult.accessState.entries.map {
-                                AccessStateWithCountRest(it.key.toRest(), it.value)
-                            }.toList(),
-                            hasLicenceContract = queryResult.hasLicenceContract,
-                            hasOpenContentLicence = queryResult.hasOpenContentLicence,
-                            hasSearchTokenWithNoKey = queryResult.hasSearchTokenWithNoKey,
-                            hasZbwUserAgreement = queryResult.hasZbwUserAgreement,
-                            invalidSearchKey = queryResult.invalidSearchKey,
-                            numberOfResults = queryResult.numberOfResults,
-                            paketSigelWithCount = queryResult.paketSigels.entries
-                                .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList(),
-                            publicationTypeWithCount = queryResult.publicationType.entries.map {
-                                PublicationTypeWithCountRest(
-                                    count = it.value,
-                                    publicationType = it.key.toRest(),
-                                )
-                            }.toList(),
-                            zdbIdWithCount = queryResult.zdbIds.entries.map {
-                                ZdbIdWithCountRest(
-                                    count = it.value,
-                                    zdbId = it.key,
-                                )
-                            }.toList(),
-                        )
+                        queryResult.toRest(pageSize)
                     )
                 } catch (e: NumberFormatException) {
                     span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")

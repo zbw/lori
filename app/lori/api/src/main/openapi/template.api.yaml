@@ -310,6 +310,23 @@ template-bookmarks-entries:
         required: true
         schema:
           type: integer
+      - name: offset
+        in: query
+        description: An offset.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: "The number of entries to return."
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+        required: false
     responses:
       200:
         description: Successful operation

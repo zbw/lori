@@ -23,6 +23,7 @@ import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.util.Date
+import kotlin.math.max
 
 /**
  * Backend for the Lori-Server.
@@ -410,38 +411,56 @@ class LoriServerBackend(
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
-    fun getSearchResultsForTemplateId(
+    fun getSearchResultsByTemplateId(
         templateId: Int,
+        limit: Int,
+        offset: Int,
     ): SearchQueryResult {
-        val template = dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
-        val rightId = template?.right?.rightId ?: return emptyList()
-        // Receive all bookmark ids
+        // Receive all Bookmarks linked to given Template
         val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
-        // Get search results for each bookmark
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+        var tmpLimit = limit;
+        var tmpOffset = offset;
+        // Execute search for each bookmark
         val searchResults: List<SearchQueryResult> = bookmarks.asSequence().map { b ->
-            searchQuery(
-                searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
-                limit = 10, //
-                offset = 0,
-                metadataSearchFilter = listOfNotNull(
-                    b.paketSigelFilter,
-                    b.publicationDateFilter,
-                    b.publicationTypeFilter,
-                    b.zdbIdFilter,
-                ),
-                rightSearchFilter = listOfNotNull(
-                    b.accessStateFilter,
-                    b.temporalValidityFilter,
-                    b.validOnFilter,
-                    b.startDateFilter,
-                    b.endDateFilter,
-                    b.formalRuleFilter,
-                ),
-                noRightInformationFilter = b.noRightInformationFilter,
+            val result = getSearchResultsByBookmark(
+                bookmark = b,
+                limit = tmpLimit,
+                offset = tmpOffset,
             )
+            tmpLimit = max(0, tmpLimit - result.results.size)
+            tmpOffset = max(0, tmpOffset - result.numberOfResults)
+            result
         }.toList()
+        // Combine results into one data structure
+        return SearchQueryResult.reduceResults(searchResults)
     }
+
+    private fun getSearchResultsByBookmark(
+        bookmark: Bookmark,
+        limit: Int,
+        offset: Int,
+        ): SearchQueryResult =
+        searchQuery(
+            searchTerm = bookmark.searchKeys?.let { searchKeysToString(it) } ?: "",
+            limit = limit,
+            offset = offset,
+            metadataSearchFilter = listOfNotNull(
+                bookmark.paketSigelFilter,
+                bookmark.publicationDateFilter,
+                bookmark.publicationTypeFilter,
+                bookmark.zdbIdFilter,
+            ),
+            rightSearchFilter = listOfNotNull(
+                bookmark.accessStateFilter,
+                bookmark.temporalValidityFilter,
+                bookmark.validOnFilter,
+                bookmark.startDateFilter,
+                bookmark.endDateFilter,
+                bookmark.formalRuleFilter,
+            ),
+            noRightInformationFilter = bookmark.noRightInformationFilter,
+        )
 
     fun deleteBookmarkTemplatePair(
         templateId: Int,
