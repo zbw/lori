@@ -73,10 +73,10 @@ build:
   stage: build
   rules:
     - changes:
-      compare_to: 'refs/heads/main'
-      paths:
-        - app/**/*
-        - buildSrc/**/*
+        compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
   script:
     - ./gradlew assemble --parallel
   artifacts:
@@ -88,10 +88,10 @@ test:
   stage: test
   rules:
     - changes:
-      compare_to: 'refs/heads/main'
-      paths:
-        - app/**/*
-        - buildSrc/**/*
+        compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
   needs: [build] 
   dependencies:
     - build
