@@ -16,7 +16,9 @@ build_dockerfiles:
   stage: build
   rules:
     - changes:
-      - docker/**/Dockerfile
+        compare_to: 'refs/heads/main'
+        paths:
+          - docker/**/Dockerfile
   image: docker:24.0.5-git
   script:
     - >
@@ -71,8 +73,10 @@ build:
   stage: build
   rules:
     - changes:
-      - app/**/*
-      - buildSrc/**/*
+        compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
   script:
     - ./gradlew assemble --parallel
   artifacts:
@@ -84,8 +88,10 @@ test:
   stage: test
   rules:
     - changes:
-      - app/**/*
-      - buildSrc/**/*
+        compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
   needs: [build] 
   dependencies:
     - build
