@@ -5,8 +5,6 @@ default:
   image: openjdk:17.0.1-slim
 
 stages:
-  - build_dockerfiles
-  - push_dockerfiles
   - build
   - test
   - push
@@ -15,7 +13,7 @@ before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
 build_dockerfiles:
-  stage: build_dockerfiles
+  stage: build
   rules:
     - changes:
       - docker/**/Dockerfile
@@ -41,7 +39,8 @@ build_dockerfiles:
       done
 
 push_dockerfiles:
-  stage: push_dockerfiles
+  stage: push
+  needs: [build_dockerfiles]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
@@ -87,6 +86,7 @@ test:
     - changes:
       - app/**/*
       - buildSrc/**/*
+  needs: [build] 
   dependencies:
     - build
   script:
@@ -105,6 +105,7 @@ pushLoriImage:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - app/lori/**/*
+  needs: [test]
   dependencies:
     - test
   script:
@@ -143,6 +144,7 @@ pushTemplateApplyJob:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - job/template_apply/**/*
+  needs: [test]
   dependencies:
     - test
   script:
