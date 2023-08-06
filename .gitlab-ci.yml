@@ -42,8 +42,6 @@ build_dockerfiles:
 
 push_dockerfiles:
   stage: push
-  needs:
-    - build_dockerfiles
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
