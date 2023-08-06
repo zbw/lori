@@ -93,7 +93,6 @@ test:
         paths:
           - app/**/*
           - buildSrc/**/*
-  needs: [build] 
   dependencies:
     - build
   script:
@@ -112,7 +111,6 @@ pushLoriImage:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - app/lori/**/*
-  needs: [test]
   dependencies:
     - test
   script:
@@ -151,7 +149,6 @@ pushTemplateApplyJob:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - job/template_apply/**/*
-  needs: [test]
   dependencies:
     - test
   script:
