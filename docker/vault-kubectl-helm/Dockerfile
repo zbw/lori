@@ -3,7 +3,7 @@ FROM alpine:3.18.2 AS docker-git
 LABEL IMAGE_VERSION_TAG=0.1.0
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
-LABEL TEST=6
+LABEL TEST=7
 
 RUN apk add --no-cache curl \
     bash \
