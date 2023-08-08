@@ -45,8 +45,9 @@ buildDockerfileImages:
         docker image ls
       done
 
-pushDockerfileImage:
+pushDockerfileImages:
   stage: push
+  needs: ["buildDockerfileImages"]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
@@ -96,6 +97,7 @@ build:
 
 test:
   stage: test
+  needs: ["build"]
   rules:
     - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"
       changes:
@@ -119,6 +121,7 @@ test:
 
 pushLoriImage:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -138,6 +141,7 @@ pushLoriImage:
 
 pushLoriImportJob:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -157,6 +161,7 @@ pushLoriImportJob:
 
 pushTemplateApplyJob:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
