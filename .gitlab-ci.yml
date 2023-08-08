@@ -12,11 +12,16 @@ stages:
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
-build_dockerfiles:
+buildDockerfileImages:
   stage: build
   rules:
-    - changes:
+    - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_PIPELINE_SOURCE == "push"
+      changes:
         compare_to: 'refs/heads/main'
+        paths:
+          - docker/**/Dockerfile
+    - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
+      changes:
         paths:
           - docker/**/Dockerfile
   image: docker:24.0.5-git
@@ -40,8 +45,9 @@ build_dockerfiles:
         docker image ls
       done
 
-push_dockerfiles:
+pushDockerfileImages:
   stage: push
+  needs: ["buildDockerfileImages"]
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
@@ -71,8 +77,14 @@ push_dockerfiles:
 build:
   stage: build
   rules:
-    - changes:
+    - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"
+      changes:
         compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
+    - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000"
+      changes:
         paths:
           - app/**/*
           - buildSrc/**/*
@@ -85,9 +97,16 @@ build:
 
 test:
   stage: test
+  needs: ["build"]
   rules:
-    - changes:
+    - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000"
+      changes:
         compare_to: 'refs/heads/main'
+        paths:
+          - app/**/*
+          - buildSrc/**/*
+    - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000"
+      changes:
         paths:
           - app/**/*
           - buildSrc/**/*
@@ -102,6 +121,7 @@ test:
 
 pushLoriImage:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -121,6 +141,7 @@ pushLoriImage:
 
 pushLoriImportJob:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -140,6 +161,7 @@ pushLoriImportJob:
 
 pushTemplateApplyJob:
   stage: push
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
