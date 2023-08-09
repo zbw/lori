@@ -468,7 +468,6 @@ fun SearchQueryResult.toRest(
     )
 }
 
-
 /**
  * Utility functions helping to convert
  * REST to Business Objects and vice versa.

@@ -14,13 +14,9 @@ import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
-import de.zbw.lori.model.PaketSigelWithCountRest
-import de.zbw.lori.model.PublicationTypeWithCountRest
-import de.zbw.lori.model.ZdbIdWithCountRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException

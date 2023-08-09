@@ -21,7 +21,6 @@ data class SearchQueryResult(
 ) {
     companion object {
         fun reduceResults(results: List<SearchQueryResult>): SearchQueryResult {
-            val uniqueResults: Set<Item> = results.flatMap { it.results }.toSet()
             val paketSigel: Map<String, Int> =
                 results.foldRight(emptyMap()) { elem, acc ->
                     val mutMap: MutableMap<String, Int> = acc.toMutableMap()
@@ -83,7 +82,7 @@ data class SearchQueryResult(
 
             return SearchQueryResult(
                 numberOfResults = results.sumOf { it.numberOfResults },
-                results = uniqueResults.toList(),
+                results = results.flatMap { it.results },
                 accessState = accessState,
                 invalidSearchKey = emptyList(),
                 hasLicenceContract = hasLicenceContract,

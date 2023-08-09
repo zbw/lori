@@ -11,7 +11,9 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
 export default defineComponent({
   components: { RightsEditDialog },
-  setup() {
+  props: {},
+  emits: ["getItemsByTemplateId"],
+  setup(props, { emit }) {
     /**
      * Stores.
      */
@@ -97,7 +99,9 @@ export default defineComponent({
         .then((r: TemplateApplicationsRest) => {
           alertSuccessful.value = true;
           alertSuccessfulMsg.value =
-            "Template '" + template.templateName + "' wurde für " +
+            "Template '" +
+            template.templateName +
+            "' wurde für " +
             r.templateApplication[0].numberOfAppliedEntries +
             " Einträge angewandt.";
         })
@@ -150,6 +154,15 @@ export default defineComponent({
       renderKey.value += 1;
     };
 
+    /**
+     * EMITS
+     */
+    const emitGetItemsByTemplateId = (templateId?: number) => {
+      if (templateId != undefined) {
+        emit("getItemsByTemplateId", templateId);
+      }
+    };
+
     onMounted(() => getTemplateList());
 
     return {
@@ -172,6 +185,7 @@ export default defineComponent({
       closeTemplateEditDialog,
       createNewTemplate,
       editTemplate,
+      emitGetItemsByTemplateId,
       getTemplateList,
       updateTemplateOverview,
     };
@@ -204,7 +218,10 @@ export default defineComponent({
         loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.displayConnectedItems="{ item }">
-          <v-btn color="blue darken-1" text
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="emitGetItemsByTemplateId(item.templateId)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>

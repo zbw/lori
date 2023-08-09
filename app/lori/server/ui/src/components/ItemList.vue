@@ -1,6 +1,7 @@
 <script lang="ts">
 import {
-  AccessStateWithCountRest, BookmarkRest,
+  AccessStateWithCountRest,
+  BookmarkRest,
   ItemInformation,
   ItemRest,
   MetadataRest,
@@ -22,6 +23,7 @@ import error from "@/utils/error";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import TemplateOverview from "@/components/TemplateOverview.vue";
 import BookmarkOverview from "@/components/BookmarkOverview.vue";
+import templateApi from "@/api/templateApi";
 
 export default defineComponent({
   components: {
@@ -143,13 +145,21 @@ export default defineComponent({
     // Page changes
     const handlePageChange = (nextPage: number) => {
       currentPage.value = nextPage;
-      searchQuery();
+      if (templateSearchIsActive.value) {
+        executeSearchByTemplateId();
+      } else {
+        searchQuery();
+      }
     };
 
     const handlePageSizeChange = (size: number) => {
       pageSize.value = size;
       currentPage.value = 1;
-      searchQuery();
+      if (templateSearchIsActive.value) {
+        executeSearchByTemplateId();
+      } else {
+        searchQuery();
+      }
     };
 
     /**
@@ -194,8 +204,43 @@ export default defineComponent({
     // Search
     const searchStore = useSearchStore();
 
-    const alertBookmarkExecuted = ref(false);
-    const alertBookmarkExecutedMsg = ref("");
+    const alertIsActive = ref(false);
+    const alertMsg = ref("");
+
+    const templateSearchIsActive = ref(false);
+    const currentTemplateId = ref(0);
+    const initSearchByTemplateId = (templateId: number) => {
+      templateSearchIsActive.value = true;
+      currentPage.value = 1;
+      currentTemplateId.value = templateId;
+      closeTemplateOverview();
+      alertMsg.value =
+        "Alle gespeicherten Suchen für Template-ID " +
+        templateId +
+        " wurden ausgeführt. Es kann zu Doppelungen in den Suchergebnissen kommen.";
+      alertIsActive.value = true;
+      executeSearchByTemplateId();
+    };
+
+    const executeSearchByTemplateId = () => {
+      templateApi
+        .getItemsByTemplateId(
+          currentTemplateId.value,
+          pageSize.value,
+          (currentPage.value - 1) * pageSize.value
+        )
+        .then((response: ItemInformation) => {
+          processSearchResult(response);
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            loadAlertErrorMessage.value = errMsg;
+            loadAlertError.value = true;
+          });
+        });
+    };
+
     const executeBookmarkSearch = (bookmark: BookmarkRest) => {
       searchquerybuilder.setPublicationDateFilter(searchStore, bookmark);
       searchquerybuilder.setPaketSigelFilter(searchStore, bookmark);
@@ -208,9 +253,12 @@ export default defineComponent({
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
-      closeBookmarkOverviewDialog();
-      alertBookmarkExecutedMsg.value = "Eine gespeicherte Suche mit ID " + bookmark.bookmarkId + " wurde ausgeführt.";
-      alertBookmarkExecuted.value = true;
+      closeBookmarkOverview();
+      alertMsg.value =
+        "Eine gespeicherte Suche mit ID " +
+        bookmark.bookmarkId +
+        " wurde ausgeführt.";
+      alertIsActive.value = true;
       startSearch();
     };
 
@@ -219,6 +267,7 @@ export default defineComponent({
       searchStore.lastSearchTerm = searchTerm.value;
       invalidSearchKeyError.value = false;
       hasSearchTokenWithNoKeyError.value = false;
+      templateSearchIsActive.value = false;
       searchQuery();
     };
 
@@ -242,7 +291,7 @@ export default defineComponent({
           searchquerybuilder.buildNoRightInformation(searchStore)
         )
         .then((response: ItemInformation) => {
-           processSearchResult(response);
+          processSearchResult(response);
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -260,15 +309,15 @@ export default defineComponent({
       numberOfResults.value = response.numberOfResults;
       if (response.invalidSearchKey?.length || 0 > 0) {
         invalidSearchKeyErrorMsg.value =
-            "Die folgenden Suchkeys sind ungültig: " +
+          "Die folgenden Suchkeys sind ungültig: " +
             response.invalidSearchKey?.join(", ") || "";
         invalidSearchKeyError.value = true;
       }
 
       if (response.hasSearchTokenWithNoKey == true) {
         hasSearchTokenWithNoKeyErrorMsg.value =
-            "Mindestens ein Wort enthält keinen Suchkey." +
-            " Dieser Teil wird bei der Suche ignoriert.";
+          "Mindestens ein Wort enthält keinen Suchkey." +
+          " Dieser Teil wird bei der Suche ignoriert.";
         hasSearchTokenWithNoKeyError.value = true;
       }
       // TODO: wird nur in abhängigkeit von ergebnis angezeigt
@@ -448,14 +497,14 @@ export default defineComponent({
      */
     const dialogStore = useDialogsStore();
 
-    const closeBookmarkOverviewDialog = () => {
+    const closeBookmarkOverview = () => {
       dialogStore.bookmarkOverviewActivated = false;
     };
     const closeGroupDialog = () => {
       dialogStore.groupOverviewActivated = false;
     };
 
-    const closeTemplateDialog = () => {
+    const closeTemplateOverview = () => {
       dialogStore.templateOverviewActivated = false;
     };
 
@@ -471,8 +520,8 @@ export default defineComponent({
     };
 
     return {
-      alertBookmarkExecuted,
-      alertBookmarkExecutedMsg,
+      alertIsActive,
+      alertMsg,
       bookmarkSuccessfulMsg,
       currentItem,
       currentPage,
@@ -499,11 +548,12 @@ export default defineComponent({
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
-      closeBookmarkOverviewDialog,
+      closeBookmarkOverview,
       closeBookmarkSaveDialog,
       closeGroupDialog,
-      closeTemplateDialog,
+      closeTemplateOverview,
       executeBookmarkSearch,
+      initSearchByTemplateId,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -545,18 +595,20 @@ export default defineComponent({
       v-model="dialogStore.templateOverviewActivated"
       :retain-focus="false"
       max-width="1000px"
-      v-on:close="closeTemplateDialog"
+      v-on:close="closeTemplateOverview"
     >
-      <TemplateOverview></TemplateOverview>
+      <TemplateOverview
+        v-on:getItemsByTemplateId="initSearchByTemplateId"
+      ></TemplateOverview>
     </v-dialog>
     <v-dialog
       v-model="dialogStore.bookmarkOverviewActivated"
       :retain-focus="false"
       max-width="1000px"
-      v-on:close="closeBookmarkOverviewDialog"
+      v-on:close="closeBookmarkOverview"
     >
       <BookmarkOverview
-          v-on:executeBookmarkSearch="executeBookmarkSearch"
+        v-on:executeBookmarkSearch="executeBookmarkSearch"
       ></BookmarkOverview>
     </v-dialog>
     <v-row>
@@ -609,13 +661,8 @@ export default defineComponent({
           >
             Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId }}.
           </v-alert>
-          <v-alert
-              v-model="alertBookmarkExecuted"
-              dismissible
-              text
-              type="success"
-          >
-            {{ alertBookmarkExecutedMsg }}
+          <v-alert v-model="alertIsActive" dismissible text type="success">
+            {{ alertMsg }}
           </v-alert>
           <v-select
             v-model="headersValueVSelect"

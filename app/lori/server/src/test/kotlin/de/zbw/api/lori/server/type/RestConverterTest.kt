@@ -12,9 +12,15 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.lori.model.AccessStateWithCountRest
+import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.PaketSigelWithCountRest
+import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.ZdbIdWithCountRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert
@@ -355,6 +361,68 @@ class RestConverterTest {
         assertThat(
             TEST_BOOKMARK.toString(),
             `is`(TEST_BOOKMARK.toRest().toBusiness().toString())
+        )
+    }
+
+    @Test
+    fun testSearchQuery2ItemInformation() {
+        val givenItem = Item(
+            metadata = TEST_METADATA,
+            rights = listOf(TEST_RIGHT)
+        )
+        val given = SearchQueryResult(
+            numberOfResults = 2,
+            results = listOf(
+                givenItem,
+            ),
+            accessState = mapOf(
+                AccessState.OPEN to 2,
+            ),
+            invalidSearchKey = listOf("foo"),
+            hasLicenceContract = false,
+            hasOpenContentLicence = true,
+            hasSearchTokenWithNoKey = false,
+            hasZbwUserAgreement = false,
+            paketSigels = mapOf("sigel1" to 1),
+            publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
+            zdbIds = mapOf("zdb1" to 1),
+        )
+        val expected = ItemInformation(
+            itemArray = listOf(givenItem.toRest()),
+            totalPages = 2,
+            accessStateWithCount = listOf(
+                AccessStateWithCountRest(AccessState.OPEN.toRest(), 2)
+            ),
+            hasLicenceContract = given.hasLicenceContract,
+            hasOpenContentLicence = given.hasOpenContentLicence,
+            hasSearchTokenWithNoKey = given.hasSearchTokenWithNoKey,
+            hasZbwUserAgreement = given.hasZbwUserAgreement,
+            invalidSearchKey = given.invalidSearchKey,
+            numberOfResults = given.numberOfResults,
+            paketSigelWithCount = listOf(
+                PaketSigelWithCountRest(count = 1, paketSigel = "sigel1")
+            ),
+            publicationTypeWithCount = listOf(
+                PublicationTypeWithCountRest(
+                    count = 1,
+                    publicationType = PublicationType.BOOK.toRest(),
+                ),
+                PublicationTypeWithCountRest(
+                    count = 1,
+                    publicationType = PublicationType.THESIS.toRest(),
+                ),
+            ),
+            zdbIdWithCount = listOf(
+                ZdbIdWithCountRest(
+                    count = 1,
+                    zdbId = "zdb1",
+                )
+            )
+        )
+
+        assertThat(
+            given.toRest(1),
+            `is`(expected),
         )
     }
 

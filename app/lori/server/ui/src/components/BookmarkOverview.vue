@@ -9,9 +9,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 export default defineComponent({
   components: { RightsEditDialog },
   props: {},
-  emits: [
-      "executeBookmarkSearch"
-  ],
+  emits: ["executeBookmarkSearch"],
   setup(props, { emit }) {
     /**
      * Error messages.

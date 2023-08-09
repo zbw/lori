@@ -73,6 +73,7 @@ class SearchQueryResultTest {
             results = listOf(
                 item1,
                 item2,
+                item2,
             ),
             accessState = mapOf(
                 AccessState.OPEN to 20,

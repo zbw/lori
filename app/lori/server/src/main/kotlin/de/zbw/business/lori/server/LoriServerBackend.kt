@@ -322,7 +322,7 @@ class LoriServerBackend(
         // Acquire number of results
         val numberOfResults =
             items
-                .takeIf { it.isNotEmpty() }
+                .takeIf { it.isNotEmpty() || offset != 0 }
                 ?.let {
                     dbConnector.searchDB.countSearchMetadata(
                         keys,
@@ -419,8 +419,8 @@ class LoriServerBackend(
         // Receive all Bookmarks linked to given Template
         val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-        var tmpLimit = limit;
-        var tmpOffset = offset;
+        var tmpLimit = limit
+        var tmpOffset = offset
         // Execute search for each bookmark
         val searchResults: List<SearchQueryResult> = bookmarks.asSequence().map { b ->
             val result = getSearchResultsByBookmark(
@@ -438,9 +438,9 @@ class LoriServerBackend(
 
     private fun getSearchResultsByBookmark(
         bookmark: Bookmark,
-        limit: Int,
-        offset: Int,
-        ): SearchQueryResult =
+        limit: Int?,
+        offset: Int?,
+    ): SearchQueryResult =
         searchQuery(
             searchTerm = bookmark.searchKeys?.let { searchKeysToString(it) } ?: "",
             limit = limit,
