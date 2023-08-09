@@ -19,27 +19,34 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
+import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
+import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
+import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
 import de.zbw.lori.model.TemplateRest
+import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 /**
  * Conversion functions between rest interface and business logic.
@@ -427,6 +434,39 @@ fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
         bookmarkId = this.bookmarkId,
         templateId = this.templateId,
     )
+
+fun SearchQueryResult.toRest(
+    pageSize: Int,
+): ItemInformation {
+    val totalPages = ceil(this.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
+    return ItemInformation(
+        itemArray = this.results.map { it.toRest() },
+        totalPages = totalPages,
+        accessStateWithCount = this.accessState.entries.map {
+            AccessStateWithCountRest(it.key.toRest(), it.value)
+        }.toList(),
+        hasLicenceContract = this.hasLicenceContract,
+        hasOpenContentLicence = this.hasOpenContentLicence,
+        hasSearchTokenWithNoKey = this.hasSearchTokenWithNoKey,
+        hasZbwUserAgreement = this.hasZbwUserAgreement,
+        invalidSearchKey = this.invalidSearchKey,
+        numberOfResults = this.numberOfResults,
+        paketSigelWithCount = this.paketSigels.entries
+            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList(),
+        publicationTypeWithCount = this.publicationType.entries.map {
+            PublicationTypeWithCountRest(
+                count = it.value,
+                publicationType = it.key.toRest(),
+            )
+        }.toList(),
+        zdbIdWithCount = this.zdbIds.entries.map {
+            ZdbIdWithCountRest(
+                count = it.value,
+                zdbId = it.key,
+            )
+        }.toList(),
+    )
+}
 
 /**
  * Utility functions helping to convert

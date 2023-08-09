@@ -58,10 +58,10 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testRoundtrip() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_Metadata,
-            TEST_Metadata.copy(metadataId = "no_rights"),
+            TEST_METADATA,
+            TEST_METADATA.copy(metadataId = "no_rights"),
         )
-        val rightAssignments = TEST_RIGHT to listOf(TEST_Metadata.metadataId)
+        val rightAssignments = TEST_RIGHT to listOf(TEST_METADATA.metadataId)
 
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
@@ -81,11 +81,11 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testGetList() {
         // given
         val givenMetadata = arrayOf(
-            TEST_Metadata.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
-            TEST_Metadata.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
-            TEST_Metadata.copy(metadataId = "aaa"),
-            TEST_Metadata.copy(metadataId = "abb"),
-            TEST_Metadata.copy(metadataId = "acc"),
+            TEST_METADATA.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
+            TEST_METADATA.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
+            TEST_METADATA.copy(metadataId = "aaa"),
+            TEST_METADATA.copy(metadataId = "abb"),
+            TEST_METADATA.copy(metadataId = "acc"),
         )
 
         backend.insertMetadataElements(givenMetadata.toList())
@@ -143,7 +143,7 @@ class LoriServerBackendTest : DatabaseTest() {
     @Test
     fun testUpsert() {
         // given
-        val expectedMetadata = TEST_Metadata.copy(band = "anotherband")
+        val expectedMetadata = TEST_METADATA.copy(band = "anotherband")
 
         // when
         backend.upsertMetadataElements(listOf(expectedMetadata))
@@ -152,7 +152,7 @@ class LoriServerBackendTest : DatabaseTest() {
         // then
         assertThat(received, `is`(listOf(expectedMetadata)))
 
-        val expectedMetadata2 = TEST_Metadata.copy(band = "anotherband2")
+        val expectedMetadata2 = TEST_METADATA.copy(band = "anotherband2")
         // when
         backend.upsertMetadataElements(listOf(expectedMetadata2))
         val received2 = backend.getMetadataElementsByIds(listOf(expectedMetadata2.metadataId))
@@ -287,8 +287,8 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testSearchQuery() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_Metadata.copy(metadataId = "search_test_1", zdbId = "zbdTest"),
-            TEST_Metadata.copy(metadataId = "search_test_2", zdbId = "zbdTest"),
+            TEST_METADATA.copy(metadataId = "search_test_1", zdbId = "zbdTest"),
+            TEST_METADATA.copy(metadataId = "search_test_2", zdbId = "zbdTest"),
         )
         val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
@@ -406,7 +406,7 @@ class LoriServerBackendTest : DatabaseTest() {
         )!!
 
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
-        val TEST_Metadata = ItemMetadata(
+        val TEST_METADATA = ItemMetadata(
             metadataId = "that-test",
             author = "Colbjørnsen, Terje",
             band = "band",

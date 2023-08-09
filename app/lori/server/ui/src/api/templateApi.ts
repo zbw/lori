@@ -2,6 +2,7 @@ import {
   BookmarkRest,
   BookmarkTemplateRest,
   Configuration,
+  ItemInformation,
   TemplateApi,
   TemplateApplicationsRest,
   TemplateIdCreated,
@@ -61,6 +62,17 @@ export default {
       body: {
         bookmarkIds: bookmarkIds,
       },
+    });
+  },
+  getItemsByTemplateId(
+    templateId: number,
+    limit: number,
+    offset: number
+  ): Promise<ItemInformation> {
+    return templateApi.getItemsByTemplateId({
+      id: templateId,
+      limit: limit,
+      offset: offset,
     });
   },
 };

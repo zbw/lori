@@ -1,7 +1,7 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.FacetTest.Companion.TEST_RIGHT
-import de.zbw.business.lori.server.LoriServerBackendTest.Companion.TEST_Metadata
+import de.zbw.business.lori.server.LoriServerBackendTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -147,21 +147,21 @@ class ApplyTemplateTest : DatabaseTest() {
 
     companion object {
         const val ZDB_1 = "zdb1"
-        val item1ZDB1 = TEST_Metadata.copy(
+        val item1ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb1",
             collectionName = "common zdb",
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
-        val item2ZDB1 = TEST_Metadata.copy(
+        val item2ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb2",
             collectionName = "common zdb",
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
-        val item3ZDB1 = TEST_Metadata.copy(
+        val item3ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb3",
             collectionName = "common zdb",
             zdbId = ZDB_1,
