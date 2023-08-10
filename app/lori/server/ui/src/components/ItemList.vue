@@ -687,13 +687,13 @@ export default defineComponent({
             :headers="selectedHeaders"
             :hide-default-footer="true"
             :items="items.map((value) => value.metadata)"
-            dblclick:row="setActiveItem"
             disable-pagination
             item-key="metadataId"
             loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             @click:row="addActiveItem"
+            @dblclick:row="setActiveItem"
           >
             <template v-slot:item.handle="{ item }">
               <td>
