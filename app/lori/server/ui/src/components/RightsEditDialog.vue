@@ -541,10 +541,14 @@ export default defineComponent({
     });
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
-    const computedRightId = computed(() =>
+    const computedRightId = computed(() => {
       // The check for undefined is required here!
-      props.right == undefined ? "" : props.right.rightId
-    );
+      if (props.right == undefined || props.right.rightId == undefined) {
+        return "";
+      } else {
+        return props.right.rightId;
+      }
+    });
     const computedTemplateId = computed(() =>
       props.templateId == undefined ? -1 : props.templateId
     );
