@@ -138,7 +138,7 @@ export default defineComponent({
      * Search.
      */
     const executeBookmarkSearch = (bookmark: BookmarkRest) => {
-      emit("executeBookmarkSearch", bookmark)
+      emit("executeBookmarkSearch", bookmark);
     };
 
     /**
@@ -222,7 +222,9 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.executeSearch="{ item }">
-          <v-btn color="blue darken-1" text @click="executeBookmarkSearch(item)">Suchanfrage ausführen</v-btn>
+          <v-btn color="blue darken-1" text @click="executeBookmarkSearch(item)"
+            >Suchanfrage ausführen</v-btn
+          >
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
@@ -242,7 +244,6 @@ export default defineComponent({
           :index="-1"
           :initial-bookmark="currentBookmark"
           :isNew="true"
-          :isTemplate="true"
           :reinit-counter="templateReinitCounter"
           metadataId=""
           v-on:addTemplateSuccessful="childTemplateAdded"

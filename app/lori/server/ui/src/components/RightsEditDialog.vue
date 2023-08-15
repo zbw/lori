@@ -50,9 +50,6 @@ export default defineComponent({
       type: String,
       required: true, // TODO: refactor to required:false
     },
-    isTemplate: {
-      type: Boolean,
-    },
     templateId: {
       type: Number,
       required: false,
@@ -238,7 +235,7 @@ export default defineComponent({
      * Deletion:
      */
     const deleteSuccessful = (index: number) => {
-      if (props.isTemplate) {
+      if (isTemplate.value) {
         emit("deleteTemplateSuccessful", formState.formTemplateName);
       } else {
         if (props.right != undefined) {
@@ -248,7 +245,7 @@ export default defineComponent({
     };
 
     const deleteDialogClosed = () => {
-      if (props.isTemplate) {
+      if (isTemplate.value) {
         dialogDeleteTemplate.value = false;
         close();
       } else {
@@ -257,7 +254,7 @@ export default defineComponent({
     };
 
     const initiateDeleteDialog = () => {
-      if (props.isTemplate) {
+      if (isTemplate.value) {
         dialogDeleteTemplate.value = true;
       } else {
         dialogDeleteRight.value = true;
@@ -391,7 +388,7 @@ export default defineComponent({
 
     const save: () => Promise<void> = () => {
       // Vuelidate expects this field to be filled. When editing rights it is not required.
-      if (!props.isTemplate) {
+      if (!isTemplate.value) {
         formState.formTemplateName = "foo";
       }
       return v$.value.$validate().then((isValid) => {
@@ -409,9 +406,9 @@ export default defineComponent({
         tmpRight.value.startDate = new Date(formState.startDate);
         tmpRight.value.endDate =
           formState.endDate == "" ? undefined : new Date(formState.endDate);
-        if (props.isNew && props.isTemplate) {
+        if (props.isNew && isTemplate.value) {
           createTemplate();
-        } else if (props.isTemplate) {
+        } else if (isTemplate.value) {
           updateTemplate();
         } else if (props.isNew) {
           createRight();
@@ -550,6 +547,11 @@ export default defineComponent({
     );
     const computedTemplateId = computed(() =>
       props.templateId == undefined ? -1 : props.templateId
+    );
+
+    const isTemplate = computed(() => props.templateId != undefined);
+    const isEditable = computed(
+      () => props.templateId != undefined && !props.isNew
     );
 
     watch(computedRight, () => {
@@ -720,6 +722,8 @@ export default defineComponent({
       errorEndDate,
       errorTemplateName,
       errorStartDate,
+      isEditable,
+      isTemplate,
       generalAlertError,
       generalAlertErrorMessage,
       groupItems,
@@ -818,7 +822,7 @@ export default defineComponent({
                   <v-text-field
                     v-if="isNew"
                     ref="templateId"
-                    disabled
+                    :disabled="isNew"
                     hint="Template Id"
                     label="Wird automatisch generiert"
                     outlined
@@ -841,6 +845,7 @@ export default defineComponent({
                   <v-text-field
                     v-model="formState.formTemplateName"
                     :error-messages="errorTemplateName"
+                    :disabled="isEditable"
                     hint="Name des Templates"
                     outlined
                   ></v-text-field>
@@ -855,6 +860,7 @@ export default defineComponent({
                     v-model="tmpTemplateDescription"
                     hint="Beschreibung des Templates"
                     outlined
+                    :disabled="isEditable"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -871,12 +877,20 @@ export default defineComponent({
                     loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.actions="{ item }">
-                      <v-icon small @click="deleteBookmarkEntry(item)">
+                      <v-icon
+                        small
+                        @click="deleteBookmarkEntry(item)"
+                        :disabled="isEditable"
+                      >
                         mdi-delete
                       </v-icon>
                     </template>
                   </v-data-table>
-                  <v-btn color="blue darken-1" text @click="selectBookmark"
+                  <v-btn
+                    color="blue darken-1"
+                    text
+                    @click="selectBookmark"
+                    :disabled="isEditable"
                     >Suche Bookmark</v-btn
                   >
                   <v-dialog
@@ -932,6 +946,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.accessState"
+                  :disabled="isEditable"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
                   outlined
@@ -974,15 +989,22 @@ export default defineComponent({
                     v-model="formState.startDate"
                     no-title
                     scrollable
+                    :disabled="isEditable"
                   >
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" text @click="menuStartDate = false">
+                    <v-btn
+                      color="primary"
+                      text
+                      @click="menuStartDate = false"
+                      :disabled="isEditable"
+                    >
                       Cancel
                     </v-btn>
                     <v-btn
                       color="primary"
                       text
                       @click="$refs.menuStart.save(formState.startDate)"
+                      :disabled="isEditable"
                     >
                       OK
                     </v-btn>
@@ -1024,14 +1046,21 @@ export default defineComponent({
                     v-model="formState.endDate"
                     no-title
                     scrollable
+                    :disabled="isEditable"
                   >
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" text @click="menuEndDate = false">
+                    <v-btn
+                      :disabled="isEditable"
+                      color="primary"
+                      text
+                      @click="menuEndDate = false"
+                    >
                       Cancel
                     </v-btn>
                     <v-btn
                       color="primary"
                       text
+                      :disabled="isEditable"
                       @click="$refs.menuEnd.save(formState.endDate)"
                     >
                       OK
@@ -1048,6 +1077,7 @@ export default defineComponent({
                 <v-select
                   v-model="tmpRight.groupIds"
                   :items="groupItems"
+                  :disabled="isEditable"
                   chips
                   counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
@@ -1064,6 +1094,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
+                  :disabled="isEditable"
                   counter
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
@@ -1085,6 +1116,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
+                  :disabled="isEditable"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   outlined
                 ></v-text-field>
@@ -1097,6 +1129,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
+                  :disabled="isEditable"
                   color="indigo"
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
                   label="Ja"
@@ -1111,6 +1144,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.zbwUserAgreement"
+                  :disabled="isEditable"
                   color="indigo"
                   hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
                   label="Ja"
@@ -1125,6 +1159,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                  :disabled="isEditable"
                   outlined
                 ></v-text-field>
               </v-col>
@@ -1138,6 +1173,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
+                  :disabled="isEditable"
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
                   outlined
                 ></v-text-field>
@@ -1152,6 +1188,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.nonStandardOpenContentLicence"
+                  :disabled="isEditable"
                   color="indigo"
                   hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
                   label="Ja"
@@ -1166,6 +1203,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
+                  :disabled="isEditable"
                   color="indigo"
                   hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
                   label="Ja"
@@ -1180,6 +1218,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
+                  :disabled="isEditable"
                   counter
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
@@ -1203,6 +1242,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisStorage"
+                  :disabled="isEditable"
                   :items="basisStorage"
                   outlined
                 ></v-select>
@@ -1215,6 +1255,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisAccessState"
+                  :disabled="isEditable"
                   :items="basisAccessState"
                   outlined
                 ></v-select>
@@ -1227,6 +1268,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
+                  :disabled="isEditable"
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
@@ -1274,6 +1316,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"
+                  :disabled="isEditable"
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"

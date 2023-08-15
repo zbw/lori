@@ -96,8 +96,10 @@ export default defineComponent({
         <v-tabs v-model="tab" align-with-title show-arrows>
           <v-tabs-slider color="yellow"></v-tabs-slider>
 
-          <v-tab v-for="name in tabNames" :key="name">
-            {{ name }}
+          <v-tab v-for="r in currentRights" :key="r.rightId">
+            <v-icon v-if="r.templateId != undefined">mdi-note-multiple</v-icon>
+            <v-icon v-else>mdi-note-outline</v-icon>
+            {{ r.rightId }}
           </v-tab>
         </v-tabs>
       </template>
@@ -131,6 +133,7 @@ export default defineComponent({
           :isNew="false"
           :metadataId="metadataId"
           :right="item"
+          :templateId="item.templateId"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"

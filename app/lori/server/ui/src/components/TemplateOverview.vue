@@ -231,7 +231,7 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
+          <v-icon small @click="editTemplate(item)">mdi-eye</v-icon>
         </template>
       </v-data-table>
       <v-dialog
@@ -243,7 +243,6 @@ export default defineComponent({
         <RightsEditDialog
           :index="-1"
           :isNew="isNew"
-          :isTemplate="true"
           :reinit-counter="reinitCounter"
           :right="currentTemplate.right"
           :template-description="currentTemplate.description"

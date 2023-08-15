@@ -43,6 +43,10 @@ export default defineComponent({
         text: "End-Datum",
         value: "endDate",
       },
+      {
+        text: "Template",
+        value: "templateId",
+      },
     ] as Array<DataTableHeader>;
     const isNew = ref(false);
     const renderKey = ref(0);
@@ -170,6 +174,8 @@ export default defineComponent({
         :isNew="isNew"
         :metadataId="metadataId"
         :right="currentRight"
+        :isTemplate="currentRight.templateId != undefined"
+        :templateId="currentRight.templateId"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
       ></RightsEditDialog>
