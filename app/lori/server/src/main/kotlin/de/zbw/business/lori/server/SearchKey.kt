@@ -11,19 +11,19 @@ import de.zbw.persistence.lori.server.DatabaseConnector
  */
 enum class SearchKey(
     private val dbColumnName: String,
-    val distColumnName: String,
+    val tsVectorColumn: String,
 ) {
-    COMMUNITY(DatabaseConnector.COLUMN_METADATA_COMMUNITY_NAME, "dist_com"),
-    COLLECTION(DatabaseConnector.COLUMN_METADATA_COLLECTION_NAME, "dist_col"),
-    PAKET_SIGEL(DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL, "dist_sig"),
-    TITLE(DatabaseConnector.COLUMN_METADATA_TITLE, "dist_title"),
-    ZDB_ID(DatabaseConnector.COLUMN_METADATA_ZDB_ID, "dist_zdb");
+    COMMUNITY(DatabaseConnector.COLUMN_METADATA_COMMUNITY_NAME, "ts_community"),
+    COLLECTION(DatabaseConnector.COLUMN_METADATA_COLLECTION_NAME, "ts_collection"),
+    PAKET_SIGEL(DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL, "ts_sigel"),
+    TITLE(DatabaseConnector.COLUMN_METADATA_TITLE, "ts_title"),
+    ZDB_ID(DatabaseConnector.COLUMN_METADATA_ZDB_ID, "ts_zdb_id");
 
     fun toSelectClause(): String =
-        "${this.dbColumnName} <-> ? as ${this.distColumnName}"
+        "${this.dbColumnName} <-> ? as ${this.tsVectorColumn}"
 
-    fun toWhereClause(): String =
-        "$SUBQUERY_NAME.${this.distColumnName} < $DISTANCE_VALUE"
+    fun toWhereClause(query: List<String>): String =
+        "$tsVectorColumn @@ to_tsquery('${query.joinToString(separator = " & ") }')"
 
     fun fromEnum(): String {
         return when (this) {
@@ -36,7 +36,6 @@ enum class SearchKey(
     }
 
     companion object {
-        const val DISTANCE_VALUE = "0.9"
         const val SUBQUERY_NAME = "sub"
 
         fun toEnum(s: String): SearchKey? {

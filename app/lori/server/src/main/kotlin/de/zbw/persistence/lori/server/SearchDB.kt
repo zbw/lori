@@ -414,15 +414,15 @@ class SearchDB(
             return if (searchKeyMap.isEmpty()) {
                 "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
-                val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry ->
-                    entry.key.toWhereClause()
+                val trgmWhere = searchKeyMap.entries.joinToString(separator = " AND ") { entry: Map.Entry<SearchKey, List<String>> ->
+                    entry.key.toWhereClause(entry.value)
                 }
                 val coalesceScore = searchKeyMap.entries.joinToString(
                     prefix = "(",
                     postfix = ")",
                     separator = " + ",
                 ) { entry ->
-                    "coalesce(${SearchKey.SUBQUERY_NAME}.${entry.key.distColumnName},1)"
+                    "coalesce(${SearchKey.SUBQUERY_NAME}.${entry.key.tsVectorColumn},1)"
                 } + "/${searchKeyMap.size} as score"
                 "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES,$coalesceScore" +
                     " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
