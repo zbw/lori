@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SearchKey
+import de.zbw.business.lori.server.SearchPair
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -337,7 +338,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchKeys = this.searchTerm?.let { LoriServerBackend.parseValidSearchKeys(it) },
+        searchPairs = this.searchTerm?.let { LoriServerBackend.parseValidSearchPairs(it) },
         publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
@@ -356,9 +357,15 @@ fun BookmarkRest.toBusiness(): Bookmark =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchKeys = this.searchKeys?.map {
-            Pair(SearchKey.toEnum(it.key), it.propertyValues)
-        }?.filter { it.first != null && it.second != null }?.associate { Pair(it.first!!, it.second!!) },
+        searchPairs = this.searchKeys?.mapNotNull {pair ->
+            val key = SearchKey.toEnum(pair.key)
+            val values = pair.propertyValues
+            if (key == null || values == null){
+                null
+            } else {
+                SearchPair(key, values)// TODO(CB): Duplicated keys might exist in list
+            }
+        },
         publicationDateFilter = PublicationDateFilter(
             fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
             toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
@@ -388,8 +395,8 @@ fun Bookmark.toRest(): BookmarkRest =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchKeys = this.searchKeys?.entries?.map { entry ->
-            SearchKeyRest(entry.key.fromEnum(), entry.value)
+        searchKeys = this.searchPairs?.map { pair ->
+            SearchKeyRest(pair.key.fromEnum(), pair.values)
         },
         filterPublicationDate = FilterPublicationDateRest(
             fromYear = this.publicationDateFilter?.fromYear,

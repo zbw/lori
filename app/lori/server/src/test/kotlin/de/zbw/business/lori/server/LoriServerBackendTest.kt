@@ -256,7 +256,7 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedKeys: Map<SearchKey, List<String>>,
         description: String,
     ) {
-        assertThat(description, LoriServerBackend.parseValidSearchKeys(searchTerm), `is`(expectedKeys))
+        assertThat(description, LoriServerBackend.parseValidSearchPairs(searchTerm), `is`(expectedKeys))
     }
 
     @DataProvider(name = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
@@ -374,16 +374,16 @@ class LoriServerBackendTest : DatabaseTest() {
 
     @Test
     fun testSearchKeyConversion() {
-        val given = mapOf(
-            SearchKey.TITLE to listOf("foobar", "baz"),
-            SearchKey.COLLECTION to listOf("col1"),
-            SearchKey.COMMUNITY to listOf("com1"),
-            SearchKey.ZDB_ID to listOf("zdb1"),
+        val given = listOf(
+            SearchPair(SearchKey.TITLE, listOf("foobar", "baz")),
+            SearchPair(SearchKey.COLLECTION, listOf("col1")),
+            SearchPair(SearchKey.COMMUNITY, listOf("com1")),
+            SearchPair(SearchKey.ZDB_ID, listOf("zdb1")),
         )
 
         assertThat(
-            LoriServerBackend.parseValidSearchKeys(
-                LoriServerBackend.searchKeysToString(given)
+            LoriServerBackend.parseValidSearchPairs(
+                LoriServerBackend.searchPairsToString(given)
             ),
             `is`(given)
         )

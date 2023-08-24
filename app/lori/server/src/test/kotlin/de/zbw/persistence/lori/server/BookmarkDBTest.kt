@@ -82,7 +82,7 @@ class BookmarkDBTest : DatabaseTest() {
             bookmarkId = 1,
             bookmarkName = "test",
             description = "some description",
-            searchKeys = LoriServerBackend.parseValidSearchKeys("tit:someTitle"),
+            searchPairs = LoriServerBackend.parseValidSearchPairs("tit:someTitle"),
             publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
             publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
             accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
