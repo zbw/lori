@@ -164,7 +164,7 @@ class RightFilterTest : DatabaseTest() {
     @DataProvider(name = DATA_FOR_SEARCH_WITH_RIGHT_FILTER)
     fun createDataForSearchWithRightFilter() = arrayOf(
         arrayOf(
-            "col:subject1",
+            "col:'subject1 | subject3'",
             listOf(
                 PublicationTypeFilter(
                     listOf(
@@ -180,7 +180,7 @@ class RightFilterTest : DatabaseTest() {
             "Filter for Access State Restricted for Item that has only one right"
         ),
         arrayOf(
-            "col:subject1",
+            "col:subject3",
             listOf(
                 PublicationTypeFilter(
                     listOf(

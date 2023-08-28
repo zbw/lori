@@ -173,78 +173,114 @@ class LoriServerBackendTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 "bllaaaa",
-                emptyMap<SearchKey, List<String>>(),
+                emptyList<SearchPair>(),
                 "no search key pair"
             ),
             arrayOf(
                 "bllaaaa col:bar",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("bar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "bar",
+                    )
                 ),
                 "single case with random string"
             ),
             arrayOf(
                 "col:bar",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("bar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "bar",
+                    )
                 ),
                 "single case no additional string"
             ),
             arrayOf(
                 "                col:bar                             ",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("bar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "bar",
+                    )
                 ),
                 "single case with whitespace"
             ),
             arrayOf(
                 "col:bar zdb:foo",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("bar"),
-                    SearchKey.ZDB_ID to listOf("foo"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "bar",
+                    ),
+                    SearchPair(
+                        SearchKey.ZDB_ID,
+                        "foo",
+                    ),
                 ),
                 "two search keys"
             ),
             arrayOf(
-                "col:'foo bar'",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("foo", "bar"),
+                "col:'foo | bar'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "foo | bar",
+                    )
                 ),
                 "multiple words quoted"
             ),
             arrayOf(
                 "col:'foobar'",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("foobar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "foobar",
+                    ),
                 ),
                 "single word quoted"
             ),
             arrayOf(
-                "            col:'foobar'           com:'foo bar'",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("foobar"),
-                    SearchKey.COMMUNITY to listOf("foo", "bar"),
+                "            col:'foobar'           com:'foo & bar'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "foobar",
+                    ),
+                    SearchPair(
+                        SearchKey.COMMUNITY,
+                        "foo & bar",
+                    ),
                 ),
                 "mutltiple and single words quoted with whitespaces"
             ),
             arrayOf(
                 "col:col-foo-bar",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("col-foo-bar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "col-foo-bar",
+                    )
                 ),
                 "multiple words minus"
             ),
             arrayOf(
                 "col:'col-foo-bar'",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("col-foo-bar"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "col-foo-bar",
+                    ),
                 ),
                 "multiple words quoted minus"
             ),
             arrayOf(
                 "col:'col-;:'",
-                mapOf(
-                    SearchKey.COLLECTION to listOf("col-;:"),
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "col-;:",
+                    ),
                 ),
                 "handle special characters"
             ),
@@ -253,10 +289,20 @@ class LoriServerBackendTest : DatabaseTest() {
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
     fun testParseSearchKeys(
         searchTerm: String,
-        expectedKeys: Map<SearchKey, List<String>>,
+        expectedKeys: List<SearchPair>,
         description: String,
     ) {
-        assertThat(description, LoriServerBackend.parseValidSearchPairs(searchTerm), `is`(expectedKeys))
+        val receivedPairs: List<SearchPair> = LoriServerBackend.parseValidSearchPairs(searchTerm)
+        receivedPairs.forEachIndexed { index, searchPair ->
+            assertThat(
+                searchPair.values,
+                `is`(expectedKeys[index].values),
+            )
+            assertThat(
+                searchPair.key,
+                `is`(expectedKeys[index].key),
+            )
+        }
     }
 
     @DataProvider(name = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
@@ -375,18 +421,24 @@ class LoriServerBackendTest : DatabaseTest() {
     @Test
     fun testSearchKeyConversion() {
         val given = listOf(
-            SearchPair(SearchKey.TITLE, listOf("foobar", "baz")),
-            SearchPair(SearchKey.COLLECTION, listOf("col1")),
-            SearchPair(SearchKey.COMMUNITY, listOf("com1")),
-            SearchPair(SearchKey.ZDB_ID, listOf("zdb1")),
+            SearchPair(SearchKey.TITLE, "foobar & baz"),
+            SearchPair(SearchKey.COLLECTION, "col1"),
+            SearchPair(SearchKey.COMMUNITY, "com1"),
+            SearchPair(SearchKey.ZDB_ID, "zdb1"),
         )
-
-        assertThat(
-            LoriServerBackend.parseValidSearchPairs(
-                LoriServerBackend.searchPairsToString(given)
-            ),
-            `is`(given)
+        val received = LoriServerBackend.parseValidSearchPairs(
+            LoriServerBackend.searchPairsToString(given)
         )
+        received.forEachIndexed { index, searchPair ->
+            assertThat(
+                searchPair.values,
+                `is`(given[index].values),
+            )
+            assertThat(
+                searchPair.key,
+                `is`(given[index].key),
+            )
+        }
     }
 
     companion object {

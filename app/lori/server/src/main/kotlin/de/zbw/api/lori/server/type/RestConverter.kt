@@ -357,13 +357,13 @@ fun BookmarkRest.toBusiness(): Bookmark =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchPairs = this.searchKeys?.mapNotNull {pair ->
+        searchPairs = this.searchKeys?.mapNotNull { pair ->
             val key = SearchKey.toEnum(pair.key)
             val values = pair.propertyValues
-            if (key == null || values == null){
+            if (key == null || values == null) {
                 null
             } else {
-                SearchPair(key, values)// TODO(CB): Duplicated keys might exist in list
+                SearchPair(key, values.joinToString(separator = " & "))
             }
         },
         publicationDateFilter = PublicationDateFilter(
@@ -396,7 +396,7 @@ fun Bookmark.toRest(): BookmarkRest =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchKeys = this.searchPairs?.map { pair ->
-            SearchKeyRest(pair.key.fromEnum(), pair.values)
+            SearchKeyRest(pair.key.fromEnum(), listOf(pair.values))
         },
         filterPublicationDate = FilterPublicationDateRest(
             fromYear = this.publicationDateFilter?.fromYear,

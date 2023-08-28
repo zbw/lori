@@ -57,14 +57,14 @@ class SearchDB(
             )
         ).apply {
             var counter = 1
-            searchPairs.forEach { entry ->
-                this.setString(counter++, entry.values.joinToString(" "))
-            }
             rightSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
+            }
+            searchPairs.forEach { entry ->
+                this.setString(counter++, entry.values)
             }
         }
         val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
@@ -189,14 +189,14 @@ class SearchDB(
             )
         ).apply {
             var counter = 1
-            searchPairs.forEach { pair ->
-                this.setString(counter++, pair.values.joinToString(" "))
-            }
             rightSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
+            }
+            searchPairs.forEach { pair ->
+                this.setString(counter++, pair.values)
             }
         }
         val span = tracer.spanBuilder("searchForOccurrence").startSpan()
@@ -387,7 +387,9 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
+                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}"
 
         fun buildSearchQuery(
             searchPairs: List<SearchPair>,
@@ -405,6 +407,13 @@ class SearchDB(
             } else ""
 
             val subquery = if (
+                searchPairs.isEmpty() && rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
+            ) {
+                buildSearchQuerySelect(rightSearchFilters) + " FROM $TABLE_NAME_ITEM_METADATA" +
+                    buildSearchQueryHelper(
+                        metadataSearchFilters,
+                    )
+            } else if (
                 rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
             ) {
                 TABLE_NAME_ITEM_METADATA
@@ -431,14 +440,13 @@ class SearchDB(
                         metadataSearchFilters,
                         rightSearchFilters,
                         noRightInformationFilter,
-                    ) +
-                    " ORDER BY item_metadata.metadata_id ASC$limit$offset"
+                    )
             }
 
             return if (searchPairs.isEmpty()) {
-                subquery
+                "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
-                val trgmWhere = searchPairs.joinToString(separator = " AND ") {pair ->
+                val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
                     pair.toWhereClause()
                 }
                 val coalesceScore = searchPairs.joinToString(
@@ -492,8 +500,8 @@ class SearchDB(
                     noRightInformationFilter = noRightInformationFilter,
                     collectFacets = true,
                 )
-            val trgmWhere = searchPairs.joinToString(separator = " AND ") {
-                pair -> pair.toWhereClause()
+            val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
+                pair.toWhereClause()
             }.takeIf { it.isNotBlank() }
                 ?.let {
                     " WHERE $it"
@@ -537,7 +545,7 @@ class SearchDB(
                         collectFacets,
                     )
             }
-            val trgmWhere = searchPairs.joinToString(separator = " AND ") {pair ->
+            val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
                 pair.toWhereClause()
             }.takeIf { it.isNotBlank() }
                 ?.let {

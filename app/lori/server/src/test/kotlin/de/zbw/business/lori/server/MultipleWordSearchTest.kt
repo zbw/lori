@@ -53,7 +53,7 @@ class MultipleWordSearchTest : DatabaseTest() {
     @DataProvider(name = DATA_FOR_MULTIPLE_WORDS)
     fun createDataForMultipleWords() = arrayOf(
         arrayOf(
-            "col:'subject1 subject2'",
+            "col:'subject1 & subject2'",
             10,
             0,
             multipleWords,
@@ -61,7 +61,7 @@ class MultipleWordSearchTest : DatabaseTest() {
             "search for two words next to each other"
         ),
         arrayOf(
-            "col:'subject1 subject3'",
+            "col:'subject1 & subject3'",
             10,
             0,
             multipleWords,

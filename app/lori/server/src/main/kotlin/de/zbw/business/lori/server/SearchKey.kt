@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server
 
-import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.MetadataDB
 
 /**

@@ -9,19 +9,17 @@ package de.zbw.business.lori.server
  */
 class SearchPair(
     val key: SearchKey,
-    val values: List<String>,
+    val values: String,
 ) {
-    // TODO: Check if List<String> is viable for the query type
-    // E.g. the user inputs: "com:'foo | bar' com:'baz'" should not get lost
-    // TODO: Prevent SQL injections -> toWhereClause() and getCoalesce() only inside prepared statement
-    // TODO: Unit test both functions
     fun toWhereClause(): String =
         "${key.tsVectorColumn} @@ $SQL_FUNC_TO_TS_QUERY(?)"
 
     fun getCoalesce(): String =
         "$SQL_FUNC_COALESCE($SQL_FUNC_TS_RANK_CD(${key.tsVectorColumn}, $SQL_FUNC_TO_TS_QUERY(?)),1)"
 
-    fun getValuesAsString(): String = values.joinToString(separator = " & ")
+    fun getValuesAsString(): String = values
+
+    override fun toString(): String = "$key:$values"
 
     companion object {
         private const val SQL_FUNC_COALESCE = "coalesce"
