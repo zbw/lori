@@ -284,6 +284,16 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "handle special characters"
             ),
+            arrayOf(
+                "col:'(subject1 | subject2) & subject3'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(subject1 | subject2) & subject3",
+                    ),
+                ),
+                "with parentheses"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
