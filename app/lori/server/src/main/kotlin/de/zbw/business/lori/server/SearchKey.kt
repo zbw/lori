@@ -1,6 +1,6 @@
 package de.zbw.business.lori.server
 
-import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.MetadataDB
 
 /**
  * SearchKeys representing keynames of the search input.
@@ -10,20 +10,13 @@ import de.zbw.persistence.lori.server.DatabaseConnector
  * @author Christian Bay (c.bay@zbw.eu)
  */
 enum class SearchKey(
-    private val dbColumnName: String,
-    val distColumnName: String,
+    val tsVectorColumn: String,
 ) {
-    COMMUNITY(DatabaseConnector.COLUMN_METADATA_COMMUNITY_NAME, "dist_com"),
-    COLLECTION(DatabaseConnector.COLUMN_METADATA_COLLECTION_NAME, "dist_col"),
-    PAKET_SIGEL(DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL, "dist_sig"),
-    TITLE(DatabaseConnector.COLUMN_METADATA_TITLE, "dist_title"),
-    ZDB_ID(DatabaseConnector.COLUMN_METADATA_ZDB_ID, "dist_zdb");
-
-    fun toSelectClause(): String =
-        "${this.dbColumnName} <-> ? as ${this.distColumnName}"
-
-    fun toWhereClause(): String =
-        "$SUBQUERY_NAME.${this.distColumnName} < $DISTANCE_VALUE"
+    COMMUNITY(MetadataDB.TS_COMMUNITY),
+    COLLECTION(MetadataDB.TS_COLLECTION),
+    PAKET_SIGEL(MetadataDB.TS_SIGEL),
+    TITLE(MetadataDB.TS_TITLE),
+    ZDB_ID(MetadataDB.TS_ZDB_ID);
 
     fun fromEnum(): String {
         return when (this) {
@@ -36,7 +29,6 @@ enum class SearchKey(
     }
 
     companion object {
-        const val DISTANCE_VALUE = "0.9"
         const val SUBQUERY_NAME = "sub"
 
         fun toEnum(s: String): SearchKey? {

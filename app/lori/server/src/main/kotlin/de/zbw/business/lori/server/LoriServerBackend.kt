@@ -198,7 +198,7 @@ class LoriServerBackend(
 
     fun countMetadataEntries(): Int =
         dbConnector.searchDB.countSearchMetadata(
-            emptyMap(),
+            emptyList(),
             emptyList(),
             emptyList(),
             null,
@@ -285,9 +285,9 @@ class LoriServerBackend(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
     ): SearchQueryResult {
-        val keys = searchTerm
-            ?.let { parseValidSearchKeys(it) }
-            ?: emptyMap()
+        val keys: List<SearchPair> = searchTerm
+            ?.let { parseValidSearchPairs(it) }
+            ?: emptyList()
 
         val invalidSearchKeys = searchTerm
             ?.let { parseInvalidSearchKeys(it) }
@@ -442,7 +442,7 @@ class LoriServerBackend(
         offset: Int?,
     ): SearchQueryResult =
         searchQuery(
-            searchTerm = bookmark.searchKeys?.let { searchKeysToString(it) } ?: "",
+            searchTerm = bookmark.searchPairs?.let { searchPairsToString(it) } ?: "",
             limit = limit,
             offset = offset,
             metadataSearchFilter = listOfNotNull(
@@ -512,7 +512,7 @@ class LoriServerBackend(
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
             searchQuery(
-                searchTerm = b.searchKeys?.let { searchKeysToString(it) } ?: "",
+                searchTerm = b.searchPairs?.let { searchPairsToString(it) } ?: "",
                 limit = null,
                 offset = null,
                 metadataSearchFilter = listOfNotNull(
@@ -551,7 +551,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;]+|\\w+:'[\\w\\s-:;]+'")
+        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;!]+|\\w+:'[\\w\\s-:;&|!()]+'")
 
         fun isJWTExpired(principal: JWTPrincipal): Boolean {
             val expiresAt: Long? = principal
@@ -572,19 +572,22 @@ class LoriServerBackend(
             }
 
         // parseValidSearchKeys . searchKeysToString == id
-        fun parseValidSearchKeys(s: String?): Map<SearchKey, List<String>> =
+        fun parseValidSearchPairs(s: String?): List<SearchPair> =
             s?.let { tokenizeSearchInput(it) }?.mapNotNull {
                 val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
                 if (key == null) {
                     null
                 } else {
-                    key to it.substringAfter(":").trim().split("\\s+".toRegex())
+                    SearchPair(
+                        key = key,
+                        values = it.substringAfter(":").trim()
+                    )
                 }
-            }?.toMap() ?: emptyMap()
+            } ?: emptyList()
 
-        fun searchKeysToString(keys: Map<SearchKey, List<String>>): String =
-            keys.entries.joinToString(separator = " ") { e ->
-                "${e.key.fromEnum()}:${e.value.joinToString(prefix = "'", postfix = "'", separator = " ")}"
+        fun searchPairsToString(keys: List<SearchPair>): String =
+            keys.joinToString(separator = " ") { e ->
+                "${e.key.fromEnum()}:'${e.values}'"
             }
 
         private fun tokenizeSearchInput(s: String): List<String> {

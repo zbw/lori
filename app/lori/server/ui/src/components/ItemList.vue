@@ -43,6 +43,11 @@ export default defineComponent({
     const selectedItems = ref([]);
     const searchTerm = ref("");
     const tableContentLoading = ref(true);
+    const hintSearchField = ref(
+      "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
+        "com(Community), col(Collection), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
+        " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'"
+    );
 
     /**
      * Error handling>
@@ -530,6 +535,7 @@ export default defineComponent({
       hasSearchTokenWithNoKeyErrorMsg,
       headers,
       headersValueVSelect,
+      hintSearchField,
       items,
       invalidSearchKeyError,
       invalidSearchKeyErrorMsg,
@@ -622,12 +628,7 @@ export default defineComponent({
               v-model="searchTerm"
               append-icon="mdi-magnify"
               clearable
-              hint="Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:
-              com(Community),
-              col(Collection),
-              sig(Paket-Sigel),
-              tit(Titel),
-              zdb(ZDB-Id)"
+              :hint="hintSearchField"
               label="Suche"
               outlined
               persistent-hint

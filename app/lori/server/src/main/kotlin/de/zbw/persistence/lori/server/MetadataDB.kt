@@ -213,6 +213,12 @@ class MetadataDB(
     }
 
     companion object {
+        const val TS_COMMUNITY = "ts_community"
+        const val TS_COLLECTION = "ts_collection"
+        const val TS_SIGEL = "ts_sigel"
+        const val TS_TITLE = "ts_title"
+        const val TS_ZDB_ID = "ts_zdb_id"
+
         const val STATEMENT_METADATA_CONTAINS_ID =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE metadata_id=?)"
 
@@ -236,7 +242,8 @@ class MetadataDB(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date"
+                "author,collection_name,community_name,storage_date,$TS_COMMUNITY," +
+                "$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"

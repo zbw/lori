@@ -175,7 +175,7 @@ class BookmarkDB(
                 bookmarkId = rs.getInt(1),
                 bookmarkName = rs.getString(2),
                 description = rs.getString(3),
-                searchKeys = LoriServerBackend.parseValidSearchKeys(rs.getString(4)),
+                searchPairs = LoriServerBackend.parseValidSearchPairs(rs.getString(4)),
                 publicationDateFilter = PublicationDateFilter.fromString(rs.getString(5)),
                 accessStateFilter = AccessStateFilter.fromString(rs.getString(6)),
                 temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(7)),
@@ -195,8 +195,8 @@ class BookmarkDB(
         ): PreparedStatement {
             return prepStmt.apply {
                 this.setString(1, bookmark.bookmarkName)
-                this.setIfNotNull(2, bookmark.searchKeys) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, LoriServerBackend.searchKeysToString(value))
+                this.setIfNotNull(2, bookmark.searchPairs) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, LoriServerBackend.searchPairsToString(value))
                 }
                 this.setIfNotNull(3, bookmark.description) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

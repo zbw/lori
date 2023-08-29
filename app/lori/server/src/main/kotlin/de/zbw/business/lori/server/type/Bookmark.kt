@@ -8,7 +8,7 @@ import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
-import de.zbw.business.lori.server.SearchKey
+import de.zbw.business.lori.server.SearchPair
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
@@ -23,7 +23,7 @@ data class Bookmark(
     val bookmarkName: String,
     val bookmarkId: Int,
     val description: String? = null,
-    val searchKeys: Map<SearchKey, List<String>>? = null,
+    val searchPairs: List<SearchPair>? = null,
     val publicationDateFilter: PublicationDateFilter? = null,
     val publicationTypeFilter: PublicationTypeFilter? = null,
     val paketSigelFilter: PaketSigelFilter? = null,
