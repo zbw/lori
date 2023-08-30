@@ -1,7 +1,10 @@
-FROM openjdk:17.0.1-slim-bullseye AS tools
+FROM amazoncorretto:17.0.8 AS tools
 
-RUN apt update && \
-    apt install -y \
+LABEL IMAGE_VERSION_TAG=0.1.0
+LABEL IMAGE_NAME=vault-openjdk-test
+LABEL OTC_STAGE=zbw-tools-nl
+
+RUN yum install -y \
     curl \
     wget \
     git \
@@ -11,7 +14,7 @@ RUN apt update && \
     unzip
 
 FROM tools as vault
-ARG VAULT_VERSION=1.12.2
+ARG VAULT_VERSION=1.14.0
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
