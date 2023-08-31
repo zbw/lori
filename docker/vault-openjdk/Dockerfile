@@ -1,6 +1,6 @@
-FROM amazoncorretto:17.0.8 AS tools
+FROM eclipse-temurin:17.0.8_7-jdk AS tools
 
-LABEL IMAGE_VERSION_TAG=0.1.0
+LABEL IMAGE_VERSION_TAG=0.2.0
 LABEL IMAGE_NAME=vault-openjdk-test
 LABEL OTC_STAGE=zbw-tools-nl
 
