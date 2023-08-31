@@ -1,7 +1,7 @@
 FROM eclipse-temurin:17.0.8_7-jdk AS tools
 
-LABEL IMAGE_VERSION_TAG=0.2.1
-LABEL IMAGE_NAME=vault-openjdk-test
+LABEL IMAGE_VERSION_TAG=0.2.2
+LABEL IMAGE_NAME=vault-openjdk
 LABEL OTC_STAGE=zbw-tools-nl
 
 RUN apt update && \
