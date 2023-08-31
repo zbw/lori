@@ -72,6 +72,7 @@ export default defineComponent({
     const activateTemplateEditDialog = () => {
       alertSuccessful.value = false;
       dialogStore.templateEditActivated = true;
+      currentTemplate.value.templateId = -1;
     };
     const createNewTemplate = () => {
       isNew.value = true;
