@@ -52,6 +52,7 @@ export default defineComponent({
       },
       { text: "Actions", value: "actions", sortable: false },
     ];
+    const searchTerm = ref("");
     const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const editBookmark = ref({} as BookmarkRest);
     const editIndex = ref(-1);
@@ -165,6 +166,7 @@ export default defineComponent({
       currentBookmark,
       headers,
       renderKey,
+      searchTerm,
       templateDialogActivated,
       templateReinitCounter,
       activateTemplateDialog,
@@ -206,10 +208,18 @@ export default defineComponent({
           </v-card-actions>
         </v-card>
       </v-dialog>
+      <v-text-field
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
+      ></v-text-field>
       <v-data-table
         :key="renderKey"
         :headers="headers"
         :items="bookmarkItems"
+        :search="searchTerm"
         item-key="bookmarkId"
         loading-text="Daten werden geladen... Bitte warten."
       >
