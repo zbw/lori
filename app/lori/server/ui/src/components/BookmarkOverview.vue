@@ -255,6 +255,7 @@ export default defineComponent({
           :initial-bookmark="currentBookmark"
           :isNew="true"
           :reinit-counter="templateReinitCounter"
+          :template-id="-1"
           metadataId=""
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:editRightClosed="closeTemplateDialog"
