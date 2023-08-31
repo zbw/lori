@@ -8,7 +8,7 @@ variables:
   VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk-test:0.1.0"
 
 default:
-  image: amazoncorretto:latest
+  image: amazoncorretto:20
 
 stages:
   - build
