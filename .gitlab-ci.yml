@@ -5,10 +5,10 @@ workflow:
     - if: $CI_COMMIT_BRANCH == null || $CI_OPEN_MERGE_REQUESTS == null || $CI_PIPELINE_SOURCE != "push"
 
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:latest"
+  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk-test:0.2.0"
 
 default:
-  image: openjdk:17.0.1-slim
+  image: eclipse-temurin:17.0.8_7-jdk
 
 stages:
   - build
