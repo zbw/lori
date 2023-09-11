@@ -551,7 +551,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;!]+|\\w+:'[\\w\\s-:;&|!()]+'")
+        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;!]+|\\w+:'[\\w\\s-:;&|!()]+'|\\w+:\"[\\w\\s-:;&|!()]+\"")
 
         fun isJWTExpired(principal: JWTPrincipal): Boolean {
             val expiresAt: Long? = principal
@@ -594,7 +594,7 @@ class LoriServerBackend(
             val iter = SEARCH_KEY_REGEX.findAll(s).iterator()
             return generateSequence {
                 if (iter.hasNext()) {
-                    iter.next().value.filter { it != '\'' }
+                    iter.next().value.filter { it != '\'' && it != '\"' }
                 } else {
                     null
                 }

@@ -241,6 +241,16 @@ class LoriServerBackendTest : DatabaseTest() {
                 "single word quoted"
             ),
             arrayOf(
+                "col:\"foobar\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "foobar",
+                    ),
+                ),
+                "single word doublequoted"
+            ),
+            arrayOf(
                 "            col:'foobar'           com:'foo & bar'",
                 listOf(
                     SearchPair(
@@ -293,6 +303,16 @@ class LoriServerBackendTest : DatabaseTest() {
                     ),
                 ),
                 "with parentheses"
+            ),
+            arrayOf(
+                "col:\"(subject1 | subject2) & subject3\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(subject1 | subject2) & subject3",
+                    ),
+                ),
+                "with parentheses and double quotes"
             ),
         )
 
