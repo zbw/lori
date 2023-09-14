@@ -1,5 +1,7 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ID
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
@@ -17,9 +19,25 @@ class ItemDB(
     val connection: Connection,
     private val tracer: Tracer,
 ) {
-    /**
-     * ITEM related queries.
-     */
+
+    fun getRightIdsByMetadataId(metadataId: String): List<String> {
+        val span = tracer.spanBuilder("getRightIdsByMetadataId").startSpan()
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID).apply {
+            this.setString(1, metadataId)
+        }
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+        return generateSequence {
+            if (rs.next()) {
+                rs.getString(1)
+            } else null
+        }.takeWhile { true }.toList()
+    }
+
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
             this.setString(1, metadataId)
@@ -138,31 +156,35 @@ class ItemDB(
         const val CONSTRAINT_ITEM_PKEY = "item_pkey"
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID = "SELECT COUNT(*) " +
             "FROM $TABLE_NAME_ITEM " +
-            "WHERE right_id = ?;"
+            "WHERE $COLUMN_RIGHT_ID = ?;"
+
+        const val STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID = "SELECT $COLUMN_RIGHT_ID" +
+            " FROM $TABLE_NAME_ITEM" +
+            " WHERE $COLUMN_METADATA_ID = ?"
 
         const val STATEMENT_INSERT_ITEM = "INSERT INTO $TABLE_NAME_ITEM" +
-            "(metadata_id, right_id)" +
+            "($COLUMN_METADATA_ID, $COLUMN_RIGHT_ID)" +
             " VALUES(?,?)" +
             " ON CONFLICT ON CONSTRAINT $CONSTRAINT_ITEM_PKEY" +
             " DO NOTHING;"
 
         const val STATEMENT_DELETE_ITEM = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +
-            "WHERE i.right_id = ? " +
-            "AND i.metadata_id = ?"
+            "WHERE i.$COLUMN_RIGHT_ID = ? " +
+            "AND i.$COLUMN_METADATA_ID = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_METADATA = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +
-            "WHERE i.metadata_id = ?"
+            "WHERE i.$COLUMN_METADATA_ID = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_RIGHT = "DELETE " +
             "FROM $TABLE_NAME_ITEM i " +
-            "WHERE i.right_id = ?"
+            "WHERE i.$COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_ITEM_CONTAINS_ENTRY =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=? AND right_id=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_METADATA_ID=? AND $COLUMN_RIGHT_ID=?)"
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE right_id=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_RIGHT_ID=?)"
     }
 }

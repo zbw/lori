@@ -11,6 +11,14 @@ item:
           schema:
             $ref: 'item.model.yaml#/ItemEntry'
       required: true
+    parameters:
+      - name: deleteRightOnConflict
+        in: query
+        description: If a conflict with other rights of the metadata id exists, delete the right information
+        required: false
+        schema:
+          type: boolean
+          default: false
     responses:
       201:
         description: Successfully created
