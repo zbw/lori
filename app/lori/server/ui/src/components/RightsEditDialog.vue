@@ -270,10 +270,13 @@ export default defineComponent({
         .addRight(tmpRight.value)
         .then((r) => {
           api
-            .addItemEntry({
-              metadataId: props.metadataId,
-              rightId: r.rightId,
-            } as ItemEntry)
+            .addItemEntry(
+              {
+                metadataId: props.metadataId,
+                rightId: r.rightId,
+              } as ItemEntry,
+              true
+            )
             .then(() => {
               tmpRight.value.rightId = r.rightId;
               historyStore.addEntry({
@@ -779,7 +782,6 @@ export default defineComponent({
       <v-btn :disabled="isNew" icon @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
-
       <v-dialog
         v-model="dialogDeleteRight"
         :retain-focus="false"
@@ -810,6 +812,13 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
+    <v-alert v-model="saveAlertError" dismissible text type="error">
+      Speichern war nicht erfolgreich:
+      {{ saveAlertErrorMessage }}
+    </v-alert>
+    <v-alert v-model="generalAlertError" dismissible text type="error">
+      {{ generalAlertErrorMessage }}
+    </v-alert>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
         <v-expansion-panel>
@@ -1343,13 +1352,6 @@ export default defineComponent({
         >Speichern
       </v-btn>
     </v-card-actions>
-    <v-alert v-model="saveAlertError" dismissible text type="error">
-      Speichern war nicht erfolgreich:
-      {{ saveAlertErrorMessage }}
-    </v-alert>
-    <v-alert v-model="generalAlertError" dismissible text type="error">
-      {{ generalAlertErrorMessage }}
-    </v-alert>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>
         <v-card-title class="text-h5"> Achtung</v-card-title>

@@ -30,7 +30,7 @@ item:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
-        description: Conflict resource exists already
+        description: Conflict resource exists already or date fields may conflict
         content:
           application/json:
             schema:
