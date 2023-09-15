@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
@@ -67,9 +68,18 @@ fun Routing.itemRoutes(
                             ),
                         )
                     } else {
-                        backend.insertItemEntry(item.metadataId, item.rightId)
-                        span.setStatus(StatusCode.OK)
-                        call.respond(HttpStatusCode.Created)
+                        val deleteOnConflict: Boolean =
+                            call.request.queryParameters["deleteRightOnConflict"]?.toBoolean() ?: false
+                        when (val ret = backend.insertItemEntry(item.metadataId, item.rightId, deleteOnConflict)) {
+                            is Either.Left -> {
+                                call.respond(ret.value.first, ret.value.second)
+                            }
+
+                            is Either.Right -> {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(HttpStatusCode.Created)
+                            }
+                        }
                     }
                 } catch (e: BadRequestException) {
                     span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")

@@ -93,8 +93,16 @@ class RightFilterTest : DatabaseTest() {
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
         itemRightRestrictedOpen to listOf(
-            TEST_RIGHT.copy(accessState = AccessState.RESTRICTED),
-            TEST_RIGHT.copy(accessState = AccessState.OPEN),
+            TEST_RIGHT.copy(
+                accessState = AccessState.RESTRICTED,
+                startDate = LocalDate.of(2025, 6, 1),
+                endDate = LocalDate.of(2025, 9, 1),
+            ),
+            TEST_RIGHT.copy(
+                accessState = AccessState.OPEN,
+                startDate = LocalDate.of(2024, 6, 1),
+                endDate = LocalDate.of(2024, 9, 1),
+            ),
         ),
         tempValFilterPresent to listOf(
             TEST_RIGHT.copy(

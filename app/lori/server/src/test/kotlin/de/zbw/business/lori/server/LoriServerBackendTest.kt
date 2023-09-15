@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
@@ -16,6 +17,7 @@ import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.junit.Assert
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
@@ -58,10 +60,10 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testRoundtrip() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_METADATA,
+            TEST_METADATA.copy(metadataId = "roundtrip"),
             TEST_METADATA.copy(metadataId = "no_rights"),
         )
-        val rightAssignments = TEST_RIGHT to listOf(TEST_METADATA.metadataId)
+        val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
@@ -241,6 +243,16 @@ class LoriServerBackendTest : DatabaseTest() {
                 "single word quoted"
             ),
             arrayOf(
+                "col:\"foobar\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "foobar",
+                    ),
+                ),
+                "single word doublequoted"
+            ),
+            arrayOf(
                 "            col:'foobar'           com:'foo & bar'",
                 listOf(
                     SearchPair(
@@ -293,6 +305,16 @@ class LoriServerBackendTest : DatabaseTest() {
                     ),
                 ),
                 "with parentheses"
+            ),
+            arrayOf(
+                "col:\"(subject1 | subject2) & subject3\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(subject1 | subject2) & subject3",
+                    ),
+                ),
+                "with parentheses and double quotes"
             ),
         )
 
@@ -451,7 +473,156 @@ class LoriServerBackendTest : DatabaseTest() {
         }
     }
 
+    @DataProvider(name = DATA_FOR_CHECK_RIGHT_CONFLICTS)
+    fun createDataForCheckDateRightConflicts() =
+        arrayOf(
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 6, 1),
+                    endDate = LocalDate.of(2025, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                false,
+                "Valid. Start and end date completely disjunct",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 6, 1),
+                    endDate = LocalDate.of(2025, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 9, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                true,
+                "Invalid overlap. Start or end date match on one day",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 3, 1),
+                    endDate = LocalDate.of(2026, 6, 1),
+                ),
+                true,
+                "Invalid overlap. Start or end date match on one day",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 4, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = null,
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 4, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 2),
+                    endDate = null
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2024, 6, 1),
+                    endDate = LocalDate.of(2024, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 2),
+                    endDate = null
+                ),
+                false,
+                "No overlap.",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_CHECK_RIGHT_CONFLICTS)
+    fun testCheckDateRightConflicts(
+        r1: ItemRight,
+        r2: ItemRight,
+        expected: Boolean,
+        description: String,
+    ) {
+        assertThat(
+            description,
+            LoriServerBackend.checkForDateConflict(r1, r2),
+            `is`(expected),
+        )
+    }
+
+    @Test
+    fun testInsertItemEntry() {
+        val givenMetadata = TEST_METADATA
+        val givenRight1 = TEST_RIGHT.copy(rightId = "1")
+        val givenRight2 = TEST_RIGHT.copy(rightId = "2")
+        val givenRight3 = TEST_RIGHT.copy(rightId = "3")
+
+        backend.insertMetadataElement(givenMetadata)
+        backend.insertRight(givenRight1)
+        backend.insertRight(givenRight2)
+        backend.insertRight(givenRight3)
+
+        backend.insertItemEntry(givenMetadata.metadataId, givenRight1.rightId!!)
+
+        // Insert first conflict, no deletion
+        when (backend.insertItemEntry(givenMetadata.metadataId, givenRight2.rightId!!)) {
+            is Either.Left -> {
+                // Error is expected due to conflict
+            }
+
+            is Either.Right -> {
+                Assert.fail("An error should be raised due to a given conflict.")
+            }
+        }
+
+        when (backend.insertItemEntry(givenMetadata.metadataId, givenRight3.rightId!!, true)) {
+            is Either.Left -> {
+                // Error is expected due to conflict
+            }
+
+            is Either.Right -> {
+                Assert.fail("An error should be raised due to a given conflict.")
+            }
+        }
+
+        val existingRights =
+            backend.getRightsByIds(listOf(givenRight1.rightId!!, givenRight2.rightId!!, givenRight3.rightId!!))
+                .map { it.rightId }
+                .toSet()
+        assertThat(
+            existingRights,
+            `is`(setOf(givenRight1.rightId!!, givenRight2.rightId!!))
+        )
+    }
+
     companion object {
+        const val DATA_FOR_CHECK_RIGHT_CONFLICTS = "DATA_FOR_CHECK_RIGHT_CONFLICTS"
         const val DATA_FOR_INVALID_SEARCH_KEY_PARSING = "DATA_FOR_INVALID_SEARCH_KEY_PARSING"
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
         const val DATA_FOR_REMOVE_VALID_SEARCH_TOKEN = "DATA_FOR_REMOVE_VALID_SEARCH_TOKEN"

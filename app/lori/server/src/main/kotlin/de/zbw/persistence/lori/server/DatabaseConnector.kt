@@ -68,6 +68,7 @@ class DatabaseConnector(
 
         const val COLUMN_METADATA_COLLECTION_NAME = "collection_name"
         const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
+        const val COLUMN_METADATA_ID = "metadata_id"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"

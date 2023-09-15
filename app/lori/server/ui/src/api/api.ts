@@ -64,8 +64,14 @@ export default {
   addRight(right: RightRest): Promise<RightIdCreated> {
     return loriRightApi.addRight({ body: right });
   },
-  addItemEntry(entry: ItemEntry): Promise<void> {
-    return loriItem.addItemRelation({ body: entry });
+  addItemEntry(
+    entry: ItemEntry,
+    deleteRightOnConflict: boolean
+  ): Promise<void> {
+    return loriItem.addItemRelation({
+      body: entry,
+      deleteRightOnConflict: deleteRightOnConflict,
+    });
   },
   deleteRight(rightId: string): Promise<void> {
     return loriRightApi.deleteRightById({ id: rightId });

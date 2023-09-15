@@ -4,6 +4,8 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
+import de.zbw.api.lori.server.route.ApiError
+import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.Group
@@ -14,10 +16,12 @@ import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
+import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
@@ -46,7 +50,7 @@ class LoriServerBackend(
         config
     )
 
-    fun insertRightForMetadataIds(
+    internal fun insertRightForMetadataIds(
         right: ItemRight,
         metadataIds: List<String>,
     ): String {
@@ -57,8 +61,26 @@ class LoriServerBackend(
         return pkRight
     }
 
-    fun insertItemEntry(metadataId: String, rightId: String): String? =
-        dbConnector.itemDB.insertItem(metadataId, rightId)
+    fun insertItemEntry(
+        metadataId: String,
+        rightId: String,
+        deleteOnConflict: Boolean = false
+    ): Either<Pair<HttpStatusCode, ErrorRest>, String> =
+        if (checkRightConflicts(metadataId, rightId)) {
+            if (deleteOnConflict) {
+                dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
+            }
+            Either.Left(
+                Pair(
+                    HttpStatusCode.Conflict,
+                    ApiError.conflictError("Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten")
+                )
+            )
+        } else {
+            dbConnector.itemDB.insertItem(metadataId, rightId)
+                ?.let { Either.Right(it) }
+                ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
+        }
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> =
         metadataElems.map { insertMetadataElement(it) }
@@ -251,6 +273,18 @@ class LoriServerBackend(
             user.username,
             hashString("SHA-256", user.password),
         )
+
+    private fun checkRightConflicts(metadataId: String, newRightId: String): Boolean {
+        // Get all right ids
+        val rightIds = dbConnector.itemDB.getRightIdsByMetadataId(metadataId)
+        // Get data for all rights
+        val rights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(rightIds)
+        val newRight: ItemRight = dbConnector.rightDB.getRightsByIds(listOf(newRightId)).firstOrNull() ?: return false
+        // Check for conflicts
+        return rights.foldRight(false) { r, acc ->
+            acc || checkForDateConflict(newRight, r)
+        }
+    }
 
     fun getCurrentUserRole(username: String): UserRole? =
         dbConnector.userDB.getRoleByUsername(username)
@@ -551,7 +585,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;!]+|\\w+:'[\\w\\s-:;&|!()]+'")
+        private val SEARCH_KEY_REGEX = Regex("\\w+:[\\w-:;!]+|\\w+:'[\\w\\s-:;&|!()]+'|\\w+:\"[\\w\\s-:;&|!()]+\"")
 
         fun isJWTExpired(principal: JWTPrincipal): Boolean {
             val expiresAt: Long? = principal
@@ -594,7 +628,7 @@ class LoriServerBackend(
             val iter = SEARCH_KEY_REGEX.findAll(s).iterator()
             return generateSequence {
                 if (iter.hasNext()) {
-                    iter.next().value.filter { it != '\'' }
+                    iter.next().value.filter { it != '\'' && it != '\"' }
                 } else {
                     null
                 }
@@ -618,6 +652,18 @@ class LoriServerBackend(
                 .getInstance(type)
                 .digest(input.toByteArray())
             return bytes.joinToString("") { "%02x".format(it) }
+        }
+
+        fun checkForDateConflict(r1: ItemRight, r2: ItemRight): Boolean {
+            return if (r1.endDate == null && r2.endDate == null) {
+                true
+            } else if (r1.endDate == null) {
+                r2.endDate!! > r1.startDate
+            } else if (r2.endDate == null) {
+                r1.endDate > r2.startDate
+            } else if (r1.endDate >= r2.startDate && r1.endDate <= r2.endDate) {
+                true
+            } else r1.startDate <= r2.endDate && r1.startDate >= r2.startDate
         }
     }
 }

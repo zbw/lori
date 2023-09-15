@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -53,7 +54,7 @@ class ItemRoutesKtTest {
 
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { itemContainsEntry(givenMetadataId, givenRightId) } returns false
-            every { insertItemEntry(givenMetadataId, givenRightId) } returns "foo"
+            every { insertItemEntry(givenMetadataId, givenRightId, any()) } returns Either.Right("foo")
         }
         val servicePool = getServicePool(backend)
 
