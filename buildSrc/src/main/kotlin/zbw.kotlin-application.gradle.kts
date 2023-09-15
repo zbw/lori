@@ -1,6 +1,7 @@
 plugins {
     application
     id("com.google.cloud.tools.jib")
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 fun getCheckedOutGitCommitHash(): String {

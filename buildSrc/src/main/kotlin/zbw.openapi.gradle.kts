@@ -3,11 +3,6 @@ plugins {
     id("org.openapi.generator")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
-
 dependencies {
     val moshi by System.getProperties()
     implementation("com.squareup.moshi:moshi:$moshi")
