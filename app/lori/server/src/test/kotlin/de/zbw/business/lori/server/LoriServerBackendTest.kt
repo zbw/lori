@@ -60,10 +60,10 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testRoundtrip() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_METADATA,
+            TEST_METADATA.copy(metadataId = "roundtrip"),
             TEST_METADATA.copy(metadataId = "no_rights"),
         )
-        val rightAssignments = TEST_RIGHT to listOf(TEST_METADATA.metadataId)
+        val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
         // when
         backend.insertMetadataElements(givenMetadataEntries.toList())
@@ -595,6 +595,7 @@ class LoriServerBackendTest : DatabaseTest() {
             is Either.Left -> {
                 // Error is expected due to conflict
             }
+
             is Either.Right -> {
                 Assert.fail("An error should be raised due to a given conflict.")
             }
@@ -604,6 +605,7 @@ class LoriServerBackendTest : DatabaseTest() {
             is Either.Left -> {
                 // Error is expected due to conflict
             }
+
             is Either.Right -> {
                 Assert.fail("An error should be raised due to a given conflict.")
             }
