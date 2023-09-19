@@ -1,7 +1,7 @@
 # install vault
 FROM alpine:3.18.3 AS vault
 
-LABEL IMAGE_VERSION_TAG=0.0.2
+LABEL IMAGE_VERSION_TAG=0.0.3
 LABEL IMAGE_NAME=vault-psql-s3cmd
 LABEL OTC_STAGE=zbw-dev-nl
 

@@ -5,10 +5,10 @@ workflow:
     - if: $CI_COMMIT_BRANCH == null || $CI_OPEN_MERGE_REQUESTS == null || $CI_PIPELINE_SOURCE != "push"
 
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:0.2.2"
+  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:0.2.3"
 
 default:
-  image: eclipse-temurin:17.0.8_7-jdk
+  image: eclipse-temurin:17.0.8.1_1-jdk
 
 stages:
   - build
@@ -30,7 +30,7 @@ buildDockerfileImages:
       changes:
         paths:
           - docker/**/Dockerfile
-  image: docker:24.0.5-git
+  image: docker:24.0.6-git
   script:
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
@@ -58,7 +58,7 @@ pushDockerfileImages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - docker/**/Dockerfile
-  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-dind:0.0.1
+  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-dind:0.0.2
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
   script:
