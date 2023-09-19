@@ -1,7 +1,7 @@
 # install vault
-FROM alpine:3.18.2 AS vault
+FROM alpine:3.18.3 AS vault
 
-LABEL IMAGE_VERSION_TAG=0.0.1
+LABEL IMAGE_VERSION_TAG=0.0.2
 LABEL IMAGE_NAME=vault-s3cmd
 LABEL OTC_STAGE=zbw-tools-nl
 

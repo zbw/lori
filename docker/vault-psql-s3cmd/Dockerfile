@@ -1,5 +1,5 @@
 # install vault
-FROM alpine:3.18.2 AS vault
+FROM alpine:3.18.3 AS vault
 
 LABEL IMAGE_VERSION_TAG=0.0.2
 LABEL IMAGE_NAME=vault-psql-s3cmd
@@ -16,7 +16,7 @@ RUN apk add --no-cache curl jq && \
 
 #install psql
 FROM vault AS psql
-ARG POSTGRES_CLIENT_VERSION=15.3-r0
+ARG POSTGRES_CLIENT_VERSION=15.4-r0
 ARG POSTGRES_CLIENT_MAJOR_VERSION=15
 RUN apk add --no-cache postgresql"$POSTGRES_CLIENT_MAJOR_VERSION"-client="$POSTGRES_CLIENT_VERSION"
 
