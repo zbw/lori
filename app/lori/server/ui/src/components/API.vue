@@ -9,9 +9,7 @@ export default defineComponent({
     OpenApi,
   },
   setup() {
-    const queryParams = {
-      userId: "john_doe",
-    };
+    const queryParams = { };
 
     const printDebug = () => {
       console.log(jsonApi);
