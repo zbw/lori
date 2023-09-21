@@ -7,6 +7,11 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://gui.lori-dev.zbw-nett.zbw-kiel.de/api/v1
+    description: dev server
+  - url: http://localhost:8082/api/v1
+    description: local running
 tags:
   - name: ItemRest
     description: A bibliographic item

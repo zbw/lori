@@ -15,12 +15,14 @@
     "@vuelidate/validators": "^2.0.3",
     "core-js": "^3.32.0",
     "lodash.isequal": "^4.5.0",
+    "material-design-icons-iconfont": "^6.7.0",
     "neverthrow": "^4.4.2",
     "pinia": "^2.1.6",
     "ts-enum-util": "^4.0.2",
     "vue": "^2.7.14",
     "vue-i18n": "^8.28.2",
     "vue-i18n-bridge": "^9.2.2",
+    "vue-material": "^1.0.0-beta-16",
     "vue-router": "^3.6.5",
     "vuetify": "^2.7.1"
   },
@@ -48,6 +50,7 @@
     "typescript": "^4.9.5",
     "vue-cli-plugin-i18n": "~2.3.2",
     "vue-cli-plugin-vuetify": "^2.5.8",
+    "vue-openapi": "^0.10.0",
     "vue-template-compiler": "^2.7.14",
     "vuetify-loader": "^1.9.2"
   }

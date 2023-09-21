@@ -1,4 +1,5 @@
 import com.github.gradle.node.npm.task.NpmTask
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
     id("de.zbw.nodeplugin")
@@ -9,7 +10,19 @@ plugins {
 node {
 }
 
-openApiGenerate {
+tasks.register<GenerateTask>("buildOpenAPIJson") {
+    inputSpec.set("${project(":app:lori:api").projectDir.path}/src/main/openapi/openapi.yaml")
+    outputDir.set("$projectDir/src/generated-sources/openapijson")
+    generatorName.set("openapi")
+    modelPackage.set("de.zbw.lori.model")
+    configOptions.set(
+        mapOf(
+            Pair("dateLibrary", "java8")
+        ).toMutableMap()
+    )
+}
+
+tasks.register<GenerateTask>("generateTypescript") {
     inputSpec.set("${project(":app:lori:api").projectDir.path}/src/main/openapi/openapi.yaml")
     outputDir.set("$projectDir/src/generated-sources/openapi")
     generatorName.set("typescript-fetch")
@@ -25,7 +38,7 @@ openApiGenerate {
 
 tasks.named<NpmTask>("npm_run_build") {
     // make sure the build task is executed only when appropriate files change
-    dependsOn(tasks.openApiGenerate)
+    dependsOn("buildOpenAPIJson", "generateTypescript")
     environment.set(mapOf("NODE_OPTIONS" to "--openssl-legacy-provider"))
     inputs.files(fileTree("public"))
     inputs.files(fileTree("src"))
@@ -103,5 +116,5 @@ tasks.clean {
 }
 
 tasks.npmSetup {
-    dependsOn(tasks.openApiGenerate)
+    dependsOn("buildOpenAPIJson", "generateTypescript")
 }
