@@ -92,7 +92,12 @@ class BookmarkSearchsByTemplateId : DatabaseTest() {
         val templateRightId = backend.insertTemplate(
             template = Template(
                 templateName = "applyTemplate",
-                right = FacetTest.TEST_RIGHT
+                createdOn = null,
+                createdBy = null,
+                lastAppliedOn = null,
+                lastUpdatedBy = "someuser",
+                lastUpdatedOn = null,
+                right = FacetTest.TEST_RIGHT,
             )
         )
 

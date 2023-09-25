@@ -419,6 +419,11 @@ fun TemplateRest.toBusiness(): Template =
         templateName = this.templateName,
         templateId = this.templateId,
         description = this.description,
+        createdBy = this.createdBy,
+        createdOn = this.createdOn,
+        lastUpdatedBy = this.lastUpdatedBy,
+        lastUpdatedOn = this.lastUpdatedOn,
+        lastAppliedOn = this.lastAppliedOn,
         right = this.right.toBusiness(),
     )
 
@@ -427,6 +432,11 @@ fun Template.toRest(): TemplateRest =
         templateName = this.templateName,
         templateId = this.templateId,
         description = this.description,
+        createdBy = this.createdBy,
+        createdOn = this.createdOn,
+        lastUpdatedOn = this.lastUpdatedOn,
+        lastUpdatedBy = this.lastUpdatedBy,
+        lastAppliedOn = this.lastAppliedOn,
         right = this.right.toRest(),
     )
 

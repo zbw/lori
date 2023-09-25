@@ -9,7 +9,10 @@ import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
@@ -17,6 +20,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
+import java.time.Instant
 import java.time.LocalDate
 import kotlin.test.assertTrue
 
@@ -46,6 +50,8 @@ class ApplyTemplateTest : DatabaseTest() {
 
     @BeforeClass
     fun fillDB() {
+        mockkStatic(Instant::class)
+        every { Instant.now() } returns ItemDBTest.NOW.toInstant()
         getInitialMetadata().forEach { entry ->
             backend.insertMetadataElement(entry.key)
             entry.value.forEach { right ->
@@ -79,7 +85,12 @@ class ApplyTemplateTest : DatabaseTest() {
         val templateRightId = backend.insertTemplate(
             template = Template(
                 templateName = "applyTemplate",
-                right = TEST_RIGHT
+                createdOn = null,
+                createdBy = null,
+                lastAppliedOn = null,
+                lastUpdatedBy = "someuser",
+                lastUpdatedOn = null,
+                right = TEST_RIGHT,
             )
         )
 
@@ -98,6 +109,11 @@ class ApplyTemplateTest : DatabaseTest() {
         // Verify that new right is assigned to metadata id
         val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
         assertTrue(rightIds.contains(templateRightId.rightId))
+
+        assertThat(
+            backend.getTemplateById(templateRightId.templateId)!!.lastAppliedOn,
+            `is`(ItemDBTest.NOW),
+        )
 
         // Repeat Apply Operation without duplicate entries errors
         val received2: List<String> = backend.applyTemplate(templateRightId.templateId)

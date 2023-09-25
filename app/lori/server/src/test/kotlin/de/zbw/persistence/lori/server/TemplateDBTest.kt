@@ -48,6 +48,8 @@ class TemplateDBTest : DatabaseTest() {
         val receivedTemplates = templateDB.getTemplatesByIds(listOf(generatedIds.templateId))
         val expected = TEST_TEMPLATE.copy(
             templateId = generatedIds.templateId,
+            createdOn = ItemDBTest.NOW,
+            lastUpdatedOn = ItemDBTest.NOW,
             right = TEST_RIGHT.copy(rightId = generatedIds.rightId, templateId = generatedIds.templateId)
         )
         // then
@@ -61,6 +63,8 @@ class TemplateDBTest : DatabaseTest() {
         val expectedUpdated = TEST_TEMPLATE.copy(
             templateId = generatedIds.templateId,
             description = "fooo",
+            createdOn = ItemDBTest.NOW,
+            lastUpdatedOn = ItemDBTest.NOW,
             right = expected.right.copy(licenceContract = "bar")
         )
         val updatedNumber: Int = templateDB.updateTemplateById(
@@ -95,11 +99,15 @@ class TemplateDBTest : DatabaseTest() {
             TEST_TEMPLATE.copy(
                 templateName = "ad",
                 templateId = ids4.templateId,
+                createdOn = ItemDBTest.NOW,
+                lastUpdatedOn = ItemDBTest.NOW,
                 right = TEST_RIGHT.copy(rightId = ids4.rightId, templateId = ids4.templateId)
             ),
             TEST_TEMPLATE.copy(
                 templateName = "ae",
                 templateId = ids5.templateId,
+                createdOn = ItemDBTest.NOW,
+                lastUpdatedOn = ItemDBTest.NOW,
                 right = TEST_RIGHT.copy(rightId = ids5.rightId, templateId = ids5.templateId)
             ),
         )
@@ -238,7 +246,12 @@ class TemplateDBTest : DatabaseTest() {
             templateId = 1,
             templateName = "test",
             description = "some description",
-            right = TEST_RIGHT
+            createdOn = null,
+            createdBy = null,
+            lastAppliedOn = null,
+            lastUpdatedBy = "someuser",
+            lastUpdatedOn = null,
+            right = TEST_RIGHT,
         )
     }
 }

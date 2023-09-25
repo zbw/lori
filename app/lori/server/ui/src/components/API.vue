@@ -9,7 +9,7 @@ export default defineComponent({
     OpenApi,
   },
   setup() {
-    const queryParams = { };
+    const queryParams = {};
 
     const printDebug = () => {
       console.log(jsonApi);
@@ -25,7 +25,9 @@ export default defineComponent({
 });
 </script>
 
-<style src="vue-openapi/node_modules/vue-material/dist/vue-material.css"></style>
+<style
+  src="vue-openapi/node_modules/vue-material/dist/vue-material.css"
+></style>
 
 <template>
   <open-api

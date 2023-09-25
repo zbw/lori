@@ -5,11 +5,14 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.Timestamp
+import java.time.Instant
 
 /**
  * Execute SQL queries related to templates.
@@ -66,6 +69,11 @@ class TemplateDB(
                     templateName = rs.getString(2),
                     description = rs.getString(3),
                     rightId = rs.getString(4),
+                    createdOn = rs.getTimestamp(5)?.toOffsetDateTime(),
+                    createdBy = rs.getString(6),
+                    lastUpdatedOn = rs.getTimestamp(7)?.toOffsetDateTime(),
+                    lastUpdatedBy = rs.getString(8),
+                    lastAppliedOn = rs.getTimestamp(9)?.toOffsetDateTime(),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -74,6 +82,11 @@ class TemplateDB(
                 templateId = it.templateId,
                 templateName = it.templateName,
                 description = it.description,
+                createdOn = it.createdOn,
+                createdBy = it.createdBy,
+                lastUpdatedOn = it.lastUpdatedOn,
+                lastUpdatedBy = it.lastUpdatedBy,
+                lastAppliedOn = it.lastAppliedOn,
                 right = rightDB.getRightsByIds(listOf(it.rightId)).first()
             )
         }
@@ -85,12 +98,21 @@ class TemplateDB(
         val newRightId: String = template.right.let {
             rightDB.insertRight(it)
         }
+        val now = Instant.now()
         val prepStmt = connection.prepareStatement(STATEMENT_INSERT_TEMPLATE, Statement.RETURN_GENERATED_KEYS).apply {
             this.setString(1, template.templateName)
             this.setIfNotNull(2, template.description) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setIfNotNull(3, newRightId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setTimestamp(4, Timestamp.from(now)) // created_on
+            this.setIfNotNull(5, template.createdBy) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setTimestamp(6, Timestamp.from(now)) // last_updated_on
+            this.setIfNotNull(7, template.lastUpdatedBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -112,12 +134,14 @@ class TemplateDB(
 
     fun updateTemplateById(templateId: Int, template: Template): Int {
         // Update Template Table
+        val now = Instant.now()
         val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE).apply {
             this.setString(1, template.templateName)
             this.setIfNotNull(2, template.description) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setInt(3, templateId)
+            this.setTimestamp(3, Timestamp.from(now)) // last_updated_on
+            this.setInt(4, templateId)
         }
         val span = tracer.spanBuilder("updateTemplateById").startSpan()
         val changedTemplates: Int = try {
@@ -138,6 +162,21 @@ class TemplateDB(
             rightDB.upsertRight(template.right.copy(rightId = it.rightId))
         }
         return changedTemplates
+    }
+
+    fun updateAppliedOnByTemplateId(templateId: Int): Int {
+        val now = Instant.now()
+        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
+            this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
+            this.setInt(2, templateId)
+        }
+        val span = tracer.spanBuilder("updateTemplateById").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
     }
 
     fun getTemplateList(
@@ -164,6 +203,11 @@ class TemplateDB(
                     templateName = rs.getString(2),
                     description = rs.getString(3),
                     rightId = rs.getString(4),
+                    createdOn = rs.getTimestamp(5)?.toOffsetDateTime(),
+                    createdBy = rs.getString(6),
+                    lastUpdatedOn = rs.getTimestamp(7)?.toOffsetDateTime(),
+                    lastUpdatedBy = rs.getString(8),
+                    lastAppliedOn = rs.getTimestamp(9)?.toOffsetDateTime(),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -178,6 +222,11 @@ class TemplateDB(
                     templateId = it.templateId,
                     templateName = it.templateName,
                     description = it.description,
+                    createdOn = it.createdOn,
+                    createdBy = it.createdBy,
+                    lastUpdatedOn = it.lastUpdatedOn,
+                    lastUpdatedBy = it.lastUpdatedBy,
+                    lastAppliedOn = it.lastAppliedOn,
                     right = assRight,
                 )
             }
@@ -334,18 +383,23 @@ class TemplateDB(
         val prepStmtGetTemplate = connection.prepareStatement(STATEMENT_GET_TEMPLATE).apply {
             this.setInt(1, templateId)
         }
-        val rsTemplate = try {
+        val rs = try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmtGetTemplate.executeQuery() }
         } finally {
             span.end()
         }
-        return if (rsTemplate.next()) {
+        return if (rs.next()) {
             TemplateTransient(
-                templateId = rsTemplate.getInt(1),
-                templateName = rsTemplate.getString(2),
-                description = rsTemplate.getString(3),
-                rightId = rsTemplate.getString(4),
+                templateId = rs.getInt(1),
+                templateName = rs.getString(2),
+                description = rs.getString(3),
+                rightId = rs.getString(4),
+                createdOn = rs.getTimestamp(5)?.toOffsetDateTime(),
+                createdBy = rs.getString(6),
+                lastUpdatedOn = rs.getTimestamp(7)?.toOffsetDateTime(),
+                lastUpdatedBy = rs.getString(8),
+                lastAppliedOn = rs.getTimestamp(9)?.toOffsetDateTime(),
             )
         } else {
             null
@@ -364,12 +418,14 @@ class TemplateDB(
             " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_TEMPLATE = "SELECT " +
-            "$COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
+            "$COLUMN_TEMPLATE_ID,template_name,template_description,right_id," +
+            "created_on,created_by,last_updated_on,last_updated_by,last_applied_on" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_TEMPLATE_LIST = "SELECT" +
-            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
+            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id," +
+            "created_on,created_by,last_updated_on,last_updated_by,last_applied_on" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " ORDER BY template_name ASC LIMIT ? OFFSET ?;"
 
@@ -378,15 +434,27 @@ class TemplateDB(
             " FROM $TABLE_NAME_TEMPLATE"
 
         const val STATEMENT_GET_TEMPLATES_BY_IDS = "SELECT" +
-            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id" +
+            " $COLUMN_TEMPLATE_ID,template_name,template_description,right_id," +
+            "created_on,created_by,last_updated_on,last_updated_by,last_applied_on" +
             " FROM $TABLE_NAME_TEMPLATE" +
             " WHERE $COLUMN_TEMPLATE_ID = ANY(?)"
 
         const val STATEMENT_INSERT_TEMPLATE =
-            "INSERT INTO $TABLE_NAME_TEMPLATE(template_name, template_description, right_id) VALUES(?,?,?)"
+            "INSERT INTO $TABLE_NAME_TEMPLATE(template_name, template_description, right_id," +
+                "created_on,created_by,last_updated_on,last_updated_by)" +
+                " VALUES(?,?,?," +
+                "?,?,?,?)"
 
         const val STATEMENT_UPDATE_TEMPLATE =
-            "UPDATE $TABLE_NAME_TEMPLATE SET template_name=?,template_description=? WHERE $COLUMN_TEMPLATE_ID = ?"
+            "UPDATE $TABLE_NAME_TEMPLATE" +
+                " SET template_name=?,template_description=?," +
+                "last_updated_on=?" +
+                " WHERE $COLUMN_TEMPLATE_ID = ?"
+
+        const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
+            "UPDATE $TABLE_NAME_TEMPLATE" +
+                " SET last_applied_on=?" +
+                " WHERE $COLUMN_TEMPLATE_ID = ?"
 
         const val STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID =
             "SELECT $COLUMN_BOOKMARK_ID" +

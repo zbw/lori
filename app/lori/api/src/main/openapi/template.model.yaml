@@ -10,6 +10,19 @@ TemplateRest:
       type: string
     description:
       type: string
+    createdBy:
+      type: string
+    createdOn:
+      type: string
+      format: date-time
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
+    lastAppliedOn:
+      type: string
+      format: date-time
     right:
       $ref: 'right.model.yaml#/RightRest'
 
