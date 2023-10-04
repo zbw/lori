@@ -43,7 +43,7 @@ class BookmarkTemplateDBTest : DatabaseTest() {
     @Test
     fun testTemplateBookmarkPairRoundtrip() {
         // Create a Bookmark and Template
-        val rightId = rightDB.insertRight(TEST_RIGHT)
+        val rightId = rightDB.insertRight(TEST_RIGHT.copy(templateId = 5))
         val templateId: Int = rightDB.getRightsByIds(listOf(rightId)).first().templateId!!
         val bookmarkId = bookmarkDB.insertBookmark(TEST_BOOKMARK)
 

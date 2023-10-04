@@ -179,7 +179,7 @@ class BookmarkRoutesKtTest {
     fun testPutBookmarkNoContent() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateBookmark(TEST_BOOKMARK.bookmarkId!!, any()) } returns 1
+            every { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } returns 1
         }
         val servicePool = getServicePool(backend)
         // when + then
@@ -345,7 +345,7 @@ class BookmarkRoutesKtTest {
     fun testPutBookmarkRawNoContent() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId!!, any()) } returns 1
+            every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } returns 1
         }
         val servicePool = getServicePool(backend)
         // when + then

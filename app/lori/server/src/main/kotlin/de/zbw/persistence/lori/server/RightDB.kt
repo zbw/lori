@@ -303,7 +303,6 @@ class RightDB(
         }.takeWhile { true }.toList()
     }
 
-
     fun deleteRightByTemplateId(templateId: Int): Int {
         val span = tracer.spanBuilder("deleteRightByTemplateId").startSpan()
 
@@ -319,7 +318,7 @@ class RightDB(
         }
     }
 
-    fun getTemplateList(limit: Int, offset:Int): List<ItemRight> {
+    fun getTemplateList(limit: Int, offset: Int): List<ItemRight> {
         val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
             this.setInt(1, limit)
             this.setInt(2, offset)
@@ -338,13 +337,14 @@ class RightDB(
             } else null
         }.takeWhile { true }.toList()
     }
+
     fun getRightsByTemplateIds(templateIds: List<Int>): List<ItemRight> {
         if (templateIds.isEmpty()) {
             return emptyList()
         }
 
         val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_IDS).apply {
-            this.setArray(1, connection.createArrayOf("text", templateIds.toTypedArray()))
+            this.setArray(1, connection.createArrayOf("integer", templateIds.toTypedArray()))
         }
 
         val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
@@ -395,7 +395,6 @@ class RightDB(
             span.end()
         }
     }
-
 
     companion object {
         private const val COLUMN_TEMPLATE_ID = "template_id"
@@ -489,11 +488,9 @@ class RightDB(
             "FROM $TABLE_NAME_ITEM_RIGHT r " +
             "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
-
         const val STATEMENT_DELETE_TEMPLATE_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_ITEM_RIGHT" +
             " WHERE template_id = ?"
-
 
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_IDS =
             "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +

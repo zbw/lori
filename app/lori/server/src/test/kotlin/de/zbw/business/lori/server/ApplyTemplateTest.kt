@@ -80,7 +80,7 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Create Template
-        val rightId = backend.insertRight( TEST_RIGHT )
+        val rightId = backend.insertRight(TEST_RIGHT.copy(templateId = 6))
         val templateId: Int = backend.getRightsByIds(listOf(rightId)).first().templateId!!
 
         // Connect Bookmark and Template

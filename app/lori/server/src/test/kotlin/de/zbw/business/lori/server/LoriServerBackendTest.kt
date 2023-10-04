@@ -675,6 +675,7 @@ class LoriServerBackendTest : DatabaseTest() {
             createdOn = NOW,
             endDate = TODAY,
             groupIds = emptyList(),
+            lastAppliedOn = null,
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
             licenceContract = "some contract",
@@ -687,7 +688,9 @@ class LoriServerBackendTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
+            templateDescription = "descritpion",
             templateId = null,
+            templateName = "name",
             zbwUserAgreement = true,
         )
     }

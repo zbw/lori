@@ -76,6 +76,7 @@ class RestConverterTest {
                     createdBy = TEST_RIGHT.createdBy,
                     createdOn = TEST_RIGHT.createdOn,
                     endDate = TEST_RIGHT.endDate,
+                    lastAppliedOn = TEST_RIGHT.lastAppliedOn,
                     lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
                     lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
                     licenceContract = TEST_RIGHT.licenceContract,
@@ -88,6 +89,8 @@ class RestConverterTest {
                     openContentLicence = TEST_RIGHT.openContentLicence,
                     restrictedOpenContentLicence = TEST_RIGHT.restrictedOpenContentLicence,
                     startDate = TEST_RIGHT.startDate,
+                    templateDescription = TEST_RIGHT.templateDescription,
+                    templateName = TEST_RIGHT.templateName,
                     zbwUserAgreement = TEST_RIGHT.zbwUserAgreement,
                 )
             ),
@@ -492,6 +495,16 @@ class RestConverterTest {
             ),
             endDate = TODAY,
             groupIds = null,
+            lastAppliedOn = OffsetDateTime.of(
+                2022,
+                3,
+                4,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             lastUpdatedBy = "user2",
             lastUpdatedOn = OffsetDateTime.of(
                 2022,
@@ -513,7 +526,9 @@ class RestConverterTest {
             notesManagementRelated = "Some management related notes",
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
+            templateDescription = "foo",
             templateId = null,
+            templateName = "name",
             zbwUserAgreement = true,
         )
 

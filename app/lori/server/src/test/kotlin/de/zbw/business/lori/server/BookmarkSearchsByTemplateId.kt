@@ -5,9 +5,9 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -90,15 +90,7 @@ class BookmarkSearchsByTemplateId : DatabaseTest() {
 
         // 2. Create Template
         val templateRightId = backend.insertTemplate(
-            template = Template(
-                templateName = "applyTemplate",
-                createdOn = null,
-                createdBy = null,
-                lastAppliedOn = null,
-                lastUpdatedBy = "someuser",
-                lastUpdatedOn = null,
-                right = FacetTest.TEST_RIGHT,
-            )
+            right = TEST_RIGHT
         )
 
         // 3. Connect Bookmarks with Template

@@ -185,6 +185,7 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
@@ -198,6 +199,8 @@ fun ItemRight.toRest(): RightRest =
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateId = templateId,
+        templateDescription = templateDescription,
+        templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
     )
 

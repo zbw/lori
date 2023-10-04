@@ -419,7 +419,7 @@ class LoriServerBackend(
      */
     fun insertTemplate(right: ItemRight, generateTemplateId: Boolean = false): TemplateRightIdCreated {
         val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // Will lead to an overflow at some point
-        val rightId =  dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
+        val rightId = dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
         return TemplateRightIdCreated(
             templateId = freeTemplateId,
             rightId = rightId
@@ -540,7 +540,8 @@ class LoriServerBackend(
 
     internal fun applyTemplate(templateId: Int): List<String> {
         // Get Right_Id
-        val right: ItemRight = dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return emptyList()
+        val right: ItemRight =
+            dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return emptyList()
         val rightId = right.rightId ?: throw InternalError("A RightId is missing for $right")
         // Receive all bookmark ids
         val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)

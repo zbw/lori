@@ -144,7 +144,6 @@ class BookmarkTemplateDB(
         }.takeWhile { true }.toList()
     }
 
-
     companion object {
         private const val TABLE_NAME_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map"
         private const val COLUMN_TEMPLATE_ID = "template_id"

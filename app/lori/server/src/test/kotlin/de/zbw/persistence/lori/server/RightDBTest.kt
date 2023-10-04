@@ -74,7 +74,7 @@ class RightDBTest : DatabaseTest() {
         val receivedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
 
         // then
-        assertThat(receivedRights.first(), `is`(initialRight.copy(rightId = generatedRightId)))
+        assertThat(receivedRights.first(), `is`(initialRight.copy(rightId = generatedRightId, lastAppliedOn = null)))
         assertTrue(dbConnector.rightDB.rightContainsId(generatedRightId))
 
         // upsert
@@ -91,7 +91,7 @@ class RightDBTest : DatabaseTest() {
         // then
         assertThat(updatedRights, `is`(1))
         val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
-        assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1))))
+        assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null)))
 
         // delete
         // when
