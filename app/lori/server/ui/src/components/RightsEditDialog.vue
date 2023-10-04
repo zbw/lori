@@ -11,6 +11,7 @@ import {
   RightRestBasisStorageEnum,
   TemplateIdCreated,
   TemplateRest,
+  TemplateRightRest,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -38,6 +39,10 @@ export default defineComponent({
       type: {} as PropType<RightRest>,
       required: false,
     },
+    template: {
+      type: {} as PropType<TemplateRest>,
+      required: false,
+    },
     index: {
       type: Number,
       required: true,
@@ -49,18 +54,6 @@ export default defineComponent({
     metadataId: {
       type: String,
       required: true, // TODO: refactor to required:false
-    },
-    templateId: {
-      type: Number,
-      required: false,
-    },
-    templateName: {
-      type: String,
-      required: false,
-    },
-    templateDescription: {
-      type: String,
-      required: false,
     },
     reinitCounter: {
       type: Number,
@@ -327,9 +320,11 @@ export default defineComponent({
       tmpTemplate.value.templateId = -1;
       tmpTemplate.value.templateName = formState.formTemplateName;
       tmpTemplate.value.description = tmpTemplateDescription.value;
-      tmpTemplate.value.right = tmpRight.value;
       templateApi
-        .addTemplate(tmpTemplate.value)
+        .addTemplate({
+          template: tmpTemplate.value,
+          right: tmpRight.value,
+        } as TemplateRightRest)
         .then((r: TemplateIdCreated) => {
           updateBookmarks(r.templateId, () => {
             emit("addTemplateSuccessful", formState.formTemplateName);
@@ -348,9 +343,11 @@ export default defineComponent({
       tmpTemplate.value.templateId = tmpTemplateId.value;
       tmpTemplate.value.templateName = formState.formTemplateName;
       tmpTemplate.value.description = tmpTemplateDescription.value;
-      tmpTemplate.value.right = tmpRight.value;
       templateApi
-        .updateTemplate(tmpTemplate.value)
+        .updateTemplate({
+          template: tmpTemplate.value,
+          right: tmpRight.value,
+        } as TemplateRightRest)
         .then(() => {
           // TODO: refactor this with callbacks
           updateBookmarks(tmpTemplateId.value, () => {
@@ -553,12 +550,20 @@ export default defineComponent({
       }
     });
     const computedTemplateId = computed(() =>
-      props.templateId == undefined ? -1 : props.templateId
+      props.template == undefined || props.template.templateId == undefined
+        ? -1
+        : props.template.templateId
     );
 
-    const isTemplate = computed(() => props.templateId != undefined);
+    const isTemplate = computed(
+      () =>
+        props.template != undefined && props.template.templateId != undefined
+    );
     const isEditable = computed(
-      () => props.templateId != undefined && !props.isNew
+      () =>
+        props.template != undefined &&
+        props.template.templateId != undefined &&
+        !props.isNew
     );
 
     watch(computedRight, () => {
@@ -583,16 +588,22 @@ export default defineComponent({
 
     const setGivenValues = () => {
       if (props.right == undefined) {
-        // This sould never happen
+        // This should never happen :'(
         return;
       }
       tmpRight.value = Object.assign({}, props.right);
       formState.formTemplateName =
-        props.templateName == undefined ? "" : props.templateName;
+        props.template == undefined || props.template.templateName == undefined
+          ? ""
+          : props.template.templateName;
       tmpTemplateId.value =
-        props.templateId == undefined ? -1 : props.templateId;
+        props.template == undefined || props.template.templateId == undefined
+          ? -1
+          : props.template.templateId;
       tmpTemplateDescription.value =
-        props.templateDescription == undefined ? "" : props.templateDescription;
+        props.template == undefined || props.template.description == undefined
+          ? ""
+          : props.template.description;
       formState.accessState = accessStateToString(props.right.accessState);
       formState.basisStorage = basisStorageToString(props.right.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
@@ -875,6 +886,14 @@ export default defineComponent({
                     outlined
                     :disabled="isEditable"
                   ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Zuletzt editiert am</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field outlined readonly></v-text-field>
                 </v-col>
               </v-row>
               <v-row>

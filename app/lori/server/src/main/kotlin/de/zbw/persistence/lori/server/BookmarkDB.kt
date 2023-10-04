@@ -123,6 +123,7 @@ class BookmarkDB(
         }.takeWhile { true }.toList()
     }
 
+
     companion object {
         private const val TABLE_NAME_BOOKMARK = "bookmark"
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"

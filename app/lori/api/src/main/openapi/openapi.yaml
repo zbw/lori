@@ -97,5 +97,3 @@ components:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
     BookmarkRawRest:
       $ref: 'bookmark.model.yaml#/BookmarkRawRest'
-    TemplateRest:
-      $ref: 'template.model.yaml#/TemplateRest'

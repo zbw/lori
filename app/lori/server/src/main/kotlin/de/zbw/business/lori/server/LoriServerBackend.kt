@@ -13,7 +13,6 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.ErrorRest
@@ -393,7 +392,7 @@ class LoriServerBackend(
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 
     fun deleteBookmark(bookmarkId: Int): Int {
-        val receivedTemplateIds = dbConnector.templateDB.getTemplateIdsByBookmarkId(bookmarkId)
+        val receivedTemplateIds = dbConnector.bookmarkTemplateDB.getTemplateIdsByBookmarkId(bookmarkId)
         return if (receivedTemplateIds.isEmpty()) {
             dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
         } else {
@@ -416,24 +415,27 @@ class LoriServerBackend(
         dbConnector.bookmarkDB.getBookmarkList(limit, offset)
 
     /**
-     * Template list.
+     * Insert template.
      */
-    fun insertTemplate(template: Template): TemplateRightIdCreated =
-        dbConnector.templateDB.insertTemplate(template)
+    fun insertTemplate(right: ItemRight, generateTemplateId: Boolean = false): TemplateRightIdCreated {
+        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // Will lead to an overflow at some point
+        val rightId =  dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
+        return TemplateRightIdCreated(
+            templateId = freeTemplateId,
+            rightId = rightId
+        )
+    }
 
-    fun deleteTemplate(templateId: Int): Int = dbConnector.templateDB.deleteTemplateById(templateId)
+    fun deleteRightByTemplateId(templateId: Int): Int = dbConnector.rightDB.deleteRightByTemplateId(templateId)
 
-    fun updateTemplate(templateId: Int, template: Template): Int =
-        dbConnector.templateDB.updateTemplateById(templateId, template)
-
-    fun getTemplateById(templateId: Int): Template? =
-        dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
+    fun getRightByTemplateId(templateId: Int): ItemRight? =
+        dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull()
 
     fun getTemplateList(
         limit: Int,
         offset: Int,
-    ): List<Template> =
-        dbConnector.templateDB.getTemplateList(limit, offset)
+    ): List<ItemRight> =
+        dbConnector.rightDB.getTemplateList(limit, offset)
 
     /**
      * Template-Bookmark Pair.
@@ -441,7 +443,7 @@ class LoriServerBackend(
     fun getBookmarksByTemplateId(
         templateId: Int,
     ): List<Bookmark> {
-        val bookmarkIds = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        val bookmarkIds = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
@@ -451,7 +453,7 @@ class LoriServerBackend(
         offset: Int,
     ): SearchQueryResult {
         // Receive all Bookmarks linked to given Template
-        val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
         var tmpLimit = limit
         var tmpOffset = offset
@@ -499,7 +501,7 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePair(
         templateId: Int,
         bookmarkId: Int,
-    ): Int = dbConnector.templateDB.deleteTemplateBookmarkPair(
+    ): Int = dbConnector.bookmarkTemplateDB.deleteTemplateBookmarkPair(
         BookmarkTemplate(
             bookmarkId = bookmarkId,
             templateId = templateId
@@ -509,7 +511,7 @@ class LoriServerBackend(
     fun insertBookmarkTemplatePair(
         bookmarkId: Int,
         templateId: Int,
-    ): Int = dbConnector.templateDB.insertTemplateBookmarkPair(
+    ): Int = dbConnector.bookmarkTemplateDB.insertTemplateBookmarkPair(
         BookmarkTemplate(
             bookmarkId = bookmarkId,
             templateId = templateId
@@ -517,18 +519,18 @@ class LoriServerBackend(
     )
 
     fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
-        dbConnector.templateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
+        dbConnector.bookmarkTemplateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
 
     fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
         bookmarkTemplates.sumOf {
-            dbConnector.templateDB.deleteTemplateBookmarkPair(it)
+            dbConnector.bookmarkTemplateDB.deleteTemplateBookmarkPair(it)
         }
 
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
-        dbConnector.templateDB.deletePairsByTemplateId(templateId)
+        dbConnector.bookmarkTemplateDB.deletePairsByTemplateId(templateId)
 
     fun applyAllTemplates(): Map<Int, List<String>> =
-        dbConnector.templateDB.getAllTemplateIds()
+        dbConnector.rightDB.getAllTemplateIds()
             .let { applyTemplates(it) }
 
     fun applyTemplates(templateIds: List<Int>): Map<Int, List<String>> =
@@ -538,10 +540,10 @@ class LoriServerBackend(
 
     internal fun applyTemplate(templateId: Int): List<String> {
         // Get Right_Id
-        val template = dbConnector.templateDB.getTemplatesByIds(listOf(templateId)).firstOrNull()
-        val rightId = template?.right?.rightId ?: return emptyList()
+        val right: ItemRight = dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return emptyList()
+        val rightId = right.rightId ?: throw InternalError("A RightId is missing for $right")
         // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.templateDB.getBookmarkIdsByTemplateId(templateId)
+        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
         // Get search results for each bookmark
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
@@ -571,7 +573,7 @@ class LoriServerBackend(
         dbConnector.itemDB.deleteItemByRight(rightId)
 
         // Update last_applied_on field
-        dbConnector.templateDB.updateAppliedOnByTemplateId(templateId)
+        dbConnector.rightDB.updateAppliedOnByTemplateId(templateId)
         // Connect Template to all results
         return searchResults.map { result ->
             dbConnector.itemDB.insertItem(
@@ -599,9 +601,9 @@ class LoriServerBackend(
 
         fun parseInvalidSearchKeys(s: String): List<String> =
             tokenizeSearchInput(s).mapNotNull {
-                val keyname = it.substringBefore(":")
-                if (SearchKey.toEnum(keyname) == null) {
-                    keyname
+                val keyName = it.substringBefore(":")
+                if (SearchKey.toEnum(keyName) == null) {
+                    keyName
                 } else {
                     null
                 }

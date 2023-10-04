@@ -1,12 +1,10 @@
 package de.zbw.business.lori.server
 
-import de.zbw.business.lori.server.FacetTest.Companion.TEST_RIGHT
 import de.zbw.business.lori.server.LoriServerBackendTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.business.lori.server.type.Template
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest
@@ -82,25 +80,16 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Create Template
-        val templateRightId = backend.insertTemplate(
-            template = Template(
-                templateName = "applyTemplate",
-                createdOn = null,
-                createdBy = null,
-                lastAppliedOn = null,
-                lastUpdatedBy = "someuser",
-                lastUpdatedOn = null,
-                right = TEST_RIGHT,
-            )
-        )
+        val rightId = backend.insertRight( TEST_RIGHT )
+        val templateId: Int = backend.getRightsByIds(listOf(rightId)).first().templateId!!
 
         // Connect Bookmark and Template
         backend.insertBookmarkTemplatePair(
             bookmarkId = bookmarkId,
-            templateId = templateRightId.templateId,
+            templateId = templateId,
         )
 
-        val received: List<String> = backend.applyTemplate(templateRightId.templateId)
+        val received: List<String> = backend.applyTemplate(templateId)
         assertThat(
             received,
             `is`(listOf(item1ZDB1.metadataId))
@@ -108,15 +97,15 @@ class ApplyTemplateTest : DatabaseTest() {
 
         // Verify that new right is assigned to metadata id
         val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
-        assertTrue(rightIds.contains(templateRightId.rightId))
+        assertTrue(rightIds.contains(rightId))
 
         assertThat(
-            backend.getTemplateById(templateRightId.templateId)!!.lastAppliedOn,
+            backend.getRightByTemplateId(templateId)!!.lastAppliedOn,
             `is`(ItemDBTest.NOW),
         )
 
         // Repeat Apply Operation without duplicate entries errors
-        val received2: List<String> = backend.applyTemplate(templateRightId.templateId)
+        val received2: List<String> = backend.applyTemplate(templateId)
         assertThat(
             received2,
             `is`(listOf(item1ZDB1.metadataId))
@@ -133,7 +122,7 @@ class ApplyTemplateTest : DatabaseTest() {
         backend.upsertMetaData(listOf(item1ZDB1.copy(zdbId = "foobar")))
 
         // Apply Template
-        val received3: List<String> = backend.applyTemplate(templateRightId.templateId)
+        val received3: List<String> = backend.applyTemplate(templateId)
         assertThat(
             received3,
             `is`(
@@ -145,7 +134,7 @@ class ApplyTemplateTest : DatabaseTest() {
         )
         // Verify that only the new items are connected to template
         assertThat(
-            backend.dbConnector.itemDB.countItemByRightId(templateRightId.rightId),
+            backend.dbConnector.itemDB.countItemByRightId(rightId),
             `is`(2),
         )
 
@@ -163,6 +152,7 @@ class ApplyTemplateTest : DatabaseTest() {
 
     companion object {
         const val ZDB_1 = "zdb1"
+        val TEST_RIGHT = RightFilterTest.TEST_RIGHT
         val item1ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb1",
             collectionName = "common zdb",
