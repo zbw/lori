@@ -47,7 +47,8 @@ RightRest:
       items:
         type: string
     lastAppliedOn:
-      type: date-time
+      type: string
+      format: date-time
     lastUpdatedBy:
       type: string
     lastUpdatedOn:

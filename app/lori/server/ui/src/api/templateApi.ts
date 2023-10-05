@@ -3,11 +3,10 @@ import {
   BookmarkTemplateRest,
   Configuration,
   ItemInformation,
+  RightRest,
   TemplateApi,
   TemplateApplicationsRest,
   TemplateIdCreated,
-  TemplateRest,
-  TemplateRightRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -16,8 +15,8 @@ const configuration = new Configuration({
 const templateApi = new TemplateApi(configuration);
 
 export default {
-  addTemplate(template: TemplateRightRest): Promise<TemplateIdCreated> {
-    return templateApi.addTemplate({ body: template });
+  addTemplate(right: RightRest): Promise<TemplateIdCreated> {
+    return templateApi.addTemplate({ body: right });
   },
   applyTemplates(
     templateIds: Array<number>
@@ -33,21 +32,18 @@ export default {
       id: templateId,
     });
   },
-  getTemplateById(templateId: string): Promise<TemplateRightRest> {
+  getTemplateById(templateId: string): Promise<RightRest> {
     return templateApi.getTemplateById({
       id: templateId,
     });
   },
-  getTemplateList(
-    offset: number,
-    limit: number
-  ): Promise<Array<TemplateRightRest>> {
+  getTemplateList(offset: number, limit: number): Promise<Array<RightRest>> {
     return templateApi.getTemplateList({
       offset: offset,
       limit: limit,
     });
   },
-  updateTemplate(template: TemplateRightRest): Promise<void> {
+  updateTemplate(template: RightRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
   },
   getBookmarksByTemplateId(templateId: number): Promise<Array<BookmarkRest>> {

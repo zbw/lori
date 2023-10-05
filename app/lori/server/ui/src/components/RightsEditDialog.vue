@@ -10,8 +10,6 @@ import {
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
   TemplateIdCreated,
-  TemplateRest,
-  TemplateRightRest,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -37,11 +35,7 @@ export default defineComponent({
   props: {
     right: {
       type: {} as PropType<RightRest>,
-      required: false,
-    },
-    template: {
-      type: {} as PropType<TemplateRest>,
-      required: false,
+      required: false, // TODO: Set this to true please.
     },
     index: {
       type: Number,
@@ -196,7 +190,6 @@ export default defineComponent({
     const updateInProgress = ref(false);
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
-    const tmpTemplate = ref({} as TemplateRest);
 
     const emitClosedDialog = () => {
       emit("editRightClosed");
@@ -317,14 +310,11 @@ export default defineComponent({
 
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
-      tmpTemplate.value.templateId = -1;
-      tmpTemplate.value.templateName = formState.formTemplateName;
-      tmpTemplate.value.description = tmpTemplateDescription.value;
+      tmpRight.value.templateId = -1;
+      tmpRight.value.templateName = formState.formTemplateName;
+      tmpRight.value.templateDescription = tmpTemplateDescription.value;
       templateApi
-        .addTemplate({
-          template: tmpTemplate.value,
-          right: tmpRight.value,
-        } as TemplateRightRest)
+        .addTemplate(tmpRight.value)
         .then((r: TemplateIdCreated) => {
           updateBookmarks(r.templateId, () => {
             emit("addTemplateSuccessful", formState.formTemplateName);
@@ -340,14 +330,11 @@ export default defineComponent({
     };
 
     const updateTemplate = () => {
-      tmpTemplate.value.templateId = tmpTemplateId.value;
-      tmpTemplate.value.templateName = formState.formTemplateName;
-      tmpTemplate.value.description = tmpTemplateDescription.value;
+      tmpRight.value.templateId = tmpTemplateId.value;
+      tmpRight.value.templateName = formState.formTemplateName;
+      tmpRight.value.templateDescription = tmpTemplateDescription.value;
       templateApi
-        .updateTemplate({
-          template: tmpTemplate.value,
-          right: tmpRight.value,
-        } as TemplateRightRest)
+        .updateTemplate(tmpRight.value)
         .then(() => {
           // TODO: refactor this with callbacks
           updateBookmarks(tmpTemplateId.value, () => {
@@ -550,19 +537,18 @@ export default defineComponent({
       }
     });
     const computedTemplateId = computed(() =>
-      props.template == undefined || props.template.templateId == undefined
+      props.right == undefined || props.right.templateId == undefined
         ? -1
-        : props.template.templateId
+        : props.right.templateId
     );
 
     const isTemplate = computed(
-      () =>
-        props.template != undefined && props.template.templateId != undefined
+      () => props.right != undefined && props.right.templateId != undefined
     );
     const isEditable = computed(
       () =>
-        props.template != undefined &&
-        props.template.templateId != undefined &&
+        props.right != undefined &&
+        props.right.templateId != undefined &&
         !props.isNew
     );
 
@@ -593,17 +579,9 @@ export default defineComponent({
       }
       tmpRight.value = Object.assign({}, props.right);
       formState.formTemplateName =
-        props.template == undefined || props.template.templateName == undefined
+        props.right == undefined || props.right.templateName == undefined
           ? ""
-          : props.template.templateName;
-      tmpTemplateId.value =
-        props.template == undefined || props.template.templateId == undefined
-          ? -1
-          : props.template.templateId;
-      tmpTemplateDescription.value =
-        props.template == undefined || props.template.description == undefined
-          ? ""
-          : props.template.description;
+          : props.right.templateName;
       formState.accessState = accessStateToString(props.right.accessState);
       formState.basisStorage = basisStorageToString(props.right.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
@@ -881,7 +859,7 @@ export default defineComponent({
                 </v-col>
                 <v-col cols="8">
                   <v-text-field
-                    v-model="tmpTemplateDescription"
+                    v-model="tmpRight.templateDescription"
                     hint="Beschreibung des Templates"
                     outlined
                     :disabled="isEditable"
@@ -890,10 +868,52 @@ export default defineComponent({
               </v-row>
               <v-row>
                 <v-col cols="4">
+                  <v-subheader>Erstellt am</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="tmpRight.createdOn"
+                    outlined
+                    readonly
+                    hint="Erstellungsdatum des Templates"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
                   <v-subheader>Zuletzt editiert am</v-subheader>
                 </v-col>
                 <v-col cols="8">
-                  <v-text-field outlined readonly></v-text-field>
+                  <v-text-field
+                    v-model="tmpRight.lastUpdatedOn"
+                    outlined
+                    readonly
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Zuletzt editiert von</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="tmpRight.lastUpdatedBy"
+                    outlined
+                    readonly
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  <v-subheader>Zuletzt angewendet am</v-subheader>
+                </v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="tmpRight.lastAppliedOn"
+                    outlined
+                    readonly
+                    hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
+                  ></v-text-field>
                 </v-col>
               </v-row>
               <v-row>
@@ -1317,7 +1337,7 @@ export default defineComponent({
         </v-expansion-panel-header>
         <v-expansion-panel-content eager>
           <v-container fluid>
-            <v-row>
+            <v-row v-if="!isTemplate">
               <v-col cols="4">
                 <v-subheader>Zuletzt editiert am</v-subheader>
               </v-col>
@@ -1329,7 +1349,7 @@ export default defineComponent({
                 ></v-text-field>
               </v-col>
             </v-row>
-            <v-row>
+            <v-row v-if="!isTemplate">
               <v-col cols="4">
                 <v-subheader>Zuletzt editiert von</v-subheader>
               </v-col>

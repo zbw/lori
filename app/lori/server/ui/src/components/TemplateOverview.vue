@@ -3,9 +3,8 @@ import { defineComponent, onMounted, Ref, ref } from "vue";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
 import {
+  RightRest,
   TemplateApplicationsRest,
-  TemplateRest,
-  TemplateRightRest,
 } from "@/generated-sources/openapi";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
@@ -42,7 +41,7 @@ export default defineComponent({
       },
       { text: "Actions", value: "actions", sortable: false },
     ];
-    const templateItems: Ref<Array<TemplateRightRest>> = ref([]);
+    const templateItems: Ref<Array<RightRest>> = ref([]);
 
     /**
      * Error messages.
@@ -55,11 +54,11 @@ export default defineComponent({
      */
     const isNew = ref(true);
     const reinitCounter = ref(0);
-    const currentTemplate = ref({} as TemplateRightRest);
+    const currentTemplate = ref({} as RightRest);
     const getTemplateList = () => {
       templateApi
         .getTemplateList(0, 100)
-        .then((r: Array<TemplateRightRest>) => {
+        .then((r: Array<RightRest>) => {
           templateItems.value = r;
         })
         .catch((e) => {
@@ -73,7 +72,6 @@ export default defineComponent({
     const activateTemplateEditDialog = () => {
       alertSuccessful.value = false;
       dialogStore.templateEditActivated = true;
-      currentTemplate.value.template.templateId = -1;
     };
     const createNewTemplate = () => {
       isNew.value = true;
@@ -85,14 +83,14 @@ export default defineComponent({
       dialogStore.templateEditActivated = false;
     };
 
-    const editTemplate = (templateRight: TemplateRightRest) => {
+    const editTemplate = (templateRight: RightRest) => {
       isNew.value = false;
       reinitCounter.value = reinitCounter.value + 1;
       currentTemplate.value = templateRight;
       activateTemplateEditDialog();
     };
 
-    const applyTemplate = (template: TemplateRest) => {
+    const applyTemplate = (template: RightRest) => {
       if (template.templateId == undefined) {
         return;
       }
@@ -215,7 +213,7 @@ export default defineComponent({
       <v-data-table
         :key="renderKey"
         :headers="headers"
-        :items="templateItems.map((tr) => tr.template)"
+        :items="templateItems"
         item-key="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >
@@ -246,10 +244,7 @@ export default defineComponent({
           :index="-1"
           :isNew="isNew"
           :reinit-counter="reinitCounter"
-          :right="currentTemplate.right"
-          :template-description="currentTemplate.template.description"
-          :template-id="currentTemplate.template.templateId"
-          :template-name="currentTemplate.template.templateName"
+          :right="currentTemplate"
           metadataId=""
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
