@@ -104,6 +104,7 @@ export default defineComponent({
             "' wurde für " +
             r.templateApplication[0].numberOfAppliedEntries +
             " Einträge angewandt.";
+          updateTemplateOverview();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -231,7 +232,7 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small @click="editTemplate(item)">mdi-eye</v-icon>
+          <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
         </template>
       </v-data-table>
       <v-dialog
