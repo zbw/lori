@@ -133,7 +133,6 @@ export default defineComponent({
           :isNew="false"
           :metadataId="metadataId"
           :right="item"
-          :templateId="item.templateId"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"

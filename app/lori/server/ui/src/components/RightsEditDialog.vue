@@ -35,7 +35,7 @@ export default defineComponent({
   props: {
     right: {
       type: {} as PropType<RightRest>,
-      required: false, // TODO: Set this to true please.
+      required: false, // Is not required because this component is used for creating new rights as well
     },
     index: {
       type: Number,
@@ -47,7 +47,7 @@ export default defineComponent({
     },
     metadataId: {
       type: String,
-      required: true, // TODO: refactor to required:false
+      required: false,
     },
     reinitCounter: {
       type: Number,
@@ -526,6 +526,7 @@ export default defineComponent({
         loadBookmarks();
       }
     });
+    const computedMetadataId = computed(() => props.metadataId != undefined ? props.metadataId : "");
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() => {
@@ -710,6 +711,7 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkItems,
       bookmarkHeaders,
+      computedMetadataId,
       computedRightId,
       computedTemplateId,
       dialogDeleteRight,
@@ -779,7 +781,7 @@ export default defineComponent({
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="metadataId"
+          :metadataId="computedMetadataId"
           :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:deleteSuccessful="deleteSuccessful"
@@ -794,7 +796,7 @@ export default defineComponent({
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="metadataId"
+          :metadataId="computedMetadataId"
           :right-id="computedTemplateId.toString()"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:templateDeleteSuccessful="deleteSuccessful"

@@ -245,7 +245,6 @@ export default defineComponent({
           :isNew="isNew"
           :reinit-counter="reinitCounter"
           :right="currentTemplate"
-          metadataId=""
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
           v-on:editRightClosed="closeTemplateEditDialog"
