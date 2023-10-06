@@ -171,7 +171,8 @@ export default defineComponent({
     >
       <RightsEditDialog
         :index="currentIndex"
-        :isNew="isNew"
+        :isNewRight="isNew"
+        :isNewTemplate="false"
         :metadataId="metadataId"
         :right="currentRight"
         :isTemplate="currentRight.templateId != undefined"

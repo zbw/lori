@@ -41,7 +41,11 @@ export default defineComponent({
       type: Number,
       required: true,
     },
-    isNew: {
+    isNewRight: {
+      type: Boolean,
+      required: true,
+    },
+    isNewTemplate: {
       type: Boolean,
       required: true,
     },
@@ -386,11 +390,11 @@ export default defineComponent({
         tmpRight.value.startDate = new Date(formState.startDate);
         tmpRight.value.endDate =
           formState.endDate == "" ? undefined : new Date(formState.endDate);
-        if (props.isNew && isTemplate.value) {
+        if (props.isNewTemplate) {
           createTemplate();
         } else if (isTemplate.value) {
           updateTemplate();
-        } else if (props.isNew) {
+        } else if (props.isNewRight) {
           createRight();
         } else {
           updateRight();
@@ -515,7 +519,7 @@ export default defineComponent({
     // Computed properties
     onMounted(() => {
       reinitializeRight();
-      if (!props.isNew) {
+      if (!isNew.value) {
         loadBookmarks();
       }
     });
@@ -538,13 +542,16 @@ export default defineComponent({
         : props.right.templateId
     );
 
-    const isTemplate = computed(
-      () => props.right != undefined && props.right.templateId != undefined
-    );
+    const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
       () =>
-        props.isNew ||
+        isNew.value ||
         (props.right != undefined && props.right.lastAppliedOn == undefined)
+    );
+    const isTemplate = computed(
+      () =>
+        props.isNewTemplate ||
+        (props.right != undefined && props.right.templateId != undefined)
     );
 
     watch(computedRight, () => {
@@ -552,7 +559,7 @@ export default defineComponent({
     });
     watch(computedReinitCounter, () => {
       updateInProgress.value = false;
-      if (props.isNew) {
+      if (isNew.value) {
         resetAllValues();
         addInitialBookmark();
       } else {
@@ -573,8 +580,7 @@ export default defineComponent({
         return;
       }
       tmpRight.value = Object.assign({}, props.right);
-      formState.formTemplateName =
-        props.right == undefined || props.right.templateName == undefined
+      formState.formTemplateName = props.right.templateName == undefined
           ? ""
           : props.right.templateName;
       formState.accessState = accessStateToString(props.right.accessState);
@@ -602,7 +608,7 @@ export default defineComponent({
     const reinitializeRight = () => {
       updateInProgress.value = false;
       getGroupList();
-      if (!props.isNew) {
+      if (!isNew.value) {
         setGivenValues();
       } else {
         resetAllValues();
@@ -713,6 +719,7 @@ export default defineComponent({
       errorTemplateName,
       errorStartDate,
       isEditable,
+      isNew,
       isTemplate,
       generalAlertError,
       generalAlertErrorMessage,
@@ -1093,11 +1100,7 @@ export default defineComponent({
                     scrollable
                   >
                     <v-spacer></v-spacer>
-                    <v-btn
-                      color="primary"
-                      text
-                      @click="menuEndDate = false"
-                    >
+                    <v-btn color="primary" text @click="menuEndDate = false">
                       Cancel
                     </v-btn>
                     <v-btn

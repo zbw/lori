@@ -243,7 +243,8 @@ export default defineComponent({
       >
         <RightsEditDialog
           :index="-1"
-          :isNew="isNew"
+          :isNewRight="false"
+          :isNewTemplate="isNew"
           :reinit-counter="reinitCounter"
           :right="currentTemplate"
           v-on:addTemplateSuccessful="childTemplateAdded"
