@@ -635,6 +635,16 @@ class RightFilterTest : DatabaseTest() {
                 ZoneOffset.UTC,
             ),
             endDate = RestConverterTest.TODAY,
+            lastAppliedOn = OffsetDateTime.of(
+                2022,
+                5,
+                4,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
             lastUpdatedBy = "user2",
             lastUpdatedOn = OffsetDateTime.of(
                 2022,
@@ -657,7 +667,9 @@ class RightFilterTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             zbwUserAgreement = true,
+            templateDescription = "some description",
             templateId = null,
+            templateName = "exampleTemplate",
             groupIds = null,
         )
     }

@@ -195,6 +195,7 @@ class ItemDBTest : DatabaseTest() {
             groupIds = emptyList(),
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
+            lastAppliedOn = NOW.minusDays(1),
             licenceContract = "some contract",
             nonStandardOpenContentLicence = true,
             nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
@@ -205,7 +206,9 @@ class ItemDBTest : DatabaseTest() {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
+            templateDescription = "description",
             templateId = null,
+            templateName = "name",
             zbwUserAgreement = true,
         )
     }

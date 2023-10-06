@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.PublicationType
+import java.time.OffsetDateTime
 
 /**
  * Types that represent results of db queries.
@@ -37,6 +38,11 @@ data class TemplateTransient(
     val templateName: String,
     val description: String?,
     val rightId: String,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
+    val lastUpdatedBy: String?,
+    val lastUpdatedOn: OffsetDateTime?,
+    val lastAppliedOn: OffsetDateTime?,
 )
 
 data class TemplateRightIdCreated(

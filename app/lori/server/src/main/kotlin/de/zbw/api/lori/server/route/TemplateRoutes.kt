@@ -5,15 +5,15 @@ import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.Template
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateApplicationsRest
 import de.zbw.lori.model.TemplateIdCreated
 import de.zbw.lori.model.TemplateIdsRest
-import de.zbw.lori.model.TemplateRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
@@ -49,9 +49,9 @@ fun Routing.templateRoutes(
                 tracer.spanBuilder("lori.LoriService.POST/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val template: TemplateRest = call.receive(TemplateRest::class)
-                    span.setAttribute("template", template.toString())
-                    val pk = backend.insertTemplate(template.toBusiness())
+                    val right: RightRest = call.receive(RightRest::class)
+                    span.setAttribute("template", right.toString())
+                    val pk = backend.insertTemplate(right.toBusiness(), true)
                     span.setStatus(StatusCode.OK)
                     call.respond(
                         HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)
@@ -95,11 +95,11 @@ fun Routing.templateRoutes(
                 tracer.spanBuilder("lori.LoriService.PUT/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    @Suppress("SENSELESS_COMPARISON") val template: TemplateRest =
-                        call.receive(TemplateRest::class).takeIf { it.templateName != null && it.templateId != null }
+                    val right: RightRest =
+                        call.receive(RightRest::class).takeIf { it.templateId != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
-                    span.setAttribute("template", template.toString())
-                    val insertedRows = backend.updateTemplate(template.templateId!!, template.toBusiness())
+                    span.setAttribute("template", right.toString())
+                    val insertedRows = backend.upsertRight(right.toBusiness())
                     if (insertedRows == 1) {
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.NoContent)
@@ -108,7 +108,7 @@ fun Routing.templateRoutes(
                         call.respond(
                             HttpStatusCode.NotFound,
                             ApiError.notFoundError(
-                                detail = "Für das Template mit Id ${template.templateId} existiert kein Eintrag.",
+                                detail = "Für das Template mit Id ${right.templateId} existiert kein Eintrag.",
                             )
                         )
                     }
@@ -299,7 +299,7 @@ fun Routing.templateRoutes(
         }
 
         /**
-         * Return Template for a given Id.
+         * Return Template for a given Template-ID.
          */
         get("{id}") {
             val span =
@@ -312,10 +312,10 @@ fun Routing.templateRoutes(
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
-                        val template: Template? = backend.getTemplateById(templateId)
-                        template?.let {
+                        val right: ItemRight? = backend.getRightByTemplateId(templateId)
+                        right?.let {
                             span.setStatus(StatusCode.OK)
-                            call.respond(template.toRest())
+                            call.respond(right.toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
                             call.respond(
@@ -339,7 +339,7 @@ fun Routing.templateRoutes(
         }
 
         /**
-         * Delete Template by Id.
+         * Delete Right by Template-ID.
          */
         delete("{id}") {
             val span = tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
@@ -357,7 +357,7 @@ fun Routing.templateRoutes(
                             ),
                         )
                     } else {
-                        val entriesDeleted = backend.deleteTemplate(templateId)
+                        val entriesDeleted = backend.deleteRightByTemplateId(templateId)
                         if (entriesDeleted == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.OK)
@@ -408,7 +408,7 @@ fun Routing.templateRoutes(
                             )
                             return@withContext
                         }
-                        val receivedTemplates: List<Template> = backend.getTemplateList(limit, offset)
+                        val receivedTemplates: List<ItemRight> = backend.getTemplateList(limit, offset)
                         span.setStatus(StatusCode.OK)
                         call.respond(receivedTemplates.map { it.toRest() })
                     } catch (e: Exception) {

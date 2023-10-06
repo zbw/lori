@@ -41,7 +41,7 @@ class DatabaseConnector(
         groupDB,
     ),
     internal val searchDB: SearchDB = SearchDB(connection, tracer),
-    internal val templateDB: TemplateDB = TemplateDB(connection, tracer, rightDB),
+    internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connection, tracer),
     internal val userDB: UserDB = UserDB(connection, tracer),
 ) {
     constructor(
@@ -66,13 +66,10 @@ class DatabaseConnector(
         const val TABLE_NAME_ITEM_RIGHT = "item_right"
         const val TABLE_NAME_USERS = "users"
 
-        const val COLUMN_METADATA_COLLECTION_NAME = "collection_name"
-        const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
         const val COLUMN_METADATA_ID = "metadata_id"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
-        const val COLUMN_METADATA_TITLE = "title"
         const val COLUMN_METADATA_ZDB_ID = "zdb_id"
 
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
@@ -117,7 +114,7 @@ class DatabaseConnector(
 
         /**
          * Helper function which adds a parameter to a prepared query.
-         * Inserts NULL if the given if the parameter is null.
+         * Inserts NULL if the given parameter is null.
          */
         fun <T> PreparedStatement.setIfNotNull(
             idx: Int,

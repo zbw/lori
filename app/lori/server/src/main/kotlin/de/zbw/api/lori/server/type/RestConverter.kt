@@ -21,7 +21,6 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.Template
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.AccessStateWithCountRest
@@ -39,7 +38,6 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.TemplateRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -157,6 +155,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
@@ -169,7 +168,9 @@ fun RightRest.toBusiness(): ItemRight =
         openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
+        templateDescription = templateDescription,
         templateId = templateId,
+        templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
     )
 
@@ -184,6 +185,7 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
@@ -197,6 +199,8 @@ fun ItemRight.toRest(): RightRest =
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateId = templateId,
+        templateDescription = templateDescription,
+        templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
     )
 
@@ -412,22 +416,6 @@ fun Bookmark.toRest(): BookmarkRest =
         filterPaketSigel = this.paketSigelFilter?.paketSigels,
         filterZDBId = this.zdbIdFilter?.zdbIds,
         filterNoRightInformation = this.noRightInformationFilter?.let { true } ?: false
-    )
-
-fun TemplateRest.toBusiness(): Template =
-    Template(
-        templateName = this.templateName,
-        templateId = this.templateId,
-        description = this.description,
-        right = this.right.toBusiness(),
-    )
-
-fun Template.toRest(): TemplateRest =
-    TemplateRest(
-        templateName = this.templateName,
-        templateId = this.templateId,
-        description = this.description,
-        right = this.right.toRest(),
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =

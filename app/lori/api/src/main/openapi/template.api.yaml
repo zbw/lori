@@ -2,14 +2,14 @@ template:
   post:
     tags:
       - template
-    summary: Save a template representing a generic right information
+    summary: Saves a right information which are marked as a template
     operationId: addTemplate
     requestBody:
-      description: Template representation
+      description: Right representation
       content:
         application/json:
           schema:
-            $ref: 'template.model.yaml#/TemplateRest'
+            $ref: 'right.model.yaml#/RightRest'
       required: true
     responses:
       201:
@@ -43,11 +43,11 @@ template:
     summary: Update an existing Template
     operationId: updateTemplate
     requestBody:
-      description: Template object
+      description: Right object
       content:
         application/json:
           schema:
-            $ref: 'template.model.yaml#/TemplateRest'
+            $ref: 'right.model.yaml#/RightRest'
       required: true
     responses:
       204:
@@ -92,7 +92,7 @@ template-id:
         content:
           application/json:
             schema:
-              $ref: 'template.model.yaml#/TemplateRest'
+              $ref: 'right.model.yaml#/RightRest'
       404:
         description: Id does not exist
         content:
@@ -172,7 +172,7 @@ template-list:
             schema:
               type: array
               items:
-                $ref: 'template.model.yaml#/TemplateRest'
+                $ref: 'right.model.yaml#/RightRest'
       400:
         description: Bad request
         content:

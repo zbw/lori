@@ -46,6 +46,9 @@ RightRest:
       type: array
       items:
         type: string
+    lastAppliedOn:
+      type: string
+      format: date-time
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -72,8 +75,12 @@ RightRest:
     startDate:
       type: string
       format: date
+    templateDescription:
+      type: string
     templateId:
       type: integer
+    templateName:
+      type: string
     zbwUserAgreement:
       type: boolean
 

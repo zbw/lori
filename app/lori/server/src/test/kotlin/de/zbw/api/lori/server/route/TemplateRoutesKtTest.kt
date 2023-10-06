@@ -10,10 +10,10 @@ import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
+import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateApplicationsRest
 import de.zbw.lori.model.TemplateIdsRest
-import de.zbw.lori.model.TemplateRest
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -59,7 +59,7 @@ class TemplateRoutesKtTest {
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT))
             }
             assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
         }
@@ -69,7 +69,7 @@ class TemplateRoutesKtTest {
     fun testPostTemplateConflict() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertTemplate(any()) } throws mockk<PSQLException> {
+            every { insertTemplate(any(), true) } throws mockk<PSQLException> {
                 every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                 every { message } returns "error"
             }
@@ -83,7 +83,7 @@ class TemplateRoutesKtTest {
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT))
             }
             assertThat("Should return 409", response.status, `is`(HttpStatusCode.Conflict))
         }
@@ -93,7 +93,7 @@ class TemplateRoutesKtTest {
     fun testPostTemplateInternalError() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertTemplate(any()) } throws SQLException()
+            every { insertTemplate(any(), true) } throws SQLException()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -104,7 +104,7 @@ class TemplateRoutesKtTest {
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT))
             }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
@@ -115,7 +115,7 @@ class TemplateRoutesKtTest {
         // given
         val templateId = 4
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { deleteTemplate(templateId) } returns 0
+            every { deleteRightByTemplateId(templateId) } returns 0
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -133,7 +133,7 @@ class TemplateRoutesKtTest {
         // given
         val templateId = 4
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { deleteTemplate(templateId) } throws SQLException()
+            every { deleteRightByTemplateId(templateId) } throws SQLException()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -150,7 +150,7 @@ class TemplateRoutesKtTest {
     fun testPutTemplateNoContent() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateTemplate(TEST_TEMPLATE.templateId!!, any()) } returns 1
+            every { upsertRight(any()) } returns 1
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -161,7 +161,7 @@ class TemplateRoutesKtTest {
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(templateId = 5)))
             }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
         }
@@ -180,7 +180,13 @@ class TemplateRoutesKtTest {
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE.copy(templateId = null)))
+                setBody(
+                    ItemRoutesKtTest.jsonAsString(
+                        TEST_RIGHT.copy(
+                            templateId = null
+                        )
+                    )
+                )
             }
             assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
         }
@@ -190,7 +196,7 @@ class TemplateRoutesKtTest {
     fun testPutTemplateInternalError() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateTemplate(TEST_TEMPLATE.templateId!!, any()) } throws SQLException()
+            every { upsertRight(any()) } throws SQLException()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -201,7 +207,7 @@ class TemplateRoutesKtTest {
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_TEMPLATE))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(templateId = 5)))
             }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
@@ -212,7 +218,7 @@ class TemplateRoutesKtTest {
         // given
         val templateId = 45
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getTemplateById(templateId) } returns TEST_TEMPLATE.toBusiness()
+            every { getRightByTemplateId(templateId) } returns TEST_RIGHT.toBusiness()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -222,9 +228,9 @@ class TemplateRoutesKtTest {
             )
             val response = client.get("/api/v1/template/$templateId")
             val content: String = response.bodyAsText()
-            val templateListType: Type = object : TypeToken<TemplateRest>() {}.type
-            val received: TemplateRest = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
-            assertThat(received, `is`(TEST_TEMPLATE))
+            val templateListType: Type = object : TypeToken<RightRest>() {}.type
+            val received: RightRest = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
+            assertThat(received, `is`(TEST_RIGHT))
         }
     }
 
@@ -233,7 +239,7 @@ class TemplateRoutesKtTest {
         // given
         val templateId = 45
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getTemplateById(templateId) } returns null
+            every { getRightByTemplateId(templateId) } returns null
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -251,7 +257,7 @@ class TemplateRoutesKtTest {
         // given
         val templateId = 45
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getTemplateById(templateId) } throws SQLException()
+            every { getRightByTemplateId(templateId) } throws SQLException()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -269,9 +275,9 @@ class TemplateRoutesKtTest {
         // given
         val limit = 50
         val offset = 0
-        val expected = listOf(TEST_TEMPLATE)
+        val expected = listOf(TEST_RIGHT)
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getTemplateList(limit, offset) } returns listOf(TEST_TEMPLATE.toBusiness())
+            every { getTemplateList(limit, offset) } returns listOf(TEST_RIGHT.toBusiness())
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -281,8 +287,8 @@ class TemplateRoutesKtTest {
             )
             val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
-            val templateListType: Type = object : TypeToken<ArrayList<TemplateRest>>() {}.type
-            val received: ArrayList<TemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
+            val templateListType: Type = object : TypeToken<ArrayList<RightRest>>() {}.type
+            val received: ArrayList<RightRest> = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
             assertThat(received, `is`(expected))
         }
     }
@@ -433,7 +439,10 @@ class TemplateRoutesKtTest {
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to expectedMetadataIds)
-            every { applyAllTemplates() } returns listOf(givenTemplateId to expectedMetadataIds, givenTemplateId2 to expectedMetadataIds).toMap()
+            every { applyAllTemplates() } returns listOf(
+                givenTemplateId to expectedMetadataIds,
+                givenTemplateId2 to expectedMetadataIds
+            ).toMap()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // Test OK Path
@@ -554,14 +563,5 @@ class TemplateRoutesKtTest {
             }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
-    }
-
-    companion object {
-        val TEST_TEMPLATE = TemplateRest(
-            templateName = "name",
-            description = "some description",
-            templateId = 2,
-            right = TEST_RIGHT,
-        )
     }
 }
