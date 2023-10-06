@@ -253,7 +253,8 @@ export default defineComponent({
         <RightsEditDialog
           :index="-1"
           :initial-bookmark="currentBookmark"
-          :isNew="true"
+          :isNewRight="false"
+          :isNewTemplate="true"
           :reinit-counter="templateReinitCounter"
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:editRightClosed="closeTemplateDialog"

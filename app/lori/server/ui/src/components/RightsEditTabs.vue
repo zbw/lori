@@ -1,7 +1,7 @@
 <script lang="ts">
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
-import {computed, ComputedRef, defineComponent, PropType, ref} from "vue";
+import { computed, ComputedRef, defineComponent, PropType, ref } from "vue";
 
 export default defineComponent({
   props: {
@@ -130,7 +130,8 @@ export default defineComponent({
         <RightsEditDialog
           :activated="true"
           :index="index"
-          :isNew="false"
+          :isNewRight="false"
+          :isNewTemplate="false"
           :metadataId="metadataId"
           :right="item"
           v-on:deleteSuccessful="deleteSuccessful"
