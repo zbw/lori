@@ -62,7 +62,8 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: false,
+        isNewRight: false,
+        isNewTemplate: false,
       },
     });
     const historyStore = useHistoryStore();
@@ -167,7 +168,6 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: false,
       },
     });
     const historyStore = useHistoryStore();
@@ -224,7 +224,8 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: false,
+        isNewRight: false,
+        isNewTemplate: false,
       },
     });
     const historyStore = useHistoryStore();
@@ -281,7 +282,8 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: false,
+        isNewRight: false,
+        isNewTemplate: false,
       },
     });
     const historyStore = useHistoryStore();
@@ -320,7 +322,8 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: false,
+        isNewRight: false,
+        isNewTemplate: false,
       },
     });
     // when
@@ -436,8 +439,8 @@ describe("Test RightsEditDialog", () => {
         right: givenRight,
         index: givenIndex,
         metadataId: "400",
-        isNew: true,
-        isTemplate: false,
+        isNewRight: true,
+        isNewTemplate: false,
       },
     });
     // when
