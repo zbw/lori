@@ -260,9 +260,9 @@ export default defineComponent({
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       closeBookmarkOverview();
       alertMsg.value =
-        "Eine gespeicherte Suche mit ID " +
-        bookmark.bookmarkId +
-        " wurde ausgeführt.";
+        "Eine gespeicherte Suche '" +
+        bookmark.bookmarkName +
+        "' und wurde erfolgreich ausgeführt.";
       alertIsActive.value = true;
       startSearch();
     };
