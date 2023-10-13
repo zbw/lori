@@ -193,7 +193,6 @@ fun Routing.usersRoutes(
                     }
                 }
             }
-
             put("/admin/role") {
                 val span = tracer
                     .spanBuilder("lori.LoriService.PUT/api/v1/users/admin/role")

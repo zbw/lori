@@ -80,6 +80,8 @@ users-id:
       - users
     summary: Update user data
     operationId: updateUser
+    security:
+      - bearerAuth: []
     requestBody:
       description: User credentials update
       content:
@@ -115,6 +117,8 @@ users-id:
       - users
     summary: Delete user
     operationId: deleteUserById
+    security:
+      - bearerAuth: []
     parameters:
       - name: id
         in: path
@@ -124,7 +128,7 @@ users-id:
           type: string
     responses:
       200:
-        description: Deletion of user was successfull
+        description: Deletion of user was successful
         content: { }
       400:
         description: Bad request
@@ -150,6 +154,8 @@ users-admin-role:
       - users
     summary: Update role of a user
     operationId: updateRole
+    security:
+      - bearerAuth: []
     requestBody:
       description: Update role of a user
       content:
