@@ -58,6 +58,14 @@ export default defineComponent({
       lastUpdateSuccessful.value = false;
     };
 
+    const parseDate = (d: Date | undefined) => {
+      if (d === undefined) {
+        return "";
+      } else {
+        return d.toLocaleDateString("de");
+      }
+    };
+
     // Computed properties
     const tabNames = computed(() => {
       return props.rights.map((r) => r.rightId);
@@ -77,6 +85,7 @@ export default defineComponent({
       tab,
       tabNames,
       deleteSuccessful,
+      parseDate,
       resetLastDeletionSuccessful,
       resetLastUpdateSuccessful,
       tabDialogClosed,
@@ -99,7 +108,8 @@ export default defineComponent({
           <v-tab v-for="r in currentRights" :key="r.rightId">
             <v-icon v-if="r.templateId != undefined">mdi-note-multiple</v-icon>
             <v-icon v-else>mdi-note-outline</v-icon>
-            {{ r.rightId }}
+            Id:'{{ r.rightId }}'; {{ parseDate(r.startDate) }} -
+            {{ parseDate(r.endDate) }}
           </v-tab>
         </v-tabs>
       </template>
