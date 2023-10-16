@@ -307,7 +307,7 @@ class LoriServerBackend(
         .withAudience(config.jwtAudience)
         .withIssuer(config.jwtIssuer)
         .withClaim("username", username)
-        .withExpiresAt(Date(System.currentTimeMillis() + 60000))
+        .withExpiresAt(Date(System.currentTimeMillis() + (60000 * 60)))
         .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(

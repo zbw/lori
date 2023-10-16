@@ -2,7 +2,7 @@ bookmark:
   post:
     tags:
       - bookmark
-    summary: Save a bookmark representing a search query.
+    summary: Save a search query as a bookmark.
     operationId: addBookmark
     requestBody:
       description: Bookmark representation
@@ -146,7 +146,7 @@ bookmarkraw:
   post:
     tags:
       - bookmarkRaw
-    summary: Save a bookmark representing a search query.
+    summary: Save a search query as a bookmark.
     operationId: addBookmarkRaw
     requestBody:
       description: Bookmark information have the same representation as in query parameters.
