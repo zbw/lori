@@ -48,7 +48,7 @@ fun Routing.bookmarkRoutes(
                 try {
                     @Suppress("SENSELESS_COMPARISON")
                     val bookmark: BookmarkRawRest = call.receive(BookmarkRawRest::class)
-                        .takeIf {it.bookmarkName != null && it.bookmarkName != null}
+                        .takeIf { it.bookmarkName != null && it.bookmarkName != null }
                         ?: throw BadRequestException("Invalid Json has been provided")
                     span.setAttribute("bookmark", bookmark.toString())
                     val pk = backend.insertBookmark(bookmark.toBusiness())
