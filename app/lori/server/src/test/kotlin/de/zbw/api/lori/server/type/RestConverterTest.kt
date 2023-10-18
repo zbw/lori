@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_SUBCOMMUNITY
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
@@ -60,6 +61,7 @@ class RestConverterTest {
                 publicationType = TEST_METADATA.publicationType.toRest(),
                 publicationDate = TEST_METADATA.publicationDate,
                 rightsK10plus = TEST_METADATA.rightsK10plus,
+                subCommunities = TEST_METADATA.subCommunities,
                 storageDate = TEST_METADATA.storageDate,
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
@@ -133,6 +135,7 @@ class RestConverterTest {
                 0,
                 ZoneOffset.UTC,
             ),
+            subCommunities = listOf(78),
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
@@ -142,7 +145,7 @@ class RestConverterTest {
         // when
         val receivedItem = TEST_DA_ITEM.toBusiness()
         // then
-        assertThat(expected, `is`(receivedItem))
+        assertThat(receivedItem, `is`(expected))
 
         // when + then
         val receivedItem2 = TEST_DA_ITEM.copy(handle = null)
@@ -470,6 +473,7 @@ class RestConverterTest {
             publicationDate = LocalDate.of(2022, 9, 1),
             rightsK10plus = "some rights",
             storageDate = OffsetDateTime.now(),
+            subCommunities = listOf(111, 112),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
@@ -574,7 +578,7 @@ class RestConverterTest {
                     introductoryText = null,
                     shortDescription = null,
                     sidebarText = null,
-                    subcommunities = emptyList(),
+                    subcommunities = listOf(TEST_SUBCOMMUNITY),
                     collections = emptyList(),
                 )
             ),

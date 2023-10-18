@@ -74,7 +74,7 @@ class DAConnectorTest {
                 respond(
                     content = ByteReadChannel(
                         """
-                        {"id":156,"name":"Test Christian","handle":"11159/4266","type":"community","link":"/econis-archiv/rest/communities/156","expand":[],"logo":null,"parentCommunity":null,"copyrightText":"","introductoryText":"","shortDescription":"TS","sidebarText":"","countItems":6,"subcommunities":[],"collections":[{"id":249,"name":"Test Lori","handle":"11159/4267","type":"collection","link":"/econis-archiv/rest/collections/249","expand":["parentCommunityList","parentCommunity","items","license","logo","all"],"logo":null,"parentCommunity":null,"parentCommunityList":[],"items":[],"license":null,"copyrightText":"","introductoryText":"","shortDescription":"","sidebarText":"","numberItems":6}]}
+                        {"id":156,"name":"Test Christian","handle":"11159/4266","type":"community","link":"/econis-archiv/rest/communities/156","expand":[],"logo":null,"parentCommunity":null,"copyrightText":"","introductoryText":"","shortDescription":"TS","sidebarText":"","countItems":6,"subcommunities":[{"id":78,"name":"Centre for European Studies, Alexandru Ioan Cuza University of Iași","handle":"11159/1114","type":"community","link":"/econis-archiv/rest/communities/78","expand":["parentCommunity","collections","subCommunities","logo","all"],"logo":null,"parentCommunity":null,"copyrightText":"","introductoryText":"","shortDescription":"","sidebarText":"","countItems":9,"subcommunities":[],"collections":[]}],"collections":[{"id":249,"name":"Test Lori","handle":"11159/4267","type":"collection","link":"/econis-archiv/rest/collections/249","expand":["parentCommunityList","parentCommunity","items","license","logo","all"],"logo":null,"parentCommunity":null,"parentCommunityList":[],"items":[],"license":null,"copyrightText":"","introductoryText":"","shortDescription":"","sidebarText":"","numberItems":6}]}
                     """.trimMargin()
                     ),
                     status = HttpStatusCode.OK,
@@ -393,6 +393,29 @@ class DAConnectorTest {
         const val DATA_FOR_SERIALIZATION = "DATA_FOR_SERIALIZATION"
         const val REST_URL = "http://test-archive.de"
 
+        val TEST_SUBCOMMUNITY = DACommunity(
+            id = 78,
+            name = "Centre for European Studies, Alexandru Ioan Cuza University of Iași",
+            handle = "11159/1114",
+            type = "community",
+            link = "/econis-archiv/rest/communities/78",
+            expand = listOf(
+                "parentCommunity",
+                "collections",
+                "subCommunities",
+                "logo",
+                "all",
+            ),
+            logo = null,
+            parentCommunity = null,
+            copyrightText = "",
+            introductoryText = "",
+            shortDescription = "",
+            sidebarText = "",
+            countItems = 9,
+            subcommunities = emptyList(),
+            collections = emptyList(),
+        )
         val TEST_COLLECTION = DACollection(
             id = 249,
             name = "Test Lori",
@@ -433,7 +456,7 @@ class DAConnectorTest {
             introductoryText = "",
             shortDescription = "TS",
             sidebarText = "",
-            subcommunities = emptyList(),
+            subcommunities = listOf(TEST_SUBCOMMUNITY),
             collections = listOf(TEST_COLLECTION)
         )
 

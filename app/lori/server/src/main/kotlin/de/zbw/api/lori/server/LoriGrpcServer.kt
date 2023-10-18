@@ -119,7 +119,7 @@ class LoriGrpcServer(
     private suspend fun importCommunity(token: String, communityId: String): Int {
         LOG.info("Start importing community $communityId")
         val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
-        val import = daConnector.startFullImport(token, daCommunity.collections.map { it.id })
+        val import = daConnector.startFullImport(token, daCommunity.collections?.map { it.id } ?: emptyList())
         return import.sum()
     }
 

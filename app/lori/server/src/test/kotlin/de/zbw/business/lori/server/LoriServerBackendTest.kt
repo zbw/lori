@@ -659,6 +659,7 @@ class LoriServerBackendTest : DatabaseTest() {
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
             storageDate = NOW.minusDays(3),
+            subCommunities = listOf(111, 112),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,

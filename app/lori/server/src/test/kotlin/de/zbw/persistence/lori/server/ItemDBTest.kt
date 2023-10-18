@@ -176,6 +176,7 @@ class ItemDBTest : DatabaseTest() {
             publicationType = PublicationType.ARTICLE,
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
+            subCommunities = listOf(111, 112),
             storageDate = NOW.minusDays(3),
             title = "Important title",
             titleJournal = "anything",

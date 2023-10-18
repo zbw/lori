@@ -110,6 +110,7 @@ fun MetadataRest.toBusiness() =
         publicationType = publicationType.toBusiness(),
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
+        subCommunities = subCommunities,
         storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
@@ -138,6 +139,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
         storageDate = storageDate,
+        subCommunities = subCommunities,
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
@@ -320,6 +322,10 @@ fun DAItem.toBusiness(): ItemMetadata? {
             publicationType = publicationType,
             publicationDate = RestConverter.parseToDate(publicationDate),
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
+            subCommunities = this
+                .parentCommunityList
+                .map { parent -> parent.subcommunities?.map { it.id }?: emptyList() }
+                .flatten(),
             storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
                 ?.let { OffsetDateTime.parse(it) },
             title = title,
