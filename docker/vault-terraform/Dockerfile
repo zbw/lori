@@ -1,6 +1,6 @@
-FROM alpine:3.18.3 AS docker-git
+FROM alpine:3.18.4 AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.0.2
+LABEL IMAGE_VERSION_TAG=0.0.3
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -22,7 +22,7 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
 
 # install terraform
 FROM vault AS terraform
-ARG TERRAFORM_VERSION=1.5.7
+ARG TERRAFORM_VERSION=1.6.2
 RUN curl -LO https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip && \
     unzip terra* && \
     chmod +x ./terraform && \

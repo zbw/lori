@@ -1,6 +1,6 @@
-FROM alpine:3.18.3 AS docker-git
+FROM alpine:3.18.4 AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.1.1
+LABEL IMAGE_VERSION_TAG=0.1.2
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -43,7 +43,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECT
 
 # install helm
 FROM vaultk8s AS downloadhelm
-ARG HELM_VERSION=3.12.3
+ARG HELM_VERSION=3.13.1
 ENV HELM_EXPERIMENTAL_OCI=1
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
