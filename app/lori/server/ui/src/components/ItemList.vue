@@ -46,7 +46,9 @@ export default defineComponent({
     const hintSearchField = ref(
       "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
         "com(Community), col(Collection), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
-        " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'"
+        " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
+        "Wichtig: Mehrwortsuchen müssen mit & getrennt werden (z.B. tit:'Ein & Titel') und Klammern in Titeln mit einem vorangegangenen \\ " +
+        "geschrieben werden (z.B. col:'EU & \\(European\\)')"
     );
 
     /**
@@ -638,6 +640,10 @@ export default defineComponent({
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
+          <v-alert v-model="loadAlertError" dismissible text type="error">
+            Laden der bibliographischen Daten war nicht erfolgreich:
+            {{ loadAlertErrorMessage }}
+          </v-alert>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible
@@ -730,10 +736,6 @@ export default defineComponent({
               </v-col>
             </v-row>
           </v-col>
-          <v-alert v-model="loadAlertError" dismissible text type="error">
-            Laden der bibliographischen Daten war nicht erfolgreich:
-            {{ loadAlertErrorMessage }}
-          </v-alert>
         </v-card>
       </v-col>
       <v-col cols="4">

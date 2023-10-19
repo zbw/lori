@@ -316,6 +316,16 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "with parentheses and double quotes"
             ),
+            arrayOf(
+                "col:\"(anyNumberOfSp\$c!;,~ | subject2) & subject3\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(anyNumberOfSp\$c!;,~ | subject2) & subject3",
+                    ),
+                ),
+                "with parentheses and double quotes"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
@@ -327,10 +337,12 @@ class LoriServerBackendTest : DatabaseTest() {
         val receivedPairs: List<SearchPair> = LoriServerBackend.parseValidSearchPairs(searchTerm)
         receivedPairs.forEachIndexed { index, searchPair ->
             assertThat(
+                description,
                 searchPair.values,
                 `is`(expectedKeys[index].values),
             )
             assertThat(
+                description,
                 searchPair.key,
                 `is`(expectedKeys[index].key),
             )
