@@ -1,6 +1,6 @@
 FROM docker:24.0.6-git AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.0.2
+LABEL IMAGE_VERSION_TAG=0.0.3
 LABEL IMAGE_NAME=vault-dind
 LABEL OTC_STAGE=zbw-tools-nl
 
