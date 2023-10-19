@@ -61,15 +61,32 @@ export default defineComponent({
               <v-col>{{ prettyPrint(currentMetadata.collectionName) }}</v-col>
               <v-col></v-col>
             </v-row>
+            <v-row v-show="currentMetadata.collectionHandle">
+              <v-col>Collection Handle</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.collectionHandle) }}</v-col>
+              <v-col></v-col>
+            </v-row>
             <v-row v-show="currentMetadata.communityName">
               <v-col>Communityname</v-col>
               <v-col>{{ prettyPrint(currentMetadata.communityName) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.communityHandle">
+              <v-col>Community Handle</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.communityHandle) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.storageDate">
               <v-col>Speicherdatum im Digitalen Archiv</v-col>
               <v-col>{{
                 parseDateToLocaleString(currentMetadata.storageDate)
+              }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.subCommunitiesHandles">
+              <v-col>Subcommunity Handle-Ids</v-col>
+              <v-col>{{
+                prettyPrint(currentMetadata.subCommunitiesHandles)
               }}</v-col>
               <v-col></v-col>
             </v-row>

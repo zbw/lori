@@ -69,8 +69,8 @@ data class DACommunity(
     val introductoryText: String?,
     val shortDescription: String?,
     val sidebarText: String?,
-    val subcommunities: List<DACollection>,
-    val collections: List<DACollection>,
+    val subcommunities: List<DACommunity>?,
+    val collections: List<DACollection>?,
 )
 
 @kotlinx.serialization.Serializable

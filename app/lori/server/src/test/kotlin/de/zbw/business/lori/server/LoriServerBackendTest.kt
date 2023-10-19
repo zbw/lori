@@ -316,6 +316,16 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "with parentheses and double quotes"
             ),
+            arrayOf(
+                "col:\"(anyNumberOfSp\$c!;,~ | subject2) & subject3\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(anyNumberOfSp\$c!;,~ | subject2) & subject3",
+                    ),
+                ),
+                "with parentheses and double quotes"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
@@ -327,10 +337,12 @@ class LoriServerBackendTest : DatabaseTest() {
         val receivedPairs: List<SearchPair> = LoriServerBackend.parseValidSearchPairs(searchTerm)
         receivedPairs.forEachIndexed { index, searchPair ->
             assertThat(
+                description,
                 searchPair.values,
                 `is`(expectedKeys[index].values),
             )
             assertThat(
+                description,
                 searchPair.key,
                 `is`(expectedKeys[index].key),
             )
@@ -643,7 +655,9 @@ class LoriServerBackendTest : DatabaseTest() {
             metadataId = "that-test",
             author = "Colbjørnsen, Terje",
             band = "band",
+            collectionHandle = "colHandle",
             collectionName = "collectionName",
+            communityHandle = "comHandle",
             communityName = "communityName",
             createdBy = "user1",
             createdOn = NOW,
@@ -659,6 +673,7 @@ class LoriServerBackendTest : DatabaseTest() {
             publicationDate = LocalDate.of(2022, 9, 26),
             rightsK10plus = "some rights",
             storageDate = NOW.minusDays(3),
+            subCommunitiesHandles = listOf("111", "112"),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,

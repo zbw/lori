@@ -95,7 +95,9 @@ fun MetadataRest.toBusiness() =
         metadataId = metadataId,
         author = author,
         band = band,
+        collectionHandle = collectionHandle,
         collectionName = collectionName,
+        communityHandle = communityHandle,
         communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
@@ -110,6 +112,7 @@ fun MetadataRest.toBusiness() =
         publicationType = publicationType.toBusiness(),
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
+        subCommunitiesHandles = subCommunitiesHandles,
         storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
@@ -122,7 +125,9 @@ fun ItemMetadata.toRest(): MetadataRest =
         metadataId = metadataId,
         author = author,
         band = band,
+        collectionHandle = collectionHandle,
         collectionName = collectionName,
+        communityHandle = communityHandle,
         communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
@@ -138,6 +143,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
         storageDate = storageDate,
+        subCommunitiesHandles = subCommunitiesHandles,
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
@@ -305,7 +311,9 @@ fun DAItem.toBusiness(): ItemMetadata? {
             metadataId = this.id.toString(),
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
             band = null, // Not in DA yet
+            collectionHandle = this.parentCollection?.handle,
             collectionName = this.parentCollection?.name,
+            communityHandle = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.handle,
             communityName = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.name,
             createdBy = null,
             createdOn = null,
@@ -320,6 +328,10 @@ fun DAItem.toBusiness(): ItemMetadata? {
             publicationType = publicationType,
             publicationDate = RestConverter.parseToDate(publicationDate),
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
+            subCommunitiesHandles = this
+                .parentCommunityList
+                .map { parent -> parent.subcommunities?.mapNotNull { it.handle } ?: emptyList() }
+                .flatten(),
             storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
                 ?.let { OffsetDateTime.parse(it) },
             title = title,

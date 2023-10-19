@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_SUBCOMMUNITY
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
@@ -46,6 +47,8 @@ class RestConverterTest {
                 author = TEST_METADATA.author,
                 band = TEST_METADATA.band,
                 collectionName = TEST_METADATA.collectionName,
+                collectionHandle = TEST_METADATA.collectionHandle,
+                communityHandle = TEST_METADATA.communityHandle,
                 communityName = TEST_METADATA.communityName,
                 createdBy = TEST_METADATA.createdBy,
                 createdOn = TEST_METADATA.createdOn,
@@ -60,6 +63,7 @@ class RestConverterTest {
                 publicationType = TEST_METADATA.publicationType.toRest(),
                 publicationDate = TEST_METADATA.publicationDate,
                 rightsK10plus = TEST_METADATA.rightsK10plus,
+                subCommunitiesHandles = TEST_METADATA.subCommunitiesHandles,
                 storageDate = TEST_METADATA.storageDate,
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
@@ -108,8 +112,10 @@ class RestConverterTest {
             metadataId = "5",
             author = "Colbjørnsen, Terje",
             band = null,
+            collectionHandle = "colHandle",
             collectionName = "Collectionname",
             communityName = "Communityname",
+            communityHandle = "comHandle",
             createdBy = null,
             createdOn = null,
             doi = null,
@@ -133,6 +139,7 @@ class RestConverterTest {
                 0,
                 ZoneOffset.UTC,
             ),
+            subCommunitiesHandles = listOf("11159/1114"),
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
@@ -142,7 +149,7 @@ class RestConverterTest {
         // when
         val receivedItem = TEST_DA_ITEM.toBusiness()
         // then
-        assertThat(expected, `is`(receivedItem))
+        assertThat(receivedItem, `is`(expected))
 
         // when + then
         val receivedItem2 = TEST_DA_ITEM.copy(handle = null)
@@ -436,7 +443,9 @@ class RestConverterTest {
             metadataId = "that-test",
             author = "Colbjørnsen, Terje",
             band = "band",
+            collectionHandle = "handleCol",
             collectionName = "Collectioname",
+            communityHandle = "handleCom",
             communityName = "Communityname",
             createdBy = "user1",
             createdOn = OffsetDateTime.of(
@@ -470,6 +479,7 @@ class RestConverterTest {
             publicationDate = LocalDate.of(2022, 9, 1),
             rightsK10plus = "some rights",
             storageDate = OffsetDateTime.now(),
+            subCommunitiesHandles = listOf("handle1", "handle2"),
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
@@ -543,7 +553,7 @@ class RestConverterTest {
             parentCollection = DACollection(
                 id = 3,
                 name = "Collectionname",
-                handle = null,
+                handle = "colHandle",
                 type = null,
                 link = "link",
                 expand = emptyList(),
@@ -563,7 +573,7 @@ class RestConverterTest {
                 DACommunity(
                     id = 1,
                     name = "Communityname",
-                    handle = null,
+                    handle = "comHandle",
                     type = null,
                     countItems = null,
                     link = "link",
@@ -574,7 +584,7 @@ class RestConverterTest {
                     introductoryText = null,
                     shortDescription = null,
                     sidebarText = null,
-                    subcommunities = emptyList(),
+                    subcommunities = listOf(TEST_SUBCOMMUNITY),
                     collections = emptyList(),
                 )
             ),
