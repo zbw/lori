@@ -210,8 +210,14 @@ class MetadataDB(
             this.setIfNotNull(23, itemMetadata.storageDate) { value, idx, prepStmt ->
                 prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
             }
-            this.setIfNotNull(24, itemMetadata.subCommunities) { value, idx, prepStmt ->
-                prepStmt.setArray(idx, connection.createArrayOf("int", value.toTypedArray()))
+            this.setIfNotNull(24, itemMetadata.subCommunitiesHandles) { value, idx, prepStmt ->
+                prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
+            }
+            this.setIfNotNull(25, itemMetadata.communityHandle) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(26, itemMetadata.collectionHandle) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
             }
         }
     }
@@ -237,7 +243,7 @@ class MetadataDB(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,sub_communities" +
+                "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_SELECT_ALL_METADATA =
@@ -246,7 +252,7 @@ class MetadataDB(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,sub_communities," +
+                "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle," +
                 "$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
@@ -257,13 +263,15 @@ class MetadataDB(
             "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
-            "author,collection_name,community_name,storage_date,sub_communities) " +
+            "author,collection_name,community_name,storage_date,sub_communities_handles," +
+            "community_handle,collection_handle) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?,?,?,?) " +
+            "?,?,?,?,?," +
+            "?) " +
             "ON CONFLICT (metadata_id) " +
             "DO UPDATE SET " +
             "handle = EXCLUDED.handle," +
@@ -286,7 +294,9 @@ class MetadataDB(
             "collection_name = EXCLUDED.collection_name," +
             "community_name = EXCLUDED.community_name," +
             "storage_date = EXCLUDED.storage_date," +
-            "sub_communities = EXCLUDED.sub_communities"
+            "sub_communities_handles = EXCLUDED.sub_communities_handles," +
+            "community_handle = EXCLUDED.community_handle," +
+            "collection_handle = EXCLUDED.collection_handle"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=?)"
@@ -296,13 +306,15 @@ class MetadataDB(
             "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
-            "author,collection_name,community_name,storage_date,sub_communities) " +
+            "author,collection_name,community_name,storage_date,sub_communities_handles," +
+            "community_handle,collection_handle) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?,?,?,?)"
+            "?,?,?,?,?," +
+            "?)"
 
         fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
             metadataId = rs.getString(1),
@@ -328,7 +340,9 @@ class MetadataDB(
             collectionName = rs.getString(21),
             communityName = rs.getString(22),
             storageDate = rs.getTimestamp(23)?.toOffsetDateTime(),
-            subCommunities = (rs.getArray(24)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<Int>()
+            subCommunitiesHandles = (rs.getArray(24)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
+            communityHandle = rs.getString(25),
+            collectionHandle = rs.getString(26),
         )
     }
 }

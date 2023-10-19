@@ -79,10 +79,12 @@ class DAConnector(
         return response
     }
 
-    suspend fun startFullImport(loginToken: String, collectionIds: List<Int>): List<Int> =
+    suspend fun startFullImport(loginToken: String, community: DACommunity): List<Int> =
         coroutineScope {
+            val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
-                val daItemList: List<DAItem> = importCollection(loginToken, cId)
+                val daItemList: List<DAItem> =
+                    importCollection(loginToken, cId).map { item -> item.copy(parentCommunityList = listOf(community)) }
                 val metadataList: List<ItemMetadata?> = daItemList.map { it.toBusiness() }
                 backend.upsertMetaData(metadataList.filterNotNull()).filter { it == 1 }.size
             }

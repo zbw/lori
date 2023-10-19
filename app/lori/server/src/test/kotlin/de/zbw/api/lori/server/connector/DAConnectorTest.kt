@@ -123,7 +123,14 @@ class DAConnectorTest {
                 coEvery { importCollection(any(), any()) } returns listOf(TEST_ITEM)
             }
             // when
-            val receivedItems = daConnector.startFullImport("token", listOf(1, 2, 3))
+            val receivedItems = daConnector.startFullImport(
+                "token",
+                TEST_COMMUNITY.copy(
+                    collections = listOf(
+                        TEST_COLLECTION, TEST_COLLECTION, TEST_COLLECTION
+                    )
+                )
+            )
 
             // then
             assertThat(receivedItems, `is`(listOf(1, 1, 1)))

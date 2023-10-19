@@ -26,7 +26,11 @@ MetadataRest:
       type: string
     band:
       type: string
+    collectionHandle:
+      type: string
     collectionName:
+      type: string
+    communityHandle:
       type: string
     communityName:
       type: string
@@ -59,10 +63,10 @@ MetadataRest:
       format: date
     rightsK10plus:
       type: string
-    subCommunities:
+    subCommunitiesHandles:
       type: array
       items:
-        type: integer
+        type: string
     storageDate:
       type: string
       format: date-time
