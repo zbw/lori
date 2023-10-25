@@ -126,7 +126,7 @@ export default defineComponent({
               <v-col>
                 <td>
                   <a :href="currentMetadata.handle">{{
-                    currentMetadata.handle.substring(22, 35)
+                    currentMetadata.handle
                   }}</a>
                 </td>
               </v-col>

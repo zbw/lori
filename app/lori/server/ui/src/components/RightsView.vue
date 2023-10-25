@@ -146,7 +146,7 @@ export default defineComponent({
         <v-toolbar flat>
           <v-toolbar-title
             >Rechteinformationen
-            <a :href="handle">{{ handle.substring(22, 35) }}</a>
+            <a :href="handle">{{ handle }}</a>
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-spacer></v-spacer>

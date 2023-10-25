@@ -14,6 +14,10 @@ enum class SearchKey(
 ) {
     COMMUNITY(MetadataDB.TS_COMMUNITY),
     COLLECTION(MetadataDB.TS_COLLECTION),
+    HDL(MetadataDB.TS_HANDLE),
+    HDL_COL(MetadataDB.TS_COLLECTION_HANDLE),
+    HDL_COM(MetadataDB.TS_COMMUNITY_HANDLE),
+    HDL_SUBCOM(MetadataDB.TS_SUBCOMMUNITY_HANDLE),
     PAKET_SIGEL(MetadataDB.TS_SIGEL),
     TITLE(MetadataDB.TS_TITLE),
     ZDB_ID(MetadataDB.TS_ZDB_ID);
@@ -25,6 +29,10 @@ enum class SearchKey(
             PAKET_SIGEL -> "sig"
             TITLE -> "tit"
             ZDB_ID -> "zdb"
+            HDL -> "hdl"
+            HDL_COL -> "hdlcol"
+            HDL_COM -> "hdlcom"
+            HDL_SUBCOM -> "hdlsubcom"
         }
     }
 
@@ -35,9 +43,13 @@ enum class SearchKey(
             return when (s.lowercase()) {
                 "com" -> COMMUNITY
                 "col" -> COLLECTION
+                "hdl" -> HDL
                 "sig" -> PAKET_SIGEL
                 "tit" -> TITLE
                 "zdb" -> ZDB_ID
+                "hdlcol" -> HDL_COL
+                "hdlcom" -> HDL_COM
+                "hdlsubcom" -> HDL_SUBCOM
                 else -> null
             }
         }
