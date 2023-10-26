@@ -85,8 +85,11 @@ class DAConnector(
             collectionIds.map { cId ->
                 val daItemList: List<DAItem> =
                     importCollection(loginToken, cId).map { item -> item.copy(parentCommunityList = listOf(community)) }
-                val metadataList: List<ItemMetadata?> = daItemList.map { it.toBusiness() }
-                backend.upsertMetaData(metadataList.filterNotNull()).filter { it == 1 }.size
+                val metadataList: List<ItemMetadata> =
+                    daItemList
+                        .mapNotNull { it.toBusiness() }
+                        .map { shortenHandle(it) }
+                backend.upsertMetaData(metadataList).filter { it == 1 }.size
             }
         }
 
@@ -122,6 +125,11 @@ class DAConnector(
 
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
+        const val HANDLE_URL = "http://hdl.handle.net/"
         private val LOG = LogManager.getLogger(DAConnector::class.java)
+
+        internal fun shortenHandle(item: ItemMetadata) = item.copy(
+            handle = item.handle.substringAfter(HANDLE_URL)
+        )
     }
 }

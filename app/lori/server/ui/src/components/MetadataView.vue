@@ -61,19 +61,9 @@ export default defineComponent({
               <v-col>{{ prettyPrint(currentMetadata.collectionName) }}</v-col>
               <v-col></v-col>
             </v-row>
-            <v-row v-show="currentMetadata.collectionHandle">
-              <v-col>Collection Handle</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.collectionHandle) }}</v-col>
-              <v-col></v-col>
-            </v-row>
             <v-row v-show="currentMetadata.communityName">
               <v-col>Communityname</v-col>
               <v-col>{{ prettyPrint(currentMetadata.communityName) }}</v-col>
-              <v-col></v-col>
-            </v-row>
-            <v-row v-show="currentMetadata.communityHandle">
-              <v-col>Community Handle</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.communityHandle) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.storageDate">
@@ -133,7 +123,42 @@ export default defineComponent({
             </v-row>
             <v-row v-show="currentMetadata.handle">
               <v-col>Handle</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.handle) }}</v-col>
+              <v-col>
+                <td>
+                  <a :href="currentMetadata.handle">{{
+                    currentMetadata.handle
+                  }}</a>
+                </td>
+              </v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.collectionHandle">
+              <v-col>Collection Handle</v-col>
+              <v-col>
+                <td>
+                  <a
+                    :href="
+                      'http://hdl.handle.net/' +
+                      currentMetadata.collectionHandle
+                    "
+                    >{{ currentMetadata.collectionHandle }}</a
+                  >
+                </td>
+              </v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.communityHandle">
+              <v-col>Community Handle</v-col>
+              <v-col>
+                <td>
+                  <a
+                    :href="
+                      'http://hdl.handle.net/' + currentMetadata.communityHandle
+                    "
+                    >{{ currentMetadata.communityHandle }}</a
+                  >
+                </td>
+              </v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.isbn">

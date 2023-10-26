@@ -9,7 +9,9 @@ import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.DAMetadata
 import de.zbw.api.lori.server.type.DAObject
 import de.zbw.api.lori.server.type.DAResourcePolicy
+import de.zbw.api.lori.server.type.RestConverterTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ItemMetadata
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
@@ -393,6 +395,19 @@ class DAConnectorTest {
         assertThat(
             Json.decodeFromString<DAItem>(Json.encodeToString(item)),
             `is`(item)
+        )
+    }
+
+    @Test
+    fun testShortenHandle() {
+        val given: ItemMetadata = TEST_METADATA.copy(
+            handle = "http://hdl.handle.net/11159/42"
+        )
+
+        val received = DAConnector.shortenHandle(given)
+        assertThat(
+            received,
+            `is`(given.copy(handle = "11159/42")),
         )
     }
 
