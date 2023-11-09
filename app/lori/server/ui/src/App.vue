@@ -3,9 +3,9 @@ import Vue from "vue";
 
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import VueMaterial from "vue-material";
-Vue.use(VueMaterial);
 import VueResource from "vue-resource";
 Vue.use(VueResource);
+Vue.use(VueMaterial);
 
 export default Vue.extend({
   name: "LoriApp",

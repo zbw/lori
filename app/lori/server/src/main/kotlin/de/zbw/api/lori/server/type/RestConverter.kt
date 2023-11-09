@@ -21,6 +21,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.AccessStateWithCountRest
@@ -38,6 +39,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
+import de.zbw.lori.model.SessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -349,6 +351,20 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.admin -> UserRole.ADMIN
     }
 
+fun SessionRest.Role.toBusiness(): UserRole =
+    when (this) {
+        SessionRest.Role.readOnly -> UserRole.READONLY
+        SessionRest.Role.readWrite -> UserRole.READWRITE
+        SessionRest.Role.admin -> UserRole.ADMIN
+    }
+
+fun UserRole.toRest(): SessionRest.Role =
+    when (this) {
+        UserRole.READONLY -> SessionRest.Role.readOnly
+        UserRole.READWRITE -> SessionRest.Role.readWrite
+        UserRole.ADMIN -> SessionRest.Role.admin
+    }
+
 fun BookmarkRawRest.toBusiness(): Bookmark =
     Bookmark(
         bookmarkName = this.bookmarkName,
@@ -474,6 +490,26 @@ fun SearchQueryResult.toRest(
         }.toList(),
     )
 }
+
+fun SessionRest.toBusiness(): Session =
+    Session(
+        sessionID = this.sessionID,
+        authenticated = this.authenticated,
+        firstName = this.firstName,
+        lastName = this.lastName,
+        role = this.role.toBusiness(),
+        validUntil = this.validUntil,
+    )
+
+fun Session.toRest(): SessionRest =
+    SessionRest(
+        sessionID = this.sessionID,
+        authenticated = this.authenticated,
+        firstName = this.firstName,
+        lastName = this.lastName,
+        role = this.role.toRest(),
+        validUntil = this.validUntil,
+    )
 
 /**
  * Utility functions helping to convert

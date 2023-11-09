@@ -113,7 +113,7 @@ template-id:
     parameters:
       - name: id
         in: path
-        description: Template id to delete
+        description: Template ID to delete
         required: true
         schema:
           type: integer
@@ -122,7 +122,7 @@ template-id:
         description: Deletion of the template was successful
         content:
       404:
-        description: Id does not exist
+        description: ID does not exist
         content:
           application/json:
             schema:

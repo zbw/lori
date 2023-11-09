@@ -1,11 +1,16 @@
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { useHistoryStore } from "@/stores/history";
 import { useDialogsStore } from "@/stores/dialogs";
+import usersApi from "@/api/usersApi";
+import { SessionRest } from "@/generated-sources/openapi";
+import error from "@/utils/error";
+import { useCookies } from "vue3-cookies";
 
 export default defineComponent({
   setup() {
     const historyStore = useHistoryStore();
+    const cookies = useCookies();
     const menuTopics = [{ title: "IP-Gruppen" }, { title: "Einstellungen" }];
     const dialogStore = useDialogsStore();
     const activateGroupDialog = () => {
@@ -18,13 +23,48 @@ export default defineComponent({
     const activateBookmarkOverviewDialog = () => {
       dialogStore.bookmarkOverviewActivated = true;
     };
+
+    /**
+     * LOGIN
+     */
+    const loginError = ref(false);
+    const loginErrorMsg = ref("");
+    const loginSuccessful = ref(false);
+    const loginSuccessfulMsg = ref("");
+    const cookieName = "JSESSIONID";
+    const login = () => {
+      let sessionId = cookies.cookies.isKey(cookieName)
+        ? cookies.cookies.get(cookieName)
+        : "none";
+      usersApi
+        .getSessionById(sessionId)
+        .then((response: SessionRest) => {
+          loginSuccessful.value = true;
+          loginSuccessfulMsg.value =
+            "You are successfully logged in as " +
+            response.firstName +
+            " " +
+            response.lastName;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            loginErrorMsg.value = errMsg;
+            loginError.value = true;
+          });
+        });
+    };
     return {
       dialogStore,
       historyStore,
+      loginError,
+      loginErrorMsg,
+      loginSuccessful,
+      loginSuccessfulMsg,
       menuTopics,
       activateBookmarkOverviewDialog,
       activateGroupDialog,
       activateTemplateDialog,
+      login,
     };
   },
 });
@@ -105,5 +145,33 @@ export default defineComponent({
         </v-list-item>
       </v-list>
     </v-menu>
+    <v-menu offset-y>
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn class="mx-2" fab large color="purple" v-bind="attrs" v-on="on">
+          <v-icon dark>mdi-account</v-icon>
+        </v-btn>
+      </template>
+      <v-list>
+        <v-list-item :key="0">
+          <v-list-item-title @click="login">Login</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+    <v-dialog v-model="loginError" max-width="290">
+      <v-card>
+        <v-card-title class="text-h5">
+          Login war nicht erfolgreich
+        </v-card-title>
+        <v-card-text>{{ loginErrorMsg }}</v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="loginSuccessful" max-width="290">
+      <v-card>
+        <v-card-title class="text-h5">
+          Login war erfolgreich
+        </v-card-title>
+        <v-card-text>{{ loginSuccessfulMsg }}</v-card-text>
+      </v-card>
+    </v-dialog>
   </v-app-bar>
 </template>
