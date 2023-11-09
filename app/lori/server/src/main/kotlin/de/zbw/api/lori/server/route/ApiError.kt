@@ -33,6 +33,14 @@ object ApiError {
             status = "409",
         )
 
+    fun movedPermanently(detail: String? = "The target moved to another location."): ErrorRest =
+        ErrorRest(
+            type = "/redirection/301",
+            title = "Target moved permanently.",
+            detail = detail,
+            status = "301",
+        )
+
     fun internalServerError(detail: String? = "Bitte an Admin wenden."): ErrorRest =
         ErrorRest(
             type = "/errors/internal",

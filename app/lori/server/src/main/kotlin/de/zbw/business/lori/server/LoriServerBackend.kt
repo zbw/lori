@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.ErrorRest
@@ -272,6 +273,16 @@ class LoriServerBackend(
             user.username,
             hashString("SHA-256", user.password),
         )
+
+    fun deleteSessionById(sessionID: String) =
+        dbConnector.userDB.deleteSessionById(sessionID)
+
+    fun getSessionById(sessionID: String): Session? =
+        dbConnector.userDB.getSessionById(sessionID)
+
+    fun insertSession(session: Session): String =
+        dbConnector.userDB.insertSession(session)
+
 
     private fun checkRightConflicts(metadataId: String, newRightId: String): Boolean {
         // Get all right ids

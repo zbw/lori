@@ -31,3 +31,36 @@ RoleRest:
         - read_only
         - read_write
         - admin
+
+SessionRest:
+  type: object
+  required:
+    - authenticated
+    - role
+    - valid_until
+  properties:
+    sessionID:
+      type: string
+    authenticated:
+      type: boolean
+    firstName:
+      type: string
+    lastName:
+      type: string
+    role:
+      type: string
+      enum:
+        - read_only
+        - read_write
+        - admin
+    valid_until:
+      type: string
+      format: date-time
+
+SessionIdCreated:
+  required:
+    - sessionId
+  type: object
+  properties:
+    sessionId:
+      type: string

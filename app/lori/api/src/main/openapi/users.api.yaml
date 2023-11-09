@@ -185,3 +185,113 @@ users-admin-role:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+sessions:
+  post:
+    tags:
+      - users
+    summary: Saves a session
+    operationId: addSession
+    requestBody:
+      description: Session information
+      content:
+        application/json:
+          schema:
+            $ref: 'users.model.yaml#/SessionRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+          application/json:
+            schema:
+              $ref: 'users.model.yaml#/SessionIdCreated'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Not authorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+sessions-id:
+  get:
+    tags:
+      - users
+    summary: Receive session by ID
+    operationId: getSessionByID
+    parameters:
+      - name: id
+        in: path
+        description: Session ID
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              $ref: 'users.model.yaml#/SessionRest'
+      302:
+        description: Redirect to SSO URL
+        headers:
+          Location:
+            schema:
+              type: string
+            description: Location of redirection
+        content: { }
+      404:
+        description: ID does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+  delete:
+    tags:
+      - users
+    summary: Delete a session by ID
+    operationId: deleteSessionById
+    parameters:
+      - name: id
+        in: path
+        description: Session ID to delete
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of the session was successful
+        content:
+      404:
+        description: ID does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server.type
 
+import java.time.OffsetDateTime
+
 /**
  * Types related to User information.
  *
@@ -16,4 +18,13 @@ data class User(
     val name: String,
     val passwordHash: String,
     val role: UserRole?,
+)
+
+data class Session(
+    val sessionID: String?,
+    val authenticated: Boolean,
+    val firstName: String?,
+    val lastName: String?,
+    val role: UserRole,
+    val validUntil: OffsetDateTime,
 )

@@ -1,11 +1,14 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.User
 import de.zbw.business.lori.server.type.UserRole
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -156,12 +159,42 @@ class UserDBTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testRoundtripSessions() {
+        val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
+        assertThat(
+            dbConnector.userDB.getSessionById(sessionId),
+            `is`(TEST_SESSION.copy(sessionID = sessionId))
+        )
+        dbConnector.userDB.deleteSessionById(sessionId)
+        assertNull(
+            dbConnector.userDB.getSessionById(sessionId),
+        )
+    }
+
     companion object {
         const val notExistingUsername = "notExistentUser"
         private val TEST_USER = User(
             name = "Bob",
             passwordHash = "122345",
             role = UserRole.ADMIN,
+        )
+        private val TEST_SESSION = Session(
+            sessionID = null,
+            authenticated = true,
+            firstName = "some",
+            lastName = "name",
+            role = UserRole.ADMIN,
+            validUntil = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
         )
     }
 }
