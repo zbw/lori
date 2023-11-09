@@ -37,7 +37,7 @@ import kotlin.math.max
  */
 class LoriServerBackend(
     internal val dbConnector: DatabaseConnector,
-    private val config: LoriConfiguration,
+    internal val config: LoriConfiguration,
 ) {
     constructor(
         config: LoriConfiguration,
