@@ -283,7 +283,6 @@ class LoriServerBackend(
     fun insertSession(session: Session): String =
         dbConnector.userDB.insertSession(session)
 
-
     private fun checkRightConflicts(metadataId: String, newRightId: String): Boolean {
         // Get all right ids
         val rightIds = dbConnector.itemDB.getRightIdsByMetadataId(metadataId)
