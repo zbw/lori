@@ -127,7 +127,7 @@ fun Routing.usersRoutes(
                                 span.setStatus(StatusCode.OK)
                                 call.respond(session.toRest())
                             } else {
-                                // TODO: Set Location Header
+                                call.response.headers.append("Location", backend.config.signInURL)
                                 call.respond(HttpStatusCode.MovedPermanently, ApiError.movedPermanently())
                             }
                         }

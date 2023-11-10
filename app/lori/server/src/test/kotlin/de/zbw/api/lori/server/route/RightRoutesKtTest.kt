@@ -340,6 +340,7 @@ class RightRoutesKtTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            signInURL = "https://signmein"
         )
 
         val TEST_RIGHT = RightRest(

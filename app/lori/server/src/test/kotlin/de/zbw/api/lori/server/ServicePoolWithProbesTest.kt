@@ -127,6 +127,7 @@ class ServicePoolWithProbesTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            signInURL = "https://signmein"
         )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
