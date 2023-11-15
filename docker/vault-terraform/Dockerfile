@@ -1,6 +1,6 @@
 FROM alpine:3.18.4 AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.0.4
+LABEL IMAGE_VERSION_TAG=0.1.0
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
