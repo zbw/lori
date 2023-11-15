@@ -16,7 +16,7 @@ RUN apk add --no-cache curl jq && \
 
 #install psql
 FROM vault AS psql
-ARG POSTGRES_CLIENT_VERSION=15.4-r1
+ARG POSTGRES_CLIENT_VERSION=15.5-r0
 ARG POSTGRES_CLIENT_MAJOR_VERSION=15
 RUN apk add --no-cache postgresql"$POSTGRES_CLIENT_MAJOR_VERSION"-client="$POSTGRES_CLIENT_VERSION"
 
