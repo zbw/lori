@@ -1,6 +1,6 @@
 FROM alpine:3.18.4 AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.1.2
+LABEL IMAGE_VERSION_TAG=0.2.0
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -27,7 +27,7 @@ RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L
 
 # install vault
 FROM gitcrypt as vault
-ARG VAULT_VERSION=1.14.0
+ARG VAULT_VERSION=1.15.1
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -36,20 +36,20 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
 
 # install kubectl
 FROM vault AS vaultk8s
-ARG KUBECTL_VERSION=1.26.9
+ARG KUBECTL_VERSION=1.26.10
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECTL_VERSION"/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
 # install helm
 FROM vaultk8s AS downloadhelm
-ARG HELM_VERSION=3.13.1
+ARG HELM_VERSION=3.13.2
 ENV HELM_EXPERIMENTAL_OCI=1
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
-ARG HELMFILE_VERSION=0.157.0
+ARG HELMFILE_VERSION=0.158.1
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz && \
     chmod +x helmfile && \
