@@ -39,16 +39,16 @@ buildDockerfileImages:
     - echo $CI_DEFAULT_BRANCH
     - echo $CI_OPEN_MERGE_REQUESTS
     - >
-      If [[ $CI_OPEN_MERGE_REQUESTS ]]
+      if [[ $CI_OPEN_MERGE_REQUESTS ]]
         then echo "MR pipeline"
         else echo "no MR pipeline"
       fi
     - >
-      If [[ $CI_OPEN_MERGE_REQUESTS ]]
-      then git diff --no-commit-id --name-only origin/main
-      elif [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
-      then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
-      else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
+      if [[ $CI_OPEN_MERGE_REQUESTS ]]
+        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only origin/main | grep Dockerfile)
+        else if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
+          then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
+          else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
       fi
     - echo $CHANGED_DOCKERFILES
     - >
