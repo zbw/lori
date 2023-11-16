@@ -38,7 +38,11 @@ buildDockerfileImages:
     - echo $CI_DEFAULT_BRANCH
     - echo $CI_COMMIT_SHA
     - echo $(git diff --no-commit-id --name-only HEAD^1)
+    - echo $(git diff --no-commit-id --name-only HEAD)
     - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA})
+   - echo $(git diff-tree --no-commit-id --name-only -r main)
+    - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} main)
+    - echo $(git diff --no-commit-id --name-only ${CI_COMMIT_SHA} main)
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
         then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
