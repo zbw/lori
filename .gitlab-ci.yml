@@ -32,22 +32,23 @@ buildDockerfileImages:
           - docker/**/Dockerfile
   image: docker:24.0.6-git
   script:
+    - echo $CI_COMMIT_SHA
     - echo $CI_COMMIT_BEFORE_SHA
     - echo $CI_PIPELINE_SOURCE
     - echo $CI_COMMIT_BRANCH
     - echo $CI_DEFAULT_BRANCH
-    - echo $CI_COMMIT_SHA
-    - echo $(git diff --no-commit-id --name-only HEAD^1)
-    - echo $(git diff --no-commit-id --name-only HEAD)
-    - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA})
-    - echo $(git diff --no-commit-id --name-only origin/main)
-    - echo $(git diff-tree --no-commit-id --name-only -r origin/main)
-    - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} origin/main)
-    - echo $(git diff --no-commit-id --name-only ${CI_COMMIT_SHA} origin/main)
+    - echo $CI_OPEN_MERGE_REQUESTS
     - >
-      if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
-        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
-        else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
+      If [[ $CI_OPEN_MERGE_REQUESTS ]]
+        then echo "MR pipeline"
+        else echo "no MR pipeline"
+      fi
+    - >
+      If [[ $CI_OPEN_MERGE_REQUESTS ]]
+      then git diff --no-commit-id --name-only origin/main
+      elif [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
+      then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
+      else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
       fi
     - echo $CHANGED_DOCKERFILES
     - >
