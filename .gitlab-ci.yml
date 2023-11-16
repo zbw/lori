@@ -32,6 +32,13 @@ buildDockerfileImages:
           - docker/**/Dockerfile
   image: docker:24.0.6-git
   script:
+    - echo $CI_COMMIT_BEFORE_SHA
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_DEFAULT_BRANCH
+    - echo $CI_COMMIT_SHA
+    - echo $(git diff --no-commit-id --name-only HEAD^1)
+    - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA})
     - >
       if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
         then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
