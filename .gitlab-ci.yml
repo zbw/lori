@@ -40,7 +40,6 @@ buildDockerfileImages:
     - echo $(git diff --no-commit-id --name-only HEAD^1)
     - echo $(git diff --no-commit-id --name-only HEAD)
     - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA})
-    - git fetch
     - echo $(git diff --no-commit-id --name-only origin/main)
     - echo $(git diff-tree --no-commit-id --name-only -r origin/main)
     - echo $(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} origin/main)
