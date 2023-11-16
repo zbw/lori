@@ -32,10 +32,18 @@ buildDockerfileImages:
           - docker/**/Dockerfile
   image: docker:24.0.6-git
   script:
+    - echo $CI_COMMIT_SHA
+    - echo $CI_COMMIT_BEFORE_SHA
+    - echo $CI_PIPELINE_SOURCE
+    - echo $CI_COMMIT_BRANCH
+    - echo $CI_DEFAULT_BRANCH
+    - echo $CI_OPEN_MERGE_REQUESTS
     - >
-      if [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
-        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)
-        else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)
+      if [[ $CI_OPEN_MERGE_REQUESTS ]]
+        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only origin/main | grep Dockerfile)  # case merge request pipeline
+        elif [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
+        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)  # case merge pipeline
+        else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)  # case push pipeline
       fi
     - echo $CHANGED_DOCKERFILES
     - >

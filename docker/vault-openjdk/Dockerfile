@@ -1,6 +1,6 @@
-FROM eclipse-temurin:17.0.8.1_1-jdk AS tools
+FROM eclipse-temurin:17.0.9_9-jdk AS tools
 
-LABEL IMAGE_VERSION_TAG=0.2.4
+LABEL IMAGE_VERSION_TAG=0.3.0
 LABEL IMAGE_NAME=vault-openjdk
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -15,7 +15,7 @@ RUN apt update && \
     unzip
 
 FROM tools as vault
-ARG VAULT_VERSION=1.14.0
+ARG VAULT_VERSION=1.15.1
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \

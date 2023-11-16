@@ -1,6 +1,6 @@
-FROM docker:24.0.6-git AS docker-git
+FROM docker:24.0.7-git AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.0.3
+LABEL IMAGE_VERSION_TAG=0.1.0
 LABEL IMAGE_NAME=vault-dind
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -10,7 +10,7 @@ RUN apk add --no-cache curl \
     rm -rf /var/cache/apk/*
 
 FROM docker-git as vault
-ARG VAULT_VERSION=1.14.0
+ARG VAULT_VERSION=1.15.1
 
 # install vault
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
