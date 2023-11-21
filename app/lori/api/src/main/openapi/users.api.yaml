@@ -187,73 +187,24 @@ users-admin-role:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
 sessions:
-  post:
-    tags:
-      - users
-    summary: Saves a session
-    operationId: addSession
-    requestBody:
-      description: Session information
-      content:
-        application/json:
-          schema:
-            $ref: 'users.model.yaml#/SessionRest'
-      required: true
-    responses:
-      201:
-        description: Successfully created
-        content:
-          application/json:
-            schema:
-              $ref: 'users.model.yaml#/SessionIdCreated'
-      400:
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      401:
-        description: Not authorized to perform this action
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-    x-codegen-request-body-name: body
-
-sessions-id:
   get:
     tags:
       - users
-    summary: Receive session by ID
-    operationId: getSessionByID
-    parameters:
-      - name: id
-        in: path
-        description: Session ID
-        required: true
-        schema:
-          type: string
+    summary: Receive session information
+    operationId: getUserSession
     responses:
       200:
         description: Successful operation
         content:
           application/json:
             schema:
-              $ref: 'users.model.yaml#/SessionRest'
-      302:
-        description: Redirect to SSO URL
-        headers:
-          Location:
+              $ref: 'users.model.yaml#/UserSessionRest'
+      401:
+        description: No valid session Id found. Unauthorized.
+        content:
+          application/json:
             schema:
-              type: string
-            description: Location of redirection
-        content: { }
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: ID does not exist
         content:
@@ -267,6 +218,7 @@ sessions-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
+sessions-id:
   delete:
     tags:
       - users

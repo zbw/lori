@@ -7,7 +7,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_SES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_USERS
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
 import java.sql.ResultSet
@@ -66,7 +65,7 @@ class UserDB(
             this.setIfNotNull(5, session.role.toString()) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setTimestamp(6, Timestamp.from(session.validUntil.toInstant()))
+            this.setTimestamp(6, Timestamp.from(session.validUntil))
         }
 
         val span = tracer.spanBuilder("insertSession").startSpan()
@@ -175,7 +174,7 @@ class UserDB(
                 role = UserRole.valueOf(
                     rs.getString(5),
                 ),
-                validUntil = rs.getTimestamp(6).toOffsetDateTime(),
+                validUntil = rs.getTimestamp(6).toInstant(),
             )
         } else null
     }

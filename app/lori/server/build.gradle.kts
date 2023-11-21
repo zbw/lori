@@ -12,6 +12,7 @@ repositories {
     mavenCentral()
     google()
     maven { setUrl("https://jitpack.io") }
+    maven { setUrl("https://build.shibboleth.net/maven/releases/") }
 }
 
 dependencies {
@@ -22,19 +23,18 @@ dependencies {
     val postgresJDBCVersion by System.getProperties()
     val zonkyVersion by System.getProperties()
     implementation(project(":app:lori:api"))
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-gson-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
-    runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
+    implementation("io.ktor:ktor-server-sessions:$ktorVersion")
     implementation("com.mchange:c3p0:0.9.5.5")
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
@@ -42,6 +42,11 @@ dependencies {
     implementation("org.postgresql:postgresql:$postgresJDBCVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
     implementation("org.apache.commons:commons-csv:$apacheCommonsCSV")
+    implementation("org.opensaml:opensaml-core:4.3.0")
+    implementation("org.opensaml:opensaml-saml-api:4.3.0")
+    implementation("org.opensaml:opensaml-saml-impl:4.3.0")
+    runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
+    testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
 }
 
 application {

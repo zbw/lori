@@ -1,13 +1,12 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AuthTokenRest
 import de.zbw.lori.model.RoleRest
-import de.zbw.lori.model.SessionIdCreated
-import de.zbw.lori.model.SessionRest
 import de.zbw.lori.model.UserRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -41,101 +40,30 @@ fun Routing.usersRoutes(
 ) {
     route("/api/v1/users") {
         route("/sessions") {
-            post {
-                // TODO: This POST is only allowed with a valid signature from DUO
-                val span = tracer
-                    .spanBuilder("lori.LoriService.POST/api/v1/sessions")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        @Suppress("SENSELESS_COMPARISON")
-                        val session = call.receive(SessionRest::class)
-                            .takeIf { it.validUntil != null && it.role != null }
-                            ?: throw BadRequestException("Invalid Json has been provided")
-                        span.setAttribute("session", session.toString())
-                        val pk = backend.insertSession(session.toBusiness())
-                        span.setStatus(StatusCode.OK)
-                        call.respond(SessionIdCreated(pk))
-                    } catch (e: BadRequestException) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ApiError.badRequestError(
-                                detail = ApiError.INVALID_JSON,
-                            )
-                        )
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiError.internalServerError()
-                        )
-                    } finally {
-                        span.end()
-                    }
-                }
-            }
-
-            delete("{sessionId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/sessions/{sessionID}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val sessionId = call.parameters["sessionId"]
-                        span.setAttribute("sessionId", sessionId ?: "null")
-                        if (sessionId == null) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
-                            )
-                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                        } else {
-                            backend.deleteSessionById(sessionId)
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
-                        }
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
-                    } finally {
-                        span.end()
-                    }
-                }
-            }
-
-            get("/{sessionId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/sessions/{sessionId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val sessionId = call.parameters["sessionId"]
-                        span.setAttribute("sessionId", sessionId ?: "null")
-                        if (sessionId == null) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
-                            )
-                            call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
-                        } else {
-                            val session = backend.getSessionById(sessionId)
-                            if (session != null) {
+            authenticate("auth-login") {
+                get {
+                    val span = tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/sessions")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                    withContext(span.asContextElement()) {
+                        try {
+                            val userSession: UserSession? = call.principal<UserSession>()
+                            if (userSession != null) {
                                 span.setStatus(StatusCode.OK)
-                                call.respond(session.toRest())
+                                call.respond(HttpStatusCode.OK, userSession.toRest())
                             } else {
-                                call.response.headers.append("Location", backend.config.signInURL)
-                                call.respond(HttpStatusCode.MovedPermanently, ApiError.movedPermanently())
+                                call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(backend.config.signInURL)
+                                )
                             }
+                        } catch (e: Exception) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
+                        } finally {
+                            span.end()
                         }
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
-                    } finally {
-                        span.end()
                     }
                 }
             }

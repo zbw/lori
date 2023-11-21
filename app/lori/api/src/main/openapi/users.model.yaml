@@ -32,20 +32,14 @@ RoleRest:
         - read_write
         - admin
 
-SessionRest:
+UserSessionRest:
   type: object
   required:
-    - authenticated
+    - email
     - role
-    - valid_until
+    - sessionId
   properties:
-    sessionID:
-      type: string
-    authenticated:
-      type: boolean
-    firstName:
-      type: string
-    lastName:
+    email:
       type: string
     role:
       type: string
@@ -53,9 +47,8 @@ SessionRest:
         - read_only
         - read_write
         - admin
-    valid_until:
+    sessionId:
       type: string
-      format: date-time
 
 SessionIdCreated:
   required:
