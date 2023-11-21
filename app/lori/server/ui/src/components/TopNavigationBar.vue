@@ -3,9 +3,10 @@ import { defineComponent, ref } from "vue";
 import { useHistoryStore } from "@/stores/history";
 import { useDialogsStore } from "@/stores/dialogs";
 import usersApi from "@/api/usersApi";
-import { SessionRest } from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import { useCookies } from "vue3-cookies";
+import {UserSessionRest} from "@/generated-sources/openapi";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   setup() {
@@ -27,30 +28,40 @@ export default defineComponent({
     /**
      * LOGIN
      */
+    const userStore = useUserStore();
     const loginError = ref(false);
     const loginErrorMsg = ref("");
     const loginSuccessful = ref(false);
     const loginSuccessfulMsg = ref("");
+    const loginUnauthorized = ref(false);
+    const loginLink = ref("");
     const cookieName = "JSESSIONID";
     const login = () => {
-      let sessionId = cookies.cookies.isKey(cookieName)
+      let cookieValue = cookies.cookies.isKey(cookieName)
         ? cookies.cookies.get(cookieName)
         : "none";
       usersApi
-        .getSessionById(sessionId)
-        .then((response: SessionRest) => {
+        .getSessionById(cookieValue)
+        .then((userSession: UserSessionRest) => {
+          userStore.emailAddress = userSession.email;
+          userStore.role = userSession.role;
           loginSuccessful.value = true;
           loginSuccessfulMsg.value =
-            "You are successfully logged in as " +
-            response.firstName +
-            " " +
-            response.lastName;
+            "You are successfully logged in as " + userSession.email;
         })
         .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            loginErrorMsg.value = errMsg;
-            loginError.value = true;
-          });
+          error.errorHandling(
+            e,
+            (errMsg: string, errorCode: string, errorDetail: string) => {
+              if (errorCode == "401") {
+                loginLink.value = errorDetail;
+                loginUnauthorized.value = true;
+              } else {
+                loginErrorMsg.value = errMsg;
+                loginError.value = true;
+              }
+            }
+          );
         });
     };
     return {
@@ -58,8 +69,10 @@ export default defineComponent({
       historyStore,
       loginError,
       loginErrorMsg,
+      loginLink,
       loginSuccessful,
       loginSuccessfulMsg,
+      loginUnauthorized,
       menuTopics,
       activateBookmarkOverviewDialog,
       activateGroupDialog,
@@ -165,11 +178,17 @@ export default defineComponent({
         <v-card-text>{{ loginErrorMsg }}</v-card-text>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="loginUnauthorized" max-width="290">
+      <v-card>
+        <v-card-title class="text-h5"> Nicht authentifiziert </v-card-title>
+        <v-card-text>
+          Bitte <a :href="loginLink">hier</a> klicken zum authentifizieren
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-dialog v-model="loginSuccessful" max-width="290">
       <v-card>
-        <v-card-title class="text-h5">
-          Login war erfolgreich
-        </v-card-title>
+        <v-card-title class="text-h5"> Login war erfolgreich </v-card-title>
         <v-card-text>{{ loginSuccessfulMsg }}</v-card-text>
       </v-card>
     </v-dialog>

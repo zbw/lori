@@ -1,6 +1,6 @@
 package de.zbw.business.lori.server.type
 
-import java.time.OffsetDateTime
+import java.time.Instant
 
 /**
  * Types related to User information.
@@ -26,5 +26,5 @@ data class Session(
     val firstName: String?,
     val lastName: String?,
     val role: UserRole,
-    val validUntil: OffsetDateTime,
+    val validUntil: Instant,
 )

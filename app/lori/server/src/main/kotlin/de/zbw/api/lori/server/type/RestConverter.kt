@@ -21,7 +21,6 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.AccessStateWithCountRest
@@ -39,7 +38,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.SessionRest
+import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
@@ -344,6 +343,20 @@ fun DAItem.toBusiness(): ItemMetadata? {
     }
 }
 
+fun UserSession.toRest(): UserSessionRest =
+    UserSessionRest(
+        email = this.email,
+        role = this.role.toRest(),
+        sessionId = this.sessionId,
+    )
+
+fun UserSessionRest.toBusiness(): UserSession =
+    UserSession(
+        email = this.email,
+        role = this.role.toBusiness(),
+        sessionId = this.sessionId,
+    )
+
 fun RoleRest.Role.toBusiness(): UserRole =
     when (this) {
         RoleRest.Role.readOnly -> UserRole.READONLY
@@ -351,18 +364,18 @@ fun RoleRest.Role.toBusiness(): UserRole =
         RoleRest.Role.admin -> UserRole.ADMIN
     }
 
-fun SessionRest.Role.toBusiness(): UserRole =
+fun UserSessionRest.Role.toBusiness(): UserRole =
     when (this) {
-        SessionRest.Role.readOnly -> UserRole.READONLY
-        SessionRest.Role.readWrite -> UserRole.READWRITE
-        SessionRest.Role.admin -> UserRole.ADMIN
+        UserSessionRest.Role.readOnly -> UserRole.READONLY
+        UserSessionRest.Role.readWrite -> UserRole.READWRITE
+        UserSessionRest.Role.admin -> UserRole.ADMIN
     }
 
-fun UserRole.toRest(): SessionRest.Role =
+fun UserRole.toRest(): UserSessionRest.Role =
     when (this) {
-        UserRole.READONLY -> SessionRest.Role.readOnly
-        UserRole.READWRITE -> SessionRest.Role.readWrite
-        UserRole.ADMIN -> SessionRest.Role.admin
+        UserRole.READONLY -> UserSessionRest.Role.readOnly
+        UserRole.READWRITE -> UserSessionRest.Role.readWrite
+        UserRole.ADMIN -> UserSessionRest.Role.admin
     }
 
 fun BookmarkRawRest.toBusiness(): Bookmark =
@@ -490,26 +503,6 @@ fun SearchQueryResult.toRest(
         }.toList(),
     )
 }
-
-fun SessionRest.toBusiness(): Session =
-    Session(
-        sessionID = this.sessionID,
-        authenticated = this.authenticated,
-        firstName = this.firstName,
-        lastName = this.lastName,
-        role = this.role.toBusiness(),
-        validUntil = this.validUntil,
-    )
-
-fun Session.toRest(): SessionRest =
-    SessionRest(
-        sessionID = this.sessionID,
-        authenticated = this.authenticated,
-        firstName = this.firstName,
-        lastName = this.lastName,
-        role = this.role.toRest(),
-        validUntil = this.validUntil,
-    )
 
 /**
  * Utility functions helping to convert

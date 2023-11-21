@@ -52,7 +52,7 @@ object ApiError {
     fun unauthorizedError(detail: String? = "Benutzer ist nicht berechtigt."): ErrorRest =
         ErrorRest(
             type = "/errors/unauthorized",
-            title = "User und/oder Passwort ungültig.",
+            title = "Authentifizierung ist ungültig.",
             detail = detail,
             status = "401",
         )

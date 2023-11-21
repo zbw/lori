@@ -194,7 +194,7 @@ class UserDBTest : DatabaseTest() {
                 0,
                 0,
                 ZoneOffset.UTC,
-            ),
+            ).toInstant(),
         )
     }
 }
