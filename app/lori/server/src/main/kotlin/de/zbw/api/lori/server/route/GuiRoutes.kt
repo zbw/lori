@@ -82,7 +82,7 @@ fun Routing.guiRoutes(
                             )
                         )
                         call.respondRedirect(
-                            "/ui&login=success"
+                            "/ui?login=success"
                         )
                     }
                 } catch (e: Exception) {

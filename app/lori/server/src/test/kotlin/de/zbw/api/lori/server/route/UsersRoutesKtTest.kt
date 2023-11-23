@@ -12,6 +12,7 @@ import de.zbw.lori.model.AuthTokenRest
 import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.UserRest
 import io.ktor.client.request.delete
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put

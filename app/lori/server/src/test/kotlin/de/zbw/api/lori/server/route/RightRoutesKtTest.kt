@@ -325,7 +325,7 @@ class RightRoutesKtTest {
     companion object {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
-        private val CONFIG = LoriConfiguration(
+        val CONFIG = LoriConfiguration(
             grpcPort = 9092,
             httpPort = 8080,
             sqlUser = "postgres",
@@ -411,7 +411,7 @@ class RightRoutesKtTest {
             .create()
 
         fun jsonAsString(any: Any): String = GSON.toJson(any)
-        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
+        val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
         fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(
             services = listOf(
