@@ -51,7 +51,7 @@ fun Routing.templateRoutes(
                 try {
                     val right: RightRest = call.receive(RightRest::class)
                     span.setAttribute("template", right.toString())
-                    val pk = backend.insertTemplate(right.toBusiness(), true)
+                    val pk = backend.insertTemplate(right.toBusiness())
                     span.setStatus(StatusCode.OK)
                     call.respond(
                         HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)

@@ -14,12 +14,6 @@ enum class UserRole {
     ADMIN,
 }
 
-data class User(
-    val name: String,
-    val passwordHash: String,
-    val role: UserRole?,
-)
-
 data class Session(
     val sessionID: String?,
     val authenticated: Boolean,

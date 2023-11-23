@@ -36,7 +36,6 @@ import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
-import de.zbw.lori.model.RoleRest
 import de.zbw.lori.model.SearchKeyRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
@@ -356,13 +355,6 @@ fun UserSessionRest.toBusiness(): UserSession =
         role = this.role.toBusiness(),
         sessionId = this.sessionId,
     )
-
-fun RoleRest.Role.toBusiness(): UserRole =
-    when (this) {
-        RoleRest.Role.readOnly -> UserRole.READONLY
-        RoleRest.Role.readWrite -> UserRole.READWRITE
-        RoleRest.Role.admin -> UserRole.ADMIN
-    }
 
 fun UserSessionRest.Role.toBusiness(): UserRole =
     when (this) {

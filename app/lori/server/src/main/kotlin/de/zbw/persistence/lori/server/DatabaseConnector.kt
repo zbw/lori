@@ -65,7 +65,6 @@ class DatabaseConnector(
         const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         const val TABLE_NAME_ITEM_RIGHT = "item_right"
         const val TABLE_NAME_SESSIONS = "sessions"
-        const val TABLE_NAME_USERS = "users"
 
         const val COLUMN_METADATA_ID = "metadata_id"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"

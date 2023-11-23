@@ -14,10 +14,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
-import de.zbw.business.lori.server.type.User
-import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.ErrorRest
-import de.zbw.lori.model.UserRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
@@ -257,23 +254,6 @@ class LoriServerBackend(
             dbConnector.rightDB.getRightsByIds(it)
         }
 
-    fun userContainsName(name: String): Boolean = dbConnector.userDB.userTableContainsName(name)
-
-    fun insertNewUser(user: UserRest): String =
-        dbConnector.userDB.insertUser(
-            User(
-                name = user.username,
-                passwordHash = hashString("SHA-256", user.password),
-                role = UserRole.READONLY,
-            )
-        )
-
-    fun checkCredentials(user: UserRest): Boolean =
-        dbConnector.userDB.userExistsByNameAndPassword(
-            user.username,
-            hashString("SHA-256", user.password),
-        )
-
     fun deleteSessionById(sessionID: String) =
         dbConnector.userDB.deleteSessionById(sessionID)
 
@@ -294,24 +274,6 @@ class LoriServerBackend(
             acc || checkForDateConflict(newRight, r)
         }
     }
-
-    fun getCurrentUserRole(username: String): UserRole? =
-        dbConnector.userDB.getRoleByUsername(username)
-
-    fun updateUserNonRoleProperties(user: UserRest): Int =
-        dbConnector.userDB.updateUserNonRoleProperties(
-            User(
-                name = user.username,
-                passwordHash = hashString("SHA-256", user.password),
-                role = null,
-            )
-        )
-
-    fun updateUserRoleProperty(username: String, role: UserRole): Int =
-        dbConnector.userDB.updateUserRoleProperty(username, role)
-
-    fun deleteUser(username: String): Int =
-        dbConnector.userDB.deleteUser(username)
 
     fun generateJWT(username: String): String = JWT.create()
         .withAudience(config.jwtAudience)
@@ -427,7 +389,7 @@ class LoriServerBackend(
     /**
      * Insert template.
      */
-    fun insertTemplate(right: ItemRight, generateTemplateId: Boolean = false): TemplateRightIdCreated {
+    fun insertTemplate(right: ItemRight): TemplateRightIdCreated {
         val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // Will lead to an overflow at some point
         val rightId = dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
         return TemplateRightIdCreated(
