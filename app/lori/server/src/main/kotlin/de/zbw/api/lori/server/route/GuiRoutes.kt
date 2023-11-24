@@ -59,7 +59,6 @@ fun Routing.guiRoutes(
                     ) {
                         call.respond(
                             HttpStatusCode.Unauthorized,
-                            ApiError.unauthorizedError(backend.config.signInURL)
                         )
                         return@withContext
                     } else {

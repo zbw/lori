@@ -1,12 +1,12 @@
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, onMounted, ref } from "vue";
 import { useHistoryStore } from "@/stores/history";
 import { useDialogsStore } from "@/stores/dialogs";
 import usersApi from "@/api/usersApi";
 import error from "@/utils/error";
 import { useCookies } from "vue3-cookies";
-import {UserSessionRest} from "@/generated-sources/openapi";
-import {useUserStore} from "@/stores/user";
+import { UserSessionRest } from "@/generated-sources/openapi";
+import { useUserStore } from "@/stores/user";
 
 export default defineComponent({
   setup() {
@@ -31,12 +31,12 @@ export default defineComponent({
     const userStore = useUserStore();
     const loginError = ref(false);
     const loginErrorMsg = ref("");
+    const loginErrorMsgTitle = ref("");
     const loginSuccessful = ref(false);
     const loginSuccessfulMsg = ref("");
     const loginUnauthorized = ref(false);
-    const loginLink = ref("");
     const cookieName = "JSESSIONID";
-    const login = () => {
+    const login = (init: boolean) => {
       let cookieValue = cookies.cookies.isKey(cookieName)
         ? cookies.cookies.get(cookieName)
         : "none";
@@ -45,39 +45,78 @@ export default defineComponent({
         .then((userSession: UserSessionRest) => {
           userStore.emailAddress = userSession.email;
           userStore.role = userSession.role;
-          loginSuccessful.value = true;
-          loginSuccessfulMsg.value =
-            "You are successfully logged in as " + userSession.email;
+          userStore.isLoggedIn = true;
+          if (!init) {
+            loginSuccessful.value = true;
+            loginSuccessfulMsg.value =
+              "You are successfully logged in as " + userSession.email;
+          }
         })
         .catch((e) => {
-          error.errorHandling(
-            e,
-            (errMsg: string, errorCode: string, errorDetail: string) => {
+          error.errorHandling(e, (errMsg: string, errorCode: string) => {
+            userStore.isLoggedIn = false;
+            if (!init) {
               if (errorCode == "401") {
-                loginLink.value = errorDetail;
                 loginUnauthorized.value = true;
               } else {
+                loginErrorMsgTitle.value = "Login war nicht erfolgreich";
                 loginErrorMsg.value = errMsg;
                 loginError.value = true;
               }
             }
-          );
+          });
         });
     };
+    const deactivateLoginDialog = () => {
+      loginUnauthorized.value = false;
+    };
+
+    const logoutDialog = ref(false);
+    const logout = () => {
+      let cookieValue = cookies.cookies.isKey(cookieName)
+        ? cookies.cookies.get(cookieName)
+        : "none";
+      usersApi
+        .deleteSessionById(cookieValue)
+        .then(() => {
+          userStore.emailAddress = "";
+          userStore.role = "";
+          userStore.isLoggedIn = false;
+          logoutDialog.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            loginErrorMsgTitle.value = "Logout war nicht erfolgreich";
+            loginErrorMsg.value = errMsg;
+            loginError.value = true;
+          });
+        });
+    };
+
+    const deactivateLogoutDialog = () => {
+      logoutDialog.value = false;
+    };
+
+    onMounted(() => login(true));
     return {
       dialogStore,
       historyStore,
       loginError,
       loginErrorMsg,
-      loginLink,
+      loginErrorMsgTitle,
       loginSuccessful,
       loginSuccessfulMsg,
       loginUnauthorized,
+      logoutDialog,
       menuTopics,
+      userStore,
       activateBookmarkOverviewDialog,
       activateGroupDialog,
       activateTemplateDialog,
+      deactivateLoginDialog,
+      deactivateLogoutDialog,
       login,
+      logout,
     };
   },
 });
@@ -164,9 +203,17 @@ export default defineComponent({
           <v-icon dark>mdi-account</v-icon>
         </v-btn>
       </template>
-      <v-list>
+      <v-list v-if="!userStore.isLoggedIn">
         <v-list-item :key="0">
-          <v-list-item-title @click="login">Login</v-list-item-title>
+          <v-list-item-title @click="login(false)">Login</v-list-item-title>
+        </v-list-item>
+      </v-list>
+      <v-list v-if="userStore.isLoggedIn">
+        <v-list-item :key="1">
+          <v-list-item-title>{{ userStore.emailAddress }}</v-list-item-title>
+        </v-list-item>
+        <v-list-item :key="2">
+          <v-list-item-title @click="logout">Logout</v-list-item-title>
         </v-list-item>
       </v-list>
     </v-menu>
@@ -174,6 +221,7 @@ export default defineComponent({
       <v-card>
         <v-card-title class="text-h5">
           Login war nicht erfolgreich
+          {{ loginErrorMsgTitle }}
         </v-card-title>
         <v-card-text>{{ loginErrorMsg }}</v-card-text>
       </v-card>
@@ -182,8 +230,28 @@ export default defineComponent({
       <v-card>
         <v-card-title class="text-h5"> Nicht authentifiziert </v-card-title>
         <v-card-text>
-          Bitte <a :href="loginLink">hier</a> klicken zum authentifizieren
+          Bitte <a :href="userStore.signInURL">hier</a> klicken zum Login
         </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn small color="primary" dark @click="deactivateLoginDialog">
+            Ohne Login fortfahren
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="logoutDialog" max-width="290">
+      <v-card>
+        <v-card-title class="text-h5">Logout</v-card-title>
+        <v-card-text>
+          Bitte <a :href="userStore.signOutURL">hier</a> klicken zum Logout
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn small color="primary" dark @click="deactivateLogoutDialog">
+            Abbrechen
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-dialog v-model="loginSuccessful" max-width="290">

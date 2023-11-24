@@ -29,26 +29,17 @@ sessions:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
-
-sessions-id:
   delete:
     tags:
       - users
     summary: Delete a session by ID
-    operationId: deleteSessionById
-    parameters:
-      - name: id
-        in: path
-        description: Session ID to delete
-        required: true
-        schema:
-          type: string
+    operationId: deleteSession
     responses:
       200:
         description: Deletion of the session was successful
         content:
-      404:
-        description: ID does not exist
+      401:
+        description: No valid cookie was passed
         content:
           application/json:
             schema:

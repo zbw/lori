@@ -494,7 +494,6 @@ class MetadataRoutesKtTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
-            signInURL = "https://signmein"
         )
 
         val TEST_METADATA = MetadataRest(

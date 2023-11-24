@@ -28,7 +28,6 @@ data class LoriConfiguration(
     val jwtAudience: String,
     val jwtIssuer: String,
     val jwtRealm: String,
-    val signInURL: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -52,7 +51,6 @@ data class LoriConfiguration(
             val jwtIssuer = KonfigDeclaration.string(prefix, "jwt", "issuer").required()
             val jwtRealm = KonfigDeclaration.string(prefix, "jwt", "realm").required()
             val jwtSecret = KonfigDeclaration.string(prefix, "jwt", "secret").secret().required()
-            val signInURL = KonfigDeclaration.string(prefix, "sso", "signinurl").required()
             return LoriConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
@@ -68,7 +66,6 @@ data class LoriConfiguration(
                 jwtIssuer = source[jwtIssuer],
                 jwtRealm = source[jwtRealm],
                 jwtSecret = source[jwtSecret],
-                signInURL = source[signInURL],
             )
         }
     }

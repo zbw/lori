@@ -15,4 +15,9 @@ export default {
       headers: { Cookie: "JSESSIONID=" + jsessionID },
     });
   },
+  deleteSessionById(jsessionID: string): Promise<void> {
+    return usersApi.deleteSession({
+      headers: { Cookie: "JSESSIONID=" + jsessionID },
+    });
+  },
 };

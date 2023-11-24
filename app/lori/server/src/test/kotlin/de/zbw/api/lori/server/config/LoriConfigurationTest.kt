@@ -39,7 +39,6 @@ class LoriConfigurationTest {
         System.setProperty("lori.jwt.issuer", expectedConfig.jwtIssuer)
         System.setProperty("lori.jwt.realm", expectedConfig.jwtRealm)
         System.setProperty("lori.jwt.secret", expectedConfig.jwtSecret)
-        System.setProperty("lori.sso.signinurl", expectedConfig.signInURL)
         val receivedConfig = LoriConfiguration.load(
             "lori",
             ChainedKonfiguration(
@@ -69,7 +68,6 @@ class LoriConfigurationTest {
                 jwtAudience = "jwtAudience",
                 jwtIssuer = "jwtIssuer",
                 jwtRealm = "jwtRealm",
-                signInURL = "https://signmein"
             )
     }
 }
