@@ -58,18 +58,8 @@ paths:
     $ref: 'right.api.yaml#/right'
   /right/{id}:
     $ref: 'right.api.yaml#/right-id'
-  /users/login:
-    $ref: 'users.api.yaml#/users-login'
-  /users/register:
-    $ref: 'users.api.yaml#/users-register'
-  /users/{id}:
-    $ref: 'users.api.yaml#/users-id'
-  /users/admin/role:
-    $ref: 'users.api.yaml#/users-admin-role'
   /users/sessions:
     $ref: 'users.api.yaml#/sessions'
-  /users/sessions/{id}:
-    $ref: 'users.api.yaml#/sessions-id'
   /template:
     $ref: 'template.api.yaml#/template'
   /template/{id}:

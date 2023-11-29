@@ -6,7 +6,6 @@ import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.route.bookmarkRoutes
 import de.zbw.api.lori.server.route.bookmarkTemplateRoutes
 import de.zbw.api.lori.server.route.groupRoutes
@@ -116,7 +115,6 @@ class ServicePoolWithProbes(
                 challenge {
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                        ApiError.unauthorizedError(backend.config.signInURL)
                     )
                 }
             }
@@ -124,13 +122,13 @@ class ServicePoolWithProbes(
                 validate { session: UserSession ->
                     backend.getSessionById(session.sessionId)
                         ?.takeIf { s ->
-                            s.validUntil > Instant.now()
+                            s.validUntil > Instant.now() &&
+                                s.firstName == session.email
                         }?.let { session }
                 }
                 challenge {
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                        ApiError.unauthorizedError(backend.config.signInURL)
                     )
                 }
             }
@@ -160,6 +158,7 @@ class ServicePoolWithProbes(
             cookie<UserSession>("JSESSIONID") {
                 cookie.path = "/"
                 cookie.maxAgeInSeconds = 60 * 60 * 24
+                cookie.extensions["SameSite"] = "lax"
             }
         }
         routing {

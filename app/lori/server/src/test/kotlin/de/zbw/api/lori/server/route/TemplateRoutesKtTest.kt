@@ -69,7 +69,7 @@ class TemplateRoutesKtTest {
     fun testPostTemplateConflict() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertTemplate(any(), true) } throws mockk<PSQLException> {
+            every { insertTemplate(any()) } throws mockk<PSQLException> {
                 every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                 every { message } returns "error"
             }
@@ -93,7 +93,7 @@ class TemplateRoutesKtTest {
     fun testPostTemplateInternalError() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertTemplate(any(), true) } throws SQLException()
+            every { insertTemplate(any()) } throws SQLException()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then

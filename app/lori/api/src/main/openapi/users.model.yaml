@@ -1,37 +1,3 @@
-UserRest:
-  required:
-    - username
-    - password
-  type: object
-  properties:
-    username:
-      type: string
-    password:
-      type: string
-
-AuthTokenRest:
-  required:
-    - token
-  type: object
-  properties:
-    token:
-      type: string
-
-RoleRest:
-  required:
-    - username
-    - role
-  type: object
-  properties:
-    username:
-      type: string
-    role:
-      type: string
-      enum:
-        - read_only
-        - read_write
-        - admin
-
 UserSessionRest:
   type: object
   required:
