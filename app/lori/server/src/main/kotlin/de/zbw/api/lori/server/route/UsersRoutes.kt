@@ -45,6 +45,7 @@ fun Routing.usersRoutes(
                             } else {
                                 call.respond(
                                     HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
                                 )
                             }
                         } catch (e: Exception) {
