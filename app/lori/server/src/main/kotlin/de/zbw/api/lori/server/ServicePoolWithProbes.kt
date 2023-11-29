@@ -122,7 +122,8 @@ class ServicePoolWithProbes(
                 validate { session: UserSession ->
                     backend.getSessionById(session.sessionId)
                         ?.takeIf { s ->
-                            s.validUntil > Instant.now()
+                            s.validUntil > Instant.now() &&
+                                s.firstName == session.email
                         }?.let { session }
                 }
                 challenge {
