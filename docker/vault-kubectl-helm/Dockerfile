@@ -1,6 +1,6 @@
-FROM alpine:3.18.4 AS docker-git
+FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.2.0
+LABEL IMAGE_VERSION_TAG=0.9.0
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -10,7 +10,7 @@ RUN apk add --no-cache curl \
     git && \
     rm -rf /var/cache/apk/*
 
-FROM docker-git as gitcrypt
+FROM tools as gitcrypt
 
 RUN apk --update add \
    curl \
@@ -44,7 +44,6 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECT
 # install helm
 FROM vaultk8s AS downloadhelm
 ARG HELM_VERSION=3.13.2
-ENV HELM_EXPERIMENTAL_OCI=1
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
@@ -66,6 +65,3 @@ FROM adduser AS helmdiff
 ARG HELMDIFF_VERSION=3.8.1
 RUN helm plugin install https://github.com/databus23/helm-diff --version $HELMDIFF_VERSION
 
-FROM helmdiff AS addhelmrepos
-RUN helm repo add prometheus-community https://prometheus-community.github.io/helm-charts  && \
-    helm repo add hashicorp https://helm.releases.hashicorp.com

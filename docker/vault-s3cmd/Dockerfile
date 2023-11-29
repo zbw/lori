@@ -1,7 +1,7 @@
 # install vault
 FROM alpine:3.18.4 AS vault
 
-LABEL IMAGE_VERSION_TAG=0.1.0
+LABEL IMAGE_VERSION_TAG=0.9.0
 LABEL IMAGE_NAME=vault-s3cmd
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -16,9 +16,8 @@ RUN apk add --no-cache curl jq && \
 
 # install s3cmd
 FROM vault AS s3cmd
-ARG S3CMD_VERSION=2.3.0
-RUN apk add --no-cache python3 py3-pip py3-setuptools libmagic && \
-    pip3 install --no-cache-dir python-dateutil python-magic s3cmd=="$S3CMD_VERSION"
+ARG S3CMD_VERSION=2.3.0-r3
+RUN apk add --no-cache s3cmd="$S3CMD_VERSION"
 
 # use standard user
 FROM s3cmd
@@ -28,5 +27,3 @@ RUN addgroup -S $IMAGE_USER && \
     mkdir -p /var/log/$IMAGE_USER && \
     chown -R $IMAGE_USER:$IMAGE_USER /var/log/$IMAGE_USER
 USER $IMAGE_USER
-
-
