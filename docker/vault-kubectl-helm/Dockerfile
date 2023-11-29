@@ -1,6 +1,6 @@
 FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.0
+LABEL IMAGE_VERSION_TAG=0.9.1
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -12,14 +12,12 @@ RUN apk add --no-cache curl \
 
 FROM tools as gitcrypt
 
-RUN apk --update add \
-   curl \
+RUN apk add --no-cache curl \
    git \
    g++ \
    make \
    openssl \
-   openssl-dev \
-   && rm -rf /var/cache/apk/*
+   openssl-dev
 
 ENV VERSION 0.7.0
 RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
