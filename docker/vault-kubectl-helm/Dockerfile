@@ -43,7 +43,7 @@ FROM vaultk8s AS downloadhelm
 ARG HELM_VERSION=3.13.2
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
-    chmod +x linux-amd64/helm\
+    chmod +x linux-amd64/helm && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
 ARG HELMFILE_VERSION=0.158.1
