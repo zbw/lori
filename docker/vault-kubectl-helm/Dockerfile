@@ -1,6 +1,6 @@
 FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.3
+LABEL IMAGE_VERSION_TAG=0.9.4
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -20,7 +20,7 @@ RUN apk add --no-cache curl \
 
 ENV VERSION 0.7.0
 RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
-RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local && apk del make openssl-dev
+RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local && apk del make
 
 # install vault
 FROM gitcrypt as vault
