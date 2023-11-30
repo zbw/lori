@@ -50,7 +50,7 @@ ARG HELMFILE_VERSION=0.158.1
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     mkdir helmfile-v"$HELMFILE_VERSION" && tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz --directory helmfile-v"$HELMFILE_VERSION" && \
     chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
-    mv helmfile /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION"
+    mv helmfile-v"$HELMFILE_VERSION"/helmfile /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION"
 
 FROM downloadhelm AS adduser
 ARG IMAGE_USER=vault-kubectl-helm-user
