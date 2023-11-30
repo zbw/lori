@@ -1,13 +1,12 @@
 FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.0
+LABEL IMAGE_VERSION_TAG=0.9.1
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
 RUN apk add --no-cache curl \
     bash \
-    jq \
-    git
+    jq
 
 # install vault
 FROM tools as vault
