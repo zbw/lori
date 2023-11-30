@@ -1,19 +1,17 @@
 FROM alpine:3.18.4 AS docker-git
 
-LABEL IMAGE_VERSION_TAG=0.1.0
+LABEL IMAGE_VERSION_TAG=0.9.0
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
 RUN apk add --no-cache curl \
     bash \
     jq \
-    git && \
-    rm -rf /var/cache/apk/*
-
-FROM docker-git as vault
-ARG VAULT_VERSION=1.15.1
+    git
 
 # install vault
+FROM docker-git as vault
+ARG VAULT_VERSION=1.15.1
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -26,7 +24,7 @@ ARG TERRAFORM_VERSION=1.5.7
 RUN curl -LO https://releases.hashicorp.com/terraform/"$TERRAFORM_VERSION"/terraform_"$TERRAFORM_VERSION"_linux_amd64.zip && \
     unzip terra* && \
     chmod +x ./terraform && \
-    mv ./terraform /usr/local/bin/terraform
+    mv ./terraform /usr/local/bin/terraform && rm terra*.zip
 
 FROM terraform
 ARG IMAGE_USER=vault-terraform

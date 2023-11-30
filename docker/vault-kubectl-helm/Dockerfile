@@ -1,14 +1,13 @@
 FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.1
+LABEL IMAGE_VERSION_TAG=0.9.2
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
 RUN apk add --no-cache curl \
     bash \
     jq \
-    git && \
-    rm -rf /var/cache/apk/*
+    git
 
 FROM tools as gitcrypt
 
@@ -21,7 +20,7 @@ RUN apk add --no-cache curl \
 
 ENV VERSION 0.7.0
 RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
-RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local
+RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local && apk del g++ make openssl-dev
 
 # install vault
 FROM gitcrypt as vault
@@ -44,13 +43,14 @@ FROM vaultk8s AS downloadhelm
 ARG HELM_VERSION=3.13.2
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
+    chmod +x linux-amd64/helm\
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
 ARG HELMFILE_VERSION=0.158.1
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
-    tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz && \
-    chmod +x helmfile && \
-    mv helmfile /usr/local/bin/helmfile && rm -rf helmfile
+    mkdir helmfile-v"$HELMFILE_VERSION" && tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz --directory helmfile-v"$HELMFILE_VERSION" && \
+    chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
+    mv helmfile /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION"
 
 FROM downloadhelm AS adduser
 ARG IMAGE_USER=vault-kubectl-helm-user
