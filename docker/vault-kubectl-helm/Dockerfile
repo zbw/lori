@@ -1,29 +1,14 @@
 FROM alpine:3.18.4 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.4
+LABEL IMAGE_VERSION_TAG=0.9.6
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
 RUN apk add --no-cache curl \
     bash \
-    jq \
-    git
+    jq
 
-FROM tools as gitcrypt
-
-RUN apk add --no-cache curl \
-   git \
-   g++ \
-   make \
-   openssl \
-   openssl-dev
-
-ENV VERSION 0.7.0
-RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
-RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local && apk del make
-
-# install vault
-FROM gitcrypt as vault
+FROM tools as vault
 ARG VAULT_VERSION=1.15.1
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
@@ -31,15 +16,25 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     mv ./vault /usr/local/bin/vault && \
     rm vault*
 
-# install kubectl
-FROM vault AS vaultk8s
+FROM vault as gitcrypt
+RUN apk add --no-cache \
+   git \
+   g++ \
+   make \
+   openssl \
+   openssl-dev
+ENV VERSION 0.7.0
+RUN curl -L https://github.com/AGWA/git-crypt/archive/$VERSION.tar.gz | tar zxv -C /var/tmp
+RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L' make && make install PREFIX=/usr/local && \
+    apk del make
+
+FROM gitcrypt AS kubectl
 ARG KUBECTL_VERSION=1.26.10
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECTL_VERSION"/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
-# install helm
-FROM vaultk8s AS downloadhelm
+FROM kubectl AS helm
 ARG HELM_VERSION=3.13.2
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
@@ -52,7 +47,7 @@ RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_V
     chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
     mv helmfile-v"$HELMFILE_VERSION"/helmfile /usr/local/bin/helmfile && rm -rf helmfile-v"$HELMFILE_VERSION"
 
-FROM downloadhelm AS adduser
+FROM helm AS adduser
 ARG IMAGE_USER=vault-kubectl-helm-user
 RUN addgroup -S $IMAGE_USER && \
     adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER
