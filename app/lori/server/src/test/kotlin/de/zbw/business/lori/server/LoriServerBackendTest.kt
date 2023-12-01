@@ -326,6 +326,36 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 "with parentheses and double quotes"
             ),
+            arrayOf(
+                "col:\"(subject1 subject2 subject3 | subject4) & subject5\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "(subject1 & subject2 & subject3 | subject4) & subject5",
+                    ),
+                ),
+                "insert missing & with other logical operations"
+            ),
+            arrayOf(
+                "col:\"subject1 subject2 subject3 subject4 subject5\"",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "subject1 & subject2 & subject3 & subject4 & subject5",
+                    ),
+                ),
+                "insert missing & standard case"
+            ),
+            arrayOf(
+                "col:\'subject1 subject2 subject3 subject4 subject5\'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "subject1 & subject2 & subject3 & subject4 & subject5",
+                    ),
+                ),
+                "insert missing & standard case"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
@@ -449,6 +479,10 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 "  col:'bar baz'  \t  ",
+                false,
+            ),
+            arrayOf(
+                "com:\"internation centre of\"",
                 false,
             ),
         )
