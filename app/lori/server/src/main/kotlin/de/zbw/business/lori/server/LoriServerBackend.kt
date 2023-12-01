@@ -19,7 +19,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.auth.jwt.JWTPrincipal
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
@@ -584,7 +583,7 @@ class LoriServerBackend(
                 } else {
                     SearchPair(
                         key = key,
-                        values = it.substringAfter(":").trim().let{ v -> insertDefaultAndOperator(v) }
+                        values = it.substringAfter(":").trim().let { v -> insertDefaultAndOperator(v) }
                     )
                 }
             } ?: emptyList()
@@ -597,11 +596,12 @@ class LoriServerBackend(
         internal fun insertDefaultAndOperator(v: String): String {
             val tokens: List<String> = v.split("\\s+".toRegex())
             return List(tokens.size) { idx ->
-                if (idx == 0){
+                if (idx == 0) {
                     return@List listOf(tokens[0])
                 }
                 if (!LOGICAL_OPERATIONS.contains(tokens[idx]) &&
-                    !LOGICAL_OPERATIONS.contains(tokens[idx-1])){
+                    !LOGICAL_OPERATIONS.contains(tokens[idx - 1])
+                ) {
                     return@List listOf("&", tokens[idx])
                 } else {
                     return@List listOf(tokens[idx])

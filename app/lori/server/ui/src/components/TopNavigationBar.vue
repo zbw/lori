@@ -53,18 +53,22 @@ export default defineComponent({
           }
         })
         .catch((e) => {
-          error.errorHandling(e, (errMsg: string, errorCode: string) => {
-            userStore.isLoggedIn = false;
-            if (!init) {
-              if (errorCode == "401") {
-                loginUnauthorized.value = true;
-              } else {
-                loginErrorMsgTitle.value = "Login war nicht erfolgreich";
-                loginErrorMsg.value = errMsg;
-                loginError.value = true;
+          error.errorHandling(
+            e,
+            (errMsg: string, errorCode: string, errorDetail: string) => {
+              userStore.isLoggedIn = false;
+              console.log("Error Code: " + errorCode);
+              if (!init) {
+                if (errorCode == "401") {
+                  loginUnauthorized.value = true;
+                } else {
+                  loginErrorMsgTitle.value = "Login war nicht erfolgreich";
+                  loginErrorMsg.value = errMsg;
+                  loginError.value = true;
+                }
               }
             }
-          });
+          );
         });
     };
     const deactivateLoginDialog = () => {
