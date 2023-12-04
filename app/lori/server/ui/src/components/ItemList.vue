@@ -47,8 +47,8 @@ export default defineComponent({
       "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
         "com(Community), col(Collection), hdl (Handle Metadata), hdlcol (Handle Collection), hdlcom(Handle Community), hdlsubcom (Handle Subcommunity), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
         " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
-        "Wichtig: Mehrwortsuchen müssen mit & getrennt werden (z.B. tit:'Ein & Titel') und Klammern in Titeln mit einem vorangegangenen \\ " +
-        "geschrieben werden (z.B. col:'EU & \\(European\\)')"
+        "Wichtig: Zeichen die als logische Operatoren dienen, aber teil der Suche sein sollen, müssen escaped werden mit \\ " +
+        " (z.B. col:'EU & \\(European\\)')"
     );
 
     /**
@@ -271,6 +271,9 @@ export default defineComponent({
 
     const startSearch = () => {
       currentPage.value = 1;
+      if (searchTerm.value == undefined) {
+        searchTerm.value = "";
+      }
       searchStore.lastSearchTerm = searchTerm.value;
       invalidSearchKeyError.value = false;
       hasSearchTokenWithNoKeyError.value = false;
