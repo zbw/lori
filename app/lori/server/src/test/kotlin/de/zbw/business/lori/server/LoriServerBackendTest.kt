@@ -291,7 +291,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 listOf(
                     SearchPair(
                         SearchKey.COLLECTION,
-                        "col-;:",
+                        "col-;\\:",
                     ),
                 ),
                 "handle special characters"
@@ -355,6 +355,26 @@ class LoriServerBackendTest : DatabaseTest() {
                     ),
                 ),
                 "insert missing & standard case"
+            ),
+            arrayOf(
+                "col:\'subject1 & subject2 :\'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "subject1 & subject2 & \\:",
+                    ),
+                ),
+                "escape : char",
+            ),
+            arrayOf(
+                "col:\'subject1 & subject2 \\:\'",
+                listOf(
+                    SearchPair(
+                        SearchKey.COLLECTION,
+                        "subject1 & subject2 & \\:",
+                    ),
+                ),
+                "escape : char but not doubled",
             ),
         )
 

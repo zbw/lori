@@ -1,7 +1,5 @@
 package de.zbw.business.lori.server
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
@@ -22,7 +20,6 @@ import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
-import java.util.Date
 import kotlin.math.max
 
 /**
@@ -273,13 +270,6 @@ class LoriServerBackend(
             acc || checkForDateConflict(newRight, r)
         }
     }
-
-    fun generateJWT(username: String): String = JWT.create()
-        .withAudience(config.jwtAudience)
-        .withIssuer(config.jwtIssuer)
-        .withClaim("username", username)
-        .withExpiresAt(Date(System.currentTimeMillis() + (60000 * 60)))
-        .sign(Algorithm.HMAC256(config.jwtSecret))
 
     fun searchQuery(
         searchTerm: String?,
@@ -561,7 +551,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        private val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\'][\\S]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
+        private val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\']\\S+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         fun parseInvalidSearchKeys(s: String): List<String> =
@@ -593,7 +583,7 @@ class LoriServerBackend(
                 "${e.key.fromEnum()}:'${e.values}'"
             }
 
-        internal fun insertDefaultAndOperator(v: String): String {
+        private fun insertDefaultAndOperator(v: String): String {
             val tokens: List<String> = v.split("\\s+".toRegex())
             return List(tokens.size) { idx ->
                 if (idx == 0) {
@@ -606,7 +596,9 @@ class LoriServerBackend(
                 } else {
                     return@List listOf(tokens[idx])
                 }
-            }.flatten().joinToString(separator = " ")
+            }.flatten().joinToString(separator = " ") { s: String ->
+                s.replace(":", "\\:").replace("\\\\:", "\\:")
+            } // Filter out :
         }
 
         private fun tokenizeSearchInput(s: String): List<String> {
