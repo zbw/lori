@@ -1,6 +1,6 @@
-FROM alpine:3.18.4 AS tools
+FROM alpine:3.19.0 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.2
+LABEL IMAGE_VERSION_TAG=0.9.3
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
