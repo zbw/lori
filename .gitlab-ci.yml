@@ -69,9 +69,12 @@ pushDockerfileImages:
   image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-dind:0.9.0
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://vault-nl.zbw.eu
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
     - export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile) # gives changed Dockerfiles, not successfully built Dockerfiles
@@ -145,9 +148,12 @@ pushLoriImage:
         - app/lori/**/*
   dependencies:
     - test
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://vault-nl.zbw.eu
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
     - ./gradlew :app:lori:server:jib
@@ -165,9 +171,12 @@ pushLoriImportJob:
         - job/lori_import/**/*
   dependencies:
     - test
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://vault-nl.zbw.eu
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
     - ./gradlew :job:lori_import:jib
@@ -185,9 +194,12 @@ pushTemplateApplyJob:
         - job/template_apply/**/*
   dependencies:
     - test
+  id_tokens:
+    VAULT_ID_TOKEN:
+      aud: https://vault-nl.zbw.eu
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$CI_JOB_JWT)"
+    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
     - mkdir -p ~/.docker
     - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
     - ./gradlew :job:template_apply:jib
