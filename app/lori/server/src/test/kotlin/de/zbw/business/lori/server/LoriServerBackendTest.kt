@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -687,8 +688,82 @@ class LoriServerBackendTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_FIND_RIGHT_CONFLICTS)
+    fun createDataForFindItemsWithConflicts() =
+        arrayOf(
+            arrayOf(
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights = listOf(TEST_RIGHT),
+                    )
+                ),
+                TEST_RIGHT,
+                emptySet<Item>(),
+                0,
+                "Skip same right",
+            ),
+            arrayOf(
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights = listOf(TEST_RIGHT),
+                    )
+                ),
+                TEST_RIGHT.copy(rightId = "testConflict"),
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights = listOf(TEST_RIGHT),
+                    )
+                ),
+                1,
+                "Find duplicate",
+            ),
+            arrayOf(
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights = listOf(TEST_RIGHT),
+                    ),
+                    Item(
+                        metadata = TEST_METADATA.copy(metadataId = "metadata2"),
+                        rights = listOf(TEST_RIGHT, TEST_RIGHT.copy(rightId = "right2")),
+                    ),
+                ),
+                TEST_RIGHT.copy(
+                    rightId = "testConflict",
+                    startDate = LocalDate.MIN,
+                    endDate = LocalDate.MIN.plusDays(1)
+                ),
+                emptySet<Item>(),
+                0,
+                "No conflicts found",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_FIND_RIGHT_CONFLICTS)
+    fun testFindItemsWithConflicts(
+        searchResults: Set<Item>,
+        rightConflictToCheck: ItemRight,
+        expected: Set<Item>,
+        expectedErrorCount: Int,
+        reason: String,
+    ) {
+        val received: Pair<Set<Item>, List<ConflictError>> = LoriServerBackend.findItemsWithConflicts(
+            searchResults,
+            rightConflictToCheck,
+        )
+        assertThat(
+            reason,
+            received.first,
+            `is`(expected)
+        )
+    }
+
     companion object {
         const val DATA_FOR_CHECK_RIGHT_CONFLICTS = "DATA_FOR_CHECK_RIGHT_CONFLICTS"
+        const val DATA_FOR_FIND_RIGHT_CONFLICTS = "DATA_FOR_FIND_RIGHT_CONFLICTS"
         const val DATA_FOR_INVALID_SEARCH_KEY_PARSING = "DATA_FOR_INVALID_SEARCH_KEY_PARSING"
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
         const val DATA_FOR_REMOVE_VALID_SEARCH_TOKEN = "DATA_FOR_REMOVE_VALID_SEARCH_TOKEN"

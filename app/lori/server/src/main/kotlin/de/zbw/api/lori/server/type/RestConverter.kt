@@ -27,6 +27,7 @@ import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
+import de.zbw.lori.model.ConflictTypeRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.ItemInformation
@@ -37,6 +38,7 @@ import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
+import de.zbw.lori.model.TemplateApplicationErrorRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
@@ -495,6 +497,21 @@ fun SearchQueryResult.toRest(
         }.toList(),
     )
 }
+
+fun ConflictError.toRest(): TemplateApplicationErrorRest =
+    TemplateApplicationErrorRest(
+        conflictType = this.conflictType.toRest(),
+        message = this.message,
+        templateIdApplied = this.templateIdApplied,
+        conflictWithMetadataId = this.conflictWithMetadataId,
+        conflictWithRightId = this.conflictWithRightId,
+    )
+
+fun ConflictType.toRest(): ConflictTypeRest =
+    when (this) {
+        ConflictType.DATE_OVERLAP -> ConflictTypeRest.dateOverlap
+        ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
+    }
 
 /**
  * Utility functions helping to convert

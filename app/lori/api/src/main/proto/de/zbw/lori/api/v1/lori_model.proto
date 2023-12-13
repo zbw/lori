@@ -17,10 +17,24 @@ message ApplyTemplatesRequest {
   repeated int32 template_ids = 2;
 }
 
+enum ConflictType {
+  CONFLICT_TYPE_UNSPECIFIED = 0;
+  CONFLICT_TYPE_DATE_OVERLAP = 1;
+}
+
+message TemplateError {
+  string message = 1;
+  int32 template_id_applied = 2;
+  string conflict_with_metadata_id = 3;
+  string conflict_with_right_id = 4;
+  ConflictType conflict_type = 5;
+}
+
 message TemplateApplication {
   repeated string metadata_ids = 1;
   int32 template_id = 2;
   int32 number_applied_entries = 3;
+  repeated TemplateError errors = 4;
 }
 
 message ApplyTemplatesResponse {

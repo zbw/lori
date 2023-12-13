@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
+import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -438,10 +439,10 @@ class TemplateRoutesKtTest {
         val givenTemplateId2 = 12
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to expectedMetadataIds)
+            every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to Pair(expectedMetadataIds, emptyList()))
             every { applyAllTemplates() } returns listOf(
-                givenTemplateId to expectedMetadataIds,
-                givenTemplateId2 to expectedMetadataIds
+                givenTemplateId to Pair(expectedMetadataIds, emptyList<ConflictError>()),
+                givenTemplateId2 to Pair(expectedMetadataIds, emptyList<ConflictError>())
             ).toMap()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
@@ -473,7 +474,8 @@ class TemplateRoutesKtTest {
                             TemplateApplicationRest(
                                 templateId = givenTemplateId,
                                 metadataIds = expectedMetadataIds,
-                                numberOfAppliedEntries = expectedMetadataIds.size
+                                numberOfAppliedEntries = expectedMetadataIds.size,
+                                errors = emptyList(),
                             )
                         )
                     )
@@ -509,12 +511,14 @@ class TemplateRoutesKtTest {
                             TemplateApplicationRest(
                                 templateId = givenTemplateId,
                                 metadataIds = expectedMetadataIds,
-                                numberOfAppliedEntries = expectedMetadataIds.size
+                                numberOfAppliedEntries = expectedMetadataIds.size,
+                                errors = emptyList(),
                             ),
                             TemplateApplicationRest(
                                 templateId = givenTemplateId2,
                                 metadataIds = expectedMetadataIds,
-                                numberOfAppliedEntries = expectedMetadataIds.size
+                                numberOfAppliedEntries = expectedMetadataIds.size,
+                                errors = emptyList(),
                             )
                         )
                     )

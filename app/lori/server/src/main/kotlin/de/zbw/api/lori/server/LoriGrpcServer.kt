@@ -2,6 +2,7 @@ package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.api.ApplyTemplatesRequest
@@ -10,6 +11,7 @@ import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
 import de.zbw.lori.api.TemplateApplication
+import de.zbw.lori.api.TemplateError
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.opentelemetry.api.trace.SpanKind
@@ -70,7 +72,7 @@ class LoriGrpcServer(
             .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val backendResponse: Map<Int, List<String>> = if (request.all) {
+                val backendResponse: Map<Int, Pair<List<String>, List<ConflictError>>> = if (request.all) {
                     daConnector.backend.applyAllTemplates()
                 } else {
                     daConnector.backend.applyTemplates(request.templateIdsList)
@@ -79,8 +81,18 @@ class LoriGrpcServer(
                     TemplateApplication
                         .newBuilder()
                         .setTemplateId(e.key)
-                        .setNumberAppliedEntries(e.value.size)
-                        .addAllMetadataIds(e.value)
+                        .setNumberAppliedEntries(e.value.first.size)
+                        .addAllMetadataIds(e.value.first)
+                        .addAllErrors(
+                            e.value.second.map {
+                                TemplateError.newBuilder()
+                                    .setTemplateIdApplied(it.templateIdApplied)
+                                    .setMessage(it.message)
+                                    .setConflictWithMetadataId(it.conflictWithMetadataId)
+                                    .setConflictWithRightId(it.conflictWithRightId)
+                                    .build()
+                            }
+                        )
                         .build()
                 }
                 ApplyTemplatesResponse
