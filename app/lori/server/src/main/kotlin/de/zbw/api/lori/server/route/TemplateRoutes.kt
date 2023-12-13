@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -148,7 +149,7 @@ fun Routing.templateRoutes(
                     val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
                     span.setAttribute("templateIds", templateIds.toString())
                     span.setAttribute("Query Parameter 'all'", all.toString())
-                    val appliedMap: Map<Int, List<String>> =
+                    val appliedMap: Map<Int, Pair<List<String>, List<ConflictError>>> =
                         if (all) {
                             backend.applyAllTemplates()
                         } else {
@@ -159,8 +160,9 @@ fun Routing.templateRoutes(
                         appliedMap.entries.map { e ->
                             TemplateApplicationRest(
                                 templateId = e.key,
-                                metadataIds = e.value,
-                                numberOfAppliedEntries = e.value.size
+                                metadataIds = e.value.first,
+                                errors = e.value.second.map { it.toRest() },
+                                numberOfAppliedEntries = e.value.first.size
                             )
                         }
                     )

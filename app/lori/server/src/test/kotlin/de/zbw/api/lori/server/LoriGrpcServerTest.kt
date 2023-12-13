@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.api.ApplyTemplatesRequest
@@ -32,7 +33,7 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesAll() {
         runBlocking {
             // given
-            val expectedResult = listOf(1 to listOf("2")).toMap()
+            val expectedResult = listOf(1 to Pair(listOf("2"), emptyList<ConflictError>())).toMap()
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
@@ -76,7 +77,7 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesIds() {
         runBlocking {
             // given
-            val expectedResult = listOf(1 to listOf("2")).toMap()
+            val expectedResult = listOf(1 to Pair(listOf("2"), emptyList<ConflictError>())).toMap()
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
