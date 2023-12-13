@@ -3,6 +3,8 @@ package de.zbw.business.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
+import de.zbw.api.lori.server.type.ConflictError
+import de.zbw.api.lori.server.type.ConflictType
 import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
@@ -490,20 +492,23 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.bookmarkTemplateDB.deletePairsByTemplateId(templateId)
 
-    fun applyAllTemplates(): Map<Int, List<String>> =
+    fun applyAllTemplates(): Map<Int, Pair<List<String>, List<ConflictError>>> =
         dbConnector.rightDB.getAllTemplateIds()
             .let { applyTemplates(it) }
 
-    fun applyTemplates(templateIds: List<Int>): Map<Int, List<String>> =
+    fun applyTemplates(templateIds: List<Int>): Map<Int, Pair<List<String>, List<ConflictError>>> =
         templateIds.associateWith { templateId ->
             applyTemplate(templateId)
         }
 
-    internal fun applyTemplate(templateId: Int): List<String> {
+    internal fun applyTemplate(templateId: Int): Pair<List<String>, List<ConflictError>> {
         // Get Right_Id
         val right: ItemRight =
-            dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return emptyList()
-        val rightId = right.rightId ?: throw InternalError("A RightId is missing for $right")
+            dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return Pair(
+                emptyList(),
+                emptyList()
+            )
+        val rightId = right.rightId ?: throw InternalError("RightId is missing for $right")
         // Receive all bookmark ids
         val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
         // Get search results for each bookmark
@@ -536,14 +541,18 @@ class LoriServerBackend(
 
         // Update last_applied_on field
         dbConnector.rightDB.updateAppliedOnByTemplateId(templateId)
+
         // Connect Template to all results
-        return searchResults.map { result ->
+        val itemsWithConflicts: Pair<Set<Item>, List<ConflictError>> = findItemsWithConflicts(searchResults, right)
+        val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.first)
+        val appliedMetadataIds = searchResultsWithoutConflict.map { result ->
             dbConnector.itemDB.insertItem(
                 metadataId = result.metadata.metadataId,
                 rightId = rightId,
             )
             result.metadata.metadataId
         }
+        return Pair(appliedMetadataIds, itemsWithConflicts.second)
     }
 
     companion object {
@@ -629,6 +638,39 @@ class LoriServerBackend(
                 .getInstance(type)
                 .digest(input.toByteArray())
             return bytes.joinToString("") { "%02x".format(it) }
+        }
+
+        fun findItemsWithConflicts(
+            searchResults: Set<Item>,
+            right: ItemRight
+        ): Pair<Set<Item>, List<ConflictError>> {
+            val conflictErrors = emptyList<ConflictError>().toMutableList()
+            val conflictingItems: Set<Item> = searchResults.toList().filter { item ->
+                val rights = item.rights
+                rights.map { r ->
+                    if (r.rightId == right.rightId) {
+                        false
+                    } else {
+                        val hasConflict = checkForDateConflict(r, right)
+                        if (hasConflict) {
+                            conflictErrors.add(
+                                ConflictError(
+                                    templateIdApplied = right.templateId ?: -1,
+                                    conflictWithMetadataId = item.metadata.metadataId,
+                                    conflictType = ConflictType.DATE_OVERLAP,
+                                    conflictWithRightId = right.rightId ?: "Unknown",
+                                    message = "Start/End-date conflict: Template id ${right.templateId} overlaps" +
+                                        " with right id ${right.rightId} which is connected to metadata id ${item.metadata.metadataId}",
+                                )
+                            )
+                            true
+                        } else {
+                            false
+                        }
+                    }
+                }.any { it }
+            }.toSet()
+            return Pair(conflictingItems, conflictErrors.toList())
         }
 
         fun checkForDateConflict(r1: ItemRight, r2: ItemRight): Boolean {
