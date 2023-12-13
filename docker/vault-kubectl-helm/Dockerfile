@@ -1,6 +1,6 @@
-FROM alpine:3.18.4 AS tools
+FROM alpine:3.19.0 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.6
+LABEL IMAGE_VERSION_TAG=0.9.7
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -9,7 +9,7 @@ RUN apk add --no-cache curl \
     jq
 
 FROM tools as vault
-ARG VAULT_VERSION=1.15.1
+ARG VAULT_VERSION=1.15.4
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -41,7 +41,7 @@ RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm
     chmod +x linux-amd64/helm && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
-ARG HELMFILE_VERSION=0.158.1
+ARG HELMFILE_VERSION=0.159.0
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     mkdir helmfile-v"$HELMFILE_VERSION" && tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz --directory helmfile-v"$HELMFILE_VERSION" && \
     chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
