@@ -1,6 +1,6 @@
 FROM alpine:3.19.0 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.3
+LABEL IMAGE_VERSION_TAG=0.9.4
 LABEL IMAGE_NAME=vault-terraform
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -9,7 +9,7 @@ RUN apk add --no-cache curl \
     jq
 
 FROM tools as vault
-ARG VAULT_VERSION=1.15.1
+ARG VAULT_VERSION=1.15.4
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
