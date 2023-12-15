@@ -569,12 +569,36 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 9, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 6, 1),
+                    endDate = LocalDate.of(2025, 9, 1),
+                ),
+                true,
+                "Invalid overlap. Start or end date match on one day",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 1),
                     endDate = LocalDate.of(2026, 9, 1),
                 ),
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2025, 3, 1),
                     endDate = LocalDate.of(2026, 6, 1),
+                ),
+                true,
+                "Invalid overlap. Start or end date match on one day",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 3, 1),
+                    endDate = LocalDate.of(2026, 6, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
                 ),
                 true,
                 "Invalid overlap. Start or end date match on one day",
@@ -593,6 +617,42 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 4, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 7, 1),
+                    endDate = LocalDate.of(2026, 8, 1),
+                ),
+                true,
+                "Invalid inner overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 7, 1),
+                    endDate = LocalDate.of(2026, 8, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 9, 1),
+                ),
+                true,
+                "Invalid inner overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 1),
                     endDate = null,
                 ),
@@ -605,12 +665,36 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 4, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = null,
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 1),
                     endDate = LocalDate.of(2026, 7, 1),
                 ),
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 2),
                     endDate = null
+                ),
+                true,
+                "Invalid overlap.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 2),
+                    endDate = null
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
                 ),
                 true,
                 "Invalid overlap.",
