@@ -4,6 +4,7 @@ import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
 import {
   RightRest,
+  TemplateApplicationErrorRest,
   TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import { useDialogsStore } from "@/stores/dialogs";
@@ -48,6 +49,10 @@ export default defineComponent({
      */
     const templateLoadError = ref(false);
     const templateLoadErrorMsg = ref("");
+    const templateApplyError = ref(false);
+    const templateApplyErrorMsg = ref("");
+    const templateApplyErrorNumber = ref(-1);
+    const templateApplyItemsApplied = ref(-1);
 
     /**
      * Template properties.
@@ -104,6 +109,20 @@ export default defineComponent({
             "' wurde für " +
             r.templateApplication[0].numberOfAppliedEntries +
             " Einträge angewandt.";
+          templateApplyItemsApplied.value = r.templateApplication.length;
+
+          // Check for errors
+          const errors: Array<TemplateApplicationErrorRest> =
+            r.templateApplication.flatMap((t) =>
+              t.errors != undefined ? t.errors : []
+            );
+          if (errors.length > 0) {
+            templateApplyError.value = true;
+            templateApplyErrorMsg.value = errors
+              .map((err) => err.message)
+              .join("\n");
+            templateApplyErrorNumber.value = errors.length;
+          }
           updateTemplateOverview();
         })
         .catch((e) => {
@@ -112,6 +131,10 @@ export default defineComponent({
             templateLoadError.value = true;
           });
         });
+    };
+
+    const closeApplyErrorMsg = () => {
+      templateApplyError.value = false;
     };
 
     /**
@@ -176,6 +199,10 @@ export default defineComponent({
       isNew,
       reinitCounter,
       renderKey,
+      templateApplyError,
+      templateApplyErrorMsg,
+      templateApplyErrorNumber,
+      templateApplyItemsApplied,
       templateLoadError,
       templateLoadErrorMsg,
       templateItems,
@@ -183,6 +210,7 @@ export default defineComponent({
       childTemplateAdded,
       childTemplateDeleted,
       childTemplateUpdated,
+      closeApplyErrorMsg,
       closeTemplateEditDialog,
       createNewTemplate,
       editTemplate,
@@ -204,6 +232,31 @@ export default defineComponent({
       <v-alert v-model="templateLoadError" dismissible text type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>
+      <v-dialog v-model="templateApplyError" max-width="1000">
+        <v-card>
+          <v-card-title class="text-h5"
+            >Template Anwendung (teilweise) fehlgeschlagen</v-card-title
+          >
+          <v-card-text>
+            Templates angewandt: {{ templateApplyItemsApplied }}<br />
+            Anzahl Fehler: {{ templateApplyErrorNumber }}<br />
+            Details zu den Fehlern:
+            <v-textarea
+              :value="templateApplyErrorMsg"
+              readonly
+              background-color="red lighten-4"
+              color="black"
+            >
+            </v-textarea>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn small color="primary" dark @click="closeApplyErrorMsg">
+              OK
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-card-title>Template Übersicht</v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>

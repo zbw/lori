@@ -659,8 +659,9 @@ class LoriServerBackend(
                                     conflictWithMetadataId = item.metadata.metadataId,
                                     conflictType = ConflictType.DATE_OVERLAP,
                                     conflictWithRightId = right.rightId ?: "Unknown",
-                                    message = "Start/End-date conflict: Template id ${right.templateId} overlaps" +
-                                        " with right id ${right.rightId} which is connected to metadata id ${item.metadata.metadataId}",
+                                    message = "Start/End-Datum Konflikt: Template-ID ${right.templateId} steht im Widerspruch" +
+                                        " zur Rechte-ID ${right.rightId}, welche an die Metadata-ID ${item.metadata.metadataId}" +
+                                        " angebunden ist.",
                                 )
                             )
                             true
@@ -681,6 +682,10 @@ class LoriServerBackend(
             } else if (r2.endDate == null) {
                 r1.endDate > r2.startDate
             } else if (r1.endDate >= r2.startDate && r1.endDate <= r2.endDate) {
+                true
+            } else if (r1.startDate >= r2.startDate && r1.startDate < r2.endDate) {
+                true
+            } else if (r2.startDate >= r1.startDate && r2.startDate < r1.endDate) {
                 true
             } else r1.startDate <= r2.endDate && r1.startDate >= r2.startDate
         }
