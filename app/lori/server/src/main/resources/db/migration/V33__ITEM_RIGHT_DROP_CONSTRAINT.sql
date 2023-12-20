@@ -1,0 +1,1 @@
+ALTER TABLE item_right DROP CONSTRAINT item_right_template_id_key CASCADE;

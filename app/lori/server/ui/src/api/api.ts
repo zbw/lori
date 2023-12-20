@@ -94,7 +94,8 @@ export default {
     filterValidOn: string | undefined,
     filterPaketSigel: string | undefined,
     filterZDBId: string | undefined,
-    filterNoRightInformation: string | undefined
+    filterNoRightInformation: string | undefined,
+    filterTemplateId: string | undefined
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -112,6 +113,7 @@ export default {
       filterPaketSigel: filterPaketSigel,
       filterZDBId: filterZDBId,
       filterNoRightInformation: filterNoRightInformation,
+      filterTemplateId: filterTemplateId,
     });
   },
 };

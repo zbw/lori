@@ -12,6 +12,7 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.TemplateIdFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -376,6 +377,11 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterNoRightInformation"]
                         )
 
+                    val templateIdFilter: TemplateIdFilter? =
+                        QueryParameterParser.parseTemplateIdFilter(
+                            call.request.queryParameters["filterTemplateId"]
+                        )
+
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
@@ -433,6 +439,7 @@ fun Routing.itemRoutes(
                         startDateFilter,
                         temporalValidityFilter,
                         validOnFilter,
+                        templateIdFilter,
                     )
 
                     val queryResult: SearchQueryResult = backend.searchQuery(

@@ -233,6 +233,15 @@ class QueryParameterParserTest {
         assertNotNull(QueryParameterParser.parseNoRightInformationFilter("TRUE"))
     }
 
+    @Test
+    fun testParseTemplateIdFilter() {
+        assertNull(QueryParameterParser.parseTemplateIdFilter("555nase"))
+        assertThat(
+            QueryParameterParser.parseTemplateIdFilter("555")!!.templateId,
+            `is`(555)
+        )
+    }
+
     companion object {
         const val DATA_FOR_PARSE_ACCESS_STATE = "DATA_FOR_PARSE_ACCESS_STATE"
         const val DATA_FOR_PARSE_PUBLICATION_DATE = "DATA_FOR_PARSE_PUBLICATION_DATE"
