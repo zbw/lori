@@ -22,7 +22,6 @@ import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
-import kotlin.math.max
 
 /**
  * Backend for the Lori-Server.
@@ -408,31 +407,6 @@ class LoriServerBackend(
     ): List<Bookmark> {
         val bookmarkIds = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-    }
-
-    fun getSearchResultsByTemplateId(
-        templateId: Int,
-        limit: Int,
-        offset: Int,
-    ): SearchQueryResult {
-        // Receive all Bookmarks linked to given Template
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
-        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-        var tmpLimit = limit
-        var tmpOffset = offset
-        // Execute search for each bookmark
-        val searchResults: List<SearchQueryResult> = bookmarks.asSequence().map { b ->
-            val result = getSearchResultsByBookmark(
-                bookmark = b,
-                limit = tmpLimit,
-                offset = tmpOffset,
-            )
-            tmpLimit = max(0, tmpLimit - result.results.size)
-            tmpOffset = max(0, tmpOffset - result.numberOfResults)
-            result
-        }.toList()
-        // Combine results into one data structure
-        return SearchQueryResult.reduceResults(searchResults)
     }
 
     private fun getSearchResultsByBookmark(

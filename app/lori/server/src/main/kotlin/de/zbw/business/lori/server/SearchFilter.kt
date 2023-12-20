@@ -259,6 +259,21 @@ class EndDateFilter(
     }
 }
 
+class TemplateIdFilter(
+    val templateId: Int,
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_TEMPLATE_ID) {
+    override fun toWhereClause(): String =
+        "$dbColumnName = ?"
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        preparedStatement.setInt(counter, templateId)
+        return counter + 1
+    }
+
+    override fun toString(): String =
+        templateId.toString()
+}
+
 class FormalRuleFilter(
     val formalRules: List<FormalRule>,
 ) : RightSearchFilter("") {

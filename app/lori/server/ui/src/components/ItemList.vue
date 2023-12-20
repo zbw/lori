@@ -224,17 +224,30 @@ export default defineComponent({
       alertMsg.value =
         "Alle gespeicherten Suchen für Template-ID " +
         templateId +
-        " wurden ausgeführt. Es kann zu Doppelungen in den Suchergebnissen kommen.";
+        " wurden ausgeführt.";
       alertIsActive.value = true;
       executeSearchByTemplateId();
     };
 
     const executeSearchByTemplateId = () => {
-      templateApi
-        .getItemsByTemplateId(
-          currentTemplateId.value,
-          pageSize.value,
-          (currentPage.value - 1) * pageSize.value
+      api
+        .searchQuery(
+          "",
+          (currentPage.value - 1) * pageSize.value, // offset
+          pageSize.value, // limit
+          currentPage.value,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          currentTemplateId.value.toString() // templateId
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -298,7 +311,8 @@ export default defineComponent({
           searchquerybuilder.buildValidOnFilter(searchStore),
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
-          searchquerybuilder.buildNoRightInformation(searchStore)
+          searchquerybuilder.buildNoRightInformation(searchStore),
+          undefined
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);

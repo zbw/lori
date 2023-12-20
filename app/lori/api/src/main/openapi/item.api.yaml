@@ -341,6 +341,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterTemplateId
+        in: query
+        schema:
+          type: string
 
     responses:
       200:

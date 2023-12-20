@@ -7,7 +7,6 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.RightRest
@@ -205,45 +204,6 @@ fun Routing.templateRoutes(
                         val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
                         span.setStatus(StatusCode.OK)
                         call.respond(bookmarks.map { it.toRest() })
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
-
-        get("{id}/bookmarks/entries") {
-            val span =
-                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks/entries")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateId = call.parameters["id"]?.toInt()
-                    val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
-                    val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
-                    span.setAttribute("templateId", templateId?.toString() ?: "null")
-                    span.setAttribute("limit", limit.toString())
-                    span.setAttribute("offset", offset.toString())
-                    if (templateId == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                    } else {
-                        val result: SearchQueryResult = backend.getSearchResultsByTemplateId(
-                            templateId = templateId,
-                            limit = limit,
-                            offset = offset,
-                        )
-                        span.setStatus(StatusCode.OK)
-                        call.respond(
-                            result.toRest(limit)
-                        )
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")

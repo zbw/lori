@@ -366,7 +366,7 @@ class BookmarkRoutesKtTest {
     fun testPutBookmarkRawInternalError() {
         // given
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId!!, any()) } throws SQLException()
+            every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } throws SQLException()
         }
         val servicePool = getServicePool(backend)
         // when + then

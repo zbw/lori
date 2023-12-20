@@ -81,6 +81,7 @@ class DatabaseConnector(
         const val COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = "restricted_open_content_licence"
         const val COLUMN_RIGHT_ID = "right_id"
         const val COLUMN_RIGHT_START_DATE = "start_date"
+        const val COLUMN_RIGHT_TEMPLATE_ID = "template_id"
         const val COLUMN_RIGHT_ZBW_USER_AGREEMENT = "zbw_user_agreement"
 
         fun Timestamp.toOffsetDateTime(): OffsetDateTime =
