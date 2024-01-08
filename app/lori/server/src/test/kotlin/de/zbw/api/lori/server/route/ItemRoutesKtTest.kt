@@ -756,7 +756,6 @@ class ItemRoutesKtTest {
             sqlPassword = "postgres",
             sqlUrl = "jdbc:someurl",
             digitalArchiveAddress = "https://archiveaddress",
-            digitalArchiveCommunity = listOf("5678"),
             digitalArchiveUsername = "testuser",
             digitalArchivePassword = "password",
             digitalArchiveBasicAuth = "basicauth",

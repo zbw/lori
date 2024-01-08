@@ -119,7 +119,6 @@ class ServicePoolWithProbesTest {
             sqlUser = "postgres",
             sqlPassword = "postgres",
             digitalArchiveAddress = "https://archiveaddress",
-            digitalArchiveCommunity = listOf("5678"),
             digitalArchiveUsername = "testuser",
             digitalArchivePassword = "password",
             digitalArchiveBasicAuth = "basicauth",

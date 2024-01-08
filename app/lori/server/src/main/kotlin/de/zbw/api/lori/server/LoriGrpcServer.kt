@@ -48,7 +48,8 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val token = daConnector.login()
-                val imports = runImports(config.digitalArchiveCommunity, token)
+                val communityIds = daConnector.getAllCommunityIds(token)
+                val imports = runImports(communityIds, token)
                 FullImportResponse
                     .newBuilder()
                     .setItemsImported(imports)
@@ -109,15 +110,15 @@ class LoriGrpcServer(
         }
     }
 
-    private suspend fun runImports(communities: List<String>, token: String): Int {
+    private suspend fun runImports(communityIds: List<Int>, token: String): Int {
         val semaphore = Semaphore(3)
         val mutex = Mutex()
         var importCount = 0
         coroutineScope {
             launch(Dispatchers.IO) {
-                repeat(communities.size) {
+                repeat(communityIds.size) {
                     semaphore.acquire()
-                    val imports = importCommunity(token, communities[it])
+                    val imports = importCommunity(token, communityIds[it])
                     mutex.withLock {
                         importCount += imports
                     }
@@ -128,7 +129,7 @@ class LoriGrpcServer(
         return importCount
     }
 
-    private suspend fun importCommunity(token: String, communityId: String): Int {
+    private suspend fun importCommunity(token: String, communityId: Int): Int {
         LOG.info("Start importing community $communityId")
         val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
         val import = daConnector.startFullImport(token, daCommunity)
