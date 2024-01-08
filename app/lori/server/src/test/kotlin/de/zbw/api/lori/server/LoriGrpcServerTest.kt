@@ -124,8 +124,7 @@ class LoriGrpcServerTest {
             // given
             val token = "SOME_TOKEN"
             val importsPerCommunity = 3
-            val communityIds = listOf("4", "6")
-
+            val communityIds = listOf("4")
             val community = DACommunity(
                 id = 5,
                 name = "Some name",
@@ -151,6 +150,7 @@ class LoriGrpcServerTest {
             val importer = mockk<DAConnector> {
                 coEvery { login() } returns token
                 coEvery { getCommunity(token, any()) } returns community
+                coEvery { getAllCommunityIds(token) } returns listOf(community.id)
                 coEvery { startFullImport(token, any()) } returns listOf(importsPerCommunity)
             }
 
@@ -161,9 +161,7 @@ class LoriGrpcServerTest {
             val request = FullImportRequest.getDefaultInstance()
             // when
             val response = LoriGrpcServer(
-                mockk() {
-                    every { digitalArchiveCommunity } returns communityIds
-                },
+                mockk(),
                 mockk(),
                 importer,
                 tracer,

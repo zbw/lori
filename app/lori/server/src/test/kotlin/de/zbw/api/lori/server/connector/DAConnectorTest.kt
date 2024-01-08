@@ -86,7 +86,6 @@ class DAConnectorTest {
             val daConnector = DAConnector(
                 config = mockk() {
                     every { digitalArchiveAddress } returns "http://primula-qs.zbw-nett.zbw-kiel.de/econis-archiv"
-                    every { digitalArchiveCommunity } returns listOf("240")
                     every { digitalArchiveBasicAuth } returns "pw"
                 },
                 engine = mockEngine,
@@ -95,7 +94,7 @@ class DAConnectorTest {
             val expected = TEST_COMMUNITY
 
             // when
-            val received = daConnector.getCommunity("sometoken", "240")
+            val received = daConnector.getCommunity("sometoken", 240)
 
             // then
             assertThat(received, `is`(expected))

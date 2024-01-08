@@ -21,7 +21,6 @@ data class LoriConfiguration(
     val sqlPassword: String,
     val digitalArchiveAddress: String,
     val digitalArchiveBasicAuth: String,
-    val digitalArchiveCommunity: List<String>,
     val digitalArchiveUsername: String,
     val digitalArchivePassword: String,
     val jwtSecret: String,
@@ -43,7 +42,6 @@ data class LoriConfiguration(
             val sqlUser = KonfigDeclaration.string(prefix, "sql", "user").required()
             val sqlPassword = KonfigDeclaration.string(prefix, "sql", "password").secret().required()
             val digitalArchiveAddress = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "address").required()
-            val digitalArchiveCommunity = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "community").required()
             val digitalArchiveBasicAuth = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "basicauth").required()
             val digitalArchiveUsername = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "user").required()
             val digitalArchivePassword = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "credentials", "password").secret().required()
@@ -58,7 +56,6 @@ data class LoriConfiguration(
                 sqlUser = source[sqlUser],
                 sqlPassword = source[sqlPassword],
                 digitalArchiveAddress = source[digitalArchiveAddress],
-                digitalArchiveCommunity = source[digitalArchiveCommunity].split(","),
                 digitalArchiveUsername = source[digitalArchiveUsername],
                 digitalArchivePassword = source[digitalArchivePassword],
                 digitalArchiveBasicAuth = source[digitalArchiveBasicAuth],

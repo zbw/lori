@@ -64,7 +64,22 @@ class DAConnector(
         return statement.bodyAsText()
     }
 
-    suspend fun getCommunity(loginToken: String, community: String): DACommunity {
+    suspend fun getAllCommunityIds(loginToken: String): List<Int> {
+        val response = client.request("$restURL/communities") {
+            method = HttpMethod.Get
+            headers {
+                append(HttpHeaders.Accept, "text/json")
+                append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
+            }
+            headers {
+                append(DSPACE_TOKEN, loginToken)
+            }
+            parameter("expand", "all")
+        }.body<List<DACommunity>>()
+        return response.map { it.id }
+    }
+
+    suspend fun getCommunity(loginToken: String, community: Int): DACommunity {
         val response = client.request("$restURL/communities/$community") {
             method = HttpMethod.Get
             headers {
