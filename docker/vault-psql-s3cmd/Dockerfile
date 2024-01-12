@@ -1,6 +1,6 @@
 FROM alpine:3.19.0 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.1
+LABEL IMAGE_VERSION_TAG=1.0.0
 LABEL IMAGE_NAME=vault-psql-s3cmd
 LABEL OTC_STAGE=zbw-dev-nl
 
@@ -17,7 +17,7 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     rm vault*
 
 FROM vault AS s3cmd
-ARG S3CMD_VERSION=2.3.0-r3
+ARG S3CMD_VERSION=2.4.0-r0
 RUN apk add --no-cache s3cmd="$S3CMD_VERSION"
 
 FROM s3cmd AS psql

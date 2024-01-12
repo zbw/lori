@@ -1,6 +1,6 @@
 FROM alpine:3.19.0 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.7
+LABEL IMAGE_VERSION_TAG=1.0.0
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -29,19 +29,19 @@ RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L
     apk del make
 
 FROM gitcrypt AS kubectl
-ARG KUBECTL_VERSION=1.26.10
+ARG KUBECTL_VERSION=1.26.12
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECTL_VERSION"/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
 FROM kubectl AS helm
-ARG HELM_VERSION=3.13.2
+ARG HELM_VERSION=3.13.3
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     chmod +x linux-amd64/helm && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
-ARG HELMFILE_VERSION=0.159.0
+ARG HELMFILE_VERSION=0.160.0
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     mkdir helmfile-v"$HELMFILE_VERSION" && tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz --directory helmfile-v"$HELMFILE_VERSION" && \
     chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
