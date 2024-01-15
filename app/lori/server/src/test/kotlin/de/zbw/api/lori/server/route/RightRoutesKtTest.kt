@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.AccessStateRest
@@ -339,6 +340,7 @@ class RightRoutesKtTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            duoSenderEntityId = "someId",
         )
 
         val TEST_RIGHT = RightRest(
@@ -411,7 +413,10 @@ class RightRoutesKtTest {
         fun jsonAsString(any: Any): String = GSON.toJson(any)
         val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
-        fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(
+        fun getServicePool(
+            backend: LoriServerBackend,
+            samlUtils: SamlUtils = mockk(),
+        ) = ServicePoolWithProbes(
             services = listOf(
                 mockk {
                     every { isReady() } returns true
@@ -421,6 +426,7 @@ class RightRoutesKtTest {
             config = CONFIG,
             backend = backend,
             tracer = tracer,
+            samlUtils = samlUtils,
         )
     }
 }

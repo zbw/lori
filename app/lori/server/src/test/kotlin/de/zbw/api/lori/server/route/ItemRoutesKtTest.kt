@@ -486,6 +486,7 @@ class ItemRoutesKtTest {
             config = CONFIG,
             backend = mockk(),
             tracer = tracer,
+            samlUtils = mockk(),
         )
         // when + then
         testApplication {
@@ -763,6 +764,7 @@ class ItemRoutesKtTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            duoSenderEntityId = "someId",
         )
 
         val ITEM_METADATA = MetadataRest(
@@ -814,6 +816,7 @@ class ItemRoutesKtTest {
             config = CONFIG,
             backend = backend,
             tracer = tracer,
+            samlUtils = mockk(),
         )
     }
 }

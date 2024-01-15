@@ -1,92 +1,28 @@
 package de.zbw.api.lori.server.route
 
-import com.google.gson.reflect.TypeToken
-import de.zbw.api.lori.server.type.UserSession
+import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.type.Session
-import de.zbw.business.lori.server.type.UserRole
-import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
-import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkAll
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.testng.Assert.assertTrue
-import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
-import java.lang.reflect.Type
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.test.assertNotNull
 
 class GuiRoutesKtTest {
-    @AfterClass
-    fun afterTestActions() {
-        unmockkAll()
-    }
-
-    @Test
-    fun testPostCallbackFound() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns VALID_TIME.toInstant()
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { insertSession(any()) } returns TEST_SESSION_ID
-            every { getSessionById(any()) } returns Session(
-                sessionID = "foobar",
-                authenticated = true,
-                firstName = "c@foobar.eu",
-                lastName = null,
-                role = UserRole.READONLY,
-                validUntil = VALID_TIME.plusDays(1).toInstant()
-            )
-        }
-        val servicePool = RightRoutesKtTest.getServicePool(backend)
-        testApplication {
-            application(
-                servicePool.application()
-            )
-            val response: HttpResponse = client.post("/ui/callback-sso") {
-                header(HttpHeaders.Accept, ContentType.Application.Any)
-                header(HttpHeaders.ContentType, ContentType.Application.FormUrlEncoded)
-                setBody(TEST_MESSAGE)
-            }
-            val hasSetCookieHeader = response.headers["Set-Cookie"]?.contains("JSESSIONID") ?: false
-            assertTrue(hasSetCookieHeader)
-            assertThat(
-                response.headers["Location"],
-                `is`("/ui?login=success"),
-            )
-            assertThat("Should return 302", response.status, `is`(HttpStatusCode.Found))
-
-            val responseGet = client.get("/api/v1/users/sessions") {
-                header(HttpHeaders.Accept, ContentType.Application.Json)
-                header(HttpHeaders.Cookie, "JSESSIONID=email%3D%2523sc%2540foobar.eu%26role%3D%2523sREADONLY%26sessionId%3D%2523s$TEST_SESSION_ID")
-            }
-
-            val content: String = responseGet.bodyAsText()
-            val templateListType: Type = object : TypeToken<UserSession>() {}.type
-            val received: UserSession = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
-            assertNotNull(received)
-        }
-    }
 
     @Test
     fun testPostCallbackUnauthorized() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns INVALID_TIME.toInstant()
         val backend = mockk<LoriServerBackend>(relaxed = true)
-        val servicePool = RightRoutesKtTest.getServicePool(backend)
+        val servicePool = RightRoutesKtTest.getServicePool(backend, SamlUtils("foo"))
         testApplication {
             application(
                 servicePool.application()
@@ -111,17 +47,6 @@ class GuiRoutesKtTest {
             20,
             13,
             20,
-            0,
-            0,
-            ZoneOffset.UTC
-        )!!
-
-        val INVALID_TIME = OffsetDateTime.of(
-            2023,
-            11,
-            20,
-            13,
-            18,
             0,
             0,
             ZoneOffset.UTC

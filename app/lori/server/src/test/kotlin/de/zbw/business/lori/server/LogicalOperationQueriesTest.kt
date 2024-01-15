@@ -8,9 +8,11 @@ import de.zbw.persistence.lori.server.ItemDBTest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -64,6 +66,11 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         getInitialMetadata().forEach {
             backend.insertMetadataElement(it)
         }
+    }
+
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
     }
 
     @DataProvider(name = DATA_FOR_LOGIC_OP)

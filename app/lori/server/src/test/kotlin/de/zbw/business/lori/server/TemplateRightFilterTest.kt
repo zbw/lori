@@ -10,9 +10,11 @@ import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
 import java.time.Instant
@@ -65,6 +67,11 @@ class TemplateRightFilterTest : DatabaseTest() {
                 backend.insertItemEntry(entry.key.metadataId, r)
             }
         }
+    }
+
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
     }
 
     @Test
