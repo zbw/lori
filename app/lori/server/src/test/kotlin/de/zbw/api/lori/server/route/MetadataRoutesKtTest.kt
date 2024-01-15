@@ -493,6 +493,7 @@ class MetadataRoutesKtTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            duoSenderEntityId = "someId",
         )
 
         val TEST_METADATA = MetadataRest(

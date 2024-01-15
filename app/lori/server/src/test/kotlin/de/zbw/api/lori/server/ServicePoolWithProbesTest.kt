@@ -91,6 +91,7 @@ class ServicePoolWithProbesTest {
                 config = TEST_CONFIG,
                 backend = mockk(),
                 tracer = mockk(),
+                samlUtils = mockk(),
             )
         ) {
             every { getHttpServer() } returns serverMock
@@ -126,6 +127,7 @@ class ServicePoolWithProbesTest {
             jwtIssuer = "0.0.0.0:8080",
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
+            duoSenderEntityId = "someId",
         )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
@@ -139,6 +141,7 @@ class ServicePoolWithProbesTest {
             config = TEST_CONFIG,
             backend = backend,
             tracer = tracer,
+            samlUtils = mockk(),
         )
     }
 }

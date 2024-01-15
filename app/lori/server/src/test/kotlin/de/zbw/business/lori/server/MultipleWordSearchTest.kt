@@ -9,9 +9,11 @@ import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -48,6 +50,11 @@ class MultipleWordSearchTest : DatabaseTest() {
         getInitialMetadata().forEach {
             backend.insertMetadataElement(it)
         }
+    }
+
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
     }
 
     @DataProvider(name = DATA_FOR_MULTIPLE_WORDS)

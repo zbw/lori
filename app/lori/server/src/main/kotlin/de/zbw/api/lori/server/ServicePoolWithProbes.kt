@@ -17,6 +17,7 @@ import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
 import de.zbw.api.lori.server.route.templateRoutes
 import de.zbw.api.lori.server.route.usersRoutes
+import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.UserRole
@@ -59,6 +60,7 @@ class ServicePoolWithProbes(
     val config: LoriConfiguration,
     private val backend: LoriServerBackend,
     private val tracer: Tracer,
+    private val samlUtils: SamlUtils = SamlUtils(backend.config.duoSenderEntityId),
 ) : ServiceLifecycle() {
 
     private var server: NettyApplicationEngine = embeddedServer(
@@ -187,7 +189,7 @@ class ServicePoolWithProbes(
             bookmarkRoutes(backend, tracer)
             bookmarkTemplateRoutes(backend, tracer)
             groupRoutes(backend, tracer)
-            guiRoutes(backend, tracer)
+            guiRoutes(backend, tracer, samlUtils)
             itemRoutes(backend, tracer)
             metadataRoutes(backend, tracer)
             rightRoutes(backend, tracer)
