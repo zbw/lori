@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
@@ -124,7 +125,6 @@ class BookmarkDB(
     }
 
     companion object {
-        private const val TABLE_NAME_BOOKMARK = "bookmark"
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
 
         const val STATEMENT_GET_BOOKMARKS = "SELECT " +
@@ -168,7 +168,7 @@ class BookmarkDB(
             "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
             "filter_no_right_information,filter_publication_type" +
             " FROM $TABLE_NAME_BOOKMARK" +
-            " ORDER BY $COLUMN_BOOKMARK_ID ASC LIMIT ? OFFSET ?;"
+            " ORDER BY $COLUMN_BOOKMARK_ID LIMIT ? OFFSET ?;"
 
         private fun extractBookmark(rs: ResultSet): Bookmark =
             Bookmark(

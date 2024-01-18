@@ -43,6 +43,7 @@ class DatabaseConnector(
     internal val searchDB: SearchDB = SearchDB(connection, tracer),
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connection, tracer),
     internal val userDB: UserDB = UserDB(connection, tracer),
+    internal val rightErrorDB: RightErrorDB = RightErrorDB(connection, tracer),
 ) {
     constructor(
         config: LoriConfiguration,
@@ -61,10 +62,12 @@ class DatabaseConnector(
     }
 
     companion object {
+        const val TABLE_NAME_BOOKMARK = "bookmark"
         const val TABLE_NAME_ITEM = "item"
         const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         const val TABLE_NAME_ITEM_RIGHT = "item_right"
         const val TABLE_NAME_SESSIONS = "sessions"
+        const val TABLE_NAME_RIGHT_ERROR = "right_error"
 
         const val COLUMN_METADATA_ID = "metadata_id"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"

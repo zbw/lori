@@ -340,7 +340,7 @@ fun Routing.bookmarkRoutes(
                                 ErrorRest(
                                     type = "/errors/badrequest",
                                     title = "Ungültiger Query Parameter.",
-                                    detail = "Der Limit Parameter muss zwischen 1 und 500 sein..",
+                                    detail = "Der Limit Parameter muss zwischen 1 und 200 sein.",
                                     status = "400",
                                 ),
                             )

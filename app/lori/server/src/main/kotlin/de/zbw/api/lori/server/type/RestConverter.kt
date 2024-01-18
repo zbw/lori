@@ -20,6 +20,7 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
@@ -36,6 +37,7 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
+import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
 import de.zbw.lori.model.TemplateApplicationErrorRest
@@ -512,6 +514,18 @@ fun ConflictType.toRest(): ConflictTypeRest =
         ConflictType.DATE_OVERLAP -> ConflictTypeRest.dateOverlap
         ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
     }
+
+fun RightError.toRest(): RightErrorRest =
+    RightErrorRest(
+        errorId = errorId,
+        conflictingRightId = conflictingRightId,
+        createdOn = createdOn,
+        description = description,
+        handleId = handleId,
+        metadataId = metadataId,
+        rightId = rightId,
+        conflictType = ConflictType.DATE_OVERLAP.toRest(), // TODO(CB: Add field to DB)
+    )
 
 /**
  * Utility functions helping to convert

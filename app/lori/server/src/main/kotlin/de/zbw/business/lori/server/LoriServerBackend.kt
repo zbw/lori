@@ -12,6 +12,7 @@ import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.lori.model.ErrorRest
@@ -409,32 +410,6 @@ class LoriServerBackend(
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
-    private fun getSearchResultsByBookmark(
-        bookmark: Bookmark,
-        limit: Int?,
-        offset: Int?,
-    ): SearchQueryResult =
-        searchQuery(
-            searchTerm = bookmark.searchPairs?.let { searchPairsToString(it) } ?: "",
-            limit = limit,
-            offset = offset,
-            metadataSearchFilter = listOfNotNull(
-                bookmark.paketSigelFilter,
-                bookmark.publicationDateFilter,
-                bookmark.publicationTypeFilter,
-                bookmark.zdbIdFilter,
-            ),
-            rightSearchFilter = listOfNotNull(
-                bookmark.accessStateFilter,
-                bookmark.temporalValidityFilter,
-                bookmark.validOnFilter,
-                bookmark.startDateFilter,
-                bookmark.endDateFilter,
-                bookmark.formalRuleFilter,
-            ),
-            noRightInformationFilter = bookmark.noRightInformationFilter,
-        )
-
     fun deleteBookmarkTemplatePair(
         templateId: Int,
         bookmarkId: Int,
@@ -528,6 +503,12 @@ class LoriServerBackend(
         }
         return Pair(appliedMetadataIds, itemsWithConflicts.second)
     }
+
+    /**
+     * Errors.
+     */
+    fun getRightErrorList(limit: Int, offset: Int): List<RightError> =
+        dbConnector.rightErrorDB.getErrorList(limit = limit, offset = offset)
 
     companion object {
         /**

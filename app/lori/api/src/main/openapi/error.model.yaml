@@ -1,0 +1,20 @@
+RightErrorRest:
+  type: object
+  properties:
+    conflictingRightId:
+      type: string
+    conflictType:
+      $ref: 'template.model.yaml#/ConflictTypeRest'
+    createdOn:
+      type: string
+      format: date-time
+    description:
+      type: string
+    errorId:
+      type: integer
+    handleId:
+      type: string
+    metadataId:
+      type: string
+    rightId:
+      type: string

@@ -1,0 +1,45 @@
+right-errors:
+  get:
+    tags:
+      - rightError
+    summary: Get list of right errors
+    operationId: getRightErrorList
+    parameters:
+      - name: offset
+        in: query
+        description: An offset.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: limit
+        in: query
+        description: "The number of errors to return."
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 200
+          default: 25
+        required: false
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'error.model.yaml#/RightErrorRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
