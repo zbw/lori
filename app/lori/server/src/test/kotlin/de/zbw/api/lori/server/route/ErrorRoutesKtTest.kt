@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.type.ConflictType
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.RightError
@@ -66,6 +67,7 @@ class ErrorRoutesKtTest {
             handleId = "somehandle",
             createdOn = NOW,
             metadataId = "metadataId",
+            conflictType = ConflictType.DATE_OVERLAP,
         )
     }
 }

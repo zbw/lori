@@ -5,5 +5,6 @@ create table right_error(
     right_id                text,
     conflicting_right_id    text,
     description             text,
-    created_on              timestamptz
+    created_on              timestamptz,
+    conflict_type           text
 );

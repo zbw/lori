@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server.type
 
+import de.zbw.api.lori.server.type.ConflictType
 import java.time.OffsetDateTime
 
 /**
@@ -11,6 +12,7 @@ import java.time.OffsetDateTime
  */
 data class RightError(
     val conflictingRightId: String?,
+    val conflictType: ConflictType?,
     val createdOn: OffsetDateTime?,
     val description: String?,
     val errorId: Int?,

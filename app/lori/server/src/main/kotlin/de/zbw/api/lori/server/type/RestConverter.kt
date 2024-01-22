@@ -524,7 +524,7 @@ fun RightError.toRest(): RightErrorRest =
         handleId = handleId,
         metadataId = metadataId,
         rightId = rightId,
-        conflictType = ConflictType.DATE_OVERLAP.toRest(), // TODO(CB: Add field to DB)
+        conflictType = conflictType?.toRest(),
     )
 
 /**

@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.api.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIGHT_ERROR
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -75,8 +76,8 @@ class RightErrorDB(
                     conflictingRightId = rs.getString(5),
                     description = rs.getString(6),
                     createdOn = rs.getTimestamp(7).toOffsetDateTime(),
+                    conflictType = ConflictType.valueOf(rs.getString(8)),
                 )
-
             } else null
         }.takeWhile { true }.toList()
     }
@@ -91,6 +92,7 @@ class RightErrorDB(
                     this.setString(4, rightError.conflictingRightId)
                     this.setString(5, rightError.description)
                     this.setTimestamp(6, Timestamp.from(Instant.now()))
+                    this.setString(7, rightError.conflictType.toString())
                 }
         val span = tracer.spanBuilder("insertRightError").startSpan()
         try {
@@ -108,6 +110,7 @@ class RightErrorDB(
 
     companion object {
         private const val COLUMN_CONFLICTING_WITH = "conflicting_right_id"
+        private const val COLUMN_CONFLICTING_TYPE = "conflict_type"
         private const val COLUMN_CREATED_ON = "created_on"
         private const val COLUMN_ERROR_ID = "error_id"
         private const val COLUMN_HANDLE_ID = "handle_id"
@@ -117,16 +120,17 @@ class RightErrorDB(
 
         const val STATEMENT_GET_RIGHT_LIST = "SELECT" +
             " $COLUMN_ERROR_ID,$COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID," +
-            "$COLUMN_CONFLICTING_WITH,$COLUMN_DESCRIPTION,$COLUMN_CREATED_ON" +
+            "$COLUMN_CONFLICTING_WITH,$COLUMN_DESCRIPTION,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE" +
             " FROM $TABLE_NAME_RIGHT_ERROR" +
             " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;"
 
-
         const val STATEMENT_INSERT_RIGHT_ERROR = "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
             "($COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID," +
-            "$COLUMN_CONFLICTING_WITH,$COLUMN_DESCRIPTION,$COLUMN_CREATED_ON)" +
+            "$COLUMN_CONFLICTING_WITH,$COLUMN_DESCRIPTION,$COLUMN_CREATED_ON," +
+            "$COLUMN_CONFLICTING_TYPE)" +
             " VALUES(?,?,?," +
-            "?,?,?)"
+            "?,?,?," +
+            "?)"
 
         const val STATEMENT_DELETE_ERROR_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_RIGHT_ERROR " +
