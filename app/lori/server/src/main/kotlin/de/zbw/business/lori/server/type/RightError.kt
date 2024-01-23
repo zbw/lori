@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server.type
 
-import de.zbw.api.lori.server.type.ConflictType
 import java.time.OffsetDateTime
 
 /**
@@ -14,9 +13,15 @@ data class RightError(
     val conflictingRightId: String?,
     val conflictType: ConflictType?,
     val createdOn: OffsetDateTime?,
-    val description: String?,
+    val message: String?,
     val errorId: Int?,
     val handleId: String?,
     val metadataId: String?,
-    val rightId: String?,
+    val rightIdSource: String?,
+    val templateIdSource: Int?,
 )
+
+enum class ConflictType {
+    DATE_OVERLAP,
+    UNSPECIFIED,
+}

@@ -1,11 +1,11 @@
 package de.zbw.business.lori.server
 
-import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.business.lori.server.LoriServerBackendTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest
@@ -90,7 +90,7 @@ class ApplyTemplateTest : DatabaseTest() {
             templateId = templateId,
         )
 
-        val received: Pair<List<String>, List<ConflictError>> = backend.applyTemplate(templateId)
+        val received: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
         assertThat(
             received.first,
             `is`(listOf(item1ZDB1.metadataId))
@@ -106,7 +106,7 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Repeat Apply Operation without duplicate entries errors
-        val received2: Pair<List<String>, List<ConflictError>> = backend.applyTemplate(templateId)
+        val received2: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
         assertThat(
             received2.first,
             `is`(listOf(item1ZDB1.metadataId))
@@ -123,7 +123,7 @@ class ApplyTemplateTest : DatabaseTest() {
         backend.upsertMetaData(listOf(item1ZDB1.copy(zdbId = "foobar")))
 
         // Apply Template
-        val received3: Pair<List<String>, List<ConflictError>> = backend.applyTemplate(templateId)
+        val received3: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
         assertThat(
             received3.first,
             `is`(
@@ -139,7 +139,7 @@ class ApplyTemplateTest : DatabaseTest() {
             `is`(2),
         )
 
-        val applyAllReceived: Map<Int, Pair<List<String>, List<ConflictError>>> = backend.applyAllTemplates()
+        val applyAllReceived: Map<Int, Pair<List<String>, List<RightError>>> = backend.applyAllTemplates()
         assertThat(
             applyAllReceived.values.map { it.first }.flatten().toSet(),
             `is`(
@@ -159,7 +159,7 @@ class ApplyTemplateTest : DatabaseTest() {
             bookmarkId = bookmarkId,
             templateId = templateIdConflict,
         )
-        val receivedConflict: Pair<List<String>, List<ConflictError>> = backend.applyTemplate(templateIdConflict)
+        val receivedConflict: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateIdConflict)
         assertThat(
             receivedConflict.second.size,
             `is`(2)

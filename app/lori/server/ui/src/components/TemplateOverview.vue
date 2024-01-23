@@ -3,8 +3,8 @@ import { defineComponent, onMounted, Ref, ref } from "vue";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
 import {
+  RightErrorRest,
   RightRest,
-  TemplateApplicationErrorRest,
   TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import { useDialogsStore } from "@/stores/dialogs";
@@ -112,10 +112,9 @@ export default defineComponent({
           templateApplyItemsApplied.value = r.templateApplication.length;
 
           // Check for errors
-          const errors: Array<TemplateApplicationErrorRest> =
-            r.templateApplication.flatMap((t) =>
-              t.errors != undefined ? t.errors : []
-            );
+          const errors: Array<RightErrorRest> = r.templateApplication.flatMap(
+            (t) => (t.errors != undefined ? t.errors : [])
+          );
           if (errors.length > 0) {
             templateApplyError.value = true;
             templateApplyErrorMsg.value = errors

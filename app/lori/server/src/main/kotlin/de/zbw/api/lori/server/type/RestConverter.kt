@@ -14,6 +14,7 @@ import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
@@ -40,7 +41,6 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.TemplateApplicationErrorRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
@@ -500,15 +500,6 @@ fun SearchQueryResult.toRest(
     )
 }
 
-fun ConflictError.toRest(): TemplateApplicationErrorRest =
-    TemplateApplicationErrorRest(
-        conflictType = this.conflictType.toRest(),
-        message = this.message,
-        templateIdApplied = this.templateIdApplied,
-        conflictWithMetadataId = this.conflictWithMetadataId,
-        conflictWithRightId = this.conflictWithRightId,
-    )
-
 fun ConflictType.toRest(): ConflictTypeRest =
     when (this) {
         ConflictType.DATE_OVERLAP -> ConflictTypeRest.dateOverlap
@@ -520,10 +511,11 @@ fun RightError.toRest(): RightErrorRest =
         errorId = errorId,
         conflictingRightId = conflictingRightId,
         createdOn = createdOn,
-        description = description,
+        message = message,
         handleId = handleId,
         metadataId = metadataId,
-        rightId = rightId,
+        rightIdSource = rightIdSource,
+        templateIdSource = templateIdSource,
         conflictType = conflictType?.toRest(),
     )
 

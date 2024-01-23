@@ -1,9 +1,9 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
-import de.zbw.api.lori.server.type.ConflictType
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.model.RightErrorRest
 import io.ktor.client.request.get
@@ -61,13 +61,14 @@ class ErrorRoutesKtTest {
         )!!
         val TEST_ERROR = RightError(
             errorId = 1,
-            description = "Timing conflict",
-            rightId = "sourceRightId",
+            message = "Timing conflict",
+            rightIdSource = "sourceRightId",
             conflictingRightId = "conflictingRightId",
             handleId = "somehandle",
             createdOn = NOW,
             metadataId = "metadataId",
             conflictType = ConflictType.DATE_OVERLAP,
+            templateIdSource = 5,
         )
     }
 }

@@ -1,6 +1,6 @@
 package de.zbw.persistence.lori.server
 
-import de.zbw.api.lori.server.type.ConflictType
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -69,13 +69,14 @@ class RightErrorDBTest : DatabaseTest() {
     companion object {
         val TEST_RIGHT_ERROR = RightError(
             errorId = null,
-            description = "Timing conflict",
-            rightId = "sourceRightId",
+            message = "Timing conflict",
+            rightIdSource = "sourceRightId",
             conflictingRightId = "conflictingRightId",
             handleId = "somehandle",
             createdOn = null,
             metadataId = "metadataId",
             conflictType = ConflictType.DATE_OVERLAP,
+            templateIdSource = 5,
         )
 
         val NOW: OffsetDateTime = OffsetDateTime.of(

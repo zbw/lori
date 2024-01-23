@@ -23,11 +23,15 @@ enum ConflictType {
 }
 
 message TemplateError {
-  string message = 1;
-  int32 template_id_applied = 2;
-  string conflict_with_metadata_id = 3;
-  string conflict_with_right_id = 4;
-  ConflictType conflict_type = 5;
+  int32 error_id = 1;
+  string message = 2;
+  int32 template_id_source = 3;
+  string right_id_source = 4;
+  string metadata_id = 5;
+  string handle_id = 6;
+  string conflicting_right_id = 7;
+  uint64 created_on = 8;
+  ConflictType conflict_type = 9;
 }
 
 message TemplateApplication {

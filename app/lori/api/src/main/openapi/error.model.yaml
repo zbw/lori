@@ -4,11 +4,11 @@ RightErrorRest:
     conflictingRightId:
       type: string
     conflictType:
-      $ref: 'template.model.yaml#/ConflictTypeRest'
+      $ref: 'error.model.yaml#/ConflictTypeRest'
     createdOn:
       type: string
       format: date-time
-    description:
+    message:
       type: string
     errorId:
       type: integer
@@ -16,5 +16,13 @@ RightErrorRest:
       type: string
     metadataId:
       type: string
-    rightId:
+    rightIdSource:
       type: string
+    templateIdSource:
+      type: integer
+
+ConflictTypeRest:
+  type: string
+  enum:
+    - date_overlap
+    - unspecified

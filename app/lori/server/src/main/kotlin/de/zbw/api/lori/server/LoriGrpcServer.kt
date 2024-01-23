@@ -2,9 +2,9 @@ package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
-import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
@@ -73,7 +73,7 @@ class LoriGrpcServer(
             .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val backendResponse: Map<Int, Pair<List<String>, List<ConflictError>>> = if (request.all) {
+                val backendResponse: Map<Int, Pair<List<String>, List<RightError>>> = if (request.all) {
                     daConnector.backend.applyAllTemplates()
                 } else {
                     daConnector.backend.applyTemplates(request.templateIdsList)
@@ -87,10 +87,14 @@ class LoriGrpcServer(
                         .addAllErrors(
                             e.value.second.map {
                                 TemplateError.newBuilder()
-                                    .setTemplateIdApplied(it.templateIdApplied)
+                                    .setErrorId(it.errorId ?: -1)
                                     .setMessage(it.message)
-                                    .setConflictWithMetadataId(it.conflictWithMetadataId)
-                                    .setConflictWithRightId(it.conflictWithRightId)
+                                    .setTemplateIdSource(it.templateIdSource ?: -1)
+                                    .setRightIdSource(it.rightIdSource)
+                                    .setMetadataId(it.metadataId)
+                                    .setHandleId(it.handleId)
+                                    .setConflictingRightId(it.conflictingRightId)
+                                    .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
                                     .build()
                             }
                         )
