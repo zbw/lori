@@ -9,6 +9,7 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.route.bookmarkRoutes
 import de.zbw.api.lori.server.route.bookmarkTemplateRoutes
+import de.zbw.api.lori.server.route.errorRoutes
 import de.zbw.api.lori.server.route.groupRoutes
 import de.zbw.api.lori.server.route.guiRoutes
 import de.zbw.api.lori.server.route.itemRoutes
@@ -188,6 +189,7 @@ class ServicePoolWithProbes(
             }
             bookmarkRoutes(backend, tracer)
             bookmarkTemplateRoutes(backend, tracer)
+            errorRoutes(backend, tracer)
             groupRoutes(backend, tracer)
             guiRoutes(backend, tracer, samlUtils)
             itemRoutes(backend, tracer)

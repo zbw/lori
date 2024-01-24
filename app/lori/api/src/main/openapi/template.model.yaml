@@ -25,31 +25,6 @@ TemplateIdsRest:
       items:
         type: integer
 
-ConflictTypeRest:
-  type: string
-  enum:
-    - date_overlap
-    - unspecified
-
-TemplateApplicationErrorRest:
-  required:
-    - templateIdApplied
-    - conflictWithMetadataId
-    - conflictWithRightId
-    - conflictType
-  type: object
-  properties:
-    conflictWithMetadataId:
-      type: string
-    conflictWithRightId:
-      type: string
-    templateIdApplied:
-      type: integer
-    message:
-      type: string
-    conflictType:
-      $ref: 'template.model.yaml#/ConflictTypeRest'
-
 TemplateApplicationRest:
   required:
     - metadataIds
@@ -68,7 +43,7 @@ TemplateApplicationRest:
     errors:
       type: array
       items:
-        $ref: 'template.model.yaml#/TemplateApplicationErrorRest'
+        $ref: 'error.model.yaml#/RightErrorRest'
 
 TemplateApplicationsRest:
   required:

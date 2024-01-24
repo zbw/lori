@@ -3,11 +3,11 @@ package de.zbw.api.lori.server.route
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
-import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
@@ -441,8 +441,8 @@ class TemplateRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every { applyTemplates(listOf(givenTemplateId)) } returns mapOf(givenTemplateId to Pair(expectedMetadataIds, emptyList()))
             every { applyAllTemplates() } returns listOf(
-                givenTemplateId to Pair(expectedMetadataIds, emptyList<ConflictError>()),
-                givenTemplateId2 to Pair(expectedMetadataIds, emptyList<ConflictError>())
+                givenTemplateId to Pair(expectedMetadataIds, emptyList<RightError>()),
+                givenTemplateId2 to Pair(expectedMetadataIds, emptyList<RightError>())
             ).toMap()
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)

@@ -14,12 +14,14 @@ import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.UserRole
 import de.zbw.lori.model.AccessStateRest
@@ -36,9 +38,9 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
+import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.TemplateApplicationErrorRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
@@ -498,20 +500,24 @@ fun SearchQueryResult.toRest(
     )
 }
 
-fun ConflictError.toRest(): TemplateApplicationErrorRest =
-    TemplateApplicationErrorRest(
-        conflictType = this.conflictType.toRest(),
-        message = this.message,
-        templateIdApplied = this.templateIdApplied,
-        conflictWithMetadataId = this.conflictWithMetadataId,
-        conflictWithRightId = this.conflictWithRightId,
-    )
-
 fun ConflictType.toRest(): ConflictTypeRest =
     when (this) {
         ConflictType.DATE_OVERLAP -> ConflictTypeRest.dateOverlap
         ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
     }
+
+fun RightError.toRest(): RightErrorRest =
+    RightErrorRest(
+        errorId = errorId,
+        conflictingRightId = conflictingRightId,
+        createdOn = createdOn,
+        message = message,
+        handleId = handleId,
+        metadataId = metadataId,
+        rightIdSource = rightIdSource,
+        templateIdSource = templateIdSource,
+        conflictType = conflictType?.toRest(),
+    )
 
 /**
  * Utility functions helping to convert

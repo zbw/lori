@@ -28,6 +28,8 @@ paths:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
   /bookmarktemplates/batch:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates-batch'
+  /errors/rights/list:
+    $ref: 'error.api.yaml#/right-errors'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
@@ -96,3 +98,5 @@ components:
       $ref: 'bookmark.model.yaml#/BookmarkRest'
     BookmarkRawRest:
       $ref: 'bookmark.model.yaml#/BookmarkRawRest'
+    RightErrorRest:
+      $ref: 'error.model.yaml#/RightErrorRest'

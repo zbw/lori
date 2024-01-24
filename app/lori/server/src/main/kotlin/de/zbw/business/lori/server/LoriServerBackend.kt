@@ -3,15 +3,15 @@ package de.zbw.business.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
-import de.zbw.api.lori.server.type.ConflictError
-import de.zbw.api.lori.server.type.ConflictType
 import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.lori.model.ErrorRest
@@ -22,6 +22,7 @@ import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
+import java.time.OffsetDateTime
 
 /**
  * Backend for the Lori-Server.
@@ -409,32 +410,6 @@ class LoriServerBackend(
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
-    private fun getSearchResultsByBookmark(
-        bookmark: Bookmark,
-        limit: Int?,
-        offset: Int?,
-    ): SearchQueryResult =
-        searchQuery(
-            searchTerm = bookmark.searchPairs?.let { searchPairsToString(it) } ?: "",
-            limit = limit,
-            offset = offset,
-            metadataSearchFilter = listOfNotNull(
-                bookmark.paketSigelFilter,
-                bookmark.publicationDateFilter,
-                bookmark.publicationTypeFilter,
-                bookmark.zdbIdFilter,
-            ),
-            rightSearchFilter = listOfNotNull(
-                bookmark.accessStateFilter,
-                bookmark.temporalValidityFilter,
-                bookmark.validOnFilter,
-                bookmark.startDateFilter,
-                bookmark.endDateFilter,
-                bookmark.formalRuleFilter,
-            ),
-            noRightInformationFilter = bookmark.noRightInformationFilter,
-        )
-
     fun deleteBookmarkTemplatePair(
         templateId: Int,
         bookmarkId: Int,
@@ -466,16 +441,16 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
         dbConnector.bookmarkTemplateDB.deletePairsByTemplateId(templateId)
 
-    fun applyAllTemplates(): Map<Int, Pair<List<String>, List<ConflictError>>> =
+    fun applyAllTemplates(): Map<Int, Pair<List<String>, List<RightError>>> =
         dbConnector.rightDB.getAllTemplateIds()
             .let { applyTemplates(it) }
 
-    fun applyTemplates(templateIds: List<Int>): Map<Int, Pair<List<String>, List<ConflictError>>> =
+    fun applyTemplates(templateIds: List<Int>): Map<Int, Pair<List<String>, List<RightError>>> =
         templateIds.associateWith { templateId ->
             applyTemplate(templateId)
         }
 
-    internal fun applyTemplate(templateId: Int): Pair<List<String>, List<ConflictError>> {
+    internal fun applyTemplate(templateId: Int): Pair<List<String>, List<RightError>> {
         // Get Right_Id
         val right: ItemRight =
             dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return Pair(
@@ -517,7 +492,8 @@ class LoriServerBackend(
         dbConnector.rightDB.updateAppliedOnByTemplateId(templateId)
 
         // Connect Template to all results
-        val itemsWithConflicts: Pair<Set<Item>, List<ConflictError>> = findItemsWithConflicts(searchResults, right)
+        val itemsWithConflicts: Pair<Set<Item>, List<RightError>> =
+            findItemsWithConflicts(searchResults, right, templateId)
         val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.first)
         val appliedMetadataIds = searchResultsWithoutConflict.map { result ->
             dbConnector.itemDB.insertItem(
@@ -526,8 +502,18 @@ class LoriServerBackend(
             )
             result.metadata.metadataId
         }
-        return Pair(appliedMetadataIds, itemsWithConflicts.second)
+        val errors = itemsWithConflicts.second.map { ce: RightError ->
+            val errorId = dbConnector.rightErrorDB.insertError(ce)
+            ce.copy(errorId = errorId)
+        }
+        return Pair(appliedMetadataIds, errors)
     }
+
+    /**
+     * Errors.
+     */
+    fun getRightErrorList(limit: Int, offset: Int): List<RightError> =
+        dbConnector.rightErrorDB.getErrorList(limit = limit, offset = offset)
 
     companion object {
         /**
@@ -616,9 +602,10 @@ class LoriServerBackend(
 
         fun findItemsWithConflicts(
             searchResults: Set<Item>,
-            right: ItemRight
-        ): Pair<Set<Item>, List<ConflictError>> {
-            val conflictErrors = emptyList<ConflictError>().toMutableList()
+            right: ItemRight,
+            templateId: Int
+        ): Pair<Set<Item>, List<RightError>> {
+            val conflictErrors = emptyList<RightError>().toMutableList()
             val conflictingItems: Set<Item> = searchResults.toList().filter { item ->
                 val rights = item.rights
                 rights.map { r ->
@@ -628,11 +615,15 @@ class LoriServerBackend(
                         val hasConflict = checkForDateConflict(r, right)
                         if (hasConflict) {
                             conflictErrors.add(
-                                ConflictError(
-                                    templateIdApplied = right.templateId ?: -1,
-                                    conflictWithMetadataId = item.metadata.metadataId,
+                                RightError(
+                                    templateIdSource = templateId,
+                                    metadataId = item.metadata.metadataId,
                                     conflictType = ConflictType.DATE_OVERLAP,
-                                    conflictWithRightId = right.rightId ?: "Unknown",
+                                    conflictingRightId = right.rightId ?: "Unknown",
+                                    createdOn = OffsetDateTime.now(),
+                                    errorId = null,
+                                    rightIdSource = null,
+                                    handleId = item.metadata.handle,
                                     message = "Start/End-Datum Konflikt: Template-ID ${right.templateId} steht im Widerspruch" +
                                         " zur Rechte-ID ${right.rightId}, welche an die Metadata-ID ${item.metadata.metadataId}" +
                                         " angebunden ist.",

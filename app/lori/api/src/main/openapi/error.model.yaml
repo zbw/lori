@@ -1,0 +1,28 @@
+RightErrorRest:
+  type: object
+  properties:
+    conflictingRightId:
+      type: string
+    conflictType:
+      $ref: 'error.model.yaml#/ConflictTypeRest'
+    createdOn:
+      type: string
+      format: date-time
+    message:
+      type: string
+    errorId:
+      type: integer
+    handleId:
+      type: string
+    metadataId:
+      type: string
+    rightIdSource:
+      type: string
+    templateIdSource:
+      type: integer
+
+ConflictTypeRest:
+  type: string
+  enum:
+    - date_overlap
+    - unspecified

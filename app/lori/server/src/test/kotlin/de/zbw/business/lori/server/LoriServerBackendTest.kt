@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server
 
-import de.zbw.api.lori.server.type.ConflictError
 import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -9,6 +8,7 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
@@ -834,9 +834,10 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedErrorCount: Int,
         reason: String,
     ) {
-        val received: Pair<Set<Item>, List<ConflictError>> = LoriServerBackend.findItemsWithConflicts(
+        val received: Pair<Set<Item>, List<RightError>> = LoriServerBackend.findItemsWithConflicts(
             searchResults,
             rightConflictToCheck,
+            1,
         )
         assertThat(
             reason,
