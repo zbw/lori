@@ -337,7 +337,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                MetadataDB.TS_HANDLE
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
 
         private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
@@ -347,7 +347,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                MetadataDB.TS_HANDLE
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
 
         private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id, $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.metadata_id," +
@@ -357,7 +357,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                MetadataDB.TS_HANDLE
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
@@ -397,7 +397,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                MetadataDB.TS_HANDLE
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
 
         fun buildSearchQuery(
             searchPairs: List<SearchPair>,

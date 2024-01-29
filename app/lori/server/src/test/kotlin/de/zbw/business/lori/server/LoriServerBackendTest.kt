@@ -844,6 +844,11 @@ class LoriServerBackendTest : DatabaseTest() {
             received.first,
             `is`(expected)
         )
+        assertThat(
+            reason,
+            received.second.size,
+            `is`(expectedErrorCount),
+        )
     }
 
     companion object {

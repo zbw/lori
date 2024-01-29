@@ -326,7 +326,7 @@ class RightRoutesKtTest {
     companion object {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
-        val CONFIG = LoriConfiguration(
+        private val CONFIG = LoriConfiguration(
             grpcPort = 9092,
             httpPort = 8080,
             sqlUser = "postgres",
