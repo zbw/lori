@@ -122,9 +122,7 @@ right-id:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'right.model.yaml#/RightRest'
+              $ref: 'right.model.yaml#/RightRest'
       400:
         description: Bad request
         content:

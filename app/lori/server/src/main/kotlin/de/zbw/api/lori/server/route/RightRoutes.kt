@@ -52,10 +52,10 @@ fun Routing.rightRoutes(
                             )
                         )
                     } else {
-                        val rightElements: List<ItemRight> = backend.getRightsByIds(listOf(rightId))
-                        rightElements.takeIf { it.isNotEmpty() }?.let {
+                        val right: ItemRight? = backend.getRightsByIds(listOf(rightId)).firstOrNull()
+                        right?.let {
                             span.setStatus(StatusCode.OK)
-                            call.respond(rightElements.first().toRest())
+                            call.respond(it.toRest())
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
                             call.respond(

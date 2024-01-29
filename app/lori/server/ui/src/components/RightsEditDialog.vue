@@ -183,9 +183,11 @@ export default defineComponent({
     const menuEndDate = ref(false);
     const menuStartDate = ref(false);
     const saveAlertError = ref(false);
-    const saveAlertErrorMessage = ref("");
+    const saveAlertErrorMsg = ref("");
     const updateConfirmDialog = ref(false);
     const updateInProgress = ref(false);
+    const updateSuccessful = ref(false);
+    const updateSuccessfulMsg = ref("");
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
 
@@ -195,11 +197,13 @@ export default defineComponent({
 
     const close = () => {
       generalAlertError.value = false;
-      generalAlertErrorMessage.value = "";
+      generalAlertErrorMsg.value = "";
       saveAlertError.value = false;
-      saveAlertErrorMessage.value = "";
+      saveAlertErrorMsg.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
+      updateSuccessful.value = false;
+      updateSuccessfulMsg.value = "";
       formState.formTemplateName = "";
       v$.value.$reset();
       emitClosedDialog();
@@ -272,7 +276,7 @@ export default defineComponent({
             .catch((e) => {
               error.errorHandling(e, (errMsg: string) => {
                 saveAlertError.value = true;
-                saveAlertErrorMessage.value = errMsg;
+                saveAlertErrorMsg.value = errMsg;
                 updateConfirmDialog.value = false;
               });
             });
@@ -280,7 +284,7 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             saveAlertError.value = true;
-            saveAlertErrorMessage.value = errMsg;
+            saveAlertErrorMsg.value = errMsg;
             updateConfirmDialog.value = false;
           });
         });
@@ -295,11 +299,16 @@ export default defineComponent({
             rightId: tmpRight.value.rightId,
           });
           emit("updateSuccessful", tmpRight.value, props.index);
+          updateSuccessfulMsg.value =
+            "Rechteinformation " +
+            tmpRight.value.rightId +
+            " erfolgreich geupdated";
+          updateSuccessful.value = true;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             saveAlertError.value = true;
-            saveAlertErrorMessage.value = errMsg;
+            saveAlertErrorMsg.value = errMsg;
             updateConfirmDialog.value = false;
           });
         });
@@ -319,7 +328,7 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMessage.value = errMsg;
+            generalAlertErrorMsg.value = errMsg;
             generalAlertError.value = true;
           });
         });
@@ -330,18 +339,21 @@ export default defineComponent({
       templateApi
         .updateTemplate(tmpRight.value)
         .then(() => {
-          // TODO: refactor this with callbacks
           if (tmpRight.value.templateId == undefined) {
             return;
           }
           updateBookmarks(tmpRight.value.templateId, () => {
+            updateSuccessfulMsg.value =
+              "Template " +
+              tmpRight.value.templateId +
+              " erfolgreich geupdated";
+            updateSuccessful.value = true;
             emit("updateTemplateSuccessful", formState.formTemplateName);
-            close();
           });
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMessage.value = errMsg;
+            generalAlertErrorMsg.value = errMsg;
             generalAlertError.value = true;
           });
         });
@@ -364,42 +376,41 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMessage.value = errMsg;
+            generalAlertErrorMsg.value = errMsg;
             generalAlertError.value = true;
           });
         });
     };
 
-    const save: () => Promise<void> = () => {
+    const save: () => Promise<void> = async () => {
       // Vuelidate expects this field to be filled. When editing rights it is not required.
       if (!isTemplate.value) {
         formState.formTemplateName = "foo";
       }
-      return v$.value.$validate().then((isValid) => {
-        if (!isValid) {
-          return;
-        }
-        tmpRight.value.accessState = stringToAccessState(formState.accessState);
-        tmpRight.value.basisStorage = stringToBasisStorage(
-          formState.basisStorage
-        );
-        tmpRight.value.basisAccessState = stringToBasisAccessState(
-          formState.basisAccessState
-        );
-        updateInProgress.value = true;
-        tmpRight.value.startDate = new Date(formState.startDate);
-        tmpRight.value.endDate =
-          formState.endDate == "" ? undefined : new Date(formState.endDate);
-        if (props.isNewTemplate) {
-          createTemplate();
-        } else if (isTemplate.value) {
-          updateTemplate();
-        } else if (props.isNewRight) {
-          createRight();
-        } else {
-          updateRight();
-        }
-      });
+      let isValid = await v$.value.$validate();
+      if (!isValid) {
+        return;
+      }
+      tmpRight.value.accessState = stringToAccessState(formState.accessState);
+      tmpRight.value.basisStorage = stringToBasisStorage(
+        formState.basisStorage
+      );
+      tmpRight.value.basisAccessState = stringToBasisAccessState(
+        formState.basisAccessState
+      );
+      updateInProgress.value = true;
+      tmpRight.value.startDate = new Date(formState.startDate);
+      tmpRight.value.endDate =
+        formState.endDate == "" ? undefined : new Date(formState.endDate);
+      if (props.isNewTemplate) {
+        createTemplate();
+      } else if (isTemplate.value) {
+        updateTemplate();
+      } else if (props.isNewRight) {
+        createRight();
+      } else {
+        updateRight();
+      }
     };
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
@@ -580,9 +591,8 @@ export default defineComponent({
         return;
       }
       tmpRight.value = Object.assign({}, props.right);
-      formState.formTemplateName = props.right.templateName == undefined
-          ? ""
-          : props.right.templateName;
+      formState.formTemplateName =
+        props.right.templateName == undefined ? "" : props.right.templateName;
       formState.accessState = accessStateToString(props.right.accessState);
       formState.basisStorage = basisStorageToString(props.right.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
@@ -662,7 +672,7 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMessage.value = errMsg;
+            generalAlertErrorMsg.value = errMsg;
             generalAlertError.value = true;
           });
         });
@@ -684,7 +694,7 @@ export default defineComponent({
 
     // Groups
     const generalAlertError = ref(false);
-    const generalAlertErrorMessage = ref("");
+    const generalAlertErrorMsg = ref("");
     const groupItems: Ref<Array<string>> = ref([]);
     const getGroupList = () => {
       api
@@ -694,7 +704,7 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMessage.value = errMsg;
+            generalAlertErrorMsg.value = errMsg;
             generalAlertError.value = true;
           });
         });
@@ -722,7 +732,7 @@ export default defineComponent({
       isNew,
       isTemplate,
       generalAlertError,
-      generalAlertErrorMessage,
+      generalAlertErrorMsg,
       groupItems,
       historyStore,
       menuStartDate,
@@ -732,8 +742,10 @@ export default defineComponent({
       openBookmarkSearch,
       renderBookmarkKey,
       saveAlertError,
-      saveAlertErrorMessage,
+      saveAlertErrorMsg,
       updateConfirmDialog,
+      updateSuccessful,
+      updateSuccessfulMsg,
       tmpRight,
       updateInProgress,
       // methods
@@ -801,12 +813,15 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
+    <v-alert v-model="updateSuccessful" dismissible text type="success">
+      {{ updateSuccessfulMsg }}
+    </v-alert>
     <v-alert v-model="saveAlertError" dismissible text type="error">
       Speichern war nicht erfolgreich:
-      {{ saveAlertErrorMessage }}
+      {{ saveAlertErrorMsg }}
     </v-alert>
     <v-alert v-model="generalAlertError" dismissible text type="error">
-      {{ generalAlertErrorMessage }}
+      {{ generalAlertErrorMsg }}
     </v-alert>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">

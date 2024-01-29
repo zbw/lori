@@ -7,9 +7,11 @@ import {
   MetadataRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
+  RightRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
+import rightApi from "@/api/rightApi";
 import { DataTableHeader } from "vuetify";
 import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
@@ -24,9 +26,11 @@ import BookmarkSave from "@/components/BookmarkSave.vue";
 import TemplateOverview from "@/components/TemplateOverview.vue";
 import BookmarkOverview from "@/components/BookmarkOverview.vue";
 import templateApi from "@/api/templateApi";
+import RightsEditDialog from "@/components/RightsEditDialog.vue";
 
 export default defineComponent({
   components: {
+    RightsEditDialog,
     BookmarkOverview,
     TemplateOverview,
     BookmarkSave,
@@ -45,7 +49,8 @@ export default defineComponent({
     const tableContentLoading = ref(true);
     const hintSearchField = ref(
       "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
-        "com(Community), col(Collection), hdl (Handle Metadata), hdlcol (Handle Collection), hdlcom(Handle Community), hdlsubcom (Handle Subcommunity), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
+        "com(Community), col(Collection), hdl (Handle Metadata), hdlcol (Handle Collection), hdlcom(Handle Community)," +
+        " hdlsubcom (Handle Subcommunity), metadataid(Metadata Id), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
         " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
         "Wichtig: Zeichen die als logische Operatoren dienen, aber teil der Suche sein sollen, müssen escaped werden mit \\ " +
         " (z.B. col:'EU & \\(European\\)')"
@@ -63,7 +68,7 @@ export default defineComponent({
 
     const headers = [
       {
-        text: "Item-Id",
+        text: "Metadata-Id",
         align: "start",
         sortable: false,
         value: "metadataId",
@@ -202,11 +207,81 @@ export default defineComponent({
       return loadAlertError;
     };
 
-    onMounted(() => startSearch());
+    onMounted(() => {
+      const hasTemplateParameter = loadTemplateView();
+      if (!hasTemplateParameter) {
+        loadRightView();
+      }
+      const hasMetadataParameter = loadMetadataView();
+      if (!hasMetadataParameter) {
+        startSearch();
+      }
+    });
 
     watch(headersValueVSelect, (currentValue) => {
       selectedHeaders.value = currentValue;
     });
+
+    // Initial Template View
+    const templateLoadError = ref(false);
+    const templateLoadErrorMsg = ref("");
+    const queryParameterRight = ref({} as RightRest);
+    const rightEditActivated = ref(false);
+    const loadTemplateView: () => boolean = () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let templateId: string | null = urlParams.get("templateId");
+      if (templateId == null || templateId == "") {
+        return false;
+      }
+      templateApi
+        .getTemplateById(templateId)
+        .then((response: RightRest) => {
+          queryParameterRight.value = response;
+          rightEditActivated.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            templateLoadErrorMsg.value = errMsg;
+            templateLoadError.value = true;
+          });
+        });
+      return true;
+    };
+
+    const loadRightView: () => boolean = () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let rightId: string | null = urlParams.get("rightId");
+      if (rightId == null || rightId == "") {
+        return false;
+      }
+      rightApi
+        .getRightById(rightId)
+        .then((response: RightRest) => {
+          queryParameterRight.value = response;
+          rightEditActivated.value = true;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            templateLoadErrorMsg.value = errMsg;
+            templateLoadError.value = true;
+          });
+        });
+      return true;
+    };
+
+    const loadMetadataView: () => boolean = () => {
+      let urlParams = new URLSearchParams(window.location.search);
+      let metadataId: string | null = urlParams.get("metadataId");
+      if (metadataId == null || metadataId == "") {
+        return false;
+      }
+      executeSearchByMetadataId("metadataId:" + metadataId);
+      return true;
+    };
+
+    const closeTemplateEditDialog = () => {
+      rightEditActivated.value = false;
+    };
 
     // Search
     const searchStore = useSearchStore();
@@ -248,6 +323,38 @@ export default defineComponent({
           undefined,
           undefined,
           currentTemplateId.value.toString() // templateId
+        )
+        .then((response: ItemInformation) => {
+          processSearchResult(response);
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            loadAlertErrorMessage.value = errMsg;
+            loadAlertError.value = true;
+          });
+        });
+    };
+
+    const executeSearchByMetadataId = (searchTerm: string) => {
+      api
+        .searchQuery(
+          searchTerm,
+          (currentPage.value - 1) * pageSize.value, // offset
+          pageSize.value, // limit
+          currentPage.value,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -549,6 +656,7 @@ export default defineComponent({
       bookmarkSuccessfulMsg,
       currentItem,
       currentPage,
+      queryParameterRight,
       dialogStore,
       hasSearchTokenWithNoKeyError,
       hasSearchTokenWithNoKeyErrorMsg,
@@ -569,12 +677,16 @@ export default defineComponent({
       selectedHeaders,
       selectedItems,
       tableContentLoading,
+      rightEditActivated,
+      templateLoadError,
+      templateLoadErrorMsg,
       totalPages,
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
       closeBookmarkOverview,
       closeBookmarkSaveDialog,
+      closeTemplateEditDialog,
       closeGroupDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
@@ -582,6 +694,7 @@ export default defineComponent({
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
+      loadTemplateView,
       parsePublicationType,
       searchQuery,
       setActiveItem,
@@ -635,6 +748,30 @@ export default defineComponent({
       <BookmarkOverview
         v-on:executeBookmarkSearch="executeBookmarkSearch"
       ></BookmarkOverview>
+    </v-dialog>
+    <v-dialog v-model="templateLoadError" max-width="1000">
+      <v-card>
+        <v-card-title class="text-h5"
+          >Laden von Template fehlgeschlagen</v-card-title
+        >
+        <v-card-text>
+          Informationen zum Fehler: {{ templateLoadErrorMsg }}
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="rightEditActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeTemplateEditDialog"
+    >
+      <RightsEditDialog
+        :index="-1"
+        :isNewRight="false"
+        :isNewTemplate="false"
+        :right="queryParameterRight"
+        v-on:editRightClosed="closeTemplateEditDialog"
+      ></RightsEditDialog>
     </v-dialog>
     <v-row>
       <v-col cols="2">

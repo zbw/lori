@@ -18,6 +18,7 @@ enum class SearchKey(
     HDL_COL(MetadataDB.TS_COLLECTION_HANDLE),
     HDL_COM(MetadataDB.TS_COMMUNITY_HANDLE),
     HDL_SUBCOM(MetadataDB.TS_SUBCOMMUNITY_HANDLE),
+    METADATA_ID(MetadataDB.TS_METADATA_ID),
     PAKET_SIGEL(MetadataDB.TS_SIGEL),
     TITLE(MetadataDB.TS_TITLE),
     ZDB_ID(MetadataDB.TS_ZDB_ID);
@@ -33,6 +34,7 @@ enum class SearchKey(
             HDL_COL -> "hdlcol"
             HDL_COM -> "hdlcom"
             HDL_SUBCOM -> "hdlsubcom"
+            METADATA_ID -> "metadataid"
         }
     }
 
@@ -50,6 +52,7 @@ enum class SearchKey(
                 "hdlcol" -> HDL_COL
                 "hdlcom" -> HDL_COM
                 "hdlsubcom" -> HDL_SUBCOM
+                "metadataid" -> METADATA_ID
                 else -> null
             }
         }
