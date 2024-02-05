@@ -1,14 +1,8 @@
 <script lang="ts">
-import Vue from "vue";
-
+import { defineComponent } from "vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
-import VueMaterial from "vue-material";
-import VueResource from "vue-resource";
-Vue.use(VueResource);
-Vue.use(VueMaterial);
 
-export default Vue.extend({
-  name: "LoriApp",
+export default defineComponent({
   components: { TopNavigationBar },
 });
 </script>

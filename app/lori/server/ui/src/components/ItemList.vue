@@ -12,7 +12,6 @@ import {
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
 import rightApi from "@/api/rightApi";
-import { DataTableHeader } from "vuetify";
 import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
@@ -53,7 +52,7 @@ export default defineComponent({
         " hdlsubcom (Handle Subcommunity), metadataid(Metadata Id), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
         " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
         "Wichtig: Zeichen die als logische Operatoren dienen, aber teil der Suche sein sollen, müssen escaped werden mit \\ " +
-        " (z.B. col:'EU & \\(European\\)')"
+        " (z.B. col:'EU & \\(European\\)')",
     );
 
     /**
@@ -144,7 +143,7 @@ export default defineComponent({
         text: "ZDB-ID",
         value: "zdbId",
       },
-    ] as Array<DataTableHeader>;
+    ];
 
     const selectedHeaders = ref(headers.slice(0, 6));
 
@@ -181,8 +180,8 @@ export default defineComponent({
      */
     const addActiveItem = (metadata: MetadataRest, row: any) => {
       row.select(true);
-      let item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.metadataId === metadata.metadataId
+      const item: ItemRest | undefined = items.value.find(
+        (e) => e.metadata.metadataId === metadata.metadataId,
       );
       if (item !== undefined) {
         currentItem.value = item;
@@ -192,14 +191,14 @@ export default defineComponent({
     /** Double Click **/
     const setActiveItem = (clickevent: any, row: any) => {
       row.select(true);
-      let item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.metadataId === row.item.metadataId
+      const item: ItemRest | undefined = items.value.find(
+        (e) => e.metadata.metadataId === row.item.metadataId,
       );
       if (item !== undefined) {
         currentItem.value = item;
       }
       selectedItems.value = selectedItems.value.filter(
-        (e: MetadataRest) => e.metadataId == row.item.metadataId
+        (e: MetadataRest) => e.metadataId == row.item.metadataId,
       );
     };
 
@@ -228,8 +227,8 @@ export default defineComponent({
     const queryParameterRight = ref({} as RightRest);
     const rightEditActivated = ref(false);
     const loadTemplateView: () => boolean = () => {
-      let urlParams = new URLSearchParams(window.location.search);
-      let templateId: string | null = urlParams.get("templateId");
+      const urlParams = new URLSearchParams(window.location.search);
+      const templateId: string | null = urlParams.get("templateId");
       if (templateId == null || templateId == "") {
         return false;
       }
@@ -249,8 +248,8 @@ export default defineComponent({
     };
 
     const loadRightView: () => boolean = () => {
-      let urlParams = new URLSearchParams(window.location.search);
-      let rightId: string | null = urlParams.get("rightId");
+      const urlParams = new URLSearchParams(window.location.search);
+      const rightId: string | null = urlParams.get("rightId");
       if (rightId == null || rightId == "") {
         return false;
       }
@@ -270,8 +269,8 @@ export default defineComponent({
     };
 
     const loadMetadataView: () => boolean = () => {
-      let urlParams = new URLSearchParams(window.location.search);
-      let metadataId: string | null = urlParams.get("metadataId");
+      const urlParams = new URLSearchParams(window.location.search);
+      const metadataId: string | null = urlParams.get("metadataId");
       if (metadataId == null || metadataId == "") {
         return false;
       }
@@ -322,7 +321,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
-          currentTemplateId.value.toString() // templateId
+          currentTemplateId.value.toString(), // templateId
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -354,7 +353,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
-          undefined
+          undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -419,7 +418,7 @@ export default defineComponent({
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
-          undefined
+          undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -498,7 +497,7 @@ export default defineComponent({
           } as PublicationTypeWithCountRest;
         });
       searchStore.publicationTypeIdx = reduceIdx(
-        searchStore.publicationTypeIdx
+        searchStore.publicationTypeIdx,
       );
 
       searchStore.zdbIdReceived = searchStore.zdbIdSelectedLastSearch.map(
@@ -507,7 +506,7 @@ export default defineComponent({
             count: 0,
             zdbId: elem,
           } as ZdbIdWithCountRest;
-        }
+        },
       );
       searchStore.zdbIdIdx = reduceIdx(searchStore.zdbIdIdx);
     };
@@ -525,12 +524,12 @@ export default defineComponent({
           ? response.accessStateWithCount
           : Array(0);
       searchStore.accessStateIdx = Array(
-        searchStore.accessStateReceived.length
+        searchStore.accessStateReceived.length,
       ).fill(false);
       resetDynamicFilter(
         searchStore.accessStateReceived.map((e) => e.accessState),
         searchStore.accessStateSelectedLastSearch,
-        searchStore.accessStateIdx
+        searchStore.accessStateIdx,
       );
       // Reset Paket Sigel
       searchStore.paketSigelIdReceived =
@@ -538,27 +537,27 @@ export default defineComponent({
           ? response.paketSigelWithCount
           : Array(0);
       searchStore.paketSigelIdIdx = Array(
-        searchStore.paketSigelIdReceived.length
+        searchStore.paketSigelIdReceived.length,
       ).fill(false);
       resetDynamicFilter(
         searchStore.paketSigelIdReceived.map((e) => e.paketSigel),
         searchStore.paketSigelSelectedLastSearch,
-        searchStore.paketSigelIdIdx
+        searchStore.paketSigelIdIdx,
       );
       // Reset Publication Type
       searchStore.publicationTypeReceived =
         response.publicationTypeWithCount != undefined
           ? response.publicationTypeWithCount.sort((a, b) =>
-              b.publicationType.localeCompare(a.publicationType)
+              b.publicationType.localeCompare(a.publicationType),
             )
           : Array(0);
       searchStore.publicationTypeIdx = Array(
-        searchStore.publicationTypeReceived.length
+        searchStore.publicationTypeReceived.length,
       ).fill(false);
       resetDynamicFilter(
         searchStore.publicationTypeReceived.map((e) => e.publicationType),
         searchStore.publicationTypeSelectedLastSearch,
-        searchStore.publicationTypeIdx
+        searchStore.publicationTypeIdx,
       );
       // Reset ZDB Id
       searchStore.zdbIdReceived =
@@ -566,19 +565,19 @@ export default defineComponent({
           ? response.zdbIdWithCount
           : Array(0);
       searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
-        false
+        false,
       );
       resetDynamicFilter(
         searchStore.zdbIdReceived.map((e) => e.zdbId),
         searchStore.zdbIdSelectedLastSearch,
-        searchStore.zdbIdIdx
+        searchStore.zdbIdIdx,
       );
     };
 
     const resetDynamicFilter = (
       receivedFilters: Array<string>,
       savedFilters: Array<string>,
-      idxMap: Array<boolean>
+      idxMap: Array<boolean>,
     ) => {
       receivedFilters.forEach((elem: string, index: number): void => {
         if (savedFilters.includes(elem)) {
@@ -794,36 +793,41 @@ export default defineComponent({
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
-          <v-alert v-model="loadAlertError" dismissible text type="error">
-            Laden der bibliographischen Daten war nicht erfolgreich:
+          <v-alert
+            v-model="loadAlertError"
+            dismissible
+            text="Laden der bibliographischen Daten war nicht erfolgreich:"
+            type="error"
+          >
             {{ loadAlertErrorMessage }}
           </v-alert>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible
-            text
+            text="{{ invalidSearchKeyErrorMsg }}"
             type="error"
           >
-            {{ invalidSearchKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="hasSearchTokenWithNoKeyError"
             dismissible
-            text
+            text="{{ hasSearchTokenWithNoKeyErrorMsg }}"
             type="error"
           >
-            {{ hasSearchTokenWithNoKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="bookmarkSuccessfulMsg"
             dismissible
-            text
+            text="Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId.toString() }}."
             type="success"
           >
-            Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId }}.
           </v-alert>
-          <v-alert v-model="alertIsActive" dismissible text type="success">
-            {{ alertMsg }}
+          <v-alert
+            v-model="alertIsActive"
+            dismissible
+            text="{{ alertMsg }}"
+            type="success"
+          >
           </v-alert>
           <v-select
             v-model="headersValueVSelect"

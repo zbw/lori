@@ -1,6 +1,5 @@
 <script lang="ts">
 import { RightRest } from "@/generated-sources/openapi";
-import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsEditTabs from "@/components/RightsEditTabs.vue";
 import { computed, defineComponent, PropType, ref } from "vue";
@@ -47,10 +46,10 @@ export default defineComponent({
         text: "Template",
         value: "templateId",
       },
-    ] as Array<DataTableHeader>;
+    ];
     const isNew = ref(false);
     const renderKey = ref(0);
-    const selectedHeaders: Array<DataTableHeader> = headers;
+    const selectedHeaders: { text: string; value: string }[] = headers;
     const updateSuccessful = ref(false);
     const addSuccessful = ref(false);
 
@@ -132,8 +131,12 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
-    <v-alert v-model="addSuccessful" dismissible text type="success">
-      Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
+    <v-alert
+      v-model="addSuccessful"
+      dismissible
+      text="Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt."
+      type="success"
+    >
     </v-alert>
     <v-divider></v-divider>
     <v-data-table

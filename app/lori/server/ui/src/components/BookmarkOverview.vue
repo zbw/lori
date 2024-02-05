@@ -29,28 +29,35 @@ export default defineComponent({
     const renderKey = ref(0);
     const headers = [
       {
-        text: "Id",
-        value: "bookmarkId",
+        title: "Id",
+        key: "bookmarkId",
         align: "start",
         sortable: true,
       },
       {
-        text: "Name",
-        value: "bookmarkName",
+        title: "Name",
+        key: "bookmarkName",
         align: "start",
         sortable: true,
       },
       {
-        text: "Template anlegen",
-        value: "createTemplate",
+        title: "Template anlegen",
+        key: "createTemplate",
         align: "start",
+        sortable: false,
       },
       {
-        text: "Suchanfrage ausführen",
-        value: "executeSearch",
+        title: "Suchanfrage ausführen",
+        key: "executeSearch",
         align: "start",
+        sortable: false,
       },
-      { text: "Actions", value: "actions", sortable: false },
+      {
+        title: "Actions",
+        key: "actions",
+        align: "start",
+        sortable: false,
+      },
     ];
     const searchTerm = ref("");
     const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
@@ -148,7 +155,7 @@ export default defineComponent({
     onMounted(() => getBookmarkList());
 
     const computedBookmarkOverview = computed(
-      () => dialogStore.bookmarkOverviewActivated
+      () => dialogStore.bookmarkOverviewActivated,
     );
     watch(computedBookmarkOverview, (currentValue) => {
       if (currentValue) {
@@ -186,11 +193,19 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessful" dismissible text type="success">
-        {{ alertSuccessfulMsg }}
+      <v-alert
+        v-model="alertSuccessful"
+        dismissible
+        text="{{ alertSuccessfulMsg }}"
+        type="success"
+      >
       </v-alert>
-      <v-alert v-model="bookmarkError" dismissible text type="error">
-        {{ bookmarkErrorMsg }}
+      <v-alert
+        v-model="bookmarkError"
+        dismissible
+        text="{{ bookmarkErrorMsg }}"
+        type="error"
+      >
       </v-alert>
       <v-card-title>Gespeicherte Suchen verwalten</v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">
@@ -198,12 +213,16 @@ export default defineComponent({
           <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="closeDeleteDialog"
-              >Abbrechen</v-btn
-            >
-            <v-btn color="error" text @click="deleteBookmarkEntry"
-              >Löschen</v-btn
-            >
+            <v-btn
+              color="blue darken-1"
+              text="Abbrechen"
+              @click="closeDeleteDialog"
+            ></v-btn>
+            <v-btn
+              color="error"
+              text="Löschen"
+              @click="deleteBookmarkEntry"
+            ></v-btn>
             <v-spacer></v-spacer>
           </v-card-actions>
         </v-card>
@@ -226,10 +245,9 @@ export default defineComponent({
         <template v-slot:item.createTemplate="{ item }">
           <v-btn
             color="blue darken-1"
-            text
+            text="Template anlegen"
             @click="activateTemplateDialog(item)"
-            >Template anlegen</v-btn
-          >
+          ></v-btn>
         </template>
         <template v-slot:item.executeSearch="{ item }">
           <v-btn color="blue darken-1" text @click="executeBookmarkSearch(item)"
