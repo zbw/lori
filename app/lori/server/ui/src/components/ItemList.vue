@@ -67,80 +67,80 @@ export default defineComponent({
 
     const headers = [
       {
-        text: "Metadata-Id",
+        title: "Metadata-Id",
         align: "start",
         sortable: false,
         value: "metadataId",
       },
       {
-        text: "Titel",
+        title: "Titel",
         sortable: true,
         value: "title",
         width: "300px",
       },
       {
-        text: "Handle",
+        title: "Handle",
         sortable: true,
         value: "handle",
       },
       {
-        text: "Community",
+        title: "Community",
         sortable: true,
         value: "communityName",
       },
       {
-        text: "Collection",
+        title: "Collection",
         sortable: true,
         value: "collectionName",
       },
       {
-        text: "Publikationstyp",
+        title: "Publikationstyp",
         sortable: true,
         value: "publicationType",
       },
       {
-        text: "Publikationsjahr",
+        title: "Publikationsjahr",
         sortable: true,
         value: "publicationDate",
       },
       {
-        text: "Band",
+        title: "Band",
         value: "band",
       },
       {
-        text: "DOI",
+        title: "DOI",
         value: "doi",
       },
       {
-        text: "ISBN",
+        title: "ISBN",
         value: "isbn",
       },
       {
-        text: "ISSN",
+        title: "ISSN",
         value: "issn",
       },
       {
-        text: "Paket-Sigel",
+        title: "Paket-Sigel",
         value: "paketSigel",
       },
       {
-        text: "PPN",
+        title: "PPN",
         value: "ppn",
       },
       {
-        text: "Rechte-K10Plus",
+        title: "Rechte-K10Plus",
         value: "rightsK10plus",
       },
       {
-        text: "Titel Journal",
+        title: "Titel Journal",
         value: "titleJournal",
       },
       {
-        text: "Titel Serie",
+        title: "Titel Serie",
         value: "titleSeries",
       },
       {
-        text: "ZDB-ID",
+        title: "ZDB-ID",
         value: "zdbId",
       },
     ];
