@@ -832,9 +832,7 @@ export default defineComponent({
           <v-expansion-panel-text eager>
             <v-container fluid>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Template-Id</v-subheader>
-                </v-col>
+                <v-col cols="4"> Template-Id </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-if="isNew"
@@ -855,9 +853,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Template Name</v-subheader>
-                </v-col>
+                <v-col cols="4"> Template Name </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="formState.formTemplateName"
@@ -869,9 +865,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Beschreibung</v-subheader>
-                </v-col>
+                <v-col cols="4"> Beschreibung </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.templateDescription"
@@ -882,9 +876,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Erstellt am</v-subheader>
-                </v-col>
+                <v-col cols="4"> Erstellt am </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.createdOn"
@@ -895,9 +887,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Zuletzt editiert am</v-subheader>
-                </v-col>
+                <v-col cols="4"> Zuletzt editiert am </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedOn"
@@ -907,9 +897,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Zuletzt editiert von</v-subheader>
-                </v-col>
+                <v-col cols="4"> Zuletzt editiert von </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedBy"
@@ -919,9 +907,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Zuletzt angewendet am</v-subheader>
-                </v-col>
+                <v-col cols="4"> Zuletzt angewendet am </v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastAppliedOn"
@@ -932,9 +918,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4">
-                  <v-subheader>Verknüpfte Suchen</v-subheader>
-                </v-col>
+                <v-col cols="4"> Verknüpfte Suchen </v-col>
                 <v-col cols="8">
                   <v-data-table
                     :key="renderBookmarkKey"
@@ -984,9 +968,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Right-Id</v-subheader>
-              </v-col>
+              <v-col cols="4"> Right-Id </v-col>
               <v-col cols="8">
                 <v-text-field
                   v-if="isNew"
@@ -1007,9 +989,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Aktueller Access-Status</v-subheader>
-              </v-col>
+              <v-col cols="4"> Aktueller Access-Status </v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.accessState"
@@ -1023,9 +1003,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Gültigkeit Startdatum</v-subheader>
-              </v-col>
+              <v-col cols="4"> Gültigkeit Startdatum </v-col>
               <v-col cols="8">
                 <v-menu
                   ref="menuStart"
@@ -1079,9 +1057,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Gültigkeit Enddatum</v-subheader>
-              </v-col>
+              <v-col cols="4"> Gültigkeit Enddatum </v-col>
               <v-col cols="8">
                 <v-menu
                   ref="menuEnd"
@@ -1128,9 +1104,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Gruppen</v-subheader>
-              </v-col>
+              <v-col cols="4"> Gruppen </v-col>
               <v-col cols="8">
                 <v-select
                   v-model="tmpRight.groupIds"
@@ -1146,9 +1120,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Bemerkungen</v-subheader>
-              </v-col>
+              <v-col cols="4"> Bemerkungen </v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
@@ -1168,9 +1140,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Lizenzvertrag</v-subheader>
-              </v-col>
+              <v-col cols="4"> Lizenzvertrag </v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
@@ -1181,9 +1151,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Urheberrechtschrankennutzung</v-subheader>
-              </v-col>
+              <v-col cols="4"> Urheberrechtschrankennutzung </v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
@@ -1196,9 +1164,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>ZBW Nutzungsvereinbarung</v-subheader>
-              </v-col>
+              <v-col cols="4"> ZBW Nutzungsvereinbarung </v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.zbwUserAgreement"
@@ -1211,9 +1177,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Open-Content-Licence</v-subheader>
-              </v-col>
+              <v-col cols="4"> Open-Content-Licence </v-col>
               <v-col cols="8">
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
@@ -1224,9 +1188,7 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col cols="4">
-                <v-subheader>
-                  Nicht-standardisierte Open-Content-Lizenz (URL)
-                </v-subheader>
+                Nicht-standardisierte Open-Content-Lizenz (URL)
               </v-col>
               <v-col cols="8">
                 <v-text-field
@@ -1239,9 +1201,7 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col cols="4">
-                <v-subheader
-                  >Nicht-standardisierte Open-Content-Lizenz (keine URL)
-                </v-subheader>
+                Nicht-standardisierte Open-Content-Lizenz (keine URL)
               </v-col>
               <v-col cols="8">
                 <v-switch
@@ -1255,9 +1215,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Eingeschränkte Open-Content-Lizenz</v-subheader>
-              </v-col>
+              <v-col cols="4"> Eingeschränkte Open-Content-Lizenz </v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
@@ -1270,9 +1228,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Bemerkungen</v-subheader>
-              </v-col>
+              <v-col cols="4"> Bemerkungen </v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
@@ -1294,9 +1250,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Basis der Speicherung</v-subheader>
-              </v-col>
+              <v-col cols="4"> Basis der Speicherung </v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisStorage"
@@ -1307,9 +1261,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Basis des Access-Status</v-subheader>
-              </v-col>
+              <v-col cols="4"> Basis des Access-Status </v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisAccessState"
@@ -1320,9 +1272,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Bemerkungen</v-subheader>
-              </v-col>
+              <v-col cols="4"> Bemerkungen </v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
@@ -1344,9 +1294,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row v-if="!isTemplate">
-              <v-col cols="4">
-                <v-subheader>Zuletzt editiert am</v-subheader>
-              </v-col>
+              <v-col cols="4"> Zuletzt editiert am </v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedOn"
@@ -1356,9 +1304,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row v-if="!isTemplate">
-              <v-col cols="4">
-                <v-subheader>Zuletzt editiert von</v-subheader>
-              </v-col>
+              <v-col cols="4"> Zuletzt editiert von </v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedBy"
@@ -1368,9 +1314,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                <v-subheader>Bemerkungen</v-subheader>
-              </v-col>
+              <v-col cols="4"> Bemerkungen </v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"

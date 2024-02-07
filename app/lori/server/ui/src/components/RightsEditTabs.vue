@@ -30,7 +30,7 @@ export default defineComponent({
     // Methods
     const deleteSuccessful = (
       index: number,
-      rightIdDeleted: string | undefined
+      rightIdDeleted: string | undefined,
     ) => {
       currentRights.value.splice(index, 1);
       renderKey.value += 1;
@@ -102,9 +102,12 @@ export default defineComponent({
       <v-toolbar-title> Editiere Rechte für {{ metadataId }} </v-toolbar-title>
       <v-spacer></v-spacer>
       <template v-slot:extension>
-        <v-tabs v-model="tab" align-with-title show-arrows>
-          <v-tabs-slider color="yellow"></v-tabs-slider>
-
+        <v-tabs
+          v-model="tab"
+          align-with-title
+          show-arrows
+          slider-color="yellow"
+        >
           <v-tab v-for="r in currentRights" :key="r.rightId">
             <v-icon v-if="r.templateId != undefined">mdi-note-multiple</v-icon>
             <v-icon v-else>mdi-note-outline</v-icon>
@@ -115,28 +118,25 @@ export default defineComponent({
       </template>
     </v-toolbar>
 
-    <v-tabs-items v-model="tab">
+    <v-window v-model="tab">
       <v-alert
         v-model="lastUpdateSuccessful"
         dismissible
-        text
+        text="Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item
+        {{ metadataId }}."
         type="success"
         @close="resetLastUpdateSuccessful"
       >
-        Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item
-        {{ metadataId }}.
       </v-alert>
       <v-alert
         v-model="lastDeletionSuccessful"
         dismissible
-        text
+        text="Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item {{ metadataId }}."
         type="success"
         @close="resetLastDeletionSuccessful"
       >
-        Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
-        {{ metadataId }}.
       </v-alert>
-      <v-tab-item v-for="(item, index) in currentRights" :key="item.rightId">
+      <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
           :activated="true"
           :index="index"
@@ -148,7 +148,7 @@ export default defineComponent({
           v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"
         ></RightsEditDialog>
-      </v-tab-item>
-    </v-tabs-items>
+      </v-window-item>
+    </v-window>
   </v-card>
 </template>

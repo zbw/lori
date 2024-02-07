@@ -113,7 +113,9 @@ export default defineComponent({
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
         <v-col cols="4">
-          <v-subheader>Name</v-subheader>
+          <div class="text-h6 mb-1">
+            Name
+          </div>/
         </v-col>
         <v-col cols="8">
           <v-text-field
@@ -127,7 +129,7 @@ export default defineComponent({
       </v-row>
       <v-row>
         <v-col cols="4">
-          <v-subheader>Bookmark-Id</v-subheader>
+         Bookmark-Id
         </v-col>
         <v-col cols="8">
           <v-text-field
@@ -139,7 +141,7 @@ export default defineComponent({
       </v-row>
       <v-row>
         <v-col cols="4">
-          <v-subheader>Beschreibung</v-subheader>
+          Beschreibung
         </v-col>
         <v-col cols="8">
           <v-text-field v-model="description" outlined></v-text-field>
