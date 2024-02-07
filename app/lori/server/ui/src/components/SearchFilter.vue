@@ -20,7 +20,7 @@ export default defineComponent({
 
     const tempEventCheckForInput: (
       value: string,
-      siblings: FormState
+      siblings: FormState,
     ) => boolean = (value: string, siblings: FormState) => {
       return !(
         ((value == "startDate" || value == "endDate") &&
@@ -116,10 +116,10 @@ export default defineComponent({
 
       searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
       searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
-        () => false
+        () => false,
       );
       searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
-        () => false
+        () => false,
       );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
       searchStore.noRightInformation = false;
@@ -324,18 +324,17 @@ export default defineComponent({
               ref="tempValidOnMenu"
               transition="scale-transition"
               :close-on-content-click="false"
-              offset-y
+              :location="'bottom'"
               min-width="auto"
               :return-value.sync="searchStore.temporalValidOn"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template v-slot:activator="{ props }">
                 <v-text-field
                   prepend-icon="mdi-calendar"
                   readonly
                   outlined
                   clearable
-                  v-bind="attrs"
-                  v-on="on"
+                  v-bind="props"
                   required
                   class="pl-7"
                   v-model="searchStore.temporalValidOn"
@@ -371,22 +370,25 @@ export default defineComponent({
             <v-menu
               ref="tempEventMenu"
               transition="scale-transition"
-              offset-y
+              :location="'bottom'"
               min-width="auto"
-              :return-value.sync="searchStore.temporalEventState.startDateOrEndDateValue"
+              :return-value.sync="
+                searchStore.temporalEventState.startDateOrEndDateValue
+              "
               :close-on-content-click="false"
             >
-              <template v-slot:activator="{ on, attrs }">
+              <template v-slot:activator="{ props }">
                 <v-text-field
                   prepend-icon="mdi-calendar"
                   readonly
                   outlined
                   clearable
-                  v-bind="attrs"
-                  v-on="on"
+                  v-bind="props"
                   required
                   class="pl-7"
-                  v-model="searchStore.temporalEventState.startDateOrEndDateValue"
+                  v-model="
+                    searchStore.temporalEventState.startDateOrEndDateValue
+                  "
                   @change="v$.startDateOrEndDateValue.$touch()"
                   @blur="v$.startDateOrEndDateValue.$touch()"
                   :error-messages="errorTempEventInput"
@@ -406,7 +408,7 @@ export default defineComponent({
                   color="primary"
                   @click="
                     $refs.tempEventMenu.save(
-                      searchStore.temporalEventState.startDateOrEndDateValue
+                      searchStore.temporalEventState.startDateOrEndDateValue,
                     )
                   "
                 >
@@ -420,7 +422,9 @@ export default defineComponent({
                   label="Startdatum"
                   class="pl-9 ml-4"
                   hide-details
-                  v-model="searchStore.temporalEventState.startDateOrEndDateOption"
+                  v-model="
+                    searchStore.temporalEventState.startDateOrEndDateOption
+                  "
                   value="startDate"
                   :error-messages="errorTempEventStartEnd"
                 ></v-checkbox>
@@ -429,7 +433,9 @@ export default defineComponent({
                 <v-checkbox
                   label="Enddatum"
                   class="pl-9 ml-4"
-                  v-model="searchStore.temporalEventState.startDateOrEndDateOption"
+                  v-model="
+                    searchStore.temporalEventState.startDateOrEndDateOption
+                  "
                   :error-messages="errorTempEventStartEnd"
                   value="endDate"
                 ></v-checkbox>

@@ -6,7 +6,7 @@ import { computed, ComputedRef, defineComponent, PropType, ref } from "vue";
 export default defineComponent({
   props: {
     rights: {
-      type: {} as PropType<Array<RightRest>>,
+      type: Object as PropType<Array<RightRest>>,
       required: true,
     },
     metadataId: {

@@ -178,19 +178,20 @@ export default defineComponent({
      *
      * Single Click
      */
-    const addActiveItem = (metadata: MetadataRest, row: any) => {
-      row.select(true);
+    const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
+      //row.select(true);
       const item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.metadataId === metadata.metadataId,
+        (e) => e.metadata.metadataId === row.item.metadataId,
       );
       if (item !== undefined) {
         currentItem.value = item;
+        console.log("ItemFound: " + currentItem.value.metadata.metadataId);
       }
     };
 
     /** Double Click **/
     const setActiveItem = (clickevent: any, row: any) => {
-      row.select(true);
+      //row.select(true);
       const item: ItemRest | undefined = items.value.find(
         (e) => e.metadata.metadataId === row.item.metadataId,
       );
@@ -854,11 +855,11 @@ export default defineComponent({
             :items="items.map((value) => value.metadata)"
             disable-pagination
             item-key="metadataId"
-            loading="tableContentLoading"
+            :loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             @click:row="addActiveItem"
-            @dblclick:row="setActiveItem"
+            @dblclick="setActiveItem"
           >
             <template v-slot:item.handle="{ item }">
               <td>

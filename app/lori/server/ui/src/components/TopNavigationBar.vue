@@ -37,7 +37,7 @@ export default defineComponent({
     const loginUnauthorized = ref(false);
     const cookieName = "JSESSIONID";
     const login = (init: boolean) => {
-      let cookieValue = cookies.cookies.isKey(cookieName)
+      const cookieValue = cookies.cookies.isKey(cookieName)
         ? cookies.cookies.get(cookieName)
         : "none";
       usersApi
@@ -67,7 +67,7 @@ export default defineComponent({
                   loginError.value = true;
                 }
               }
-            }
+            },
           );
         });
     };
@@ -77,7 +77,7 @@ export default defineComponent({
 
     const logoutDialog = ref(false);
     const logout = () => {
-      let cookieValue = cookies.cookies.isKey(cookieName)
+      const cookieValue = cookies.cookies.isKey(cookieName)
         ? cookies.cookies.get(cookieName)
         : "none";
       usersApi
@@ -140,11 +140,9 @@ export default defineComponent({
       />
     </div>
 
-    <v-menu :offset-y="true" bottom left>
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn dark icon v-bind="attrs" v-on="on">
-          <v-icon>mdi-view-headline</v-icon>
-        </v-btn>
+    <v-menu :location="'bottom'">
+      <template v-slot:activator="{ props }">
+        <v-btn dark icon="mdi-view-headline" v-bind="props"> </v-btn>
       </template>
 
       <v-list>
@@ -172,14 +170,13 @@ export default defineComponent({
     </v-menu>
 
     <v-spacer></v-spacer>
-    <v-menu offset-y>
-      <template v-slot:activator="{ on, attrs }">
+    <v-menu :location="'bottom'">
+      <template v-slot:activator="{ props }">
         <v-chip
           class="ma-2"
           color="green"
           text-color="white"
-          v-bind="attrs"
-          v-on="on"
+          v-bind="props"
         >
           <v-avatar class="green darken-4" left>
             {{ historyStore.numberEntries }}
@@ -201,9 +198,9 @@ export default defineComponent({
         </v-list-item>
       </v-list>
     </v-menu>
-    <v-menu offset-y>
-      <template v-slot:activator="{ on, attrs }">
-        <v-btn class="mx-2" fab large color="purple" v-bind="attrs" v-on="on">
+    <v-menu :location="'bottom'">
+      <template v-slot:activator="{ props }">
+        <v-btn class="mx-2" fab large color="purple" v-bind="props">
           <v-icon dark>mdi-account</v-icon>
         </v-btn>
       </template>

@@ -24,7 +24,7 @@ export default defineComponent({
       required: true,
     },
     group: {
-      type: {} as PropType<GroupRest>,
+      type: Object as PropType<GroupRest>,
       required: true,
     },
   },

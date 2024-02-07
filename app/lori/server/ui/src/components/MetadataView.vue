@@ -5,7 +5,7 @@ import { computed, defineComponent, PropType } from "vue";
 export default defineComponent({
   props: {
     metadata: {
-      type: {} as PropType<MetadataRest>,
+      type: Object as PropType<MetadataRest>,
       required: true,
     },
   },

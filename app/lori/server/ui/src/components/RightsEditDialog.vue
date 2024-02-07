@@ -34,7 +34,7 @@ import { uniqWith } from "lodash";
 export default defineComponent({
   props: {
     right: {
-      type: {} as PropType<RightRest>,
+      type: Object as PropType<RightRest>,
       required: false, // Is not required because this component is used for creating new rights as well
     },
     index: {
@@ -58,7 +58,7 @@ export default defineComponent({
       required: false,
     },
     initialBookmark: {
-      type: {} as PropType<BookmarkRest>,
+      type: Object as PropType<BookmarkRest>,
       required: false,
     },
   },
@@ -262,7 +262,7 @@ export default defineComponent({
                 metadataId: props.metadataId,
                 rightId: r.rightId,
               } as ItemEntry,
-              true
+              true,
             )
             .then(() => {
               tmpRight.value.rightId = r.rightId;
@@ -369,7 +369,7 @@ export default defineComponent({
           bookmarkItems.value
             .map((elem) => elem.bookmarkId)
             .filter((elem): elem is number => !!elem),
-          true
+          true,
         )
         .then(() => {
           callback();
@@ -387,16 +387,16 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.formTemplateName = "foo";
       }
-      let isValid = await v$.value.$validate();
+      const isValid = await v$.value.$validate();
       if (!isValid) {
         return;
       }
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
       tmpRight.value.basisStorage = stringToBasisStorage(
-        formState.basisStorage
+        formState.basisStorage,
       );
       tmpRight.value.basisAccessState = stringToBasisAccessState(
-        formState.basisAccessState
+        formState.basisAccessState,
       );
       updateInProgress.value = true;
       tmpRight.value.startDate = new Date(formState.startDate);
@@ -444,7 +444,7 @@ export default defineComponent({
     };
 
     const basisStorageToString = (
-      basisStorage: RightRestBasisStorageEnum | undefined
+      basisStorage: RightRestBasisStorageEnum | undefined,
     ) => {
       if (basisStorage == undefined) {
         return "Kein Wert";
@@ -488,7 +488,7 @@ export default defineComponent({
     };
 
     const basisAccessStateToString = (
-      basisAccessState: RightRestBasisAccessStateEnum | undefined
+      basisAccessState: RightRestBasisAccessStateEnum | undefined,
     ) => {
       if (basisAccessState == undefined) {
         return "Kein Wert";
@@ -535,7 +535,7 @@ export default defineComponent({
       }
     });
     const computedMetadataId = computed(() =>
-      props.metadataId != undefined ? props.metadataId : ""
+      props.metadataId != undefined ? props.metadataId : "",
     );
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
@@ -550,19 +550,19 @@ export default defineComponent({
     const computedTemplateId = computed(() =>
       props.right == undefined || props.right.templateId == undefined
         ? -1
-        : props.right.templateId
+        : props.right.templateId,
     );
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
       () =>
         isNew.value ||
-        (props.right != undefined && props.right.lastAppliedOn == undefined)
+        (props.right != undefined && props.right.lastAppliedOn == undefined),
     );
     const isTemplate = computed(
       () =>
         props.isNewTemplate ||
-        (props.right != undefined && props.right.templateId != undefined)
+        (props.right != undefined && props.right.templateId != undefined),
     );
 
     watch(computedRight, () => {
@@ -596,7 +596,7 @@ export default defineComponent({
       formState.accessState = accessStateToString(props.right.accessState);
       formState.basisStorage = basisStorageToString(props.right.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
-        props.right.basisAccessState
+        props.right.basisAccessState,
       );
       formState.startDate = props.right.startDate.toISOString().slice(0, 10);
       if (props.right.endDate !== undefined) {
@@ -682,7 +682,7 @@ export default defineComponent({
       // Unionise
       bookmarkItems.value = bookmarkItems.value.concat(bookmarks);
       bookmarkItems.value = uniqWith(bookmarkItems.value, isEqual).sort(
-        (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1)
+        (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1),
       );
       renderBookmarkKey.value += 1;
     };
@@ -1032,11 +1032,11 @@ export default defineComponent({
                   v-model="menuStartDate"
                   :close-on-content-click="false"
                   :return-value.sync="formState.startDate"
+                  :location="'bottom'"
                   min-width="auto"
-                  offset-y
                   transition="scale-transition"
                 >
-                  <template v-slot:activator="{ on, attrs }">
+                  <template v-slot:activator="{ props }">
                     <v-text-field
                       ref="startDate"
                       v-model="formState.startDate"
@@ -1046,10 +1046,9 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       readonly
                       required
-                      v-bind="attrs"
+                      v-bind="props"
                       @blur="v$.startDate.$touch()"
                       @change="v$.startDate.$touch()"
-                      v-on="on"
                     ></v-text-field>
                   </template>
                   <v-date-picker
@@ -1090,10 +1089,10 @@ export default defineComponent({
                   :close-on-content-click="false"
                   :return-value.sync="formState.endDate"
                   min-width="auto"
-                  offset-y
+                  :location="'bottom'"
                   transition="scale-transition"
                 >
-                  <template v-slot:activator="{ on, attrs }">
+                  <template v-slot:activator="{ props }">
                     <v-text-field
                       ref="endDate"
                       v-model="formState.endDate"
@@ -1103,10 +1102,9 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       readonly
                       required
-                      v-bind="attrs"
+                      v-bind="props"
                       @blur="v$.endDate.$touch()"
                       @change="v$.endDate.$touch()"
-                      v-on="on"
                     ></v-text-field>
                   </template>
                   <v-date-picker
