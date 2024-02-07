@@ -826,10 +826,10 @@ export default defineComponent({
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
         <v-expansion-panel>
-          <v-expansion-panel-header>
+          <v-expansion-panel-title>
             Template Informationen
-          </v-expansion-panel-header>
-          <v-expansion-panel-content eager>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text eager>
             <v-container fluid>
               <v-row>
                 <v-col cols="4">
@@ -974,14 +974,14 @@ export default defineComponent({
                 </v-col>
               </v-row>
             </v-container>
-          </v-expansion-panel-content>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </template>
       <v-expansion-panel>
-        <v-expansion-panel-header
+        <v-expansion-panel-title
           >Steuerungsrelevante Elemente
-        </v-expansion-panel-header>
-        <v-expansion-panel-content eager>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
               <v-col cols="4">
@@ -1161,11 +1161,11 @@ export default defineComponent({
               </v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
       <v-expansion-panel>
-        <v-expansion-panel-header>Formale Regelung</v-expansion-panel-header>
-        <v-expansion-panel-content eager>
+        <v-expansion-panel-title>Formale Regelung</v-expansion-panel-title>
+        <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
               <v-col cols="4">
@@ -1285,13 +1285,13 @@ export default defineComponent({
               </v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
       <v-expansion-panel>
-        <v-expansion-panel-header
+        <v-expansion-panel-title
           >Prozessdokumentierende Elemente
-        </v-expansion-panel-header>
-        <v-expansion-panel-content eager>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
               <v-col cols="4">
@@ -1335,13 +1335,13 @@ export default defineComponent({
               </v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
       <v-expansion-panel>
-        <v-expansion-panel-header>
+        <v-expansion-panel-title>
           Metadaten über den Rechteinformationseintrag
-        </v-expansion-panel-header>
-        <v-expansion-panel-content eager>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row v-if="!isTemplate">
               <v-col cols="4">
@@ -1383,7 +1383,7 @@ export default defineComponent({
               </v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
     <v-card-actions>

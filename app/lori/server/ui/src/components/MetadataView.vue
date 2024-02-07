@@ -46,10 +46,10 @@ export default defineComponent({
     <v-divider></v-divider>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
-        <v-expansion-panel-header>
+        <v-expansion-panel-title>
           DSpace-Item Metadaten
-        </v-expansion-panel-header>
-        <v-expansion-panel-content>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
           <v-container>
             <v-row>
               <v-col>Id</v-col>
@@ -81,13 +81,13 @@ export default defineComponent({
               <v-col></v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
       <v-expansion-panel>
-        <v-expansion-panel-header>
+        <v-expansion-panel-title>
           Bibliographische Metadaten
-        </v-expansion-panel-header>
-        <v-expansion-panel-content>
+        </v-expansion-panel-title>
+        <v-expansion-panel-text>
           <v-container>
             <v-row v-show="currentMetadata.title">
               <v-col>Titel</v-col>
@@ -207,7 +207,7 @@ export default defineComponent({
               <v-col></v-col>
             </v-row>
           </v-container>
-        </v-expansion-panel-content>
+        </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
   </v-card>
