@@ -220,15 +220,15 @@ export default {
     }
     searchStore.temporalEventState.startDateOrEndDateOption = "startDate";
     searchStore.temporalEventState.startDateOrEndDateValue =
-      bookmark.filterStartDate.toISOString().split("T")[0];
+      bookmark.filterStartDate;
   },
 
   buildStartDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventState.startDateOrEndDateOption == "startDate" &&
-      searchStore.temporalEventState.startDateOrEndDateValue != ""
+      searchStore.temporalEventState.startDateOrEndDateValue != undefined
     ) {
-      return searchStore.temporalEventState.startDateOrEndDateValue;
+      return date_utils.dateToIso8601(searchStore.temporalEventState.startDateOrEndDateValue);
     } else {
       return undefined;
     }
@@ -239,16 +239,14 @@ export default {
       return;
     }
     searchStore.temporalEventState.startDateOrEndDateOption = "endDate";
-    searchStore.temporalEventState.startDateOrEndDateValue =
-      bookmark.filterEndDate.toISOString().split("T")[0];
   },
 
   buildEndDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventState.startDateOrEndDateOption == "endDate" &&
-      searchStore.temporalEventState.startDateOrEndDateValue != ""
+      searchStore.temporalEventState.startDateOrEndDateValue != undefined
     ) {
-      return searchStore.temporalEventState.startDateOrEndDateValue;
+      return date_utils.dateToIso8601(searchStore.temporalEventState.startDateOrEndDateValue);
     } else {
       return undefined;
     }
@@ -362,9 +360,7 @@ export default {
     if (bookmark.filterValidOn == undefined) {
       return;
     }
-    searchStore.temporalValidOn = bookmark.filterValidOn
-      .toISOString()
-      .split("T")[0];
+    searchStore.temporalValidOn = bookmark.filterValidOn;
   },
 
   buildValidOnFilter(searchStore: any): string | undefined {
