@@ -13,7 +13,7 @@ export default defineComponent({
     const tempEventMenu = ref(false);
     const tempValidOnMenu = ref(false);
     type FormState = {
-      tempEventInput: string;
+      tempEventInput: Date | undefined;
       tempEventStart: boolean;
       tempEventEnd: boolean;
     };
@@ -24,7 +24,7 @@ export default defineComponent({
     ) => boolean = (value: string, siblings: FormState) => {
       return !(
         ((value == "startDate" || value == "endDate") &&
-          siblings.tempEventInput != "") ||
+          startEndDateFormatted.value != "") ||
         siblings.tempEventInput != undefined
       );
     };
@@ -39,8 +39,8 @@ export default defineComponent({
     const errorTempEventInput = computed(() => {
       const errors: Array<string> = [];
       if (
-        v$.value.startDateOrEndDateOption.$invalid &&
-        searchStore.temporalEventState.startDateOrEndDateValue == undefined
+        searchStore.temporalEventState.startDateOrEndDateValue == undefined ||
+        startEndDateFormatted.value == ""
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -143,7 +143,7 @@ export default defineComponent({
         /**
          * IMPORTANT NOTE: Openapis conversion of enums between frontend and backend
          * has issues with multiple word entries. The entries aren't always
-         * encoded as the interface suggest, for instance 'periodicalPart' is
+         * encoded as the interface suggests, for instance 'periodicalPart' is
          * sometimes encoded as 'periodical_part'. That's the reason why all
          * these conversions contain both variants.
          */
@@ -415,6 +415,11 @@ export default defineComponent({
                     prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
+                    required
+                    clearable
+                    @change="v$.startDateOrEndDateValue.$touch()"
+                    @blur="v$.startDateOrEndDateValue.$touch()"
+                    :error-messages="errorTempEventInput"
                   ></v-text-field>
                 </template>
                 <v-date-picker
