@@ -384,6 +384,7 @@ export default defineComponent({
                 <template v-slot:activator="{ props }">
                   <v-text-field
                     :modelValue="temporalValidOnFormatted"
+                    prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
                   ></v-text-field>
@@ -411,6 +412,7 @@ export default defineComponent({
                 <template v-slot:activator="{ props }">
                   <v-text-field
                     :modelValue="startEndDateFormatted"
+                    prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
                   ></v-text-field>

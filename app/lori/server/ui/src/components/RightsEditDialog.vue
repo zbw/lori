@@ -813,15 +813,26 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-    <v-alert v-model="updateSuccessful" dismissible text type="success">
-      {{ updateSuccessfulMsg }}
+    <v-alert
+      v-model="updateSuccessful"
+      dismissible
+      type="success"
+      text="{{ updateSuccessfulMsg }}"
+    >
     </v-alert>
-    <v-alert v-model="saveAlertError" dismissible text type="error">
-      Speichern war nicht erfolgreich:
-      {{ saveAlertErrorMsg }}
+    <v-alert
+      v-model="saveAlertError"
+      dismissible
+      type="error"
+      text="Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}"
+    >
     </v-alert>
-    <v-alert v-model="generalAlertError" dismissible text type="error">
-      {{ generalAlertErrorMsg }}
+    <v-alert
+      v-model="generalAlertError"
+      dismissible
+      type="error"
+      text="{{ generalAlertErrorMsg }}"
+    >
     </v-alert>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
@@ -939,7 +950,6 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                     color="blue darken-1"
-                    text
                     @click="selectBookmark"
                     :disabled="!isEditable"
                     >Suche Bookmark</v-btn
@@ -1038,7 +1048,6 @@ export default defineComponent({
                     <v-spacer></v-spacer>
                     <v-btn
                       color="primary"
-                      text
                       @click="menuStartDate = false"
                       :disabled="!isEditable"
                     >
@@ -1046,7 +1055,6 @@ export default defineComponent({
                     </v-btn>
                     <v-btn
                       color="primary"
-                      text
                       @click="$refs.menuStart.save(formState.startDate)"
                       :disabled="!isEditable"
                     >
@@ -1089,12 +1097,11 @@ export default defineComponent({
                     scrollable
                   >
                     <v-spacer></v-spacer>
-                    <v-btn color="primary" text @click="menuEndDate = false">
+                    <v-btn color="primary" @click="menuEndDate = false">
                       Cancel
                     </v-btn>
                     <v-btn
                       color="primary"
-                      text
                       @click="$refs.menuEnd.save(formState.endDate)"
                     >
                       OK
@@ -1332,11 +1339,10 @@ export default defineComponent({
     </v-expansion-panels>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
+      <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
       <v-btn
         :disabled="updateInProgress"
         color="blue darken-1"
-        text
         @click="save"
         >Speichern
       </v-btn>
