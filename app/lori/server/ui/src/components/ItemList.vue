@@ -797,24 +797,23 @@ export default defineComponent({
           <v-alert
             v-model="loadAlertError"
             dismissible
-            text="Laden der bibliographischen Daten war nicht erfolgreich:"
             type="error"
           >
-            {{ loadAlertErrorMessage }}
+            Laden der bibliographischen Daten war nicht erfolgreich: {{ loadAlertErrorMessage }}
           </v-alert>
           <v-alert
             v-model="invalidSearchKeyError"
             dismissible
-            text="{{ invalidSearchKeyErrorMsg }}"
             type="error"
           >
+            {{ invalidSearchKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="hasSearchTokenWithNoKeyError"
             dismissible
-            text="{{ hasSearchTokenWithNoKeyErrorMsg }}"
             type="error"
           >
+            {{ hasSearchTokenWithNoKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="bookmarkSuccessfulMsg"

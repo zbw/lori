@@ -122,19 +122,18 @@ export default defineComponent({
       <v-alert
         v-model="lastUpdateSuccessful"
         dismissible
-        text="Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item
-        {{ metadataId }}."
         type="success"
         @close="resetLastUpdateSuccessful"
       >
+        Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item {{ metadataId }}.
       </v-alert>
       <v-alert
         v-model="lastDeletionSuccessful"
         dismissible
-        text="Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item {{ metadataId }}."
         type="success"
         @close="resetLastDeletionSuccessful"
       >
+        Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item {{ metadataId }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog

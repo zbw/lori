@@ -193,19 +193,11 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert
-        v-model="alertSuccessful"
-        dismissible
-        text="{{ alertSuccessfulMsg }}"
-        type="success"
-      >
+      <v-alert v-model="alertSuccessful" dismissible type="success">
+        {{ alertSuccessfulMsg }}
       </v-alert>
-      <v-alert
-        v-model="bookmarkError"
-        dismissible
-        text="{{ bookmarkErrorMsg }}"
-        type="error"
-      >
+      <v-alert v-model="bookmarkError" dismissible type="error">
+        {{ bookmarkErrorMsg }}
       </v-alert>
       <v-card-title>Gespeicherte Suchen verwalten</v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">

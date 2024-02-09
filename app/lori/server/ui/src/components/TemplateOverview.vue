@@ -113,7 +113,7 @@ export default defineComponent({
 
           // Check for errors
           const errors: Array<RightErrorRest> = r.templateApplication.flatMap(
-            (t) => (t.errors != undefined ? t.errors : [])
+            (t) => (t.errors != undefined ? t.errors : []),
           );
           if (errors.length > 0) {
             templateApplyError.value = true;
@@ -225,10 +225,10 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessful" dismissible text type="success">
+      <v-alert v-model="alertSuccessful" dismissible type="success">
         {{ alertSuccessfulMsg }}
       </v-alert>
-      <v-alert v-model="templateLoadError" dismissible text type="error">
+      <v-alert v-model="templateLoadError" dismissible type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>
       <v-dialog v-model="templateApplyError" max-width="1000">

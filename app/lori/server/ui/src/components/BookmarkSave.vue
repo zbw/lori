@@ -113,9 +113,8 @@ export default defineComponent({
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
         <v-col cols="4">
-          <div class="text-h6 mb-1">
-            Name
-          </div>/
+          <div class="text-h6 mb-1">Name</div>
+          /
         </v-col>
         <v-col cols="8">
           <v-text-field
@@ -128,9 +127,7 @@ export default defineComponent({
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4">
-         Bookmark-Id
-        </v-col>
+        <v-col cols="4"> Bookmark-Id </v-col>
         <v-col cols="8">
           <v-text-field
             disabled
@@ -140,9 +137,7 @@ export default defineComponent({
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4">
-          Beschreibung
-        </v-col>
+        <v-col cols="4"> Beschreibung </v-col>
         <v-col cols="8">
           <v-text-field v-model="description" outlined></v-text-field>
         </v-col>
@@ -157,12 +152,8 @@ export default defineComponent({
           @click="save"
         ></v-btn>
       </v-card-actions>
-      <v-alert
-        v-model="saveAlertError"
-        dismissible
-        text=" Speichern war nicht erfolgreich: {{ saveAlertErrorMessage }}"
-        type="error"
-      >
+      <v-alert v-model="saveAlertError" dismissible type="error">
+        Speichern war nicht erfolgreich: {{ saveAlertErrorMessage }}
       </v-alert>
     </v-container>
   </v-card>

@@ -93,9 +93,9 @@ export default defineComponent({
       <v-alert
         v-model="bookmarkLoadError"
         dismissible
-        text="{{ bookmarkLoadErrorMsg }}"
         type="error"
       >
+        {{ bookmarkLoadErrorMsg }}"
       </v-alert>
       <v-text-field
         v-model="searchTerm"

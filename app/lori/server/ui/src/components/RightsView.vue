@@ -131,12 +131,8 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
-    <v-alert
-      v-model="addSuccessful"
-      dismissible
-      text="Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt."
-      type="success"
-    >
+    <v-alert v-model="addSuccessful" dismissible type="success">
+      Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
     <v-data-table
