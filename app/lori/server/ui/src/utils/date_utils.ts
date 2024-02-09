@@ -8,4 +8,24 @@ export default {
       .toISOString()
       .split("T")[0];
   },
+
+  isEmpty(obj: object): boolean {
+    for (const prop in obj) {
+      if (Object.hasOwn(obj, prop)) {
+        return false;
+      }
+    }
+    return true;
+  },
+
+  isEmptyObject(obj: object | undefined): boolean {
+    if (obj == undefined) {
+      return false;
+    }
+    const proto = Object.getPrototypeOf(obj);
+    if (proto !== null && proto !== Object.prototype) {
+      return false;
+    }
+    return this.isEmpty(obj);
+  },
 };

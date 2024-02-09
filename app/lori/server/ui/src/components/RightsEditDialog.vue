@@ -30,6 +30,8 @@ import templateApi from "@/api/templateApi";
 import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
+import date_utils from "@/utils/date_utils";
+import { useDate } from "vuetify";
 
 export default defineComponent({
   props: {
@@ -87,8 +89,8 @@ export default defineComponent({
      */
     type FormState = {
       accessState: string;
-      startDate: string;
-      endDate: string;
+      startDate: Date;
+      endDate: Date | undefined;
       formTemplateName: string;
     };
 
@@ -96,21 +98,48 @@ export default defineComponent({
       accessState: "",
       basisStorage: "",
       basisAccessState: "",
-      startDate: "",
-      endDate: "",
+      startDate: {} as Date,
+      endDate: {} as Date | undefined,
       formTemplateName: "",
     });
 
-    const endDateCheck = (value: string, siblings: FormState) => {
-      if (value == "") {
+    const isStartDateMenuOpen = ref(false);
+    const isEndDateMenuOpen = ref(false);
+
+    const startDateFormatted = computed(() => {
+      if (date_utils.isEmptyObject(formState.startDate)) {
+        return "";
+      } else {
+        return date_utils.dateToIso8601(formState.startDate);
+      }
+    });
+
+    const endDateFormatted = computed(() => {
+      if (
+        date_utils.isEmptyObject(formState.endDate) ||
+        formState.endDate == undefined
+      ) {
+        return "";
+      } else {
+        return date_utils.dateToIso8601(formState.endDate);
+      }
+    });
+
+    watch(startDateFormatted, () => {
+      isStartDateMenuOpen.value = false;
+    });
+
+    watch(endDateFormatted, () => {
+      isEndDateMenuOpen.value = false;
+    });
+
+    const endDateCheck = (value: Date | undefined, siblings: FormState) => {
+      if (value == undefined || siblings.startDate == undefined) {
         return true;
       } else {
-        const endDate = new Date(value);
-        const startDate = new Date(siblings.startDate);
-        return startDate < endDate;
+        return siblings.startDate < value;
       }
     };
-
     const rules = {
       accessState: { required },
       startDate: { required },
@@ -399,9 +428,8 @@ export default defineComponent({
         formState.basisAccessState,
       );
       updateInProgress.value = true;
-      tmpRight.value.startDate = new Date(formState.startDate);
-      tmpRight.value.endDate =
-        formState.endDate == "" ? undefined : new Date(formState.endDate);
+      tmpRight.value.startDate = formState.startDate;
+      tmpRight.value.endDate = formState.endDate;
       if (props.isNewTemplate) {
         createTemplate();
       } else if (isTemplate.value) {
@@ -598,19 +626,19 @@ export default defineComponent({
       formState.basisAccessState = basisAccessStateToString(
         props.right.basisAccessState,
       );
-      formState.startDate = props.right.startDate.toISOString().slice(0, 10);
+      formState.startDate = props.right.startDate;
       if (props.right.endDate !== undefined) {
-        formState.endDate = props.right.endDate.toISOString().slice(0, 10);
+        formState.endDate = props.right.endDate;
       } else {
-        formState.endDate = "";
+        formState.endDate = undefined;
       }
     };
 
     const resetAllValues = () => {
       tmpRight.value = Object.assign({} as RightRest);
-      formState.endDate = "";
-      formState.startDate = "";
-      formState.formTemplateName = "";
+      (formState.endDate = undefined),
+        (formState.startDate = {} as Date),
+        (formState.formTemplateName = "");
       formState.accessState = "";
       bookmarkItems.value = [];
     };
@@ -724,6 +752,7 @@ export default defineComponent({
       computedTemplateId,
       dialogDeleteRight,
       dialogDeleteTemplate,
+      endDateFormatted,
       errorAccessState,
       errorEndDate,
       errorTemplateName,
@@ -735,6 +764,8 @@ export default defineComponent({
       generalAlertErrorMsg,
       groupItems,
       historyStore,
+      isStartDateMenuOpen,
+      isEndDateMenuOpen,
       menuStartDate,
       menuEndDate,
       metadataCount,
@@ -743,6 +774,7 @@ export default defineComponent({
       renderBookmarkKey,
       saveAlertError,
       saveAlertErrorMsg,
+      startDateFormatted,
       updateConfirmDialog,
       updateSuccessful,
       updateSuccessfulMsg,
@@ -1016,18 +1048,13 @@ export default defineComponent({
               <v-col cols="4"> Gültigkeit Startdatum </v-col>
               <v-col cols="8">
                 <v-menu
-                  ref="menuStart"
-                  v-model="menuStartDate"
                   :close-on-content-click="false"
-                  :return-value.sync="formState.startDate"
                   :location="'bottom'"
-                  min-width="auto"
-                  transition="scale-transition"
+                  v-model="isStartDateMenuOpen"
                 >
                   <template v-slot:activator="{ props }">
                     <v-text-field
-                      ref="startDate"
-                      v-model="formState.startDate"
+                      :modelValue="startDateFormatted"
                       :error-messages="errorStartDate"
                       label="Start-Datum"
                       outlined
@@ -1039,27 +1066,8 @@ export default defineComponent({
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker
-                    v-model="formState.startDate"
-                    no-title
-                    scrollable
-                    :disabled="!isEditable"
-                  >
-                    <v-spacer></v-spacer>
-                    <v-btn
-                      color="primary"
-                      @click="menuStartDate = false"
-                      :disabled="!isEditable"
-                    >
-                      Cancel
-                    </v-btn>
-                    <v-btn
-                      color="primary"
-                      @click="$refs.menuStart.save(formState.startDate)"
-                      :disabled="!isEditable"
-                    >
-                      OK
-                    </v-btn>
+                  <v-date-picker v-model="formState.startDate" color="primary"
+                    ><template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>
               </v-col>
@@ -1068,18 +1076,13 @@ export default defineComponent({
               <v-col cols="4"> Gültigkeit Enddatum </v-col>
               <v-col cols="8">
                 <v-menu
-                  ref="menuEnd"
-                  v-model="menuEndDate"
                   :close-on-content-click="false"
-                  :return-value.sync="formState.endDate"
-                  min-width="auto"
                   :location="'bottom'"
-                  transition="scale-transition"
+                  v-model="isEndDateMenuOpen"
                 >
                   <template v-slot:activator="{ props }">
                     <v-text-field
-                      ref="endDate"
-                      v-model="formState.endDate"
+                      :modelValue="endDateFormatted"
                       :error-messages="errorEndDate"
                       label="End-Datum"
                       outlined
@@ -1091,22 +1094,9 @@ export default defineComponent({
                       @change="v$.endDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker
-                    v-model="formState.endDate"
-                    no-title
-                    scrollable
-                  >
-                    <v-spacer></v-spacer>
-                    <v-btn color="primary" @click="menuEndDate = false">
-                      Cancel
-                    </v-btn>
-                    <v-btn
-                      color="primary"
-                      @click="$refs.menuEnd.save(formState.endDate)"
-                    >
-                      OK
-                    </v-btn>
-                  </v-date-picker>
+                  <v-date-picker v-model="formState.endDate" color="primary"
+                    ><template v-slot:header></template
+                  ></v-date-picker>
                 </v-menu>
               </v-col>
             </v-row>
@@ -1340,10 +1330,7 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
-      <v-btn
-        :disabled="updateInProgress"
-        color="blue darken-1"
-        @click="save"
+      <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
     </v-card-actions>
