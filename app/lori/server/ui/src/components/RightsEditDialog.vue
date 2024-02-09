@@ -31,7 +31,6 @@ import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
-import { useDate } from "vuetify";
 
 export default defineComponent({
   props: {
@@ -190,7 +189,7 @@ export default defineComponent({
     /**
      * Constants:
      */
-    const openPanelsDefault = [0];
+    const openPanelsDefault: Ref<Array<string>> = ref(["0"]);
     const accessStatusSelect = ["Open", "Closed", "Restricted"];
     const basisAccessState = ref([
       "Lizenzvertrag",
@@ -801,14 +800,10 @@ export default defineComponent({
 <style scoped></style>
 
 <template>
-  <v-card>
+  <v-card class="overflow-y-auto" max-height="1000">
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn
-        :disabled="updateInProgress"
-        color="blue darken-1"
-        text
-        @click="save"
+      <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
@@ -845,34 +840,22 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-    <v-alert
-      v-model="updateSuccessful"
-      dismissible
-      type="success"
-      text="{{ updateSuccessfulMsg }}"
-    >
+    <v-alert v-model="updateSuccessful" dismissible type="success">
+      {{ updateSuccessfulMsg }}
     </v-alert>
-    <v-alert
-      v-model="saveAlertError"
-      dismissible
-      type="error"
-      text="Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}"
-    >
+    <v-alert v-model="saveAlertError" dismissible type="error">
+      Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}
     </v-alert>
-    <v-alert
-      v-model="generalAlertError"
-      dismissible
-      type="error"
-      text="{{ generalAlertErrorMsg }}"
-    >
+    <v-alert v-model="generalAlertError" dismissible type="error">
+      {{ generalAlertErrorMsg }}
     </v-alert>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
-        <v-expansion-panel>
+        <v-expansion-panel value="0">
           <v-expansion-panel-title>
             Template Informationen
           </v-expansion-panel-title>
-          <v-expansion-panel-text eager>
+          <v-expansion-panel-text>
             <v-container fluid>
               <v-row>
                 <v-col cols="4"> Template-Id </v-col>
