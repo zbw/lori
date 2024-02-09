@@ -161,23 +161,13 @@ export default defineComponent({
             >Bookmarks</v-list-item-title
           >
         </v-list-item>
-        <v-list-item link>
-          <v-list-item-title
-            >Templates mit Bookmarks verknüpfen</v-list-item-title
-          >
-        </v-list-item>
       </v-list>
     </v-menu>
 
     <v-spacer></v-spacer>
     <v-menu :location="'bottom'">
       <template v-slot:activator="{ props }">
-        <v-chip
-          class="ma-2"
-          color="green"
-          text-color="white"
-          v-bind="props"
-        >
+        <v-chip class="ma-2" color="green" text-color="white" v-bind="props">
           <v-avatar class="green darken-4" left>
             {{ historyStore.numberEntries }}
           </v-avatar>

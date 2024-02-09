@@ -120,20 +120,13 @@ export default defineComponent({
 
     <v-window v-model="tab">
       <v-alert
-        v-model="lastUpdateSuccessful"
-        dismissible
-        type="success"
-        @close="resetLastUpdateSuccessful"
-      >
-        Rechteinformation {{ lastUpdatedRight }} erfolgreich geupdated für Item {{ metadataId }}.
-      </v-alert>
-      <v-alert
         v-model="lastDeletionSuccessful"
         dismissible
         type="success"
         @close="resetLastDeletionSuccessful"
       >
-        Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item {{ metadataId }}.
+        Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
+        {{ metadataId }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
