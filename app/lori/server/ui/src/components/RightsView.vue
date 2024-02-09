@@ -148,7 +148,6 @@ export default defineComponent({
             <a :href="handle">{{ handle }}</a>
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
-          <v-spacer></v-spacer>
           <v-btn class="mb-2" color="primary" dark @click="newRight()">
             Neu
           </v-btn>
