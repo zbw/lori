@@ -74,7 +74,7 @@ export default defineComponent({
             searchquerybuilder.buildValidOnFilter(searchStore),
             searchquerybuilder.buildPaketSigelIdFilter(searchStore),
             searchquerybuilder.buildZDBIdFilter(searchStore),
-            searchquerybuilder.buildNoRightInformation(searchStore)
+            searchquerybuilder.buildNoRightInformation(searchStore),
           )
           .then((r) => {
             emit("addBookmarkSuccessful", r.bookmarkId);
@@ -113,7 +113,8 @@ export default defineComponent({
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
         <v-col cols="4">
-          <v-subheader>Name</v-subheader>
+          <div class="text-h6 mb-1">Name</div>
+          /
         </v-col>
         <v-col cols="8">
           <v-text-field
@@ -121,44 +122,38 @@ export default defineComponent({
             :error-messages="errorName"
             hint="Name des Bookmarks"
             maxlength="256"
-            outlined
+            variant="outlined"
           ></v-text-field>
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4">
-          <v-subheader>Bookmark-Id</v-subheader>
-        </v-col>
+        <v-col cols="4"> Bookmark-Id </v-col>
         <v-col cols="8">
           <v-text-field
             disabled
             label="Wird automatisch generiert"
-            outlined
+            variant="outlined"
           ></v-text-field>
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4">
-          <v-subheader>Beschreibung</v-subheader>
-        </v-col>
+        <v-col cols="4"> Beschreibung </v-col>
         <v-col cols="8">
           <v-text-field v-model="description" outlined></v-text-field>
         </v-col>
       </v-row>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close">Zurück</v-btn>
+        <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
           :disabled="updateInProgress"
           color="blue darken-1"
-          text
+          text="Speichern"
           @click="save"
-          >Speichern
-        </v-btn>
+        ></v-btn>
       </v-card-actions>
-      <v-alert v-model="saveAlertError" dismissible text type="error">
-        Speichern war nicht erfolgreich:
-        {{ saveAlertErrorMessage }}
+      <v-alert v-model="saveAlertError" closable type="error">
+        Speichern war nicht erfolgreich: {{ saveAlertErrorMessage }}
       </v-alert>
     </v-container>
   </v-card>

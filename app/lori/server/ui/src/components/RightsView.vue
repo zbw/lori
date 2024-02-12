@@ -1,6 +1,5 @@
 <script lang="ts">
 import { RightRest } from "@/generated-sources/openapi";
-import { DataTableHeader } from "vuetify";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsEditTabs from "@/components/RightsEditTabs.vue";
 import { computed, defineComponent, PropType, ref } from "vue";
@@ -9,7 +8,7 @@ import { useDialogsStore } from "@/stores/dialogs";
 export default defineComponent({
   props: {
     rights: {
-      type: {} as PropType<Array<RightRest>>,
+      type: Object as PropType<Array<RightRest>>,
       required: true,
     },
     metadataId: {
@@ -47,10 +46,10 @@ export default defineComponent({
         text: "Template",
         value: "templateId",
       },
-    ] as Array<DataTableHeader>;
+    ];
     const isNew = ref(false);
     const renderKey = ref(0);
-    const selectedHeaders: Array<DataTableHeader> = headers;
+    const selectedHeaders: { text: string; value: string }[] = headers;
     const updateSuccessful = ref(false);
     const addSuccessful = ref(false);
 
@@ -132,7 +131,7 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card v-if="rights" class="mx-auto" tile>
-    <v-alert v-model="addSuccessful" dismissible text type="success">
+    <v-alert v-model="addSuccessful" closable type="success">
       Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
     </v-alert>
     <v-divider></v-divider>
@@ -149,7 +148,6 @@ export default defineComponent({
             <a :href="handle">{{ handle }}</a>
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
-          <v-spacer></v-spacer>
           <v-btn class="mb-2" color="primary" dark @click="newRight()">
             Neu
           </v-btn>

@@ -113,7 +113,7 @@ export default defineComponent({
 
           // Check for errors
           const errors: Array<RightErrorRest> = r.templateApplication.flatMap(
-            (t) => (t.errors != undefined ? t.errors : [])
+            (t) => (t.errors != undefined ? t.errors : []),
           );
           if (errors.length > 0) {
             templateApplyError.value = true;
@@ -225,10 +225,10 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessful" dismissible text type="success">
+      <v-alert v-model="alertSuccessful" closable type="success">
         {{ alertSuccessfulMsg }}
       </v-alert>
-      <v-alert v-model="templateLoadError" dismissible text type="error">
+      <v-alert v-model="templateLoadError" closable type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>
       <v-dialog v-model="templateApplyError" max-width="1000">
@@ -259,7 +259,7 @@ export default defineComponent({
       <v-card-title>Template Übersicht</v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="createNewTemplate"
+        <v-btn color="blue darken-1" @click="createNewTemplate"
           >Neues Template anlegen
         </v-btn>
       </v-card-actions>
@@ -267,19 +267,18 @@ export default defineComponent({
         :key="renderKey"
         :headers="headers"
         :items="templateItems"
-        item-key="templateName"
+        item-value="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
             color="blue darken-1"
-            text
             @click="emitGetItemsByTemplateId(item.templateId)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
-          <v-btn color="blue darken-1" text @click="applyTemplate(item)"
+          <v-btn color="blue darken-1" @click="applyTemplate(item)"
             >Template anwenden</v-btn
           >
         </template>

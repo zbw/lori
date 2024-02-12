@@ -90,8 +90,8 @@ export default defineComponent({
   <v-card>
     <v-container>
       <v-card-title>Suche Gespeichterte Suchen</v-card-title>
-      <v-alert v-model="bookmarkLoadError" dismissible text type="error">
-        {{ bookmarkLoadErrorMsg }}
+      <v-alert v-model="bookmarkLoadError" closable type="error">
+        {{ bookmarkLoadErrorMsg }}"
       </v-alert>
       <v-text-field
         v-model="searchTerm"
@@ -105,19 +105,20 @@ export default defineComponent({
         :headers="headers"
         :items="bookmarkItems"
         :search="searchTerm"
-        item-key="bookmarkId"
+        item-value="bookmarkId"
         show-select
+        return-object
       >
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close">Zurück</v-btn>
+        <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
           :disabled="selectedBookmarks.length == 0"
           color="blue darken-1"
-          text
+          text="Speichern"
           @click="save"
-          >Speichern
+        >
         </v-btn>
       </v-card-actions>
     </v-container>

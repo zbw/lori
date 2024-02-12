@@ -26,7 +26,7 @@ export default defineComponent({
 </script>
 
 <style
-  src="vue-openapi/node_modules/vue-material/dist/vue-material.css"
+  src="@mdi/font/css/materialdesignicons.css"
 ></style>
 
 <template>

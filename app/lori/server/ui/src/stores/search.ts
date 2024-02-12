@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import {reactive, Ref, ref} from "vue";
+import { reactive, Ref, ref } from "vue";
 import {
   AccessStateWithCountRest,
   PaketSigelWithCountRest,
@@ -35,19 +35,19 @@ export const useSearchStore = defineStore("search", () => {
 
   const publicationTypeIdx: Ref<Array<boolean>> = ref([]);
   const publicationTypeReceived: Ref<Array<PublicationTypeWithCountRest>> = ref(
-    []
+    [],
   );
   const publicationTypeSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const temporalEventState = reactive({
-    startDateOrEndDateValue: "",
+    startDateOrEndDateValue: undefined as Date | undefined,
     startDateOrEndDateOption: "",
   });
 
   const temporalValidityFilterFuture = ref(false);
   const temporalValidityFilterPresent = ref(false);
   const temporalValidityFilterPast = ref(false);
-  const temporalValidOn = ref("");
+  const temporalValidOn = ref(undefined as Date | undefined);
 
   const zdbIdIdx: Ref<Array<boolean>> = ref([]);
   const zdbIdReceived: Ref<Array<ZdbIdWithCountRest>> = ref([]);

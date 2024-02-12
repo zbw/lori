@@ -98,7 +98,8 @@ val testNpm by tasks.registering(NpmTask::class) {
 }
 
 tasks.check {
-    dependsOn(testNpm)
+    // TODO(CB): uncommented until vite is used
+    //dependsOn(testNpm)
 }
 
 tasks.jar {

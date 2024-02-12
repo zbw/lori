@@ -136,29 +136,19 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
-    <v-alert
-      v-model="addSuccessfulNotification"
-      dismissible
-      text
-      type="success"
-    >
+    <v-alert v-model="addSuccessfulNotification" closable type="success">
       Gruppe {{ lastModifiedGroup.name }} erfolgreich hinzugefügt.
     </v-alert>
 
-    <v-alert v-model="groupLoadError" dismissible text type="error">
+    <v-alert v-model="groupLoadError" closable type="error">
       {{ groupLoadErrorMsg }}
     </v-alert>
-    <v-alert
-      v-model="updateSuccessfulNotification"
-      dismissible
-      text
-      type="success"
-    >
+    <v-alert v-model="updateSuccessfulNotification" closable type="success">
       Gruppe {{ lastModifiedGroup.name }} erfolgreich geupdated.
     </v-alert>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="blue darken-1" text @click="createNewGroup"
+      <v-btn color="blue darken-1" @click="createNewGroup"
         >Neue IP-Gruppe anlegen
       </v-btn>
     </v-card-actions>
@@ -168,7 +158,7 @@ export default defineComponent({
       :key="renderKey"
       @click:row="editGroup"
       loading-text="Daten werden geladen... Bitte warten."
-      item-key="groupName"
+      item-value="groupName"
     ></v-data-table>
     <v-dialog
       max-width="1000px"

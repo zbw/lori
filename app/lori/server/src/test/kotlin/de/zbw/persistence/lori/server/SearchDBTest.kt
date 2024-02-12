@@ -597,7 +597,7 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter,
                 null,
             ),
-            `is`(expectedSQLQuery)
+            `is`(expectedSQLQuery),
         )
     }
 

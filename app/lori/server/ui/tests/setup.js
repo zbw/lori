@@ -1,4 +1,6 @@
-import Vue from "vue";
-import Vuetify from "vuetify";
-Vue.use(Vuetify);
-Vue.config.productionTip = false;
+import { createApp } from "vue";
+import vuetify from "@/plugins/vuetify";
+import App from "@/App.vue";
+//Vue.config.productionTip = false;
+const app = createApp(App);
+app.use(vuetify);

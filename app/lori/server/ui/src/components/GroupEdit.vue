@@ -24,7 +24,7 @@ export default defineComponent({
       required: true,
     },
     group: {
-      type: {} as PropType<GroupRest>,
+      type: Object as PropType<GroupRest>,
       required: true,
     },
   },
@@ -254,7 +254,7 @@ export default defineComponent({
   <v-card>
     <v-container>
       <v-card-title>{{ dialogTitle }}</v-card-title>
-      <v-alert v-model="saveAlertError" dismissible text type="error">
+      <v-alert v-model="saveAlertError" closable type="error">
         {{ saveAlertErrorMessage }}
       </v-alert>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
@@ -268,14 +268,14 @@ export default defineComponent({
           <v-col>
             <v-text-field
               v-if="isNew"
-              outlined
+              variant="outlined"
               label="Name der Berechtigungsgruppe"
               v-model="formState.name"
               :error-messages="errorName"
             ></v-text-field>
             <v-text-field
               v-if="!isNew"
-              outlined
+              variant="outlined"
               label="Name der Berechtigungsgruppe"
               v-model="formState.name"
               :error-messages="errorName"
@@ -301,7 +301,7 @@ export default defineComponent({
               label="IP-Adressen"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
-              outlined
+              variant="outlined"
             ></v-textarea>
             <v-checkbox
               label="CSV Eingabe besitzt KEINEN Header"
@@ -316,7 +316,7 @@ export default defineComponent({
               label="CSV-Datei"
               v-model="formState.ipAddressesFile"
               :error-messages="errorIpAddresses"
-              outlined
+              variant="outlined"
             ></v-file-input>
             Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
           </v-col>
@@ -328,7 +328,7 @@ export default defineComponent({
             <v-textarea
               label="Beschreibung"
               v-model="formState.description"
-              outlined
+              variant="outlined"
             ></v-textarea>
           </v-col>
         </v-row>
