@@ -185,12 +185,11 @@ export default defineComponent({
       );
       if (item !== undefined) {
         currentItem.value = item;
-        console.log("ItemFound: " + currentItem.value.metadata.metadataId);
       }
     };
 
     /** Double Click **/
-    const setActiveItem = (clickevent: any, row: any) => {
+    const setActiveItem = (mouseEvent: MouseEvent, row: any) => {
       //row.select(true);
       const item: ItemRest | undefined = items.value.find(
         (e) => e.metadata.metadataId === row.item.metadataId,
@@ -794,18 +793,11 @@ export default defineComponent({
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
-          <v-alert
-            v-model="loadAlertError"
-            dismissible
-            type="error"
-          >
-            Laden der bibliographischen Daten war nicht erfolgreich: {{ loadAlertErrorMessage }}
+          <v-alert v-model="loadAlertError" dismissible type="error">
+            Laden der bibliographischen Daten war nicht erfolgreich:
+            {{ loadAlertErrorMessage }}
           </v-alert>
-          <v-alert
-            v-model="invalidSearchKeyError"
-            dismissible
-            type="error"
-          >
+          <v-alert v-model="invalidSearchKeyError" dismissible type="error">
             {{ invalidSearchKeyErrorMsg }}
           </v-alert>
           <v-alert
@@ -858,7 +850,7 @@ export default defineComponent({
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             @click:row="addActiveItem"
-            @dblclick="setActiveItem"
+            @dblclick:row="setActiveItem"
           >
             <template v-slot:item.handle="{ item }">
               <td>
