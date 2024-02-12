@@ -259,7 +259,7 @@ export default defineComponent({
       <v-card-title>Template Übersicht</v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="createNewTemplate"
+        <v-btn color="blue darken-1" @click="createNewTemplate"
           >Neues Template anlegen
         </v-btn>
       </v-card-actions>
@@ -273,13 +273,12 @@ export default defineComponent({
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
             color="blue darken-1"
-            text
             @click="emitGetItemsByTemplateId(item.templateId)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
-          <v-btn color="blue darken-1" text @click="applyTemplate(item)"
+          <v-btn color="blue darken-1" @click="applyTemplate(item)"
             >Template anwenden</v-btn
           >
         </template>

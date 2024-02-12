@@ -812,8 +812,8 @@ export default defineComponent({
       <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
-      <v-btn color="blue darken-1" text @click="cancel">Zurück</v-btn>
-      <v-btn :disabled="isNew" icon @click="initiateDeleteDialog">
+      <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
+      <v-btn :disabled="isNew" @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>
       <v-dialog
