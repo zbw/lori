@@ -107,6 +107,7 @@ export default defineComponent({
         :search="searchTerm"
         item-value="bookmarkId"
         show-select
+        return-object
       >
       </v-data-table>
       <v-card-actions>

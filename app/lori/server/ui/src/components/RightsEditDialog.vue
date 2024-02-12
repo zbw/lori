@@ -676,24 +676,24 @@ export default defineComponent({
     const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const bookmarkHeaders = [
       {
-        text: "Id",
+        title: "Id",
         align: "start",
         value: "bookmarkId",
         sortable: true,
       },
       {
-        text: "Name",
+        title: "Name",
         align: "start",
         value: "bookmarkName",
         sortable: true,
       },
       {
-        text: "Beschreibung",
+        title: "Beschreibung",
         align: "start",
         value: "description",
         sortable: true,
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { title: "Actions", value: "actions", sortable: false },
     ];
 
     // Load Bookmarks
