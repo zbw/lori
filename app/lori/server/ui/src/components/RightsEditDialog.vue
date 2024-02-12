@@ -88,7 +88,7 @@ export default defineComponent({
      */
     type FormState = {
       accessState: string;
-      startDate: Date;
+      startDate: Date | undefined;
       endDate: Date | undefined;
       formTemplateName: string;
     };
@@ -97,7 +97,7 @@ export default defineComponent({
       accessState: "",
       basisStorage: "",
       basisAccessState: "",
-      startDate: {} as Date,
+      startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
       formTemplateName: "",
     });
@@ -106,7 +106,10 @@ export default defineComponent({
     const isEndDateMenuOpen = ref(false);
 
     const startDateFormatted = computed(() => {
-      if (date_utils.isEmptyObject(formState.startDate)) {
+      if (
+        date_utils.isEmptyObject(formState.startDate) ||
+        formState.startDate == undefined
+      ) {
         return "";
       } else {
         return date_utils.dateToIso8601(formState.startDate);
@@ -427,6 +430,9 @@ export default defineComponent({
         formState.basisAccessState,
       );
       updateInProgress.value = true;
+      if (formState.startDate == undefined) {
+        return;
+      }
       tmpRight.value.startDate = formState.startDate;
       tmpRight.value.endDate = formState.endDate;
       if (props.isNewTemplate) {
@@ -635,9 +641,9 @@ export default defineComponent({
 
     const resetAllValues = () => {
       tmpRight.value = Object.assign({} as RightRest);
-      (formState.endDate = undefined),
-        (formState.startDate = {} as Date),
-        (formState.formTemplateName = "");
+      formState.endDate = undefined;
+      formState.startDate = undefined;
+      formState.formTemplateName = "";
       formState.accessState = "";
       bookmarkItems.value = [];
     };
