@@ -58,7 +58,7 @@ export default defineComponent({
 <template>
   <v-card>
     <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
-    <v-alert v-model="deleteAlertError" dismissible type="error">
+    <v-alert v-model="deleteAlertError" closable type="error">
       {{ deleteAlertErrorMessage }}
     </v-alert>
     <v-card-text> Soll diese Gruppe wirklich gelöscht werden? </v-card-text>

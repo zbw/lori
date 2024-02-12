@@ -152,7 +152,7 @@ export default defineComponent({
           @click="save"
         ></v-btn>
       </v-card-actions>
-      <v-alert v-model="saveAlertError" dismissible type="error">
+      <v-alert v-model="saveAlertError" closable type="error">
         Speichern war nicht erfolgreich: {{ saveAlertErrorMessage }}
       </v-alert>
     </v-container>

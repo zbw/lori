@@ -121,7 +121,7 @@ export default defineComponent({
     <v-window v-model="tab">
       <v-alert
         v-model="lastDeletionSuccessful"
-        dismissible
+        closable
         type="success"
         @close="resetLastDeletionSuccessful"
       >

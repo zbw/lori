@@ -225,10 +225,10 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessful" dismissible type="success">
+      <v-alert v-model="alertSuccessful" closable type="success">
         {{ alertSuccessfulMsg }}
       </v-alert>
-      <v-alert v-model="templateLoadError" dismissible type="error">
+      <v-alert v-model="templateLoadError" closable type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>
       <v-dialog v-model="templateApplyError" max-width="1000">

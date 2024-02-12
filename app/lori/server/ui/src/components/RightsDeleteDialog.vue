@@ -127,7 +127,7 @@ export default defineComponent({
 <template>
   <v-card>
     <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
-    <v-alert v-model="deleteAlertError" dismissible type="error">
+    <v-alert v-model="deleteAlertError" closable type="error">
       Löschen war nicht erfolgreich:
       {{ deleteErrorMessage }}
     </v-alert>

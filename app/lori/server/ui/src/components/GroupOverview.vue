@@ -136,14 +136,14 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
-    <v-alert v-model="addSuccessfulNotification" dismissible type="success">
+    <v-alert v-model="addSuccessfulNotification" closable type="success">
       Gruppe {{ lastModifiedGroup.name }} erfolgreich hinzugefügt.
     </v-alert>
 
-    <v-alert v-model="groupLoadError" dismissible type="error">
+    <v-alert v-model="groupLoadError" closable type="error">
       {{ groupLoadErrorMsg }}
     </v-alert>
-    <v-alert v-model="updateSuccessfulNotification" dismissible type="success">
+    <v-alert v-model="updateSuccessfulNotification" closable type="success">
       Gruppe {{ lastModifiedGroup.name }} erfolgreich geupdated.
     </v-alert>
     <v-card-actions>

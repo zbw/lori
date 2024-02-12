@@ -254,7 +254,7 @@ export default defineComponent({
   <v-card>
     <v-container>
       <v-card-title>{{ dialogTitle }}</v-card-title>
-      <v-alert v-model="saveAlertError" dismissible type="error">
+      <v-alert v-model="saveAlertError" closable type="error">
         {{ saveAlertErrorMessage }}
       </v-alert>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">

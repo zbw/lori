@@ -793,30 +793,26 @@ export default defineComponent({
             ></v-text-field>
           </v-card-title>
           <v-spacer></v-spacer>
-          <v-alert v-model="loadAlertError" dismissible type="error">
+          <v-alert v-model="loadAlertError" closable type="error">
             Laden der bibliographischen Daten war nicht erfolgreich:
             {{ loadAlertErrorMessage }}
           </v-alert>
-          <v-alert v-model="invalidSearchKeyError" dismissible type="error">
+          <v-alert v-model="invalidSearchKeyError" closable type="error">
             {{ invalidSearchKeyErrorMsg }}
           </v-alert>
-          <v-alert
-            v-model="hasSearchTokenWithNoKeyError"
-            dismissible
-            type="error"
-          >
+          <v-alert v-model="hasSearchTokenWithNoKeyError" closable type="error">
             {{ hasSearchTokenWithNoKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="bookmarkSuccessfulMsg"
-            dismissible
+            closable
             text="Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId.toString() }}."
             type="success"
           >
           </v-alert>
           <v-alert
             v-model="alertIsActive"
-            dismissible
+            closable
             text="{{ alertMsg }}"
             type="success"
           >

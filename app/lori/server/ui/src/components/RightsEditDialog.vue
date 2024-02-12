@@ -840,13 +840,13 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-    <v-alert v-model="updateSuccessful" dismissible type="success">
+    <v-alert v-model="updateSuccessful" closable type="success">
       {{ updateSuccessfulMsg }}
     </v-alert>
-    <v-alert v-model="saveAlertError" dismissible type="error">
+    <v-alert v-model="saveAlertError" closable type="error">
       Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}
     </v-alert>
-    <v-alert v-model="generalAlertError" dismissible type="error">
+    <v-alert v-model="generalAlertError" closable type="error">
       {{ generalAlertErrorMsg }}
     </v-alert>
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
