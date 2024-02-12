@@ -705,7 +705,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-/deep/ tr.v-data-table__selected {
+:deep(tr.v-data-table__selected) {
   background: #7d92f5 !important;
 }
 </style>
