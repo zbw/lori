@@ -231,7 +231,7 @@ export default defineComponent({
         :headers="headers"
         :items="bookmarkItems"
         :search="searchTerm"
-        item-key="bookmarkId"
+        item-value="bookmarkId"
         loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.createTemplate="{ item }">

@@ -267,7 +267,7 @@ export default defineComponent({
         :key="renderKey"
         :headers="headers"
         :items="templateItems"
-        item-key="templateName"
+        item-value="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.displayConnectedItems="{ item }">

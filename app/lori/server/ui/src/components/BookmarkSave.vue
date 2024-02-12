@@ -122,7 +122,7 @@ export default defineComponent({
             :error-messages="errorName"
             hint="Name des Bookmarks"
             maxlength="256"
-            outlined
+            variant="outlined"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -132,7 +132,7 @@ export default defineComponent({
           <v-text-field
             disabled
             label="Wird automatisch generiert"
-            outlined
+            variant="outlined"
           ></v-text-field>
         </v-col>
       </v-row>

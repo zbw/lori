@@ -866,7 +866,7 @@ export default defineComponent({
                     :disabled="isNew"
                     hint="Template Id"
                     label="Wird automatisch generiert"
-                    outlined
+                    variant="outlined"
                   ></v-text-field>
                   <v-text-field
                     v-if="!isNew"
@@ -874,7 +874,7 @@ export default defineComponent({
                     v-model="computedTemplateId"
                     disabled
                     hint="Template Id"
-                    outlined
+                    variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -886,7 +886,7 @@ export default defineComponent({
                     :error-messages="errorTemplateName"
                     :disabled="!isEditable"
                     hint="Name des Templates"
-                    outlined
+                    variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -896,7 +896,7 @@ export default defineComponent({
                   <v-text-field
                     v-model="tmpRight.templateDescription"
                     hint="Beschreibung des Templates"
-                    outlined
+                    variant="outlined"
                     :disabled="!isEditable"
                   ></v-text-field>
                 </v-col>
@@ -906,7 +906,7 @@ export default defineComponent({
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.createdOn"
-                    outlined
+                    variant="outlined"
                     readonly
                     hint="Erstellungsdatum des Templates"
                   ></v-text-field>
@@ -917,7 +917,7 @@ export default defineComponent({
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedOn"
-                    outlined
+                    variant="outlined"
                     readonly
                   ></v-text-field>
                 </v-col>
@@ -927,7 +927,7 @@ export default defineComponent({
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedBy"
-                    outlined
+                    variant="outlined"
                     readonly
                   ></v-text-field>
                 </v-col>
@@ -937,7 +937,7 @@ export default defineComponent({
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastAppliedOn"
-                    outlined
+                    variant="outlined"
                     readonly
                     hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
                   ></v-text-field>
@@ -950,7 +950,7 @@ export default defineComponent({
                     :key="renderBookmarkKey"
                     :headers="bookmarkHeaders"
                     :items="bookmarkItems"
-                    item-key="bookmarkId"
+                    item-value="bookmarkId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.actions="{ item }">
@@ -1001,7 +1001,7 @@ export default defineComponent({
                   disabled
                   hint="Rechte Id"
                   label="Wird automatisch generiert"
-                  outlined
+                  variant="outlined"
                 ></v-text-field>
                 <v-text-field
                   v-if="!isNew"
@@ -1009,7 +1009,7 @@ export default defineComponent({
                   v-model="tmpRight.rightId"
                   disabled
                   hint="Rechte Id"
-                  outlined
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1021,7 +1021,7 @@ export default defineComponent({
                   :disabled="!isEditable"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
-                  outlined
+                  variant="outlined"
                   @blur="v$.accessState.$touch()"
                   @change="v$.accessState.$touch()"
                 ></v-select>
@@ -1040,7 +1040,7 @@ export default defineComponent({
                       :modelValue="startDateFormatted"
                       :error-messages="errorStartDate"
                       label="Start-Datum"
-                      outlined
+                      variant="outlined"
                       prepend-icon="mdi-calendar"
                       readonly
                       required
@@ -1068,7 +1068,7 @@ export default defineComponent({
                       :modelValue="endDateFormatted"
                       :error-messages="errorEndDate"
                       label="End-Datum"
-                      outlined
+                      variant="outlined"
                       prepend-icon="mdi-calendar"
                       readonly
                       required
@@ -1094,7 +1094,7 @@ export default defineComponent({
                   counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
                   multiple
-                  outlined
+                  variant="outlined"
                 >
                 </v-select>
               </v-col>
@@ -1108,7 +1108,7 @@ export default defineComponent({
                   counter
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
-                  outlined
+                  variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1126,7 +1126,7 @@ export default defineComponent({
                   v-model="tmpRight.licenceContract"
                   :disabled="!isEditable"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
-                  outlined
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1162,7 +1162,7 @@ export default defineComponent({
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
                   :disabled="!isEditable"
-                  outlined
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1175,7 +1175,7 @@ export default defineComponent({
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
                   :disabled="!isEditable"
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
-                  outlined
+                  variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1216,7 +1216,7 @@ export default defineComponent({
                   counter
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
-                  outlined
+                  variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1236,7 +1236,7 @@ export default defineComponent({
                   v-model="formState.basisStorage"
                   :disabled="!isEditable"
                   :items="basisStorage"
-                  outlined
+                  variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1247,7 +1247,7 @@ export default defineComponent({
                   v-model="formState.basisAccessState"
                   :disabled="!isEditable"
                   :items="basisAccessState"
-                  outlined
+                  variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1260,7 +1260,7 @@ export default defineComponent({
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
-                  outlined
+                  variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1278,7 +1278,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedOn"
-                  outlined
+                  variant="outlined"
                   readonly
                 ></v-text-field>
               </v-col>
@@ -1288,7 +1288,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedBy"
-                  outlined
+                  variant="outlined"
                   readonly
                 ></v-text-field>
               </v-col>
@@ -1302,7 +1302,7 @@ export default defineComponent({
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
-                  outlined
+                  variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>

@@ -158,7 +158,7 @@ export default defineComponent({
       :key="renderKey"
       @click:row="editGroup"
       loading-text="Daten werden geladen... Bitte warten."
-      item-key="groupName"
+      item-value="groupName"
     ></v-data-table>
     <v-dialog
       max-width="1000px"

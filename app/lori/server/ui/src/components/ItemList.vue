@@ -785,7 +785,7 @@ export default defineComponent({
               clearable
               :hint="hintSearchField"
               label="Suche"
-              outlined
+              variant="outlined"
               persistent-hint
               single-line
               @click:append="startSearch"
@@ -845,7 +845,7 @@ export default defineComponent({
             :hide-default-footer="true"
             :items="items.map((value) => value.metadata)"
             disable-pagination
-            item-key="metadataId"
+            item-value="metadataId"
             :loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
             show-select

@@ -90,11 +90,7 @@ export default defineComponent({
   <v-card>
     <v-container>
       <v-card-title>Suche Gespeichterte Suchen</v-card-title>
-      <v-alert
-        v-model="bookmarkLoadError"
-        dismissible
-        type="error"
-      >
+      <v-alert v-model="bookmarkLoadError" dismissible type="error">
         {{ bookmarkLoadErrorMsg }}"
       </v-alert>
       <v-text-field
@@ -109,7 +105,7 @@ export default defineComponent({
         :headers="headers"
         :items="bookmarkItems"
         :search="searchTerm"
-        item-key="bookmarkId"
+        item-value="bookmarkId"
         show-select
       >
       </v-data-table>
