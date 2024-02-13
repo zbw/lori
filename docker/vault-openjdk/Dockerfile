@@ -1,6 +1,6 @@
-FROM eclipse-temurin:17.0.9_9-jdk AS tools
+FROM eclipse-temurin:17.0.10_7-jdk AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.1
+LABEL IMAGE_VERSION_TAG=0.9.2
 LABEL IMAGE_NAME=vault-openjdk
 LABEL OTC_STAGE=zbw-tools-nl
 
