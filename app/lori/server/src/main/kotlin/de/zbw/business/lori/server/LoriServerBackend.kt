@@ -502,11 +502,7 @@ class LoriServerBackend(
             )
             result.metadata.metadataId
         }
-        val errors = itemsWithConflicts.second.map { ce: RightError ->
-            val errorId = dbConnector.rightErrorDB.insertError(ce)
-            ce.copy(errorId = errorId)
-        }
-        return Pair(appliedMetadataIds, errors)
+        return Pair(appliedMetadataIds, itemsWithConflicts.second)
     }
 
     /**
