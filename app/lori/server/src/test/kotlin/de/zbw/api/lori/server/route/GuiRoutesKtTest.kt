@@ -24,8 +24,9 @@ class GuiRoutesKtTest {
         val backend = mockk<LoriServerBackend>(relaxed = true)
         val servicePool = RightRoutesKtTest.getServicePool(backend, SamlUtils("foo"))
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response: HttpResponse = client.post("/ui/callback-sso") {
                 header(HttpHeaders.Accept, ContentType.Application.Any)

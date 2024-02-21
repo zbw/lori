@@ -37,8 +37,9 @@ class ErrorRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/errors/rights/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()

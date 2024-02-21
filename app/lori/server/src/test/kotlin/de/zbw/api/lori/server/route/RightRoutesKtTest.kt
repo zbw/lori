@@ -52,8 +52,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/right/$rightId")
             val content: String = response.bodyAsText()
@@ -73,8 +74,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/right/$testId")
             assertThat(
@@ -95,8 +97,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/right/$rightId")
             assertThat(
@@ -119,8 +122,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
@@ -139,8 +143,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
@@ -159,8 +164,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat(
@@ -179,8 +185,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -198,8 +205,9 @@ class RightRoutesKtTest {
         }
         val servicePool = getServicePool(backend)
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -220,8 +228,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -245,8 +254,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -266,8 +276,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -287,8 +298,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -307,8 +319,9 @@ class RightRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/right") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -341,6 +354,8 @@ class RightRoutesKtTest {
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
             duoSenderEntityId = "someId",
+            sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
+            sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
         )
 
         val TEST_RIGHT = RightRest(

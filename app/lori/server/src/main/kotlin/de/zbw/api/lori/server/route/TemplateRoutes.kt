@@ -313,7 +313,6 @@ fun Routing.templateRoutes(
             }
         }
 
-
         /**
          * Return Template for a given Template-ID.
          */
@@ -353,7 +352,6 @@ fun Routing.templateRoutes(
                 }
             }
         }
-
 
         route("/list") {
             get {

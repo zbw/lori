@@ -256,7 +256,6 @@ fun Routing.groupRoutes(
             }
         }
 
-
         route("/list") {
             /**
              * Receive a list of groups.

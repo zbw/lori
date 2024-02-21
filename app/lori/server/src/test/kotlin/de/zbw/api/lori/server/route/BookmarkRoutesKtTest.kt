@@ -46,8 +46,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmark") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -70,8 +71,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmark") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -91,8 +93,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmark") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -113,8 +116,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.OK))
@@ -131,8 +135,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.Conflict))
@@ -149,8 +154,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -167,8 +173,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -184,8 +191,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/bookmark") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -205,8 +213,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/bookmark") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -228,8 +237,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/$bookmarkId")
             val content: String = response.bodyAsText()
@@ -249,8 +259,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -267,8 +278,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/$bookmarkId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -284,8 +296,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarkraw") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -308,8 +321,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarkraw") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -329,8 +343,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarkraw") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -350,8 +365,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/bookmarkraw") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -371,8 +387,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/bookmarkraw") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -395,8 +412,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -419,8 +437,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -439,8 +458,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.BadRequest))
@@ -458,8 +478,9 @@ class BookmarkRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/bookmark/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))

@@ -44,8 +44,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -68,8 +69,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/metadata") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -89,8 +91,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -113,8 +116,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -140,8 +144,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
@@ -160,8 +165,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
@@ -188,8 +194,9 @@ class MetadataRoutesKtTest {
         )
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat(
@@ -211,8 +218,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/$testId")
             val content: String = response.bodyAsText()
@@ -232,8 +240,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/$testId")
             assertThat(
@@ -254,8 +263,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/$testId")
             assertThat(
@@ -275,8 +285,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -300,8 +311,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -322,8 +334,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -346,8 +359,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/metadata") {
                 header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
@@ -375,8 +389,9 @@ class MetadataRoutesKtTest {
 
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -404,8 +419,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/list")
             val content: String = response.bodyAsText()
@@ -423,8 +439,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/list?limit=0")
             assertThat(
@@ -442,8 +459,9 @@ class MetadataRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/list?offset=-1")
             assertThat(
@@ -466,8 +484,9 @@ class MetadataRoutesKtTest {
 
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
             assertThat(
@@ -494,6 +513,8 @@ class MetadataRoutesKtTest {
             jwtRealm = "Lori ui",
             jwtSecret = "foobar",
             duoSenderEntityId = "someId",
+            sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
+            sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
         )
 
         val TEST_METADATA = MetadataRest(

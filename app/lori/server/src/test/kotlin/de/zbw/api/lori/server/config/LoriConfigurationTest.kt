@@ -33,6 +33,8 @@ class LoriConfigurationTest {
         System.setProperty("lori.jwt.realm", expectedConfig.jwtRealm)
         System.setProperty("lori.jwt.secret", expectedConfig.jwtSecret)
         System.setProperty("lori.duo.senderentityid", expectedConfig.duoSenderEntityId)
+        System.setProperty("lori.session.sign", expectedConfig.sessionSignKey)
+        System.setProperty("lori.session.encrypt", expectedConfig.sessionEncryptKey)
         val receivedConfig = LoriConfiguration.load(
             "lori",
             ChainedKonfiguration(
@@ -62,6 +64,8 @@ class LoriConfigurationTest {
                 jwtIssuer = "jwtIssuer",
                 jwtRealm = "jwtRealm",
                 duoSenderEntityId = "someId",
+                sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
+                sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
             )
     }
 }

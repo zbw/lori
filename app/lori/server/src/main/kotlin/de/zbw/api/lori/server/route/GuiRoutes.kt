@@ -22,7 +22,6 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import net.shibboleth.utilities.java.support.resolver.ResolverException
-import org.opensaml.core.xml.XMLObject
 import org.opensaml.core.xml.schema.XSString
 import org.opensaml.saml.saml2.core.Response
 import org.opensaml.xmlsec.signature.support.SignatureException

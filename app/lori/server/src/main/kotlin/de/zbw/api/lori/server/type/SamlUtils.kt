@@ -16,8 +16,6 @@ import org.opensaml.saml.criterion.ProtocolCriterion
 import org.opensaml.saml.metadata.resolver.impl.FilesystemMetadataResolver
 import org.opensaml.saml.metadata.resolver.impl.PredicateRoleDescriptorResolver
 import org.opensaml.saml.saml2.core.Assertion
-import org.opensaml.saml.saml2.core.Attribute
-import org.opensaml.saml.saml2.core.Response
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor
 import org.opensaml.saml.security.impl.MetadataCredentialResolver
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator

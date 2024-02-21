@@ -28,6 +28,8 @@ data class LoriConfiguration(
     val jwtIssuer: String,
     val jwtRealm: String,
     val duoSenderEntityId: String,
+    val sessionSignKey: String,
+    val sessionEncryptKey: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -51,6 +53,8 @@ data class LoriConfiguration(
             val jwtRealm = KonfigDeclaration.string(prefix, "jwt", "realm").required()
             val jwtSecret = KonfigDeclaration.string(prefix, "jwt", "secret").secret().required()
             val duoSenderEntityId = KonfigDeclaration.string(prefix, "duo", "senderentityid").required()
+            val sessionSignKey = KonfigDeclaration.string(prefix, "session", "sign").secret().required()
+            val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
             return LoriConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
@@ -66,6 +70,8 @@ data class LoriConfiguration(
                 jwtRealm = source[jwtRealm],
                 jwtSecret = source[jwtSecret],
                 duoSenderEntityId = source[duoSenderEntityId],
+                sessionSignKey = source[sessionSignKey],
+                sessionEncryptKey = source[sessionEncryptKey],
             )
         }
     }
