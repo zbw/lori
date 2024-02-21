@@ -21,7 +21,7 @@ import de.zbw.api.lori.server.route.usersRoutes
 import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.type.UserRole
+import de.zbw.business.lori.server.type.UserPermission
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.gson.gson
 import io.ktor.server.application.Application
@@ -113,7 +113,9 @@ class ServicePoolWithProbes(
                 validate { session: UserSession ->
                     backend.getSessionById(session.sessionId)
                         ?.takeIf { s ->
-                            s.validUntil > Instant.now() && (s.role == UserRole.READWRITE || s.role == UserRole.ADMIN)
+                            s.validUntil > Instant.now() &&
+                                (s.permissions.contains(UserPermission.WRITE) || s.permissions.contains(UserPermission.ADMIN)
+                                    )
                         }?.let { session }
                 }
                 challenge {
@@ -133,7 +135,7 @@ class ServicePoolWithProbes(
                 challenge {
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                        ApiError.unauthorizedError("User is not authorized"),
+                        ApiError.unauthorizedError("User has not the required permissions"),
                     )
                 }
             }

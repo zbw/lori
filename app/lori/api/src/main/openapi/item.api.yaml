@@ -1,5 +1,7 @@
 item:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - item
     summary: Add a new relation between metadata and right
@@ -45,6 +47,8 @@ item:
 
 item-deletion:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - item
     summary: Delete an item relation
@@ -81,6 +85,8 @@ item-deletion:
 
 item-metadata:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - item
     summary: Delete all item relations with metadata id
@@ -197,6 +203,8 @@ item-list:
 
 item-right:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - item
     summary: Delete all item relations with right id

@@ -1,7 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Session
-import de.zbw.business.lori.server.type.UserRole
+import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_SESSIONS
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
@@ -45,8 +45,8 @@ class UserDB(
             this.setIfNotNull(4, session.lastName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(5, session.role.toString()) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
+            this.setIfNotNull(5, session.permissions) { value, idx, prepStmt ->
+                prepStmt.setArray(idx, connection.createArrayOf("permission_enum", value.toTypedArray()))
             }
             this.setTimestamp(6, Timestamp.from(session.validUntil))
         }
@@ -82,9 +82,9 @@ class UserDB(
                 authenticated = rs.getBoolean(2),
                 firstName = rs.getString(3),
                 lastName = rs.getString(4),
-                role = UserRole.valueOf(
-                    rs.getString(5),
-                ),
+                permissions = (rs.getArray(5)?.array as? Array<out Any?>)?.filterIsInstance<String>()
+                    ?.map { UserPermission.valueOf(it) }
+                    ?: emptyList(),
                 validUntil = rs.getTimestamp(6).toInstant(),
             )
         } else null
@@ -93,13 +93,13 @@ class UserDB(
     companion object {
         const val STATEMENT_INSERT_SESSION = "INSERT INTO $TABLE_NAME_SESSIONS" +
             "(session_id,authenticated,first_name," +
-            "last_name,role,valid_until) " +
+            "last_name,permissions,valid_until) " +
             "VALUES(?,?,?," +
-            "?,?::role_enum,?)"
+            "?,?,?)"
 
         const val STATEMENT_GET_SESSION_BY_ID =
             "SELECT session_id,authenticated,first_name," +
-                "last_name,role,valid_until " +
+                "last_name,permissions,valid_until " +
                 "FROM $TABLE_NAME_SESSIONS " +
                 "WHERE session_id=?"
 

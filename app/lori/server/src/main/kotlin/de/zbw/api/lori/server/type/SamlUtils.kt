@@ -7,6 +7,7 @@ import net.shibboleth.utilities.java.support.xml.ParserPool
 import org.opensaml.core.config.ConfigurationService
 import org.opensaml.core.config.InitializationService
 import org.opensaml.core.criterion.EntityIdCriterion
+import org.opensaml.core.xml.XMLObject
 import org.opensaml.core.xml.config.XMLObjectProviderRegistry
 import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport
 import org.opensaml.saml.common.xml.SAMLConstants
@@ -14,6 +15,9 @@ import org.opensaml.saml.criterion.EntityRoleCriterion
 import org.opensaml.saml.criterion.ProtocolCriterion
 import org.opensaml.saml.metadata.resolver.impl.FilesystemMetadataResolver
 import org.opensaml.saml.metadata.resolver.impl.PredicateRoleDescriptorResolver
+import org.opensaml.saml.saml2.core.Assertion
+import org.opensaml.saml.saml2.core.Attribute
+import org.opensaml.saml.saml2.core.Response
 import org.opensaml.saml.saml2.metadata.IDPSSODescriptor
 import org.opensaml.saml.security.impl.MetadataCredentialResolver
 import org.opensaml.saml.security.impl.SAMLSignatureProfileValidator
@@ -145,5 +149,15 @@ class SamlUtils(
                 .substringAfter("SAMLResponse=")
                 .let { URLDecoder.decode(it, "UTF-8") }
                 .let { String(Base64.getDecoder().decode(it)) }
+
+        fun getAttributeValuesByName(
+            assertion: Assertion,
+            attributeName: String,
+        ): List<XMLObject> {
+            return assertion.attributeStatements.flatMap { attrStmt ->
+                val attributes = attrStmt.attributes.filter { attr -> attr.name == attributeName }
+                attributes.map { it.attributeValues }
+            }.flatten()
+        }
     }
 }

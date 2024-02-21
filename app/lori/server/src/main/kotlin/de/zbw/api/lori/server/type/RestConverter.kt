@@ -23,7 +23,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.UserRole
+import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.BookmarkRawRest
@@ -41,6 +41,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
+import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
@@ -349,29 +350,29 @@ fun DAItem.toBusiness(): ItemMetadata? {
 fun UserSession.toRest(): UserSessionRest =
     UserSessionRest(
         email = this.email,
-        role = this.role.toRest(),
+        permissions = this.permissions.map { it.toRest() },
         sessionId = this.sessionId,
     )
 
 fun UserSessionRest.toBusiness(): UserSession =
     UserSession(
         email = this.email,
-        role = this.role.toBusiness(),
+        permissions = this.permissions?.map { it.toBusiness() } ?: emptyList(),
         sessionId = this.sessionId,
     )
 
-fun UserSessionRest.Role.toBusiness(): UserRole =
+fun UserPermissionRest.toBusiness(): UserPermission =
     when (this) {
-        UserSessionRest.Role.readOnly -> UserRole.READONLY
-        UserSessionRest.Role.readWrite -> UserRole.READWRITE
-        UserSessionRest.Role.admin -> UserRole.ADMIN
+        UserPermissionRest.read -> UserPermission.READ
+        UserPermissionRest.write -> UserPermission.WRITE
+        UserPermissionRest.admin -> UserPermission.ADMIN
     }
 
-fun UserRole.toRest(): UserSessionRest.Role =
+fun UserPermission.toRest(): UserPermissionRest =
     when (this) {
-        UserRole.READONLY -> UserSessionRest.Role.readOnly
-        UserRole.READWRITE -> UserSessionRest.Role.readWrite
-        UserRole.ADMIN -> UserSessionRest.Role.admin
+        UserPermission.READ -> UserPermissionRest.read
+        UserPermission.WRITE -> UserPermissionRest.write
+        UserPermission.ADMIN -> UserPermissionRest.admin
     }
 
 fun BookmarkRawRest.toBusiness(): Bookmark =

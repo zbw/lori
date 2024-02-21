@@ -1,5 +1,7 @@
 metadata:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - metadata
     summary: Add a new metadata information
@@ -35,6 +37,8 @@ metadata:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
+    security:
+      - cookieAuth: []
     tags:
       - metadata
     summary: Update an existing Metadata
@@ -116,6 +120,8 @@ metadata-list:
 
 metadata-id:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - metadata
     summary: Delete metadata

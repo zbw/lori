@@ -10,6 +10,7 @@ import de.zbw.lori.model.GroupIdCreated
 import de.zbw.lori.model.GroupRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -37,124 +38,178 @@ fun Routing.groupRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/group") {
-        /**
-         * Insert a new Group.
-         */
-        post {
-            val span = tracer
-                .spanBuilder("lori.LoriService.POST/api/v1/group")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    @Suppress("SENSELESS_COMPARISON")
-                    val group: GroupRest = call.receive(GroupRest::class)
-                        .takeIf { it.name != null && it.ipAddresses != null }
-                        ?: throw BadRequestException("Invalid Json has been provided")
-                    span.setAttribute("group", group.toString())
-                    val pk = backend.insertGroup(group.toBusiness())
-                    span.setStatus(StatusCode.OK)
-                    call.respond(HttpStatusCode.Created, GroupIdCreated(pk))
-                } catch (e: BadRequestException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+        authenticate("auth-login") {
+            /**
+             * Insert a new Group.
+             */
+            post {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.POST/api/v1/group")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        @Suppress("SENSELESS_COMPARISON")
+                        val group: GroupRest = call.receive(GroupRest::class)
+                            .takeIf { it.name != null && it.ipAddresses != null }
+                            ?: throw BadRequestException("Invalid Json has been provided")
+                        span.setAttribute("group", group.toString())
+                        val pk = backend.insertGroup(group.toBusiness())
+                        span.setStatus(StatusCode.OK)
+                        call.respond(HttpStatusCode.Created, GroupIdCreated(pk))
+                    } catch (e: BadRequestException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                            )
                         )
-                    )
-                } catch (iae: IllegalArgumentException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das CSV File hat die falsche Anzahl an Spalten.",
+                    } catch (iae: IllegalArgumentException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das CSV File hat die falsche Anzahl an Spalten.",
+                            )
                         )
-                    )
-                } catch (pe: PSQLException) {
-                    if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                    } catch (pe: PSQLException) {
+                        if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                ApiError.conflictError(
+                                    detail = "Eine Gruppe mit diesem Namen existiert bereits.",
+                                )
+                            )
+                        } else {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                            ),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            /**
+             * Update an existing Group.
+             */
+            put {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.PUT/api/v1/group")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        @Suppress("SENSELESS_COMPARISON")
+                        val group: GroupRest = call.receive(GroupRest::class)
+                            .takeIf { it.name != null && it.ipAddresses != null }
+                            ?: throw BadRequestException("Invalid Json has been provided")
+                        span.setAttribute("group", group.toString())
+                        val insertedRows = backend.updateGroup(group.toBusiness())
+                        if (insertedRows == 1) {
+                            span.setStatus(StatusCode.OK)
+                            call.respond(HttpStatusCode.NoContent)
+                        } else {
+                            span.setStatus(StatusCode.ERROR)
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(
+                                    detail = "Für die Gruppe ${group.name} existiert kein Eintrag.",
+                                )
+                            )
+                        }
+                    } catch (iae: IllegalArgumentException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das CSV File hat die falsche Anzahl an Spalten.",
+                            ),
+                        )
+                    } catch (e: BadRequestException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                            ),
+                        )
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            /**
+             * Delete Group by Id.
+             */
+            delete("{id}") {
+                val span = tracer
+                    .spanBuilder("lori.LoriService.DELETE/api/v1/group/{id}")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val groupId = call.parameters["id"]
+                        span.setAttribute("groupId", groupId ?: "null")
+                        if (groupId == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            val entriesDeleted = backend.deleteGroup(groupId)
+                            if (entriesDeleted == 1) {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(HttpStatusCode.OK)
+                            } else {
+                                span.setStatus(StatusCode.ERROR)
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    ApiError.notFoundError(
+                                        detail = "Für die Gruppe $groupId existiert kein Eintrag.",
+                                    ),
+                                )
+                            }
+                        }
+                    } catch (re: ResourceStillInUseException) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
                         call.respond(
                             HttpStatusCode.Conflict,
                             ApiError.conflictError(
-                                detail = "Eine Gruppe mit diesem Namen existiert bereits.",
-                            )
+                                detail = re.message,
+                            ),
                         )
-                    } else {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
                                 detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                            )
+                            ),
                         )
+                    } finally {
+                        span.end()
                     }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Fehler ist aufgetreten.",
-                        ),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
-
-        /**
-         * Update an existing Group.
-         */
-        put {
-            val span = tracer
-                .spanBuilder("lori.LoriService.PUT/api/v1/group")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    @Suppress("SENSELESS_COMPARISON")
-                    val group: GroupRest = call.receive(GroupRest::class)
-                        .takeIf { it.name != null && it.ipAddresses != null }
-                        ?: throw BadRequestException("Invalid Json has been provided")
-                    span.setAttribute("group", group.toString())
-                    val insertedRows = backend.updateGroup(group.toBusiness())
-                    if (insertedRows == 1) {
-                        span.setStatus(StatusCode.OK)
-                        call.respond(HttpStatusCode.NoContent)
-                    } else {
-                        span.setStatus(StatusCode.ERROR)
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            ApiError.notFoundError(
-                                detail = "Für die Gruppe ${group.name} existiert kein Eintrag.",
-                            )
-                        )
-                    }
-                } catch (iae: IllegalArgumentException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das CSV File hat die falsche Anzahl an Spalten.",
-                        ),
-                    )
-                } catch (e: BadRequestException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
-                        ),
-                    )
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
                 }
             }
         }
@@ -201,57 +256,6 @@ fun Routing.groupRoutes(
             }
         }
 
-        /**
-         * Delete Group by Id.
-         */
-        delete("{id}") {
-            val span = tracer
-                .spanBuilder("lori.LoriService.DELETE/api/v1/group/{id}")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val groupId = call.parameters["id"]
-                    span.setAttribute("groupId", groupId ?: "null")
-                    if (groupId == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                    } else {
-                        val entriesDeleted = backend.deleteGroup(groupId)
-                        if (entriesDeleted == 1) {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
-                        } else {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für die Gruppe $groupId existiert kein Eintrag.",
-                                ),
-                            )
-                        }
-                    }
-                } catch (re: ResourceStillInUseException) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        ApiError.conflictError(
-                            detail = re.message,
-                        ),
-                    )
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                        ),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
 
         route("/list") {
             /**

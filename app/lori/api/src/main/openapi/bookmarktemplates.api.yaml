@@ -1,5 +1,7 @@
 bookmarktemplates:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarktemplates
     summary: Connect a Bookmark-Id and Template-Id with each other
@@ -36,6 +38,8 @@ bookmarktemplates:
     x-codegen-request-body-name: body
 
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarktemplates
     summary: Delete a bookmark template pair
@@ -72,6 +76,8 @@ bookmarktemplates:
 
 bookmarktemplates-batch:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarktemplates
     summary: Upsert a batch of bookmark template pairs.
@@ -113,6 +119,8 @@ bookmarktemplates-batch:
     x-codegen-request-body-name: body
 
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarktemplates
     summary: Delete a batch of bookmark template pairs

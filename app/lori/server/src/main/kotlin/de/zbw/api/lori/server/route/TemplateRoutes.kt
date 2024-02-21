@@ -16,6 +16,7 @@ import de.zbw.lori.model.TemplateIdCreated
 import de.zbw.lori.model.TemplateIdsRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -44,144 +45,239 @@ fun Routing.templateRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/template") {
-        post {
-            val span: Span =
-                tracer.spanBuilder("lori.LoriService.POST/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val right: RightRest = call.receive(RightRest::class)
-                    span.setAttribute("template", right.toString())
-                    val pk = backend.insertTemplate(right.toBusiness())
-                    span.setStatus(StatusCode.OK)
-                    call.respond(
-                        HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)
-                    )
-                } catch (pe: PSQLException) {
-                    if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+        authenticate("auth-login") {
+            post {
+                val span: Span =
+                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val right: RightRest = call.receive(RightRest::class)
+                        span.setAttribute("template", right.toString())
+                        val pk = backend.insertTemplate(right.toBusiness())
+                        span.setStatus(StatusCode.OK)
                         call.respond(
-                            HttpStatusCode.Conflict,
-                            ApiError.conflictError(
-                                detail = "Ein Template mit diesem Namen existiert bereits.",
-                            )
+                            HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)
                         )
-                    } else {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                    } catch (pe: PSQLException) {
+                        if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                ApiError.conflictError(
+                                    detail = "Ein Template mit diesem Namen existiert bereits.",
+                                )
+                            )
+                        } else {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                                )
+                            )
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
-                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                            )
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                            ),
                         )
+                    } finally {
+                        span.end()
                     }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Fehler ist aufgetreten.",
-                        ),
-                    )
-                } finally {
-                    span.end()
                 }
             }
-        }
-        /**
-         * Update an existing Template.
-         */
-        put {
-            val span =
-                tracer.spanBuilder("lori.LoriService.PUT/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val right: RightRest =
-                        call.receive(RightRest::class).takeIf { it.templateId != null }
-                            ?: throw BadRequestException("Invalid Json has been provided")
-                    span.setAttribute("template", right.toString())
-                    val insertedRows = backend.upsertRight(right.toBusiness())
-                    if (insertedRows == 1) {
-                        span.setStatus(StatusCode.OK)
-                        call.respond(HttpStatusCode.NoContent)
-                    } else {
-                        span.setStatus(StatusCode.ERROR)
-                        call.respond(
-                            HttpStatusCode.NotFound,
-                            ApiError.notFoundError(
-                                detail = "Für das Template mit Id ${right.templateId} existiert kein Eintrag.",
+            /**
+             * Update an existing Template.
+             */
+            put {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.PUT/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val right: RightRest =
+                            call.receive(RightRest::class).takeIf { it.templateId != null }
+                                ?: throw BadRequestException("Invalid Json has been provided")
+                        span.setAttribute("template", right.toString())
+                        val insertedRows = backend.upsertRight(right.toBusiness())
+                        if (insertedRows == 1) {
+                            span.setStatus(StatusCode.OK)
+                            call.respond(HttpStatusCode.NoContent)
+                        } else {
+                            span.setStatus(StatusCode.ERROR)
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(
+                                    detail = "Für das Template mit Id ${right.templateId} existiert kein Eintrag.",
+                                )
                             )
+                        }
+                    } catch (e: BadRequestException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                            ),
                         )
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(),
+                        )
+                    } finally {
+                        span.end()
                     }
-                } catch (e: BadRequestException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
-                        ),
-                    )
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
                 }
             }
         }
     }
     route("/api/v1/template") {
-        /**
-         * Apply given templates.
-         */
-        post("/applications") {
-            val span =
-                tracer.spanBuilder("lori.LoriService.POST/api/v1/template/applications").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateIds: List<Int> =
-                        call.receive(TemplateIdsRest::class).takeIf { it.templateIds != null }?.templateIds
-                            ?: throw BadRequestException("Invalid Json has been provided")
-                    val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
-                    span.setAttribute("templateIds", templateIds.toString())
-                    span.setAttribute("Query Parameter 'all'", all.toString())
-                    val appliedMap: Map<Int, Pair<List<String>, List<RightError>>> =
-                        if (all) {
-                            backend.applyAllTemplates()
+        authenticate("auth-login") {
+            /**
+             * Apply given templates.
+             */
+            post("/applications") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/applications")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val templateIds: List<Int> =
+                            call.receive(TemplateIdsRest::class).takeIf { it.templateIds != null }?.templateIds
+                                ?: throw BadRequestException("Invalid Json has been provided")
+                        val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
+                        span.setAttribute("templateIds", templateIds.toString())
+                        span.setAttribute("Query Parameter 'all'", all.toString())
+                        val appliedMap: Map<Int, Pair<List<String>, List<RightError>>> =
+                            if (all) {
+                                backend.applyAllTemplates()
+                            } else {
+                                backend.applyTemplates(templateIds)
+                            }
+                        val result = TemplateApplicationsRest(
+                            templateApplication =
+                            appliedMap.entries.map { e: Map.Entry<Int, Pair<List<String>, List<RightError>>> ->
+                                TemplateApplicationRest(
+                                    templateId = e.key,
+                                    metadataIds = e.value.first,
+                                    errors = e.value.second.map { it.toRest() },
+                                    numberOfAppliedEntries = e.value.first.size
+                                )
+                            }
+                        )
+                        call.respond(result)
+                    } catch (e: BadRequestException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                            ),
+                        )
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            post("{id}/bookmarks") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val templateId = call.parameters["id"]?.toInt()
+                        val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
+                        val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
+                        span.setAttribute("templateId", templateId?.toString() ?: "null")
+                        span.setAttribute("deleteOld", deleteOld)
+                        span.setAttribute("bookmarkIds", bookmarkIds?.toString() ?: "null")
+                        if (templateId == null || bookmarkIds == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                         } else {
-                            backend.applyTemplates(templateIds)
-                        }
-                    val result = TemplateApplicationsRest(
-                        templateApplication =
-                        appliedMap.entries.map { e: Map.Entry<Int, Pair<List<String>, List<RightError>>> ->
-                            TemplateApplicationRest(
-                                templateId = e.key,
-                                metadataIds = e.value.first,
-                                errors = e.value.second.map { it.toRest() },
-                                numberOfAppliedEntries = e.value.first.size
+                            if (deleteOld) {
+                                backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
+                            }
+                            val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
+                                bookmarkIds.map {
+                                    BookmarkTemplate(
+                                        bookmarkId = it,
+                                        templateId = templateId,
+                                    )
+                                }
+                            )
+                            call.respond(
+                                HttpStatusCode.Created, generatedPairs.map { it.toRest() }
                             )
                         }
-                    )
-                    call.respond(result)
-                } catch (e: BadRequestException) {
-                    span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        ApiError.badRequestError(
-                            detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
-                        ),
-                    )
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                            ),
+                        )
+                    }
+                }
+            }
+
+            /**
+             * Delete Right by Template-ID.
+             */
+            delete("{id}") {
+                val span = tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val templateId = call.parameters["id"]?.toInt()
+                        span.setAttribute("templateId", templateId?.toString() ?: "null")
+                        if (templateId == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError(
+                                    detail = "Keine valide numerische Id wurde übergeben",
+                                ),
+                            )
+                        } else {
+                            val entriesDeleted = backend.deleteRightByTemplateId(templateId)
+                            if (entriesDeleted == 1) {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(HttpStatusCode.OK)
+                            } else {
+                                span.setStatus(StatusCode.ERROR)
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    ApiError.notFoundError(
+                                        detail = "Für die TemplateId $templateId existiert kein Eintrag.",
+                                    ),
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                            ),
+                        )
+                    } finally {
+                        span.end()
+                    }
                 }
             }
         }
@@ -217,48 +313,6 @@ fun Routing.templateRoutes(
             }
         }
 
-        post("{id}/bookmarks") {
-            val span =
-                tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateId = call.parameters["id"]?.toInt()
-                    val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
-                    val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
-                    span.setAttribute("templateId", templateId?.toString() ?: "null")
-                    span.setAttribute("deleteOld", deleteOld)
-                    span.setAttribute("bookmarkIds", bookmarkIds?.toString() ?: "null")
-                    if (templateId == null || bookmarkIds == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                    } else {
-                        if (deleteOld) {
-                            backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
-                        }
-                        val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
-                            bookmarkIds.map {
-                                BookmarkTemplate(
-                                    bookmarkId = it,
-                                    templateId = templateId,
-                                )
-                            }
-                        )
-                        call.respond(
-                            HttpStatusCode.Created, generatedPairs.map { it.toRest() }
-                        )
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Fehler ist aufgetreten.",
-                        ),
-                    )
-                }
-            }
-        }
 
         /**
          * Return Template for a given Template-ID.
@@ -300,52 +354,6 @@ fun Routing.templateRoutes(
             }
         }
 
-        /**
-         * Delete Right by Template-ID.
-         */
-        delete("{id}") {
-            val span = tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
-                .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateId = call.parameters["id"]?.toInt()
-                    span.setAttribute("templateId", templateId?.toString() ?: "null")
-                    if (templateId == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ApiError.badRequestError(
-                                detail = "Keine valide numerische Id wurde übergeben",
-                            ),
-                        )
-                    } else {
-                        val entriesDeleted = backend.deleteRightByTemplateId(templateId)
-                        if (entriesDeleted == 1) {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
-                        } else {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für die TemplateId $templateId existiert kein Eintrag.",
-                                ),
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(
-                            detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                        ),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
 
         route("/list") {
             get {
