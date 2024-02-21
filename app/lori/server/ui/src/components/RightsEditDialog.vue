@@ -808,6 +808,15 @@ export default defineComponent({
 <template>
   <v-card class="overflow-y-auto" max-height="1000">
     <v-card-actions>
+      <v-alert v-model="updateSuccessful" closable type="success">
+        {{ updateSuccessfulMsg }}
+      </v-alert>
+      <v-alert v-model="saveAlertError" closable type="error">
+        Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}
+      </v-alert>
+      <v-alert v-model="generalAlertError" closable type="error">
+        {{ generalAlertErrorMsg }}
+      </v-alert>
       <v-spacer></v-spacer>
       <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
@@ -846,15 +855,7 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-    <v-alert v-model="updateSuccessful" closable type="success">
-      {{ updateSuccessfulMsg }}
-    </v-alert>
-    <v-alert v-model="saveAlertError" closable type="error">
-      Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}
-    </v-alert>
-    <v-alert v-model="generalAlertError" closable type="error">
-      {{ generalAlertErrorMsg }}
-    </v-alert>
+
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
         <v-expansion-panel value="0">

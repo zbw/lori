@@ -54,8 +54,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -78,8 +79,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -99,8 +101,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -121,8 +124,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/template/$templateId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -139,8 +143,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/template/$templateId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -156,8 +161,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -175,8 +181,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -202,8 +209,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -224,8 +232,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/$templateId")
             val content: String = response.bodyAsText()
@@ -245,8 +254,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/$templateId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -263,8 +273,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/$templateId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -283,8 +294,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -303,8 +315,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.BadRequest))
@@ -322,8 +335,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -339,8 +353,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/$givenTemplateId/bookmarks")
             val content: String = response.bodyAsText()
@@ -359,8 +374,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/template/$givenTemplateId/bookmarks")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -383,8 +399,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
 
             // Case w/ deleteOld=true
@@ -408,8 +425,9 @@ class TemplateRoutesKtTest {
         }
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
 
             // Case w/ deleteOld=true
@@ -448,8 +466,9 @@ class TemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // Test OK Path
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template/applications") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -485,8 +504,9 @@ class TemplateRoutesKtTest {
 
         // Test OK when all templates are applied
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template/applications?all=true") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -528,8 +548,9 @@ class TemplateRoutesKtTest {
 
         // Test Bad Request Path
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/template/applications") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -551,8 +572,9 @@ class TemplateRoutesKtTest {
         }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool2.application()
+                servicePool2.testApplication()
             )
             val response = client.post("/api/v1/template/applications") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)

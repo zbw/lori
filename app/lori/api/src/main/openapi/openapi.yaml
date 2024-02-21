@@ -81,6 +81,11 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+
   schemas:
     AccessStateRest:
       $ref: 'right.model.yaml#/AccessStateRest'

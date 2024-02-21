@@ -1,7 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Session
-import de.zbw.business.lori.server.type.UserRole
+import de.zbw.business.lori.server.type.UserPermission
 import io.opentelemetry.api.OpenTelemetry
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -41,7 +41,7 @@ class UserDBTest : DatabaseTest() {
             authenticated = true,
             firstName = "some",
             lastName = "name",
-            role = UserRole.ADMIN,
+            permissions = listOf(UserPermission.WRITE, UserPermission.READ),
             validUntil = OffsetDateTime.of(
                 2022,
                 3,

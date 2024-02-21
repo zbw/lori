@@ -44,7 +44,7 @@ export default defineComponent({
         .getSessionById(cookieValue)
         .then((userSession: UserSessionRest) => {
           userStore.emailAddress = userSession.email;
-          userStore.role = userSession.role;
+          userStore.permissions = userSession.permissions;
           userStore.isLoggedIn = true;
           if (!init) {
             loginSuccessful.value = true;
@@ -84,7 +84,7 @@ export default defineComponent({
         .deleteSessionById(cookieValue)
         .then(() => {
           userStore.emailAddress = "";
-          userStore.role = "";
+          userStore.permissions = undefined;
           userStore.isLoggedIn = false;
           logoutDialog.value = true;
         })

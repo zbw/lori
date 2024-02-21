@@ -1,5 +1,7 @@
 template:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - template
     summary: Saves a right information which are marked as a template
@@ -106,6 +108,8 @@ template-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - template
     summary: Delete a template
@@ -188,6 +192,8 @@ template-list:
 
 template-bookmarks:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - template
     summary: For a given Template-Id connect all given Bookmark-Ids to it
@@ -263,6 +269,8 @@ template-bookmarks:
 
 template-applications:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - template
     summary: Apply templates to all their bookmark results.

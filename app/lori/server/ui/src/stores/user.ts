@@ -1,15 +1,16 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { UserPermissionRest } from "@/generated-sources/openapi";
 
 export const useUserStore = defineStore("user", () => {
   const emailAddress = ref("");
-  const role = ref("");
+  const permissions = ref([] as Array<UserPermissionRest> | undefined);
   const isLoggedIn = ref(false);
   const signInURL = ref(
-    "https://sso-1793b17c.sso.duosecurity.com/saml2/sp/DIMOJTPPL6E090X4BUL1/sso"
+    "https://sso-1793b17c.sso.duosecurity.com/saml2/sp/DIMOJTPPL6E090X4BUL1/sso",
   );
   const signOutURL = ref(
-    "https://sso-1793b17c.sso.duosecurity.com/saml2/sp/DIMOJTPPL6E090X4BUL1/slo"
+    "https://sso-1793b17c.sso.duosecurity.com/saml2/sp/DIMOJTPPL6E090X4BUL1/slo",
   );
 
   return {
@@ -17,6 +18,6 @@ export const useUserStore = defineStore("user", () => {
     isLoggedIn,
     signInURL,
     signOutURL,
-    role,
+    permissions,
   };
 });

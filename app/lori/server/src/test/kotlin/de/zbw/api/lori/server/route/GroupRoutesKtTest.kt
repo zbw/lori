@@ -48,8 +48,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/$groupId")
             val content: String = response.bodyAsText()
@@ -69,8 +70,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/$groupId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -87,8 +89,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/$groupId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -105,8 +108,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/group/$groupId")
             assertThat(response.status, `is`(HttpStatusCode.OK))
@@ -123,8 +127,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/group/$groupId")
             assertThat(response.status, `is`(HttpStatusCode.NotFound))
@@ -141,8 +146,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/group/$groupId")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
@@ -158,8 +164,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -179,8 +186,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -203,8 +211,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -224,8 +233,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -245,8 +255,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -266,8 +277,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -287,8 +299,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -308,8 +321,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -329,8 +343,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.put("/api/v1/group") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -353,8 +368,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -381,8 +397,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset&idOnly=True")
             val content: String = response.bodyAsText()
@@ -401,8 +418,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.BadRequest))
@@ -420,8 +438,9 @@ class GroupRoutesKtTest {
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.get("/api/v1/group/list?limit=$limit&offset=$offset")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))

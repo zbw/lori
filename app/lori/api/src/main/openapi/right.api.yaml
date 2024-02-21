@@ -1,5 +1,7 @@
 right:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - right
     summary: Add a new right information to LoRi
@@ -38,6 +40,8 @@ right:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
+    security:
+      - cookieAuth: []
     tags:
       - right
     summary: Update an existing right information in LoRi
@@ -72,6 +76,8 @@ right:
 
 right-id:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - right
     summary: Delete right

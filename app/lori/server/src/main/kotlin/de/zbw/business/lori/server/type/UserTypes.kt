@@ -8,9 +8,9 @@ import java.time.Instant
  * Created on 08-17-2022.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-enum class UserRole {
-    READONLY,
-    READWRITE,
+enum class UserPermission {
+    READ,
+    WRITE,
     ADMIN,
 }
 
@@ -19,6 +19,6 @@ data class Session(
     val authenticated: Boolean,
     val firstName: String?,
     val lastName: String?,
-    val role: UserRole,
+    val permissions: List<UserPermission>,
     val validUntil: Instant,
 )

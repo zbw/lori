@@ -44,8 +44,9 @@ class BookmarkTemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -56,8 +57,9 @@ class BookmarkTemplateRoutesKtTest {
         }
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -85,8 +87,9 @@ class BookmarkTemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -97,8 +100,9 @@ class BookmarkTemplateRoutesKtTest {
         }
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -123,8 +127,9 @@ class BookmarkTemplateRoutesKtTest {
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response =
                 client.delete("/api/v1/bookmarktemplates?templateid=${TEST_BOOKMARK_TEMPLATE.templateId}&bookmarkid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
@@ -132,8 +137,9 @@ class BookmarkTemplateRoutesKtTest {
         }
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response =
                 client.delete("/api/v1/bookmarktemplates?bookmarkid=${TEST_BOOKMARK_TEMPLATE.templateId}&templateid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
@@ -141,8 +147,9 @@ class BookmarkTemplateRoutesKtTest {
         }
 
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response =
                 client.delete("/api/v1/bookmarktemplates?bookmarkid=foobar&templateid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
@@ -162,8 +169,9 @@ class BookmarkTemplateRoutesKtTest {
 
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmarktemplates/batch") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -185,8 +193,9 @@ class BookmarkTemplateRoutesKtTest {
         servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.delete("/api/v1/bookmarktemplates/batch") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -209,8 +218,9 @@ class BookmarkTemplateRoutesKtTest {
 
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates/batch") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
@@ -242,8 +252,9 @@ class BookmarkTemplateRoutesKtTest {
         servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
+            moduleAuthForTests()
             application(
-                servicePool.application()
+                servicePool.testApplication()
             )
             val response = client.post("/api/v1/bookmarktemplates/batch") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)

@@ -4,7 +4,7 @@ import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Session
-import de.zbw.business.lori.server.type.UserRole
+import de.zbw.business.lori.server.type.UserPermission
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import net.shibboleth.utilities.java.support.resolver.ResolverException
+import org.opensaml.core.xml.schema.XSString
 import org.opensaml.saml.saml2.core.Response
 import org.opensaml.xmlsec.signature.support.SignatureException
 import java.time.Instant
@@ -63,15 +64,18 @@ fun Routing.guiRoutes(
                     )
                     val email = response.assertions[0].subject.nameID?.value
                         ?: throw BadRequestException("Response lacks name ID")
+                    val permissions = SamlUtils.getAttributeValuesByName(response.assertions[0], "permissions")
+                        .filterIsInstance<XSString>()
+                        .mapNotNull { xss -> xss.value?.uppercase()?.let { UserPermission.valueOf(it) } }
                     call.sessions.set(
                         "JSESSIONID",
                         UserSession(
                             email = email,
-                            role = UserRole.READONLY,
+                            permissions = permissions,
                             sessionId = backend.insertSession(
                                 Session(
                                     authenticated = true,
-                                    role = UserRole.READONLY,
+                                    permissions = permissions,
                                     firstName = email,
                                     lastName = null,
                                     sessionID = null,

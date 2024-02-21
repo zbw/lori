@@ -7,12 +7,10 @@ UserSessionRest:
   properties:
     email:
       type: string
-    role:
-      type: string
-      enum:
-        - read_only
-        - read_write
-        - admin
+    permissions:
+      type: array
+      items:
+        $ref: 'users.model.yaml#/UserPermissionRest'
     sessionId:
       type: string
 
@@ -23,3 +21,10 @@ SessionIdCreated:
   properties:
     sessionId:
       type: string
+
+UserPermissionRest:
+  type: string
+  enum:
+    - read
+    - write
+    - admin

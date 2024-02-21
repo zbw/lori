@@ -30,6 +30,8 @@ sessions:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - users
     summary: Delete a session by ID

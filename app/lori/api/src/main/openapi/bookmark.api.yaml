@@ -1,5 +1,7 @@
 bookmark:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - bookmark
     summary: Save a search query as a bookmark.
@@ -38,6 +40,8 @@ bookmark:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
+    security:
+      - cookieAuth: []
     tags:
       - bookmark
     summary: Update an existing Bookmark
@@ -108,6 +112,8 @@ bookmark-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - bookmark
     summary: Delete a bookmark
@@ -144,6 +150,8 @@ bookmark-id:
 
 bookmarkraw:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarkRaw
     summary: Save a search query as a bookmark.
@@ -182,6 +190,8 @@ bookmarkraw:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
+    security:
+      - cookieAuth: []
     tags:
       - bookmarkRaw
     summary: Update an existing Bookmark

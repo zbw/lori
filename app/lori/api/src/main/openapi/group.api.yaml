@@ -1,5 +1,7 @@
 group:
   post:
+    security:
+      - cookieAuth: []
     tags:
       - group
     summary: Add a new group
@@ -38,6 +40,8 @@ group:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
   put:
+    security:
+      - cookieAuth: []
     tags:
       - group
     summary: Update an existing Group
@@ -69,6 +73,8 @@ group:
 
 group-id:
   delete:
+    security:
+      - cookieAuth: []
     tags:
       - group
     summary: Delete a group
