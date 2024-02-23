@@ -90,7 +90,7 @@ class LoriGrpcServer(
                                     .setErrorId(it.errorId ?: -1)
                                     .setMessage(it.message)
                                     .setTemplateIdSource(it.templateIdSource ?: -1)
-                                    .setRightIdSource(it.rightIdSource)
+                                    .setRightIdSource(it.rightIdSource ?: "")
                                     .setMetadataId(it.metadataId)
                                     .setHandleId(it.handleId)
                                     .setConflictingRightId(it.conflictingRightId)
