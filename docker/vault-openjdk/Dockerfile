@@ -1,6 +1,6 @@
 FROM eclipse-temurin:17.0.10_7-jdk AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.2
+LABEL IMAGE_VERSION_TAG=0.9.2-nonroot
 LABEL IMAGE_NAME=vault-openjdk
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -21,3 +21,9 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     chmod +x ./vault && \
     mv ./vault /usr/local/bin/vault && \
     rm vault*
+
+FROM vault AS adduser
+ARG IMAGE_USER=vault-openjdk
+RUN addgroup -S $IMAGE_USER && \
+    adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER
+USER $IMAGE_USER
