@@ -129,6 +129,8 @@ test:
           - buildSrc/**/*
   dependencies:
     - build
+  tags:
+    - privileged
   script:
     - ./gradlew check --parallel
   artifacts:
