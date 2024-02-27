@@ -1,6 +1,6 @@
 FROM docker:25.0.3-git AS tools
 
-LABEL IMAGE_VERSION_TAG=1.0.0-nonroot
+LABEL IMAGE_VERSION_TAG=1.0.0-nonroot2
 LABEL IMAGE_NAME=vault-docker
 LABEL OTC_STAGE=zbw-tools-nl
 
