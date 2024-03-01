@@ -386,9 +386,9 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterNoRightInformation"]
                         )
 
-                    val templateIdFilter: TemplateIdFilter? =
+                    val templateIdsFilter: TemplateIdFilter? =
                         QueryParameterParser.parseTemplateIdFilter(
-                            call.request.queryParameters["filterTemplateId"]
+                            call.request.queryParameters["filterTemplateIds"]
                         )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
@@ -448,7 +448,7 @@ fun Routing.itemRoutes(
                         startDateFilter,
                         temporalValidityFilter,
                         validOnFilter,
-                        templateIdFilter,
+                        templateIdsFilter,
                     )
 
                     val queryResult: SearchQueryResult = backend.searchQuery(

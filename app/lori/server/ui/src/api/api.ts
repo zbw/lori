@@ -42,7 +42,7 @@ export default {
   getGroupList(
     offset: number,
     limit: number,
-    idOnly: boolean
+    idOnly: boolean,
   ): Promise<Array<GroupRest>> {
     return loriGroupApi.getGroupList({
       offset: offset,
@@ -66,7 +66,7 @@ export default {
   },
   addItemEntry(
     entry: ItemEntry,
-    deleteRightOnConflict: boolean
+    deleteRightOnConflict: boolean,
   ): Promise<void> {
     return loriItem.addItemRelation({
       body: entry,
@@ -95,7 +95,7 @@ export default {
     filterPaketSigel: string | undefined,
     filterZDBId: string | undefined,
     filterNoRightInformation: string | undefined,
-    filterTemplateId: string | undefined
+    filterTemplateIds: string | undefined,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -113,7 +113,7 @@ export default {
       filterPaketSigel: filterPaketSigel,
       filterZDBId: filterZDBId,
       filterNoRightInformation: filterNoRightInformation,
-      filterTemplateId: filterTemplateId,
+      filterTemplateIds: filterTemplateIds,
     });
   },
 };

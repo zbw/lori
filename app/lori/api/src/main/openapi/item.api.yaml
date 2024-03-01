@@ -349,7 +349,7 @@ item-search:
         in: query
         schema:
           type: string
-      - name: filterTemplateId
+      - name: filterTemplateIds
         in: query
         schema:
           type: string

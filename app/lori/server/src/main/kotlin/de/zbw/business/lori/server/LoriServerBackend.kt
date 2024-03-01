@@ -381,7 +381,7 @@ class LoriServerBackend(
      * Insert template.
      */
     fun insertTemplate(right: ItemRight): TemplateRightIdCreated {
-        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // Will lead to an overflow at some point
+        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // TODO(CB): use the lowest available number
         val rightId = dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
         return TemplateRightIdCreated(
             templateId = freeTemplateId,

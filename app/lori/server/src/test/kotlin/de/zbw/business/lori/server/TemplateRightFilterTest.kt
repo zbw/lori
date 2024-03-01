@@ -76,7 +76,7 @@ class TemplateRightFilterTest : DatabaseTest() {
 
     @Test
     fun testTemplateFilter() {
-        val rightSearchFilter = listOf(TemplateIdFilter(TEST_TEMPLATE_ID))
+        val rightSearchFilter = listOf(TemplateIdFilter(listOf(TEST_TEMPLATE_ID)))
         val searchResult: SearchQueryResult = backend.searchQuery(
             "col:subject3",
             10,

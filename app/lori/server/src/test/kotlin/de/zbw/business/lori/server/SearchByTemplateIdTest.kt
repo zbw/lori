@@ -1,12 +1,11 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
-import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
+import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -14,8 +13,11 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
+import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Test receiving all search results saved in bookmarks
@@ -33,22 +35,19 @@ class SearchByTemplateIdTest : DatabaseTest() {
         mockk(),
     )
 
-    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
-        item1ZDB1 to listOf(TEST_RIGHT.copy(rightId = "a")),
-        item2ZDB1 to listOf(TEST_RIGHT.copy(rightId = "b")),
-        item1ZDB2 to listOf(TEST_RIGHT.copy(rightId = "c")),
-    )
+    private var templateRightIds: List<TemplateRightIdCreated> = emptyList()
 
     @BeforeClass
     fun fillDB() {
-        val templateRightId = backend.insertTemplate(
-            right = TEST_RIGHT.copy(rightId = "Test Template")
-        )
-        getInitialMetadata().forEach { entry ->
-            backend.insertMetadataElement(entry.key)
-            entry.value.forEach { right ->
-                val r = backend.insertRight(right.copy(templateId = templateRightId.templateId))
-                backend.insertItemEntry(entry.key.metadataId, r)
+        templateRightIds = initialTemplates.map {
+            backend.insertTemplate(
+                it
+            )
+        }
+        initialItems.forEach { entry: Map.Entry<ItemMetadata, List<Int>> ->
+            val metadataId: String = backend.insertMetadataElement(entry.key)
+            entry.value.forEach { templateKey ->
+                backend.insertItemEntry(metadataId, templateRightIds[templateKey].rightId)
             }
         }
     }
@@ -58,49 +57,85 @@ class SearchByTemplateIdTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @Test
-    fun testSearchByTemplateId() {
-        // Get template id (created in fillDB() function)
-        val templateId = backend.getTemplateList(10, 0).first().templateId
+    @DataProvider(name = DATA_FOR_SEARCH_BY_TEMPLATE_ID)
+    fun createDataForSearchByTemplateId() =
+        arrayOf(
+            arrayOf(
+                0,
+                1,
+            ),
+            arrayOf(
+                1,
+                2,
+            ),
+            arrayOf(
+                2,
+                1,
+            ),
+        )
 
+    @Test(dataProvider = DATA_FOR_SEARCH_BY_TEMPLATE_ID)
+    fun testSearchByTemplateId(
+        templateIdIdx: Int,
+        expectedNumberOfResults: Int,
+        ) {
         // When
         val result: SearchQueryResult = backend.searchQuery(
             searchTerm = "",
             limit = 10,
             offset = 0,
             metadataSearchFilter = emptyList(),
-            rightSearchFilter = listOf(TemplateIdFilter(templateId!!)),
+            rightSearchFilter = listOf(
+                TemplateIdFilter(
+                    listOf(
+                        templateRightIds[templateIdIdx].templateId
+                    )
+                )
+            ),
         )
 
         assertThat(
             result.numberOfResults,
-            `is`(3),
+            `is`(expectedNumberOfResults),
         )
     }
 
+    // TODO(CB): Test with multiple templates assigned
     companion object {
-        const val ZDB_1 = "zdb1"
-        const val ZDB_2 = "zdb2"
-        val item1ZDB1 = LoriServerBackendTest.TEST_METADATA.copy(
-            metadataId = "zdb1",
-            collectionName = "common zdb",
-            zdbId = ZDB_1,
-            publicationDate = LocalDate.of(2010, 1, 1),
-            publicationType = PublicationType.BOOK,
+        const val DATA_FOR_SEARCH_BY_TEMPLATE_ID = "DATA_FOR_SEARCH_BY_TEMPLATE_ID"
+        val EXAMPLE_DATE: LocalDate = LocalDate.of(
+            2022,
+            3,
+            1,
+        )!!
+
+        val initialTemplates = listOf(
+            TEST_RIGHT.copy(
+                rightId = "a",
+                startDate = EXAMPLE_DATE.minusDays(10),
+                endDate = EXAMPLE_DATE.minusDays(9),
+            ),
+            TEST_RIGHT.copy(
+                rightId = "b",
+                startDate = EXAMPLE_DATE.minusDays(8),
+                endDate = EXAMPLE_DATE.minusDays(7),
+                ),
+            TEST_RIGHT.copy(
+                rightId = "c",
+                startDate = EXAMPLE_DATE.minusDays(6),
+                endDate = EXAMPLE_DATE.minusDays(5),
+                )
         )
-        val item2ZDB1 = LoriServerBackendTest.TEST_METADATA.copy(
-            metadataId = "zdb2",
-            collectionName = "common zdb",
-            zdbId = ZDB_1,
-            publicationDate = LocalDate.of(2010, 1, 1),
-            publicationType = PublicationType.BOOK,
-        )
-        val item1ZDB2 = LoriServerBackendTest.TEST_METADATA.copy(
-            metadataId = "zdb3",
-            collectionName = "common zdb",
-            zdbId = ZDB_2,
-            publicationDate = LocalDate.of(2010, 1, 1),
-            publicationType = PublicationType.BOOK,
+        val initialItems = mapOf(
+            LoriServerBackendTest.TEST_METADATA.copy(
+                metadataId = "1",
+            ) to listOf(0, 1),
+            LoriServerBackendTest.TEST_METADATA.copy(
+                metadataId = "2",
+            ) to listOf(1),
+            LoriServerBackendTest.TEST_METADATA.copy(
+                metadataId = "3",
+            ) to listOf(2),
         )
     }
 }
