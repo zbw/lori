@@ -31,8 +31,8 @@ buildDockerfileImages:
         paths:
           - docker/**/Dockerfile
   image: docker:25.0.3-git
-  tags:
-    - dockersocket
+#  tags:
+#    - dockersocket
   script:
     - echo $CI_COMMIT_SHA
     - echo $CI_COMMIT_BEFORE_SHA
