@@ -31,6 +31,8 @@ buildDockerfileImages:
         paths:
           - docker/**/Dockerfile
   image: docker:25.0.3-git
+  tags:
+    - dockersocket
   script:
     - echo $CI_COMMIT_SHA
     - echo $CI_COMMIT_BEFORE_SHA
@@ -72,6 +74,8 @@ pushDockerfileImages:
   id_tokens:
     VAULT_ID_TOKEN:
       aud: https://vault-nl.zbw.eu
+  tags:
+    - dockersocket
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
@@ -105,6 +109,8 @@ build:
         paths:
           - app/**/*
           - buildSrc/**/*
+  tags:
+    - dockersocket
   script:
     - ./gradlew assemble --parallel
   artifacts:
@@ -153,6 +159,8 @@ pushLoriImage:
   id_tokens:
     VAULT_ID_TOKEN:
       aud: https://vault-nl.zbw.eu
+  tags:
+    - dockersocket
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
@@ -176,6 +184,8 @@ pushLoriImportJob:
   id_tokens:
     VAULT_ID_TOKEN:
       aud: https://vault-nl.zbw.eu
+  tags:
+    - dockersocket
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
@@ -199,6 +209,8 @@ pushTemplateApplyJob:
   id_tokens:
     VAULT_ID_TOKEN:
       aud: https://vault-nl.zbw.eu
+  tags:
+    - dockersocket
   script:
     - export VAULT_ADDR=https://vault-nl.zbw.eu
     - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
