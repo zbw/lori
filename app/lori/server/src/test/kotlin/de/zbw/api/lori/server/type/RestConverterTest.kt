@@ -21,6 +21,7 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.TemplateIdWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -427,6 +428,12 @@ class RestConverterTest {
                 ZdbIdWithCountRest(
                     count = 1,
                     zdbId = "zdb1",
+                )
+            ),
+            templateIdWithCount = listOf(
+                TemplateIdWithCountRest(
+                    count = 2,
+                    templateId = "1",
                 )
             )
         )
