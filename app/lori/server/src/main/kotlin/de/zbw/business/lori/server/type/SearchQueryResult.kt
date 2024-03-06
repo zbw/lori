@@ -17,6 +17,7 @@ data class SearchQueryResult(
     val hasZbwUserAgreement: Boolean,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
+    val templateIds: Map<Int, Int>,
     val zdbIds: Map<String, Int>,
 ) {
     companion object {
@@ -53,6 +54,18 @@ data class SearchQueryResult(
                     }
                     mutMap
                 }
+
+            val templateIds: Map<Int, Int> =
+                results.foldRight(emptyMap()) { elem, acc ->
+                    val mutMap: MutableMap<Int, Int> = acc.toMutableMap()
+                    elem.templateIds.forEach { it: Map.Entry<Int, Int> ->
+                        mutMap.merge(it.key, it.value) { oldV, newV ->
+                            oldV + newV
+                        }
+                    }
+                    mutMap
+                }
+            val templateIdsNonNull = templateIds.filter { it.value > 0 }
 
             val accessState = results.foldRight(emptyMap<AccessState, Int>()) { elem, acc ->
                 val mutMap: MutableMap<AccessState, Int> = acc.toMutableMap()
@@ -91,6 +104,7 @@ data class SearchQueryResult(
                 hasZbwUserAgreement = hasZbwUserAgreement,
                 paketSigels = paketSigel,
                 publicationType = publicationTypes,
+                templateIds = templateIdsNonNull,
                 zdbIds = zdbIds,
             )
         }

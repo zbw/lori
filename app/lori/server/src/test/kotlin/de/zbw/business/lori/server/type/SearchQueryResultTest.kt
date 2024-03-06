@@ -39,6 +39,7 @@ class SearchQueryResultTest {
                 PublicationType.ARTICLE to 5,
                 PublicationType.THESIS to 3,
             ),
+            templateIds = emptyMap(),
             zdbIds = emptyMap(),
         )
 
@@ -62,6 +63,9 @@ class SearchQueryResultTest {
             publicationType = mapOf(
                 PublicationType.THESIS to 3,
                 PublicationType.BOOK to 5,
+            ),
+            templateIds = mapOf(
+                100 to 1,
             ),
             zdbIds = mapOf(
                 "zdbId1" to 3,
@@ -93,6 +97,9 @@ class SearchQueryResultTest {
                 PublicationType.ARTICLE to 5,
                 PublicationType.THESIS to 6,
                 PublicationType.BOOK to 5,
+            ),
+            templateIds = mapOf(
+                100 to 1,
             ),
             zdbIds = mapOf(
                 "zdbId1" to 3,

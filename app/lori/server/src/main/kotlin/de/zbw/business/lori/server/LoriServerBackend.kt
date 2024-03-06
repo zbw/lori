@@ -347,6 +347,7 @@ class LoriServerBackend(
             invalidSearchKey = invalidSearchKeys,
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
+            templateIds = facets.templateIdToOccurence,
             zdbIds = facets.zdbIds,
         )
     }

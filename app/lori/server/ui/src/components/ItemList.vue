@@ -813,9 +813,10 @@ export default defineComponent({
           <v-alert
             v-model="alertIsActive"
             closable
-            text="{{ alertMsg }}"
+            text
             type="success"
           >
+            {{ alertMsg }}
           </v-alert>
           <v-select
             v-model="headersValueVSelect"

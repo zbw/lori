@@ -25,6 +25,10 @@ ItemInformation:
       type: array
       items:
         $ref: 'item.model.yaml#/PublicationTypeWithCountRest'
+    templateIdWithCount:
+      type: array
+      items:
+        $ref: 'item.model.yaml#/TemplateIdWithCountRest'
     hasLicenceContract:
       type: boolean
     hasOpenContentLicence:
@@ -120,3 +124,14 @@ PublicationTypeWithCountRest:
       type: integer
     publicationType:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
+
+TemplateIdWithCountRest:
+  required:
+    - count
+    - templateId
+  type: object
+  properties:
+    count:
+      type: integer
+    templateId:
+      type: string

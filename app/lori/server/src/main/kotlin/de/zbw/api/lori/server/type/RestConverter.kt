@@ -41,6 +41,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
+import de.zbw.lori.model.TemplateIdWithCountRest
 import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
@@ -498,6 +499,12 @@ fun SearchQueryResult.toRest(
                 zdbId = it.key,
             )
         }.toList(),
+        templateIdWithCount = this.templateIds.entries.map {
+            TemplateIdWithCountRest(
+                templateId = it.key.toString(),
+                count = it.value,
+            )
+        }
     )
 }
 
