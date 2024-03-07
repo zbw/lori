@@ -177,7 +177,7 @@ class SearchDB(
         ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
     }
 
-    private fun searchOccurrencesTemplateId(
+    internal fun searchOccurrencesTemplateId(
         searchPairs: List<SearchPair>,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
@@ -436,7 +436,6 @@ class SearchDB(
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
-
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT metadata_id,handle,ppn,title,title_journal," +

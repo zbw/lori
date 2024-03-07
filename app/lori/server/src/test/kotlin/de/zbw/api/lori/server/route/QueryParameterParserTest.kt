@@ -242,7 +242,7 @@ class QueryParameterParserTest {
         )
         assertThat(
             QueryParameterParser.parseTemplateIdFilter("555,444")!!.templateIds,
-            `is`(listOf(555,444))
+            `is`(listOf(555, 444))
         )
     }
 

@@ -276,7 +276,7 @@ class TemplateIdFilter(
     }
 
     override fun toString(): String =
-        templateIds.joinToString (separator = ",")
+        templateIds.joinToString(separator = ",")
 }
 
 class FormalRuleFilter(

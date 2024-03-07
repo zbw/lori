@@ -16,8 +16,6 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.time.ZoneOffset
 
 /**
  * Test receiving all search results saved in bookmarks
@@ -78,7 +76,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
     fun testSearchByTemplateId(
         templateIdIdx: Int,
         expectedNumberOfResults: Int,
-        ) {
+    ) {
         // When
         val result: SearchQueryResult = backend.searchQuery(
             searchTerm = "",
@@ -119,12 +117,12 @@ class SearchByTemplateIdTest : DatabaseTest() {
                 rightId = "b",
                 startDate = EXAMPLE_DATE.minusDays(8),
                 endDate = EXAMPLE_DATE.minusDays(7),
-                ),
+            ),
             TEST_RIGHT.copy(
                 rightId = "c",
                 startDate = EXAMPLE_DATE.minusDays(6),
                 endDate = EXAMPLE_DATE.minusDays(5),
-                )
+            )
         )
         val initialItems = mapOf(
             LoriServerBackendTest.TEST_METADATA.copy(

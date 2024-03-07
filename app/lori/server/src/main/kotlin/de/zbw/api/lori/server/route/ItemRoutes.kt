@@ -388,7 +388,7 @@ fun Routing.itemRoutes(
 
                     val templateIdsFilter: TemplateIdFilter? =
                         QueryParameterParser.parseTemplateIdFilter(
-                            call.request.queryParameters["filterTemplateIds"]
+                            call.request.queryParameters["filterTemplateId"]
                         )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")

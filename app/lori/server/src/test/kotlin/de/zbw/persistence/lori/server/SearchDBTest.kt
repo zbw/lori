@@ -707,7 +707,6 @@ class SearchDBTest : DatabaseTest() {
         )
     }
 
-    // TODO(CB): Add tests
     @DataProvider(name = DATA_FOR_BUILD_OCCURRENCE_QUERY)
     fun createDataForOccurrenceQuery() =
         arrayOf(
@@ -762,11 +761,53 @@ class SearchDBTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY)
+    fun createDataForOccurrenceTemplateIdQuery() =
+        arrayOf(
+            arrayOf(
+                setOf(
+                    AccessState.OPEN.toString(),
+                    AccessState.CLOSED.toString(),
+                    AccessState.RESTRICTED.toString(),
+                ),
+                DatabaseConnector.COLUMN_RIGHT_TEMPLATE_ID,
+                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                null,
+                "SELECT A.template_id, COUNT(sub.template_id) FROM(VALUES (OPEN),(CLOSED),(RESTRICTED)) as A(template_id) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.template_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_id,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.template_id = sub.template_id  WHERE ts_collection @@ to_tsquery(?) GROUP BY A.template_id",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY)
+    fun testBuildOccurrenceTemplateIdQuery(
+        values: Set<Int>,
+        columnName: String,
+        searchPairs: List<SearchPair>,
+        metadataSearchFilters: List<MetadataSearchFilter>,
+        rightSearchFilters: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        expectedQuery: String,
+    ) {
+        assertThat(
+            SearchDB.buildSearchQueryOccurrence(
+                SearchDB.createGenericValuesForSql(values),
+                columnName,
+                searchPairs,
+                metadataSearchFilters,
+                rightSearchFilters,
+                noRightInformationFilter,
+            ),
+            `is`(expectedQuery)
+        )
+    }
+
     companion object {
         const val DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
         const val DATA_FOR_BUILD_OCCURRENCE_QUERY = "DATA_FOR_BUILD_OCCURENCE_QUERY"
+        const val DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY = "DATA_FOR_BUILD_OCCURENCE_TEMPLATE_ID_QUERY"
         const val DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH =
             "DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH "
         const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
