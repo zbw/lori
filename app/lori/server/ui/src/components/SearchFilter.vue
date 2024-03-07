@@ -550,7 +550,7 @@ export default defineComponent({
               <v-checkbox
                 v-for="(item, i) in searchStore.templateIdReceived"
                 :key="i"
-                :label="ppZDBId(item.templateId, item.count)"
+                :label="ppZDBId(item.templateName, item.count)"
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.templateIdIdx[i]"

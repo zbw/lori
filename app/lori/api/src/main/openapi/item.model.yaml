@@ -129,9 +129,12 @@ TemplateIdWithCountRest:
   required:
     - count
     - templateId
+    - templateName
   type: object
   properties:
     count:
       type: integer
     templateId:
+      type: string
+    templateName:
       type: string

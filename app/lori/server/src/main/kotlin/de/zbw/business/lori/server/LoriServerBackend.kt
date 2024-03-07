@@ -347,9 +347,18 @@ class LoriServerBackend(
             invalidSearchKey = invalidSearchKeys,
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
-            templateIds = facets.templateIdToOccurence,
+            templateIds = getTemplateNamesForIds(facets.templateIdToOccurence),
             zdbIds = facets.zdbIds,
         )
+    }
+
+    private fun getTemplateNamesForIds(idToCount: Map<Int,Int>): Map<Int, Pair<String,Int>> {
+        return dbConnector.rightDB.getRightsByTemplateIds(idToCount.keys.toList()).mapNotNull { right ->
+            if (right.templateId == null || right.templateName == null || idToCount[right.templateId] == null){
+                return@mapNotNull null
+            }
+            right.templateId to (right.templateName to idToCount[right.templateId]!!)
+        }.toMap()
     }
 
     fun insertBookmark(bookmark: Bookmark): Int =
