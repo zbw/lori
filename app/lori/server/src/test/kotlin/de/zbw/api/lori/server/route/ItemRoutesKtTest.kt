@@ -591,6 +591,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 invalidSearchKey = listOf("cor"),
                 hasSearchTokenWithNoKey = false,
+                templateIdWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -616,6 +617,7 @@ class ItemRoutesKtTest {
                     hasZbwUserAgreement = false,
                     invalidSearchKey = listOf("cor"),
                     hasSearchTokenWithNoKey = false,
+                    templateIds = emptyMap(),
                 )
                 )
         }
@@ -661,6 +663,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 invalidSearchKey = listOf("cor"),
                 hasSearchTokenWithNoKey = false,
+                templateIdWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -686,6 +689,7 @@ class ItemRoutesKtTest {
                     hasZbwUserAgreement = false,
                     invalidSearchKey = listOf("cor"),
                     hasSearchTokenWithNoKey = false,
+                    templateIds = emptyMap(),
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

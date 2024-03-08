@@ -5,6 +5,7 @@ import {
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,
+  TemplateIdWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import date_utils from "@/utils/date_utils";
@@ -97,6 +98,43 @@ export default {
       return undefined;
     } else {
       return zdbIds.join(",");
+    }
+  },
+
+  setTemplateIdFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (
+      bookmark.filterTemplateId == undefined ||
+      bookmark.filterTemplateId.length == 0
+    ) {
+      return;
+    }
+    searchStore.templateIdIdx = Array(bookmark.filterTemplateId.length).fill(
+      true,
+    );
+    searchStore.templateIdReceived = Array(bookmark.filterTemplateId.length);
+    bookmark.filterTemplateId.forEach((v: string, index: number): void => {
+      searchStore.templateIdReceived[index] = {
+        count: 0,
+        templateId: v,
+      } as TemplateIdWithCountRest;
+    });
+  },
+
+  buildTemplateIdFilter(searchStore: any): string | undefined {
+    const templateIds: Array<string> = [];
+    searchStore.templateIdIdx.forEach(
+      (i: boolean | undefined, index: number): void => {
+        if (i) {
+          templateIds.push(searchStore.templateIdReceived[index].templateId);
+        }
+      },
+    );
+    // Remind selected ids, for resetting the filter afterwards correctly.
+    searchStore.templateIdSelectedLastSearch = templateIds;
+    if (templateIds.length == 0) {
+      return undefined;
+    } else {
+      return templateIds.join(",");
     }
   },
 
@@ -228,7 +266,9 @@ export default {
       searchStore.temporalEventState.startDateOrEndDateOption == "startDate" &&
       searchStore.temporalEventState.startDateOrEndDateValue != undefined
     ) {
-      return date_utils.dateToIso8601(searchStore.temporalEventState.startDateOrEndDateValue);
+      return date_utils.dateToIso8601(
+        searchStore.temporalEventState.startDateOrEndDateValue,
+      );
     } else {
       return undefined;
     }
@@ -246,7 +286,9 @@ export default {
       searchStore.temporalEventState.startDateOrEndDateOption == "endDate" &&
       searchStore.temporalEventState.startDateOrEndDateValue != undefined
     ) {
-      return date_utils.dateToIso8601(searchStore.temporalEventState.startDateOrEndDateValue);
+      return date_utils.dateToIso8601(
+        searchStore.temporalEventState.startDateOrEndDateValue,
+      );
     } else {
       return undefined;
     }

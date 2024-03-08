@@ -34,6 +34,8 @@ BookmarkRawRest:
       type: string
     filterNoRightInformation:
       type: string
+    filterTemplateId:
+      type: string
 
 BookmarkIdCreated:
   required:
@@ -96,6 +98,10 @@ BookmarkRest:
         type: string
     filterNoRightInformation:
       type: boolean
+    filterTemplateId:
+      type: array
+      items:
+        type: string
 
 FilterPublicationDateRest:
   type: object

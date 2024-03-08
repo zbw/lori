@@ -81,6 +81,7 @@ export default defineComponent({
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
+        searchStore.templateIdIdx.filter((element) => element).length > 0 ||
         searchStore.publicationTypeIdx.filter((element) => element).length >
           0 ||
         searchStore.noRightInformation
@@ -118,6 +119,7 @@ export default defineComponent({
       searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
         () => false,
       );
+      searchStore.templateIdIdx = searchStore.templateIdIdx.map(() => false);
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
       searchStore.noRightInformation = false;
     };
@@ -538,6 +540,20 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.noRightInformation"
+              ></v-checkbox>
+            </v-list-group>
+            <v-list-group sub-group>
+              <template v-slot:activator="{ props }">
+                <v-list-item v-bind="props" title="Template-IDs"></v-list-item>
+              </template>
+              <h6></h6>
+              <v-checkbox
+                v-for="(item, i) in searchStore.templateIdReceived"
+                :key="i"
+                :label="ppZDBId(item.templateName, item.count)"
+                hide-details
+                class="pl-9 ml-4"
+                v-model="searchStore.templateIdIdx[i]"
               ></v-checkbox>
             </v-list-group>
           </v-list>

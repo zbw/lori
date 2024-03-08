@@ -237,8 +237,12 @@ class QueryParameterParserTest {
     fun testParseTemplateIdFilter() {
         assertNull(QueryParameterParser.parseTemplateIdFilter("555nase"))
         assertThat(
-            QueryParameterParser.parseTemplateIdFilter("555")!!.templateId,
-            `is`(555)
+            QueryParameterParser.parseTemplateIdFilter("555")!!.templateIds,
+            `is`(listOf(555))
+        )
+        assertThat(
+            QueryParameterParser.parseTemplateIdFilter("555,444")!!.templateIds,
+            `is`(listOf(555, 444))
         )
     }
 

@@ -19,6 +19,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_N
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_TEMPLATE_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ZBW_USER_AGREEMENT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
@@ -88,6 +89,7 @@ class SearchDB(
                     oclRestricted = rs.getBoolean(8),
                     ocl = rs.getString(9),
                     zbwUserAgreement = rs.getBoolean(10),
+                    templateId = rs.getInt(11),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -129,7 +131,15 @@ class SearchDB(
                 received.any { it.nonStandardsOCL },
                 received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
                 received.any { it.oclRestricted },
-            ).any { it }
+            ).any { it },
+            templateIdToOccurence = searchOccurrencesTemplateId(
+                givenValues = received.map { it.templateId }.filter { it != 0 }.toSet(),
+                occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_ID,
+                searchPairs = searchPairs,
+                metadataSearchFilter = metadataSearchFilter,
+                rightSearchFilter = rightSearchFilter,
+                noRightInformationFilter = noRightInformationFilter,
+            ),
         )
     }
 
@@ -165,6 +175,61 @@ class SearchDB(
             rightSearchFilter = rightSearchFilter,
             noRightInformationFilter = noRightInformationFilter,
         ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
+    }
+
+    internal fun searchOccurrencesTemplateId(
+        searchPairs: List<SearchPair>,
+        metadataSearchFilter: List<MetadataSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
+        givenValues: Set<Int>,
+        occurrenceForColumn: String,
+    ): Map<Int, Int> {
+        if (givenValues.isEmpty()) {
+            return emptyMap()
+        }
+        val prepStmt = connection.prepareStatement(
+            buildSearchQueryOccurrence(
+                createGenericValuesForSql(givenValues),
+                occurrenceForColumn,
+                searchPairs,
+                metadataSearchFilter,
+                rightSearchFilter,
+                noRightInformationFilter,
+            )
+        ).apply {
+            var counter = 1
+            rightSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            metadataSearchFilter.forEach { f ->
+                counter = f.setSQLParameter(counter, this)
+            }
+            searchPairs.forEach { pair ->
+                this.setString(counter++, pair.values)
+            }
+        }
+        val span = tracer.spanBuilder("searchForOccurrenceTemplateId").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+        } finally {
+            span.end()
+        }
+
+        val received: List<Pair<Int, Int>> = generateSequence {
+            if (rs.next()) {
+                Pair(
+                    rs.getInt(1),
+                    rs.getInt(2),
+                )
+            } else null
+        }.takeWhile { true }.toList()
+        val occurrenceMap = received.toMap().toMutableMap()
+        // Make sure that every given value still exist in the resulting map. That should
+        // never be necessary but in case of any expected value has no counts, the frontend
+        // will still display it.
+        return addDefaultEntriesToMap(occurrenceMap, givenValues, 0) { a, b -> max(a, b) }
     }
 
     private fun searchOccurrences(
@@ -334,6 +399,7 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_ID," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
@@ -344,6 +410,7 @@ class SearchDB(
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "$COLUMN_RIGHT_TEMPLATE_ID," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
@@ -354,6 +421,17 @@ class SearchDB(
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
+                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
+                "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
+
+        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_ID =
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id, $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_ID) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+                "$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID," +
+                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "$COLUMN_RIGHT_TEMPLATE_ID," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
@@ -378,7 +456,8 @@ class SearchDB(
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT"
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_ID"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id,handle,ppn,title,title_journal," +
@@ -501,6 +580,7 @@ class SearchDB(
                 rightSearchFilters = rightSearchFilters,
                 collectOccurrences = true,
                 collectOccurrencesAccessRight = columnName == COLUMN_RIGHT_ACCESS_STATE,
+                collectOccurrencesTemplateId = columnName == COLUMN_RIGHT_TEMPLATE_ID,
             ) + " FROM $TABLE_NAME_ITEM_METADATA" +
                 buildSearchQueryHelper(
                     metadataSearchFilter = metadataSearchFilters,
@@ -526,6 +606,9 @@ class SearchDB(
 
         internal fun createValuesForSql(given: Set<String>): String =
             "VALUES " + given.joinToString(separator = ",") { "('$it')" }
+
+        internal fun <T> createGenericValuesForSql(given: Set<T>): String =
+            "VALUES " + given.joinToString(separator = ",") { "($it)" }
 
         fun buildSearchQueryForFacets(
             searchPairs: List<SearchPair>,
@@ -574,7 +657,8 @@ class SearchDB(
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID;"
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID," +
+                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_ID;"
         }
 
         private fun buildSearchQueryHelper(
@@ -645,9 +729,12 @@ class SearchDB(
             forceRightTableJoin: Boolean = false,
             collectOccurrences: Boolean = false,
             collectOccurrencesAccessRight: Boolean = false,
+            collectOccurrencesTemplateId: Boolean = false,
         ): String {
             return if (collectOccurrencesAccessRight) {
                 STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS
+            } else if (collectOccurrencesTemplateId) {
+                STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_ID
             } else if (collectOccurrences) {
                 STATEMENT_SELECT_OCCURRENCE_DISTINCT
             } else if (forceRightTableJoin) {

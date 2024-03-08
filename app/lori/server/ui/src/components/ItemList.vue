@@ -379,6 +379,7 @@ export default defineComponent({
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
+      searchquerybuilder.setTemplateIdFilter(searchStore, bookmark);
       closeBookmarkOverview();
       alertMsg.value =
         "Eine gespeicherte Suche '" +
@@ -418,7 +419,7 @@ export default defineComponent({
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
-          undefined,
+          searchquerybuilder.buildTemplateIdFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -571,6 +572,19 @@ export default defineComponent({
         searchStore.zdbIdReceived.map((e) => e.zdbId),
         searchStore.zdbIdSelectedLastSearch,
         searchStore.zdbIdIdx,
+      );
+      // Reset Template Id
+      searchStore.templateIdReceived =
+          response.templateIdWithCount != undefined
+              ? response.templateIdWithCount
+              : Array(0);
+      searchStore.templateIdIdx = Array(searchStore.templateIdReceived.length).fill(
+          false,
+      );
+      resetDynamicFilter(
+          searchStore.templateIdReceived.map((e) => e.templateId),
+          searchStore.templateIdSelectedLastSearch,
+          searchStore.templateIdIdx,
       );
     };
 
@@ -813,9 +827,10 @@ export default defineComponent({
           <v-alert
             v-model="alertIsActive"
             closable
-            text="{{ alertMsg }}"
+            text
             type="success"
           >
+            {{ alertMsg }}
           </v-alert>
           <v-select
             v-model="headersValueVSelect"

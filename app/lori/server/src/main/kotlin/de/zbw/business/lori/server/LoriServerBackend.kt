@@ -347,8 +347,18 @@ class LoriServerBackend(
             invalidSearchKey = invalidSearchKeys,
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
+            templateIds = getTemplateNamesForIds(facets.templateIdToOccurence),
             zdbIds = facets.zdbIds,
         )
+    }
+
+    private fun getTemplateNamesForIds(idToCount: Map<Int, Int>): Map<Int, Pair<String, Int>> {
+        return dbConnector.rightDB.getRightsByTemplateIds(idToCount.keys.toList()).mapNotNull { right ->
+            if (right.templateId == null || right.templateName == null || idToCount[right.templateId] == null) {
+                return@mapNotNull null
+            }
+            right.templateId to (right.templateName to idToCount[right.templateId]!!)
+        }.toMap()
     }
 
     fun insertBookmark(bookmark: Bookmark): Int =
@@ -381,7 +391,7 @@ class LoriServerBackend(
      * Insert template.
      */
     fun insertTemplate(right: ItemRight): TemplateRightIdCreated {
-        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // Will lead to an overflow at some point
+        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // TODO(CB): use the lowest available number
         val rightId = dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
         return TemplateRightIdCreated(
             templateId = freeTemplateId,
