@@ -575,16 +575,16 @@ export default defineComponent({
       );
       // Reset Template Id
       searchStore.templateIdReceived =
-          response.templateIdWithCount != undefined
-              ? response.templateIdWithCount
-              : Array(0);
-      searchStore.templateIdIdx = Array(searchStore.templateIdReceived.length).fill(
-          false,
-      );
+        response.templateIdWithCount != undefined
+          ? response.templateIdWithCount
+          : Array(0);
+      searchStore.templateIdIdx = Array(
+        searchStore.templateIdReceived.length,
+      ).fill(false);
       resetDynamicFilter(
-          searchStore.templateIdReceived.map((e) => e.templateId),
-          searchStore.templateIdSelectedLastSearch,
-          searchStore.templateIdIdx,
+        searchStore.templateIdReceived.map((e) => e.templateId),
+        searchStore.templateIdSelectedLastSearch,
+        searchStore.templateIdIdx,
       );
     };
 
@@ -824,12 +824,7 @@ export default defineComponent({
             type="success"
           >
           </v-alert>
-          <v-alert
-            v-model="alertIsActive"
-            closable
-            text
-            type="success"
-          >
+          <v-alert v-model="alertIsActive" closable text type="success">
             {{ alertMsg }}
           </v-alert>
           <v-select
