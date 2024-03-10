@@ -1,6 +1,6 @@
 FROM alpine:3.19.1 AS tools
 
-LABEL IMAGE_VERSION_TAG=1.0.1
+LABEL IMAGE_VERSION_TAG=1.0.2
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -9,7 +9,7 @@ RUN apk add --no-cache curl \
     jq
 
 FROM tools as vault
-ARG VAULT_VERSION=1.15.4
+ARG VAULT_VERSION=1.15.6
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -29,19 +29,19 @@ RUN cd /var/tmp/git-crypt-$VERSION && CXXFLAGS='-DOPENSSL_API_COMPAT=0x30000000L
     apk del make
 
 FROM gitcrypt AS kubectl
-ARG KUBECTL_VERSION=1.26.13
+ARG KUBECTL_VERSION=1.26.14
 RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECTL_VERSION"/bin/linux/amd64/kubectl && \
     chmod +x ./kubectl && \
     mv ./kubectl /usr/local/bin/kubectl
 
 FROM kubectl AS helm
-ARG HELM_VERSION=3.14.0
+ARG HELM_VERSION=3.14.2
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     chmod +x linux-amd64/helm && \
     mv linux-amd64/helm /usr/local/bin/helm && rm -rf linux-amd64 && rm -rf helm-v"$HELM_VERSION"-linux-amd64.tar.gz
 
-ARG HELMFILE_VERSION=0.161.0
+ARG HELMFILE_VERSION=0.162.0
 RUN curl -L https://github.com/helmfile/helmfile/releases/download/v"$HELMFILE_VERSION"/helmfile_"$HELMFILE_VERSION"_linux_amd64.tar.gz -o helmfile-v"$HELMFILE_VERSION".tar.gz && \
     mkdir helmfile-v"$HELMFILE_VERSION" && tar -xzf helmfile-v"$HELMFILE_VERSION".tar.gz --directory helmfile-v"$HELMFILE_VERSION" && \
     chmod +x helmfile-v"$HELMFILE_VERSION"/helmfile && \
@@ -55,6 +55,6 @@ USER $IMAGE_USER
 
 # install helm-diff in user context
 FROM adduser AS helmdiff
-ARG HELMDIFF_VERSION=3.9.4
+ARG HELMDIFF_VERSION=3.9.5
 RUN helm plugin install https://github.com/databus23/helm-diff --version $HELMDIFF_VERSION
 
