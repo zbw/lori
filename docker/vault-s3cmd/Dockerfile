@@ -1,6 +1,6 @@
 FROM alpine:3.19.1 AS tools
 
-LABEL IMAGE_VERSION_TAG=0.9.3
+LABEL IMAGE_VERSION_TAG=1.0.0
 LABEL IMAGE_NAME=vault-s3cmd
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -9,7 +9,7 @@ RUN apk add --no-cache curl \
     jq
 
 FROM tools as vault
-ARG VAULT_VERSION=1.15.4
+ARG VAULT_VERSION=1.15.6
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -17,7 +17,7 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     rm vault*
 
 FROM vault AS s3cmd
-ARG S3CMD_VERSION=2.3.0-r3
+ARG S3CMD_VERSION=2.4.0-r0
 RUN apk add --no-cache s3cmd="$S3CMD_VERSION"
 
 FROM s3cmd AS adduser
