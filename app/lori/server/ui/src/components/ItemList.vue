@@ -31,8 +31,8 @@ import metadata_utils from "@/utils/metadata_utils";
 export default defineComponent({
   computed: {
     metadata_utils() {
-      return metadata_utils
-    }
+      return metadata_utils;
+    },
   },
   components: {
     RightsEditDialog,
