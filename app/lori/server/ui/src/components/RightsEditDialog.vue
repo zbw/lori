@@ -803,10 +803,15 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.my-scroll {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+</style>
 
 <template>
-  <v-card class="overflow-y-auto" max-height="1000">
+  <v-card class="my-scroll" max-height="700px">
     <v-card-actions>
       <v-alert v-model="updateSuccessful" closable type="success">
         {{ updateSuccessfulMsg }}
