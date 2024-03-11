@@ -4,8 +4,14 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import RightsEditTabs from "@/components/RightsEditTabs.vue";
 import { computed, defineComponent, PropType, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
+import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
+  computed: {
+    metadata_utils() {
+      return metadata_utils;
+    },
+  },
   props: {
     rights: {
       type: Object as PropType<Array<RightRest>>,
@@ -31,25 +37,24 @@ export default defineComponent({
     const currentIndex = ref(0);
     const headers = [
       {
-        text: "AccessState",
+        title: "AccessState",
         value: "accessState",
       },
       {
-        text: "Start-Datum",
+        title: "Start-Datum",
         value: "startDate",
       },
       {
-        text: "End-Datum",
+        title: "End-Datum",
         value: "endDate",
       },
       {
-        text: "Template",
+        title: "Template-ID",
         value: "templateId",
       },
     ];
     const isNew = ref(false);
     const renderKey = ref(0);
-    const selectedHeaders: { text: string; value: string }[] = headers;
     const updateSuccessful = ref(false);
     const addSuccessful = ref(false);
 
@@ -112,7 +117,7 @@ export default defineComponent({
       dialogStore,
       isNew,
       renderKey,
-      selectedHeaders,
+      headers,
       tabDialogActivated,
       // Methods
       activateTabEdit,
@@ -137,7 +142,7 @@ export default defineComponent({
     <v-divider></v-divider>
     <v-data-table
       :key="renderKey"
-      :headers="selectedHeaders"
+      :headers="headers"
       :items="rights"
       @click:row="activateTabEdit"
     >
@@ -145,7 +150,9 @@ export default defineComponent({
         <v-toolbar flat>
           <v-toolbar-title
             >Rechteinformationen
-            <a :href="handle">{{ handle }}</a>
+            <a v-bind:href="metadata_utils.hrefHandle(handle)">{{
+              metadata_utils.shortenHandle(handle)
+            }}</a>
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn class="mb-2" color="primary" dark @click="newRight()">
@@ -163,7 +170,8 @@ export default defineComponent({
     <v-dialog
       v-model="dialogStore.editRightActivated"
       :retain-focus="false"
-      max-width="1000px"
+      max-height="800px"
+      max-width="1600px"
       v-on:close="editRightClosed"
       v-on:click:outside="editRightClosed"
     >
@@ -181,6 +189,8 @@ export default defineComponent({
     </v-dialog>
     <v-dialog
       v-model="tabDialogActivated"
+      max-height="800px"
+      max-width="1600px"
       :retain-focus="false"
       v-on:close="tabDialogClosed"
       v-on:deleteSuccessful="deleteSuccessful"

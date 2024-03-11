@@ -31,8 +31,8 @@ import metadata_utils from "@/utils/metadata_utils";
 export default defineComponent({
   computed: {
     metadata_utils() {
-      return metadata_utils
-    }
+      return metadata_utils;
+    },
   },
   components: {
     RightsEditDialog,
@@ -404,6 +404,7 @@ export default defineComponent({
       invalidSearchKeyError.value = false;
       hasSearchTokenWithNoKeyError.value = false;
       templateSearchIsActive.value = false;
+      currentItem.value = {} as ItemRest;
       searchQuery();
     };
 
@@ -854,9 +855,7 @@ export default defineComponent({
           <v-data-table
             v-model="selectedItems"
             :headers="selectedHeaders"
-            :hide-default-footer="true"
             :items="items.map((value) => value.metadata)"
-            disable-pagination
             item-value="metadataId"
             :loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
@@ -877,6 +876,7 @@ export default defineComponent({
             <template v-slot:item.publicationDate="{ item }">
               <td>{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
+            <template #bottom></template>
           </v-data-table>
           <v-col cols="14" sm="12">
             <v-row>
