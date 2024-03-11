@@ -404,6 +404,7 @@ export default defineComponent({
       invalidSearchKeyError.value = false;
       hasSearchTokenWithNoKeyError.value = false;
       templateSearchIsActive.value = false;
+      currentItem.value = {} as ItemRest;
       searchQuery();
     };
 
