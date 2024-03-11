@@ -112,10 +112,7 @@ export default defineComponent({
     <v-container>
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
-        <v-col cols="4">
-          <div class="text-h6 mb-1">Name</div>
-          /
-        </v-col>
+        <v-col cols="4">Name</v-col>
         <v-col cols="8">
           <v-text-field
             v-model="formState.name"
@@ -139,7 +136,11 @@ export default defineComponent({
       <v-row>
         <v-col cols="4"> Beschreibung </v-col>
         <v-col cols="8">
-          <v-text-field v-model="description" outlined></v-text-field>
+          <v-text-field
+            hint="Beschreibung des Bookmarks"
+            v-model="description"
+            outlined
+          ></v-text-field>
         </v-col>
       </v-row>
       <v-card-actions>

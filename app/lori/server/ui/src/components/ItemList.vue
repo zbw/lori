@@ -26,8 +26,14 @@ import TemplateOverview from "@/components/TemplateOverview.vue";
 import BookmarkOverview from "@/components/BookmarkOverview.vue";
 import templateApi from "@/api/templateApi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
+  computed: {
+    metadata_utils() {
+      return metadata_utils
+    }
+  },
   components: {
     RightsEditDialog,
     BookmarkOverview,
@@ -575,16 +581,16 @@ export default defineComponent({
       );
       // Reset Template Id
       searchStore.templateIdReceived =
-          response.templateIdWithCount != undefined
-              ? response.templateIdWithCount
-              : Array(0);
-      searchStore.templateIdIdx = Array(searchStore.templateIdReceived.length).fill(
-          false,
-      );
+        response.templateIdWithCount != undefined
+          ? response.templateIdWithCount
+          : Array(0);
+      searchStore.templateIdIdx = Array(
+        searchStore.templateIdReceived.length,
+      ).fill(false);
       resetDynamicFilter(
-          searchStore.templateIdReceived.map((e) => e.templateId),
-          searchStore.templateIdSelectedLastSearch,
-          searchStore.templateIdIdx,
+        searchStore.templateIdReceived.map((e) => e.templateId),
+        searchStore.templateIdSelectedLastSearch,
+        searchStore.templateIdIdx,
       );
     };
 
@@ -824,12 +830,7 @@ export default defineComponent({
             type="success"
           >
           </v-alert>
-          <v-alert
-            v-model="alertIsActive"
-            closable
-            text
-            type="success"
-          >
+          <v-alert v-model="alertIsActive" closable text type="success">
             {{ alertMsg }}
           </v-alert>
           <v-select
@@ -865,7 +866,9 @@ export default defineComponent({
           >
             <template v-slot:item.handle="{ item }">
               <td>
-                <a :href="item.handle">{{ item.handle }}</a>
+                <a v-bind:href="metadata_utils.hrefHandle(item.handle)">{{
+                  metadata_utils.shortenHandle(item.handle)
+                }}</a>
               </td>
             </template>
             <template v-slot:item.publicationType="{ item }">

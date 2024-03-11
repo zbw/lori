@@ -13,6 +13,8 @@ import date_utils from "@/utils/date_utils";
 export default {
   setPublicationDateFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterPublicationDate == undefined) {
+      searchStore.publicationDateFrom = "";
+      searchStore.publicationDateTo = "";
       return;
     }
     if (bookmark.filterPublicationDate.fromYear !== undefined) {
@@ -35,6 +37,7 @@ export default {
       bookmark.filterPaketSigel == undefined ||
       bookmark.filterPaketSigel.length == 0
     ) {
+      searchStore.paketSigelIdIdx = [];
       return;
     }
     searchStore.paketSigelIdIdx = Array(bookmark.filterPaketSigel.length).fill(
@@ -71,6 +74,7 @@ export default {
 
   setZDBFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterZDBId == undefined || bookmark.filterZDBId.length == 0) {
+      searchStore.zdbIdIdx = [];
       return;
     }
     searchStore.zdbIdIdx = Array(bookmark.filterZDBId.length).fill(true);
@@ -106,6 +110,7 @@ export default {
       bookmark.filterTemplateId == undefined ||
       bookmark.filterTemplateId.length == 0
     ) {
+      searchStore.templateIdIdx = [];
       return;
     }
     searchStore.templateIdIdx = Array(bookmark.filterTemplateId.length).fill(
@@ -143,6 +148,7 @@ export default {
       bookmark.filterAccessState == undefined ||
       bookmark.filterAccessState.length == 0
     ) {
+      searchStore.accessStateIdx = [];
       return;
     }
     searchStore.accessStateIdx = Array(bookmark.filterAccessState.length).fill(
@@ -185,6 +191,9 @@ export default {
       bookmark.filterFormalRule == undefined ||
       bookmark.filterFormalRule.length == 0
     ) {
+      searchStore.formalRuleLicenceContract = false;
+      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleUserAgreement = false;
       return;
     }
     bookmark.filterFormalRule.forEach((v: string, index: number): void => {
@@ -221,6 +230,9 @@ export default {
       bookmark.filterTemporalValidity == undefined ||
       bookmark.filterTemporalValidity.length == 0
     ) {
+      searchStore.temporalValidityFilterFuture = false;
+      searchStore.temporalValidityFilterPresent = false;
+      searchStore.temporalValidityFilterPast = false;
       return;
     }
     bookmark.filterTemporalValidity.forEach((v: string): void => {
@@ -254,6 +266,7 @@ export default {
 
   setStartDateAtFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterStartDate == undefined) {
+      searchStore.temporalEventState.startDateOrEndDateValue = undefined;
       return;
     }
     searchStore.temporalEventState.startDateOrEndDateOption = "startDate";
@@ -276,6 +289,7 @@ export default {
 
   setEndDateAtFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterEndDate == undefined) {
+      searchStore.temporalEventState.startDateOrEndDateValue = undefined;
       return;
     }
     searchStore.temporalEventState.startDateOrEndDateOption = "endDate";
@@ -299,6 +313,7 @@ export default {
       bookmark.filterPublicationType == undefined ||
       bookmark.filterPublicationType.length == 0
     ) {
+      searchStore.publicationTypeIdx = [];
       return;
     }
     searchStore.publicationTypeIdx = Array(
@@ -400,6 +415,7 @@ export default {
 
   setValidOnFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterValidOn == undefined) {
+      searchStore.temporalValidOn = undefined;
       return;
     }
     searchStore.temporalValidOn = bookmark.filterValidOn;
@@ -415,6 +431,7 @@ export default {
 
   setNoRightInformationFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterNoRightInformation == undefined) {
+      searchStore.noRightInformation = false;
       return;
     }
     searchStore.noRightInformation = bookmark.filterNoRightInformation;
