@@ -855,9 +855,7 @@ export default defineComponent({
           <v-data-table
             v-model="selectedItems"
             :headers="selectedHeaders"
-            :hide-default-footer="true"
             :items="items.map((value) => value.metadata)"
-            disable-pagination
             item-value="metadataId"
             :loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
@@ -878,6 +876,7 @@ export default defineComponent({
             <template v-slot:item.publicationDate="{ item }">
               <td>{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
+            <template #bottom></template>
           </v-data-table>
           <v-col cols="14" sm="12">
             <v-row>
