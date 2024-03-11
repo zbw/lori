@@ -1,8 +1,14 @@
 <script lang="ts">
 import { MetadataRest } from "@/generated-sources/openapi";
 import { computed, defineComponent, PropType } from "vue";
+import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
+  computed: {
+    metadata_utils() {
+      return metadata_utils;
+    },
+  },
   props: {
     metadata: {
       type: Object as PropType<MetadataRest>,
@@ -125,9 +131,14 @@ export default defineComponent({
               <v-col>Handle</v-col>
               <v-col>
                 <td>
-                  <a :href="currentMetadata.handle">{{
-                    currentMetadata.handle
-                  }}</a>
+                  <a
+                    v-bind:href="
+                      metadata_utils.hrefHandle(currentMetadata.handle)
+                    "
+                    >{{
+                      metadata_utils.shortenHandle(currentMetadata.handle)
+                    }}</a
+                  >
                 </td>
               </v-col>
               <v-col></v-col>
@@ -137,9 +148,10 @@ export default defineComponent({
               <v-col>
                 <td>
                   <a
-                    :href="
-                      'http://hdl.handle.net/' +
-                      currentMetadata.collectionHandle
+                    v-bind:href="
+                      metadata_utils.prependHandleUrl(
+                        currentMetadata.collectionHandle
+                      )
                     "
                     >{{ currentMetadata.collectionHandle }}</a
                   >
@@ -151,9 +163,10 @@ export default defineComponent({
               <v-col>Community Handle</v-col>
               <v-col>
                 <td>
-                  <a
-                    :href="
-                      'http://hdl.handle.net/' + currentMetadata.communityHandle
+                  <a v-bind:href="
+                      metadata_utils.prependHandleUrl(
+                        currentMetadata.communityHandle
+                      )
                     "
                     >{{ currentMetadata.communityHandle }}</a
                   >
