@@ -52,14 +52,6 @@ export default defineComponent({
     const selectedItems = ref([]);
     const searchTerm = ref("");
     const tableContentLoading = ref(true);
-    const hintSearchField = ref(
-      "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
-        "com(Community), col(Collection), hdl (Handle Metadata), hdlcol (Handle Collection), hdlcom(Handle Community)," +
-        " hdlsubcom (Handle Subcommunity), metadataid(Metadata Id), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
-        " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
-        "Wichtig: Zeichen die als logische Operatoren dienen, aber teil der Suche sein sollen, müssen escaped werden mit \\ " +
-        " (z.B. col:'EU & \\(European\\)')",
-    );
 
     /**
      * Error handling>
@@ -684,7 +676,6 @@ export default defineComponent({
       hasSearchTokenWithNoKeyErrorMsg,
       headers,
       headersValueVSelect,
-      hintSearchField,
       items,
       invalidSearchKeyError,
       invalidSearchKeyErrorMsg,
@@ -834,10 +825,10 @@ export default defineComponent({
                 <v-card-text>
                   <p class="text-left text-body-1">Genereller Aufbau:</p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
-                    keyword1:"wert1" keyword2:"wert2"
+                    suchschluessel1:"wert1" suchschluessel2:"wert2"
                   </p>
                   <p class="text-left text-body-1 mt-4">
-                    Erlaubte Keywords sind:
+                    Erlaubte Suchschlüssel sind:
                   </p>
                   <p
                     class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
