@@ -52,14 +52,6 @@ export default defineComponent({
     const selectedItems = ref([]);
     const searchTerm = ref("");
     const tableContentLoading = ref(true);
-    const hintSearchField = ref(
-      "Syntax der Sucheingabe: keyword:'suchtext'; Erlaubte Keywords:" +
-        "com(Community), col(Collection), hdl (Handle Metadata), hdlcol (Handle Collection), hdlcom(Handle Community)," +
-        " hdlsubcom (Handle Subcommunity), metadataid(Metadata Id), sig(Paket-Sigel), tit(Titel), zdb(ZDB-Id)." +
-        " Negationen(!), Verundungen(&), Veroderungen(|) sowie Klammersetzungen sind zulässig, z.B.: col:'(subject1 | subject2) & !subject3'." +
-        "Wichtig: Zeichen die als logische Operatoren dienen, aber teil der Suche sein sollen, müssen escaped werden mit \\ " +
-        " (z.B. col:'EU & \\(European\\)')",
-    );
 
     /**
      * Error handling>
@@ -670,6 +662,8 @@ export default defineComponent({
       bookmarkSuccessfulMsg.value = true;
     };
 
+    const searchHelpDialog = ref(false);
+
     return {
       alertIsActive,
       alertMsg,
@@ -682,7 +676,6 @@ export default defineComponent({
       hasSearchTokenWithNoKeyErrorMsg,
       headers,
       headersValueVSelect,
-      hintSearchField,
       items,
       invalidSearchKeyError,
       invalidSearchKeyErrorMsg,
@@ -696,6 +689,7 @@ export default defineComponent({
       searchStore,
       selectedHeaders,
       selectedItems,
+      searchHelpDialog,
       tableContentLoading,
       rightEditActivated,
       templateLoadError,
@@ -804,7 +798,6 @@ export default defineComponent({
               v-model="searchTerm"
               append-icon="mdi-magnify"
               clearable
-              :hint="hintSearchField"
               label="Suche"
               variant="outlined"
               persistent-hint
@@ -812,6 +805,74 @@ export default defineComponent({
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
             ></v-text-field>
+            <v-dialog v-model="searchHelpDialog" max-width="400px" persistent>
+              <template v-slot:activator="{ props: activatorProps }">
+                <v-btn
+                  density="compact"
+                  icon="mdi-help"
+                  v-bind="activatorProps"
+                >
+                </v-btn>
+              </template>
+              <v-card>
+                <template v-slot:actions>
+                  <v-spacer></v-spacer>
+                  <v-btn @click="searchHelpDialog = false"> Zurück </v-btn>
+                </template>
+                <v-card-title class="text-h5">
+                  Syntax der Sucheingabe
+                </v-card-title>
+                <v-card-text>
+                  <p class="text-left text-body-1">Genereller Aufbau:</p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2">
+                    suchschluessel1:"wert1" suchschluessel2:"wert2"
+                  </p>
+                  <p class="text-left text-body-1 mt-4">
+                    Erlaubte Suchschlüssel sind:
+                  </p>
+                  <p
+                    class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
+                  >
+                    col, com, hdlcol, hdlcom, hdlsubcom, metadataid, sig, tit,
+                    zdb
+                  </p>
+
+                  <p class="text-left text-body-2 bg-light-blue-lighten-5">
+                    Diese durchsuchen jeweils diese Felder: Collection,
+                    Community, Handle der Metadaten, Handle der Community,
+                    Handle der Subcommunity, Metadaten ID, Paket-Sigel, Titel
+                    and ZDB-ID
+                  </p>
+
+                  <p class="text-left text-body-1 mt-4">Boolsche Operatoren:</p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Es können auf einem Feld mehrere Werte gleichzeitig gesucht
+                    werden. Diese Werte können durch die gängigen Boolschen
+                    Operatoren verknüpft und durch Klammersetzungen strukturiert
+                    werden
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2">
+                    Beispiel: col:"(subject1 | subject2) & !subject3"
+                  </p>
+                  <p
+                    class="text-left text-body-2 bg-light-blue-lighten-5 mt-1 mb-1"
+                  >
+                    Es gibt Veroderungen (|), Verundungen (&), Negationen (!)
+                    und Klammerzeichen
+                  </p>
+
+                  <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Wichtig: Zeichen die als logische Operatoren dienen, aber
+                    teil der Suche sein sollen, müssen mit einem Backslash \
+                    beginnen
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2">
+                    Beispiel: col:"EU & \(European\)"
+                  </p>
+                </v-card-text>
+              </v-card>
+            </v-dialog>
           </v-card-title>
           <v-spacer></v-spacer>
           <v-alert v-model="loadAlertError" closable type="error">
@@ -831,7 +892,7 @@ export default defineComponent({
             type="success"
           >
           </v-alert>
-          <v-alert v-model="alertIsActive" closable text type="success">
+          <v-alert v-model="alertIsActive" closable type="success">
             {{ alertMsg }}
           </v-alert>
           <v-select
