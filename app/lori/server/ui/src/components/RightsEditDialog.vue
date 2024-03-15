@@ -483,18 +483,20 @@ export default defineComponent({
         return "Kein Wert";
       } else {
         switch (basisStorage) {
-          case RightRestBasisStorageEnum.AuthorRightException:
+          case RightRestBasisStorageEnum.Authorrightexception:
             return "Urheberrechtschranke";
-          case RightRestBasisStorageEnum.UserAgreement:
+          case RightRestBasisStorageEnum.Useragreement:
             return "Nutzungsvereinbarung";
-          case RightRestBasisStorageEnum.OpenContentLicence:
+          case RightRestBasisStorageEnum.Opencontentlicence:
             return "Open-Content-Lizenz";
-          case RightRestBasisStorageEnum.ZbwPolicyUnanswered:
+          case RightRestBasisStorageEnum.Zbwpolicyunanswered:
             return "ZBW-Policy (unbeantwortete Rechteanforderung)";
-          case RightRestBasisStorageEnum.ZbwPolicyRestricted:
+          case RightRestBasisStorageEnum.Zbwpolicyrestricted:
             return "ZBW-Policy (Eingeschränkte OCL)";
-          default:
+          case RightRestBasisStorageEnum.Licencecontract:
             return "Lizenzvertrag";
+          default:
+            return "Kein Wert";
         }
       }
     };
@@ -505,17 +507,19 @@ export default defineComponent({
       } else {
         switch (value) {
           case "Lizenzvertrag":
-            return RightRestBasisStorageEnum.LicenceContract;
+            return RightRestBasisStorageEnum.Licencecontract;
           case "Nutzungsvereinbarung":
-            return RightRestBasisStorageEnum.UserAgreement;
+            return RightRestBasisStorageEnum.Useragreement;
           case "Urheberrechtschranke":
-            return RightRestBasisStorageEnum.AuthorRightException;
+            return RightRestBasisStorageEnum.Authorrightexception;
           case "Open-Content-Lizenz":
-            return RightRestBasisStorageEnum.OpenContentLicence;
+            return RightRestBasisStorageEnum.Opencontentlicence;
           case "ZBW-Policy (Eingeschränkte OCL)":
-            return RightRestBasisStorageEnum.ZbwPolicyRestricted;
+            return RightRestBasisStorageEnum.Zbwpolicyrestricted;
+          case "ZBW-Policy (unbeantwortete Rechteanforderung)":
+            return RightRestBasisStorageEnum.Zbwpolicyunanswered;
           default:
-            return RightRestBasisStorageEnum.ZbwPolicyUnanswered;
+            return undefined;
         }
       }
     };
@@ -527,16 +531,18 @@ export default defineComponent({
         return "Kein Wert";
       } else {
         switch (basisAccessState) {
-          case RightRestBasisAccessStateEnum.AuthorRightException:
+          case RightRestBasisAccessStateEnum.Authorrightexception:
             return "Urheberrechtschranke";
-          case RightRestBasisAccessStateEnum.UserAgreement:
+          case RightRestBasisAccessStateEnum.Useragreement:
             return "Nutzungsvereinbarung";
-          case RightRestBasisAccessStateEnum.LicenceContract:
+          case RightRestBasisAccessStateEnum.Licencecontract:
             return "Lizenzvertrag";
-          case RightRestBasisAccessStateEnum.ZbwPolicy:
+          case RightRestBasisAccessStateEnum.Zbwpolicy:
             return "ZBW-Policy";
-          default:
+          case RightRestBasisAccessStateEnum.Licencecontractoa:
             return "OA-Rechte aus Lizenzvertrag";
+          default:
+            return "Kein Wert";
         }
       }
     };
@@ -547,15 +553,17 @@ export default defineComponent({
       } else {
         switch (value) {
           case "Lizenzvertrag":
-            return RightRestBasisAccessStateEnum.LicenceContract;
+            return RightRestBasisAccessStateEnum.Licencecontract;
           case "Nutzungsvereinbarung":
-            return RightRestBasisAccessStateEnum.UserAgreement;
+            return RightRestBasisAccessStateEnum.Useragreement;
           case "OA-Rechte aus Lizenzvertrag":
-            return RightRestBasisAccessStateEnum.LicenceContractOa;
+            return RightRestBasisAccessStateEnum.Licencecontractoa;
           case "Urheberrechtschranke":
-            return RightRestBasisAccessStateEnum.AuthorRightException;
+            return RightRestBasisAccessStateEnum.Authorrightexception;
+          case "ZBW-Policy":
+            return RightRestBasisAccessStateEnum.Zbwpolicy;
           default:
-            return RightRestBasisAccessStateEnum.ZbwPolicy;
+            return undefined;
         }
       }
     };
