@@ -85,7 +85,7 @@ class RightDBTest : DatabaseTest() {
         val updatedRight =
             TEST_UPDATED_RIGHT.copy(
                 rightId = generatedRightId,
-                )
+            )
         mockkStatic(Instant::class)
         every { Instant.now() } returns NOW.plusDays(1).toInstant()
 
@@ -95,7 +95,10 @@ class RightDBTest : DatabaseTest() {
         // then
         assertThat(updatedRights, `is`(1))
         val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
-        assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null)))
+        assertThat(
+            receivedUpdatedRights.first(),
+            `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null))
+        )
 
         // delete
         // when
@@ -131,7 +134,7 @@ class RightDBTest : DatabaseTest() {
             basisStorage = BasisStorage.LICENCE_CONTRACT,
             createdBy = TEST_RIGHT.createdBy,
             createdOn = TEST_RIGHT.createdOn,
-            endDate =  TEST_RIGHT.endDate!!.plusDays(1),
+            endDate = TEST_RIGHT.endDate!!.plusDays(1),
             groupIds = TEST_RIGHT.groupIds,
             lastUpdatedBy = "user4",
             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
