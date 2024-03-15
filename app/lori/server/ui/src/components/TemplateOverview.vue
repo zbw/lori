@@ -170,6 +170,7 @@ export default defineComponent({
       alertSuccessfulMsg.value =
         "Template " + lastModifiedTemplateName.value + " erfolgreich editiert.";
       updateTemplateOverview();
+      closeTemplateEditDialog();
     };
 
     const updateTemplateOverview = () => {
