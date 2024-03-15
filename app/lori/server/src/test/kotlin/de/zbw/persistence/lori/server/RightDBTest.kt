@@ -1,6 +1,8 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
@@ -81,7 +83,9 @@ class RightDBTest : DatabaseTest() {
 
         // given
         val updatedRight =
-            initialRight.copy(rightId = generatedRightId, lastUpdatedBy = "user2", accessState = AccessState.RESTRICTED)
+            TEST_UPDATED_RIGHT.copy(
+                rightId = generatedRightId,
+            )
         mockkStatic(Instant::class)
         every { Instant.now() } returns NOW.plusDays(1).toInstant()
 
@@ -91,7 +95,10 @@ class RightDBTest : DatabaseTest() {
         // then
         assertThat(updatedRights, `is`(1))
         val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
-        assertThat(receivedUpdatedRights.first(), `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null)))
+        assertThat(
+            receivedUpdatedRights.first(),
+            `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null))
+        )
 
         // delete
         // when
@@ -119,5 +126,33 @@ class RightDBTest : DatabaseTest() {
 
     companion object {
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.RightDBTest")
+        val TEST_UPDATED_RIGHT = ItemRight(
+            rightId = "testupdated",
+            accessState = AccessState.RESTRICTED,
+            authorRightException = false,
+            basisAccessState = BasisAccessState.ZBW_POLICY,
+            basisStorage = BasisStorage.LICENCE_CONTRACT,
+            createdBy = TEST_RIGHT.createdBy,
+            createdOn = TEST_RIGHT.createdOn,
+            endDate = TEST_RIGHT.endDate!!.plusDays(1),
+            groupIds = TEST_RIGHT.groupIds,
+            lastUpdatedBy = "user4",
+            lastAppliedOn = TEST_RIGHT.lastAppliedOn,
+            lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
+            licenceContract = "foo licence",
+            nonStandardOpenContentLicence = false,
+            nonStandardOpenContentLicenceURL = "https://foobar.de",
+            notesGeneral = "Some more general notes",
+            notesFormalRules = "Some more formal rule notes",
+            notesProcessDocumentation = "Some more process documentation",
+            notesManagementRelated = "Some more management related notes",
+            openContentLicence = "some more licence",
+            restrictedOpenContentLicence = true,
+            startDate = TEST_RIGHT.startDate.minusDays(10),
+            templateDescription = "description foo",
+            templateId = null,
+            templateName = "name foo",
+            zbwUserAgreement = true,
+        )
     }
 }

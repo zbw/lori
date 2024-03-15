@@ -140,7 +140,7 @@ class DAConnector(
 
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
-        const val HANDLE_URL = "http://hdl.handle.net/"
+        private const val HANDLE_URL = "http://hdl.handle.net/"
         private val LOG = LogManager.getLogger(DAConnector::class.java)
 
         internal fun shortenHandle(item: ItemMetadata) = item.copy(

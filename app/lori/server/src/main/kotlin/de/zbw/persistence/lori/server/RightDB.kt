@@ -482,7 +482,8 @@ class RightDB(
                 "notes_management_related = EXCLUDED.notes_management_related," +
                 "template_id = EXCLUDED.template_id," +
                 "template_name = EXCLUDED.template_name," +
-                "template_description = EXCLUDED.template_description;"
+                "template_description = EXCLUDED.template_description," +
+                "author_right_exception = EXCLUDED.author_right_exception;"
 
         const val STATEMENT_DELETE_RIGHTS = "DELETE " +
             "FROM $TABLE_NAME_ITEM_RIGHT r " +

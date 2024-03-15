@@ -232,42 +232,42 @@ internal fun AccessState.toRest(): AccessStateRest =
 
 internal fun RightRest.BasisAccessState.toBusiness(): BasisAccessState =
     when (this) {
-        RightRest.BasisAccessState.authorRightException -> BasisAccessState.AUTHOR_RIGHT_EXCEPTION
-        RightRest.BasisAccessState.licenceContract -> BasisAccessState.LICENCE_CONTRACT
-        RightRest.BasisAccessState.licenceContractOa -> BasisAccessState.LICENCE_CONTRACT_OA
-        RightRest.BasisAccessState.openContentLicence -> BasisAccessState.OPEN_CONTENT_LICENCE
-        RightRest.BasisAccessState.userAgreement -> BasisAccessState.USER_AGREEMENT
-        RightRest.BasisAccessState.zbwPolicy -> BasisAccessState.ZBW_POLICY
+        RightRest.BasisAccessState.authorrightexception -> BasisAccessState.AUTHOR_RIGHT_EXCEPTION
+        RightRest.BasisAccessState.licencecontract -> BasisAccessState.LICENCE_CONTRACT
+        RightRest.BasisAccessState.licencecontractoa -> BasisAccessState.LICENCE_CONTRACT_OA
+        RightRest.BasisAccessState.opencontentlicence -> BasisAccessState.OPEN_CONTENT_LICENCE
+        RightRest.BasisAccessState.useragreement -> BasisAccessState.USER_AGREEMENT
+        RightRest.BasisAccessState.zbwpolicy -> BasisAccessState.ZBW_POLICY
     }
 
 internal fun BasisAccessState.toRest(): RightRest.BasisAccessState =
     when (this) {
-        BasisAccessState.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisAccessState.authorRightException
-        BasisAccessState.LICENCE_CONTRACT -> RightRest.BasisAccessState.licenceContract
-        BasisAccessState.LICENCE_CONTRACT_OA -> RightRest.BasisAccessState.licenceContractOa
-        BasisAccessState.OPEN_CONTENT_LICENCE -> RightRest.BasisAccessState.openContentLicence
-        BasisAccessState.USER_AGREEMENT -> RightRest.BasisAccessState.userAgreement
-        BasisAccessState.ZBW_POLICY -> RightRest.BasisAccessState.zbwPolicy
+        BasisAccessState.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisAccessState.authorrightexception
+        BasisAccessState.LICENCE_CONTRACT -> RightRest.BasisAccessState.licencecontract
+        BasisAccessState.LICENCE_CONTRACT_OA -> RightRest.BasisAccessState.licencecontractoa
+        BasisAccessState.OPEN_CONTENT_LICENCE -> RightRest.BasisAccessState.opencontentlicence
+        BasisAccessState.USER_AGREEMENT -> RightRest.BasisAccessState.useragreement
+        BasisAccessState.ZBW_POLICY -> RightRest.BasisAccessState.zbwpolicy
     }
 
 internal fun RightRest.BasisStorage.toBusiness(): BasisStorage =
     when (this) {
-        RightRest.BasisStorage.authorRightException -> BasisStorage.AUTHOR_RIGHT_EXCEPTION
-        RightRest.BasisStorage.licenceContract -> BasisStorage.LICENCE_CONTRACT
-        RightRest.BasisStorage.openContentLicence -> BasisStorage.LICENCE_CONTRACT
-        RightRest.BasisStorage.userAgreement -> BasisStorage.USER_AGREEMENT
-        RightRest.BasisStorage.zbwPolicyRestricted -> BasisStorage.ZBW_POLICY_RESTRICTED
-        RightRest.BasisStorage.zbwPolicyUnanswered -> BasisStorage.ZBW_POLICY_UNANSWERED
+        RightRest.BasisStorage.authorrightexception -> BasisStorage.AUTHOR_RIGHT_EXCEPTION
+        RightRest.BasisStorage.licencecontract -> BasisStorage.LICENCE_CONTRACT
+        RightRest.BasisStorage.opencontentlicence -> BasisStorage.LICENCE_CONTRACT
+        RightRest.BasisStorage.useragreement -> BasisStorage.USER_AGREEMENT
+        RightRest.BasisStorage.zbwpolicyrestricted -> BasisStorage.ZBW_POLICY_RESTRICTED
+        RightRest.BasisStorage.zbwpolicyunanswered -> BasisStorage.ZBW_POLICY_UNANSWERED
     }
 
 internal fun BasisStorage.toRest(): RightRest.BasisStorage =
     when (this) {
-        BasisStorage.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisStorage.authorRightException
-        BasisStorage.LICENCE_CONTRACT -> RightRest.BasisStorage.licenceContract
-        BasisStorage.OPEN_CONTENT_LICENCE -> RightRest.BasisStorage.openContentLicence
-        BasisStorage.USER_AGREEMENT -> RightRest.BasisStorage.userAgreement
-        BasisStorage.ZBW_POLICY_RESTRICTED -> RightRest.BasisStorage.zbwPolicyRestricted
-        BasisStorage.ZBW_POLICY_UNANSWERED -> RightRest.BasisStorage.zbwPolicyUnanswered
+        BasisStorage.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisStorage.authorrightexception
+        BasisStorage.LICENCE_CONTRACT -> RightRest.BasisStorage.licencecontract
+        BasisStorage.OPEN_CONTENT_LICENCE -> RightRest.BasisStorage.opencontentlicence
+        BasisStorage.USER_AGREEMENT -> RightRest.BasisStorage.useragreement
+        BasisStorage.ZBW_POLICY_RESTRICTED -> RightRest.BasisStorage.zbwpolicyrestricted
+        BasisStorage.ZBW_POLICY_UNANSWERED -> RightRest.BasisStorage.zbwpolicyunanswered
     }
 
 internal fun PublicationTypeRest.toBusiness(): PublicationType =

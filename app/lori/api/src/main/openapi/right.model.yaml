@@ -19,21 +19,21 @@ RightRest:
     basisAccessState:
       type: string
       enum:
-        - author_right_exception
-        - licence_contract
-        - licence_contract_oa
-        - open_content_licence
-        - user_agreement
-        - zbw_policy
+        - authorrightexception
+        - licencecontract
+        - licencecontractoa
+        - opencontentlicence
+        - useragreement
+        - zbwpolicy
     basisStorage:
       type: string
       enum:
-        - author_right_exception
-        - licence_contract
-        - open_content_licence
-        - user_agreement
-        - zbw_policy_restricted
-        - zbw_policy_unanswered
+        - authorrightexception
+        - licencecontract
+        - opencontentlicence
+        - useragreement
+        - zbwpolicyrestricted
+        - zbwpolicyunanswered
     createdBy:
       type: string
     createdOn:
