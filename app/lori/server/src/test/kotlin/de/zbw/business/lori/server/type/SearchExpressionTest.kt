@@ -21,41 +21,40 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "tit:'foo'",
-                "Variable(searchPair=TITLE:foo)",
+                "SEVariable(searchPair=TITLE:foo)",
                 false,
                 "Single Search Pair",
             ),
             arrayOf(
                 "!tit:'foo'",
-                "Not(body=Variable(searchPair=TITLE:foo))",
+                "SENot(body=SEVariable(searchPair=TITLE:foo))",
                 false,
                 "One negation",
             ),
             arrayOf(
                 "tit:'foo'|zdb:'123'",
-                "Or(left=Variable(searchPair=TITLE:foo), right=Variable(searchPair=ZDB_ID:123))",
+                "SEOr(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))",
                 false,
                 "Or search pairs no whitespace",
             ),
             arrayOf(
                 "tit:'foo' | zdb:'123'",
-                "Or(left=Variable(searchPair=TITLE:foo), right=Variable(searchPair=ZDB_ID:123))",
+                "SEOr(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))",
                 false,
                 "Or search pairs",
             ),
             arrayOf(
                 "tit:'foo' & zdb:'123'",
-                "And(left=Variable(searchPair=TITLE:foo), right=Variable(searchPair=ZDB_ID:123))",
+                "SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))",
                 false,
                 "And search pairs"
             ),
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "Or(left=And(left=Variable(searchPair=TITLE:foo), right=Variable(searchPair=ZDB_ID:123)), right=Variable(searchPair=HDL:123))",
+                "SEOr(left=SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123)), right=SEVariable(searchPair=HDL:123))",
                 false,
                 "Or, And, parentheses"
             ),
-            // TODO(CB): Add more test cases, especially error cases
         )
 
     @Test(dataProvider = DATA_FOR_PARSING_SEARCH_QUERY)
