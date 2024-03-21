@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
@@ -589,8 +590,6 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
-                invalidSearchKey = listOf("cor"),
-                hasSearchTokenWithNoKey = false,
                 templateIdWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -615,8 +614,6 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
-                    invalidSearchKey = listOf("cor"),
-                    hasSearchTokenWithNoKey = false,
                     templateIds = emptyMap(),
                 )
                 )
@@ -661,8 +658,6 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
-                invalidSearchKey = listOf("cor"),
-                hasSearchTokenWithNoKey = false,
                 templateIdWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
@@ -687,8 +682,6 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
-                    invalidSearchKey = listOf("cor"),
-                    hasSearchTokenWithNoKey = false,
                     templateIds = emptyMap(),
                 )
                 )
@@ -770,6 +763,26 @@ class ItemRoutesKtTest {
             )
             val response = client.get("/api/v1/item/search?searchTerm=$searchTerm")
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
+    fun testItemGetSearchResultParseError() {
+        // given
+        val searchTerm = "com:foobar"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { searchQuery(searchTerm, any(), any()) } throws ParsingException("some parsing error")
+        }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication()
+            )
+            val response = client.get("/api/v1/item/search?searchTerm=$searchTerm")
+            assertThat(response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 

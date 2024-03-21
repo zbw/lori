@@ -1,6 +1,7 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -55,6 +56,22 @@ class SearchKeyTest : DatabaseTest() {
             setOf(METADATA_ID_TEST),
             1,
             "search for specific metadata id"
+        ),
+        arrayOf(
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}')",
+            10,
+            0,
+            setOf(METADATA_ID_TEST),
+            1,
+            "search for specific metadata id with complex query"
+        ),
+        arrayOf(
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}' & !tit:'stupid title')",
+            10,
+            0,
+            setOf(METADATA_ID_TEST),
+            1,
+            "search for specific metadata id with even complexer query"
         ),
         arrayOf(
             "metadataid:'$NO_VALID_METADATA_ID'",

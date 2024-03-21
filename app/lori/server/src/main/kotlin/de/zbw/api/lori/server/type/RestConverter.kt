@@ -6,8 +6,6 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.RightValidOnFilter
-import de.zbw.business.lori.server.SearchKey
-import de.zbw.business.lori.server.SearchPair
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -22,6 +20,8 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.SearchKey
+import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
@@ -481,9 +481,7 @@ fun SearchQueryResult.toRest(
         }.toList(),
         hasLicenceContract = this.hasLicenceContract,
         hasOpenContentLicence = this.hasOpenContentLicence,
-        hasSearchTokenWithNoKey = this.hasSearchTokenWithNoKey,
         hasZbwUserAgreement = this.hasZbwUserAgreement,
-        invalidSearchKey = this.invalidSearchKey,
         numberOfResults = this.numberOfResults,
         paketSigelWithCount = this.paketSigels.entries
             .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList(),

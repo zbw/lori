@@ -1,4 +1,4 @@
-package de.zbw.business.lori.server
+package de.zbw.business.lori.server.type
 
 import de.zbw.persistence.lori.server.MetadataDB
 

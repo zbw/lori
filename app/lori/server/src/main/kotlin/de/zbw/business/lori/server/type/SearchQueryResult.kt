@@ -10,10 +10,8 @@ data class SearchQueryResult(
     val numberOfResults: Int, // Number of all search results
     val results: List<Item>, // Results determined by offset and limit
     val accessState: Map<AccessState, Int>,
-    val invalidSearchKey: List<String>,
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
-    val hasSearchTokenWithNoKey: Boolean,
     val hasZbwUserAgreement: Boolean,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,

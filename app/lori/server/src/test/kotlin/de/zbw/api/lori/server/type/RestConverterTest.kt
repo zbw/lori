@@ -389,10 +389,8 @@ class RestConverterTest {
             accessState = mapOf(
                 AccessState.OPEN to 2,
             ),
-            invalidSearchKey = listOf("foo"),
             hasLicenceContract = false,
             hasOpenContentLicence = true,
-            hasSearchTokenWithNoKey = false,
             hasZbwUserAgreement = false,
             paketSigels = mapOf("sigel1" to 1),
             publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
@@ -407,9 +405,7 @@ class RestConverterTest {
             ),
             hasLicenceContract = given.hasLicenceContract,
             hasOpenContentLicence = given.hasOpenContentLicence,
-            hasSearchTokenWithNoKey = given.hasSearchTokenWithNoKey,
             hasZbwUserAgreement = given.hasZbwUserAgreement,
-            invalidSearchKey = given.invalidSearchKey,
             numberOfResults = given.numberOfResults,
             paketSigelWithCount = listOf(
                 PaketSigelWithCountRest(count = 1, paketSigel = "sigel1")

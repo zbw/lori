@@ -3,11 +3,12 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.SearchKey
-import de.zbw.business.lori.server.SearchPair
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SearchKey
+import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -43,14 +44,14 @@ class SearchDB(
     private val tracer: Tracer,
 ) {
     fun searchForFacets(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
     ): FacetTransientSet {
         val prepStmt = connection.prepareStatement(
             buildSearchQueryForFacets(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -64,6 +65,7 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { entry ->
                 this.setString(counter++, entry.values)
             }
@@ -96,7 +98,7 @@ class SearchDB(
         return FacetTransientSet(
             accessState = getAccessStateOccurrences(
                 givenAccessState = received.mapNotNull { it.accessState }.toSet(),
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
@@ -104,14 +106,14 @@ class SearchDB(
             paketSigels = searchOccurrences(
                 givenValues = received.mapNotNull { it.paketSigel }.toSet(),
                 occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
             ),
             publicationType = getPublicationTypeOccurrences(
                 givenPublicationType = received.map { it.publicationType }.toSet(),
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
@@ -119,7 +121,7 @@ class SearchDB(
             zdbIds = searchOccurrences(
                 givenValues = received.mapNotNull { it.zdbId }.toSet(),
                 occurrenceForColumn = COLUMN_METADATA_ZDB_ID,
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
@@ -135,7 +137,7 @@ class SearchDB(
             templateIdToOccurence = searchOccurrencesTemplateId(
                 givenValues = received.map { it.templateId }.filter { it != 0 }.toSet(),
                 occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_ID,
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
@@ -144,7 +146,7 @@ class SearchDB(
     }
 
     private fun getAccessStateOccurrences(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -153,7 +155,7 @@ class SearchDB(
         return searchOccurrences(
             givenValues = givenAccessState.map { it.toString() }.toSet(),
             occurrenceForColumn = COLUMN_RIGHT_ACCESS_STATE,
-            searchPairs = searchPairs,
+            searchExpression = searchExpression,
             metadataSearchFilter = metadataSearchFilter,
             rightSearchFilter = rightSearchFilter,
             noRightInformationFilter = noRightInformationFilter,
@@ -161,7 +163,7 @@ class SearchDB(
     }
 
     private fun getPublicationTypeOccurrences(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -170,7 +172,7 @@ class SearchDB(
         return searchOccurrences(
             givenValues = givenPublicationType.map { it.toString() }.toSet(),
             occurrenceForColumn = COLUMN_METADATA_PUBLICATION_TYPE,
-            searchPairs = searchPairs,
+            searchExpression = searchExpression,
             metadataSearchFilter = metadataSearchFilter,
             rightSearchFilter = rightSearchFilter,
             noRightInformationFilter = noRightInformationFilter,
@@ -178,7 +180,7 @@ class SearchDB(
     }
 
     internal fun searchOccurrencesTemplateId(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -192,7 +194,7 @@ class SearchDB(
             buildSearchQueryOccurrence(
                 createGenericValuesForSql(givenValues),
                 occurrenceForColumn,
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -205,6 +207,7 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.values)
             }
@@ -233,7 +236,7 @@ class SearchDB(
     }
 
     private fun searchOccurrences(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -247,7 +250,7 @@ class SearchDB(
             buildSearchQueryOccurrence(
                 createValuesForSql(givenValues),
                 occurrenceForColumn,
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -260,6 +263,8 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
+
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.values)
             }
@@ -291,14 +296,14 @@ class SearchDB(
      * Search related queries.
      */
     fun countSearchMetadata(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter?,
     ): Int {
         val prepStmt = connection.prepareStatement(
             buildCountSearchQuery(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -306,6 +311,7 @@ class SearchDB(
         )
             .apply {
                 var counter = 1
+                val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
                 searchPairs.forEach { pair ->
                     this.setString(counter++, pair.getValuesAsString())
                 }
@@ -332,7 +338,7 @@ class SearchDB(
     }
 
     fun searchMetadata(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         limit: Int?,
         offset: Int?,
         metadataSearchFilter: List<MetadataSearchFilter>,
@@ -341,7 +347,7 @@ class SearchDB(
     ): List<ItemMetadata> {
         val prepStmt = connection.prepareStatement(
             buildSearchQuery(
-                searchPairs = searchPairs,
+                searchExpression = searchExpression,
                 metadataSearchFilters = metadataSearchFilter,
                 rightSearchFilters = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
@@ -350,6 +356,7 @@ class SearchDB(
             )
         ).apply {
             var counter = 1
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.getValuesAsString())
             }
@@ -479,7 +486,7 @@ class SearchDB(
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID}"
 
         fun buildSearchQuery(
-            searchPairs: List<SearchPair>,
+            searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
@@ -494,7 +501,7 @@ class SearchDB(
             } else ""
 
             val subquery = if (
-                searchPairs.isEmpty() && rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
+                searchExpression == null && rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
             ) {
                 buildSearchQuerySelect(rightSearchFilters) + " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
@@ -512,7 +519,7 @@ class SearchDB(
                         metadataSearchFilters,
                     ) +
                     ")"
-            } else if (searchPairs.isNotEmpty()) {
+            } else if (searchExpression != null) {
                 "(" + buildSearchQuerySelect(rightSearchFilters) +
                     " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
@@ -530,19 +537,12 @@ class SearchDB(
                     )
             }
 
-            return if (searchPairs.isEmpty()) {
+            return if (searchExpression == null) {
                 "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
-                val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
-                    pair.toWhereClause()
-                }
-                val coalesceScore = searchPairs.joinToString(
-                    prefix = "(",
-                    postfix = ")",
-                    separator = " + ",
-                ) { pair ->
-                    pair.getCoalesce()
-                } + "/${searchPairs.size} as score"
+                val trgmWhere = SearchExpressionResolution.resolveSearchExpression(searchExpression)
+                val coalesceScore =
+                    SearchExpressionResolution.resolveSearchExpressionCoalesce(searchExpression, "score")
                 "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES,$coalesceScore" +
                     " FROM $subquery as ${SearchKey.SUBQUERY_NAME}" +
                     " WHERE $trgmWhere" +
@@ -553,14 +553,14 @@ class SearchDB(
         }
 
         fun buildCountSearchQuery(
-            searchPairs: List<SearchPair>,
+            searchExpression: SearchExpression?,
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String =
             "SELECT COUNT(*) FROM (" +
                 buildSearchQuery(
-                    searchPairs,
+                    searchExpression,
                     metadataSearchFilter,
                     rightSearchFilter,
                     noRightInformationFilter,
@@ -571,7 +571,7 @@ class SearchDB(
         fun buildSearchQueryOccurrence(
             values: String,
             columnName: String,
-            searchPairs: List<SearchPair>,
+            searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
@@ -588,13 +588,13 @@ class SearchDB(
                     noRightInformationFilter = noRightInformationFilter,
                     collectFacets = true,
                 )
-            val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
-                pair.toWhereClause()
-            }.takeIf { it.isNotBlank() }
-                ?.let {
-                    " WHERE $it"
+
+            val trgmWhere =
+                if (searchExpression == null) {
+                    ""
+                } else {
+                    " WHERE " + SearchExpressionResolution.resolveSearchExpression(searchExpression)
                 }
-                ?: ""
 
             return "SELECT A.$columnName, COUNT(${SearchKey.SUBQUERY_NAME}.$columnName)" +
                 " FROM($values) as A($columnName)" +
@@ -611,7 +611,7 @@ class SearchDB(
             "VALUES " + given.joinToString(separator = ",") { "($it)" }
 
         fun buildSearchQueryForFacets(
-            searchPairs: List<SearchPair>,
+            searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
@@ -636,13 +636,12 @@ class SearchDB(
                         collectFacets,
                     )
             }
-            val trgmWhere = searchPairs.joinToString(separator = " AND ") { pair ->
-                pair.toWhereClause()
-            }.takeIf { it.isNotBlank() }
-                ?.let {
-                    " WHERE $it"
+            val trgmWhere =
+                if (searchExpression == null) {
+                    ""
+                } else {
+                    " WHERE " + SearchExpressionResolution.resolveSearchExpression(searchExpression)
                 }
-                ?: ""
 
             return STATEMENT_SELECT_FACET +
                 " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +

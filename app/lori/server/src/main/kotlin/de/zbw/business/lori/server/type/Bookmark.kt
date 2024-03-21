@@ -8,7 +8,6 @@ import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
-import de.zbw.business.lori.server.SearchPair
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
