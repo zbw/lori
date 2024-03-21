@@ -1181,6 +1181,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                  v-model="tmpRight.openContentLicence"
                   :disabled="!isEditable"
                   variant="outlined"
                 ></v-text-field>
