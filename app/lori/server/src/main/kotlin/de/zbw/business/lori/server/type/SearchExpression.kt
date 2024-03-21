@@ -14,10 +14,10 @@ import de.zbw.business.lori.server.LoriServerBackend
 
 sealed class SearchExpression
 
-data class Variable(val searchPair: SearchPair) : SearchExpression()
-data class Not(val body: SearchExpression) : SearchExpression()
-data class And(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
-data class Or(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
+data class SEVariable(val searchPair: SearchPair) : SearchExpression()
+data class SENot(val body: SearchExpression) : SearchExpression()
+data class SEAnd(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
+data class SEOr(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
 
 object SearchGrammar : Grammar<SearchExpression>() {
     val id by regexToken(LoriServerBackend.SEARCH_KEY_REGEX)
@@ -26,9 +26,10 @@ object SearchGrammar : Grammar<SearchExpression>() {
     val not by literalToken("!")
     val and by literalToken("&")
     val or by literalToken("|")
+    // Even if not used the variable seems to be necessary according to documentation
     val ws by regexToken("\\s+", ignore = true)
 
-    private val negation by -not * parser(this::term) map { Not(it) }
+    private val negation by -not * parser(this::term) map { SENot(it) }
     private val bracedExpression by -lpar * parser(this::orChain) * -rpar
 
     private val term: Parser<SearchExpression> by
@@ -36,15 +37,15 @@ object SearchGrammar : Grammar<SearchExpression>() {
         id map { searchPairInQuery ->
             LoriServerBackend.parseValidSearchPairs(searchPairInQuery.text).takeIf { it.isNotEmpty() }
                 ?.let {
-                    Variable(it.first())
+                    SEVariable(it.first())
                 } ?: throw ParsingException("Invalid Search Pair found in $searchPairInQuery")
         }
         ) or
         negation or
         bracedExpression
 
-    private val andChain: Parser<SearchExpression> by leftAssociative(term, and) { a, _, b -> And(a, b) }
-    private val orChain by leftAssociative(andChain, or) { a, _, b -> Or(a, b) }
+    private val andChain: Parser<SearchExpression> by leftAssociative(term, and) { a, _, b -> SEAnd(a, b) }
+    private val orChain by leftAssociative(andChain, or) { a, _, b -> SEOr(a, b) }
 
     override val rootParser by orChain
 }

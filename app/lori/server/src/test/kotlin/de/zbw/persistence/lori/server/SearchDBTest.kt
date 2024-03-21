@@ -7,13 +7,13 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.type.AccessState
-import de.zbw.business.lori.server.type.And
-import de.zbw.business.lori.server.type.Or
+import de.zbw.business.lori.server.type.SEAnd
+import de.zbw.business.lori.server.type.SEOr
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
-import de.zbw.business.lori.server.type.Variable
+import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -65,7 +65,7 @@ class SearchDBTest : DatabaseTest() {
         dbConnector.metadataDB.insertMetadata(testZDB)
 
         // when
-        val searchPairsZDB = Variable(
+        val searchPairsZDB = SEVariable(
             SearchPair(
                 key = SearchKey.ZDB_ID,
                 values = testZDB.zdbId!!
@@ -89,13 +89,13 @@ class SearchDBTest : DatabaseTest() {
         assertThat(resultZDB[0], `is`(testZDB))
         assertThat(numberResultZDB, `is`(1))
         // when
-        val searchPairsAll = And(
-            Variable(SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!)),
-            And(
-                Variable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
-                And(
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
-                    Variable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbId!!))
+        val searchPairsAll = SEAnd(
+            SEVariable(SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!)),
+            SEAnd(
+                SEVariable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbId!!))
                 )
             )
         )
@@ -158,22 +158,22 @@ class SearchDBTest : DatabaseTest() {
     private fun createBuildSearchQueryData() =
         arrayOf(
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE ts_collection @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple searchkeys",
             ),
             arrayOf(
-                Variable(
+                SEVariable(
                     SearchPair(SearchKey.ZDB_ID, "foo & bar"),
                 ),
                 emptyList<MetadataSearchFilter>(),
@@ -181,18 +181,18 @@ class SearchDBTest : DatabaseTest() {
                 "query for multiple words in one searchkey",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple words in multiple searchkeys"
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -201,12 +201,12 @@ class SearchDBTest : DatabaseTest() {
                 "query for publication date filter"
             ),
             arrayOf(
-                Or(
-                    And(
-                        Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                        Variable(SearchPair(SearchKey.HDL, "baz")),
+                SEOr(
+                    SEAnd(
+                        SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                        SEVariable(SearchPair(SearchKey.HDL, "baz")),
                     ),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -244,7 +244,7 @@ class SearchDBTest : DatabaseTest() {
     fun createDataForBuildSearchQueryBoth() =
         arrayOf(
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
@@ -252,7 +252,7 @@ class SearchDBTest : DatabaseTest() {
                 "right filter only",
             ),
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -267,7 +267,7 @@ class SearchDBTest : DatabaseTest() {
                 "right filter combined with metadatafilter",
             ),
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -308,7 +308,7 @@ class SearchDBTest : DatabaseTest() {
     private fun createBuildSearchCountQueryData() =
         arrayOf(
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
@@ -316,9 +316,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query filter with one searchkey",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "foo")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "foo")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
@@ -327,7 +327,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query filter with two searchkeys",
             ),
             arrayOf(
-                Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
@@ -335,9 +335,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query filter with multiple words for one key",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
@@ -346,9 +346,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query with multiple words for multiple keys",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -462,9 +462,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys, metadata and right filter. Only norightinformation filter",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -481,9 +481,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query with keys and metadata filter and norightinformation filter",
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
-                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
+                SEAnd(
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -675,7 +675,7 @@ class SearchDBTest : DatabaseTest() {
     private fun createQueryFilterSearchForSigelAndZDB() =
         arrayOf(
             arrayOf(
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_id FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_id,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE ts_collection @@ to_tsquery(?) GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_id;",
@@ -728,7 +728,7 @@ class SearchDBTest : DatabaseTest() {
                     PublicationType.PERIODICAL_PART.toString()
                 ),
                 COLUMN_METADATA_PUBLICATION_TYPE,
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
@@ -741,7 +741,7 @@ class SearchDBTest : DatabaseTest() {
                     AccessState.RESTRICTED.toString(),
                 ),
                 DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE,
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
@@ -782,7 +782,7 @@ class SearchDBTest : DatabaseTest() {
                     AccessState.RESTRICTED.toString(),
                 ),
                 DatabaseConnector.COLUMN_RIGHT_TEMPLATE_ID,
-                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
+                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
