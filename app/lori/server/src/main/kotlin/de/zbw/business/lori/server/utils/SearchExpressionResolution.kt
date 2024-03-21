@@ -3,9 +3,9 @@ package de.zbw.business.lori.server.utils
 import de.zbw.business.lori.server.type.SEAnd
 import de.zbw.business.lori.server.type.SENot
 import de.zbw.business.lori.server.type.SEOr
+import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchPair
-import de.zbw.business.lori.server.type.SEVariable
 
 object SearchExpressionResolution {
     fun resolveSearchExpression(expression: SearchExpression): String = when (expression) {
