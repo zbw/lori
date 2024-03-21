@@ -7,13 +7,13 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SEAnd
 import de.zbw.business.lori.server.type.SEOr
-import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
-import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
