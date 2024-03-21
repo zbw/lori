@@ -6,7 +6,6 @@ import de.zbw.business.lori.server.type.Or
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.Variable
-import kotlin.math.exp
 
 object SearchExpressionResolution {
     fun resolveSearchExpression(expression: SearchExpression): String = when (expression) {

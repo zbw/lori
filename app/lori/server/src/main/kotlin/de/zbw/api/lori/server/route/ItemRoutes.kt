@@ -15,6 +15,7 @@ import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateIdFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
@@ -466,6 +467,12 @@ fun Routing.itemRoutes(
                 } catch (e: NumberFormatException) {
                     span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("Parameters have a bad format"))
+                } catch (pe: ParsingException) {
+                    span.setStatus(StatusCode.ERROR, "ParsingException: ${pe.message}")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError("Search Query ist ungültig. Siehe ? Button für mehr Informationen")
+                    )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())

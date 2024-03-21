@@ -6,12 +6,13 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.type.SearchKey
-import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.And
+import de.zbw.business.lori.server.type.Or
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SearchKey
+import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.Variable
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
@@ -200,8 +201,11 @@ class SearchDBTest : DatabaseTest() {
                 "query for publication date filter"
             ),
             arrayOf(
-                And(
-                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                Or(
+                    And(
+                        Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                        Variable(SearchPair(SearchKey.HDL, "baz")),
+                    ),
                     Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 listOf(
@@ -212,7 +216,7 @@ class SearchDBTest : DatabaseTest() {
                         )
                     )
                 ),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ((ts_zdb_id @@ to_tsquery(?)) AND ts_hdl @@ to_tsquery(?)) OR ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter"
             )
         )

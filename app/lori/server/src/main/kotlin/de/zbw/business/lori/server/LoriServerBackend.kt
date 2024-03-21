@@ -2,9 +2,7 @@ package de.zbw.business.lori.server
 
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
-import com.github.h0tk3y.betterParse.parser.ParseResult
 import com.github.h0tk3y.betterParse.parser.Parsed
-import com.github.h0tk3y.betterParse.parser.tryParseToEnd
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
@@ -16,7 +14,7 @@ import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.type.ParseError
+import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
@@ -298,7 +296,7 @@ class LoriServerBackend(
                 ?.let {
                     when (it) {
                         is Parsed -> it.value
-                        is ErrorResult -> throw ParseError("Parsing error in query: $it")
+                        is ErrorResult -> throw ParsingException("Parsing error in query: $it")
                     }
                 }
 
@@ -348,9 +346,7 @@ class LoriServerBackend(
             accessState = facets.accessState,
             hasLicenceContract = facets.hasLicenceContract,
             hasOpenContentLicence = facets.hasOpenContentLicence,
-            hasSearchTokenWithNoKey = false, // TODO(CB): Error handling
             hasZbwUserAgreement = facets.hasZbwUserAgreement,
-            invalidSearchKey = emptyList(), // TODO(CB): Error handling
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
             templateIds = getTemplateNamesForIds(facets.templateIdToOccurence),

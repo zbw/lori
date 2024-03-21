@@ -3,11 +3,11 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
@@ -65,7 +65,7 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
-            val searchPairs = searchExpression?.let{SearchExpressionResolution.getSearchPairs(it)}?: emptyList()
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { entry ->
                 this.setString(counter++, entry.values)
             }
@@ -207,7 +207,7 @@ class SearchDB(
             metadataSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
-            val searchPairs = searchExpression?.let{SearchExpressionResolution.getSearchPairs(it)}?: emptyList()
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.values)
             }
@@ -264,7 +264,7 @@ class SearchDB(
                 counter = f.setSQLParameter(counter, this)
             }
 
-            val searchPairs = searchExpression?.let{SearchExpressionResolution.getSearchPairs(it)}?: emptyList()
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.values)
             }
@@ -311,7 +311,7 @@ class SearchDB(
         )
             .apply {
                 var counter = 1
-                val searchPairs = searchExpression?.let{SearchExpressionResolution.getSearchPairs(it)}?: emptyList()
+                val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
                 searchPairs.forEach { pair ->
                     this.setString(counter++, pair.getValuesAsString())
                 }
@@ -356,7 +356,7 @@ class SearchDB(
             )
         ).apply {
             var counter = 1
-            val searchPairs = searchExpression?.let{SearchExpressionResolution.getSearchPairs(it)}?: emptyList()
+            val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
             searchPairs.forEach { pair ->
                 this.setString(counter++, pair.getValuesAsString())
             }
@@ -541,7 +541,8 @@ class SearchDB(
                 "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
                 val trgmWhere = SearchExpressionResolution.resolveSearchExpression(searchExpression)
-                val coalesceScore = SearchExpressionResolution.resolveSearchExpressionCoalesce(searchExpression, "score")
+                val coalesceScore =
+                    SearchExpressionResolution.resolveSearchExpressionCoalesce(searchExpression, "score")
                 "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES,$coalesceScore" +
                     " FROM $subquery as ${SearchKey.SUBQUERY_NAME}" +
                     " WHERE $trgmWhere" +
@@ -589,7 +590,7 @@ class SearchDB(
                 )
 
             val trgmWhere =
-                if (searchExpression == null){
+                if (searchExpression == null) {
                     ""
                 } else {
                     " WHERE " + SearchExpressionResolution.resolveSearchExpression(searchExpression)
@@ -636,7 +637,7 @@ class SearchDB(
                     )
             }
             val trgmWhere =
-                if (searchExpression == null){
+                if (searchExpression == null) {
                     ""
                 } else {
                     " WHERE " + SearchExpressionResolution.resolveSearchExpression(searchExpression)

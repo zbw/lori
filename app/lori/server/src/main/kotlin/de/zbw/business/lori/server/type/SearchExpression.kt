@@ -2,9 +2,9 @@ package de.zbw.business.lori.server.type
 
 import com.github.h0tk3y.betterParse.combinators.leftAssociative
 import com.github.h0tk3y.betterParse.combinators.map
-import com.github.h0tk3y.betterParse.combinators.unaryMinus
 import com.github.h0tk3y.betterParse.combinators.or
 import com.github.h0tk3y.betterParse.combinators.times
+import com.github.h0tk3y.betterParse.combinators.unaryMinus
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.lexer.literalToken
@@ -32,12 +32,14 @@ object SearchGrammar : Grammar<SearchExpression>() {
     private val bracedExpression by -lpar * parser(this::orChain) * -rpar
 
     private val term: Parser<SearchExpression> by
-        (id map { searchPairInQuery ->
-            LoriServerBackend.parseValidSearchPairs(searchPairInQuery.text).takeIf{ it.isNotEmpty() }
+    (
+        id map { searchPairInQuery ->
+            LoriServerBackend.parseValidSearchPairs(searchPairInQuery.text).takeIf { it.isNotEmpty() }
                 ?.let {
                     Variable(it.first())
-                }?: throw ParseError("Invalid Search Pair found in $searchPairInQuery")
-            }) or
+                } ?: throw ParsingException("Invalid Search Pair found in $searchPairInQuery")
+        }
+        ) or
         negation or
         bracedExpression
 
@@ -47,4 +49,4 @@ object SearchGrammar : Grammar<SearchExpression>() {
     override val rootParser by orChain
 }
 
-class ParseError(message: String) : Exception(message)
+class ParsingException(message: String) : Exception(message)

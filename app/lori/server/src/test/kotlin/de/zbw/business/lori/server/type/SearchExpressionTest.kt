@@ -103,7 +103,6 @@ class SearchExpressionTest {
         )
     }
 
-
     @DataProvider(name = DATA_FOR_RESOLVE_SEARCH_EXPRESSION_COALESCE)
     fun createDataForResolveSearchExpressionCoalesce() =
         arrayOf(

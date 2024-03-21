@@ -58,6 +58,22 @@ class SearchKeyTest : DatabaseTest() {
             "search for specific metadata id"
         ),
         arrayOf(
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}')",
+            10,
+            0,
+            setOf(METADATA_ID_TEST),
+            1,
+            "search for specific metadata id with complex query"
+        ),
+        arrayOf(
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}' & !tit:'stupid title')",
+            10,
+            0,
+            setOf(METADATA_ID_TEST),
+            1,
+            "search for specific metadata id with even complexer query"
+        ),
+        arrayOf(
             "metadataid:'$NO_VALID_METADATA_ID'",
             10,
             0,

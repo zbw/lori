@@ -56,10 +56,6 @@ export default defineComponent({
     /**
      * Error handling>
      */
-    const hasSearchTokenWithNoKeyError = ref(false);
-    const hasSearchTokenWithNoKeyErrorMsg = ref("");
-    const invalidSearchKeyError = ref(false);
-    const invalidSearchKeyErrorMsg = ref("");
     const loadAlertError = ref(false);
     const loadAlertErrorMessage = ref("");
 
@@ -393,8 +389,6 @@ export default defineComponent({
         searchTerm.value = "";
       }
       searchStore.lastSearchTerm = searchTerm.value;
-      invalidSearchKeyError.value = false;
-      hasSearchTokenWithNoKeyError.value = false;
       templateSearchIsActive.value = false;
       currentItem.value = {} as ItemRest;
       searchQuery();
@@ -437,19 +431,7 @@ export default defineComponent({
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
       numberOfResults.value = response.numberOfResults;
-      if (response.invalidSearchKey?.length || 0 > 0) {
-        invalidSearchKeyErrorMsg.value =
-          "Die folgenden Suchkeys sind ungültig: " +
-            response.invalidSearchKey?.join(", ") || "";
-        invalidSearchKeyError.value = true;
-      }
 
-      if (response.hasSearchTokenWithNoKey == true) {
-        hasSearchTokenWithNoKeyErrorMsg.value =
-          "Mindestens ein Wort enthält keinen Suchkey." +
-          " Dieser Teil wird bei der Suche ignoriert.";
-        hasSearchTokenWithNoKeyError.value = true;
-      }
       // TODO: wird nur in abhängigkeit von ergebnis angezeigt
       if (response.paketSigelWithCount != undefined) {
         searchStore.paketSigelIdReceived = response.paketSigelWithCount;
@@ -672,13 +654,9 @@ export default defineComponent({
       currentPage,
       queryParameterRight,
       dialogStore,
-      hasSearchTokenWithNoKeyError,
-      hasSearchTokenWithNoKeyErrorMsg,
       headers,
       headersValueVSelect,
       items,
-      invalidSearchKeyError,
-      invalidSearchKeyErrorMsg,
       loadAlertError,
       loadAlertErrorMessage,
       newBookmarkId,
@@ -844,21 +822,33 @@ export default defineComponent({
                     and ZDB-ID
                   </p>
 
-                  <p class="text-left text-body-1 mt-4">Boolsche Operatoren:</p>
+                  <p class="text-left text-body-1 mt-4">
+                    Bool'sche Operatoren:
+                  </p>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Es können auf einem Feld mehrere Werte gleichzeitig gesucht
-                    werden. Diese Werte können durch die gängigen Boolschen
-                    Operatoren verknüpft und durch Klammersetzungen strukturiert
-                    werden
+                    Bool'sche Operatoren funktionieren innerhalb eines
+                    Suchschlüssels und zwischen diesen. Möchte man auf einem
+                    Schlüssel mehrere Werte suchen kann dies durch die gängigen
+                    Operatoren erzielt und durch Klammersetzungen strukturiert
+                    werden.
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
                     Beispiel: col:"(subject1 | subject2) & !subject3"
                   </p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Gleiches gilt wenn man auf verschiedenen Feldern suchen
+                    möchte. Auch diese kann mit Operatoren verknüpfen
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2">
+                    Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
+                  </p>
+
                   <p
                     class="text-left text-body-2 bg-light-blue-lighten-5 mt-1 mb-1"
                   >
                     Es gibt Veroderungen (|), Verundungen (&), Negationen (!)
-                    und Klammerzeichen
+                    und Klammerzeichen. Diese müssen auch verwendet werden! Es
+                    wird nicht implizit von einer Verundung ausgegangen.
                   </p>
 
                   <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
@@ -878,12 +868,6 @@ export default defineComponent({
           <v-alert v-model="loadAlertError" closable type="error">
             Laden der bibliographischen Daten war nicht erfolgreich:
             {{ loadAlertErrorMessage }}
-          </v-alert>
-          <v-alert v-model="invalidSearchKeyError" closable type="error">
-            {{ invalidSearchKeyErrorMsg }}
-          </v-alert>
-          <v-alert v-model="hasSearchTokenWithNoKeyError" closable type="error">
-            {{ hasSearchTokenWithNoKeyErrorMsg }}
           </v-alert>
           <v-alert
             v-model="bookmarkSuccessfulMsg"

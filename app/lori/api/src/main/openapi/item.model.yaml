@@ -35,12 +35,6 @@ ItemInformation:
       type: boolean
     hasZbwUserAgreement:
       type: boolean
-    hasSearchTokenWithNoKey:
-      type: boolean
-    invalidSearchKey:
-      type: array
-      items:
-        type: string
     itemArray:
       type: array
       items:
