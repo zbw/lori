@@ -1,5 +1,10 @@
 package de.zbw.business.lori.server
 
+import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
+import com.github.h0tk3y.betterParse.parser.ErrorResult
+import com.github.h0tk3y.betterParse.parser.ParseResult
+import com.github.h0tk3y.betterParse.parser.Parsed
+import com.github.h0tk3y.betterParse.parser.tryParseToEnd
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
@@ -11,7 +16,12 @@ import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.ParseError
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SearchGrammar
+import de.zbw.business.lori.server.type.SearchKey
+import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.lori.model.ErrorRest
@@ -215,7 +225,7 @@ class LoriServerBackend(
 
     fun countMetadataEntries(): Int =
         dbConnector.searchDB.countSearchMetadata(
-            emptyList(),
+            null,
             emptyList(),
             emptyList(),
             null,
@@ -281,25 +291,21 @@ class LoriServerBackend(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
     ): SearchQueryResult {
-        val keys: List<SearchPair> = searchTerm
-            ?.let { parseValidSearchPairs(it) }
-            ?: emptyList()
-
-        val invalidSearchKeys = searchTerm
-            ?.let { parseInvalidSearchKeys(it) }
-            ?: emptyList()
-
-        val hasSearchTokenWithNoKey = searchTerm
-            ?.takeIf {
-                searchTerm.isNotEmpty()
-            }?.let {
-                hasSearchTokensWithNoKey(it)
-            } ?: false
+        val searchExpression: SearchExpression? =
+            searchTerm
+                ?.takeIf { it.isNotBlank() }
+                ?.let { SearchGrammar.tryParseToEnd(it) }
+                ?.let {
+                    when (it) {
+                        is Parsed -> it.value
+                        is ErrorResult -> throw ParseError("Parsing error in query: $it")
+                    }
+                }
 
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
             dbConnector.searchDB.searchMetadata(
-                keys,
+                searchExpression,
                 limit,
                 offset,
                 metadataSearchFilter,
@@ -321,7 +327,7 @@ class LoriServerBackend(
                 .takeIf { it.isNotEmpty() || offset != 0 }
                 ?.let {
                     dbConnector.searchDB.countSearchMetadata(
-                        keys,
+                        searchExpression,
                         metadataSearchFilter,
                         rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                         noRightInformationFilter,
@@ -331,7 +337,7 @@ class LoriServerBackend(
 
         // Collect all publication types, zdbIds and paketSigels
         val facets: FacetTransientSet = dbConnector.searchDB.searchForFacets(
-            keys,
+            searchExpression,
             metadataSearchFilter,
             rightSearchFilter,
             noRightInformationFilter,
@@ -342,9 +348,9 @@ class LoriServerBackend(
             accessState = facets.accessState,
             hasLicenceContract = facets.hasLicenceContract,
             hasOpenContentLicence = facets.hasOpenContentLicence,
-            hasSearchTokenWithNoKey = hasSearchTokenWithNoKey,
+            hasSearchTokenWithNoKey = false, // TODO(CB): Error handling
             hasZbwUserAgreement = facets.hasZbwUserAgreement,
-            invalidSearchKey = invalidSearchKeys,
+            invalidSearchKey = emptyList(), // TODO(CB): Error handling
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
             templateIds = getTemplateNamesForIds(facets.templateIdToOccurence),
@@ -526,7 +532,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        private val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\']\\S+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
+        val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\']\\S+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         fun parseInvalidSearchKeys(s: String): List<String> =

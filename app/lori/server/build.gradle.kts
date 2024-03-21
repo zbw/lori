@@ -45,6 +45,7 @@ dependencies {
     implementation("org.opensaml:opensaml-core:4.3.0")
     implementation("org.opensaml:opensaml-saml-api:4.3.0")
     implementation("org.opensaml:opensaml-saml-impl:4.3.0")
+    implementation("com.github.h0tk3y.betterParse:better-parse:0.4.4")
     runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
 }

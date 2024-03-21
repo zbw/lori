@@ -6,10 +6,13 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.SearchKey
-import de.zbw.business.lori.server.SearchPair
+import de.zbw.business.lori.server.type.SearchKey
+import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.And
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.Variable
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -61,7 +64,7 @@ class SearchDBTest : DatabaseTest() {
         dbConnector.metadataDB.insertMetadata(testZDB)
 
         // when
-        val searchPairsZDB = listOf(
+        val searchPairsZDB = Variable(
             SearchPair(
                 key = SearchKey.ZDB_ID,
                 values = testZDB.zdbId!!
@@ -69,7 +72,7 @@ class SearchDBTest : DatabaseTest() {
         )
         val resultZDB =
             dbConnector.searchDB.searchMetadata(
-                searchPairs = searchPairsZDB,
+                searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
@@ -77,7 +80,7 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter = null,
             )
         val numberResultZDB = dbConnector.searchDB.countSearchMetadata(
-            searchPairs = searchPairsZDB,
+            searchExpression = searchPairsZDB,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
         )
@@ -85,15 +88,19 @@ class SearchDBTest : DatabaseTest() {
         assertThat(resultZDB[0], `is`(testZDB))
         assertThat(numberResultZDB, `is`(1))
         // when
-        val searchPairsAll = listOf(
-            SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!),
-            SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!),
-            SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!),
-            SearchPair(SearchKey.ZDB_ID, testZDB.zdbId!!),
+        val searchPairsAll = And(
+            Variable(SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!)),
+            And(
+                Variable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
+                And(
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
+                    Variable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbId!!))
+                )
+            )
         )
         val resultAll =
             dbConnector.searchDB.searchMetadata(
-                searchPairs = searchPairsAll,
+                searchExpression = searchPairsAll,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
@@ -101,7 +108,7 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter = null,
             )
         val numberResultAll = dbConnector.searchDB.countSearchMetadata(
-            searchPairs = searchPairsAll,
+            searchExpression = searchPairsAll,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
         )
@@ -115,7 +122,7 @@ class SearchDBTest : DatabaseTest() {
         // when
         val resultZBD2 =
             dbConnector.searchDB.searchMetadata(
-                searchPairs = searchPairsZDB,
+                searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
@@ -123,7 +130,7 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter = null,
             )
         val numberResultZDB2 = dbConnector.searchDB.countSearchMetadata(
-            searchPairs = searchPairsAll,
+            searchExpression = searchPairsAll,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
         )
@@ -134,7 +141,7 @@ class SearchDBTest : DatabaseTest() {
         // when
         val resultZDB2Offset =
             dbConnector.searchDB.searchMetadata(
-                searchPairs = searchPairsZDB,
+                searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 1,
                 metadataSearchFilter = emptyList(),
@@ -150,22 +157,22 @@ class SearchDBTest : DatabaseTest() {
     private fun createBuildSearchQueryData() =
         arrayOf(
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE ts_collection @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "bar"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 emptyList<MetadataSearchFilter>(),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple searchkeys",
             ),
             arrayOf(
-                listOf(
+                Variable(
                     SearchPair(SearchKey.ZDB_ID, "foo & bar"),
                 ),
                 emptyList<MetadataSearchFilter>(),
@@ -173,29 +180,29 @@ class SearchDBTest : DatabaseTest() {
                 "query for multiple words in one searchkey",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "bar"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 emptyList<MetadataSearchFilter>(),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple words in multiple searchkeys"
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "bar"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date filter"
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "bar"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "bar")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -205,14 +212,14 @@ class SearchDBTest : DatabaseTest() {
                         )
                     )
                 ),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter"
             )
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY)
     fun testBuildSearchQueryWithOnlyMetadataFilter(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression,
         metadataSearchFilter: List<MetadataSearchFilter>,
         expectedWhereClause: String,
         description: String,
@@ -220,7 +227,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildSearchQuery(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 emptyList(),
                 null,
@@ -233,7 +240,7 @@ class SearchDBTest : DatabaseTest() {
     fun createDataForBuildSearchQueryBoth() =
         arrayOf(
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
@@ -241,7 +248,7 @@ class SearchDBTest : DatabaseTest() {
                 "right filter only",
             ),
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -256,7 +263,7 @@ class SearchDBTest : DatabaseTest() {
                 "right filter combined with metadatafilter",
             ),
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -274,7 +281,7 @@ class SearchDBTest : DatabaseTest() {
 
     @Test(dataProvider = DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY)
     fun testBuildSearchQueryWithBothFilterTypes(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -284,7 +291,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildSearchQuery(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -297,7 +304,7 @@ class SearchDBTest : DatabaseTest() {
     private fun createBuildSearchCountQueryData() =
         arrayOf(
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
@@ -305,18 +312,18 @@ class SearchDBTest : DatabaseTest() {
                 "count query filter with one searchkey",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "foo"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "foo")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
                 "count query filter with two searchkeys",
             ),
             arrayOf(
-                listOf(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
@@ -324,31 +331,31 @@ class SearchDBTest : DatabaseTest() {
                 "count query filter with multiple words for one key",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "baz"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
                 "count query with multiple words for multiple keys",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "baz"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
                 "count query with one filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf<MetadataSearchFilter>(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                 ),
@@ -358,7 +365,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys but with filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -374,7 +381,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys but with filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
                 null,
@@ -389,7 +396,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query only with right search filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -412,7 +419,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys but with both filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
@@ -427,7 +434,7 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys, metadata filter and norightinformation filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
@@ -451,9 +458,9 @@ class SearchDBTest : DatabaseTest() {
                 "count query without keys, metadata and right filter. Only norightinformation filter",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "baz"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -466,13 +473,13 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
                 "count query with keys and metadata filter and norightinformation filter",
             ),
             arrayOf(
-                listOf(
-                    SearchPair(SearchKey.ZDB_ID, "foo & bar"),
-                    SearchPair(SearchKey.PAKET_SIGEL, "baz"),
+                And(
+                    Variable(SearchPair(SearchKey.ZDB_ID, "foo & bar")),
+                    Variable(SearchPair(SearchKey.PAKET_SIGEL, "baz")),
                 ),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -485,14 +492,14 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
                 null,
-                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ts_zdb_id @@ to_tsquery(?) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM (SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_zdb_id @@ to_tsquery(?)) AND ts_sigel @@ to_tsquery(?) ORDER BY score DESC) as countsearch",
                 "count query with keys and with both filter",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_SEARCH_COUNT_QUERY)
     fun testBuildSearchCountQuery(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -502,7 +509,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildCountSearchQuery(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
@@ -592,7 +599,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildCountSearchQuery(
-                emptyList(),
+                null,
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
@@ -651,7 +658,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildSearchQuery(
-                emptyList(),
+                null,
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
@@ -664,21 +671,21 @@ class SearchDBTest : DatabaseTest() {
     private fun createQueryFilterSearchForSigelAndZDB() =
         arrayOf(
             arrayOf(
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_id FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_id,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE ts_collection @@ to_tsquery(?) GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_id;",
                 "query with search and right filter",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_id FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_id,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_id;",
                 "query with both filters and no searchkey",
             ),
             arrayOf(
-                emptyList<SearchPair>(),
+                null,
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 emptyList<RightSearchFilter>(),
                 "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_id FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_id,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_id;",
@@ -688,7 +695,7 @@ class SearchDBTest : DatabaseTest() {
 
     @Test(dataProvider = DATA_FOR_BUILD_SIGEL_AND_ZDB)
     fun testBuildQueryForFacetSearch(
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         expectedSQLQuery: String,
@@ -697,7 +704,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(
             description,
             SearchDB.buildSearchQueryForFacets(
-                searchPairs,
+                searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
@@ -717,7 +724,7 @@ class SearchDBTest : DatabaseTest() {
                     PublicationType.PERIODICAL_PART.toString()
                 ),
                 COLUMN_METADATA_PUBLICATION_TYPE,
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
@@ -730,7 +737,7 @@ class SearchDBTest : DatabaseTest() {
                     AccessState.RESTRICTED.toString(),
                 ),
                 DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE,
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
@@ -742,7 +749,7 @@ class SearchDBTest : DatabaseTest() {
     fun testBuildOccurrenceQuery(
         values: Set<String>,
         columnName: String,
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression,
         metadataSearchFilters: List<MetadataSearchFilter>,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -752,7 +759,7 @@ class SearchDBTest : DatabaseTest() {
             SearchDB.buildSearchQueryOccurrence(
                 SearchDB.createValuesForSql(values),
                 columnName,
-                searchPairs,
+                searchExpression,
                 metadataSearchFilters,
                 rightSearchFilters,
                 noRightInformationFilter,
@@ -771,7 +778,7 @@ class SearchDBTest : DatabaseTest() {
                     AccessState.RESTRICTED.toString(),
                 ),
                 DatabaseConnector.COLUMN_RIGHT_TEMPLATE_ID,
-                listOf(SearchPair(SearchKey.COLLECTION, "foo")),
+                Variable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
@@ -783,7 +790,7 @@ class SearchDBTest : DatabaseTest() {
     fun testBuildOccurrenceTemplateIdQuery(
         values: Set<Int>,
         columnName: String,
-        searchPairs: List<SearchPair>,
+        searchExpression: SearchExpression,
         metadataSearchFilters: List<MetadataSearchFilter>,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
@@ -793,7 +800,7 @@ class SearchDBTest : DatabaseTest() {
             SearchDB.buildSearchQueryOccurrence(
                 SearchDB.createGenericValuesForSql(values),
                 columnName,
-                searchPairs,
+                searchExpression,
                 metadataSearchFilters,
                 rightSearchFilters,
                 noRightInformationFilter,
@@ -806,8 +813,8 @@ class SearchDBTest : DatabaseTest() {
         const val DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY"
         const val DATA_FOR_BUILD_SEARCH_COUNT_QUERY = "DATA_FOR_BUILD_SEARCH_COUNT_QUERY"
-        const val DATA_FOR_BUILD_OCCURRENCE_QUERY = "DATA_FOR_BUILD_OCCURENCE_QUERY"
-        const val DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY = "DATA_FOR_BUILD_OCCURENCE_TEMPLATE_ID_QUERY"
+        const val DATA_FOR_BUILD_OCCURRENCE_QUERY = "DATA_FOR_BUILD_OCCURRENCE_QUERY"
+        const val DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY = "DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_ID_QUERY"
         const val DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH =
             "DATA_FOR_BUILD_COUNT_QUERY_RIGHT_FILTER_NO_SEARCH "
         const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"

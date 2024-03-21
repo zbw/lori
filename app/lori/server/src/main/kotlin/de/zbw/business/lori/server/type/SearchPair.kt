@@ -1,4 +1,4 @@
-package de.zbw.business.lori.server
+package de.zbw.business.lori.server.type
 
 /**
  * This class represents a key-value pair of a search:
