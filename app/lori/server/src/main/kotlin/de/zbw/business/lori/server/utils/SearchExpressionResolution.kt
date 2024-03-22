@@ -2,6 +2,7 @@ package de.zbw.business.lori.server.utils
 
 import de.zbw.business.lori.server.type.SEAnd
 import de.zbw.business.lori.server.type.SENot
+import de.zbw.business.lori.server.type.SENotPar
 import de.zbw.business.lori.server.type.SEOr
 import de.zbw.business.lori.server.type.SEPar
 import de.zbw.business.lori.server.type.SEVariable
@@ -15,6 +16,7 @@ object SearchExpressionResolution {
         is SENot -> "NOT ${resolveSearchExpression(expression.body)}"
         is SEVariable -> expression.searchPair.toWhereClause()
         is SEPar -> "(${resolveSearchExpression(expression.body)})"
+        is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
     }
 
     fun resolveSearchExpressionCoalesce(expression: SearchExpression, columnName: String = "score"): String {
@@ -35,5 +37,6 @@ object SearchExpressionResolution {
             is SEPar -> getSearchPairs(expression.body)
             is SEOr -> getSearchPairs(expression.left) + getSearchPairs(expression.right)
             is SEVariable -> listOf(expression.searchPair)
+            is SENotPar -> getSearchPairs(expression.body)
         }
 }

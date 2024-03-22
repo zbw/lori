@@ -110,7 +110,11 @@ class SearchExpressionTest {
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
                 "ts_sigel @@ to_tsquery(?) AND (NOT ts_hdl @@ to_tsquery(?) OR NOT ts_hdl @@ to_tsquery(?))",
-            )
+            ),
+            arrayOf(
+                "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
+                "ts_sigel @@ to_tsquery(?) AND NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl @@ to_tsquery(?))",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_RESOLVE_SEARCH_EXPRESSION)

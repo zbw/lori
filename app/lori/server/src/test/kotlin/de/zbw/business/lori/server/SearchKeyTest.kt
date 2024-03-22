@@ -89,6 +89,14 @@ class SearchKeyTest : DatabaseTest() {
             1,
             "search for specific metadata id with even complexer query ensuring parantheses works as expected"
         ),
+        arrayOf(
+            "sig:'${METADATA_TEST.paketSigel}' & !(hdl:'nonse' | tit:'stupid title')",
+            10,
+            0,
+            setOf(METADATA_TEST),
+            1,
+            "negation around parantheses"
+        ),
     )
 
     @Test(dataProvider = DATA_FOR_METADATA_ID_KEY)
