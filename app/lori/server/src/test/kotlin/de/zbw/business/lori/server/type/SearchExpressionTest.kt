@@ -55,6 +55,18 @@ class SearchExpressionTest {
                 false,
                 "Or, And, parentheses"
             ),
+            arrayOf(
+                "com:2764793-6 & (metadataid:4633 | zdb:4566)",
+                "SEAnd(left=SEVariable(searchPair=COMMUNITY:2764793-6), right=SEOr(left=SEVariable(searchPair=METADATA_ID:4633), right=SEVariable(searchPair=ZDB_ID:4566)))",
+                false,
+                "Verify that ) after key:value without \"' works"
+            ),
+            arrayOf(
+                "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
+                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993))))",
+                false,
+                "Verify that ) after key:value without \"' works"
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_PARSING_SEARCH_QUERY)
@@ -75,7 +87,7 @@ class SearchExpressionTest {
                     assertTrue(!throwsException)
                 }
 
-                is ErrorResult -> Assert.fail()
+                is ErrorResult -> Assert.fail(expr.toString())
             }
         } catch (pe: ParserException) {
             assertTrue(throwsException)
