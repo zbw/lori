@@ -51,19 +51,25 @@ class SearchExpressionTest {
             ),
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "SEOr(left=SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123)), right=SEVariable(searchPair=HDL:123))",
+                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))), right=SEVariable(searchPair=HDL:123))",
                 false,
                 "Or, And, parentheses"
             ),
             arrayOf(
                 "com:2764793-6 & (metadataid:4633 | zdb:4566)",
-                "SEAnd(left=SEVariable(searchPair=COMMUNITY:2764793-6), right=SEOr(left=SEVariable(searchPair=METADATA_ID:4633), right=SEVariable(searchPair=ZDB_ID:4566)))",
+                "SEAnd(left=SEVariable(searchPair=COMMUNITY:2764793-6), right=SEPar(body=SEOr(left=SEVariable(searchPair=METADATA_ID:4633), right=SEVariable(searchPair=ZDB_ID:4566))))",
                 false,
                 "Verify that ) after key:value without \"' works"
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993))))",
+                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
+                false,
+                "Verify that ) after key:value without \"' works"
+            ),
+            arrayOf(
+                "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
+                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
                 false,
                 "Verify that ) after key:value without \"' works"
             ),
@@ -99,8 +105,12 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "((ts_title @@ to_tsquery(?)) AND ts_zdb_id @@ to_tsquery(?)) OR ts_hdl @@ to_tsquery(?)",
+                "(ts_title @@ to_tsquery(?) AND ts_zdb_id @@ to_tsquery(?)) OR ts_hdl @@ to_tsquery(?)",
             ),
+            arrayOf(
+                "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
+                "ts_sigel @@ to_tsquery(?) AND (NOT ts_hdl @@ to_tsquery(?) OR NOT ts_hdl @@ to_tsquery(?))",
+            )
         )
 
     @Test(dataProvider = DATA_FOR_RESOLVE_SEARCH_EXPRESSION)
