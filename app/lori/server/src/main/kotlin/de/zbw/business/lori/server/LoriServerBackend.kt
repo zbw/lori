@@ -528,7 +528,7 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\']\\S+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
+        val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         fun parseInvalidSearchKeys(s: String): List<String> =

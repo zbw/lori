@@ -803,41 +803,46 @@ export default defineComponent({
                 <v-card-text>
                   <p class="text-left text-body-1">Genereller Aufbau:</p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
-                    suchschluessel1:"wert1" suchschluessel2:"wert2"
+                    suchschluessel1:"wert1" & suchschluessel2:"wert2"
+                  </p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Wobei " auch durch ' ersetzt werden kann. Beides kann man
+                    weglassen wenn der Wert nur ein Wort ist.
                   </p>
                   <p class="text-left text-body-1 mt-4">
-                    Erlaubte Suchschlüssel sind:
+                    Unterstützte Suchschlüssel sind:
                   </p>
                   <p
                     class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
                   >
-                    col, com, hdlcol, hdlcom, hdlsubcom, metadataid, sig, tit,
-                    zdb
+                    col, com, hdl, hdlcol, hdlcom, hdlsubcom, metadataid, sig,
+                    tit, zdb
                   </p>
 
                   <p class="text-left text-body-2 bg-light-blue-lighten-5">
                     Diese durchsuchen jeweils diese Felder: Collection,
-                    Community, Handle der Metadaten, Handle der Community,
-                    Handle der Subcommunity, Metadaten ID, Paket-Sigel, Titel
-                    and ZDB-ID
+                    Community, Handle, Handle der Metadaten, Handle der
+                    Community, Handle der Subcommunity, Metadaten ID,
+                    Paket-Sigel, Titel and ZDB-ID
                   </p>
 
                   <p class="text-left text-body-1 mt-4">
                     Bool'sche Operatoren:
                   </p>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Bool'sche Operatoren funktionieren innerhalb eines
-                    Suchschlüssels und zwischen diesen. Möchte man auf einem
-                    Schlüssel mehrere Werte suchen kann dies durch die gängigen
-                    Operatoren erzielt und durch Klammersetzungen strukturiert
-                    werden.
+                    Es gibt Veroderungen (|), Verundungen (&), Negationen (!)
+                    und Klammerzeichen. Bool'sche Operatoren funktionieren
+                    innerhalb eines Suchschlüssels und zwischen diesen. Es ist
+                    möglich unter einem Suchschlüssel mehrere Werte gleichzeitig
+                    zu suchen mittels der obigen Operatoren und
+                    Klammersetzungen.
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
                     Beispiel: col:"(subject1 | subject2) & !subject3"
                   </p>
                   <p class="text-left text-body-2 mt-1 mb-1">
                     Gleiches gilt wenn man auf verschiedenen Feldern suchen
-                    möchte. Auch diese kann mit Operatoren verknüpfen
+                    möchte. Auch diese kann mittels der Operatoren verknüpfen.
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
                     Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
@@ -846,16 +851,15 @@ export default defineComponent({
                   <p
                     class="text-left text-body-2 bg-light-blue-lighten-5 mt-1 mb-1"
                   >
-                    Es gibt Veroderungen (|), Verundungen (&), Negationen (!)
-                    und Klammerzeichen. Diese müssen auch verwendet werden! Es
-                    wird nicht implizit von einer Verundung ausgegangen.
+                    Diese Operatoren müssen auch verwendet werden bei mehreren
+                    Suchpaaren. Es wird nicht implizit von einer Verundung o.ä.
+                    ausgegangen.
                   </p>
 
                   <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Wichtig: Zeichen die als logische Operatoren dienen, aber
-                    teil der Suche sein sollen, müssen mit einem Backslash \
-                    beginnen
+                    Zeichen die als logische Operatoren dienen, aber teil der
+                    Suche sein sollen, müssen mit einem Backslash \ beginnen
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
                     Beispiel: col:"EU & \(European\)"
