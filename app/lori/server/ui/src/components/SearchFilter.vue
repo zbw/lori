@@ -6,7 +6,8 @@ import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
 
 export default defineComponent({
-  setup() {
+  emits: ["startEmptySearch"],
+  setup(props, { emit }) {
     const searchStore = useSearchStore();
     const temporalEvent = -1;
 
@@ -84,7 +85,8 @@ export default defineComponent({
         searchStore.templateIdIdx.filter((element) => element).length > 0 ||
         searchStore.publicationTypeIdx.filter((element) => element).length >
           0 ||
-        searchStore.noRightInformation
+        searchStore.noRightInformation ||
+        searchStore.searchTerm
       );
     });
 
@@ -122,6 +124,7 @@ export default defineComponent({
       searchStore.templateIdIdx = searchStore.templateIdIdx.map(() => false);
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
       searchStore.noRightInformation = false;
+      emit("startEmptySearch");
     };
 
     const parseAccessState = (accessState: string, count: number) => {
@@ -255,7 +258,7 @@ export default defineComponent({
           @click="resetFilter"
           size="large"
         >
-          Alle Filter resetten</v-btn
+          Suche resetten</v-btn
         >
       </v-col>
     </v-row>

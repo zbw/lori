@@ -9,6 +9,7 @@ import {
 import {TemplateIdWithCountRest} from "@/generated-sources/openapi/models/TemplateIdWithCountRest";
 
 export const useSearchStore = defineStore("search", () => {
+  const searchTerm = ref("");
   const lastSearchTerm = ref("");
 
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
@@ -81,6 +82,7 @@ export const useSearchStore = defineStore("search", () => {
     publicationTypeSelectedLastSearch,
     publicationDateFrom,
     publicationDateTo,
+    searchTerm,
     templateIdIdx,
     templateIdReceived,
     templateIdSelectedLastSearch,
