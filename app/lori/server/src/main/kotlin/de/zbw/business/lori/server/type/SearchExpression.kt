@@ -18,6 +18,7 @@ data class SEVariable(val searchPair: SearchPair) : SearchExpression()
 data class SENot(val body: SearchExpression) : SearchExpression()
 data class SEAnd(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
 data class SEOr(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
+data class SEPar(val body: SearchExpression) : SearchExpression()
 
 object SearchGrammar : Grammar<SearchExpression>() {
     val id by regexToken(LoriServerBackend.SEARCH_KEY_REGEX)
@@ -26,11 +27,12 @@ object SearchGrammar : Grammar<SearchExpression>() {
     val not by literalToken("!")
     val and by literalToken("&")
     val or by literalToken("|")
+
     // Even if not used the variable seems to be necessary according to documentation
     val ws by regexToken("\\s+", ignore = true)
 
     private val negation by -not * parser(this::term) map { SENot(it) }
-    private val bracedExpression by -lpar * parser(this::orChain) * -rpar
+    private val bracedExpression by -lpar * parser(this::orChain) * -rpar map { SEPar(it) }
 
     private val term: Parser<SearchExpression> by
     (

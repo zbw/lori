@@ -30,7 +30,7 @@ class SearchKeyTest : DatabaseTest() {
     )
 
     private fun getInitialMetadata() = listOf(
-        METADATA_ID_TEST
+        METADATA_TEST
     )
 
     @BeforeClass
@@ -50,26 +50,26 @@ class SearchKeyTest : DatabaseTest() {
     @DataProvider(name = DATA_FOR_METADATA_ID_KEY)
     fun createDataForMetadataId() = arrayOf(
         arrayOf(
-            "metadataid:'${METADATA_ID_TEST.metadataId}'",
+            "metadataid:'${METADATA_TEST.metadataId}'",
             10,
             0,
-            setOf(METADATA_ID_TEST),
+            setOf(METADATA_TEST),
             1,
             "search for specific metadata id"
         ),
         arrayOf(
-            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}')",
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}')",
             10,
             0,
-            setOf(METADATA_ID_TEST),
+            setOf(METADATA_TEST),
             1,
             "search for specific metadata id with complex query"
         ),
         arrayOf(
-            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_ID_TEST.handle}' & !tit:'stupid title')",
+            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}' & !tit:'stupid title')",
             10,
             0,
-            setOf(METADATA_ID_TEST),
+            setOf(METADATA_TEST),
             1,
             "search for specific metadata id with even complexer query"
         ),
@@ -80,6 +80,14 @@ class SearchKeyTest : DatabaseTest() {
             emptySet<ItemMetadata>(),
             0,
             "fail to find a metadata id"
+        ),
+        arrayOf(
+            "sig:'${METADATA_TEST.paketSigel}' & (!hdl:'nonse' & !tit:'stupid title')",
+            10,
+            0,
+            setOf(METADATA_TEST),
+            1,
+            "search for specific metadata id with even complexer query ensuring parantheses works as expected"
         ),
     )
 
@@ -122,7 +130,7 @@ class SearchKeyTest : DatabaseTest() {
         const val DATA_FOR_METADATA_ID_KEY = "DATA_FOR_METADATA_ID_KEY "
         const val NO_VALID_METADATA_ID = "INVALID"
         private const val TEST_METADATA_ID = "some metadata id"
-        val METADATA_ID_TEST = TEST_Metadata.copy(
+        val METADATA_TEST = TEST_Metadata.copy(
             metadataId = TEST_METADATA_ID,
         )
     }
