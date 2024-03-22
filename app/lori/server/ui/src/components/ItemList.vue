@@ -50,7 +50,6 @@ export default defineComponent({
     const currentItem = ref({} as ItemRest);
     const headersValueVSelect = ref([]);
     const selectedItems = ref([]);
-    const searchTerm = ref("");
     const tableContentLoading = ref(true);
 
     /**
@@ -383,12 +382,17 @@ export default defineComponent({
       startSearch();
     };
 
+    const startEmptySearch = () => {
+      searchStore.searchTerm= "";
+      startSearch();
+    };
+
     const startSearch = () => {
       currentPage.value = 1;
-      if (searchTerm.value == undefined) {
-        searchTerm.value = "";
+      if (searchStore.searchTerm == undefined) {
+        searchStore.searchTerm= "";
       }
-      searchStore.lastSearchTerm = searchTerm.value;
+      searchStore.lastSearchTerm = searchStore.searchTerm;
       templateSearchIsActive.value = false;
       currentItem.value = {} as ItemRest;
       searchQuery();
@@ -397,7 +401,7 @@ export default defineComponent({
     const searchQuery = () => {
       api
         .searchQuery(
-          searchTerm.value,
+          searchStore.searchTerm,
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
@@ -663,7 +667,6 @@ export default defineComponent({
       numberOfResults,
       pageSize,
       pageSizes,
-      searchTerm,
       searchStore,
       selectedHeaders,
       selectedItems,
@@ -690,6 +693,7 @@ export default defineComponent({
       parsePublicationType,
       searchQuery,
       setActiveItem,
+      startEmptySearch,
       startSearch,
     };
   },
@@ -767,13 +771,15 @@ export default defineComponent({
     </v-dialog>
     <v-row>
       <v-col cols="2">
-        <SearchFilter></SearchFilter>
+        <SearchFilter
+            v-on:startEmptySearch="startEmptySearch"
+        ></SearchFilter>
       </v-col>
       <v-col cols="6">
         <v-card>
           <v-card-title>
             <v-text-field
-              v-model="searchTerm"
+              v-model="searchStore.searchTerm"
               append-icon="mdi-magnify"
               clearable
               label="Suche"
