@@ -16,6 +16,7 @@ sealed class SearchExpression
 
 data class SEVariable(val searchPair: SearchPair) : SearchExpression()
 data class SENot(val body: SearchExpression) : SearchExpression()
+data class SENotPar(val body: SearchExpression) : SearchExpression()
 data class SEAnd(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
 data class SEOr(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
 data class SEPar(val body: SearchExpression) : SearchExpression()
@@ -33,6 +34,7 @@ object SearchGrammar : Grammar<SearchExpression>() {
 
     private val negation by -not * parser(this::term) map { SENot(it) }
     private val bracedExpression by -lpar * parser(this::orChain) * -rpar map { SEPar(it) }
+    private val bracedNegExpression by -not * -lpar * parser(this::orChain) * -rpar map { SEPar(it) }
 
     private val term: Parser<SearchExpression> by
     (
@@ -44,7 +46,8 @@ object SearchGrammar : Grammar<SearchExpression>() {
         }
         ) or
         negation or
-        bracedExpression
+        bracedExpression or
+        bracedNegExpression
 
     private val andChain: Parser<SearchExpression> by leftAssociative(term, and) { a, _, b -> SEAnd(a, b) }
     private val orChain by leftAssociative(andChain, or) { a, _, b -> SEOr(a, b) }
