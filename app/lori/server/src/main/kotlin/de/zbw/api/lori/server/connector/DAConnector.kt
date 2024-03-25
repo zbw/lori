@@ -75,6 +75,7 @@ class DAConnector(
                 append(DSPACE_TOKEN, loginToken)
             }
             parameter("expand", "all")
+            parameter("limit", "1000")
         }.body<List<DACommunity>>()
         return response.map { it.id }
     }

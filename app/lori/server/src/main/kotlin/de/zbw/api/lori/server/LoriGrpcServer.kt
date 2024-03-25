@@ -49,6 +49,7 @@ class LoriGrpcServer(
             try {
                 val token = daConnector.login()
                 val communityIds = daConnector.getAllCommunityIds(token)
+                LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
                 val imports = runImports(communityIds, token)
                 FullImportResponse
                     .newBuilder()
