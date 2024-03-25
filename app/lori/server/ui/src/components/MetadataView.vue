@@ -150,7 +150,7 @@ export default defineComponent({
                   <a
                     v-bind:href="
                       metadata_utils.prependHandleUrl(
-                        currentMetadata.collectionHandle
+                        currentMetadata.collectionHandle,
                       )
                     "
                     >{{ currentMetadata.collectionHandle }}</a
@@ -163,9 +163,10 @@ export default defineComponent({
               <v-col>Community Handle</v-col>
               <v-col>
                 <td>
-                  <a v-bind:href="
+                  <a
+                    v-bind:href="
                       metadata_utils.prependHandleUrl(
-                        currentMetadata.communityHandle
+                        currentMetadata.communityHandle,
                       )
                     "
                     >{{ currentMetadata.communityHandle }}</a
@@ -217,6 +218,11 @@ export default defineComponent({
             <v-row v-show="currentMetadata.zdbId">
               <v-col>ZDB Id</v-col>
               <v-col>{{ prettyPrint(currentMetadata.zdbId) }}</v-col>
+              <v-col></v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.licenceUrl">
+              <v-col>Lizenz URL</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
               <v-col></v-col>
             </v-row>
           </v-container>
