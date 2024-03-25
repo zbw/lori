@@ -219,6 +219,9 @@ class MetadataDB(
             this.setIfNotNull(26, itemMetadata.collectionHandle) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(27, itemMetadata.licenceUrl) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
     }
 
@@ -248,7 +251,8 @@ class MetadataDB(
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle" +
+                "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle," +
+                "collection_handle,licence_url" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_SELECT_ALL_METADATA =
@@ -258,7 +262,7 @@ class MetadataDB(
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle," +
-                "$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
+                "licence_url,$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
                 "$TS_HANDLE,$TS_METADATA_ID"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
@@ -270,14 +274,14 @@ class MetadataDB(
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author,collection_name,community_name,storage_date,sub_communities_handles," +
-            "community_handle,collection_handle) " +
+            "community_handle,collection_handle,licence_url) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?) " +
+            "?,?) " +
             "ON CONFLICT (metadata_id) " +
             "DO UPDATE SET " +
             "handle = EXCLUDED.handle," +
@@ -302,7 +306,8 @@ class MetadataDB(
             "storage_date = EXCLUDED.storage_date," +
             "sub_communities_handles = EXCLUDED.sub_communities_handles," +
             "community_handle = EXCLUDED.community_handle," +
-            "collection_handle = EXCLUDED.collection_handle"
+            "collection_handle = EXCLUDED.collection_handle," +
+            "licence_url = EXCLUDED.licence_url"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=?)"
@@ -313,14 +318,14 @@ class MetadataDB(
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author,collection_name,community_name,storage_date,sub_communities_handles," +
-            "community_handle,collection_handle) " +
+            "community_handle,collection_handle,licence_url) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?)"
+            "?,?)"
 
         fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
             metadataId = rs.getString(1),
@@ -349,6 +354,7 @@ class MetadataDB(
             subCommunitiesHandles = (rs.getArray(24)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
             communityHandle = rs.getString(25),
             collectionHandle = rs.getString(26),
+            licenceUrl = rs.getString(27),
         )
     }
 }

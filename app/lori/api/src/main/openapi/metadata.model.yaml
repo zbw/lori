@@ -52,6 +52,8 @@ MetadataRest:
     lastUpdatedOn:
       type: string
       format: date-time
+    licenceUrl:
+      type: string
     paketSigel:
       type: string
     ppn:
