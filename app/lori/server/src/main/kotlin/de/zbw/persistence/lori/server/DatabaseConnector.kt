@@ -70,9 +70,14 @@ class DatabaseConnector(
         const val TABLE_NAME_RIGHT_ERROR = "right_error"
 
         const val COLUMN_METADATA_ID = "metadata_id"
+        const val COLUMN_METADATA_HANDLE = "handle"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
+        const val COLUMN_METADATA_PPN = "ppn"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
+        const val COLUMN_METADATA_TITLE = "title"
+        const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
+        const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_ID = "zdb_id"
 
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"

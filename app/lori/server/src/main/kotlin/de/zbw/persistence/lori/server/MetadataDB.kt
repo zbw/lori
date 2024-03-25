@@ -231,6 +231,7 @@ class MetadataDB(
         const val TS_COLLECTION = "ts_collection"
         const val TS_COLLECTION_HANDLE = "ts_col_hdl"
         const val TS_HANDLE = "ts_hdl"
+        const val TS_LICENCE_URL = "ts_licence_url"
         const val TS_METADATA_ID = "ts_metadata_id"
         const val TS_SIGEL = "ts_sigel"
         const val TS_SUBCOMMUNITY_HANDLE = "ts_subcom_hdl"
@@ -263,7 +264,7 @@ class MetadataDB(
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle," +
                 "licence_url,$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
-                "$TS_HANDLE,$TS_METADATA_ID"
+                "$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"

@@ -97,6 +97,14 @@ class SearchKeyTest : DatabaseTest() {
             1,
             "negation around parantheses"
         ),
+        arrayOf(
+            "lur:'${METADATA_TEST.licenceUrl}'",
+            10,
+            0,
+            setOf(METADATA_TEST),
+            1,
+            "search for licence url"
+        ),
     )
 
     @Test(dataProvider = DATA_FOR_METADATA_ID_KEY)
