@@ -31,5 +31,3 @@ RUN apk del curl && \
     addgroup -S $IMAGE_USER && \
     adduser -G $IMAGE_USER --system --shell=/bin/false --disabled-password $IMAGE_USER
 USER $IMAGE_USER
-
-
