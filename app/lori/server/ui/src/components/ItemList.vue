@@ -147,8 +147,7 @@ export default defineComponent({
     const numberOfResults = ref(0);
 
     // Page changes
-    const handlePageChange = (nextPage: number) => {
-      currentPage.value = nextPage;
+    const handlePageChange = () => {
       if (templateSearchIsActive.value) {
         executeSearchByTemplateId();
       } else {
@@ -156,8 +155,7 @@ export default defineComponent({
       }
     };
 
-    const handlePageSizeChange = (size: number) => {
-      pageSize.value = size;
+    const handlePageSizeChange = () => {
       currentPage.value = 1;
       if (templateSearchIsActive.value) {
         executeSearchByTemplateId();
@@ -212,6 +210,14 @@ export default defineComponent({
 
     watch(headersValueVSelect, (currentValue) => {
       selectedHeaders.value = currentValue;
+    });
+
+    watch(currentPage, () => {
+      handlePageChange();
+    });
+
+    watch(pageSize, () => {
+      handlePageSizeChange();
     });
 
     // Initial Template View
@@ -383,14 +389,14 @@ export default defineComponent({
     };
 
     const startEmptySearch = () => {
-      searchStore.searchTerm= "";
+      searchStore.searchTerm = "";
       startSearch();
     };
 
     const startSearch = () => {
       currentPage.value = 1;
       if (searchStore.searchTerm == undefined) {
-        searchStore.searchTerm= "";
+        searchStore.searchTerm = "";
       }
       searchStore.lastSearchTerm = searchStore.searchTerm;
       templateSearchIsActive.value = false;
@@ -771,9 +777,7 @@ export default defineComponent({
     </v-dialog>
     <v-row>
       <v-col cols="2">
-        <SearchFilter
-            v-on:startEmptySearch="startEmptySearch"
-        ></SearchFilter>
+        <SearchFilter v-on:startEmptySearch="startEmptySearch"></SearchFilter>
       </v-col>
       <v-col cols="6">
         <v-card>
@@ -821,15 +825,15 @@ export default defineComponent({
                   <p
                     class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
                   >
-                    col, com, hdl, hdlcol, hdlcom, hdlsubcom, lur, metadataid, sig,
-                    tit, zdb
+                    col, com, hdl, hdlcol, hdlcom, hdlsubcom, lur, metadataid,
+                    sig, tit, zdb
                   </p>
 
                   <p class="text-left text-body-2 bg-light-blue-lighten-5">
                     Diese durchsuchen jeweils diese Felder: Collection,
                     Community, Handle, Handle der Metadaten, Handle der
-                    Community, Handle der Subcommunity, Lizenz URL, Metadaten ID,
-                    Paket-Sigel, Titel and ZDB-ID
+                    Community, Handle der Subcommunity, Lizenz URL, Metadaten
+                    ID, Paket-Sigel, Titel and ZDB-ID
                   </p>
 
                   <p class="text-left text-body-1 mt-4">
@@ -911,6 +915,7 @@ export default defineComponent({
             v-model="selectedItems"
             :headers="selectedHeaders"
             :items="items.map((value) => value.metadata)"
+            :items-per-page="0"
             item-value="metadataId"
             :loading="tableContentLoading"
             loading-text="Daten werden geladen... Bitte warten."
@@ -940,7 +945,6 @@ export default defineComponent({
                   v-model="pageSize"
                   :items="pageSizes"
                   label="Einträge pro Seite"
-                  @change="handlePageSizeChange"
                 ></v-select>
               </v-col>
               <v-col cols="10" sm="9">
@@ -950,7 +954,6 @@ export default defineComponent({
                   next-icon="mdi-menu-right"
                   prev-icon="mdi-menu-left"
                   total-visible="7"
-                  @input="handlePageChange"
                 ></v-pagination>
               </v-col>
             </v-row>
