@@ -30,7 +30,7 @@ buildDockerfileImages:
       changes:
         paths:
           - docker/**/Dockerfile
-  image: docker:25.0.3-git
+  image: docker:25.0.5-git
   tags:
     - dockersocket
   script:
@@ -68,7 +68,7 @@ pushDockerfileImages:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - docker/**/Dockerfile
-  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-docker:1.0.1
+  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-docker:1.0.2
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
   id_tokens:
