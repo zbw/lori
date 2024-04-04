@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "test:unit": "vue-cli-service test:unit --setupTestFrameworkScriptFile=./tests/setup.js",
-    "lint": "vue-cli-service lint",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
     "codegen": "rm -rf src/generated-sources/openapi; openapi-generator-cli generate -i ../../api/src/main/openapi/openapi.yaml -o src/generated-sources/openapi -g typescript-fetch --additional-properties=supportsES6=true,npmVersion=7.20.3,typescriptThreePlus=true",
     "i18n:report": "vue-cli-service i18n:report --src \"./src/**/*.?(js|vue)\" --locales \"./src/locales/**/*.json\""
   },
@@ -32,11 +32,7 @@
     "@types/lodash.isequal": "^4.5.8",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
-    "@vue/cli-plugin-babel": "^5.0.8",
-    "@vue/cli-plugin-router": "^5.0.8",
-    "@vue/cli-plugin-typescript": "^5.0.8",
-    "@vue/cli-plugin-unit-jest": "^5.0.8",
-    "@vue/cli-service": "^5.0.8",
+    "@vitejs/plugin-vue": "^5.0.4",
     "@vue/compiler-sfc": "^3.4.21",
     "@vue/eslint-config-prettier": "^9.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
@@ -48,7 +44,7 @@
     "sass": "^1.71.1",
     "sass-loader": "^10.5.2",
     "typescript": "^5.4.2",
-    "vue-cli-plugin-i18n": "~2.3.2",
-    "vue-cli-plugin-vuetify": "^2.5.8"
+    "vite": "^5.2.8",
+    "vite-plugin-vuetify": "^2.0.3"
   }
 }
