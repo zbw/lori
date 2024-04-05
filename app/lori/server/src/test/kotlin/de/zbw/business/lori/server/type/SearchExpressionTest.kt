@@ -105,15 +105,15 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "(ts_title @@ to_tsquery(?) AND ts_zdb_id @@ to_tsquery(?)) OR ts_hdl @@ to_tsquery(?)",
+                "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null)) OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "ts_sigel @@ to_tsquery(?) AND (NOT ts_hdl @@ to_tsquery(?) OR NOT ts_hdl @@ to_tsquery(?))",
+                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "ts_sigel @@ to_tsquery(?) AND NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl @@ to_tsquery(?))",
+                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
             ),
         )
 

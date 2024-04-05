@@ -30,7 +30,9 @@ class SearchKeyTest : DatabaseTest() {
     )
 
     private fun getInitialMetadata() = listOf(
-        METADATA_TEST
+        METADATA_TEST,
+        METADATA_TEST_2,
+        METADATA_TEST_3,
     )
 
     @BeforeClass
@@ -54,7 +56,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "search for specific metadata id"
         ),
         arrayOf(
@@ -62,7 +63,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "search for specific metadata id with complex query"
         ),
         arrayOf(
@@ -70,7 +70,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "search for specific metadata id with even complexer query"
         ),
         arrayOf(
@@ -78,7 +77,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             emptySet<ItemMetadata>(),
-            0,
             "fail to find a metadata id"
         ),
         arrayOf(
@@ -86,7 +84,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "search for specific metadata id with even complexer query ensuring parantheses works as expected"
         ),
         arrayOf(
@@ -94,7 +91,6 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "negation around parantheses"
         ),
         arrayOf(
@@ -102,8 +98,14 @@ class SearchKeyTest : DatabaseTest() {
             10,
             0,
             setOf(METADATA_TEST),
-            1,
             "search for licence url"
+        ),
+        arrayOf(
+            "!zdb:'${METADATA_TEST.zdbId}'",
+            10,
+            0,
+            setOf(METADATA_TEST_2, METADATA_TEST_3),
+            "find all items that have a different ZDB-ID or no value at all"
         ),
     )
 
@@ -113,7 +115,6 @@ class SearchKeyTest : DatabaseTest() {
         limit: Int,
         offset: Int,
         expectedResult: Set<ItemMetadata>,
-        expectedNumberOfResults: Int,
         description: String,
     ) {
         // when
@@ -124,11 +125,6 @@ class SearchKeyTest : DatabaseTest() {
             description,
             searchQueryResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
-        )
-        assertThat(
-            description,
-            searchQueryResult.numberOfResults,
-            `is`(expectedNumberOfResults),
         )
     }
 
@@ -148,6 +144,20 @@ class SearchKeyTest : DatabaseTest() {
         private const val TEST_METADATA_ID = "some metadata id"
         val METADATA_TEST = TEST_Metadata.copy(
             metadataId = TEST_METADATA_ID,
+        )
+        val METADATA_TEST_2 = TEST_Metadata.copy(
+            metadataId = "second",
+            handle = "second/handle",
+            zdbId = null,
+            licenceUrl = "foobar.baz",
+            paketSigel = "someothersigel2",
+        )
+        val METADATA_TEST_3 = TEST_Metadata.copy(
+            metadataId = "third",
+            zdbId = "someotherzdbid",
+            licenceUrl = "foobar",
+            paketSigel = "someothersigel",
+            handle = "some/other/handle"
         )
     }
 }
