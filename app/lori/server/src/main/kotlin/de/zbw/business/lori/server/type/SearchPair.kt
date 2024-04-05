@@ -12,7 +12,7 @@ class SearchPair(
     val values: String,
 ) {
     fun toWhereClause(): String =
-        "${key.tsVectorColumn} @@ $SQL_FUNC_TO_TS_QUERY(?)"
+        "(${key.tsVectorColumn} @@ $SQL_FUNC_TO_TS_QUERY(?) AND ${key.tsVectorColumn} is not null)"
 
     fun getCoalesce(): String =
         "$SQL_FUNC_COALESCE($SQL_FUNC_TS_RANK_CD(${key.tsVectorColumn}, $SQL_FUNC_TO_TS_QUERY(?)),1)"
