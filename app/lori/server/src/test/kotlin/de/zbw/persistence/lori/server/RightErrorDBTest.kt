@@ -76,7 +76,6 @@ class RightErrorDBTest : DatabaseTest() {
             createdOn = null,
             metadataId = "metadataId",
             conflictType = ConflictType.DATE_OVERLAP,
-            templateIdSource = 5,
         )
 
         val NOW: OffsetDateTime = OffsetDateTime.of(

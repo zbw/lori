@@ -21,7 +21,7 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
-import de.zbw.lori.model.TemplateIdWithCountRest
+import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -82,6 +82,7 @@ class RestConverterTest {
                     createdBy = TEST_RIGHT.createdBy,
                     createdOn = TEST_RIGHT.createdOn,
                     endDate = TEST_RIGHT.endDate,
+                    isTemplate = TEST_RIGHT.isTemplate,
                     lastAppliedOn = TEST_RIGHT.lastAppliedOn,
                     lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
                     lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
@@ -396,7 +397,7 @@ class RestConverterTest {
             hasZbwUserAgreement = false,
             paketSigels = mapOf("sigel1" to 1),
             publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
-            templateIds = mapOf(1 to ("name" to 2)),
+            templateNamesToOcc = mapOf("name" to 2),
             zdbIds = mapOf("zdb1" to 1),
         )
         val expected = ItemInformation(
@@ -428,10 +429,9 @@ class RestConverterTest {
                     zdbId = "zdb1",
                 )
             ),
-            templateIdWithCount = listOf(
-                TemplateIdWithCountRest(
+            templateNameWithCount = listOf(
+                TemplateNameWithCountRest(
                     count = 2,
-                    templateId = "1",
                     templateName = "name",
                 )
             )
@@ -513,6 +513,7 @@ class RestConverterTest {
             ),
             endDate = TODAY,
             groupIds = null,
+            isTemplate = true,
             lastAppliedOn = OffsetDateTime.of(
                 2022,
                 3,
@@ -545,7 +546,6 @@ class RestConverterTest {
             openContentLicence = "some licence",
             restrictedOpenContentLicence = false,
             templateDescription = "foo",
-            templateId = null,
             templateName = "name",
             zbwUserAgreement = true,
         )

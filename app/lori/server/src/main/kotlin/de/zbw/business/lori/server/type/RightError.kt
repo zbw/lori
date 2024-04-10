@@ -18,7 +18,6 @@ data class RightError(
     val handleId: String?,
     val metadataId: String?,
     val rightIdSource: String?,
-    val templateIdSource: Int?,
 )
 
 enum class ConflictType {

@@ -136,6 +136,7 @@ class RightDBTest : DatabaseTest() {
             createdOn = TEST_RIGHT.createdOn,
             endDate = TEST_RIGHT.endDate!!.plusDays(1),
             groupIds = TEST_RIGHT.groupIds,
+            isTemplate = true,
             lastUpdatedBy = "user4",
             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
             lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
@@ -150,7 +151,6 @@ class RightDBTest : DatabaseTest() {
             restrictedOpenContentLicence = true,
             startDate = TEST_RIGHT.startDate.minusDays(10),
             templateDescription = "description foo",
-            templateId = null,
             templateName = "name foo",
             zbwUserAgreement = true,
         )

@@ -1,0 +1,2 @@
+alter table item_right add column exception_from text default null;
+alter table item_right add constraint exception_from_fkey foreign key (exception_from) REFERENCES item_right (right_id) ON DELETE CASCADE;

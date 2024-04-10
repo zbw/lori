@@ -373,6 +373,7 @@ class RightRoutesKtTest {
                 ZoneOffset.UTC,
             ),
             endDate = TODAY,
+            isTemplate = false,
             lastUpdatedBy = "user2",
             lastUpdatedOn = OffsetDateTime.of(
                 2022,

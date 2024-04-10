@@ -105,7 +105,7 @@ class DAConnector(
                     daItemList
                         .mapNotNull { it.toBusiness() }
                         .map { shortenHandle(it) }
-                backend.upsertMetaData(metadataList).filter { it == 1 }.size
+                backend.upsertMetadata(metadataList).filter { it == 1 }.size
             }
         }
 

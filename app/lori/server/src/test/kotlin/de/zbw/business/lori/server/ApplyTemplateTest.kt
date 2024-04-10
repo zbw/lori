@@ -81,16 +81,15 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Create Template
-        val rightId = backend.insertRight(TEST_RIGHT.copy(templateId = 6))
-        val templateId: Int = backend.getRightsByIds(listOf(rightId)).first().templateId!!
+        val rightId = backend.insertTemplate(TEST_RIGHT.copy(templateName = "test", isTemplate = true))
 
         // Connect Bookmark and Template
         backend.insertBookmarkTemplatePair(
             bookmarkId = bookmarkId,
-            templateId = templateId,
+            rightId = rightId,
         )
 
-        val received: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
+        val received: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
         assertThat(
             received.first,
             `is`(listOf(item1ZDB1.metadataId))
@@ -101,12 +100,12 @@ class ApplyTemplateTest : DatabaseTest() {
         assertTrue(rightIds.contains(rightId))
 
         assertThat(
-            backend.getRightByTemplateId(templateId)!!.lastAppliedOn,
+            backend.getRightById(rightId)!!.lastAppliedOn,
             `is`(ItemDBTest.NOW),
         )
 
         // Repeat Apply Operation without duplicate entries errors
-        val received2: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
+        val received2: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
         assertThat(
             received2.first,
             `is`(listOf(item1ZDB1.metadataId))
@@ -120,10 +119,10 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         )
         // Update old item from database so it no longer matches for bookmark
-        backend.upsertMetaData(listOf(item1ZDB1.copy(zdbId = "foobar")))
+        backend.upsertMetadata(listOf(item1ZDB1.copy(zdbId = "foobar")))
 
         // Apply Template
-        val received3: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateId)
+        val received3: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
         assertThat(
             received3.first,
             `is`(
@@ -139,7 +138,7 @@ class ApplyTemplateTest : DatabaseTest() {
             `is`(2),
         )
 
-        val applyAllReceived: Map<Int, Pair<List<String>, List<RightError>>> = backend.applyAllTemplates()
+        val applyAllReceived: Map<String, Pair<List<String>, List<RightError>>> = backend.applyAllTemplates()
         assertThat(
             applyAllReceived.values.map { it.first }.flatten().toSet(),
             `is`(
@@ -151,15 +150,14 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Create conflicting template
-        val rightIdConflict = backend.insertRight(TEST_RIGHT.copy(templateId = 62))
-        val templateIdConflict: Int = backend.getRightsByIds(listOf(rightIdConflict)).first().templateId!!
+        val rightIdConflict = backend.insertTemplate(TEST_RIGHT.copy(isTemplate = true, templateName = "conflicting"))
 
         // Connect Bookmark and Template
         backend.insertBookmarkTemplatePair(
             bookmarkId = bookmarkId,
-            templateId = templateIdConflict,
+            rightId = rightIdConflict,
         )
-        val receivedConflict: Pair<List<String>, List<RightError>> = backend.applyTemplate(templateIdConflict)
+        val receivedConflict: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdConflict)
         assertThat(
             receivedConflict.second.size,
             `is`(2)

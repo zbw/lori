@@ -152,9 +152,7 @@ object QueryParameterParser {
 
     fun parseTemplateIdFilter(s: String?): TemplateIdFilter? =
         s?.split(",".toRegex())
-            ?.mapNotNull {
-                it.toIntOrNull()
-            }?.takeIf {
+            ?.takeIf {
                 it.isNotEmpty()
             }?.let {
                 TemplateIdFilter(it)

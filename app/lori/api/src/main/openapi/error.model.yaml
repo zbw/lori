@@ -18,8 +18,6 @@ RightErrorRest:
       type: string
     rightIdSource:
       type: string
-    templateIdSource:
-      type: integer
 
 ConflictTypeRest:
   type: string

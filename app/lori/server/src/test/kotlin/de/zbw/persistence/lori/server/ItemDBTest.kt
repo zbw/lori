@@ -78,7 +78,7 @@ class ItemDBTest : DatabaseTest() {
     fun testDeleteItemBy() {
         // given
         val expectedMetadata = TEST_Metadata.copy(metadataId = "delete_item_meta")
-        val expectedRight = TEST_RIGHT
+        val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
         // when
         dbConnector.metadataDB.insertMetadata(expectedMetadata)
@@ -126,7 +126,7 @@ class ItemDBTest : DatabaseTest() {
     fun testItemExists() {
         // given
         val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
-        val expectedRight = TEST_RIGHT
+        val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
         assertFalse(dbConnector.itemDB.itemContainsRight(expectedRight.rightId!!))
         assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId!!))
@@ -197,6 +197,7 @@ class ItemDBTest : DatabaseTest() {
             createdOn = NOW,
             endDate = TODAY,
             groupIds = emptyList(),
+            isTemplate = false,
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
             lastAppliedOn = NOW.minusDays(1),
@@ -211,7 +212,6 @@ class ItemDBTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
             templateDescription = "description",
-            templateId = null,
             templateName = "name",
             zbwUserAgreement = true,
         )

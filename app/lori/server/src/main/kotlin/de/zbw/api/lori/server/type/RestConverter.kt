@@ -41,7 +41,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.TemplateIdWithCountRest
+import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
@@ -169,6 +169,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -183,7 +184,6 @@ fun RightRest.toBusiness(): ItemRight =
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateDescription = templateDescription,
-        templateId = templateId,
         templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
     )
@@ -199,6 +199,7 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -212,7 +213,6 @@ fun ItemRight.toRest(): RightRest =
         openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
-        templateId = templateId,
         templateDescription = templateDescription,
         templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
@@ -463,13 +463,13 @@ fun Bookmark.toRest(): BookmarkRest =
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
     BookmarkTemplate(
         bookmarkId = this.bookmarkId,
-        templateId = this.templateId,
+        rightId = this.rightId,
     )
 
 fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
     BookmarkTemplateRest(
         bookmarkId = this.bookmarkId,
-        templateId = this.templateId,
+        rightId = this.rightId,
     )
 
 fun SearchQueryResult.toRest(
@@ -500,11 +500,10 @@ fun SearchQueryResult.toRest(
                 zdbId = it.key,
             )
         }.toList(),
-        templateIdWithCount = this.templateIds.entries.map {
-            TemplateIdWithCountRest(
-                templateId = it.key.toString(),
-                templateName = it.value.first,
-                count = it.value.second,
+        templateNameWithCount = this.templateNamesToOcc.entries.map {
+            TemplateNameWithCountRest(
+                templateName = it.key,
+                count = it.value,
             )
         }
     )
@@ -525,7 +524,6 @@ fun RightError.toRest(): RightErrorRest =
         handleId = handleId,
         metadataId = metadataId,
         rightIdSource = rightIdSource,
-        templateIdSource = templateIdSource,
         conflictType = conflictType?.toRest(),
     )
 

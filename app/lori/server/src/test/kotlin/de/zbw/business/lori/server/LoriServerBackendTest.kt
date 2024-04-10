@@ -839,7 +839,6 @@ class LoriServerBackendTest : DatabaseTest() {
         val received: Pair<Set<Item>, List<RightError>> = LoriServerBackend.findItemsWithConflicts(
             searchResults,
             rightConflictToCheck,
-            1,
         )
         assertThat(
             reason,
@@ -912,6 +911,7 @@ class LoriServerBackendTest : DatabaseTest() {
             createdOn = NOW,
             endDate = TODAY,
             groupIds = emptyList(),
+            isTemplate = false,
             lastAppliedOn = null,
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
@@ -926,8 +926,7 @@ class LoriServerBackendTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
             templateDescription = "descritpion",
-            templateId = null,
-            templateName = "name",
+            templateName = null,
             zbwUserAgreement = true,
         )
     }

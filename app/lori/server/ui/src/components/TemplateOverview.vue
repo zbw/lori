@@ -181,7 +181,7 @@ export default defineComponent({
     /**
      * EMITS
      */
-    const emitGetItemsByTemplateId = (templateId?: number) => {
+    const emitGetItemsByTemplateId = (templateId?: string) => {
       if (templateId != undefined) {
         emit("getItemsByTemplateId", templateId);
       }
@@ -274,7 +274,7 @@ export default defineComponent({
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
             color="blue darken-1"
-            @click="emitGetItemsByTemplateId(item.templateId)"
+            @click="emitGetItemsByTemplateId(item.rightId)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>

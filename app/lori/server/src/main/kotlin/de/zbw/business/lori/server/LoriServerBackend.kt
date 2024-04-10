@@ -25,7 +25,6 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
-import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import org.apache.logging.log4j.util.Strings
@@ -57,7 +56,7 @@ class LoriServerBackend(
         right: ItemRight,
         metadataIds: List<String>,
     ): String {
-        val pkRight = dbConnector.rightDB.insertRight(right)
+        val pkRight = dbConnector.rightDB.insertRight(right.copy(isTemplate = false, templateName = null))
         metadataIds.forEach {
             dbConnector.itemDB.insertItem(it, pkRight)
         }
@@ -133,7 +132,7 @@ class LoriServerBackend(
     fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
         dbConnector.metadataDB.upsertMetadataBatch(metadataElems.map { it })
 
-    fun upsertMetaData(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
+    fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
 
     fun getMetadataList(limit: Int, offset: Int): List<ItemMetadata> =
         dbConnector.metadataDB.getMetadataRange(limit, offset).takeIf {
@@ -182,6 +181,9 @@ class LoriServerBackend(
                     description = null,
                 )
             }
+
+    fun getRightById(rightId: String): ItemRight? =
+        getRightsByIds(listOf(rightId)).firstOrNull()
 
     fun getRightsByIds(rightIds: List<String>): List<ItemRight> {
         return dbConnector.rightDB.getRightsByIds(rightIds)
@@ -349,25 +351,16 @@ class LoriServerBackend(
             hasZbwUserAgreement = facets.hasZbwUserAgreement,
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
-            templateIds = getTemplateNamesForIds(facets.templateIdToOccurence),
+            templateNamesToOcc = facets.templateIdToOccurence,
             zdbIds = facets.zdbIds,
         )
-    }
-
-    private fun getTemplateNamesForIds(idToCount: Map<Int, Int>): Map<Int, Pair<String, Int>> {
-        return dbConnector.rightDB.getRightsByTemplateIds(idToCount.keys.toList()).mapNotNull { right ->
-            if (right.templateId == null || right.templateName == null || idToCount[right.templateId] == null) {
-                return@mapNotNull null
-            }
-            right.templateId to (right.templateName to idToCount[right.templateId]!!)
-        }.toMap()
     }
 
     fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 
     fun deleteBookmark(bookmarkId: Int): Int {
-        val receivedTemplateIds = dbConnector.bookmarkTemplateDB.getTemplateIdsByBookmarkId(bookmarkId)
+        val receivedTemplateIds = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)
         return if (receivedTemplateIds.isEmpty()) {
             dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
         } else {
@@ -392,19 +385,8 @@ class LoriServerBackend(
     /**
      * Insert template.
      */
-    fun insertTemplate(right: ItemRight): TemplateRightIdCreated {
-        val freeTemplateId = dbConnector.rightDB.getMaxTemplateId() + 1 // TODO(CB): use the lowest available number
-        val rightId = dbConnector.rightDB.insertRight(right.copy(templateId = freeTemplateId))
-        return TemplateRightIdCreated(
-            templateId = freeTemplateId,
-            rightId = rightId
-        )
-    }
-
-    fun deleteRightByTemplateId(templateId: Int): Int = dbConnector.rightDB.deleteRightByTemplateId(templateId)
-
-    fun getRightByTemplateId(templateId: Int): ItemRight? =
-        dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull()
+    fun insertTemplate(right: ItemRight): String =
+        dbConnector.rightDB.insertRight(right)
 
     fun getTemplateList(
         limit: Int,
@@ -415,30 +397,30 @@ class LoriServerBackend(
     /**
      * Template-Bookmark Pair.
      */
-    fun getBookmarksByTemplateId(
-        templateId: Int,
+    fun getBookmarksByRightId(
+        rightId: String,
     ): List<Bookmark> {
-        val bookmarkIds = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
+        val bookmarkIds = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
     fun deleteBookmarkTemplatePair(
-        templateId: Int,
+        rightId: String,
         bookmarkId: Int,
     ): Int = dbConnector.bookmarkTemplateDB.deleteTemplateBookmarkPair(
         BookmarkTemplate(
             bookmarkId = bookmarkId,
-            templateId = templateId
+            rightId = rightId
         )
     )
 
     fun insertBookmarkTemplatePair(
         bookmarkId: Int,
-        templateId: Int,
+        rightId: String,
     ): Int = dbConnector.bookmarkTemplateDB.insertTemplateBookmarkPair(
         BookmarkTemplate(
             bookmarkId = bookmarkId,
-            templateId = templateId
+            rightId = rightId
         )
     )
 
@@ -450,28 +432,27 @@ class LoriServerBackend(
             dbConnector.bookmarkTemplateDB.deleteTemplateBookmarkPair(it)
         }
 
-    fun deleteBookmarkTemplatePairsByTemplateId(templateId: Int): Int =
-        dbConnector.bookmarkTemplateDB.deletePairsByTemplateId(templateId)
+    fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int =
+        dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
-    fun applyAllTemplates(): Map<Int, Pair<List<String>, List<RightError>>> =
-        dbConnector.rightDB.getAllTemplateIds()
+    fun applyAllTemplates(): Map<String, Pair<List<String>, List<RightError>>> =
+        dbConnector.rightDB.getRightIdsForAllTemplates()
             .let { applyTemplates(it) }
 
-    fun applyTemplates(templateIds: List<Int>): Map<Int, Pair<List<String>, List<RightError>>> =
-        templateIds.associateWith { templateId ->
-            applyTemplate(templateId)
+    fun applyTemplates(rightIds: List<String>): Map<String, Pair<List<String>, List<RightError>>> =
+        rightIds.associateWith { rightId ->
+            applyTemplate(rightId)
         }
 
-    internal fun applyTemplate(templateId: Int): Pair<List<String>, List<RightError>> {
-        // Get Right_Id
+    internal fun applyTemplate(rightId: String): Pair<List<String>, List<RightError>> {
+        // Get Right object
         val right: ItemRight =
-            dbConnector.rightDB.getRightsByTemplateIds(listOf(templateId)).firstOrNull() ?: return Pair(
+            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return Pair(
                 emptyList(),
                 emptyList()
             )
-        val rightId = right.rightId ?: throw InternalError("RightId is missing for $right")
         // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByTemplateId(templateId)
+        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
         // Get search results for each bookmark
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
@@ -501,11 +482,11 @@ class LoriServerBackend(
         dbConnector.itemDB.deleteItemByRight(rightId)
 
         // Update last_applied_on field
-        dbConnector.rightDB.updateAppliedOnByTemplateId(templateId)
+        dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
 
         // Connect Template to all results
         val itemsWithConflicts: Pair<Set<Item>, List<RightError>> =
-            findItemsWithConflicts(searchResults, right, templateId)
+            findItemsWithConflicts(searchResults, right)
         val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.first)
         val appliedMetadataIds = searchResultsWithoutConflict.map { result ->
             dbConnector.itemDB.insertItem(
@@ -611,7 +592,6 @@ class LoriServerBackend(
         fun findItemsWithConflicts(
             searchResults: Set<Item>,
             right: ItemRight,
-            templateId: Int
         ): Pair<Set<Item>, List<RightError>> {
             val conflictErrors = emptyList<RightError>().toMutableList()
             val conflictingItems: Set<Item> = searchResults.toList().filter { item ->
@@ -624,15 +604,14 @@ class LoriServerBackend(
                         if (hasConflict) {
                             conflictErrors.add(
                                 RightError(
-                                    templateIdSource = templateId,
                                     metadataId = item.metadata.metadataId,
                                     conflictType = ConflictType.DATE_OVERLAP,
                                     conflictingRightId = right.rightId ?: "Unknown",
                                     createdOn = OffsetDateTime.now(),
                                     errorId = null,
-                                    rightIdSource = null,
+                                    rightIdSource = right.rightId, // TODO: Not sure if this is correct
                                     handleId = item.metadata.handle,
-                                    message = "Start/End-Datum Konflikt: Template-ID ${right.templateId} steht im Widerspruch" +
+                                    message = "Start/End-Datum Konflikt: Template-ID ${right.rightId} steht im Widerspruch" +
                                         " zur Rechte-ID ${right.rightId}, welche an die Metadata-ID ${item.metadata.metadataId}" +
                                         " angebunden ist.",
                                 )

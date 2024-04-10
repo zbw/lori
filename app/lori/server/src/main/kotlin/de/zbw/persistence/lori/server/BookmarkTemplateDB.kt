@@ -21,9 +21,9 @@ class BookmarkTemplateDB(
     /**
      * Queries on Template-Bookmark Pairs Table.
      */
-    fun deletePairsByTemplateId(templateId: Int): Int {
+    fun deletePairsByRightId(rightId: String): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP).apply {
-            this.setInt(1, templateId)
+            this.setString(1, rightId)
         }
         val span = tracer.spanBuilder("deleteTemplateBookmarkPairByTempId").startSpan()
         return try {
@@ -37,9 +37,9 @@ class BookmarkTemplateDB(
     /**
      * Get all bookmark ids that are a connected to a given template-id.
      */
-    fun getBookmarkIdsByTemplateId(templateId: Int): List<Int> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID).apply {
-            this.setInt(1, templateId)
+    fun getBookmarkIdsByRightId(rightId: String): List<Int> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID).apply {
+            this.setString(1, rightId)
         }
         val span = tracer.spanBuilder("getBookmarkIdsByTemplateId").startSpan()
         val rs = try {
@@ -59,7 +59,7 @@ class BookmarkTemplateDB(
     /**
      * Get all bookmark ids that are a connected to a given template-id.
      */
-    fun getTemplateIdsByBookmarkId(bookmarkId: Int): List<Int> {
+    fun getRightIdsByBookmarkId(bookmarkId: Int): List<String> {
         val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID).apply {
             this.setInt(1, bookmarkId)
         }
@@ -73,7 +73,7 @@ class BookmarkTemplateDB(
 
         return generateSequence {
             if (rs.next()) {
-                rs.getInt(1)
+                rs.getString(1)
             } else null
         }.takeWhile { true }.toList()
     }
@@ -84,7 +84,7 @@ class BookmarkTemplateDB(
         val prepStmt = connection
             .prepareStatement(STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
             .apply {
-                this.setInt(1, bookmarkTemplate.templateId)
+                this.setString(1, bookmarkTemplate.rightId)
                 this.setInt(2, bookmarkTemplate.bookmarkId)
             }
         val span = tracer.spanBuilder("insertTemplateBookmarkPair").startSpan()
@@ -103,7 +103,7 @@ class BookmarkTemplateDB(
 
     fun deleteTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR).apply {
-            this.setInt(1, bookmarkTemplate.templateId)
+            this.setString(1, bookmarkTemplate.rightId)
             this.setInt(2, bookmarkTemplate.bookmarkId)
         }
         val span = tracer.spanBuilder("deleteTemplateBookmarkPair").startSpan()
@@ -123,7 +123,7 @@ class BookmarkTemplateDB(
         bookmarkTemplates.map { bookmarkTemplate ->
             val p = prep.apply {
                 this.setInt(1, bookmarkTemplate.bookmarkId)
-                this.setInt(2, bookmarkTemplate.templateId)
+                this.setString(2, bookmarkTemplate.rightId)
             }
             p.addBatch()
         }
@@ -138,7 +138,7 @@ class BookmarkTemplateDB(
             if (rs.next()) {
                 BookmarkTemplate(
                     bookmarkId = rs.getInt(1),
-                    templateId = rs.getInt(2),
+                    rightId = rs.getString(2),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -146,35 +146,35 @@ class BookmarkTemplateDB(
 
     companion object {
         private const val TABLE_NAME_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map"
-        private const val COLUMN_TEMPLATE_ID = "template_id"
+        private const val COLUMN_RIGHT_ID = "right_id"
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
         private const val CONSTRAINT_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map_pkey"
 
-        const val STATEMENT_GET_BOOKMARKS_BY_TEMPLATE_ID =
+        const val STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID =
             "SELECT $COLUMN_BOOKMARK_ID" +
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-                " WHERE $COLUMN_TEMPLATE_ID = ?"
+                " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID =
-            "SELECT $COLUMN_TEMPLATE_ID" +
+            "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
                 " WHERE $COLUMN_BOOKMARK_ID = ?"
 
         const val STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR =
             "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-                " ($COLUMN_TEMPLATE_ID, $COLUMN_BOOKMARK_ID)" +
+                " ($COLUMN_RIGHT_ID, $COLUMN_BOOKMARK_ID)" +
                 " VALUES(?,?)"
 
         const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR = "DELETE" +
             " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-            " WHERE $COLUMN_TEMPLATE_ID = ? AND $COLUMN_BOOKMARK_ID = ?"
+            " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_BOOKMARK_ID = ?"
 
         const val STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP = "DELETE " +
             "FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-            " WHERE $COLUMN_TEMPLATE_ID = ?"
+            " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR = "INSERT INTO $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
-            " ($COLUMN_BOOKMARK_ID, $COLUMN_TEMPLATE_ID)" +
+            " ($COLUMN_BOOKMARK_ID, $COLUMN_RIGHT_ID)" +
             " VALUES(?,?)" +
             " ON CONFLICT ON CONSTRAINT $CONSTRAINT_TEMPLATE_BOOKMARK_MAP" +
             " DO NOTHING"

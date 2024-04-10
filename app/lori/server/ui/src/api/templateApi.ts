@@ -3,10 +3,10 @@ import {
   BookmarkTemplateRest,
   Configuration,
   ItemInformation,
+  RightIdCreated,
   RightRest,
   TemplateApi,
   TemplateApplicationsRest,
-  TemplateIdCreated,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -15,19 +15,19 @@ const configuration = new Configuration({
 const templateApi = new TemplateApi(configuration);
 
 export default {
-  addTemplate(right: RightRest): Promise<TemplateIdCreated> {
+  addTemplate(right: RightRest): Promise<RightIdCreated> {
     return templateApi.addTemplate({ body: right });
   },
   applyTemplates(
-    templateIds: Array<number>
+    templateIds: Array<string>,
   ): Promise<TemplateApplicationsRest> {
     return templateApi.applyTemplateIds({
       body: {
-        templateIds: templateIds,
+        rightIds: templateIds,
       },
     });
   },
-  deleteTemplate(templateId: number): Promise<void> {
+  deleteTemplate(templateId: string): Promise<void> {
     return templateApi.deleteTemplateById({
       id: templateId,
     });
@@ -46,15 +46,15 @@ export default {
   updateTemplate(template: RightRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
   },
-  getBookmarksByTemplateId(templateId: number): Promise<Array<BookmarkRest>> {
+  getBookmarksByTemplateId(templateId: string): Promise<Array<BookmarkRest>> {
     return templateApi.getBookmarksByTemplateId({
       id: templateId,
     });
   },
   addBookmarksByTemplateId(
-    templateId: number,
+    templateId: string,
     bookmarkIds: Array<number>,
-    deleteOld: boolean
+    deleteOld: boolean,
   ): Promise<Array<BookmarkTemplateRest>> {
     return templateApi.addBookmarksByTemplateId({
       id: templateId,
@@ -65,9 +65,9 @@ export default {
     });
   },
   getItemsByTemplateId(
-    templateId: number,
+    templateId: string,
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<ItemInformation> {
     return templateApi.getItemsByTemplateId({
       id: templateId,

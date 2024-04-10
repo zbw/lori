@@ -37,7 +37,7 @@ class BookmarkTemplateRoutesKtTest {
             every {
                 insertBookmarkTemplatePair(
                     bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
-                    templateId = TEST_BOOKMARK_TEMPLATE.templateId,
+                    rightId = TEST_BOOKMARK_TEMPLATE.rightId,
                 )
             } returns 1
         }
@@ -77,7 +77,7 @@ class BookmarkTemplateRoutesKtTest {
             every {
                 insertBookmarkTemplatePair(
                     bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
-                    templateId = TEST_BOOKMARK_TEMPLATE.templateId,
+                    rightId = TEST_BOOKMARK_TEMPLATE.rightId,
                 )
             } throws mockk<PSQLException> {
                 every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
@@ -120,7 +120,7 @@ class BookmarkTemplateRoutesKtTest {
             every {
                 deleteBookmarkTemplatePair(
                     bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
-                    templateId = TEST_BOOKMARK_TEMPLATE.templateId,
+                    rightId = TEST_BOOKMARK_TEMPLATE.rightId,
                 )
             } returns 1
         }
@@ -132,7 +132,7 @@ class BookmarkTemplateRoutesKtTest {
                 servicePool.testApplication()
             )
             val response =
-                client.delete("/api/v1/bookmarktemplates?templateid=${TEST_BOOKMARK_TEMPLATE.templateId}&bookmarkid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
+                client.delete("/api/v1/bookmarktemplates?rightid=${TEST_BOOKMARK_TEMPLATE.rightId}&bookmarkid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
             assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
         }
 
@@ -142,7 +142,7 @@ class BookmarkTemplateRoutesKtTest {
                 servicePool.testApplication()
             )
             val response =
-                client.delete("/api/v1/bookmarktemplates?bookmarkid=${TEST_BOOKMARK_TEMPLATE.templateId}&templateid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
+                client.delete("/api/v1/bookmarktemplates?bookmarkid=${TEST_BOOKMARK_TEMPLATE.rightId}&rightid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
             assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
         }
 
@@ -152,7 +152,7 @@ class BookmarkTemplateRoutesKtTest {
                 servicePool.testApplication()
             )
             val response =
-                client.delete("/api/v1/bookmarktemplates?bookmarkid=foobar&templateid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
+                client.delete("/api/v1/bookmarktemplates?bookmarkid=foobar&rightid=${TEST_BOOKMARK_TEMPLATE.bookmarkId}")
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -237,7 +237,7 @@ class BookmarkTemplateRoutesKtTest {
                     listOf(
                         BookmarkTemplateRest(
                             bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
-                            templateId = TEST_BOOKMARK_TEMPLATE.templateId
+                            rightId = TEST_BOOKMARK_TEMPLATE.rightId
                         )
                     )
                 )
@@ -268,7 +268,7 @@ class BookmarkTemplateRoutesKtTest {
     companion object {
         val TEST_BOOKMARK_TEMPLATE = BookmarkTemplateRest(
             bookmarkId = 10,
-            templateId = 15,
+            rightId = "15",
         )
 
         val TEST_BOOKMARK_TEMPLATE_BATCH = BookmarkTemplateBatchRest(

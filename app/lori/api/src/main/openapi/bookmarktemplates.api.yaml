@@ -51,12 +51,12 @@ bookmarktemplates:
         required: true
         schema:
           type: integer
-      - name: templateId
+      - name: rightId
         in: query
-        description: Template Id
+        description: Right Id
         required: true
         schema:
-          type: integer
+          type: string
     responses:
       200:
         description: Deletion of bookmark template pair was successful

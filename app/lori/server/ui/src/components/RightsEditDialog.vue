@@ -6,10 +6,10 @@ import {
   BookmarkRest,
   GroupRest,
   ItemEntry,
+  RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
   RightRestBasisStorageEnum,
-  TemplateIdCreated,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -347,12 +347,12 @@ export default defineComponent({
 
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
-      tmpRight.value.templateId = -1;
+      tmpRight.value.isTemplate = true;
       tmpRight.value.templateName = formState.formTemplateName;
       templateApi
         .addTemplate(tmpRight.value)
-        .then((r: TemplateIdCreated) => {
-          updateBookmarks(r.templateId, () => {
+        .then((r: RightIdCreated) => {
+          updateBookmarks(r.rightId, () => {
             emit("addTemplateSuccessful", formState.formTemplateName);
             close();
           });
@@ -370,17 +370,20 @@ export default defineComponent({
       templateApi
         .updateTemplate(tmpRight.value)
         .then(() => {
-          if (tmpRight.value.templateId == undefined) {
-            return;
+          if (tmpRight.value.rightId == undefined) {
+            generalAlertErrorMsg.value =
+              "No RightId found when updating. This should NOT happen.";
+            generalAlertError.value = true;
+          } else {
+            updateBookmarks(tmpRight.value.rightId, () => {
+              updateSuccessfulMsg.value =
+                "Template " +
+                tmpRight.value.templateName +
+                " erfolgreich geupdated";
+              updateSuccessful.value = true;
+              emit("updateTemplateSuccessful", formState.formTemplateName);
+            });
           }
-          updateBookmarks(tmpRight.value.templateId, () => {
-            updateSuccessfulMsg.value =
-              "Template " +
-              tmpRight.value.templateId +
-              " erfolgreich geupdated";
-            updateSuccessful.value = true;
-            emit("updateTemplateSuccessful", formState.formTemplateName);
-          });
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -393,10 +396,10 @@ export default defineComponent({
     /**
      * Delete and Create Bookmarks compared to last save:
      */
-    const updateBookmarks = (templateId: number, callback: () => void) => {
+    const updateBookmarks = (rightId: string, callback: () => void) => {
       templateApi
         .addBookmarksByTemplateId(
-          templateId,
+          rightId,
           bookmarkItems.value
             .map((elem) => elem.bookmarkId)
             .filter((elem): elem is number => !!elem),
@@ -589,9 +592,9 @@ export default defineComponent({
       }
     });
     const computedTemplateId = computed(() =>
-      props.right == undefined || props.right.templateId == undefined
-        ? -1
-        : props.right.templateId,
+      props.right == undefined || !props.right.isTemplate
+        ? "invalid"
+        : props.right.rightId,
     );
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
@@ -603,7 +606,7 @@ export default defineComponent({
     const isTemplate = computed(
       () =>
         props.isNewTemplate ||
-        (props.right != undefined && props.right.templateId != undefined),
+        (props.right != undefined && props.right.isTemplate),
     );
 
     watch(computedRight, () => {
@@ -706,17 +709,23 @@ export default defineComponent({
 
     // Load Bookmarks
     const loadBookmarks = () => {
-      templateApi
-        .getBookmarksByTemplateId(computedTemplateId.value)
-        .then((bookmarks: Array<BookmarkRest>) => {
-          bookmarkItems.value = bookmarks;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+      if (computedTemplateId.value == undefined) {
+        generalAlertErrorMsg.value =
+          "Error while loading bookmarks. Invalid Template ID.";
+        generalAlertError.value = true;
+      } else {
+        templateApi
+          .getBookmarksByTemplateId(computedTemplateId.value)
+          .then((bookmarks: Array<BookmarkRest>) => {
+            bookmarkItems.value = bookmarks;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              generalAlertErrorMsg.value = errMsg;
+              generalAlertError.value = true;
+            });
           });
-        });
+      }
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
@@ -862,7 +871,7 @@ export default defineComponent({
           :index="index"
           :is-template="isTemplate"
           :metadataId="computedMetadataId"
-          :right-id="computedTemplateId.toString()"
+          :right-id="computedTemplateId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:templateDeleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>

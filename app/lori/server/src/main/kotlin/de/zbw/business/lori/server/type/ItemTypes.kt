@@ -90,6 +90,7 @@ data class ItemRight(
     val createdOn: OffsetDateTime?,
     val endDate: LocalDate?,
     val groupIds: List<String>?,
+    val isTemplate: Boolean,
     val lastAppliedOn: OffsetDateTime?,
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
@@ -104,7 +105,6 @@ data class ItemRight(
     val restrictedOpenContentLicence: Boolean?,
     val startDate: LocalDate,
     val templateDescription: String?,
-    val templateId: Int?,
     val templateName: String?,
     val zbwUserAgreement: Boolean?,
 )

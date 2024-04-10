@@ -19,7 +19,7 @@ template:
         content:
           application/json:
             schema:
-              $ref: 'template.model.yaml#/TemplateIdCreated'
+              $ref: 'right.model.yaml#/RightIdCreated'
       400:
         description: Bad request
         content:
@@ -144,6 +144,7 @@ template-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
+
 template-list:
   get:
     tags:
@@ -204,7 +205,7 @@ template-bookmarks:
         description: Template Id
         required: true
         schema:
-          type: integer
+          type: string
       - name: deleteOld
         in: query
         description: "Delete all old connections first"
@@ -250,7 +251,7 @@ template-bookmarks:
         description: Template Id
         required: true
         schema:
-          type: integer
+          type: string
     responses:
       200:
         description: Successful operation
@@ -280,7 +281,7 @@ template-applications:
       content:
         application/json:
           schema:
-            $ref: 'template.model.yaml#/TemplateIdsRest'
+            $ref: 'template.model.yaml#/RightIdsRest'
       required: true
     parameters:
       - name: all
@@ -317,7 +318,7 @@ template-bookmarks-entries:
         description: Template Id
         required: true
         schema:
-          type: integer
+          type: string
       - name: offset
         in: query
         description: An offset.

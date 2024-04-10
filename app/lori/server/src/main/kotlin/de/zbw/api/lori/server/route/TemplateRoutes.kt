@@ -9,11 +9,11 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.RightIdCreated
+import de.zbw.lori.model.RightIdsRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateApplicationsRest
-import de.zbw.lori.model.TemplateIdCreated
-import de.zbw.lori.model.TemplateIdsRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -53,10 +53,10 @@ fun Routing.templateRoutes(
                     try {
                         val right: RightRest = call.receive(RightRest::class)
                         span.setAttribute("template", right.toString())
-                        val pk = backend.insertTemplate(right.toBusiness())
+                        val pk: String = backend.insertTemplate(right.toBusiness())
                         span.setStatus(StatusCode.OK)
                         call.respond(
-                            HttpStatusCode.Created, TemplateIdCreated(templateId = pk.templateId, rightId = pk.rightId)
+                            HttpStatusCode.Created, RightIdCreated(rightId = pk)
                         )
                     } catch (pe: PSQLException) {
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
@@ -98,7 +98,8 @@ fun Routing.templateRoutes(
                 withContext(span.asContextElement()) {
                     try {
                         val right: RightRest =
-                            call.receive(RightRest::class).takeIf { it.templateId != null }
+                            call.receive(RightRest::class)
+                                .takeIf { it.rightId != null && it.isTemplate && it.templateName != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("template", right.toString())
                         val insertedRows = backend.upsertRight(right.toBusiness())
@@ -110,7 +111,25 @@ fun Routing.templateRoutes(
                             call.respond(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
-                                    detail = "Für das Template mit Id ${right.templateId} existiert kein Eintrag.",
+                                    detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
+                                )
+                            )
+                        }
+                    } catch (pe: PSQLException) {
+                        if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                ApiError.conflictError(
+                                    detail = "Ein Template mit diesem Namen existiert bereits.",
+                                )
+                            )
+                        } else {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
                                 )
                             )
                         }
@@ -147,23 +166,23 @@ fun Routing.templateRoutes(
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val templateIds: List<Int> =
-                            call.receive(TemplateIdsRest::class).takeIf { it.templateIds != null }?.templateIds
+                        val rightIds: List<String> =
+                            call.receive(RightIdsRest::class).takeIf { it.rightIds != null }?.rightIds
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
-                        span.setAttribute("templateIds", templateIds.toString())
+                        span.setAttribute("rightIds", rightIds.toString())
                         span.setAttribute("Query Parameter 'all'", all.toString())
-                        val appliedMap: Map<Int, Pair<List<String>, List<RightError>>> =
+                        val appliedMap: Map<String, Pair<List<String>, List<RightError>>> =
                             if (all) {
                                 backend.applyAllTemplates()
                             } else {
-                                backend.applyTemplates(templateIds)
+                                backend.applyTemplates(rightIds)
                             }
                         val result = TemplateApplicationsRest(
                             templateApplication =
-                            appliedMap.entries.map { e: Map.Entry<Int, Pair<List<String>, List<RightError>>> ->
+                            appliedMap.entries.map { e: Map.Entry<String, Pair<List<String>, List<RightError>>> ->
                                 TemplateApplicationRest(
-                                    templateId = e.key,
+                                    rightId = e.key,
                                     metadataIds = e.value.first,
                                     errors = e.value.second.map { it.toRest() },
                                     numberOfAppliedEntries = e.value.first.size
@@ -193,28 +212,29 @@ fun Routing.templateRoutes(
 
             post("{id}/bookmarks") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
+                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks")
+                        .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val templateId = call.parameters["id"]?.toInt()
+                        val rightId = call.parameters["id"]
                         val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
                         val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
-                        span.setAttribute("templateId", templateId?.toString() ?: "null")
+                        span.setAttribute("rightId", rightId ?: "null")
                         span.setAttribute("deleteOld", deleteOld)
                         span.setAttribute("bookmarkIds", bookmarkIds?.toString() ?: "null")
-                        if (templateId == null || bookmarkIds == null) {
+                        if (rightId == null || bookmarkIds == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                         } else {
                             if (deleteOld) {
-                                backend.deleteBookmarkTemplatePairsByTemplateId(templateId)
+                                backend.deleteBookmarkTemplatePairsByRightId(rightId)
                             }
                             val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
                                 bookmarkIds.map {
                                     BookmarkTemplate(
                                         bookmarkId = it,
-                                        templateId = templateId,
+                                        rightId = rightId,
                                     )
                                 }
                             )
@@ -235,16 +255,90 @@ fun Routing.templateRoutes(
             }
 
             /**
-             * Delete Right by Template-ID.
+             * Return all bookmarks connected to a given RightId.
              */
-            delete("{id}") {
-                val span = tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+            get("{id}/bookmarks") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val templateId = call.parameters["id"]?.toInt()
-                        span.setAttribute("templateId", templateId?.toString() ?: "null")
-                        if (templateId == null) {
+                        val rightId = call.parameters["id"]
+                        span.setAttribute("rightId", rightId ?: "null")
+                        if (rightId == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            val bookmarks: List<Bookmark> = backend.getBookmarksByRightId(rightId)
+                            span.setStatus(StatusCode.OK)
+                            call.respond(bookmarks.map { it.toRest() })
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            /**
+             * Return Template for a given RightId.
+             */
+            get("{id}") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val rightId = call.parameters["id"]
+                        span.setAttribute("rightId", rightId ?: "null")
+                        if (rightId == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
+                        } else {
+                            val right: ItemRight? = backend.getRightById(rightId)
+                            right?.let {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(right.toRest())
+                            } ?: let {
+                                span.setStatus(StatusCode.ERROR)
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    ApiError.notFoundError(
+                                        detail = "Für das Template mit Id: $rightId existiert kein Eintrag.",
+                                    )
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            /**
+             * Delete Template by RightId.
+             */
+            delete("{id}") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val rightId = call.parameters["id"]
+                        span.setAttribute("templateId", rightId ?: "null")
+                        if (rightId == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(
                                 HttpStatusCode.BadRequest,
@@ -253,7 +347,7 @@ fun Routing.templateRoutes(
                                 ),
                             )
                         } else {
-                            val entriesDeleted = backend.deleteRightByTemplateId(templateId)
+                            val entriesDeleted = backend.deleteRight(rightId)
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)
                                 call.respond(HttpStatusCode.OK)
@@ -262,7 +356,7 @@ fun Routing.templateRoutes(
                                 call.respond(
                                     HttpStatusCode.NotFound,
                                     ApiError.notFoundError(
-                                        detail = "Für die TemplateId $templateId existiert kein Eintrag.",
+                                        detail = "Für die TemplateId $rightId existiert kein Eintrag.",
                                     ),
                                 )
                             }
@@ -282,81 +376,11 @@ fun Routing.templateRoutes(
             }
         }
 
-        /**
-         * Return all bookmarks connected to Templated Id.
-         */
-        get("{id}/bookmarks") {
-            val span =
-                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateId = call.parameters["id"]?.toInt()
-                    span.setAttribute("templateId", templateId?.toString() ?: "null")
-                    if (templateId == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                    } else {
-                        val bookmarks: List<Bookmark> = backend.getBookmarksByTemplateId(templateId)
-                        span.setStatus(StatusCode.OK)
-                        call.respond(bookmarks.map { it.toRest() })
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
-
-        /**
-         * Return Template for a given Template-ID.
-         */
-        get("{id}") {
-            val span =
-                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}").setSpanKind(SpanKind.SERVER).startSpan()
-            withContext(span.asContextElement()) {
-                try {
-                    val templateId = call.parameters["id"]?.toInt()
-                    span.setAttribute("templateId", templateId?.toString() ?: "null")
-                    if (templateId == null) {
-                        span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
-                    } else {
-                        val right: ItemRight? = backend.getRightByTemplateId(templateId)
-                        right?.let {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(right.toRest())
-                        } ?: let {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für das Template mit Id: $templateId existiert kein Eintrag.",
-                                )
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        ApiError.internalServerError(),
-                    )
-                } finally {
-                    span.end()
-                }
-            }
-        }
-
         route("/list") {
             get {
-                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/template/list").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/list").setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
