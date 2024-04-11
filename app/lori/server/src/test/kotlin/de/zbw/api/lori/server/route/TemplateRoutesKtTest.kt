@@ -128,7 +128,7 @@ class TemplateRoutesKtTest {
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy()))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(isTemplate = true, templateName = "name")))
             }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
         }
@@ -174,7 +174,7 @@ class TemplateRoutesKtTest {
             val response = client.put("/api/v1/template") {
                 header(HttpHeaders.Accept, ContentType.Application.Json)
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy()))
+                setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(isTemplate = true, templateName = "name")))
             }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }

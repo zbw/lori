@@ -502,8 +502,9 @@ fun SearchQueryResult.toRest(
         }.toList(),
         templateNameWithCount = this.templateNamesToOcc.entries.map {
             TemplateNameWithCountRest(
-                templateName = it.key,
-                count = it.value,
+                templateName = it.value.first,
+                count = it.value.second,
+                rightId = it.key,
             )
         }
     )

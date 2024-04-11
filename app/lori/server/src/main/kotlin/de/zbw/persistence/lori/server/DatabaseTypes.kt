@@ -2,7 +2,6 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.PublicationType
-import java.time.OffsetDateTime
 
 /**
  * Types that represent results of db queries.

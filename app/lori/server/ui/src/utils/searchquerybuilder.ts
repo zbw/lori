@@ -5,7 +5,7 @@ import {
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,
-  TemplateIdWithCountRest,
+  TemplateNameWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import date_utils from "@/utils/date_utils";
@@ -120,26 +120,27 @@ export default {
     bookmark.filterTemplateId.forEach((v: string, index: number): void => {
       searchStore.templateIdReceived[index] = {
         count: 0,
-        templateId: v,
-      } as TemplateIdWithCountRest;
+        templateName: "",
+        rightId: v,
+      } as TemplateNameWithCountRest;
     });
   },
 
   buildTemplateIdFilter(searchStore: any): string | undefined {
-    const templateIds: Array<string> = [];
+    const rightIds: Array<string> = [];
     searchStore.templateIdIdx.forEach(
       (i: boolean | undefined, index: number): void => {
         if (i) {
-          templateIds.push(searchStore.templateIdReceived[index].templateId);
+          rightIds.push(searchStore.templateIdReceived[index].rightId);
         }
       },
     );
     // Remind selected ids, for resetting the filter afterwards correctly.
-    searchStore.templateIdSelectedLastSearch = templateIds;
-    if (templateIds.length == 0) {
+    searchStore.templateIdSelectedLastSearch = rightIds;
+    if (rightIds.length == 0) {
       return undefined;
     } else {
-      return templateIds.join(",");
+      return rightIds.join(",");
     }
   },
 

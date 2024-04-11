@@ -397,7 +397,7 @@ class RestConverterTest {
             hasZbwUserAgreement = false,
             paketSigels = mapOf("sigel1" to 1),
             publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
-            templateNamesToOcc = mapOf("name" to 2),
+            templateNamesToOcc = mapOf("rightId" to ("name" to 2)),
             zdbIds = mapOf("zdb1" to 1),
         )
         val expected = ItemInformation(
@@ -433,6 +433,7 @@ class RestConverterTest {
                 TemplateNameWithCountRest(
                     count = 2,
                     templateName = "name",
+                    rightId = "rightId",
                 )
             )
         )

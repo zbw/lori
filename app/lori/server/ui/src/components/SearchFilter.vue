@@ -86,7 +86,8 @@ export default defineComponent({
         searchStore.publicationTypeIdx.filter((element) => element).length >
           0 ||
         searchStore.noRightInformation ||
-        searchStore.searchTerm
+        searchStore.searchTerm ||
+        searchStore.isLastSearchForTemplates
       );
     });
 
@@ -547,7 +548,10 @@ export default defineComponent({
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
-                <v-list-item v-bind="props" title="Template-IDs"></v-list-item>
+                <v-list-item
+                  v-bind="props"
+                  title="Template-Namen"
+                ></v-list-item>
               </template>
               <h6></h6>
               <v-checkbox

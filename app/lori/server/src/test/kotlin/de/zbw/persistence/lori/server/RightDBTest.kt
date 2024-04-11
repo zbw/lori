@@ -15,6 +15,8 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.postgresql.util.PSQLException
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -122,6 +124,30 @@ class RightDBTest : DatabaseTest() {
             mockk(),
         )
         dbConnector.rightDB.getRightsByIds(listOf("1"))
+    }
+
+    @Test
+    fun testGetRightsByTemplateName() {
+        val templateName1 = "foobar"
+        val templateName2 = "baz"
+        val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2))
+        val receivedRightIds = dbConnector.rightDB.getRightsByTemplateNames(listOf(templateName2, templateName1))
+            .map { it.rightId }
+            .toSet()
+
+        assertThat(
+            receivedRightIds,
+            `is`(setOf(rightId1, rightId2)),
+        )
+    }
+
+    @Test(expectedExceptions = [PSQLException::class])
+    fun testUniqueConstraintOnTemplates() {
+        val templateName1 = "foobar"
+        dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        Assert.fail()
     }
 
     companion object {

@@ -591,11 +591,6 @@ export default defineComponent({
         return props.right.rightId;
       }
     });
-    const computedTemplateId = computed(() =>
-      props.right == undefined || !props.right.isTemplate
-        ? "invalid"
-        : props.right.rightId,
-    );
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
@@ -709,13 +704,13 @@ export default defineComponent({
 
     // Load Bookmarks
     const loadBookmarks = () => {
-      if (computedTemplateId.value == undefined) {
+      if (computedRightId.value == undefined) {
         generalAlertErrorMsg.value =
           "Error while loading bookmarks. Invalid Template ID.";
         generalAlertError.value = true;
       } else {
         templateApi
-          .getBookmarksByTemplateId(computedTemplateId.value)
+          .getBookmarksByTemplateId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
             bookmarkItems.value = bookmarks;
           })
@@ -771,7 +766,6 @@ export default defineComponent({
       bookmarkHeaders,
       computedMetadataId,
       computedRightId,
-      computedTemplateId,
       dialogDeleteRight,
       dialogDeleteTemplate,
       endDateFormatted,
@@ -871,7 +865,7 @@ export default defineComponent({
           :index="index"
           :is-template="isTemplate"
           :metadataId="computedMetadataId"
-          :right-id="computedTemplateId"
+          :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:templateDeleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
@@ -886,27 +880,6 @@ export default defineComponent({
           </v-expansion-panel-title>
           <v-expansion-panel-text>
             <v-container fluid>
-              <v-row>
-                <v-col cols="4"> Template-Id </v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-if="isNew"
-                    ref="templateId"
-                    :disabled="isNew"
-                    hint="Template Id"
-                    label="Wird automatisch generiert"
-                    variant="outlined"
-                  ></v-text-field>
-                  <v-text-field
-                    v-if="!isNew"
-                    ref="templateId"
-                    v-model="computedTemplateId"
-                    disabled
-                    hint="Template Id"
-                    variant="outlined"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
               <v-row>
                 <v-col cols="4"> Template Name </v-col>
                 <v-col cols="8">

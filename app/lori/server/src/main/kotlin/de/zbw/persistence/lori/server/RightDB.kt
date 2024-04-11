@@ -11,6 +11,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_N
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_TEMPLATE_NAME
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ZBW_USER_AGREEMENT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
@@ -345,29 +346,31 @@ class RightDB(
         }
     }
 
-    //fun getExceptionsByTemplateId(templateId: Int): List<ItemRight> {
-    //    val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_IDS).apply {
-    //        this.setInt(1, templateId)
-    //    }
+    fun getRightsByTemplateNames(templateNames: List<String>): List<ItemRight> {
+        if (templateNames.isEmpty()) {
+            return emptyList()
+        }
 
-    //    val span = tracer.spanBuilder("getExceptionsByTemplateId").startSpan()
-    //    val rs = try {
-    //        span.makeCurrent()
-    //        runInTransaction(connection) { prepStmt.executeQuery() }
-    //    } finally {
-    //        span.end()
-    //    }
-    //    return generateSequence {
-    //        if (rs.next()) {
-    //            extractRightFromRS(rs, groupDB)
-    //        } else null
-    //    }.takeWhile { true }.toList()
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME).apply {
+            this.setArray(1, connection.createArrayOf("varchar", templateNames.toTypedArray()))
+        }
 
-    //}
+        val span = tracer.spanBuilder("getRightIdsByTemplateNames").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+        return generateSequence {
+            if (rs.next()) {
+                extractRightFromRS(rs, groupDB)
+            } else null
+        }.takeWhile { true }.toList()
+    }
 
     companion object {
         private const val COLUMN_IS_TEMPLATE = "is_template"
-        //private const val COLUMN_EXCEPTION_FROM = "exception_from"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -456,18 +459,6 @@ class RightDB(
             "FROM $TABLE_NAME_ITEM_RIGHT r " +
             "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
-        //const val STATEMENT_GET_EXCEPTIONS_BY_TEMPLATE_ID =
-        //    "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
-        //        "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
-        //        "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-        //        "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-        //        "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-        //        "basis_access_state, notes_process_documentation, notes_management_related," +
-        //        "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on" +
-        //        " FROM $TABLE_NAME_ITEM_RIGHT" +
-        //        " WHERE $COLUMN_EXCEPTION_FROM = ANY(?)"
-
-
         const val STATEMENT_GET_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
@@ -479,6 +470,17 @@ class RightDB(
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_IS_TEMPLATE = true" +
                 " ORDER BY $COLUMN_RIGHT_ID LIMIT ? OFFSET ?"
+
+        const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
+            "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
+                "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
+                "basis_access_state, notes_process_documentation, notes_management_related," +
+                "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on" +
+                " FROM $TABLE_NAME_ITEM_RIGHT" +
+                " WHERE $COLUMN_RIGHT_TEMPLATE_NAME = ANY(?)"
 
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +

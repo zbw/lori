@@ -299,6 +299,7 @@ export default defineComponent({
         templateId +
         " wurden ausgeführt.";
       alertIsActive.value = true;
+      searchStore.isLastSearchForTemplates = true;
       executeSearchByTemplateId();
     };
 
@@ -335,6 +336,7 @@ export default defineComponent({
     };
 
     const executeSearchByMetadataId = (searchTerm: string) => {
+      searchStore.isLastSearchForTemplates = false;
       api
         .searchQuery(
           searchTerm,
@@ -399,6 +401,7 @@ export default defineComponent({
         searchStore.searchTerm = "";
       }
       searchStore.lastSearchTerm = searchStore.searchTerm;
+      searchStore.isLastSearchForTemplates = false;
       templateSearchIsActive.value = false;
       currentItem.value = {} as ItemRest;
       searchQuery();
@@ -564,16 +567,16 @@ export default defineComponent({
         searchStore.zdbIdSelectedLastSearch,
         searchStore.zdbIdIdx,
       );
-      // Reset Template Id
+      // Reset Template Names
       searchStore.templateIdReceived =
-        response.templateIdWithCount != undefined
-          ? response.templateIdWithCount
+        response.templateNameWithCount != undefined
+          ? response.templateNameWithCount
           : Array(0);
       searchStore.templateIdIdx = Array(
         searchStore.templateIdReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateIdReceived.map((e) => e.templateId),
+        searchStore.templateIdReceived.map((e) => e.rightId),
         searchStore.templateIdSelectedLastSearch,
         searchStore.templateIdIdx,
       );

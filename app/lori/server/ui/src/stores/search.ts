@@ -6,11 +6,12 @@ import {
   PublicationTypeWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
-import {TemplateIdWithCountRest} from "@/generated-sources/openapi/models/TemplateIdWithCountRest";
+import { TemplateNameWithCountRest } from "@/generated-sources/openapi/models/TemplateNameWithCountRest";
 
 export const useSearchStore = defineStore("search", () => {
   const searchTerm = ref("");
   const lastSearchTerm = ref("");
+  const isLastSearchForTemplates = ref(false);
 
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
   const accessStateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
@@ -56,7 +57,7 @@ export const useSearchStore = defineStore("search", () => {
   const zdbIdSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const templateIdIdx: Ref<Array<boolean>> = ref([]);
-  const templateIdReceived: Ref<Array<TemplateIdWithCountRest>> = ref([]);
+  const templateIdReceived: Ref<Array<TemplateNameWithCountRest>> = ref([]);
   const templateIdSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   return {
@@ -74,6 +75,7 @@ export const useSearchStore = defineStore("search", () => {
     hasOpenContentLicence,
     hasZbwUserAgreement,
     noRightInformation,
+    isLastSearchForTemplates,
     paketSigelIdIdx,
     paketSigelIdReceived,
     paketSigelSelectedLastSearch,

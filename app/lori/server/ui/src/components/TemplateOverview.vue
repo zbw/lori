@@ -96,11 +96,11 @@ export default defineComponent({
     };
 
     const applyTemplate = (template: RightRest) => {
-      if (template.templateId == undefined) {
+      if (template.rightId == undefined) {
         return;
       }
       templateApi
-        .applyTemplates([template.templateId])
+        .applyTemplates([template.rightId])
         .then((r: TemplateApplicationsRest) => {
           alertSuccessful.value = true;
           alertSuccessfulMsg.value =

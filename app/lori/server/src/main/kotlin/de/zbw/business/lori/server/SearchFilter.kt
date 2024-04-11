@@ -264,7 +264,7 @@ class TemplateIdFilter(
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String = "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " + // TODO(CB): Not sure if this is so smart
         rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.${dbColumnName} = ?"
+            "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName = ?"
         }
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {

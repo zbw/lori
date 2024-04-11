@@ -18,18 +18,16 @@ export default {
   addTemplate(right: RightRest): Promise<RightIdCreated> {
     return templateApi.addTemplate({ body: right });
   },
-  applyTemplates(
-    templateIds: Array<string>,
-  ): Promise<TemplateApplicationsRest> {
-    return templateApi.applyTemplateIds({
+  applyTemplates(rightIds: Array<string>): Promise<TemplateApplicationsRest> {
+    return templateApi.applyRightIds({
       body: {
-        rightIds: templateIds,
+        rightIds: rightIds,
       },
     });
   },
-  deleteTemplate(templateId: string): Promise<void> {
-    return templateApi.deleteTemplateById({
-      id: templateId,
+  deleteTemplate(rightId: string): Promise<void> {
+    return templateApi.deleteTemplateByRightId({
+      id: rightId,
     });
   },
   getTemplateById(templateId: string): Promise<RightRest> {
@@ -46,18 +44,18 @@ export default {
   updateTemplate(template: RightRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
   },
-  getBookmarksByTemplateId(templateId: string): Promise<Array<BookmarkRest>> {
-    return templateApi.getBookmarksByTemplateId({
-      id: templateId,
+  getBookmarksByTemplateId(rightId: string): Promise<Array<BookmarkRest>> {
+    return templateApi.getBookmarksByRightId({
+      id: rightId,
     });
   },
   addBookmarksByTemplateId(
-    templateId: string,
+    rightId: string,
     bookmarkIds: Array<number>,
     deleteOld: boolean,
   ): Promise<Array<BookmarkTemplateRest>> {
-    return templateApi.addBookmarksByTemplateId({
-      id: templateId,
+    return templateApi.addBookmarksByRightId({
+      id: rightId,
       deleteOld: deleteOld,
       body: {
         bookmarkIds: bookmarkIds,
@@ -65,12 +63,12 @@ export default {
     });
   },
   getItemsByTemplateId(
-    templateId: string,
+    rightId: string,
     limit: number,
     offset: number,
   ): Promise<ItemInformation> {
-    return templateApi.getItemsByTemplateId({
-      id: templateId,
+    return templateApi.getItemsByRightId({
+      id: rightId,
       limit: limit,
       offset: offset,
     });
