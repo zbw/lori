@@ -56,6 +56,25 @@ class BookmarkTemplateDB(
         }.takeWhile { true }.toList()
     }
 
+    fun getBookmarkIdsByRightIds(rightIds: List<String>): Set<Int> {
+        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS).apply {
+            this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
+        }
+        val span = tracer.spanBuilder("getBookmarkIdsByRightIds").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+
+        return generateSequence {
+            if (rs.next()) {
+                rs.getInt(1)
+            } else null
+        }.takeWhile { true }.toSet()
+    }
+
     /**
      * Get all bookmark ids that are a connected to a given template-id.
      */
@@ -154,6 +173,12 @@ class BookmarkTemplateDB(
             "SELECT $COLUMN_BOOKMARK_ID" +
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
+
+        const val STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS =
+            "SELECT $COLUMN_BOOKMARK_ID" +
+                " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
+                " WHERE $COLUMN_RIGHT_ID = ANY(?)"
+
 
         const val STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID =
             "SELECT $COLUMN_RIGHT_ID" +

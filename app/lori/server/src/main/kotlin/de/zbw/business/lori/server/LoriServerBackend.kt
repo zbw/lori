@@ -462,8 +462,15 @@ class LoriServerBackend(
             )
         // Receive all bookmark ids
         val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
-        // Get search results for each bookmark
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+
+        // Receive exception templates
+        val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
+        val bookmarksIdsExceptions: Set<Int> =
+            dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
+        val bookmarksExceptions: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
+
+        // Get search results for each bookmark
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
             searchQuery(
                 searchTerm = b.searchTerm,
