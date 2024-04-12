@@ -35,13 +35,13 @@ class BookmarkTemplateDB(
     }
 
     /**
-     * Get all bookmark ids that are a connected to a given template-id.
+     * Get all bookmark ids that are a connected to a given RightId.
      */
     fun getBookmarkIdsByRightId(rightId: String): List<Int> {
         val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID).apply {
             this.setString(1, rightId)
         }
-        val span = tracer.spanBuilder("getBookmarkIdsByTemplateId").startSpan()
+        val span = tracer.spanBuilder("getBookmarkIdsByRightId").startSpan()
         val rs = try {
             span.makeCurrent()
             runInTransaction(connection) { prepStmt.executeQuery() }

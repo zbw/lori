@@ -3,7 +3,6 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
-import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -175,7 +174,7 @@ class BookmarkDB(
                 bookmarkId = rs.getInt(1),
                 bookmarkName = rs.getString(2),
                 description = rs.getString(3),
-                searchPairs = LoriServerBackend.parseValidSearchPairs(rs.getString(4)),
+                searchTerm = rs.getString(4),
                 publicationDateFilter = PublicationDateFilter.fromString(rs.getString(5)),
                 accessStateFilter = AccessStateFilter.fromString(rs.getString(6)),
                 temporalValidityFilter = TemporalValidityFilter.fromString(rs.getString(7)),
@@ -195,8 +194,8 @@ class BookmarkDB(
         ): PreparedStatement {
             return prepStmt.apply {
                 this.setString(1, bookmark.bookmarkName)
-                this.setIfNotNull(2, bookmark.searchPairs) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, LoriServerBackend.searchPairsToString(value))
+                this.setIfNotNull(2, bookmark.searchTerm) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(3, bookmark.description) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

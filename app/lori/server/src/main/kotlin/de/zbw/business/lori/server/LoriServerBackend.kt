@@ -466,7 +466,7 @@ class LoriServerBackend(
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
             searchQuery(
-                searchTerm = b.searchPairs?.let { searchPairsToString(it) } ?: "",
+                searchTerm = b.searchTerm,
                 limit = null,
                 offset = null,
                 metadataSearchFilter = listOfNotNull(

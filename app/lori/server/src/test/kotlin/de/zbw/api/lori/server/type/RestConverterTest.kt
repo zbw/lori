@@ -654,7 +654,7 @@ class RestConverterTest {
             bookmarkId = 1,
             bookmarkName = "test",
             description = "some description",
-            searchPairs = LoriServerBackend.parseValidSearchPairs("tit:someTitle"),
+            searchTerm = "tit:someTitle",
             publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
             publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
             accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
