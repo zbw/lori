@@ -105,19 +105,17 @@ export default {
     }
   },
 
-  setTemplateIdFilter(searchStore: any, bookmark: BookmarkRest): void {
+  setRightIdFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (
-      bookmark.filterTemplateId == undefined ||
-      bookmark.filterTemplateId.length == 0
+      bookmark.filterRightId == undefined ||
+      bookmark.filterRightId.length == 0
     ) {
       searchStore.templateIdIdx = [];
       return;
     }
-    searchStore.templateIdIdx = Array(bookmark.filterTemplateId.length).fill(
-      true,
-    );
-    searchStore.templateIdReceived = Array(bookmark.filterTemplateId.length);
-    bookmark.filterTemplateId.forEach((v: string, index: number): void => {
+    searchStore.templateIdIdx = Array(bookmark.filterRightId.length).fill(true);
+    searchStore.templateIdReceived = Array(bookmark.filterRightId.length);
+    bookmark.filterRightId.forEach((v: string, index: number): void => {
       searchStore.templateIdReceived[index] = {
         count: 0,
         templateName: "",

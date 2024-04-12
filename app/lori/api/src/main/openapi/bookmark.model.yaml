@@ -34,7 +34,7 @@ BookmarkRawRest:
       type: string
     filterNoRightInformation:
       type: string
-    filterTemplateId:
+    filterRightId:
       type: string
 
 BookmarkIdCreated:
@@ -96,7 +96,7 @@ BookmarkRest:
         type: string
     filterNoRightInformation:
       type: boolean
-    filterTemplateId:
+    filterRightId:
       type: array
       items:
         type: string

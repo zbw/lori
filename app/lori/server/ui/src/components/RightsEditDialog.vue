@@ -398,7 +398,7 @@ export default defineComponent({
      */
     const updateBookmarks = (rightId: string, callback: () => void) => {
       templateApi
-        .addBookmarksByTemplateId(
+        .addBookmarksByRightId(
           rightId,
           bookmarkItems.value
             .map((elem) => elem.bookmarkId)
@@ -710,7 +710,7 @@ export default defineComponent({
         generalAlertError.value = true;
       } else {
         templateApi
-          .getBookmarksByTemplateId(computedRightId.value)
+          .getBookmarksByRightId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
             bookmarkItems.value = bookmarks;
           })

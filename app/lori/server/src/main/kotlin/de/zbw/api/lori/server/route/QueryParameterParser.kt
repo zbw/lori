@@ -9,7 +9,7 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.TemplateIdFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.AccessState
@@ -150,11 +150,11 @@ object QueryParameterParser {
             }
         }
 
-    fun parseTemplateIdFilter(s: String?): TemplateIdFilter? =
+    fun parseRightIdFilter(s: String?): RightIdFilter? =
         s?.split(",".toRegex())
             ?.takeIf {
                 it.isNotEmpty()
             }?.let {
-                TemplateIdFilter(it)
+                RightIdFilter(it)
             }
 }

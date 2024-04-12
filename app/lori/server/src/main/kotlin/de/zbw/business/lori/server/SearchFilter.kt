@@ -259,7 +259,7 @@ class EndDateFilter(
     }
 }
 
-class TemplateIdFilter(
+class RightIdFilter(
     val rightIds: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String = "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " + // TODO(CB): Not sure if this is so smart

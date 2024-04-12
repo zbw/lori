@@ -149,7 +149,7 @@ export default defineComponent({
     // Page changes
     const handlePageChange = () => {
       if (templateSearchIsActive.value) {
-        executeSearchByTemplateId();
+        executeSearchByRightId();
       } else {
         searchQuery();
       }
@@ -158,7 +158,7 @@ export default defineComponent({
     const handlePageSizeChange = () => {
       currentPage.value = 1;
       if (templateSearchIsActive.value) {
-        executeSearchByTemplateId();
+        executeSearchByRightId();
       } else {
         searchQuery();
       }
@@ -288,22 +288,20 @@ export default defineComponent({
     const alertMsg = ref("");
 
     const templateSearchIsActive = ref(false);
-    const currentTemplateId = ref(0);
-    const initSearchByTemplateId = (templateId: number) => {
+    const initSearchByRightId = (rightId: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
-      currentTemplateId.value = templateId;
       closeTemplateOverview();
       alertMsg.value =
         "Alle gespeicherten Suchen für Template-ID " +
-        templateId +
+        rightId +
         " wurden ausgeführt.";
       alertIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
-      executeSearchByTemplateId();
+      executeSearchByRightId(rightId);
     };
 
-    const executeSearchByTemplateId = () => {
+    const executeSearchByRightId = (rightId: string) => {
       api
         .searchQuery(
           "",
@@ -321,7 +319,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
-          currentTemplateId.value.toString(), // templateId
+          rightId,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -380,7 +378,9 @@ export default defineComponent({
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
-      searchquerybuilder.setTemplateIdFilter(searchStore, bookmark);
+      searchquerybuilder.setRightIdFilter(searchStore, bookmark);
+      searchStore.searchTerm =
+        bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
       alertMsg.value =
         "Eine gespeicherte Suche '" +
@@ -694,7 +694,7 @@ export default defineComponent({
       closeGroupDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
-      initSearchByTemplateId,
+      initSearchByRightId,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -741,7 +741,7 @@ export default defineComponent({
       v-on:close="closeTemplateOverview"
     >
       <TemplateOverview
-        v-on:getItemsByTemplateId="initSearchByTemplateId"
+        v-on:getItemsByRightId="initSearchByRightId"
       ></TemplateOverview>
     </v-dialog>
     <v-dialog

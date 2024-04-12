@@ -44,12 +44,12 @@ export default {
   updateTemplate(template: RightRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
   },
-  getBookmarksByTemplateId(rightId: string): Promise<Array<BookmarkRest>> {
+  getBookmarksByRightId(rightId: string): Promise<Array<BookmarkRest>> {
     return templateApi.getBookmarksByRightId({
       id: rightId,
     });
   },
-  addBookmarksByTemplateId(
+  addBookmarksByRightId(
     rightId: string,
     bookmarkIds: Array<number>,
     deleteOld: boolean,
@@ -62,7 +62,7 @@ export default {
       },
     });
   },
-  getItemsByTemplateId(
+  getItemsByRightId(
     rightId: string,
     limit: number,
     offset: number,
