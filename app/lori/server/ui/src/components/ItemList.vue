@@ -309,7 +309,7 @@ export default defineComponent({
           "",
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
-          currentPage.value,
+          pageSize.value,
           undefined,
           undefined,
           undefined,
