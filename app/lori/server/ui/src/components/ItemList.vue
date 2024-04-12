@@ -141,6 +141,7 @@ export default defineComponent({
     const selectedHeaders = ref(headers.slice(0, 6));
 
     const currentPage = ref(1);
+    const currentRightId = ref("");
     const pageSize = ref(25); // Default page size is 25
     const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
     const totalPages = ref(0);
@@ -149,7 +150,7 @@ export default defineComponent({
     // Page changes
     const handlePageChange = () => {
       if (templateSearchIsActive.value) {
-        executeSearchByRightId();
+        executeSearchByRightId(currentRightId.value);
       } else {
         searchQuery();
       }
@@ -158,7 +159,7 @@ export default defineComponent({
     const handlePageSizeChange = () => {
       currentPage.value = 1;
       if (templateSearchIsActive.value) {
-        executeSearchByRightId();
+        executeSearchByRightId(currentRightId.value);
       } else {
         searchQuery();
       }
@@ -291,6 +292,7 @@ export default defineComponent({
     const initSearchByRightId = (rightId: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
+      currentRightId.value = rightId;
       closeTemplateOverview();
       alertMsg.value =
         "Alle gespeicherten Suchen für Template-ID " +
@@ -403,6 +405,7 @@ export default defineComponent({
       searchStore.lastSearchTerm = searchStore.searchTerm;
       searchStore.isLastSearchForTemplates = false;
       templateSearchIsActive.value = false;
+      currentRightId.value = "";
       currentItem.value = {} as ItemRest;
       searchQuery();
     };
@@ -425,7 +428,7 @@ export default defineComponent({
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
-          searchquerybuilder.buildTemplateIdFilter(searchStore),
+          searchquerybuilder.buildRightIdFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -568,17 +571,17 @@ export default defineComponent({
         searchStore.zdbIdIdx,
       );
       // Reset Template Names
-      searchStore.templateIdReceived =
+      searchStore.templateNameReceived =
         response.templateNameWithCount != undefined
           ? response.templateNameWithCount
           : Array(0);
-      searchStore.templateIdIdx = Array(
-        searchStore.templateIdReceived.length,
+      searchStore.templateNameIdx = Array(
+        searchStore.templateNameReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateIdReceived.map((e) => e.rightId),
-        searchStore.templateIdSelectedLastSearch,
-        searchStore.templateIdIdx,
+        searchStore.templateNameReceived.map((e) => e.rightId),
+        searchStore.templateNameSelectedLastSearch,
+        searchStore.templateNameIdx,
       );
     };
 

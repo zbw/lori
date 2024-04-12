@@ -56,9 +56,9 @@ export const useSearchStore = defineStore("search", () => {
   const zdbIdReceived: Ref<Array<ZdbIdWithCountRest>> = ref([]);
   const zdbIdSelectedLastSearch: Ref<Array<string>> = ref([]);
 
-  const templateIdIdx: Ref<Array<boolean>> = ref([]);
-  const templateIdReceived: Ref<Array<TemplateNameWithCountRest>> = ref([]);
-  const templateIdSelectedLastSearch: Ref<Array<string>> = ref([]);
+  const templateNameIdx: Ref<Array<boolean>> = ref([]);
+  const templateNameReceived: Ref<Array<TemplateNameWithCountRest>> = ref([]);
+  const templateNameSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   return {
     lastSearchTerm,
@@ -85,9 +85,9 @@ export const useSearchStore = defineStore("search", () => {
     publicationDateFrom,
     publicationDateTo,
     searchTerm,
-    templateIdIdx,
-    templateIdReceived,
-    templateIdSelectedLastSearch,
+    templateNameIdx,
+    templateNameReceived,
+    templateNameSelectedLastSearch,
     temporalEventState,
     temporalValidityFilterFuture,
     temporalValidityFilterPast,

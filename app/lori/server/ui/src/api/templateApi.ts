@@ -30,9 +30,9 @@ export default {
       id: rightId,
     });
   },
-  getTemplateById(templateId: string): Promise<RightRest> {
+  getTemplateById(rightId: string): Promise<RightRest> {
     return templateApi.getTemplateById({
-      id: templateId,
+      id: rightId,
     });
   },
   getTemplateList(offset: number, limit: number): Promise<Array<RightRest>> {

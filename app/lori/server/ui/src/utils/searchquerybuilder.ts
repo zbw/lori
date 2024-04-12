@@ -110,13 +110,13 @@ export default {
       bookmark.filterRightId == undefined ||
       bookmark.filterRightId.length == 0
     ) {
-      searchStore.templateIdIdx = [];
+      searchStore.templateNameIdx = [];
       return;
     }
-    searchStore.templateIdIdx = Array(bookmark.filterRightId.length).fill(true);
-    searchStore.templateIdReceived = Array(bookmark.filterRightId.length);
+    searchStore.templateNameIdx = Array(bookmark.filterRightId.length).fill(true);
+    searchStore.templateNameReceived = Array(bookmark.filterRightId.length);
     bookmark.filterRightId.forEach((v: string, index: number): void => {
-      searchStore.templateIdReceived[index] = {
+      searchStore.templateNameReceived[index] = {
         count: 0,
         templateName: "",
         rightId: v,
@@ -124,17 +124,17 @@ export default {
     });
   },
 
-  buildTemplateIdFilter(searchStore: any): string | undefined {
+  buildRightIdFilter(searchStore: any): string | undefined {
     const rightIds: Array<string> = [];
-    searchStore.templateIdIdx.forEach(
+    searchStore.templateNameIdx.forEach(
       (i: boolean | undefined, index: number): void => {
         if (i) {
-          rightIds.push(searchStore.templateIdReceived[index].rightId);
+          rightIds.push(searchStore.templateNameReceived[index].rightId);
         }
       },
     );
     // Remind selected ids, for resetting the filter afterwards correctly.
-    searchStore.templateIdSelectedLastSearch = rightIds;
+    searchStore.templateNameSelectedLastSearch = rightIds;
     if (rightIds.length == 0) {
       return undefined;
     } else {
