@@ -910,6 +910,7 @@ class LoriServerBackendTest : DatabaseTest() {
             createdBy = "user1",
             createdOn = NOW,
             endDate = TODAY,
+            exceptionFrom = null,
             groupIds = emptyList(),
             isTemplate = false,
             lastAppliedOn = null,

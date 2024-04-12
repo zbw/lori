@@ -513,6 +513,7 @@ class RestConverterTest {
                 ZoneOffset.UTC,
             ),
             endDate = TODAY,
+            exceptionFrom = null,
             groupIds = null,
             isTemplate = true,
             lastAppliedOn = OffsetDateTime.of(

@@ -653,6 +653,7 @@ class RightFilterTest : DatabaseTest() {
                 ZoneOffset.UTC,
             ),
             endDate = RestConverterTest.TODAY,
+            exceptionFrom = null,
             isTemplate = false,
             lastAppliedOn = OffsetDateTime.of(
                 2022,

@@ -43,6 +43,8 @@ RightRest:
     endDate:
       type: string
       format: date
+    exceptionFrom:
+      type: string
     groupIds:
       type: array
       items:

@@ -168,6 +168,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
+        exceptionFrom = exceptionFrom,
         groupIds = groupIds,
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,

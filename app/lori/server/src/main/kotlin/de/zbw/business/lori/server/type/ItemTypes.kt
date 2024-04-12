@@ -89,6 +89,7 @@ data class ItemRight(
     val createdBy: String?,
     val createdOn: OffsetDateTime?,
     val endDate: LocalDate?,
+    val exceptionFrom: String?,
     val groupIds: List<String>?,
     val isTemplate: Boolean,
     val lastAppliedOn: OffsetDateTime?,

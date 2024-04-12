@@ -140,6 +140,33 @@ class RightDBTest : DatabaseTest() {
             receivedRightIds,
             `is`(setOf(rightId1, rightId2)),
         )
+        // Clean up for other tests
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId2, rightId1))
+    }
+
+    @Test
+    fun testTemplateExceptions() {
+        val templateName1 = "foobar"
+        val templateName2 = "baz"
+        val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+
+        // Create Template which is an exception of the first one.
+        val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2, exceptionFrom = rightId1))
+
+        val exceptionRights: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId1)
+        assertThat(
+            exceptionRights.size,
+            `is`(1),
+        )
+
+        assertThat(
+            exceptionRights.first().rightId,
+            `is`(rightId2),
+        )
+
+        // Clean up for other tests
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId2))
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId1))
     }
 
     @Test(expectedExceptions = [PSQLException::class])
@@ -161,6 +188,7 @@ class RightDBTest : DatabaseTest() {
             createdBy = TEST_RIGHT.createdBy,
             createdOn = TEST_RIGHT.createdOn,
             endDate = TEST_RIGHT.endDate!!.plusDays(1),
+            exceptionFrom = null,
             groupIds = TEST_RIGHT.groupIds,
             isTemplate = true,
             lastUpdatedBy = "user4",
