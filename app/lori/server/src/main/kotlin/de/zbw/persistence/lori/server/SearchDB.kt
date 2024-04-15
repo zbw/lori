@@ -475,17 +475,25 @@ class SearchDB(
             } else ""
 
             val subquery = if (
-                searchExpression == null && rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
+                searchExpression == null &&
+                rightSearchFilters.isEmpty() &&
+                noRightInformationFilter == null && // TODO: Not necessary
+                metadataSearchFilters.isEmpty()
             ) {
                 buildSearchQuerySelect(rightSearchFilters) + " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
                         metadataSearchFilters,
                     )
             } else if (
-                rightSearchFilters.isEmpty() && noRightInformationFilter == null && metadataSearchFilters.isEmpty()
+                rightSearchFilters.isEmpty() &&
+                noRightInformationFilter == null && // TODO: Not necessary
+                metadataSearchFilters.isEmpty()
             ) {
                 TABLE_NAME_ITEM_METADATA
-            } else if (rightSearchFilters.isEmpty() && noRightInformationFilter == null) {
+            } else if (
+                rightSearchFilters.isEmpty() &&
+                noRightInformationFilter == null // TODO: Not necessary
+            ) {
                 "(" +
                     buildSearchQuerySelect(rightSearchFilters) +
                     " FROM $TABLE_NAME_ITEM_METADATA" +
@@ -655,24 +663,27 @@ class SearchDB(
             noRightInformationFilter: NoRightInformationFilter?,
             collectFacets: Boolean = false,
         ): String {
-
-            val metadataFilters = metadataSearchFilter.joinToString(separator = " AND ") { f ->
+            val metadataFilters: String = metadataSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
             }.takeIf { it.isNotBlank() } ?: ""
-            val noRightInformationFilterClause = noRightInformationFilter?.let {
-                if (metadataFilters.isBlank()) {
-                    " WHERE " + noRightInformationFilter.toWhereClause()
-                } else {
-                    " AND " + noRightInformationFilter.toWhereClause()
-                }
+            val noRightInformationFilterClause: String = noRightInformationFilter?.let {
+                    noRightInformationFilter.toWhereClause()
             } ?: ""
+            val whereClause = listOf(metadataFilters, noRightInformationFilterClause)
+                .filter{it.isNotBlank()}
+                .joinToString(separator = " AND ")
+                .takeIf {it.isNotBlank()}
+                ?.let{ " WHERE $it"}
+                ?: ""
+
+            /**
+             * metadataFilter: String?
+             * metadataExceptionFilter: String?
+             * noRightFilter: String?
+             * noRightExceptionFilter: String?
+             */
             val rightFilters = rightSearchFilter.joinToString(separator = " AND ") { f ->
                 f.toWhereClause()
-            }
-            val whereClause = if (metadataFilters.isBlank()) {
-                ""
-            } else {
-                " WHERE $metadataFilters"
             }
             val extendedRightFilter = if (rightFilters.isBlank()) {
                 rightFilters
@@ -693,8 +704,7 @@ class SearchDB(
                 " $joinItemRight $TABLE_NAME_ITEM_RIGHT" +
                 " ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
                 extendedRightFilter +
-                whereClause +
-                noRightInformationFilterClause
+                whereClause
         }
 
         private fun buildSearchQuerySelect(

@@ -122,7 +122,9 @@ export default defineComponent({
       searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
         () => false,
       );
-      searchStore.templateNameIdx = searchStore.templateNameIdx.map(() => false);
+      searchStore.templateNameIdx = searchStore.templateNameIdx.map(
+        () => false,
+      );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
       searchStore.noRightInformation = false;
       emit("startEmptySearch");
@@ -540,7 +542,7 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-checkbox
-                label="Keine Rechteeintrag"
+                label="Keine Rechteeinträge"
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.noRightInformation"

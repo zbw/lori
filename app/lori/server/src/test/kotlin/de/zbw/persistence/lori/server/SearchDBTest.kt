@@ -798,8 +798,8 @@ class SearchDBTest : DatabaseTest() {
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_OCCURRENCE_TEMPLATE_NAME_QUERY)
-    fun testBuildOccurrenceTemplateIdQuery(
-        values: Set<Int>,
+    fun testBuildOccurrenceTemplateNameQuery(
+        values: Set<String>,
         columnName: String,
         searchExpression: SearchExpression,
         metadataSearchFilters: List<MetadataSearchFilter>,
