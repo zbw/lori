@@ -590,7 +590,7 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
-                templateIdWithCount = emptyList(),
+                templateNameWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -614,7 +614,7 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
-                    templateIds = emptyMap(),
+                    templateNamesToOcc = emptyMap(),
                 )
                 )
         }
@@ -658,7 +658,7 @@ class ItemRoutesKtTest {
                 hasOpenContentLicence = false,
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
-                templateIdWithCount = emptyList(),
+                templateNameWithCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -682,7 +682,7 @@ class ItemRoutesKtTest {
                     hasOpenContentLicence = false,
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
-                    templateIds = emptyMap(),
+                    templateNamesToOcc = emptyMap(),
                 )
                 )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults

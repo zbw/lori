@@ -44,18 +44,24 @@ class FacetTest : DatabaseTest() {
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2000, 1, 1),
                 endDate = LocalDate.of(2000, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         itemZDB2 to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2001, 1, 1),
                 endDate = LocalDate.of(2001, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         itemZDB3 to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2002, 1, 1),
                 endDate = LocalDate.of(2002, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         itemSigel1 to listOf(
@@ -63,6 +69,8 @@ class FacetTest : DatabaseTest() {
                 accessState = AccessState.OPEN,
                 startDate = LocalDate.of(2003, 1, 1),
                 endDate = LocalDate.of(2003, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         itemSigel2 to listOf(
@@ -70,6 +78,8 @@ class FacetTest : DatabaseTest() {
                 accessState = AccessState.RESTRICTED,
                 startDate = LocalDate.of(2004, 1, 1),
                 endDate = LocalDate.of(2004, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         itemSigel3 to listOf(
@@ -77,11 +87,15 @@ class FacetTest : DatabaseTest() {
                 accessState = AccessState.CLOSED,
                 startDate = LocalDate.of(2005, 1, 1),
                 endDate = LocalDate.of(2005, 12, 31),
+                isTemplate = false,
+                templateName = null,
             ),
             TEST_RIGHT.copy(
                 accessState = AccessState.OPEN,
                 startDate = LocalDate.of(2003, 1, 1),
                 endDate = LocalDate.of(2003, 12, 31),
+                isTemplate = false,
+                templateName = null,
             )
         ),
     )

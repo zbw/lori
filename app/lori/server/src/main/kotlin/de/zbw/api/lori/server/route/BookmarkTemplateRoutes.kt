@@ -44,10 +44,10 @@ fun Routing.bookmarkTemplateRoutes(
                     try {
                         val bookmarkTemplate: BookmarkTemplateRest = call.receive(BookmarkTemplateRest::class)
                         span.setAttribute("Bookmark-Id", bookmarkTemplate.bookmarkId.toString())
-                        span.setAttribute("Template-Id", bookmarkTemplate.templateId.toString())
+                        span.setAttribute("Right-Id", bookmarkTemplate.rightId)
                         val created = backend.insertBookmarkTemplatePair(
                             bookmarkId = bookmarkTemplate.bookmarkId,
-                            templateId = bookmarkTemplate.templateId,
+                            rightId = bookmarkTemplate.rightId,
                         )
                         if (created == 1) {
                             span.setStatus(StatusCode.OK)
@@ -104,9 +104,9 @@ fun Routing.bookmarkTemplateRoutes(
                 withContext(span.asContextElement()) {
                     try {
                         val bookmarkId: Int? = call.request.queryParameters["bookmarkid"]?.toInt()
-                        val templateId: Int? = call.request.queryParameters["templateid"]?.toInt()
+                        val rightId: String? = call.request.queryParameters["rightid"]
                         span.setAttribute("bookmarkId", bookmarkId?.toString() ?: "null")
-                        if (bookmarkId == null || templateId == null) {
+                        if (bookmarkId == null || rightId == null) {
                             span.setStatus(
                                 StatusCode.ERROR,
                                 "BadRequest: No valid id has been provided in the query parameters."
@@ -120,7 +120,7 @@ fun Routing.bookmarkTemplateRoutes(
                         } else {
                             val entriesDeleted = backend.deleteBookmarkTemplatePair(
                                 bookmarkId = bookmarkId,
-                                templateId = templateId,
+                                rightId = rightId,
                             )
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)
@@ -130,7 +130,7 @@ fun Routing.bookmarkTemplateRoutes(
                                 call.respond(
                                     HttpStatusCode.NotFound,
                                     ApiError.notFoundError(
-                                        detail = "Für die BookmarkId $bookmarkId und TemplateId $templateId existiert kein Eintrag.",
+                                        detail = "Für die BookmarkId $bookmarkId und TemplateId $rightId existiert kein Eintrag.",
                                     ),
                                 )
                             }

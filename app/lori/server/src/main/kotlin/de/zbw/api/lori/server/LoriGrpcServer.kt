@@ -74,15 +74,15 @@ class LoriGrpcServer(
             .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val backendResponse: Map<Int, Pair<List<String>, List<RightError>>> = if (request.all) {
+                val backendResponse: Map<String, Pair<List<String>, List<RightError>>> = if (request.all) {
                     daConnector.backend.applyAllTemplates()
                 } else {
-                    daConnector.backend.applyTemplates(request.templateIdsList)
+                    daConnector.backend.applyTemplates(request.rightIdsList)
                 }
-                val templateApplications: List<TemplateApplication> = backendResponse.entries.map { e ->
+                val templateApplications: List<TemplateApplication> = backendResponse.entries.map { e: Map.Entry<String, Pair<List<String>, List<RightError>>> ->
                     TemplateApplication
                         .newBuilder()
-                        .setTemplateId(e.key)
+                        .setRightId(e.key)
                         .setNumberAppliedEntries(e.value.first.size)
                         .addAllMetadataIds(e.value.first)
                         .addAllErrors(
@@ -90,7 +90,6 @@ class LoriGrpcServer(
                                 TemplateError.newBuilder()
                                     .setErrorId(it.errorId ?: -1)
                                     .setMessage(it.message)
-                                    .setTemplateIdSource(it.templateIdSource ?: -1)
                                     .setRightIdSource(it.rightIdSource ?: "")
                                     .setMetadataId(it.metadataId)
                                     .setHandleId(it.handleId)

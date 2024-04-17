@@ -13,7 +13,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 export default defineComponent({
   components: { RightsEditDialog },
   props: {},
-  emits: ["getItemsByTemplateId"],
+  emits: ["getItemsByRightId"],
   setup(props, { emit }) {
     /**
      * Stores.
@@ -96,11 +96,11 @@ export default defineComponent({
     };
 
     const applyTemplate = (template: RightRest) => {
-      if (template.templateId == undefined) {
+      if (template.rightId == undefined) {
         return;
       }
       templateApi
-        .applyTemplates([template.templateId])
+        .applyTemplates([template.rightId])
         .then((r: TemplateApplicationsRest) => {
           alertSuccessful.value = true;
           alertSuccessfulMsg.value =
@@ -181,9 +181,9 @@ export default defineComponent({
     /**
      * EMITS
      */
-    const emitGetItemsByTemplateId = (templateId?: number) => {
-      if (templateId != undefined) {
-        emit("getItemsByTemplateId", templateId);
+    const emitGetItemsByRightId = (rightId?: string) => {
+      if (rightId != undefined) {
+        emit("getItemsByRightId", rightId);
       }
     };
 
@@ -214,7 +214,7 @@ export default defineComponent({
       closeTemplateEditDialog,
       createNewTemplate,
       editTemplate,
-      emitGetItemsByTemplateId,
+      emitGetItemsByRightId,
       getTemplateList,
       updateTemplateOverview,
     };
@@ -274,7 +274,7 @@ export default defineComponent({
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
             color="blue darken-1"
-            @click="emitGetItemsByTemplateId(item.templateId)"
+            @click="emitGetItemsByRightId(item.rightId)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>

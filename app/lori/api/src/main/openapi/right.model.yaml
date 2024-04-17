@@ -8,6 +8,7 @@ AccessStateRest:
 RightRest:
   required:
     - startDate
+    - isTemplate
   type: object
   properties:
     rightId:
@@ -42,10 +43,14 @@ RightRest:
     endDate:
       type: string
       format: date
+    exceptionFrom:
+      type: string
     groupIds:
       type: array
       items:
         type: string
+    isTemplate:
+      type: boolean
     lastAppliedOn:
       type: string
       format: date-time
@@ -77,8 +82,6 @@ RightRest:
       format: date
     templateDescription:
       type: string
-    templateId:
-      type: integer
     templateName:
       type: string
     zbwUserAgreement:

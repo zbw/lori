@@ -10,9 +10,9 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.TemplateIdFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.ParsingException
@@ -387,9 +387,9 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterNoRightInformation"]
                         )
 
-                    val templateIdsFilter: TemplateIdFilter? =
-                        QueryParameterParser.parseTemplateIdFilter(
-                            call.request.queryParameters["filterTemplateId"]
+                    val rightIdsFilter: RightIdFilter? =
+                        QueryParameterParser.parseRightIdFilter(
+                            call.request.queryParameters["filterRightId"]
                         )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
@@ -449,7 +449,7 @@ fun Routing.itemRoutes(
                         startDateFilter,
                         temporalValidityFilter,
                         validOnFilter,
-                        templateIdsFilter,
+                        rightIdsFilter,
                     )
 
                     val queryResult: SearchQueryResult = backend.searchQuery(

@@ -9,7 +9,7 @@ export default defineComponent({
   props: {
     rightId: {
       type: String,
-      required: true,
+      required: false,
     },
     index: {
       type: Number,
@@ -43,7 +43,7 @@ export default defineComponent({
       deleteAlertError.value = false;
       deleteError.value = false;
 
-      if (props.rightId == "") {
+      if (props.rightId == undefined || props.rightId == "") {
         deleteErrorMessage.value = "Es fehlt eine valide Rechte-Id!";
         deleteError.value = true;
         deleteAlertError.value = true;
@@ -75,13 +75,13 @@ export default defineComponent({
       deleteInProgress.value = true;
       deleteAlertError.value = false;
       deleteError.value = false;
-      if (props.rightId == "") {
+      if (props.rightId == undefined || props.rightId == "") {
         deleteErrorMessage.value = "Es fehlt eine valide Rechte-Id!";
         deleteError.value = true;
         deleteAlertError.value = true;
       } else {
         templateApi
-          .deleteTemplate(parseInt(props.rightId))
+          .deleteTemplate(props.rightId)
           .then(() => {
             emit("templateDeleteSuccessful");
             close();

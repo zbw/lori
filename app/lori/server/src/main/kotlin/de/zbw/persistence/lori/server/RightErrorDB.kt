@@ -4,7 +4,6 @@ import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIGHT_ERROR
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
@@ -78,7 +77,6 @@ class RightErrorDB(
                     message = rs.getString(6),
                     createdOn = rs.getTimestamp(7).toOffsetDateTime(),
                     conflictType = ConflictType.valueOf(rs.getString(8)),
-                    templateIdSource = rs.getInt(9),
                 )
             } else null
         }.takeWhile { true }.toList()
@@ -95,9 +93,6 @@ class RightErrorDB(
                     this.setString(5, rightError.message)
                     this.setTimestamp(6, Timestamp.from(rightError.createdOn?.toInstant() ?: Instant.now()))
                     this.setString(7, rightError.conflictType.toString())
-                    this.setIfNotNull(8, rightError.templateIdSource) { value, idx, prepStmt ->
-                        prepStmt.setInt(idx, value)
-                    }
                 }
         val span = tracer.spanBuilder("insertRightError").startSpan()
         try {
@@ -122,22 +117,20 @@ class RightErrorDB(
         private const val COLUMN_METADATA_ID = "metadata_id"
         private const val COLUMN_RIGHT_ID_SOURCE = "right_id_source"
         private const val COLUMN_MESSAGE = "message"
-        private const val COLUMN_TEMPLATE_ID_SOURCE = "template_id_source"
 
         const val STATEMENT_GET_RIGHT_LIST = "SELECT" +
             " $COLUMN_ERROR_ID,$COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
-            "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE," +
-            COLUMN_TEMPLATE_ID_SOURCE +
+            "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE" +
             " FROM $TABLE_NAME_RIGHT_ERROR" +
             " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;"
 
         const val STATEMENT_INSERT_RIGHT_ERROR = "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
             "($COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
             "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-            "$COLUMN_CONFLICTING_TYPE,$COLUMN_TEMPLATE_ID_SOURCE)" +
+            "$COLUMN_CONFLICTING_TYPE)" +
             " VALUES(?,?,?," +
             "?,?,?," +
-            "?,?)"
+            "?)"
 
         const val STATEMENT_DELETE_ERROR_BY_ID = "DELETE " +
             "FROM $TABLE_NAME_RIGHT_ERROR " +

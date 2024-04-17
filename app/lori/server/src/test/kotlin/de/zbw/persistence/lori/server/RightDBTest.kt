@@ -15,6 +15,8 @@ import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.postgresql.util.PSQLException
+import org.testng.Assert
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
@@ -124,6 +126,57 @@ class RightDBTest : DatabaseTest() {
         dbConnector.rightDB.getRightsByIds(listOf("1"))
     }
 
+    @Test
+    fun testGetRightsByTemplateName() {
+        val templateName1 = "foobar"
+        val templateName2 = "baz"
+        val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2))
+        val receivedRightIds = dbConnector.rightDB.getRightsByTemplateNames(listOf(templateName2, templateName1))
+            .map { it.rightId }
+            .toSet()
+
+        assertThat(
+            receivedRightIds,
+            `is`(setOf(rightId1, rightId2)),
+        )
+        // Clean up for other tests
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId2, rightId1))
+    }
+
+    @Test
+    fun testTemplateExceptions() {
+        val templateName1 = "foobar"
+        val templateName2 = "baz"
+        val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+
+        // Create Template which is an exception of the first one.
+        val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2, exceptionFrom = rightId1))
+
+        val exceptionRights: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId1)
+        assertThat(
+            exceptionRights.size,
+            `is`(1),
+        )
+
+        assertThat(
+            exceptionRights.first().rightId,
+            `is`(rightId2),
+        )
+
+        // Clean up for other tests
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId2))
+        dbConnector.rightDB.deleteRightsByIds(listOf(rightId1))
+    }
+
+    @Test(expectedExceptions = [PSQLException::class])
+    fun testUniqueConstraintOnTemplates() {
+        val templateName1 = "foobar"
+        dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+        Assert.fail()
+    }
+
     companion object {
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.RightDBTest")
         val TEST_UPDATED_RIGHT = ItemRight(
@@ -135,7 +188,9 @@ class RightDBTest : DatabaseTest() {
             createdBy = TEST_RIGHT.createdBy,
             createdOn = TEST_RIGHT.createdOn,
             endDate = TEST_RIGHT.endDate!!.plusDays(1),
+            exceptionFrom = null,
             groupIds = TEST_RIGHT.groupIds,
+            isTemplate = true,
             lastUpdatedBy = "user4",
             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
             lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
@@ -150,7 +205,6 @@ class RightDBTest : DatabaseTest() {
             restrictedOpenContentLicence = true,
             startDate = TEST_RIGHT.startDate.minusDays(10),
             templateDescription = "description foo",
-            templateId = null,
             templateName = "name foo",
             zbwUserAgreement = true,
         )

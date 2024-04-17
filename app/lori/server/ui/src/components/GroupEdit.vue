@@ -334,12 +334,12 @@ export default defineComponent({
         </v-row>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="save" color="blue darken-1" text>Speichern</v-btn>
-          <v-btn @click="close" color="blue darken-1" text>Zurück</v-btn>
-          <v-btn v-if="!isNew" icon @click="initiateDeleteDialog">
+          <v-btn @click="save" color="blue darken-1">Speichern</v-btn>
+          <v-btn @click="close" color="blue darken-1">Zurück</v-btn>
+          <v-btn v-if="!isNew" @click="initiateDeleteDialog">
             <v-icon>mdi-delete</v-icon>
           </v-btn>
-          <v-btn v-if="isNew" icon disabled>
+          <v-btn v-if="isNew" disabled>
             <v-icon>mdi-delete</v-icon>
           </v-btn>
         </v-card-actions>

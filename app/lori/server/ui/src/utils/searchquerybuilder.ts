@@ -5,7 +5,7 @@ import {
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,
-  TemplateIdWithCountRest,
+  TemplateNameWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import date_utils from "@/utils/date_utils";
@@ -105,41 +105,40 @@ export default {
     }
   },
 
-  setTemplateIdFilter(searchStore: any, bookmark: BookmarkRest): void {
+  setRightIdFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (
-      bookmark.filterTemplateId == undefined ||
-      bookmark.filterTemplateId.length == 0
+      bookmark.filterRightId == undefined ||
+      bookmark.filterRightId.length == 0
     ) {
-      searchStore.templateIdIdx = [];
+      searchStore.templateNameIdx = [];
       return;
     }
-    searchStore.templateIdIdx = Array(bookmark.filterTemplateId.length).fill(
-      true,
-    );
-    searchStore.templateIdReceived = Array(bookmark.filterTemplateId.length);
-    bookmark.filterTemplateId.forEach((v: string, index: number): void => {
-      searchStore.templateIdReceived[index] = {
+    searchStore.templateNameIdx = Array(bookmark.filterRightId.length).fill(true);
+    searchStore.templateNameReceived = Array(bookmark.filterRightId.length);
+    bookmark.filterRightId.forEach((v: string, index: number): void => {
+      searchStore.templateNameReceived[index] = {
         count: 0,
-        templateId: v,
-      } as TemplateIdWithCountRest;
+        templateName: "",
+        rightId: v,
+      } as TemplateNameWithCountRest;
     });
   },
 
-  buildTemplateIdFilter(searchStore: any): string | undefined {
-    const templateIds: Array<string> = [];
-    searchStore.templateIdIdx.forEach(
+  buildRightIdFilter(searchStore: any): string | undefined {
+    const rightIds: Array<string> = [];
+    searchStore.templateNameIdx.forEach(
       (i: boolean | undefined, index: number): void => {
         if (i) {
-          templateIds.push(searchStore.templateIdReceived[index].templateId);
+          rightIds.push(searchStore.templateNameReceived[index].rightId);
         }
       },
     );
     // Remind selected ids, for resetting the filter afterwards correctly.
-    searchStore.templateIdSelectedLastSearch = templateIds;
-    if (templateIds.length == 0) {
+    searchStore.templateNameSelectedLastSearch = rightIds;
+    if (rightIds.length == 0) {
       return undefined;
     } else {
-      return templateIds.join(",");
+      return rightIds.join(",");
     }
   },
 

@@ -10,22 +10,22 @@ const configuration = new Configuration({
 const bookmarkTemplateApi = new BookmarktemplatesApi(configuration);
 
 export default {
-  deletePair(templateId: number, bookmarkId: number): Promise<void> {
+  deletePair(rightId: string, bookmarkId: number): Promise<void> {
     return bookmarkTemplateApi.deleteBookmarkTemplate({
       bookmarkId: bookmarkId,
-      templateId: templateId,
+      rightId: rightId,
     });
   },
-  addPair(templateId: number, bookmarkId: number): Promise<void> {
+  addPair(rightId: string, bookmarkId: number): Promise<void> {
     return bookmarkTemplateApi.addBookmarkTemplate({
       body: {
         bookmarkId: bookmarkId,
-        templateId: templateId,
+        rightId: rightId,
       },
     });
   },
   addBookmarkTemplateBatch(
-    batch: Array<BookmarkTemplateRest>
+    batch: Array<BookmarkTemplateRest>,
   ): Promise<Array<BookmarkTemplateRest>> {
     return bookmarkTemplateApi.addBookmarkTemplateBatch({
       body: {

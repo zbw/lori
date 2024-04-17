@@ -141,6 +141,7 @@ export default defineComponent({
     const selectedHeaders = ref(headers.slice(0, 6));
 
     const currentPage = ref(1);
+    const currentRightId = ref("");
     const pageSize = ref(25); // Default page size is 25
     const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
     const totalPages = ref(0);
@@ -149,7 +150,7 @@ export default defineComponent({
     // Page changes
     const handlePageChange = () => {
       if (templateSearchIsActive.value) {
-        executeSearchByTemplateId();
+        executeSearchByRightId(currentRightId.value);
       } else {
         searchQuery();
       }
@@ -158,7 +159,7 @@ export default defineComponent({
     const handlePageSizeChange = () => {
       currentPage.value = 1;
       if (templateSearchIsActive.value) {
-        executeSearchByTemplateId();
+        executeSearchByRightId(currentRightId.value);
       } else {
         searchQuery();
       }
@@ -288,27 +289,27 @@ export default defineComponent({
     const alertMsg = ref("");
 
     const templateSearchIsActive = ref(false);
-    const currentTemplateId = ref(0);
-    const initSearchByTemplateId = (templateId: number) => {
+    const initSearchByRightId = (rightId: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
-      currentTemplateId.value = templateId;
+      currentRightId.value = rightId;
       closeTemplateOverview();
       alertMsg.value =
         "Alle gespeicherten Suchen für Template-ID " +
-        templateId +
+        rightId +
         " wurden ausgeführt.";
       alertIsActive.value = true;
-      executeSearchByTemplateId();
+      searchStore.isLastSearchForTemplates = true;
+      executeSearchByRightId(rightId);
     };
 
-    const executeSearchByTemplateId = () => {
+    const executeSearchByRightId = (rightId: string) => {
       api
         .searchQuery(
           "",
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
-          currentPage.value,
+          pageSize.value,
           undefined,
           undefined,
           undefined,
@@ -320,7 +321,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
-          currentTemplateId.value.toString(), // templateId
+          rightId,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -335,6 +336,7 @@ export default defineComponent({
     };
 
     const executeSearchByMetadataId = (searchTerm: string) => {
+      searchStore.isLastSearchForTemplates = false;
       api
         .searchQuery(
           searchTerm,
@@ -378,7 +380,9 @@ export default defineComponent({
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
-      searchquerybuilder.setTemplateIdFilter(searchStore, bookmark);
+      searchquerybuilder.setRightIdFilter(searchStore, bookmark);
+      searchStore.searchTerm =
+        bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
       alertMsg.value =
         "Eine gespeicherte Suche '" +
@@ -399,7 +403,9 @@ export default defineComponent({
         searchStore.searchTerm = "";
       }
       searchStore.lastSearchTerm = searchStore.searchTerm;
+      searchStore.isLastSearchForTemplates = false;
       templateSearchIsActive.value = false;
+      currentRightId.value = "";
       currentItem.value = {} as ItemRest;
       searchQuery();
     };
@@ -422,7 +428,7 @@ export default defineComponent({
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
-          searchquerybuilder.buildTemplateIdFilter(searchStore),
+          searchquerybuilder.buildRightIdFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -564,18 +570,18 @@ export default defineComponent({
         searchStore.zdbIdSelectedLastSearch,
         searchStore.zdbIdIdx,
       );
-      // Reset Template Id
-      searchStore.templateIdReceived =
-        response.templateIdWithCount != undefined
-          ? response.templateIdWithCount
+      // Reset Template Names
+      searchStore.templateNameReceived =
+        response.templateNameWithCount != undefined
+          ? response.templateNameWithCount
           : Array(0);
-      searchStore.templateIdIdx = Array(
-        searchStore.templateIdReceived.length,
+      searchStore.templateNameIdx = Array(
+        searchStore.templateNameReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateIdReceived.map((e) => e.templateId),
-        searchStore.templateIdSelectedLastSearch,
-        searchStore.templateIdIdx,
+        searchStore.templateNameReceived.map((e) => e.rightId),
+        searchStore.templateNameSelectedLastSearch,
+        searchStore.templateNameIdx,
       );
     };
 
@@ -691,7 +697,7 @@ export default defineComponent({
       closeGroupDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
-      initSearchByTemplateId,
+      initSearchByRightId,
       getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
@@ -738,7 +744,7 @@ export default defineComponent({
       v-on:close="closeTemplateOverview"
     >
       <TemplateOverview
-        v-on:getItemsByTemplateId="initSearchByTemplateId"
+        v-on:getItemsByRightId="initSearchByRightId"
       ></TemplateOverview>
     </v-dialog>
     <v-dialog

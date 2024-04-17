@@ -109,7 +109,7 @@ export default defineComponent({
           slider-color="yellow"
         >
           <v-tab v-for="r in currentRights" :key="r.rightId">
-            <v-icon v-if="r.templateId != undefined">mdi-note-multiple</v-icon>
+            <v-icon v-if="r.isTemplate == true">mdi-note-multiple</v-icon>
             <v-icon v-else>mdi-note-outline</v-icon>
             Id:'{{ r.rightId }}'; {{ parseDate(r.startDate) }} -
             {{ parseDate(r.endDate) }}

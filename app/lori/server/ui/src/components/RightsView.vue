@@ -49,8 +49,8 @@ export default defineComponent({
         value: "endDate",
       },
       {
-        title: "Template-ID",
-        value: "templateId",
+        title: "Right-ID",
+        value: "rightId",
       },
     ];
     const isNew = ref(false);
@@ -181,8 +181,6 @@ export default defineComponent({
         :isNewTemplate="false"
         :metadataId="metadataId"
         :right="currentRight"
-        :isTemplate="currentRight.templateId != undefined"
-        :templateId="currentRight.templateId"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
       ></RightsEditDialog>

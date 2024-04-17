@@ -97,47 +97,63 @@ class RightFilterTest : DatabaseTest() {
                 accessState = AccessState.RESTRICTED,
                 startDate = LocalDate.of(2025, 6, 1),
                 endDate = LocalDate.of(2025, 9, 1),
+                isTemplate = false,
+                templateName = null,
             ),
             TEST_RIGHT.copy(
                 accessState = AccessState.OPEN,
                 startDate = LocalDate.of(2024, 6, 1),
                 endDate = LocalDate.of(2024, 9, 1),
+                isTemplate = false,
+                templateName = null,
             ),
         ),
         tempValFilterPresent to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2021, 6, 1),
                 endDate = LocalDate.of(2021, 9, 1),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         tempValFilterPast to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2021, 2, 1),
                 endDate = LocalDate.of(2021, 3, 1),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         tempValFilterFuture to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2021, 10, 1),
                 endDate = LocalDate.of(2021, 12, 1),
+                isTemplate = false,
+                templateName = null,
             )
         ),
         startEndDateFilter to listOf(
             TEST_RIGHT.copy(
                 startDate = LocalDate.of(2000, 10, 1),
                 endDate = LocalDate.of(2000, 12, 1),
+                isTemplate = false,
+                templateName = null,
             ),
         ),
         formalRuleLicenceContract to listOf(
             TEST_RIGHT.copy(
                 licenceContract = "licence",
                 zbwUserAgreement = false,
+                isTemplate = false,
+                templateName = null,
             ),
         ),
         formalRuleUserAgreement to listOf(
             TEST_RIGHT.copy(
                 zbwUserAgreement = true,
                 licenceContract = null,
+                isTemplate = false,
+                templateName = null,
             ),
         ),
         formalRuleOCL to listOf(
@@ -145,6 +161,8 @@ class RightFilterTest : DatabaseTest() {
                 openContentLicence = "foobar",
                 licenceContract = null,
                 zbwUserAgreement = false,
+                isTemplate = false,
+                templateName = null,
             ),
         ),
     )
@@ -635,6 +653,8 @@ class RightFilterTest : DatabaseTest() {
                 ZoneOffset.UTC,
             ),
             endDate = RestConverterTest.TODAY,
+            exceptionFrom = null,
+            isTemplate = false,
             lastAppliedOn = OffsetDateTime.of(
                 2022,
                 5,
@@ -668,7 +688,6 @@ class RightFilterTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             zbwUserAgreement = true,
             templateDescription = "some description",
-            templateId = null,
             templateName = "exampleTemplate",
             groupIds = null,
         )

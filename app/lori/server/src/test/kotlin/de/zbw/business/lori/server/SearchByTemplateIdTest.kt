@@ -5,7 +5,6 @@ import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
-import de.zbw.persistence.lori.server.TemplateRightIdCreated
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -33,11 +32,11 @@ class SearchByTemplateIdTest : DatabaseTest() {
         mockk(),
     )
 
-    private var templateRightIds: List<TemplateRightIdCreated> = emptyList()
+    private var rightIds: List<String> = emptyList()
 
     @BeforeClass
     fun fillDB() {
-        templateRightIds = initialTemplates.map {
+        rightIds = initialTemplates.map {
             backend.insertTemplate(
                 it
             )
@@ -45,7 +44,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
         initialItems.forEach { entry: Map.Entry<ItemMetadata, List<Int>> ->
             val metadataId: String = backend.insertMetadataElement(entry.key)
             entry.value.forEach { templateKey ->
-                backend.insertItemEntry(metadataId, templateRightIds[templateKey].rightId)
+                backend.insertItemEntry(metadataId, rightIds[templateKey])
             }
         }
     }
@@ -84,9 +83,9 @@ class SearchByTemplateIdTest : DatabaseTest() {
             offset = 0,
             metadataSearchFilter = emptyList(),
             rightSearchFilter = listOf(
-                TemplateIdFilter(
+                RightIdFilter(
                     listOf(
-                        templateRightIds[templateIdIdx].templateId
+                        rightIds[templateIdIdx]
                     )
                 )
             ),
@@ -112,16 +111,22 @@ class SearchByTemplateIdTest : DatabaseTest() {
                 rightId = "a",
                 startDate = EXAMPLE_DATE.minusDays(10),
                 endDate = EXAMPLE_DATE.minusDays(9),
+                isTemplate = true,
+                templateName = "1",
             ),
             TEST_RIGHT.copy(
                 rightId = "b",
                 startDate = EXAMPLE_DATE.minusDays(8),
                 endDate = EXAMPLE_DATE.minusDays(7),
+                isTemplate = true,
+                templateName = "2",
             ),
             TEST_RIGHT.copy(
                 rightId = "c",
                 startDate = EXAMPLE_DATE.minusDays(6),
                 endDate = EXAMPLE_DATE.minusDays(5),
+                isTemplate = true,
+                templateName = "3",
             )
         )
         val initialItems = mapOf(

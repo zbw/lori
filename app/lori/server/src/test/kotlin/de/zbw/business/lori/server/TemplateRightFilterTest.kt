@@ -44,13 +44,12 @@ class TemplateRightFilterTest : DatabaseTest() {
         collectionName = "subject3",
     )
 
-    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
+    private fun getInitialData(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightWithTemplate to listOf(
-            RightFilterTest.TEST_RIGHT.copy(templateId = TEST_TEMPLATE_ID),
-            RightFilterTest.TEST_RIGHT.copy(templateId = TEST_TEMPLATE_ID + 1)
+            RightFilterTest.TEST_RIGHT.copy(isTemplate = true, templateName = "some template"),
         ),
         itemRightWithoutTemplate to listOf(
-            RightFilterTest.TEST_RIGHT
+            RightFilterTest.TEST_RIGHT.copy(isTemplate = false)
         ),
     )
 
@@ -60,10 +59,10 @@ class TemplateRightFilterTest : DatabaseTest() {
         every { Instant.now() } returns NOW.toInstant()
         mockkStatic(LocalDate::class)
         every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
-        getInitialMetadata().forEach { entry ->
+        getInitialData().forEach { entry ->
             backend.insertMetadataElement(entry.key)
             entry.value.forEach { right ->
-                val r = backend.insertRight(right)
+                val r = backend.insertTemplate(right)
                 backend.insertItemEntry(entry.key.metadataId, r)
             }
         }
@@ -76,7 +75,8 @@ class TemplateRightFilterTest : DatabaseTest() {
 
     @Test
     fun testTemplateFilter() {
-        val rightSearchFilter = listOf(TemplateIdFilter(listOf(TEST_TEMPLATE_ID)))
+        val rightId = backend.getTemplateList(10, 0).first().rightId!!
+        val rightSearchFilter = listOf(RightIdFilter(listOf(rightId)))
         val searchResult: SearchQueryResult = backend.searchQuery(
             "col:subject3",
             10,
@@ -89,9 +89,5 @@ class TemplateRightFilterTest : DatabaseTest() {
             searchResult.results.map { it.metadata }.toSet(),
             `is`(setOf(itemRightWithTemplate)),
         )
-    }
-
-    companion object {
-        const val TEST_TEMPLATE_ID = 5
     }
 }

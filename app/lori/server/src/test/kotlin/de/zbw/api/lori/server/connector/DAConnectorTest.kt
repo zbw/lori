@@ -136,7 +136,7 @@ class DAConnectorTest {
             // then
             assertThat(receivedItems, `is`(listOf(1, 1, 1)))
             coVerify(exactly = 3) { daConnector.importCollection("token", any()) }
-            coVerify(exactly = 3) { backend.upsertMetaData(any()) }
+            coVerify(exactly = 3) { backend.upsertMetadata(any()) }
         }
     }
 

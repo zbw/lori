@@ -1,13 +1,13 @@
 BookmarkTemplateRest:
   required:
     - bookmarkId
-    - templateId
+    - rightId
   type: object
   properties:
     bookmarkId:
       type: integer
-    templateId:
-      type: integer
+    rightId:
+      type: string
 
 BookmarkTemplateBatchRest:
   type: object

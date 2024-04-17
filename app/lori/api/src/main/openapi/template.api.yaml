@@ -19,7 +19,7 @@ template:
         content:
           application/json:
             schema:
-              $ref: 'template.model.yaml#/TemplateIdCreated'
+              $ref: 'right.model.yaml#/RightIdCreated'
       400:
         description: Bad request
         content:
@@ -113,14 +113,14 @@ template-id:
     tags:
       - template
     summary: Delete a template
-    operationId: deleteTemplateById
+    operationId: deleteTemplateByRightId
     parameters:
       - name: id
         in: path
-        description: Template ID to delete
+        description: RightId to delete
         required: true
         schema:
-          type: integer
+          type: string
     responses:
       200:
         description: Deletion of the template was successful
@@ -143,6 +143,7 @@ template-id:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
 
 template-list:
   get:
@@ -196,15 +197,15 @@ template-bookmarks:
       - cookieAuth: []
     tags:
       - template
-    summary: For a given Template-Id connect all given Bookmark-Ids to it
-    operationId: addBookmarksByTemplateId
+    summary: For a given Right-Id connect all given Bookmark-Ids to it
+    operationId: addBookmarksByRightId
     parameters:
       - name: id
         in: path
-        description: Template Id
+        description: Right Id
         required: true
         schema:
-          type: integer
+          type: string
       - name: deleteOld
         in: query
         description: "Delete all old connections first"
@@ -242,15 +243,15 @@ template-bookmarks:
   get:
     tags:
       - template
-    summary: Receive all bookmarks that are connected to the given template id
-    operationId: getBookmarksByTemplateId
+    summary: Receive all bookmarks that are connected to the given right id
+    operationId: getBookmarksByRightId
     parameters:
       - name: id
         in: path
-        description: Template Id
+        description: Right Id
         required: true
         schema:
-          type: integer
+          type: string
     responses:
       200:
         description: Successful operation
@@ -274,13 +275,13 @@ template-applications:
     tags:
       - template
     summary: Apply templates to all their bookmark results.
-    operationId: applyTemplateIds
+    operationId: applyRightIds
     requestBody:
-      description: Template-Ids
+      description: Right-Ids
       content:
         application/json:
           schema:
-            $ref: 'template.model.yaml#/TemplateIdsRest'
+            $ref: 'template.model.yaml#/RightIdsRest'
       required: true
     parameters:
       - name: all
@@ -309,15 +310,15 @@ template-bookmarks-entries:
   get:
     tags:
       - template
-    summary: Return all items that are associated to the bookmarks connected to the given template id
-    operationId: getItemsByTemplateId
+    summary: Return all items that are associated to the bookmarks connected to the given right id
+    operationId: getItemsByRightId
     parameters:
       - name: id
         in: path
-        description: Template Id
+        description: Right Id
         required: true
         schema:
-          type: integer
+          type: string
       - name: offset
         in: query
         description: An offset.

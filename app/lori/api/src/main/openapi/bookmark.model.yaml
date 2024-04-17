@@ -34,7 +34,7 @@ BookmarkRawRest:
       type: string
     filterNoRightInformation:
       type: string
-    filterTemplateId:
+    filterRightId:
       type: string
 
 BookmarkIdCreated:
@@ -57,10 +57,8 @@ BookmarkRest:
       type: string
     description:
       type: string
-    searchKeys:
-      type: array
-      items:
-        $ref: 'bookmark.model.yaml#/SearchKeyRest'
+    searchTerm:
+      type: string
     filterPublicationDate:
       $ref: 'bookmark.model.yaml#/FilterPublicationDateRest'
     filterPublicationType:
@@ -98,7 +96,7 @@ BookmarkRest:
         type: string
     filterNoRightInformation:
       type: boolean
-    filterTemplateId:
+    filterRightId:
       type: array
       items:
         type: string

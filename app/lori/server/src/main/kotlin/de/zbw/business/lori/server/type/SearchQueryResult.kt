@@ -15,6 +15,6 @@ data class SearchQueryResult(
     val hasZbwUserAgreement: Boolean,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
-    val templateIds: Map<Int, Pair<String, Int>>,
+    val templateNamesToOcc: Map<String, Pair<String, Int>>,
     val zdbIds: Map<String, Int>,
 )

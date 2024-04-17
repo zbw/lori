@@ -3,10 +3,10 @@ import {
   BookmarkTemplateRest,
   Configuration,
   ItemInformation,
+  RightIdCreated,
   RightRest,
   TemplateApi,
   TemplateApplicationsRest,
-  TemplateIdCreated,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -15,26 +15,24 @@ const configuration = new Configuration({
 const templateApi = new TemplateApi(configuration);
 
 export default {
-  addTemplate(right: RightRest): Promise<TemplateIdCreated> {
+  addTemplate(right: RightRest): Promise<RightIdCreated> {
     return templateApi.addTemplate({ body: right });
   },
-  applyTemplates(
-    templateIds: Array<number>
-  ): Promise<TemplateApplicationsRest> {
-    return templateApi.applyTemplateIds({
+  applyTemplates(rightIds: Array<string>): Promise<TemplateApplicationsRest> {
+    return templateApi.applyRightIds({
       body: {
-        templateIds: templateIds,
+        rightIds: rightIds,
       },
     });
   },
-  deleteTemplate(templateId: number): Promise<void> {
-    return templateApi.deleteTemplateById({
-      id: templateId,
+  deleteTemplate(rightId: string): Promise<void> {
+    return templateApi.deleteTemplateByRightId({
+      id: rightId,
     });
   },
-  getTemplateById(templateId: string): Promise<RightRest> {
+  getTemplateById(rightId: string): Promise<RightRest> {
     return templateApi.getTemplateById({
-      id: templateId,
+      id: rightId,
     });
   },
   getTemplateList(offset: number, limit: number): Promise<Array<RightRest>> {
@@ -46,31 +44,31 @@ export default {
   updateTemplate(template: RightRest): Promise<void> {
     return templateApi.updateTemplate({ body: template });
   },
-  getBookmarksByTemplateId(templateId: number): Promise<Array<BookmarkRest>> {
-    return templateApi.getBookmarksByTemplateId({
-      id: templateId,
+  getBookmarksByRightId(rightId: string): Promise<Array<BookmarkRest>> {
+    return templateApi.getBookmarksByRightId({
+      id: rightId,
     });
   },
-  addBookmarksByTemplateId(
-    templateId: number,
+  addBookmarksByRightId(
+    rightId: string,
     bookmarkIds: Array<number>,
-    deleteOld: boolean
+    deleteOld: boolean,
   ): Promise<Array<BookmarkTemplateRest>> {
-    return templateApi.addBookmarksByTemplateId({
-      id: templateId,
+    return templateApi.addBookmarksByRightId({
+      id: rightId,
       deleteOld: deleteOld,
       body: {
         bookmarkIds: bookmarkIds,
       },
     });
   },
-  getItemsByTemplateId(
-    templateId: number,
+  getItemsByRightId(
+    rightId: string,
     limit: number,
-    offset: number
+    offset: number,
   ): Promise<ItemInformation> {
-    return templateApi.getItemsByTemplateId({
-      id: templateId,
+    return templateApi.getItemsByRightId({
+      id: rightId,
       limit: limit,
       offset: offset,
     });

@@ -22,7 +22,7 @@ data class Bookmark(
     val bookmarkName: String,
     val bookmarkId: Int,
     val description: String? = null,
-    val searchPairs: List<SearchPair>? = null,
+    val searchTerm: String? = null,
     val publicationDateFilter: PublicationDateFilter? = null,
     val publicationTypeFilter: PublicationTypeFilter? = null,
     val paketSigelFilter: PaketSigelFilter? = null,

@@ -417,15 +417,6 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
-    fun testParseInvalidSearchKeys(
-        searchTerm: String,
-        expectedKeys: List<String>,
-        description: String,
-    ) {
-        assertThat(description, LoriServerBackend.parseInvalidSearchKeys(searchTerm), `is`(expectedKeys))
-    }
-
     @Test
     fun testSearchQuery() {
         // given
@@ -839,7 +830,6 @@ class LoriServerBackendTest : DatabaseTest() {
         val received: Pair<Set<Item>, List<RightError>> = LoriServerBackend.findItemsWithConflicts(
             searchResults,
             rightConflictToCheck,
-            1,
         )
         assertThat(
             reason,
@@ -911,7 +901,9 @@ class LoriServerBackendTest : DatabaseTest() {
             createdBy = "user1",
             createdOn = NOW,
             endDate = TODAY,
+            exceptionFrom = null,
             groupIds = emptyList(),
+            isTemplate = false,
             lastAppliedOn = null,
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
@@ -926,8 +918,7 @@ class LoriServerBackendTest : DatabaseTest() {
             restrictedOpenContentLicence = false,
             startDate = TODAY.minusDays(1),
             templateDescription = "descritpion",
-            templateId = null,
-            templateName = "name",
+            templateName = null,
             zbwUserAgreement = true,
         )
     }

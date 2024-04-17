@@ -33,7 +33,7 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesAll() {
         runBlocking {
             // given
-            val expectedResult = listOf(1 to Pair(listOf("2"), emptyList<RightError>())).toMap()
+            val expectedResult = listOf("1" to Pair(listOf("2"), emptyList<RightError>())).toMap()
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
@@ -41,7 +41,7 @@ class LoriGrpcServerTest {
                         TemplateApplication
                             .newBuilder()
                             .addMetadataIds("2")
-                            .setTemplateId(1)
+                            .setRightId("1")
                             .setNumberAppliedEntries(1)
                             .build()
                     )
@@ -52,7 +52,7 @@ class LoriGrpcServerTest {
                 .newBuilder()
                 .setAll(true)
                 .build()
-            val backendMock = mockk<LoriServerBackend>() {
+            val backendMock = mockk<LoriServerBackend> {
                 every {
                     applyAllTemplates()
                 } returns expectedResult
@@ -77,7 +77,7 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesIds() {
         runBlocking {
             // given
-            val expectedResult = listOf(1 to Pair(listOf("2"), emptyList<RightError>())).toMap()
+            val expectedResult = listOf("1" to Pair(listOf("2"), emptyList<RightError>())).toMap()
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
@@ -85,7 +85,7 @@ class LoriGrpcServerTest {
                         TemplateApplication
                             .newBuilder()
                             .addMetadataIds("2")
-                            .setTemplateId(1)
+                            .setRightId("1")
                             .setNumberAppliedEntries(1)
                             .build()
                     )
@@ -95,7 +95,7 @@ class LoriGrpcServerTest {
             val request = ApplyTemplatesRequest
                 .newBuilder()
                 .setAll(false)
-                .addAllTemplateIds(listOf(1))
+                .addAllRightIds(listOf("1"))
                 .build()
             val backendMock = mockk<LoriServerBackend> {
                 every {
@@ -106,7 +106,7 @@ class LoriGrpcServerTest {
             val grpcServer = LoriGrpcServer(
                 config = mockk(),
                 backend = backendMock,
-                daConnector = mockk() {
+                daConnector = mockk {
                     every { backend } returns backendMock
                 },
                 tracer = tracer,

@@ -2,7 +2,6 @@ package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.EndDateFilter
-import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.RightValidOnFilter
@@ -20,8 +19,6 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
-import de.zbw.business.lori.server.type.SearchKey
-import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
@@ -40,8 +37,7 @@ import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
-import de.zbw.lori.model.SearchKeyRest
-import de.zbw.lori.model.TemplateIdWithCountRest
+import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
@@ -168,7 +164,9 @@ fun RightRest.toBusiness(): ItemRight =
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
+        exceptionFrom = exceptionFrom,
         groupIds = groupIds,
+        isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -183,7 +181,6 @@ fun RightRest.toBusiness(): ItemRight =
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateDescription = templateDescription,
-        templateId = templateId,
         templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
     )
@@ -199,6 +196,7 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         groupIds = groupIds,
+        isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -212,7 +210,6 @@ fun ItemRight.toRest(): RightRest =
         openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
-        templateId = templateId,
         templateDescription = templateDescription,
         templateName = templateName,
         zbwUserAgreement = zbwUserAgreement,
@@ -384,7 +381,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchPairs = this.searchTerm?.let { LoriServerBackend.parseValidSearchPairs(it) },
+        searchTerm = this.searchTerm,
         publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
@@ -403,15 +400,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchPairs = this.searchKeys?.mapNotNull { pair ->
-            val key = SearchKey.toEnum(pair.key)
-            val values = pair.propertyValues
-            if (key == null || values == null) {
-                null
-            } else {
-                SearchPair(key, values.joinToString(separator = " & "))
-            }
-        },
+        searchTerm = this.searchTerm,
         publicationDateFilter = PublicationDateFilter(
             fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
             toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
@@ -441,9 +430,7 @@ fun Bookmark.toRest(): BookmarkRest =
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
         description = this.description,
-        searchKeys = this.searchPairs?.map { pair ->
-            SearchKeyRest(pair.key.fromEnum(), listOf(pair.values))
-        },
+        searchTerm = this.searchTerm,
         filterPublicationDate = FilterPublicationDateRest(
             fromYear = this.publicationDateFilter?.fromYear,
             toYear = this.publicationDateFilter?.toYear,
@@ -463,13 +450,13 @@ fun Bookmark.toRest(): BookmarkRest =
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
     BookmarkTemplate(
         bookmarkId = this.bookmarkId,
-        templateId = this.templateId,
+        rightId = this.rightId,
     )
 
 fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
     BookmarkTemplateRest(
         bookmarkId = this.bookmarkId,
-        templateId = this.templateId,
+        rightId = this.rightId,
     )
 
 fun SearchQueryResult.toRest(
@@ -500,11 +487,11 @@ fun SearchQueryResult.toRest(
                 zdbId = it.key,
             )
         }.toList(),
-        templateIdWithCount = this.templateIds.entries.map {
-            TemplateIdWithCountRest(
-                templateId = it.key.toString(),
+        templateNameWithCount = this.templateNamesToOcc.entries.map {
+            TemplateNameWithCountRest(
                 templateName = it.value.first,
                 count = it.value.second,
+                rightId = it.key,
             )
         }
     )
@@ -525,7 +512,6 @@ fun RightError.toRest(): RightErrorRest =
         handleId = handleId,
         metadataId = metadataId,
         rightIdSource = rightIdSource,
-        templateIdSource = templateIdSource,
         conflictType = conflictType?.toRest(),
     )
 

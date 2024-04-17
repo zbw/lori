@@ -1,14 +1,3 @@
-TemplateIdCreated:
-  required:
-    - templateId
-    - rightId
-  type: object
-  properties:
-    templateId:
-      type: integer
-    rightId:
-      type: string
-
 BookmarkIdsRest:
   type: object
   properties:
@@ -17,19 +6,19 @@ BookmarkIdsRest:
       items:
         type: integer
 
-TemplateIdsRest:
+RightIdsRest:
   type: object
   properties:
-    templateIds:
+    rightIds:
       type: array
       items:
-        type: integer
+        type: string
 
 TemplateApplicationRest:
   required:
     - metadataIds
     - numberOfAppliedEntries
-    - templateId
+    - rightId
   type: object
   properties:
     metadataIds:
@@ -38,8 +27,8 @@ TemplateApplicationRest:
         type: string
     numberOfAppliedEntries:
       type: integer
-    templateId:
-      type: integer
+    rightId:
+      type: string
     errors:
       type: array
       items:
