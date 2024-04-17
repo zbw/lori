@@ -260,9 +260,9 @@ class EndDateFilter(
 }
 
 class RightIdFilter(
-    val rightIds: List<String>,
+    private val rightIds: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " + // TODO(CB): Not sure if this is so smart
+    override fun toWhereClause(): String = "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
         rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName = ?"
         }
@@ -307,7 +307,7 @@ class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID)
     override fun toWhereClause(): String = "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName IS NULL"
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
-    override fun toString(): String = "true"
+    override fun toString(): String = "true" // WAT?
 
     companion object {
         fun fromString(s: String?): NoRightInformationFilter? = QueryParameterParser.parseNoRightInformationFilter(s)

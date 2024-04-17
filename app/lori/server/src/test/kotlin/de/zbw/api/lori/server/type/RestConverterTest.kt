@@ -2,7 +2,6 @@ package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_SUBCOMMUNITY
 import de.zbw.api.lori.server.route.QueryParameterParser
-import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage

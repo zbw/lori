@@ -229,6 +229,10 @@ class LoriServerBackend(
             emptyList(),
             emptyList(),
             null,
+            null,
+            emptyList(),
+            emptyList(),
+            null,
         )
 
     fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
@@ -290,9 +294,23 @@ class LoriServerBackend(
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
+        exceptionSearchTerm: String? = null,
+        exceptionMetadataFilter: List<MetadataSearchFilter> = emptyList(),
+        exceptionRightSearchFilter: List<RightSearchFilter> = emptyList(),
+        exceptionNoRightInformationFilter: NoRightInformationFilter? = null,
     ): SearchQueryResult {
         val searchExpression: SearchExpression? =
             searchTerm
+                ?.takeIf { it.isNotBlank() }
+                ?.let { SearchGrammar.tryParseToEnd(it) }
+                ?.let {
+                    when (it) {
+                        is Parsed -> it.value
+                        is ErrorResult -> throw ParsingException("Parsing error in query: $it")
+                    }
+                }
+        val exceptionSearchExpression: SearchExpression? =
+            exceptionSearchTerm
                 ?.takeIf { it.isNotBlank() }
                 ?.let { SearchGrammar.tryParseToEnd(it) }
                 ?.let {
@@ -311,6 +329,10 @@ class LoriServerBackend(
                 metadataSearchFilter,
                 rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                 noRightInformationFilter,
+                exceptionSearchExpression,
+                exceptionMetadataFilter,
+                exceptionRightSearchFilter,
+                exceptionNoRightInformationFilter,
             )
 
         // Combine Metadata entries with their rights
@@ -331,6 +353,10 @@ class LoriServerBackend(
                         metadataSearchFilter,
                         rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                         noRightInformationFilter,
+                        exceptionSearchExpression,
+                        exceptionMetadataFilter,
+                        exceptionRightSearchFilter,
+                        exceptionNoRightInformationFilter,
                     )
                 }
                 ?: 0
@@ -341,6 +367,10 @@ class LoriServerBackend(
             metadataSearchFilter,
             rightSearchFilter,
             noRightInformationFilter,
+            exceptionSearchExpression,
+            exceptionMetadataFilter,
+            exceptionRightSearchFilter,
+            exceptionNoRightInformationFilter,
         )
         return SearchQueryResult(
             numberOfResults = numberOfResults,
@@ -468,7 +498,36 @@ class LoriServerBackend(
         val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
-        val bookmarksExceptions: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
+        val bookmarksExceptions: List<Bookmark> =
+            dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
+        val exceptionSearchTerm = bookmarksExceptions.map { b ->
+            b.searchTerm
+        }.filter { !it.isNullOrBlank() }
+            .joinToString(" & ") { s ->
+                "($s)"
+            }
+        val exceptionMetadataFilter = bookmarksExceptions.map { b ->
+            listOfNotNull(
+                b.paketSigelFilter,
+                b.publicationDateFilter,
+                b.publicationTypeFilter,
+                b.zdbIdFilter,
+            )
+        }.flatten()
+        val exceptionRightSearchFilter = bookmarksExceptions.map { b ->
+            listOfNotNull(
+                b.accessStateFilter,
+                b.temporalValidityFilter,
+                b.validOnFilter,
+                b.startDateFilter,
+                b.endDateFilter,
+                b.formalRuleFilter,
+            )
+        }.flatten()
+
+        val exceptionNoRightInformationFilter = bookmarksExceptions.firstNotNullOfOrNull { b ->
+            b.noRightInformationFilter
+        }
 
         // Get search results for each bookmark
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
@@ -491,6 +550,10 @@ class LoriServerBackend(
                     b.formalRuleFilter,
                 ),
                 noRightInformationFilter = b.noRightInformationFilter,
+                exceptionSearchTerm = exceptionSearchTerm,
+                exceptionMetadataFilter = exceptionMetadataFilter,
+                exceptionRightSearchFilter = exceptionRightSearchFilter,
+                exceptionNoRightInformationFilter = exceptionNoRightInformationFilter,
             ).results
         }.toSet()
 
@@ -527,16 +590,6 @@ class LoriServerBackend(
          */
         val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
-
-        fun parseInvalidSearchKeys(s: String): List<String> =
-            tokenizeSearchInput(s).mapNotNull {
-                val keyName = it.substringBefore(":")
-                if (SearchKey.toEnum(keyName) == null) {
-                    keyName
-                } else {
-                    null
-                }
-            }
 
         // parseValidSearchKeys . searchKeysToString == id
         fun parseValidSearchPairs(s: String?): List<SearchPair> =

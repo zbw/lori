@@ -1,7 +1,6 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
-import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.type.Bookmark
 import io.opentelemetry.api.OpenTelemetry

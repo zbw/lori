@@ -179,7 +179,6 @@ class BookmarkTemplateDB(
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
-
         const val STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID =
             "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_TEMPLATE_BOOKMARK_MAP" +

@@ -417,15 +417,6 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
-    fun testParseInvalidSearchKeys(
-        searchTerm: String,
-        expectedKeys: List<String>,
-        description: String,
-    ) {
-        assertThat(description, LoriServerBackend.parseInvalidSearchKeys(searchTerm), `is`(expectedKeys))
-    }
-
     @Test
     fun testSearchQuery() {
         // given

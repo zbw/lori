@@ -44,7 +44,7 @@ class TemplateRightFilterTest : DatabaseTest() {
         collectionName = "subject3",
     )
 
-    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
+    private fun getInitialData(): Map<ItemMetadata, List<ItemRight>> = mapOf(
         itemRightWithTemplate to listOf(
             RightFilterTest.TEST_RIGHT.copy(isTemplate = true, templateName = "some template"),
         ),
@@ -59,7 +59,7 @@ class TemplateRightFilterTest : DatabaseTest() {
         every { Instant.now() } returns NOW.toInstant()
         mockkStatic(LocalDate::class)
         every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
-        getInitialMetadata().forEach { entry ->
+        getInitialData().forEach { entry ->
             backend.insertMetadataElement(entry.key)
             entry.value.forEach { right ->
                 val r = backend.insertTemplate(right)

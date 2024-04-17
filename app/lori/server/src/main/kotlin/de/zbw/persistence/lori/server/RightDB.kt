@@ -526,7 +526,6 @@ class RightDB(
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_RIGHT_TEMPLATE_NAME = ANY(?)"
 
-
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
                 " SET last_applied_on=?" +
