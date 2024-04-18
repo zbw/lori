@@ -54,7 +54,10 @@ class ItemDB(
         return rs.getBoolean(1)
     }
 
-    fun itemContainsRight(rightId: String): Boolean {
+    /**
+     * Check if a given rightId is still used in the table.
+     */
+    fun itemContainsRightId(rightId: String): Boolean {
         val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_RIGHT).apply {
             this.setString(1, rightId)
         }
@@ -122,7 +125,7 @@ class ItemDB(
         } else throw IllegalStateException("No count found.")
     }
 
-    fun deleteItemByMetadata(
+    fun deleteItemByMetadataId(
         metadataId: String,
     ): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
@@ -137,7 +140,7 @@ class ItemDB(
         }
     }
 
-    fun deleteItemByRight(
+    fun deleteItemByRightId(
         rightId: String,
     ): Int {
         val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {

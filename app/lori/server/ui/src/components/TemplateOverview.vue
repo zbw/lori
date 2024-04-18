@@ -232,7 +232,7 @@ export default defineComponent({
       <v-alert v-model="templateLoadError" closable type="error">
         {{ templateLoadErrorMsg }}
       </v-alert>
-      <v-dialog v-model="templateApplyError" max-width="1000">
+      <v-dialog v-model="templateApplyError" max-width="500px">
         <v-card>
           <v-card-title class="text-h5"
             >Template Anwendung (teilweise) fehlgeschlagen</v-card-title

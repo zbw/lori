@@ -394,7 +394,7 @@ export default defineComponent({
     };
 
     /**
-     * Delete and Create Bookmarks compared to last save:
+     * Refresh bookmarks.
      */
     const updateBookmarks = (rightId: string, callback: () => void) => {
       templateApi
@@ -574,13 +574,10 @@ export default defineComponent({
     // Computed properties
     onMounted(() => {
       reinitializeRight();
-      if (!isNew.value) {
+      if (!isNew.value && isTemplate.value) {
         loadBookmarks();
       }
     });
-    const computedMetadataId = computed(() =>
-      props.metadataId != undefined ? props.metadataId : "",
-    );
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() => {
@@ -764,7 +761,6 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkItems,
       bookmarkHeaders,
-      computedMetadataId,
       computedRightId,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -849,7 +845,6 @@ export default defineComponent({
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="computedMetadataId"
           :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:deleteSuccessful="deleteSuccessful"
@@ -859,12 +854,11 @@ export default defineComponent({
       <v-dialog
         v-model="dialogDeleteTemplate"
         :retain-focus="false"
-        max-width="500pxi"
+        max-width="500px"
       >
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="computedMetadataId"
           :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:templateDeleteSuccessful="deleteSuccessful"

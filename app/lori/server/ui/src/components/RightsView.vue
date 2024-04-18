@@ -49,7 +49,7 @@ export default defineComponent({
         value: "endDate",
       },
       {
-        title: "Right-ID",
+        title: "Rechte-ID",
         value: "rightId",
       },
     ];

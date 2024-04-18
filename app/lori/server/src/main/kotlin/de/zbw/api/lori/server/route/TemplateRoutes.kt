@@ -347,6 +347,8 @@ fun Routing.templateRoutes(
                                 ),
                             )
                         } else {
+                            // Delete relations between Metadata and Template to avoid conflicts
+                            backend.deleteItemEntriesByRightId(rightId)
                             val entriesDeleted = backend.deleteRight(rightId)
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)
@@ -356,7 +358,7 @@ fun Routing.templateRoutes(
                                 call.respond(
                                     HttpStatusCode.NotFound,
                                     ApiError.notFoundError(
-                                        detail = "Für die TemplateId $rightId existiert kein Eintrag.",
+                                        detail = "Template mit ID '$rightId' existiert nicht.",
                                     ),
                                 )
                             }

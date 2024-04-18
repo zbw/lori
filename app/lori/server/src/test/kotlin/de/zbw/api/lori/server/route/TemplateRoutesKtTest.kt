@@ -1,8 +1,12 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
+import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.CONFIG
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
+import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.tracer
+import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -15,6 +19,7 @@ import de.zbw.lori.model.RightIdsRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateApplicationsRest
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
@@ -42,6 +47,69 @@ import java.sql.SQLException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class TemplateRoutesKtTest {
+
+    @Test
+    fun testDeleteTemplateOK() {
+        // given
+        val rightId = "123"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteRight(rightId) } returns 1
+            every { deleteItemEntriesByRightId(rightId) } returns 5
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication()
+            )
+            val response = client.delete("/api/v1/template/$rightId")
+            assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
+            verify(exactly = 1) { backend.deleteRight(rightId) }
+            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+        }
+    }
+
+    @Test
+    fun testDeleteTemplateNotFound() {
+        // given
+        val rightId = "123"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteRight(rightId) } returns 0
+            every { deleteItemEntriesByRightId(rightId) } returns 0
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication()
+            )
+            val response = client.delete("/api/v1/template/$rightId")
+            assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
+            verify(exactly = 1) { backend.deleteRight(rightId) }
+            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+        }
+    }
+
+    @Test
+    fun testDeleteTemplateException() {
+        // given
+        val rightId = "123"
+        val backend = mockk<LoriServerBackend>(relaxed = true) {
+            every { deleteRight(rightId) } throws SQLException("foo")
+        }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication()
+            )
+            val response = client.delete("/api/v1/template/$rightId")
+            assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
 
     @Test
     fun testPostTemplateCreated() {
@@ -415,7 +483,12 @@ class TemplateRoutesKtTest {
         val givenRightId2 = "12"
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { applyTemplates(listOf(givenRightId)) } returns mapOf(givenRightId to Pair(expectedMetadataIds, emptyList()))
+            every { applyTemplates(listOf(givenRightId)) } returns mapOf(
+                givenRightId to Pair(
+                    expectedMetadataIds,
+                    emptyList()
+                )
+            )
             every { applyAllTemplates() } returns listOf(
                 givenRightId to Pair(expectedMetadataIds, emptyList<RightError>()),
                 givenRightId2 to Pair(expectedMetadataIds, emptyList<RightError>())
@@ -547,5 +620,23 @@ class TemplateRoutesKtTest {
             }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
+    }
+
+    companion object {
+        fun getServicePool(
+            backend: LoriServerBackend,
+            samlUtils: SamlUtils = mockk(),
+        ) = ServicePoolWithProbes(
+            services = listOf(
+                mockk {
+                    every { isReady() } returns true
+                    every { isHealthy() } returns true
+                }
+            ),
+            config = CONFIG,
+            backend = backend,
+            tracer = tracer,
+            samlUtils = samlUtils,
+        )
     }
 }

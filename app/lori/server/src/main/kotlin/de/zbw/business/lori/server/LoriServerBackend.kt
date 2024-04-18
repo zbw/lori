@@ -216,7 +216,7 @@ class LoriServerBackend(
         }
     }
 
-    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemDB.itemContainsRight(rightId)
+    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemDB.itemContainsRightId(rightId)
 
     fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
 
@@ -239,9 +239,9 @@ class LoriServerBackend(
 
     fun deleteItemEntry(metadataId: String, rightId: String) = dbConnector.itemDB.deleteItem(metadataId, rightId)
 
-    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadata(metadataId)
+    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadataId(metadataId)
 
-    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRight(rightId)
+    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRightId(rightId)
 
     fun deleteGroup(groupId: String): Int {
         val receivedRights: List<String> = dbConnector.groupDB.getRightsByGroupId(groupId)
@@ -558,7 +558,7 @@ class LoriServerBackend(
         }.toSet()
 
         // Delete all template connections
-        dbConnector.itemDB.deleteItemByRight(rightId)
+        dbConnector.itemDB.deleteItemByRightId(rightId)
 
         // Update last_applied_on field
         dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)

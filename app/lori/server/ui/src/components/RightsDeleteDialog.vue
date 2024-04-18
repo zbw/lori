@@ -15,10 +15,6 @@ export default defineComponent({
       type: Number,
       required: true,
     },
-    metadataId: {
-      type: String,
-      required: true,
-    },
     isTemplate: {
       type: Boolean,
       required: false,
@@ -49,7 +45,7 @@ export default defineComponent({
         deleteAlertError.value = true;
       } else {
         api
-          .deleteItemRelation(props.metadataId, props.rightId)
+          .deleteRight(props.rightId)
           .then(() => {
             historyStore.addEntry({
               type: ChangeType.DELETED,

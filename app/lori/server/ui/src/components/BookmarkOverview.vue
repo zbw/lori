@@ -252,7 +252,7 @@ export default defineComponent({
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="close">Zurück</v-btn>
+        <v-btn color="blue darken-1" @click="close">Zurück</v-btn>
       </v-card-actions>
       <v-dialog
         v-model="templateDialogActivated"

@@ -164,19 +164,22 @@ fun Routing.rightRoutes(
                         if (rightId == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
-                        } else if (backend.itemContainsRight(rightId)) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "Conflict: Right id $rightId is still in use. Can't be deleted."
-                            )
-                            call.respond(
-                                HttpStatusCode.Conflict,
-                                ApiError.conflictError(ApiError.RESOURCE_STILL_IN_USE)
-                            )
                         } else {
-                            backend.deleteRight(rightId)
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.OK)
+                            // Delete relations between Metadata and Right to avoid conflicts
+                            backend.deleteItemEntriesByRightId(rightId)
+                            val entriesDeleted = backend.deleteRight(rightId)
+                            if (entriesDeleted == 1) {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(HttpStatusCode.OK)
+                            } else {
+                                span.setStatus(StatusCode.ERROR)
+                                call.respond(
+                                    HttpStatusCode.NotFound,
+                                    ApiError.notFoundError(
+                                        detail = "Recht mit ID '$rightId' existiert nicht.",
+                                    ),
+                                )
+                            }
                         }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
