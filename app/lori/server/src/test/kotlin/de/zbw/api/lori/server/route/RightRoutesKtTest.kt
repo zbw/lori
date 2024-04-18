@@ -112,12 +112,11 @@ class RightRoutesKtTest {
 
     @Test
     fun testDeleteRightOK() {
-
         // given
         val rightId = "123"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsRight(rightId) } returns false
             every { deleteRight(rightId) } returns 1
+            every { deleteItemEntriesByRightId(rightId) } returns 5
         }
         val servicePool = getServicePool(backend)
 
@@ -128,17 +127,18 @@ class RightRoutesKtTest {
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 1) { backend.itemContainsRight(rightId) }
+            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
             verify(exactly = 1) { backend.deleteRight(rightId) }
         }
     }
 
     @Test
-    fun testDeleteRightConflict() {
+    fun testDeleteRightNotFound() {
         // given
         val rightId = "123"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsRight(rightId) } returns true
+            every { deleteRight(rightId) } returns 0
+            every { deleteItemEntriesByRightId(rightId) } returns 0
         }
         val servicePool = getServicePool(backend)
 
@@ -148,8 +148,9 @@ class RightRoutesKtTest {
                 servicePool.testApplication()
             )
             val response = client.delete("/api/v1/right/$rightId")
-            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
-            verify(exactly = 1) { backend.itemContainsRight(rightId) }
+            assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.NotFound))
+            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+            verify(exactly = 1) { backend.deleteRight(rightId) }
         }
     }
 
@@ -158,7 +159,6 @@ class RightRoutesKtTest {
         // given
         val rightId = "123"
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsRight(rightId) } returns false
             every { deleteRight(rightId) } throws SQLException()
         }
         val servicePool = getServicePool(backend)

@@ -578,9 +578,6 @@ export default defineComponent({
         loadBookmarks();
       }
     });
-    const computedMetadataId = computed(() =>
-      props.metadataId != undefined ? props.metadataId : "",
-    );
     const computedRight = computed(() => props.right);
     const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() => {
@@ -764,7 +761,6 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkItems,
       bookmarkHeaders,
-      computedMetadataId,
       computedRightId,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -849,7 +845,6 @@ export default defineComponent({
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="computedMetadataId"
           :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:deleteSuccessful="deleteSuccessful"
@@ -864,7 +859,6 @@ export default defineComponent({
         <RightsDeleteDialog
           :index="index"
           :is-template="isTemplate"
-          :metadataId="computedMetadataId"
           :right-id="computedRightId"
           v-on:deleteDialogClosed="deleteDialogClosed"
           v-on:templateDeleteSuccessful="deleteSuccessful"

@@ -91,7 +91,7 @@ class ItemDBTest : DatabaseTest() {
             `is`(listOf(generatedRightId))
         )
 
-        val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadata(expectedMetadata.metadataId)
+        val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadataId(expectedMetadata.metadataId)
         assertThat(
             deletedItemsByMetadata,
             `is`(1),
@@ -110,7 +110,7 @@ class ItemDBTest : DatabaseTest() {
             `is`(listOf(generatedRightId))
         )
 
-        val deletedItemsByRight = dbConnector.itemDB.deleteItemByRight(generatedRightId)
+        val deletedItemsByRight = dbConnector.itemDB.deleteItemByRightId(generatedRightId)
         assertThat(
             deletedItemsByRight,
             `is`(1),
@@ -128,7 +128,7 @@ class ItemDBTest : DatabaseTest() {
         val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
         val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
-        assertFalse(dbConnector.itemDB.itemContainsRight(expectedRight.rightId!!))
+        assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
         assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId!!))
         assertFalse(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
         // when
@@ -137,7 +137,7 @@ class ItemDBTest : DatabaseTest() {
         dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
 
         // then
-        assertTrue(dbConnector.itemDB.itemContainsRight(generatedRightId))
+        assertTrue(dbConnector.itemDB.itemContainsRightId(generatedRightId))
         assertTrue(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
         assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, generatedRightId))
         assertThat(dbConnector.itemDB.countItemByRightId(generatedRightId), `is`(1))
