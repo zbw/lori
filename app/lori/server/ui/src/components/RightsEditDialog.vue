@@ -574,7 +574,7 @@ export default defineComponent({
     // Computed properties
     onMounted(() => {
       reinitializeRight();
-      if (!isNew.value) {
+      if (!isNew.value && isTemplate.value) {
         loadBookmarks();
       }
     });
