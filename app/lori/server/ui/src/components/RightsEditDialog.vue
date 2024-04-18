@@ -394,7 +394,7 @@ export default defineComponent({
     };
 
     /**
-     * Delete and Create Bookmarks compared to last save:
+     * Refresh bookmarks.
      */
     const updateBookmarks = (rightId: string, callback: () => void) => {
       templateApi
@@ -859,7 +859,7 @@ export default defineComponent({
       <v-dialog
         v-model="dialogDeleteTemplate"
         :retain-focus="false"
-        max-width="500pxi"
+        max-width="500px"
       >
         <RightsDeleteDialog
           :index="index"
