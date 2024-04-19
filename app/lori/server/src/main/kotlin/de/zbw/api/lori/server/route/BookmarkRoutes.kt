@@ -140,6 +140,50 @@ fun Routing.bookmarkRoutes(
         }
     }
     route("/api/v1/bookmark") {
+        route("/list") {
+            get {
+                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/bookmark/list").setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
+                        val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                        if (limit < 1 || limit > 200) {
+                            span.setStatus(
+                                StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between 1 and 200."
+                            )
+                            call.respond(
+                                HttpStatusCode.BadRequest,
+                                ErrorRest(
+                                    type = "/errors/badrequest",
+                                    title = "Ungültiger Query Parameter.",
+                                    detail = "Der Limit Parameter muss zwischen 1 und 200 sein.",
+                                    status = "400",
+                                ),
+                            )
+                            return@withContext
+                        }
+                        val receivedBookmarks: List<Bookmark> = backend.getBookmarkList(limit, offset)
+                        span.setStatus(StatusCode.OK)
+                        call.respond(receivedBookmarks.map { it.toRest() })
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ErrorRest(
+                                type = "/errors/internalservererror",
+                                title = "Unerwarteter Fehler.",
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                                status = "500",
+                            ),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+        }
+
         /**
          * Return Bookmark for a given id.
          */
@@ -181,6 +225,7 @@ fun Routing.bookmarkRoutes(
                 }
             }
         }
+
         authenticate("auth-login") {
             post {
                 val span: Span = tracer
@@ -225,6 +270,7 @@ fun Routing.bookmarkRoutes(
                     }
                 }
             }
+
             /**
              * Update an existing Bookmark.
              */
@@ -319,50 +365,6 @@ fun Routing.bookmarkRoutes(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
                                 detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                            ),
-                        )
-                    } finally {
-                        span.end()
-                    }
-                }
-            }
-        }
-
-        route("/list") {
-            get {
-                val span = tracer.spanBuilder("lori.LoriService.GET/api/v1/bookmark/list").setSpanKind(SpanKind.SERVER)
-                    .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
-                        val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
-                        if (limit < 1 || limit > 200) {
-                            span.setStatus(
-                                StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between 1 and 200."
-                            )
-                            call.respond(
-                                HttpStatusCode.BadRequest,
-                                ErrorRest(
-                                    type = "/errors/badrequest",
-                                    title = "Ungültiger Query Parameter.",
-                                    detail = "Der Limit Parameter muss zwischen 1 und 200 sein.",
-                                    status = "400",
-                                ),
-                            )
-                            return@withContext
-                        }
-                        val receivedBookmarks: List<Bookmark> = backend.getBookmarkList(limit, offset)
-                        span.setStatus(StatusCode.OK)
-                        call.respond(receivedBookmarks.map { it.toRest() })
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ErrorRest(
-                                type = "/errors/internalservererror",
-                                title = "Unerwarteter Fehler.",
-                                detail = "Ein interner Fehler ist aufgetreten.",
-                                status = "500",
                             ),
                         )
                     } finally {
