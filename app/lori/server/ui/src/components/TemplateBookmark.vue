@@ -89,7 +89,7 @@ export default defineComponent({
 <template>
   <v-card>
     <v-container>
-      <v-card-title>Suche Gespeichterte Suchen</v-card-title>
+      <v-card-title>Auswahl Bookmarks</v-card-title>
       <v-alert v-model="bookmarkLoadError" closable type="error">
         {{ bookmarkLoadErrorMsg }}"
       </v-alert>

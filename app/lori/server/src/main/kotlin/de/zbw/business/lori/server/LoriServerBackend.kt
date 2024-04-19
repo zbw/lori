@@ -395,6 +395,14 @@ class LoriServerBackend(
         }.toMap()
     }
 
+    fun isException(rightId: String): Boolean = dbConnector.rightDB.isException(rightId)
+
+    fun addExceptionToTemplate(rightIdTemplate: String, rightIdExceptions: List<String>): Int =
+        dbConnector.rightDB.addExceptionToTemplate(
+            rightIdTemplate = rightIdTemplate,
+            rightIdExceptions = rightIdExceptions,
+        )
+
     fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
 

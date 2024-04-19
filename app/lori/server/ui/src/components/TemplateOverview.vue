@@ -146,8 +146,9 @@ export default defineComponent({
      * Child events:
      */
     const lastModifiedTemplateName = ref("");
-    const childTemplateAdded = (templateName: string) => {
-      lastModifiedTemplateName.value = templateName;
+    const childTemplateAdded = (template: RightRest) => {
+      lastModifiedTemplateName.value =
+        template.templateName == undefined ? "invalid" : template.templateName;
       alertSuccessful.value = true;
       alertSuccessfulMsg.value =
         "Template " +

@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.ExceptionsForTemplateRest
 import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightIdsRest
 import de.zbw.lori.model.RightRest
@@ -284,6 +285,56 @@ fun Routing.templateRoutes(
                 }
             }
 
+            post("/exceptions") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/exceptions")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val templateExceptionPair: ExceptionsForTemplateRest =
+                            call.receive(ExceptionsForTemplateRest::class)
+                        val idOfTemplate = templateExceptionPair.idOfTemplate
+                        val idsOfExceptions = templateExceptionPair.idsOfExceptions
+                        span.setAttribute("idOfTemplate", idOfTemplate)
+                        span.setAttribute("idsOfExceptions", idsOfExceptions.toString())
+                        if (idsOfExceptions.contains(idOfTemplate)){
+                            span.setStatus(StatusCode.ERROR)
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Ein Template kann nicht seine eigene Exception sein")
+                            )
+                        }
+                        // Prevent deeper exception loops -> max depth = 1
+                        if (backend.isException(idOfTemplate)) {
+                            span.setStatus(StatusCode.ERROR)
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Exception existiert nicht")
+                            )
+                        }
+                        backend.addExceptionToTemplate(
+                            rightIdTemplate = idOfTemplate,
+                            rightIdExceptions = idsOfExceptions
+                        )
+
+                        span.setStatus(StatusCode.OK)
+                        call.respond(
+                            HttpStatusCode.OK
+                        )
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                            ),
+                        )
+                    }
+                }
+
+            }
+
             post("{id}/bookmarks") {
                 val span =
                     tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks")
@@ -350,6 +401,7 @@ fun Routing.templateRoutes(
                         } else {
                             // Delete relations between Metadata and Template to avoid conflicts
                             backend.deleteItemEntriesByRightId(rightId)
+                            backend.deleteBookmarkTemplatePairsByRightId(rightId)
                             val entriesDeleted = backend.deleteRight(rightId)
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)

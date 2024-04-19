@@ -1,6 +1,6 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
-import { BookmarkRest } from "@/generated-sources/openapi";
+import { BookmarkRest, RightRest } from "@/generated-sources/openapi";
 import bookmarkApi from "@/api/bookmarkApi";
 import error from "@/utils/error";
 import { useDialogsStore } from "@/stores/dialogs";
@@ -137,9 +137,10 @@ export default defineComponent({
       templateDialogActivated.value = false;
     };
 
-    const childTemplateAdded = () => {
+    const childTemplateAdded = (template: RightRest) => {
       alertSuccessful.value = true;
-      alertSuccessfulMsg.value = "Template has been created."; // TODO: Display Id
+      alertSuccessfulMsg.value =
+        "Successfully created Template " + template.templateName;
     };
 
     /**

@@ -397,6 +397,42 @@ class RightDB(
         }.takeWhile { true }.toList()
     }
 
+    /**
+     * Checks if a given RightId is an exception.
+     */
+    fun isException(rightId: String): Boolean {
+        val prepStmt = connection.prepareStatement(STATEMENT_IS_EXCEPTION).apply {
+            this.setString(1, rightId)
+        }
+
+        val span = tracer.spanBuilder("isTemplateAnException").startSpan()
+        val rs = try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.executeQuery() }
+        } finally {
+            span.end()
+        }
+        rs.next()
+        return (rs.getInt(1) == 1)
+    }
+
+    /**
+     * Connects an exception with a template.
+     */
+    fun addExceptionToTemplate(rightIdTemplate: String, rightIdExceptions: List<String>): Int {
+        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
+            this.setString(1, rightIdTemplate)
+            this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
+        }
+        val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
+        return try {
+            span.makeCurrent()
+            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+        } finally {
+            span.end()
+        }
+    }
+
     companion object {
         private const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_FROM = "exception_from"
@@ -493,13 +529,13 @@ class RightDB(
             "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID =
-            "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
-                "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-                "basis_access_state, notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on,$COLUMN_EXCEPTION_FROM" +
+            "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
+                "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
+                "basis_access_state,notes_process_documentation,notes_management_related," +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_EXCEPTION_FROM = ?"
 
@@ -530,6 +566,16 @@ class RightDB(
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
                 " SET last_applied_on=?" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
+
+        const val STATEMENT_IS_EXCEPTION =
+            "SELECT COUNT(*)" +
+                " FROM $TABLE_NAME_ITEM_RIGHT" +
+                " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_EXCEPTION_FROM IS NOT NULL AND $COLUMN_IS_TEMPLATE"
+
+        const val STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM =
+            "UPDATE $TABLE_NAME_ITEM_RIGHT" +
+                " SET $COLUMN_EXCEPTION_FROM=?" +
+                " WHERE $COLUMN_RIGHT_ID=ANY(?)"
 
         fun extractRightFromRS(rs: ResultSet, groupDB: GroupDB): ItemRight {
             val currentRightId = rs.getString(1)

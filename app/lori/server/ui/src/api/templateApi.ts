@@ -25,7 +25,7 @@ export default {
       },
     });
   },
-  deleteTemplate(rightId: string): Promise<void> {
+  deleteTemplateById(rightId: string): Promise<void> {
     return templateApi.deleteTemplateByRightId({
       id: rightId,
     });
@@ -71,6 +71,17 @@ export default {
       id: rightId,
       limit: limit,
       offset: offset,
+    });
+  },
+  addExceptionToTemplate(
+    rightIdTemplate: string,
+    rightIdException: Array<string>,
+  ): Promise<void> {
+    return templateApi.addExceptionsToTemplate({
+      body: {
+        idOfTemplate: rightIdTemplate,
+        idsOfExceptions: rightIdException,
+      },
     });
   },
 };
