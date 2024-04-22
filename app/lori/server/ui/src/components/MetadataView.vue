@@ -221,7 +221,7 @@ export default defineComponent({
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.licenceUrl">
-              <v-col>Lizenz URL</v-col>
+              <v-col>OC-/CC-Lizenz-URL</v-col>
               <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
               <v-col></v-col>
             </v-row>
