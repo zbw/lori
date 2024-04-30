@@ -1,6 +1,6 @@
 FROM alpine:3.19.1 AS tools
 
-LABEL IMAGE_VERSION_TAG=1.0.3
+LABEL IMAGE_VERSION_TAG=1.0.4
 LABEL IMAGE_NAME=vault-kubectl-helm
 LABEL OTC_STAGE=zbw-tools-nl
 
@@ -9,7 +9,7 @@ RUN apk add --no-cache curl \
     jq
 
 FROM tools as vault
-ARG VAULT_VERSION=1.15.6
+ARG VAULT_VERSION=1.16.2
 RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT_VERSION"_linux_amd64.zip && \
     unzip vault* && \
     chmod +x ./vault && \
@@ -35,7 +35,7 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v"$KUBECT
     mv ./kubectl /usr/local/bin/kubectl
 
 FROM kubectl AS helm
-ARG HELM_VERSION=3.14.3
+ARG HELM_VERSION=3.14.4
 RUN curl -L https://get.helm.sh/helm-v"$HELM_VERSION"-linux-amd64.tar.gz -o helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     tar -xzf helm-v"$HELM_VERSION"-linux-amd64.tar.gz && \
     chmod +x linux-amd64/helm && \
