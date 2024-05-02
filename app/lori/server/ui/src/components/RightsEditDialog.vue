@@ -356,7 +356,6 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
-          // TODO: DEBUG
           const exceptionIds: string[] = exceptionTemplateItems.value
             .map((e) => e.rightId)
             .filter((e) => e != undefined);
@@ -608,6 +607,7 @@ export default defineComponent({
       reinitializeRight();
       if (!isNew.value && isTemplate.value) {
         loadBookmarks();
+        loadExceptions();
       }
     });
     const computedRight = computed(() => props.right);
@@ -810,6 +810,26 @@ export default defineComponent({
           .getBookmarksByRightId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
             bookmarkItems.value = bookmarks;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              generalAlertErrorMsg.value = errMsg;
+              generalAlertError.value = true;
+            });
+          });
+      }
+    };
+
+    const loadExceptions = () => {
+      if (computedRightId.value == undefined) {
+        generalAlertErrorMsg.value =
+          "Error while loading bookmarks. Invalid Template ID.";
+        generalAlertError.value = true;
+      } else {
+        templateApi
+          .getExceptionsById(computedRightId.value)
+          .then((exceptions: Array<BookmarkRest>) => {
+            exceptionTemplateItems.value = exceptions;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {

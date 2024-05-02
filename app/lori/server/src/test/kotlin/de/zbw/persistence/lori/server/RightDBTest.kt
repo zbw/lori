@@ -199,13 +199,16 @@ class RightDBTest : DatabaseTest() {
             TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException)
         val excID1 = dbConnector.rightDB.insertRight(exceptionTemplate1)
         val exceptionTemplate2 =
-            TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException+"2")
+            TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException + "2")
         val excID2 = dbConnector.rightDB.insertRight(exceptionTemplate2)
 
         assertFalse(
             dbConnector.rightDB.isException(upperID),
         )
-        dbConnector.rightDB.addExceptionToTemplate(rightIdExceptions = listOf(excID1, excID2) , rightIdTemplate = upperID)
+        dbConnector.rightDB.addExceptionToTemplate(
+            rightIdExceptions = listOf(excID1, excID2),
+            rightIdTemplate = upperID
+        )
         assertFalse(
             dbConnector.rightDB.isException(upperID),
         )
@@ -218,10 +221,12 @@ class RightDBTest : DatabaseTest() {
         val result = dbConnector.rightDB.getExceptionsByRightId(upperID)
         assertThat(
             result.toSet(),
-            `is`(setOf(
-                exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
-                exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID)
-            )),
+            `is`(
+                setOf(
+                    exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
+                    exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID)
+                )
+            ),
         )
     }
 

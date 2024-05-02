@@ -285,56 +285,6 @@ fun Routing.templateRoutes(
                 }
             }
 
-            post("/exceptions") {
-                val span =
-                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/exceptions")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val templateExceptionPair: ExceptionsForTemplateRest =
-                            call.receive(ExceptionsForTemplateRest::class)
-                        val idOfTemplate = templateExceptionPair.idOfTemplate
-                        val idsOfExceptions = templateExceptionPair.idsOfExceptions
-                        span.setAttribute("idOfTemplate", idOfTemplate)
-                        span.setAttribute("idsOfExceptions", idsOfExceptions.toString())
-                        if (idsOfExceptions.contains(idOfTemplate)){
-                            span.setStatus(StatusCode.ERROR)
-                            return@withContext call.respond(
-                                HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Ein Template kann nicht seine eigene Exception sein")
-                            )
-                        }
-                        // Prevent deeper exception loops -> max depth = 1
-                        if (backend.isException(idOfTemplate)) {
-                            span.setStatus(StatusCode.ERROR)
-                            return@withContext call.respond(
-                                HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Exception existiert nicht")
-                            )
-                        }
-                        backend.addExceptionToTemplate(
-                            rightIdTemplate = idOfTemplate,
-                            rightIdExceptions = idsOfExceptions
-                        )
-
-                        span.setStatus(StatusCode.OK)
-                        call.respond(
-                            HttpStatusCode.OK
-                        )
-                    } catch (e: Exception) {
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ApiError.internalServerError(
-                                detail = "Ein interner Fehler ist aufgetreten.",
-                            ),
-                        )
-                    }
-                }
-
-            }
-
             post("{id}/bookmarks") {
                 val span =
                     tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks")
@@ -426,6 +376,91 @@ fun Routing.templateRoutes(
                         )
                     } finally {
                         span.end()
+                    }
+                }
+            }
+        }
+
+        route("/exceptions") {
+            get("{id}") {
+                val span =
+                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/exceptions/{id}")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        val rightId = call.parameters["id"]
+                        span.setAttribute("rightId", rightId ?: "null")
+                        if (rightId == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                "No valid id has been provided in the url."
+                            )
+                        }
+                        val exceptions = backend.getExceptionsByRightId(rightId)
+                        call.respond(exceptions.map { it.toRest() })
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.InternalServerError,
+                            ApiError.internalServerError(
+                                detail = "Ein interner Fehler ist aufgetreten.",
+                            ),
+                        )
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            authenticate("auth-login") {
+                post {
+                    val span =
+                        tracer.spanBuilder("lori.LoriService.POST/api/v1/template/exceptions")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
+                    withContext(span.asContextElement()) {
+                        try {
+                            val templateExceptionPair: ExceptionsForTemplateRest =
+                                call.receive(ExceptionsForTemplateRest::class)
+                            val idOfTemplate = templateExceptionPair.idOfTemplate
+                            val idsOfExceptions = templateExceptionPair.idsOfExceptions
+                            span.setAttribute("idOfTemplate", idOfTemplate)
+                            span.setAttribute("idsOfExceptions", idsOfExceptions.toString())
+                            if (idsOfExceptions.contains(idOfTemplate)) {
+                                span.setStatus(StatusCode.ERROR)
+                                return@withContext call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    ApiError.badRequestError("Ein Template kann nicht seine eigene Exception sein")
+                                )
+                            }
+                            // Prevent deeper exception loops -> max depth = 1
+                            if (backend.isException(idOfTemplate)) {
+                                span.setStatus(StatusCode.ERROR)
+                                return@withContext call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    ApiError.badRequestError("Exception existiert nicht")
+                                )
+                            }
+                            backend.addExceptionToTemplate(
+                                rightIdTemplate = idOfTemplate,
+                                rightIdExceptions = idsOfExceptions
+                            )
+
+                            span.setStatus(StatusCode.OK)
+                            call.respond(
+                                HttpStatusCode.OK
+                            )
+                        } catch (e: Exception) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Fehler ist aufgetreten.",
+                                ),
+                            )
+                        }
                     }
                 }
             }

@@ -96,7 +96,7 @@ template-id:
     parameters:
       - name: id
         in: path
-        description: Template Id
+        description: Right Id
         required: true
         schema:
           type: string
@@ -425,3 +425,38 @@ template-exceptions:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
+
+template-exceptions-id:
+  get:
+    tags:
+      - template
+    summary: Receive all exceptions for a given right id
+    operationId: getExceptionsById
+    parameters:
+      - name: id
+        in: path
+        description: Right Id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'right.model.yaml#/RightRest'
+      400:
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

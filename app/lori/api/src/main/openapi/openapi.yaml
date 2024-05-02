@@ -70,6 +70,8 @@ paths:
     $ref: 'template.api.yaml#/template-applications'
   /template/exceptions:
     $ref: 'template.api.yaml#/template-exceptions'
+  /template/exceptions/{id}:
+    $ref: 'template.api.yaml#/template-exceptions-id'
   /template/{id}/bookmarks:
     $ref: 'template.api.yaml#/template-bookmarks'
   /template/{id}/bookmarks/entries:

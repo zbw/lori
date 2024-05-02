@@ -459,6 +459,7 @@ fun Routing.itemRoutes(
                         metadataFilters,
                         rightFilters,
                         noRightInformationFilter,
+                        emptyList(),
                     )
                     span.setStatus(StatusCode.OK)
                     call.respond(
