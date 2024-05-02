@@ -26,6 +26,12 @@ right:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflicting resources
         content:
@@ -66,6 +72,12 @@ right:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
         content:
@@ -95,6 +107,12 @@ right-id:
         content: { }
       400:
         description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
         content:
           application/json:
             schema:

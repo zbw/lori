@@ -20,6 +20,12 @@ group:
           application/json:
             schema:
               $ref: 'group.model.yaml#/GroupIdCreated'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       405:
         description: Invalid input
         content:
@@ -63,6 +69,12 @@ group:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
         content:
@@ -90,6 +102,12 @@ group-id:
       200:
         description: Deletion of the group was successful
         content:
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id does not exist
         content:

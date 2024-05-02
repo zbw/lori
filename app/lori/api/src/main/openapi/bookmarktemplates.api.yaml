@@ -23,6 +23,12 @@ bookmarktemplates:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflict resource exists already
         content:
@@ -61,6 +67,12 @@ bookmarktemplates:
       200:
         description: Deletion of bookmark template pair was successful
         content:
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id combination does not exist
         content:
@@ -104,6 +116,12 @@ bookmarktemplates-batch:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflict resource exists already
         content:
@@ -139,6 +157,12 @@ bookmarktemplates-batch:
           application/json:
             schema:
               type: integer
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
         content:
