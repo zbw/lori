@@ -41,7 +41,6 @@ import org.postgresql.util.ServerErrorMessage
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
-import kotlin.math.exp
 
 /**
  * Testing [TemplateRoutes].
