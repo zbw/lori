@@ -26,6 +26,12 @@ template:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflict resource exists already
         content:
@@ -61,6 +67,12 @@ template:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Not found
         content:
@@ -84,7 +96,7 @@ template-id:
     parameters:
       - name: id
         in: path
-        description: Template Id
+        description: Right Id
         required: true
         schema:
           type: string
@@ -125,6 +137,12 @@ template-id:
       200:
         description: Deletion of the template was successful
         content:
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: ID does not exist
         content:
@@ -233,6 +251,12 @@ template-bookmarks:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
         content:
@@ -298,6 +322,12 @@ template-applications:
           application/json:
             schema:
               $ref: 'template.model.yaml#/TemplateApplicationsRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       500:
         description: Internal error
         content:
@@ -356,3 +386,77 @@ template-bookmarks-entries:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
+
+template-exceptions:
+  post:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - template
+    summary: Pair an exception with to a template
+    operationId: addExceptionsToTemplate
+    requestBody:
+      description: Add Exceptions to a Template
+      content:
+        application/json:
+          schema:
+            $ref: 'template.model.yaml#/ExceptionsForTemplateRest'
+      required: true
+    responses:
+      200:
+        description: Paired Template with Exception successfully
+        content:
+      400:
+        description: Request was invalid in some way
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
+template-exceptions-id:
+  get:
+    tags:
+      - template
+    summary: Receive all exceptions for a given right id
+    operationId: getExceptionsById
+    parameters:
+      - name: id
+        in: path
+        description: Right Id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'right.model.yaml#/RightRest'
+      400:
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

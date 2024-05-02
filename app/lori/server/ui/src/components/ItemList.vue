@@ -889,12 +889,9 @@ export default defineComponent({
             Laden der bibliographischen Daten war nicht erfolgreich:
             {{ loadAlertErrorMessage }}
           </v-alert>
-          <v-alert
-            v-model="bookmarkSuccessfulMsg"
-            closable
-            text="Bookmark erfolgreich hinzugefügt mit Id {{ newBookmarkId.toString() }}."
-            type="success"
-          >
+          <v-alert v-model="bookmarkSuccessfulMsg" closable type="success">
+            Bookmark erfolgreich hinzugefügt mit Id
+            {{ newBookmarkId.toString() }}.
           </v-alert>
           <v-alert v-model="alertIsActive" closable type="success">
             {{ alertMsg }}

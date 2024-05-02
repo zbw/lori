@@ -130,7 +130,6 @@ export default defineComponent({
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
-          :activated="true"
           :index="index"
           :isNewRight="false"
           :isNewTemplate="false"

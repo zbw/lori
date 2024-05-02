@@ -216,8 +216,6 @@ class LoriServerBackend(
         }
     }
 
-    fun itemContainsRight(rightId: String): Boolean = dbConnector.itemDB.itemContainsRightId(rightId)
-
     fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
 
     fun itemContainsEntry(metadataId: String, rightId: String): Boolean =
@@ -225,10 +223,6 @@ class LoriServerBackend(
 
     fun countMetadataEntries(): Int =
         dbConnector.searchDB.countSearchMetadata(
-            null,
-            emptyList(),
-            emptyList(),
-            null,
             null,
             emptyList(),
             emptyList(),
@@ -294,10 +288,7 @@ class LoriServerBackend(
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
-        exceptionSearchTerm: String? = null,
-        exceptionMetadataFilter: List<MetadataSearchFilter> = emptyList(),
-        exceptionRightSearchFilter: List<RightSearchFilter> = emptyList(),
-        exceptionNoRightInformationFilter: NoRightInformationFilter? = null,
+        metadataIdsToIgnore: List<String> = emptyList(),
     ): SearchQueryResult {
         val searchExpression: SearchExpression? =
             searchTerm
@@ -309,30 +300,16 @@ class LoriServerBackend(
                         is ErrorResult -> throw ParsingException("Parsing error in query: $it")
                     }
                 }
-        val exceptionSearchExpression: SearchExpression? =
-            exceptionSearchTerm
-                ?.takeIf { it.isNotBlank() }
-                ?.let { SearchGrammar.tryParseToEnd(it) }
-                ?.let {
-                    when (it) {
-                        is Parsed -> it.value
-                        is ErrorResult -> throw ParsingException("Parsing error in query: $it")
-                    }
-                }
-
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
-            dbConnector.searchDB.searchMetadata(
+            dbConnector.searchDB.searchMetadataItems(
                 searchExpression,
                 limit,
                 offset,
                 metadataSearchFilter,
                 rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                 noRightInformationFilter,
-                exceptionSearchExpression,
-                exceptionMetadataFilter,
-                exceptionRightSearchFilter,
-                exceptionNoRightInformationFilter,
+                metadataIdsToIgnore,
             )
 
         // Combine Metadata entries with their rights
@@ -353,10 +330,6 @@ class LoriServerBackend(
                         metadataSearchFilter,
                         rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                         noRightInformationFilter,
-                        exceptionSearchExpression,
-                        exceptionMetadataFilter,
-                        exceptionRightSearchFilter,
-                        exceptionNoRightInformationFilter,
                     )
                 }
                 ?: 0
@@ -367,10 +340,6 @@ class LoriServerBackend(
             metadataSearchFilter,
             rightSearchFilter,
             noRightInformationFilter,
-            exceptionSearchExpression,
-            exceptionMetadataFilter,
-            exceptionRightSearchFilter,
-            exceptionNoRightInformationFilter,
         )
         return SearchQueryResult(
             numberOfResults = numberOfResults,
@@ -394,6 +363,14 @@ class LoriServerBackend(
             right.rightId to (right.templateName to idToCount[right.templateName]!!)
         }.toMap()
     }
+
+    fun isException(rightId: String): Boolean = dbConnector.rightDB.isException(rightId)
+
+    fun addExceptionToTemplate(rightIdTemplate: String, rightIdExceptions: List<String>): Int =
+        dbConnector.rightDB.addExceptionToTemplate(
+            rightIdTemplate = rightIdTemplate,
+            rightIdExceptions = rightIdExceptions,
+        )
 
     fun insertBookmark(bookmark: Bookmark): Int =
         dbConnector.bookmarkDB.insertBookmark(bookmark)
@@ -490,44 +467,50 @@ class LoriServerBackend(
                 emptyList(),
                 emptyList()
             )
-        // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
-        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-
-        // Receive exception templates
+        // Exceptions
         val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
         val bookmarksExceptions: List<Bookmark> =
             dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
-        val exceptionSearchTerm = bookmarksExceptions.map { b ->
-            b.searchTerm
-        }.filter { !it.isNullOrBlank() }
-            .joinToString(" & ") { s ->
-                "($s)"
-            }
-        val exceptionMetadataFilter = bookmarksExceptions.map { b ->
-            listOfNotNull(
-                b.paketSigelFilter,
-                b.publicationDateFilter,
-                b.publicationTypeFilter,
-                b.zdbIdFilter,
-            )
-        }.flatten()
-        val exceptionRightSearchFilter = bookmarksExceptions.map { b ->
-            listOfNotNull(
-                b.accessStateFilter,
-                b.temporalValidityFilter,
-                b.validOnFilter,
-                b.startDateFilter,
-                b.endDateFilter,
-                b.formalRuleFilter,
-            )
-        }.flatten()
 
-        val exceptionNoRightInformationFilter = bookmarksExceptions.firstNotNullOfOrNull { b ->
-            b.noRightInformationFilter
-        }
+        val searchResultsExceptions: Set<String> = bookmarksExceptions.asSequence().flatMap { b ->
+            val searchExpression: SearchExpression? =
+                b.searchTerm
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { SearchGrammar.tryParseToEnd(it) }
+                    ?.let {
+                        when (it) {
+                            is Parsed -> it.value
+                            is ErrorResult -> throw ParsingException("Parsing error in query: $it")
+                        }
+                    }
+            dbConnector.searchDB.searchForMetadataIds(
+                searchExpression = searchExpression,
+                limit = null,
+                offset = null,
+                metadataSearchFilter = listOfNotNull(
+                    b.paketSigelFilter,
+                    b.publicationDateFilter,
+                    b.publicationTypeFilter,
+                    b.zdbIdFilter,
+                ),
+                rightSearchFilter = listOfNotNull(
+                    b.accessStateFilter,
+                    b.temporalValidityFilter,
+                    b.validOnFilter,
+                    b.startDateFilter,
+                    b.endDateFilter,
+                    b.formalRuleFilter,
+                ),
+                noRightInformationFilter = b.noRightInformationFilter,
+                metadataIdsToIgnore = emptyList(),
+            )
+        }.toSet()
+
+        // Receive all bookmark ids
+        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
+        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
 
         // Get search results for each bookmark
         val searchResults: Set<Item> = bookmarks.asSequence().flatMap { b ->
@@ -550,10 +533,7 @@ class LoriServerBackend(
                     b.formalRuleFilter,
                 ),
                 noRightInformationFilter = b.noRightInformationFilter,
-                exceptionSearchTerm = exceptionSearchTerm,
-                exceptionMetadataFilter = exceptionMetadataFilter,
-                exceptionRightSearchFilter = exceptionRightSearchFilter,
-                exceptionNoRightInformationFilter = exceptionNoRightInformationFilter,
+                searchResultsExceptions.toList(),
             ).results
         }.toSet()
 
@@ -576,6 +556,9 @@ class LoriServerBackend(
         }
         return Pair(appliedMetadataIds, itemsWithConflicts.second)
     }
+
+    fun getExceptionsByRightId(rightId: String): List<ItemRight> =
+        dbConnector.rightDB.getExceptionsByRightId(rightId)
 
     /**
      * Errors.

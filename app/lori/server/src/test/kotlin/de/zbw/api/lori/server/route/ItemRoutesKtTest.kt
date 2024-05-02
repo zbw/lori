@@ -599,6 +599,8 @@ class ItemRoutesKtTest {
                     any(),
                     any(),
                     any(),
+                    any(),
+                    any(),
                 )
             } returns (
                 SearchQueryResult(

@@ -31,6 +31,12 @@ item:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
         description: Conflict resource exists already or date fields may conflict
         content:
@@ -70,6 +76,12 @@ item-deletion:
       200:
         description: Deletion was successfull
         content: { }
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Relation does not exist
         content:
@@ -222,6 +234,12 @@ item-right:
         content: { }
       400:
         description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
         content:
           application/json:
             schema:

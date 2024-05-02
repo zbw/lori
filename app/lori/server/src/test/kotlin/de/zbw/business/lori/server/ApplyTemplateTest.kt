@@ -45,6 +45,8 @@ class ApplyTemplateTest : DatabaseTest() {
                 endDate = LocalDate.of(2000, 12, 31),
             )
         ),
+        item1ZDB2 to emptyList(),
+        item2ZDB2 to emptyList(),
     )
 
     @BeforeClass
@@ -164,8 +166,81 @@ class ApplyTemplateTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testApplyTemplateWithException() {
+        // Create Bookmarks
+        val bookmarkIdUpper = backend.insertBookmark(
+            Bookmark(
+                bookmarkName = "allZDB2",
+                bookmarkId = 10,
+                zdbIdFilter = ZDBIdFilter(
+                    zdbIds = listOf(
+                        ZDB_2,
+                    )
+                )
+            )
+        )
+
+        val bookmarkIdException = backend.insertBookmark(
+            Bookmark(
+                bookmarkName = "zdb2AndHandle",
+                bookmarkId = 20,
+                zdbIdFilter = ZDBIdFilter(
+                    zdbIds = listOf(
+                        ZDB_2,
+                    )
+                ),
+                searchTerm = "hdl:bar"
+            )
+        )
+
+        // Create Templates
+        val rightIdUpper =
+            backend.insertTemplate(TEST_RIGHT.copy(templateName = "upper", isTemplate = true))
+
+        // Connect Bookmarks and Templates
+        backend.insertBookmarkTemplatePair(
+            bookmarkId = bookmarkIdUpper,
+            rightId = rightIdUpper,
+        )
+
+        // Without exception
+        val receivedUpperNoExc: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdUpper)
+        assertThat(
+            receivedUpperNoExc.first.toSet(),
+            `is`(setOf(item1ZDB2.metadataId, item2ZDB2.metadataId))
+        )
+
+        val rightIdException =
+            backend.insertTemplate(
+                TEST_RIGHT.copy(
+                    templateName = "exception",
+                    isTemplate = true,
+                    exceptionFrom = rightIdUpper
+                )
+            )
+
+        backend.insertBookmarkTemplatePair(
+            bookmarkId = bookmarkIdException,
+            rightId = rightIdException,
+        )
+
+        val receivedUpperWithExc: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdUpper)
+        assertThat(
+            receivedUpperWithExc.first.toSet(),
+            `is`(setOf(item1ZDB2.metadataId))
+        )
+
+        val receivedException: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdException)
+        assertThat(
+            receivedException.first,
+            `is`(listOf(item2ZDB2.metadataId))
+        )
+    }
+
     companion object {
         const val ZDB_1 = "zdb1"
+        const val ZDB_2 = "zdb2"
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT
         val item1ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb1",
@@ -187,6 +262,16 @@ class ApplyTemplateTest : DatabaseTest() {
             zdbId = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
+        )
+        val item1ZDB2 = TEST_METADATA.copy(
+            metadataId = "foo-zdb2",
+            zdbId = ZDB_2,
+            handle = "foo",
+        )
+        val item2ZDB2 = TEST_METADATA.copy(
+            metadataId = "bar-zdb2",
+            zdbId = ZDB_2,
+            handle = "bar",
         )
     }
 }

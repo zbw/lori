@@ -6,7 +6,6 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SEAnd
@@ -16,7 +15,6 @@ import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
-import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -75,26 +73,18 @@ class SearchDBTest : DatabaseTest() {
             )
         )
         val resultZDB =
-            dbConnector.searchDB.searchMetadata(
+            dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
-                exceptionSearchExpression = null,
-                exceptionMetadataFilter = emptyList(),
-                exceptionRightSearchFilter = emptyList(),
-                exceptionNoRightInformationFilter = null,
             )
         val numberResultZDB = dbConnector.searchDB.countSearchMetadata(
             searchExpression = searchPairsZDB,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
-            exceptionSearchExpression = null,
-            exceptionMetadataFilter = emptyList(),
-            exceptionRightSearchFilter = emptyList(),
-            exceptionNoRightInformationFilter = null,
         )
         // then
         assertThat(resultZDB[0], `is`(testZDB))
@@ -111,26 +101,18 @@ class SearchDBTest : DatabaseTest() {
             )
         )
         val resultAll =
-            dbConnector.searchDB.searchMetadata(
+            dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsAll,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
-                exceptionSearchExpression = null,
-                exceptionMetadataFilter = emptyList(),
-                exceptionRightSearchFilter = emptyList(),
-                exceptionNoRightInformationFilter = null,
             )
         val numberResultAll = dbConnector.searchDB.countSearchMetadata(
             searchExpression = searchPairsAll,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
-            exceptionSearchExpression = null,
-            exceptionMetadataFilter = emptyList(),
-            exceptionRightSearchFilter = emptyList(),
-            exceptionNoRightInformationFilter = null,
         )
         // then
         assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
@@ -141,26 +123,18 @@ class SearchDBTest : DatabaseTest() {
         dbConnector.metadataDB.insertMetadata(testZDB2)
         // when
         val resultZBD2 =
-            dbConnector.searchDB.searchMetadata(
+            dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 0,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
-                exceptionSearchExpression = null,
-                exceptionMetadataFilter = emptyList(),
-                exceptionRightSearchFilter = emptyList(),
-                exceptionNoRightInformationFilter = null,
             )
         val numberResultZDB2 = dbConnector.searchDB.countSearchMetadata(
             searchExpression = searchPairsAll,
             metadataSearchFilter = emptyList(),
             noRightInformationFilter = null,
-            exceptionSearchExpression = null,
-            exceptionMetadataFilter = emptyList(),
-            exceptionRightSearchFilter = emptyList(),
-            exceptionNoRightInformationFilter = null,
         )
         // then
         assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
@@ -168,17 +142,13 @@ class SearchDBTest : DatabaseTest() {
 
         // when
         val resultZDB2Offset =
-            dbConnector.searchDB.searchMetadata(
+            dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsZDB,
                 limit = 5,
                 offset = 1,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
-                exceptionSearchExpression = null,
-                exceptionMetadataFilter = emptyList(),
-                exceptionRightSearchFilter = emptyList(),
-                exceptionNoRightInformationFilter = null,
             )
         assertThat(
             resultZDB2Offset.size, `is`(1)
@@ -188,39 +158,6 @@ class SearchDBTest : DatabaseTest() {
     @DataProvider(name = DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY)
     private fun createBuildSearchQueryDataMetadataFilter() =
         arrayOf(
-            arrayOf(
-                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
-                listOf<MetadataSearchFilter>(
-                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
-                ),
-                SEVariable(SearchPair(SearchKey.COMMUNITY, "bar")),
-                listOf(
-                    PublicationDateFilter(fromYear = 2021, toYear = 2021),
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
-                ),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_community, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND  NOT (publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?))) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT (ts_community @@ to_tsquery(?) AND ts_community is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "Combine metadata filter and search query with exceptions",
-            ),
-            arrayOf(
-                null,
-                emptyList<MetadataSearchFilter>(),
-                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
-                emptyList<MetadataSearchFilter>(),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE NOT (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "Only exception search query",
-            ),
-            arrayOf(
-                SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
-                emptyList<MetadataSearchFilter>(),
-                SEVariable(SearchPair(SearchKey.COLLECTION, "bar")),
-                emptyList<MetadataSearchFilter>(),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "Search query combined with exception search query",
-            ),
             arrayOf(
                 SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
@@ -297,7 +234,6 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ((ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)) OR (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter"
             ),
-
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY)
@@ -316,10 +252,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 emptyList(),
                 null,
-                exceptionSearchExpression,
-                exceptionMetadataSearchFilter,
-                emptyList(),
-                null,
+                hasMetadataIdsToIgnore = false,
             ),
             `is`(expectedWhereClause)
         )
@@ -333,10 +266,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
-                null,
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                null,
+                false,
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter only",
             ),
@@ -352,10 +282,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
-                null,
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                null,
+                false,
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter combined with metadatafilter",
             ),
@@ -371,10 +298,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
-                null,
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                null,
+                false,
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "return only items without any right information",
             ),
@@ -390,10 +314,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
-                null,
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                null,
+                false,
                 "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "return only items without any right information",
             ),
@@ -402,18 +323,27 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
-                null,
-                emptyList<MetadataSearchFilter>(),
-                listOf<RightSearchFilter>(
-                    TemporalValidityFilter(
-                        listOf(TemporalValidity.PAST)
-                    )
-                ),
-                null,
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) AND  NOT ((end_date < ?))) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                false,
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
             ),
             arrayOf(
+                null,
+                listOf(
+                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
+                        )
+                    )
+                ),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
+                NoRightInformationFilter(),
+                true,
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url FROM SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL as sub WHERE NOT metadata_id = ANY(?) ORDER BY metadata_id ASC LIMIT ? OFFSET ?",
+                "all the filters except search expression plus metadata ids to filter",
+            ),
+            arrayOf(
                 SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 listOf(
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
@@ -425,31 +355,19 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 NoRightInformationFilter(),
-                SEVariable(SearchPair(SearchKey.COMMUNITY, "bar")),
-                listOf(
-                    PublicationDateFilter(fromYear = 2021, toYear = 2021),
-                ),
-                listOf<RightSearchFilter>(
-                    TemporalValidityFilter(
-                        listOf(TemporalValidity.PAST)
-                    )
-                ),
-                NoRightInformationFilter(),
-                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_community, to_tsquery(?)),1))/2 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) AND  NOT ((end_date < ?)) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND  NOT (publication_date >= ? AND publication_date <= ?) AND item_right.right_id IS NULL AND  NOT (item_right.right_id IS NULL)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT (ts_community @@ to_tsquery(?) AND ts_community is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                true,
+                "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_communities_handles,community_handle,collection_handle,licence_url,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT item_metadata.metadata_id = ANY(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "all the filters",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_BUILD_BOTH_FILTER_SEARCH_QUERY)
     fun testBuildSearchQueryWithBothFilterTypes(
-        searchExpression: SearchExpression,
+        searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
-        exceptionSearchExpression: SearchExpression?,
-        exceptionMetadataSearchFilter: List<MetadataSearchFilter>,
-        exceptionRightSearchFilter: List<RightSearchFilter>,
-        exceptionNoRightInformationFilter: NoRightInformationFilter?,
+        hasMetadataItemToIgnore: Boolean,
         expectedWhereClause: String,
         description: String,
     ) {
@@ -460,10 +378,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
-                exceptionSearchExpression,
-                exceptionMetadataSearchFilter,
-                exceptionRightSearchFilter,
-                exceptionNoRightInformationFilter,
+                hasMetadataItemToIgnore,
             ),
             `is`(expectedWhereClause)
         )
@@ -682,10 +597,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
-                null,
-                emptyList(),
-                emptyList(),
-                null,
+                hasMetadataIdsToIgnore = false,
             ),
             `is`(expectedWhereClause)
         )
@@ -778,10 +690,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
-                null,
-                emptyList(),
-                emptyList(),
-                null,
+                hasMetadataIdsToIgnore = false,
             ),
             `is`(expectedSQLQuery),
         )
@@ -843,10 +752,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
-                null,
-                emptyList(),
-                emptyList(),
-                null,
+                hasMetadataIdsToIgnore = false,
             ),
             `is`(expectedSQLQuery)
         )
@@ -892,10 +798,6 @@ class SearchDBTest : DatabaseTest() {
                 searchExpression,
                 metadataSearchFilter,
                 rightSearchFilter,
-                null,
-                null,
-                emptyList(),
-                emptyList(),
                 null,
                 true,
             ),
@@ -952,10 +854,6 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilters,
                 rightSearchFilters,
                 noRightInformationFilter,
-                null,
-                emptyList(),
-                emptyList(),
-                null,
             ),
             `is`(expectedQuery)
         )
@@ -997,10 +895,6 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilters,
                 rightSearchFilters,
                 noRightInformationFilter,
-                null,
-                emptyList(),
-                emptyList(),
-                null,
             ),
             `is`(expectedQuery)
         )

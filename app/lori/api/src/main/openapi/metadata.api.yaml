@@ -17,6 +17,12 @@ metadata:
       201:
         description: Successfully created
         content: { }
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       405:
         description: Invalid input
         content:
@@ -59,6 +65,12 @@ metadata:
         content: { }
       400:
         description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
         content:
           application/json:
             schema:
@@ -137,6 +149,12 @@ metadata-id:
       200:
         description: Deletion was successfull
         content: { }
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Id does not exist
         content:

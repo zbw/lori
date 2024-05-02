@@ -151,7 +151,13 @@ class RightDBTest : DatabaseTest() {
         val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
 
         // Create Template which is an exception of the first one.
-        val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2, exceptionFrom = rightId1))
+        val rightId2 = dbConnector.rightDB.insertRight(
+            TEST_RIGHT.copy(
+                isTemplate = true,
+                templateName = templateName2,
+                exceptionFrom = rightId1
+            )
+        )
 
         val exceptionRights: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId1)
         assertThat(
@@ -175,6 +181,53 @@ class RightDBTest : DatabaseTest() {
         dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
         dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
         Assert.fail()
+    }
+
+    @Test
+    fun testTemplateException() {
+        val templateNameUpper = "upper"
+        val upperID =
+            dbConnector.rightDB.insertRight(
+                TEST_RIGHT.copy(
+                    isTemplate = true,
+                    lastAppliedOn = null,
+                    templateName = templateNameUpper
+                )
+            )
+        val templateNameException = "exception"
+        val exceptionTemplate1 =
+            TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException)
+        val excID1 = dbConnector.rightDB.insertRight(exceptionTemplate1)
+        val exceptionTemplate2 =
+            TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException + "2")
+        val excID2 = dbConnector.rightDB.insertRight(exceptionTemplate2)
+
+        assertFalse(
+            dbConnector.rightDB.isException(upperID),
+        )
+        dbConnector.rightDB.addExceptionToTemplate(
+            rightIdExceptions = listOf(excID1, excID2),
+            rightIdTemplate = upperID
+        )
+        assertFalse(
+            dbConnector.rightDB.isException(upperID),
+        )
+        assertTrue(
+            dbConnector.rightDB.isException(excID1),
+        )
+        assertTrue(
+            dbConnector.rightDB.isException(excID2),
+        )
+        val result = dbConnector.rightDB.getExceptionsByRightId(upperID)
+        assertThat(
+            result.toSet(),
+            `is`(
+                setOf(
+                    exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
+                    exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID)
+                )
+            ),
+        )
     }
 
     companion object {

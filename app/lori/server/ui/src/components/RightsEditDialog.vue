@@ -50,6 +50,10 @@ export default defineComponent({
       type: Boolean,
       required: true,
     },
+    isExceptionTemplate: {
+      type: Boolean,
+      required: false,
+    },
     metadataId: {
       type: String,
       required: false,
@@ -352,9 +356,15 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
-          updateBookmarks(r.rightId, () => {
-            emit("addTemplateSuccessful", formState.formTemplateName);
-            close();
+          const exceptionIds: string[] = exceptionTemplateItems.value
+            .map((e) => e.rightId)
+            .filter((e) => e != undefined);
+          addExceptionsToTemplate(r.rightId, exceptionIds, () => {
+            updateBookmarks(r.rightId, () => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addTemplateSuccessful", tmpRight.value);
+              close();
+            });
           });
         })
         .catch((e) => {
@@ -384,6 +394,27 @@ export default defineComponent({
               emit("updateTemplateSuccessful", formState.formTemplateName);
             });
           }
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            generalAlertErrorMsg.value = errMsg;
+            generalAlertError.value = true;
+          });
+        });
+    };
+
+    /**
+     * Add exceptions.
+     */
+    const addExceptionsToTemplate = (
+      rightId: string,
+      exceptionIds: Array<string>,
+      callback: () => void,
+    ) => {
+      templateApi
+        .addExceptionToTemplate(rightId, exceptionIds)
+        .then(() => {
+          callback();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -576,6 +607,7 @@ export default defineComponent({
       reinitializeRight();
       if (!isNew.value && isTemplate.value) {
         loadBookmarks();
+        loadExceptions();
       }
     });
     const computedRight = computed(() => props.right);
@@ -600,6 +632,22 @@ export default defineComponent({
         props.isNewTemplate ||
         (props.right != undefined && props.right.isTemplate),
     );
+    const exceptionsAllowed = computed(
+      () =>
+        !props.isExceptionTemplate &&
+        (props.isNewTemplate ||
+          (props.right != undefined && props.right.exceptionFrom == undefined)),
+    );
+
+    const cardTitle = computed(() => {
+      const mode = isNew.value ? "erstellen" : "bearbeiten";
+      const exception = props.isExceptionTemplate ? " (Ausnahme)" : "";
+      if (isTemplate.value) {
+        return "Template" + exception + " " + mode;
+      } else {
+        return "Rechteinformation " + mode;
+      }
+    });
 
     watch(computedRight, () => {
       reinitializeRight();
@@ -699,6 +747,58 @@ export default defineComponent({
       { title: "Actions", value: "actions", sortable: false },
     ];
 
+    // Template Exceptions
+    const dialogCreateException = ref(false);
+    const renderTemplateKey = ref(0);
+
+    const openCreateExceptionDialog = () => {
+      dialogCreateException.value = true;
+    };
+    const closeCreateExceptionDialog = () => {
+      dialogCreateException.value = false;
+    };
+
+    const exceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
+    const exceptionTemplateHeaders = [
+      {
+        title: "Id",
+        align: "start",
+        value: "rightId",
+        sortable: true,
+      },
+      {
+        title: "Name",
+        align: "start",
+        value: "templateName",
+        sortable: true,
+      },
+      {
+        title: "Beschreibung",
+        align: "start",
+        value: "templateDescription",
+      },
+      { title: "Actions", value: "actions", sortable: false },
+    ];
+
+    const addNewException = (excTemplate: RightRest) => {
+      exceptionTemplateItems.value =
+        exceptionTemplateItems.value.concat(excTemplate);
+      renderTemplateKey.value += 1;
+    };
+
+    const deleteExceptionEntry = (entry: RightRest) => {
+      const editedIndex = exceptionTemplateItems.value.indexOf(entry);
+      exceptionTemplateItems.value.splice(editedIndex, 1);
+      if (entry.rightId != undefined) {
+        templateApi.deleteTemplateById(entry.rightId).catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            generalAlertErrorMsg.value = errMsg;
+            generalAlertError.value = true;
+          });
+        });
+      }
+    };
+
     // Load Bookmarks
     const loadBookmarks = () => {
       if (computedRightId.value == undefined) {
@@ -710,6 +810,26 @@ export default defineComponent({
           .getBookmarksByRightId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
             bookmarkItems.value = bookmarks;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              generalAlertErrorMsg.value = errMsg;
+              generalAlertError.value = true;
+            });
+          });
+      }
+    };
+
+    const loadExceptions = () => {
+      if (computedRightId.value == undefined) {
+        generalAlertErrorMsg.value =
+          "Error while loading bookmarks. Invalid Template ID.";
+        generalAlertError.value = true;
+      } else {
+        templateApi
+          .getExceptionsById(computedRightId.value)
+          .then((exceptions: Array<BookmarkRest>) => {
+            exceptionTemplateItems.value = exceptions;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -761,7 +881,9 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkItems,
       bookmarkHeaders,
+      cardTitle,
       computedRightId,
+      dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
       endDateFormatted,
@@ -769,6 +891,7 @@ export default defineComponent({
       errorEndDate,
       errorTemplateName,
       errorStartDate,
+      exceptionsAllowed,
       isEditable,
       isNew,
       isTemplate,
@@ -784,22 +907,29 @@ export default defineComponent({
       openPanelsDefault,
       openBookmarkSearch,
       renderBookmarkKey,
+      renderTemplateKey,
       saveAlertError,
       saveAlertErrorMsg,
       startDateFormatted,
+      exceptionTemplateItems,
+      exceptionTemplateHeaders,
       updateConfirmDialog,
       updateSuccessful,
       updateSuccessfulMsg,
       tmpRight,
       updateInProgress,
       // methods
+      addNewException,
       cancel,
       cancelConfirm,
+      closeCreateExceptionDialog,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
+      deleteExceptionEntry,
       deleteSuccessful,
+      openCreateExceptionDialog,
       selectBookmark,
       setSelectedBookmarks,
       save,
@@ -819,6 +949,7 @@ export default defineComponent({
 
 <template>
   <v-card class="my-scroll" max-height="700px">
+    <v-card-title>{{ cardTitle }}</v-card-title>
     <v-card-actions>
       <v-alert v-model="updateSuccessful" closable type="success">
         {{ updateSuccessfulMsg }}
@@ -875,7 +1006,7 @@ export default defineComponent({
           <v-expansion-panel-text>
             <v-container fluid>
               <v-row>
-                <v-col cols="4"> Template Name </v-col>
+                <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="formState.formTemplateName"
@@ -887,7 +1018,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Beschreibung </v-col>
+                <v-col cols="4"> Beschreibung</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.templateDescription"
@@ -898,7 +1029,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Erstellt am </v-col>
+                <v-col cols="4"> Erstellt am</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.createdOn"
@@ -909,7 +1040,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Zuletzt editiert am </v-col>
+                <v-col cols="4"> Zuletzt editiert am</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedOn"
@@ -919,7 +1050,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Zuletzt editiert von </v-col>
+                <v-col cols="4"> Zuletzt editiert von</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastUpdatedBy"
@@ -929,7 +1060,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Zuletzt angewendet am </v-col>
+                <v-col cols="4"> Zuletzt angewendet am</v-col>
                 <v-col cols="8">
                   <v-text-field
                     v-model="tmpRight.lastAppliedOn"
@@ -940,7 +1071,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Verknüpfte Suchen </v-col>
+                <v-col cols="4"> Verknüpfte Suchen</v-col>
                 <v-col cols="8">
                   <v-data-table
                     :key="renderBookmarkKey"
@@ -963,8 +1094,8 @@ export default defineComponent({
                     color="blue darken-1"
                     @click="selectBookmark"
                     :disabled="!isEditable"
-                    >Suche Bookmark</v-btn
-                  >
+                    >Suche Bookmark
+                  </v-btn>
                   <v-dialog
                     v-model="bookmarkDialogOn"
                     :retain-focus="false"
@@ -975,6 +1106,48 @@ export default defineComponent({
                       v-on:bookmarksSelected="setSelectedBookmarks"
                       v-on:templateBookmarkClosed="templateBookmarkClosed"
                     ></TemplateBookmark>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row v-if="exceptionsAllowed">
+                <v-col cols="4">Ausnahmen</v-col>
+                <v-col cols="8">
+                  <v-data-table
+                    :key="renderTemplateKey"
+                    :headers="exceptionTemplateHeaders"
+                    :items="exceptionTemplateItems"
+                    item-value="rightId"
+                    loading-text="Daten werden geladen... Bitte warten."
+                  >
+                    <template v-slot:item.actions="{ item }">
+                      <v-icon
+                        small
+                        :disabled="!isEditable"
+                        @click="deleteExceptionEntry(item)"
+                      >
+                        mdi-delete
+                      </v-icon>
+                    </template>
+                  </v-data-table>
+                  <v-btn
+                    color="blue darken-1"
+                    :disabled="!isEditable"
+                    @click="openCreateExceptionDialog"
+                    >Erstelle neue Ausnahme
+                  </v-btn>
+                  <v-dialog
+                    v-model="dialogCreateException"
+                    :retain-focus="false"
+                    max-width="1000px"
+                  >
+                    <RightsEditDialog
+                      :index="index"
+                      :isNewRight="false"
+                      :isNewTemplate="true"
+                      :isExceptionTemplate="true"
+                      v-on:editRightClosed="closeCreateExceptionDialog"
+                      v-on:addTemplateSuccessful="addNewException"
+                    ></RightsEditDialog>
                   </v-dialog>
                 </v-col>
               </v-row>
@@ -989,7 +1162,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4"> Right-Id </v-col>
+              <v-col cols="4"> Right-Id</v-col>
               <v-col cols="8">
                 <v-text-field
                   v-if="isNew"
@@ -1010,7 +1183,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Aktueller Access-Status </v-col>
+              <v-col cols="4"> Aktueller Access-Status</v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.accessState"
@@ -1024,7 +1197,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Gültigkeit Startdatum </v-col>
+              <v-col cols="4"> Gültigkeit Startdatum</v-col>
               <v-col cols="8">
                 <v-menu
                   :close-on-content-click="false"
@@ -1045,14 +1218,14 @@ export default defineComponent({
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.startDate" color="primary"
-                    ><template v-slot:header></template>
+                  <v-date-picker v-model="formState.startDate" color="primary">
+                    <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Gültigkeit Enddatum </v-col>
+              <v-col cols="4"> Gültigkeit Enddatum</v-col>
               <v-col cols="8">
                 <v-menu
                   :close-on-content-click="false"
@@ -1073,14 +1246,14 @@ export default defineComponent({
                       @change="v$.endDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.endDate" color="primary"
-                    ><template v-slot:header></template
-                  ></v-date-picker>
+                  <v-date-picker v-model="formState.endDate" color="primary">
+                    <template v-slot:header></template>
+                  </v-date-picker>
                 </v-menu>
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Gruppen </v-col>
+              <v-col cols="4"> Gruppen</v-col>
               <v-col cols="8">
                 <v-select
                   v-model="tmpRight.groupIds"
@@ -1096,7 +1269,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Bemerkungen </v-col>
+              <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
@@ -1116,7 +1289,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4"> Lizenzvertrag </v-col>
+              <v-col cols="4"> Lizenzvertrag</v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
@@ -1127,7 +1300,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Urheberrechtschrankennutzung </v-col>
+              <v-col cols="4"> Urheberrechtschrankennutzung</v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
@@ -1140,7 +1313,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> ZBW Nutzungsvereinbarung </v-col>
+              <v-col cols="4"> ZBW Nutzungsvereinbarung</v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.zbwUserAgreement"
@@ -1153,7 +1326,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Open-Content-Licence </v-col>
+              <v-col cols="4"> Open-Content-Licence</v-col>
               <v-col cols="8">
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
@@ -1192,7 +1365,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Eingeschränkte Open-Content-Lizenz </v-col>
+              <v-col cols="4"> Eingeschränkte Open-Content-Lizenz</v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
@@ -1205,7 +1378,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Bemerkungen </v-col>
+              <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
@@ -1227,7 +1400,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row>
-              <v-col cols="4"> Basis der Speicherung </v-col>
+              <v-col cols="4"> Basis der Speicherung</v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisStorage"
@@ -1238,7 +1411,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Basis des Access-Status </v-col>
+              <v-col cols="4"> Basis des Access-Status</v-col>
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisAccessState"
@@ -1249,7 +1422,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Bemerkungen </v-col>
+              <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
@@ -1271,7 +1444,7 @@ export default defineComponent({
         <v-expansion-panel-text eager>
           <v-container fluid>
             <v-row v-if="!isTemplate">
-              <v-col cols="4"> Zuletzt editiert am </v-col>
+              <v-col cols="4"> Zuletzt editiert am</v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedOn"
@@ -1281,7 +1454,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row v-if="!isTemplate">
-              <v-col cols="4"> Zuletzt editiert von </v-col>
+              <v-col cols="4"> Zuletzt editiert von</v-col>
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.lastUpdatedBy"
@@ -1291,7 +1464,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Bemerkungen </v-col>
+              <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"

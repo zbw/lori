@@ -195,6 +195,7 @@ fun ItemRight.toRest(): RightRest =
         createdBy = createdBy,
         createdOn = createdOn,
         endDate = endDate,
+        exceptionFrom = exceptionFrom,
         groupIds = groupIds,
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
