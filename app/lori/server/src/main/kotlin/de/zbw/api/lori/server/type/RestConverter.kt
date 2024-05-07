@@ -317,14 +317,18 @@ fun DAItem.toBusiness(): ItemMetadata? {
             metadataId = this.id.toString(),
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
             band = null, // Not in DA yet
-            collectionHandle = this.parentCollection?.handle,
+            collectionHandle = this.parentCollection?.handle?.let {
+                RestConverter.parseHandle(it)
+            },
             collectionName = this.parentCollection?.name,
-            communityHandle = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.handle,
+            communityHandle = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.handle?.let {
+                RestConverter.parseHandle(it)
+            },
             communityName = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.name,
             createdBy = null,
             createdOn = null,
             doi = RestConverter.extractMetadata("dc.identifier.pi", metadata),
-            handle = handle,
+            handle = RestConverter.parseHandle(handle),
             isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
             issn = RestConverter.extractMetadata("dc.identifier.issn", metadata),
             lastUpdatedBy = null,
@@ -577,6 +581,9 @@ object RestConverter {
         } catch (e: Exception) {
             throw IllegalArgumentException()
         }
+
+    fun parseHandle(given: String): String =
+        given.replace("^[\\D]*".toRegex(), "")
 
     private val LOG = LogManager.getLogger(RestConverter::class.java)
     const val CSV_DELIMITER = ";"

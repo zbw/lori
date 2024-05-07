@@ -18,8 +18,8 @@ export default {
     return HANDLE_URL + handle;
   },
 
-  prependHandleUrl(handlePath: string | undefined) : string {
-    if (handlePath == undefined){
+  prependHandleUrl(handlePath: string | undefined): string {
+    if (handlePath == undefined) {
       return HANDLE_URL;
     }
     return HANDLE_URL + handlePath;
