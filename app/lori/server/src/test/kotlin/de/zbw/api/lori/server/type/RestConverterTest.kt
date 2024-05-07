@@ -114,14 +114,14 @@ class RestConverterTest {
             metadataId = "5",
             author = "Colbjørnsen, Terje",
             band = null,
-            collectionHandle = "colHandle",
+            collectionHandle = "11159/849",
             collectionName = "Collectionname",
             communityName = "Communityname",
-            communityHandle = "comHandle",
+            communityHandle = "11159/850",
             createdBy = null,
             createdOn = null,
             doi = null,
-            handle = "some_handle",
+            handle = "11159/848",
             isbn = null,
             issn = null,
             lastUpdatedBy = null,
@@ -443,8 +443,47 @@ class RestConverterTest {
         )
     }
 
+    @DataProvider(name = DATA_FOR_PARSE_HANDLE)
+    fun createDataForParseHandle() =
+        arrayOf(
+            arrayOf(
+                "http://hdl.handle.net/11159/848",
+                "11159/848",
+                "http url",
+            ),
+            arrayOf(
+                "https://hdl.handle.net/11159/848",
+                "11159/848",
+                "https url",
+            ),
+            arrayOf(
+                "/11159/848",
+                "11159/848",
+                "slash prefix",
+            ),
+            arrayOf(
+                "/11159/848",
+                "11159/848",
+                "desired input",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_PARSE_HANDLE)
+    fun testParseHandle(
+        given: String,
+        expected: String,
+        details: String,
+    ) {
+        assertThat(
+            details,
+            RestConverter.parseHandle(given),
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PARSE_TO_GROUP = "DATA_FOR_PARSE_TO_GROUP"
+        const val DATA_FOR_PARSE_HANDLE = "DATA_FOR_PARSE_HANDLE"
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA = ItemMetadata(
             metadataId = "that-test",
@@ -554,7 +593,7 @@ class RestConverterTest {
         val TEST_DA_ITEM = DAItem(
             id = 5,
             name = "name",
-            handle = "handle",
+            handle = "http://hdl.handle.net/11159/848",
             type = "type",
             link = "link",
             expand = listOf("foo"),
@@ -562,7 +601,7 @@ class RestConverterTest {
             parentCollection = DACollection(
                 id = 3,
                 name = "Collectionname",
-                handle = "colHandle",
+                handle = "http://hdl.handle.net/11159/849",
                 type = null,
                 link = "link",
                 expand = emptyList(),
@@ -582,7 +621,7 @@ class RestConverterTest {
                 DACommunity(
                     id = 1,
                     name = "Communityname",
-                    handle = "comHandle",
+                    handle = "http://hdl.handle.net/11159/850",
                     type = null,
                     countItems = null,
                     link = "link",
@@ -600,7 +639,7 @@ class RestConverterTest {
             metadata = listOf(
                 DAMetadata(
                     key = "dc.identifier.uri",
-                    value = "some_handle",
+                    value = "http://hdl.handle.net/11159/848",
                     language = "DE",
                 ),
                 DAMetadata(
