@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -9,6 +10,7 @@ import de.zbw.lori.model.RightRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -90,7 +92,17 @@ fun Routing.rightRoutes(
                             .takeIf { it.startDate != null && it.accessState != null }
                             ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("right", right.toString())
-                        val pk = backend.insertRight(right.toBusiness())
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
+                        val pk = backend.insertRight(
+                            right.toBusiness().copy(
+                                createdBy = userSession.email,
+                                lastUpdatedBy = userSession.email,
+                            )
+                        )
                         span.setStatus(StatusCode.OK)
                         call.respond(RightIdCreated(pk))
                     } catch (e: BadRequestException) {
@@ -126,12 +138,24 @@ fun Routing.rightRoutes(
                                 .takeIf { it.rightId != null && it.startDate != null && it.accessState != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("right", right.toString())
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
                         if (backend.rightContainsId(right.rightId!!)) {
-                            backend.upsertRight(right.toBusiness())
+                            backend.upsertRight(right.toBusiness().copy(
+                                lastUpdatedBy = userSession.email,
+                            ))
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)
                         } else {
-                            backend.insertRight(right.toBusiness())
+                            backend.insertRight(
+                                right.toBusiness().copy(
+                                    lastUpdatedBy = userSession.email,
+                                    createdBy = userSession.email,
+                                )
+                            )
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.Created)
                         }
