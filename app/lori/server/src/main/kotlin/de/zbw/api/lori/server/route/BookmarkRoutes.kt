@@ -243,10 +243,12 @@ fun Routing.bookmarkRoutes(
                                 HttpStatusCode.Unauthorized,
                                 ApiError.unauthorizedError("User is not authorized"),
                             ) // This should never happen
-                        val pk = backend.insertBookmark(bookmark.toBusiness().copy(
-                            lastUpdatedBy = userSession.email,
-                            createdBy = userSession.email,
-                        ))
+                        val pk = backend.insertBookmark(
+                            bookmark.toBusiness().copy(
+                                lastUpdatedBy = userSession.email,
+                                createdBy = userSession.email,
+                            )
+                        )
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
                     } catch (pe: PSQLException) {

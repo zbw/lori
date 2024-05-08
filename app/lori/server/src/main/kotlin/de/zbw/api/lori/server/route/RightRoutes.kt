@@ -144,9 +144,11 @@ fun Routing.rightRoutes(
                                 ApiError.unauthorizedError("User is not authorized"),
                             ) // This should never happen
                         if (backend.rightContainsId(right.rightId!!)) {
-                            backend.upsertRight(right.toBusiness().copy(
-                                lastUpdatedBy = userSession.email,
-                            ))
+                            backend.upsertRight(
+                                right.toBusiness().copy(
+                                    lastUpdatedBy = userSession.email,
+                                )
+                            )
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)
                         } else {
