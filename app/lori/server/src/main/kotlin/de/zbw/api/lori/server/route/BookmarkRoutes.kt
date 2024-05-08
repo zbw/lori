@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -12,6 +13,7 @@ import de.zbw.lori.model.ErrorRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -236,7 +238,15 @@ fun Routing.bookmarkRoutes(
                     try {
                         val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
                         span.setAttribute("bookmark", bookmark.toString())
-                        val pk = backend.insertBookmark(bookmark.toBusiness())
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
+                        val pk = backend.insertBookmark(bookmark.toBusiness().copy(
+                            lastUpdatedBy = userSession.email,
+                            createdBy = userSession.email,
+                        ))
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
                     } catch (pe: PSQLException) {
@@ -283,7 +293,17 @@ fun Routing.bookmarkRoutes(
                     try {
                         val bookmark: BookmarkRest = call.receive(BookmarkRest::class)
                         span.setAttribute("bookmark", bookmark.toString())
-                        val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
+                        val insertedRows = backend.updateBookmark(
+                            bookmark.bookmarkId,
+                            bookmark.toBusiness().copy(
+                                lastUpdatedBy = userSession.email
+                            )
+                        )
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)

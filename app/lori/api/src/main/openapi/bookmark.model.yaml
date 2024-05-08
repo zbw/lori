@@ -8,6 +8,11 @@ BookmarkRawRest:
       type: integer
     bookmarkName:
       type: string
+    createdBy:
+      type: string
+    createdOn:
+      type: string
+      format: date-time
     description:
       type: string
     searchTerm:
@@ -36,6 +41,11 @@ BookmarkRawRest:
       type: string
     filterRightId:
       type: string
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
 
 BookmarkIdCreated:
   required:
@@ -55,6 +65,11 @@ BookmarkRest:
       type: integer
     bookmarkName:
       type: string
+    createdBy:
+      type: string
+    createdOn:
+      type: string
+      format: date-time
     description:
       type: string
     searchTerm:
@@ -100,6 +115,11 @@ BookmarkRest:
       type: array
       items:
         type: string
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
 
 FilterPublicationDateRest:
   type: object

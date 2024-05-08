@@ -21,6 +21,8 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.test.assertTrue
 
 /**
@@ -78,7 +80,29 @@ class ApplyTemplateTest : DatabaseTest() {
                     zdbIds = listOf(
                         ZDB_1,
                     )
-                )
+                ),
+                lastUpdatedOn = OffsetDateTime.of(
+                    2022,
+                    3,
+                    2,
+                    1,
+                    1,
+                    0,
+                    0,
+                    ZoneOffset.UTC,
+                ),
+                lastUpdatedBy = "user2",
+                createdBy = "user1",
+                createdOn = OffsetDateTime.of(
+                    2022,
+                    3,
+                    2,
+                    1,
+                    1,
+                    0,
+                    0,
+                    ZoneOffset.UTC,
+                ),
             )
         )
 

@@ -398,6 +398,10 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         endDateFilter = QueryParameterParser.parseEndDateFilter(this.filterEndDate),
         validOnFilter = QueryParameterParser.parseRightValidOnFilter(this.filterValidOn),
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
+        lastUpdatedBy = lastUpdatedBy,
+        lastUpdatedOn = lastUpdatedOn,
+        createdBy = createdBy,
+        createdOn = createdOn,
     )
 
 fun BookmarkRest.toBusiness(): Bookmark =
@@ -427,7 +431,11 @@ fun BookmarkRest.toBusiness(): Bookmark =
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
-        noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() }
+        noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
+        lastUpdatedBy = lastUpdatedBy,
+        lastUpdatedOn = lastUpdatedOn,
+        createdBy = createdBy,
+        createdOn = createdOn,
     )
 
 fun Bookmark.toRest(): BookmarkRest =
@@ -449,7 +457,11 @@ fun Bookmark.toRest(): BookmarkRest =
         filterValidOn = this.validOnFilter?.date,
         filterPaketSigel = this.paketSigelFilter?.paketSigels,
         filterZDBId = this.zdbIdFilter?.zdbIds,
-        filterNoRightInformation = this.noRightInformationFilter?.let { true } ?: false
+        filterNoRightInformation = this.noRightInformationFilter?.let { true } ?: false,
+        createdBy = this.createdBy,
+        createdOn = this.createdOn,
+        lastUpdatedBy = this.lastUpdatedBy,
+        lastUpdatedOn = this.lastUpdatedOn,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
