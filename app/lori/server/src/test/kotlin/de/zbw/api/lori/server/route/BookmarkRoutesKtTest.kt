@@ -29,6 +29,8 @@ import org.postgresql.util.PSQLException
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Testing [BookmarkRoutes].
@@ -512,6 +514,28 @@ class BookmarkRoutesKtTest {
             paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
             zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
             noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
+            lastUpdatedOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
+            lastUpdatedBy = "user2",
+            createdBy = "user1",
+            createdOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
         )
     }
 }

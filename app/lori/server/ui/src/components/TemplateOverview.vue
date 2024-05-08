@@ -43,6 +43,7 @@ export default defineComponent({
       { text: "Actions", value: "actions", sortable: false },
     ];
     const templateItems: Ref<Array<RightRest>> = ref([]);
+    const searchTerm = ref("");
 
     /**
      * Error messages.
@@ -200,6 +201,7 @@ export default defineComponent({
       isNew,
       reinitCounter,
       renderKey,
+      searchTerm,
       templateApplyError,
       templateApplyErrorMsg,
       templateApplyErrorNumber,
@@ -265,10 +267,18 @@ export default defineComponent({
           >Neues Template anlegen
         </v-btn>
       </v-card-actions>
+      <v-text-field
+        v-model="searchTerm"
+        append-icon="mdi-magnify"
+        hide-details
+        label="Suche"
+        single-line
+      ></v-text-field>
       <v-data-table
         :key="renderKey"
         :headers="headers"
         :items="templateItems"
+        :search="searchTerm"
         item-value="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >

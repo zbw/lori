@@ -11,6 +11,7 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
+import java.time.OffsetDateTime
 
 /**
  * Business representation of [BookmarkRest].
@@ -21,7 +22,11 @@ import de.zbw.business.lori.server.ZDBIdFilter
 data class Bookmark(
     val bookmarkName: String,
     val bookmarkId: Int,
+    val createdBy: String? = null,
+    val createdOn: OffsetDateTime? = null,
     val description: String? = null,
+    val lastUpdatedBy: String? = null,
+    val lastUpdatedOn: OffsetDateTime? = null,
     val searchTerm: String? = null,
     val publicationDateFilter: PublicationDateFilter? = null,
     val publicationTypeFilter: PublicationTypeFilter? = null,

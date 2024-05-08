@@ -499,9 +499,9 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?)" +
-                " ON CONFLICT ($COLUMN_RIGHT_ID) " +
-                "DO UPDATE SET " +
-                "last_updated_on = EXCLUDED.last_updated_on," +
+                " ON CONFLICT ($COLUMN_RIGHT_ID)" +
+                " DO UPDATE SET" +
+                " last_updated_on = EXCLUDED.last_updated_on," +
                 "last_updated_by = EXCLUDED.last_updated_by," +
                 "$COLUMN_RIGHT_ACCESS_STATE = EXCLUDED.$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date = EXCLUDED.start_date," +

@@ -1040,6 +1040,16 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
+                <v-col cols="4"> Erstellt von</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                    v-model="tmpRight.createdBy"
+                    variant="outlined"
+                    readonly
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
                 <v-col cols="4"> Zuletzt editiert am</v-col>
                 <v-col cols="8">
                   <v-text-field
@@ -1443,6 +1453,27 @@ export default defineComponent({
         </v-expansion-panel-title>
         <v-expansion-panel-text eager>
           <v-container fluid>
+            <v-row v-if="!isTemplate">
+              <v-col cols="4"> Erstellt am</v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.createdOn"
+                  variant="outlined"
+                  readonly
+                  hint="Erstellungsdatum des Templates"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row v-if="!isTemplate">
+              <v-col cols="4"> Erstellt von</v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="tmpRight.createdBy"
+                  variant="outlined"
+                  readonly
+                ></v-text-field>
+              </v-col>
+            </v-row>
             <v-row v-if="!isTemplate">
               <v-col cols="4"> Zuletzt editiert am</v-col>
               <v-col cols="8">

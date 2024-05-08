@@ -704,6 +704,28 @@ class RestConverterTest {
             paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
             zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
             noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
+            lastUpdatedOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
+            lastUpdatedBy = "user2",
+            createdBy = "user1",
+            createdOn = OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            ),
         )
     }
 }

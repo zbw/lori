@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -18,6 +19,7 @@ import de.zbw.lori.model.TemplateApplicationsRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -54,7 +56,13 @@ fun Routing.templateRoutes(
                     try {
                         val right: RightRest = call.receive(RightRest::class)
                         span.setAttribute("template", right.toString())
-                        val pk: String = backend.insertTemplate(right.toBusiness())
+
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
+                        val pk: String = backend.insertTemplate(right.toBusiness().copy(createdBy = userSession.email))
                         span.setStatus(StatusCode.OK)
                         call.respond(
                             HttpStatusCode.Created, RightIdCreated(rightId = pk)
@@ -103,7 +111,12 @@ fun Routing.templateRoutes(
                                 .takeIf { it.rightId != null && it.isTemplate && it.templateName != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("template", right.toString())
-                        val insertedRows = backend.upsertRight(right.toBusiness())
+                        val userSession: UserSession = call.principal<UserSession>()
+                            ?: return@withContext call.respond(
+                                HttpStatusCode.Unauthorized,
+                                ApiError.unauthorizedError("User is not authorized"),
+                            ) // This should never happen
+                        val insertedRows = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)
