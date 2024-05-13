@@ -585,7 +585,7 @@ class SearchDB(
                 "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
                 val filterMetadataIds = if (hasMetadataIdsToIgnore) {
-                    "NOT item_metadata.metadata_id = ANY(?)"
+                    "NOT sub.metadata_id = ANY(?)"
                 } else {
                     ""
                 }
