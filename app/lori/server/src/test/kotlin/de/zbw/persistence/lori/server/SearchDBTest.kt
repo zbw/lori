@@ -819,7 +819,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.publication_type, COUNT(sub.publication_type) FROM(VALUES ('ARTICLE'),('PROCEEDINGS'),('PERIODICAL_PART')) as A(publication_type) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.publication_type = sub.publication_type  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.publication_type",
+                "SELECT A.publication_type, COUNT(sub.publication_type) FROM(VALUES (?),(?),(?)) as A(publication_type) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.publication_type = sub.publication_type  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.publication_type",
             ),
             arrayOf(
                 setOf(
@@ -832,7 +832,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.access_state, COUNT(sub.access_state) FROM(VALUES ('OPEN'),('CLOSED'),('RESTRICTED')) as A(access_state) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.access_state) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.access_state = sub.access_state  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.access_state",
+                "SELECT A.access_state, COUNT(sub.access_state) FROM(VALUES (?),(?),(?)) as A(access_state) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.access_state) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.access_state = sub.access_state  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.access_state",
             ),
         )
 
@@ -848,7 +848,7 @@ class SearchDBTest : DatabaseTest() {
     ) {
         assertThat(
             SearchDB.buildSearchQueryOccurrence(
-                SearchDB.createValuesForSql(values),
+                SearchDB.createValuesForSql(values.size),
                 columnName,
                 searchExpression,
                 metadataSearchFilters,
@@ -873,7 +873,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.template_name, COUNT(sub.template_name) FROM(VALUES (OPEN),(CLOSED),(RESTRICTED)) as A(template_name) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.template_name) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.template_name = sub.template_name  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.template_name",
+                "SELECT A.template_name, COUNT(sub.template_name) FROM(VALUES (?),(?),(?)) as A(template_name) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.template_name) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.template_name = sub.template_name  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.template_name",
             ),
         )
 
@@ -889,7 +889,7 @@ class SearchDBTest : DatabaseTest() {
     ) {
         assertThat(
             SearchDB.buildSearchQueryOccurrence(
-                SearchDB.createGenericValuesForSql(values),
+                SearchDB.createValuesForSql(values.size),
                 columnName,
                 searchExpression,
                 metadataSearchFilters,

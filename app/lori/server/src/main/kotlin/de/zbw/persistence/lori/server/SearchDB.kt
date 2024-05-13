@@ -217,7 +217,7 @@ class SearchDB(
         }
         val prepStmt = connection.prepareStatement(
             buildSearchQueryOccurrence(
-                createValuesForSql(givenValues),
+                createValuesForSql(givenValues.size),
                 occurrenceForColumn,
                 searchExpression,
                 metadataSearchFilter,
@@ -226,6 +226,9 @@ class SearchDB(
             )
         ).apply {
             var counter = 1
+            givenValues.forEach { v ->
+                this.setString(counter++, v)
+            }
             rightSearchFilter.forEach { f ->
                 counter = f.setSQLParameter(counter, this)
             }
@@ -657,11 +660,8 @@ class SearchDB(
                 " GROUP BY A.$columnName"
         }
 
-        internal fun createValuesForSql(given: Set<String>): String =
-            "VALUES " + given.joinToString(separator = ",") { "('$it')" }
-
-        internal fun <T> createGenericValuesForSql(given: Set<T>): String =
-            "VALUES " + given.joinToString(separator = ",") { "($it)" }
+        internal fun createValuesForSql(given: Int): String =
+            "VALUES " + (1..given).joinToString(separator = ",") { "(?)" }
 
         fun buildSearchQueryForFacets(
             searchExpression: SearchExpression?,
