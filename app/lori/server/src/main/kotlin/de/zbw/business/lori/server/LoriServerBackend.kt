@@ -663,8 +663,8 @@ class LoriServerBackend(
                                     errorId = null,
                                     rightIdSource = right.rightId, // TODO: Not sure if this is correct
                                     handleId = item.metadata.handle,
-                                    message = "Start/End-Datum Konflikt: Template-ID ${right.rightId} steht im Widerspruch" +
-                                        " zur Rechte-ID ${right.rightId}, welche an die Metadata-ID ${item.metadata.metadataId}" +
+                                    message = "Start/End-Datum Konflikt: Template '${right.templateName}' steht im Widerspruch" +
+                                        " mit einer Rechteinformation (Id: ${r.rightId}), welche an die Metadata-ID ${item.metadata.metadataId}" +
                                         " angebunden ist.",
                                 )
                             )
