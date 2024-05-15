@@ -164,3 +164,54 @@ curl -vvv -H "Content-Type: application/json" \
 --data '{"rightId":123, "startDate": "2022-01-01", "endDate":"2023-01-01", "licenseConditions":"somelicense", "provenanceLicense":"proven", "accessState":"open"}' \
 localhost:8082/api/v1/right
 ```
+
+## Reimport Database
+
+Sometimes it might be required to import a database dump.
+1. Connect to the database as usual (parameters may change depending on your setup)
+   ```shell
+   psql -U lori -h localhost -p 5432 postgres
+   ```
+2. Drop the existing database
+   ```sql
+   DROP DATABASE loridb;
+   ```
+3. Create a new database
+   ```sql
+   CREATE DATABASE loridb OWNER lori ENCODING UTF8;
+   ```
+4. Import a database dump
+   ```shell
+   psql -h localhost -p 5432 -U lori -d loridb --file=path/to/backup.bak
+   ```
+
+The standard tool for creating database dumps is `pg_dump`, e.g.:
+```shell
+pg_dump --dbname=postgresql://lori:[password]@localhost/loridb > path/to/backup.bak
+```
+
+## Telepresence
+
+In case you use a cloud environment [Telepresence](https://www.telepresence.io) is a useful tool for debugging
+purposes. Follow the instructions on Telepresence website for installation: https://www.telepresence.io/docs/latest/quick-start/
+1. Connect to telepresence
+   ```shell
+   telepresence connect --namespace=<NAMESPACE_FOR_LORI>
+   ```
+2. Verify that the service representing `lori` is listed with
+   ```shell
+   telepresence list
+   ```
+3. Intercept the traffic of the service (remote port is usually 8080)
+   ```shell
+   telepresence intercept <servicename> --port <localport>:<remoteport> --env-file ./lori_env_file.env
+    ```
+4. Source the environment variables and start lori with a debugger. Now all the traffic reaching the service in the
+cloud is intercepted and runs through the local instance.
+   ```shell
+   ./gradlew :app:lori:server:run --debug-jvm
+   ```
+5. After debugging, close the interception
+   ```shell
+   telepresence leave <servicename>
+   ```
