@@ -127,7 +127,10 @@ export default defineComponent({
       Löschen war nicht erfolgreich:
       {{ deleteErrorMessage }}
     </v-alert>
-    <v-card-text>
+    <v-card-text v-if="isTemplate">
+      Möchtest du dieses Template wirklich löschen?
+    </v-card-text>
+    <v-card-text v-else>
       Möchtest du diese Rechteinformation wirklich löschen?
     </v-card-text>
     <v-card-actions>
