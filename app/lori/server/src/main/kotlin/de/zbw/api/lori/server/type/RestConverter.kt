@@ -342,7 +342,8 @@ fun DAItem.toBusiness(): ItemMetadata? {
             subCommunitiesHandles = this
                 .parentCommunityList
                 .map { parent -> parent.subcommunities?.mapNotNull { it.handle } ?: emptyList() }
-                .flatten(),
+                .flatten()
+                .takeIf{it.isNotEmpty()},
             storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
                 ?.let { OffsetDateTime.parse(it) },
             title = title,

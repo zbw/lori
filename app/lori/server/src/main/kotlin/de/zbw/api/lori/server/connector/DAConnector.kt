@@ -99,6 +99,9 @@ class DAConnector(
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
+                // The parentCommunityList is copied into each item because it would
+                // lack the information of subcommunities otherwise. If this really makes sense
+                // needs to be determined in the future
                 val daItemList: List<DAItem> =
                     importCollection(loginToken, cId).map { item -> item.copy(parentCommunityList = listOf(community)) }
                 val metadataList: List<ItemMetadata> =
