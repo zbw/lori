@@ -37,7 +37,9 @@ message TemplateApplication {
   repeated string metadata_ids = 1;
   string right_id = 2;
   int32 number_applied_entries = 3;
-  repeated TemplateError errors = 4;
+  string template_name = 4;
+  repeated TemplateError errors = 5;
+  repeated TemplateApplication exceptions = 6;
 }
 
 message ApplyTemplatesResponse {

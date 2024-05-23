@@ -22,6 +22,7 @@ import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
@@ -451,24 +452,25 @@ class LoriServerBackend(
     fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int =
         dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
-    fun applyAllTemplates(): Map<String, Pair<List<String>, List<RightError>>> =
+    fun applyAllTemplates(): List<TemplateApplicationResult> =
         dbConnector.rightDB.getRightIdsForAllTemplates()
             .let { applyTemplates(it) }
 
-    fun applyTemplates(rightIds: List<String>): Map<String, Pair<List<String>, List<RightError>>> =
-        rightIds.associateWith { rightId ->
+    fun applyTemplates(rightIds: List<String>): List<TemplateApplicationResult> =
+        rightIds.mapNotNull { rightId ->
             applyTemplate(rightId)
         }
 
-    internal fun applyTemplate(rightId: String): Pair<List<String>, List<RightError>> {
+    internal fun applyTemplate(rightId: String): TemplateApplicationResult? {
         // Get Right object
         val right: ItemRight =
-            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return Pair(
-                emptyList(),
-                emptyList()
-            )
+            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
         // Exceptions
         val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
+        val exceptionTemplateApplicationResult: List<TemplateApplicationResult> =
+            exceptionTemplates.mapNotNull { excTemp ->
+                excTemp.rightId?.let { applyTemplate(it) }
+            }
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
         val bookmarksExceptions: List<Bookmark> =
@@ -554,7 +556,13 @@ class LoriServerBackend(
             )
             result.metadata.metadataId
         }
-        return Pair(appliedMetadataIds, itemsWithConflicts.second)
+        return TemplateApplicationResult(
+            rightId = rightId,
+            appliedMetadataIds = appliedMetadataIds,
+            errors = itemsWithConflicts.second,
+            exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
+            templateName = right.templateName ?: "Missing Template Name", // Templates will have a name
+        )
     }
 
     fun getExceptionsByRightId(rightId: String): List<ItemRight> =

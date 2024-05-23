@@ -19,6 +19,7 @@ TemplateApplicationRest:
     - metadataIds
     - numberOfAppliedEntries
     - rightId
+    - templateName
   type: object
   properties:
     metadataIds:
@@ -29,6 +30,12 @@ TemplateApplicationRest:
       type: integer
     rightId:
       type: string
+    templateName:
+      type: string
+    exceptionTemplateApplications:
+      type: array
+      items:
+        $ref: 'template.model.yaml#/TemplateApplicationRest'
     errors:
       type: array
       items:

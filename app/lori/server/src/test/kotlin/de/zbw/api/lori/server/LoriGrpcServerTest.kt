@@ -3,7 +3,7 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
@@ -33,7 +33,15 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesAll() {
         runBlocking {
             // given
-            val expectedResult = listOf("1" to Pair(listOf("2"), emptyList<RightError>())).toMap()
+            val expectedResult = listOf(
+                TemplateApplicationResult(
+                    rightId = "1",
+                    errors = emptyList(),
+                    appliedMetadataIds = listOf("2"),
+                    templateName = "foobar",
+                    exceptionTemplateApplicationResult = emptyList(),
+                )
+            )
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
@@ -42,6 +50,7 @@ class LoriGrpcServerTest {
                             .newBuilder()
                             .addMetadataIds("2")
                             .setRightId("1")
+                            .setTemplateName("foobar")
                             .setNumberAppliedEntries(1)
                             .build()
                     )
@@ -77,7 +86,15 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesIds() {
         runBlocking {
             // given
-            val expectedResult = listOf("1" to Pair(listOf("2"), emptyList<RightError>())).toMap()
+            val expectedResult = listOf(
+                TemplateApplicationResult(
+                    rightId = "1",
+                    errors = emptyList(),
+                    appliedMetadataIds = listOf("2"),
+                    templateName = "foobar",
+                    exceptionTemplateApplicationResult = emptyList(),
+                )
+            )
             val expectedResponse = ApplyTemplatesResponse
                 .newBuilder()
                 .addAllTemplateApplications(
@@ -86,6 +103,7 @@ class LoriGrpcServerTest {
                             .newBuilder()
                             .addMetadataIds("2")
                             .setRightId("1")
+                            .setTemplateName("foobar")
                             .setNumberAppliedEntries(1)
                             .build()
                     )
