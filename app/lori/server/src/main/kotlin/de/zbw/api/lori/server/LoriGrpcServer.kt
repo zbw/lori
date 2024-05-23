@@ -4,7 +4,7 @@ import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.FullImportRequest
@@ -74,32 +74,58 @@ class LoriGrpcServer(
             .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val backendResponse: Map<String, Pair<List<String>, List<RightError>>> = if (request.all) {
+                val backendResponse: List<TemplateApplicationResult> = if (request.all) {
                     daConnector.backend.applyAllTemplates()
                 } else {
                     daConnector.backend.applyTemplates(request.rightIdsList)
                 }
-                val templateApplications: List<TemplateApplication> = backendResponse.entries.map { e: Map.Entry<String, Pair<List<String>, List<RightError>>> ->
-                    TemplateApplication
-                        .newBuilder()
-                        .setRightId(e.key)
-                        .setNumberAppliedEntries(e.value.first.size)
-                        .addAllMetadataIds(e.value.first)
-                        .addAllErrors(
-                            e.value.second.map {
-                                TemplateError.newBuilder()
-                                    .setErrorId(it.errorId ?: -1)
-                                    .setMessage(it.message)
-                                    .setRightIdSource(it.rightIdSource ?: "")
-                                    .setMetadataId(it.metadataId)
-                                    .setHandleId(it.handleId)
-                                    .setConflictingRightId(it.conflictingRightId)
-                                    .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
-                                    .build()
-                            }
-                        )
-                        .build()
-                }
+                val templateApplications: List<TemplateApplication> =
+                    backendResponse.map { e: TemplateApplicationResult ->
+                        TemplateApplication
+                            .newBuilder()
+                            .setRightId(e.rightId)
+                            .setTemplateName(e.templateName)
+                            .setNumberAppliedEntries(e.appliedMetadataIds.size)
+                            .addAllMetadataIds(e.appliedMetadataIds)
+                            .addAllErrors(
+                                e.errors.map {
+                                    TemplateError.newBuilder()
+                                        .setErrorId(it.errorId ?: -1)
+                                        .setMessage(it.message)
+                                        .setRightIdSource(it.rightIdSource ?: "")
+                                        .setMetadataId(it.metadataId)
+                                        .setHandleId(it.handleId)
+                                        .setConflictingRightId(it.conflictingRightId)
+                                        .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
+                                        .build()
+                                }
+                            )
+                            .addAllExceptions(
+                                e.exceptionTemplateApplicationResult.map { exc ->
+                                    TemplateApplication
+                                        .newBuilder()
+                                        .setRightId(exc.rightId)
+                                        .setTemplateName(exc.templateName)
+                                        .setNumberAppliedEntries(exc.appliedMetadataIds.size)
+                                        .addAllMetadataIds(exc.appliedMetadataIds)
+                                        .addAllErrors(
+                                            exc.errors.map {
+                                                TemplateError.newBuilder()
+                                                    .setErrorId(it.errorId ?: -1)
+                                                    .setMessage(it.message)
+                                                    .setRightIdSource(it.rightIdSource ?: "")
+                                                    .setMetadataId(it.metadataId)
+                                                    .setHandleId(it.handleId)
+                                                    .setConflictingRightId(it.conflictingRightId)
+                                                    .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
+                                                    .build()
+                                            }
+                                        )
+                                        .build()
+                                }
+                            )
+                            .build()
+                    }
                 ApplyTemplatesResponse
                     .newBuilder()
                     .addAllTemplateApplications(templateApplications)

@@ -5,6 +5,7 @@ import templateApi from "@/api/templateApi";
 import {
   RightErrorRest,
   RightRest,
+  TemplateApplicationRest,
   TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import { useDialogsStore } from "@/stores/dialogs";
@@ -103,19 +104,29 @@ export default defineComponent({
       templateApi
         .applyTemplates([template.rightId])
         .then((r: TemplateApplicationsRest) => {
+          const templateApplicationResult: TemplateApplicationRest =
+            r.templateApplication[0];
+          const infoMsg = constructApplicationInfoText(
+            templateApplicationResult,
+          );
           alertSuccessful.value = true;
-          alertSuccessfulMsg.value =
-            "Template '" +
-            template.templateName +
-            "' wurde für " +
-            r.templateApplication[0].numberOfAppliedEntries +
-            " Einträge angewandt.";
-          templateApplyItemsApplied.value = r.templateApplication.length;
+          alertSuccessfulMsg.value = infoMsg;
+          templateApplyItemsApplied.value = r.templateApplication.length; // TODO: Handle error messages for exceptions
 
           // Check for errors
-          const errors: Array<RightErrorRest> = r.templateApplication.flatMap(
-            (t) => (t.errors != undefined ? t.errors : []),
-          );
+          let exceptionErrors: Array<RightErrorRest> = [];
+          if (
+            templateApplicationResult.exceptionTemplateApplications !==
+            undefined
+          ) {
+            exceptionErrors =
+              templateApplicationResult.exceptionTemplateApplications.flatMap(
+                (t) => (t.errors != undefined ? t.errors : []),
+              );
+          }
+          const errors: Array<RightErrorRest> = r.templateApplication
+            .flatMap((t) => (t.errors != undefined ? t.errors : []))
+            .concat(exceptionErrors);
           if (errors.length > 0) {
             templateApplyError.value = true;
             templateApplyErrorMsg.value = errors
@@ -131,6 +142,31 @@ export default defineComponent({
             templateLoadError.value = true;
           });
         });
+    };
+
+    const constructApplicationInfoText: (
+      templateApplication: TemplateApplicationRest,
+    ) => string = (templateApplication: TemplateApplicationRest) => {
+      const parent: string =
+        "Template '" +
+        templateApplication.templateName +
+        "' wurde für " +
+        templateApplication.numberOfAppliedEntries +
+        " Einträge angewandt.";
+      let exceptions: string = "";
+      if (templateApplication.exceptionTemplateApplications !== undefined) {
+        exceptions = templateApplication.exceptionTemplateApplications
+          .map(
+            (tA: TemplateApplicationRest) =>
+              "Template (Ausnahme) '" +
+              tA.templateName +
+              "' wurde für " +
+              tA.numberOfAppliedEntries +
+              " Einträge angewandt.",
+          )
+          .join("\n");
+      }
+      return parent + "\n" + exceptions;
     };
 
     const closeApplyErrorMsg = () => {
@@ -225,11 +261,20 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.multi-line {
+  white-space: pre-line;
+}
+</style>
 <template>
   <v-card>
     <v-container>
-      <v-alert v-model="alertSuccessful" closable type="success">
+      <v-alert
+        v-model="alertSuccessful"
+        closable
+        type="success"
+        class="multi-line"
+      >
         {{ alertSuccessfulMsg }}
       </v-alert>
       <v-alert v-model="templateLoadError" closable type="error">

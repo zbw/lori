@@ -7,7 +7,7 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.ExceptionsForTemplateRest
@@ -260,7 +260,7 @@ fun Routing.templateRoutes(
                         val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
                         span.setAttribute("rightIds", rightIds.toString())
                         span.setAttribute("Query Parameter 'all'", all.toString())
-                        val appliedMap: Map<String, Pair<List<String>, List<RightError>>> =
+                        val appliedMap: List<TemplateApplicationResult> =
                             if (all) {
                                 backend.applyAllTemplates()
                             } else {
@@ -268,12 +268,22 @@ fun Routing.templateRoutes(
                             }
                         val result = TemplateApplicationsRest(
                             templateApplication =
-                            appliedMap.entries.map { e: Map.Entry<String, Pair<List<String>, List<RightError>>> ->
+                            appliedMap.map { e: TemplateApplicationResult ->
                                 TemplateApplicationRest(
-                                    rightId = e.key,
-                                    metadataIds = e.value.first,
-                                    errors = e.value.second.map { it.toRest() },
-                                    numberOfAppliedEntries = e.value.first.size
+                                    rightId = e.rightId,
+                                    templateName = e.templateName,
+                                    metadataIds = e.appliedMetadataIds,
+                                    errors = e.errors.map { it.toRest() },
+                                    numberOfAppliedEntries = e.appliedMetadataIds.size,
+                                    exceptionTemplateApplications = e.exceptionTemplateApplicationResult.map { exc ->
+                                        TemplateApplicationRest(
+                                            rightId = exc.rightId,
+                                            metadataIds = exc.appliedMetadataIds,
+                                            templateName = e.templateName,
+                                            errors = exc.errors.map { it.toRest() },
+                                            numberOfAppliedEntries = exc.appliedMetadataIds.size,
+                                        )
+                                    }
                                 )
                             }
                         )

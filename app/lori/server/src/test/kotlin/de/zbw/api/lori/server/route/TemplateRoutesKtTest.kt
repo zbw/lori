@@ -11,7 +11,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.BookmarkTemplate
-import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.BookmarkIdsRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
@@ -485,16 +485,31 @@ class TemplateRoutesKtTest {
         val givenRightId2 = "12"
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { applyTemplates(listOf(givenRightId)) } returns mapOf(
-                givenRightId to Pair(
-                    expectedMetadataIds,
-                    emptyList()
+            every { applyTemplates(listOf(givenRightId)) } returns listOf(
+                TemplateApplicationResult(
+                    rightId = givenRightId,
+                    errors = emptyList(),
+                    appliedMetadataIds = expectedMetadataIds,
+                    templateName = "foobar",
+                    exceptionTemplateApplicationResult = emptyList(),
                 )
             )
             every { applyAllTemplates() } returns listOf(
-                givenRightId to Pair(expectedMetadataIds, emptyList<RightError>()),
-                givenRightId2 to Pair(expectedMetadataIds, emptyList<RightError>())
-            ).toMap()
+                TemplateApplicationResult(
+                    rightId = givenRightId,
+                    errors = emptyList(),
+                    appliedMetadataIds = expectedMetadataIds,
+                    templateName = "foobar",
+                    exceptionTemplateApplicationResult = emptyList(),
+                ),
+                TemplateApplicationResult(
+                    rightId = givenRightId2,
+                    errors = emptyList(),
+                    appliedMetadataIds = expectedMetadataIds,
+                    templateName = "baz",
+                    exceptionTemplateApplicationResult = emptyList(),
+                ),
+            )
         }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // Test OK Path
@@ -528,6 +543,8 @@ class TemplateRoutesKtTest {
                                 metadataIds = expectedMetadataIds,
                                 numberOfAppliedEntries = expectedMetadataIds.size,
                                 errors = emptyList(),
+                                exceptionTemplateApplications = emptyList(),
+                                templateName = "foobar",
                             )
                         )
                     )
@@ -566,12 +583,16 @@ class TemplateRoutesKtTest {
                                 metadataIds = expectedMetadataIds,
                                 numberOfAppliedEntries = expectedMetadataIds.size,
                                 errors = emptyList(),
+                                templateName = "foobar",
+                                exceptionTemplateApplications = emptyList(),
                             ),
                             TemplateApplicationRest(
                                 rightId = givenRightId2,
                                 metadataIds = expectedMetadataIds,
                                 numberOfAppliedEntries = expectedMetadataIds.size,
                                 errors = emptyList(),
+                                templateName = "baz",
+                                exceptionTemplateApplications = emptyList(),
                             )
                         )
                     )

@@ -5,7 +5,7 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest
@@ -115,9 +115,9 @@ class ApplyTemplateTest : DatabaseTest() {
             rightId = rightId,
         )
 
-        val received: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
+        val received = backend.applyTemplate(rightId)
         assertThat(
-            received.first,
+            received!!.appliedMetadataIds,
             `is`(listOf(item1ZDB1.metadataId))
         )
 
@@ -131,9 +131,9 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Repeat Apply Operation without duplicate entries errors
-        val received2: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
+        val received2: TemplateApplicationResult? = backend.applyTemplate(rightId)
         assertThat(
-            received2.first,
+            received2!!.appliedMetadataIds,
             `is`(listOf(item1ZDB1.metadataId))
         )
 
@@ -148,9 +148,9 @@ class ApplyTemplateTest : DatabaseTest() {
         backend.upsertMetadata(listOf(item1ZDB1.copy(zdbId = "foobar")))
 
         // Apply Template
-        val received3: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightId)
+        val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
         assertThat(
-            received3.first,
+            received3!!.appliedMetadataIds,
             `is`(
                 listOf(
                     item2ZDB1.metadataId,
@@ -164,9 +164,9 @@ class ApplyTemplateTest : DatabaseTest() {
             `is`(2),
         )
 
-        val applyAllReceived: Map<String, Pair<List<String>, List<RightError>>> = backend.applyAllTemplates()
+        val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates()
         assertThat(
-            applyAllReceived.values.map { it.first }.flatten().toSet(),
+            applyAllReceived.map { it.appliedMetadataIds }.flatten().toSet(),
             `is`(
                 setOf(
                     item2ZDB1.metadataId,
@@ -183,10 +183,10 @@ class ApplyTemplateTest : DatabaseTest() {
             bookmarkId = bookmarkId,
             rightId = rightIdConflict,
         )
-        val receivedConflict: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdConflict)
+        val receivedConflict = backend.applyTemplate(rightIdConflict)
         assertThat(
-            receivedConflict.second.size,
-            `is`(2)
+            receivedConflict!!.errors.size,
+            `is`(2),
         )
     }
 
@@ -229,18 +229,12 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
         // Without exception
-        val receivedUpperNoExc: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdUpper)
-        assertThat(
-            receivedUpperNoExc.first.toSet(),
-            `is`(setOf(item1ZDB2.metadataId, item2ZDB2.metadataId))
-        )
-
         val rightIdException =
             backend.insertTemplate(
                 TEST_RIGHT.copy(
                     templateName = "exception",
                     isTemplate = true,
-                    exceptionFrom = rightIdUpper
+                    exceptionFrom = rightIdUpper,
                 )
             )
 
@@ -249,15 +243,18 @@ class ApplyTemplateTest : DatabaseTest() {
             rightId = rightIdException,
         )
 
-        val receivedUpperWithExc: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdUpper)
+        val receivedUpperWithExc = backend.applyTemplate(rightIdUpper)!!
         assertThat(
-            receivedUpperWithExc.first.toSet(),
+            receivedUpperWithExc.appliedMetadataIds.toSet(),
             `is`(setOf(item1ZDB2.metadataId))
         )
-
-        val receivedException: Pair<List<String>, List<RightError>> = backend.applyTemplate(rightIdException)
         assertThat(
-            receivedException.first,
+            receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataIds }.toSet(),
+            `is`(setOf(item2ZDB2.metadataId))
+        )
+        val receivedException = backend.applyTemplate(rightIdException)!!
+        assertThat(
+            receivedException.appliedMetadataIds,
             `is`(listOf(item2ZDB2.metadataId))
         )
     }
