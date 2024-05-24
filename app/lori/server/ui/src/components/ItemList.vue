@@ -599,38 +599,7 @@ export default defineComponent({
 
     // parse publication type
     const parsePublicationType = (pubType: string) => {
-      switch (pubType) {
-        case "article":
-          return "Article";
-        case "book":
-          return "Book";
-        case "bookPart":
-          return "Book Part";
-        case "book_part":
-          return "Book Part";
-        case "conferencePaper":
-          return "Conference Paper";
-        case "conference_paper":
-          return "Conference Paper";
-        case "periodicalPart":
-          return "Periodical Part";
-        case "periodical_part":
-          return "Periodical Part";
-        case "proceedings":
-          return "Proceedings";
-        case "researchReport":
-          return "Research Report";
-        case "research_report":
-          return "Research Report";
-        case "thesis":
-          return "Thesis";
-        case "workingPaper":
-          return "Working Paper";
-        case "working_paper":
-          return "Working Paper";
-        default:
-          return "Unknown pub type:" + pubType;
-      }
+      return metadata_utils.prettyPrintPublicationType(pubType);
     };
 
     /**

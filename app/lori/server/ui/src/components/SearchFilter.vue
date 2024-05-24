@@ -4,6 +4,7 @@ import { useSearchStore } from "@/stores/search";
 import { useVuelidate } from "@vuelidate/core";
 import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
+import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
   emits: ["startEmptySearch"],
@@ -141,43 +142,9 @@ export default defineComponent({
       }
     };
     const parsePublicationType = (pubType: string, count: number) => {
-      switch (pubType) {
-        case "article":
-          return "Aufsatz/Article " + "(" + count + ")";
-        case "book":
-          return "Buch/Book " + "(" + count + ")";
-        case "bookPart":
-          return "Buchaufsatz/Book Part " + "(" + count + ")";
-        /**
-         * IMPORTANT NOTE: Openapis conversion of enums between frontend and backend
-         * has issues with multiple word entries. The entries aren't always
-         * encoded as the interface suggests, for instance 'periodicalPart' is
-         * sometimes encoded as 'periodical_part'. That's the reason why all
-         * these conversions contain both variants.
-         */
-        case "conference_paper":
-          return "Konferenzschrift/\n Conference Paper " + "(" + count + ")";
-        case "conferencePaper":
-          return "Konferenzschrift/\n Conference Paper " + "(" + count + ")";
-        case "periodical_part":
-          return "Zeitschriftenband/\n Periodical Part " + "(" + count + ")";
-        case "periodicalPart":
-          return "Zeitschriftenband/\n Periodical Part " + "(" + count + ")";
-        case "proceedings":
-          return "Konferenzband/\n Proceeding " + "(" + count + ")";
-        case "research_report":
-          return "Forschungsbericht/\n Research Report " + "(" + count + ")";
-        case "researchReport":
-          return "Forschungsbericht/\n Research Report " + "(" + count + ")";
-        case "thesis":
-          return "Thesis " + "(" + count + ")";
-        case "working_paper":
-          return "Working Paper " + "(" + count + ")";
-        case "workingPaper":
-          return "Working Paper " + "(" + count + ")";
-        default:
-          return "Unknown pub type:" + pubType;
-      }
+      return (
+        metadata_utils.prettyPrintPublicationType(pubType) + " (" + count + ")"
+      );
     };
 
     const ppPaketSigel = (paketSigel: string, count: number) => {
