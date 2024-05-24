@@ -36,10 +36,15 @@ export default defineComponent({
       return props.metadata;
     });
 
+    const parsePublicationType = (pubType: string) => {
+      return metadata_utils.prettyPrintPublicationType(pubType);
+    };
+
     return {
       currentMetadata,
       prettyPrint,
       parseDateToLocaleString,
+      parsePublicationType,
     };
   },
 });
@@ -112,7 +117,9 @@ export default defineComponent({
             </v-row>
             <v-row>
               <v-col>Publikationstyp</v-col>
-              <v-col>{{ currentMetadata.publicationType }}</v-col>
+              <v-col>{{
+                parsePublicationType(currentMetadata.publicationType)
+              }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row>
