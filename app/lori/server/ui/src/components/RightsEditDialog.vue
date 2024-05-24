@@ -356,9 +356,9 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
-          const exceptionIds: string[] = exceptionTemplateItems.value
-            .map((e) => e.rightId)
-            .filter((e) => e != undefined);
+          const exceptionIds: string[] = exceptionTemplateItems.value.flatMap(
+            (e) => (e.rightId ? [e.rightId] : []),
+          );
           addExceptionsToTemplate(r.rightId, exceptionIds, () => {
             updateBookmarks(r.rightId, () => {
               tmpRight.value.rightId = r.rightId;
@@ -385,14 +385,23 @@ export default defineComponent({
               "No RightId found when updating. This should NOT happen.";
             generalAlertError.value = true;
           } else {
-            updateBookmarks(tmpRight.value.rightId, () => {
-              updateSuccessfulMsg.value =
-                "Template " +
-                tmpRight.value.templateName +
-                " erfolgreich geupdated";
-              updateSuccessful.value = true;
-              emit("updateTemplateSuccessful", formState.formTemplateName);
-            });
+            const exceptionIds: string[] = exceptionTemplateItems.value.flatMap(
+              (e) => (e.rightId ? [e.rightId] : []),
+            );
+            addExceptionsToTemplate(
+              tmpRight.value.rightId,
+              exceptionIds,
+              () => {
+                updateBookmarks(tmpRight.value.rightId, () => {
+                  updateSuccessfulMsg.value =
+                    "Template " +
+                    tmpRight.value.templateName +
+                    " erfolgreich geupdated";
+                  updateSuccessful.value = true;
+                  emit("updateTemplateSuccessful", formState.formTemplateName);
+                });
+              },
+            );
           }
         })
         .catch((e) => {
@@ -828,7 +837,7 @@ export default defineComponent({
       } else {
         templateApi
           .getExceptionsById(computedRightId.value)
-          .then((exceptions: Array<BookmarkRest>) => {
+          .then((exceptions: Array<RightRest>) => {
             exceptionTemplateItems.value = exceptions;
           })
           .catch((e) => {
