@@ -14,7 +14,7 @@ RUN curl -LO https://releases.hashicorp.com/vault/"$VAULT_VERSION"/vault_"$VAULT
     unzip vault* && \
     chmod +x ./vault && \
     mv ./vault /usr/local/bin/vault && \
-    rm vault*
+    rm vault* LICENSE.txt
 
 FROM vault AS terraform
 ARG TERRAFORM_VERSION=1.8.4
