@@ -641,6 +641,9 @@ export default defineComponent({
         props.isNewTemplate ||
         (props.right != undefined && props.right.isTemplate),
     );
+    const isTemplateAndException = computed(
+      () => isTemplate.value && props.isExceptionTemplate,
+    );
     const exceptionsAllowed = computed(
       () =>
         !props.isExceptionTemplate &&
@@ -902,6 +905,7 @@ export default defineComponent({
       errorStartDate,
       exceptionsAllowed,
       isEditable,
+      isTemplateAndException,
       isNew,
       isTemplate,
       generalAlertError,
@@ -974,7 +978,10 @@ export default defineComponent({
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
-      <v-btn :disabled="isNew" @click="initiateDeleteDialog">
+      <v-btn
+        :disabled="isNew || isTemplateAndException"
+        @click="initiateDeleteDialog"
+      >
         <v-icon>mdi-delete</v-icon>
       </v-btn>
       <v-dialog
