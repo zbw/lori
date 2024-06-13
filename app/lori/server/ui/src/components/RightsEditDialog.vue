@@ -641,6 +641,9 @@ export default defineComponent({
         props.isNewTemplate ||
         (props.right != undefined && props.right.isTemplate),
     );
+    const isTemplateAndException = computed(
+      () => isTemplate.value && props.isExceptionTemplate,
+    );
     const exceptionsAllowed = computed(
       () =>
         !props.isExceptionTemplate &&
@@ -902,6 +905,7 @@ export default defineComponent({
       errorStartDate,
       exceptionsAllowed,
       isEditable,
+      isTemplateAndException,
       isNew,
       isTemplate,
       generalAlertError,
@@ -958,7 +962,22 @@ export default defineComponent({
 
 <template>
   <v-card class="my-scroll" max-height="700px">
-    <v-card-title>{{ cardTitle }}</v-card-title>
+    <v-card-title>
+      <v-row>
+        <v-col>
+          {{ cardTitle }}
+        </v-col>
+        <v-col cols="1" offset="6">
+          <v-tooltip location="bottom" text="Ausnahme Template">
+            <template v-slot:activator="{ props }">
+              <v-icon v-if="isTemplateAndException" v-bind="props">
+                mdi-alpha-a-box-outline
+              </v-icon>
+            </template>
+          </v-tooltip>
+        </v-col>
+      </v-row>
+    </v-card-title>
     <v-card-actions>
       <v-alert v-model="updateSuccessful" closable type="success">
         {{ updateSuccessfulMsg }}
@@ -974,9 +993,24 @@ export default defineComponent({
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
-      <v-btn :disabled="isNew" @click="initiateDeleteDialog">
-        <v-icon>mdi-delete</v-icon>
-      </v-btn>
+
+      <v-tooltip
+        location="bottom"
+        :disabled="!(isNew || isTemplateAndException)"
+      >
+        <template v-slot:activator="{ props }">
+          <div v-bind="props" class="d-inline-block">
+            <v-btn
+              :disabled="isNew || isTemplateAndException"
+              @click="initiateDeleteDialog"
+            >
+              <v-icon>mdi-delete</v-icon>
+            </v-btn>
+          </div>
+        </template>
+        <span>Ausnahme-Templates können nicht gelöscht werden</span>
+      </v-tooltip>
+
       <v-dialog
         v-model="dialogDeleteRight"
         :retain-focus="false"

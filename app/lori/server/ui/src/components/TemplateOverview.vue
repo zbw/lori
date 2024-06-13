@@ -354,6 +354,10 @@ export default defineComponent({
           :isNewRight="false"
           :isNewTemplate="isNew"
           :reinit-counter="reinitCounter"
+          :is-exception-template="
+            currentTemplate.exceptionFrom !== undefined &&
+            currentTemplate.exceptionFrom != ''
+          "
           :right="currentTemplate"
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
