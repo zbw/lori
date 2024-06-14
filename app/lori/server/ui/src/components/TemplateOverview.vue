@@ -26,22 +26,28 @@ export default defineComponent({
     const renderKey = ref(0);
     const headers = [
       {
-        text: "Template Name",
+        title: "Template Name",
         align: "start",
         value: "templateName",
         sortable: true,
       },
       {
-        text: "Items verknüpfen",
+        title: "Ausnahme",
+        align: "start",
+        value: "isException",
+        sortable: false,
+      },
+      {
+        title: "Items verknüpfen",
         value: "displayConnectedItems",
         sortable: true,
       },
       {
-        text: "Template anwenden",
+        title: "Template anwenden",
         value: "applyTemplate",
         sortable: true,
       },
-      { text: "Actions", value: "actions", sortable: false },
+      { title: "Aktionen", value: "actions", sortable: false },
     ];
     const templateItems: Ref<Array<RightRest>> = ref([]);
     const searchTerm = ref("");
@@ -335,9 +341,17 @@ export default defineComponent({
           </v-btn>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
-          <v-btn color="blue darken-1" @click="applyTemplate(item)"
+          <v-btn
+            v-if="item.exceptionFrom == undefined"
+            color="blue darken-1"
+            @click="applyTemplate(item)"
             >Template anwenden</v-btn
           >
+        </template>
+        <template v-slot:item.isException="{ item }">
+          <v-icon v-if="item.exceptionFrom !== undefined">
+            mdi-alpha-a-box-outline
+          </v-icon>
         </template>
         <template v-slot:item.actions="{ item }">
           <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
