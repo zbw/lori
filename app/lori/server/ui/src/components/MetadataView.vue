@@ -2,6 +2,7 @@
 import { MetadataRest } from "@/generated-sources/openapi";
 import { computed, defineComponent, PropType } from "vue";
 import metadata_utils from "@/utils/metadata_utils";
+import { useSearchStore } from "@/stores/search";
 
 export default defineComponent({
   computed: {
@@ -17,6 +18,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const searchStore = useSearchStore();
     const prettyPrint = (value: string) => {
       if (value) {
         return value;
@@ -42,6 +44,7 @@ export default defineComponent({
 
     return {
       currentMetadata,
+      searchStore,
       prettyPrint,
       parseDateToLocaleString,
       parsePublicationType,
@@ -140,7 +143,10 @@ export default defineComponent({
                 <td>
                   <a
                     v-bind:href="
-                      metadata_utils.hrefHandle(currentMetadata.handle)
+                      metadata_utils.hrefHandle(
+                        currentMetadata.handle,
+                        searchStore.handleURLResolver,
+                      )
                     "
                     >{{
                       metadata_utils.shortenHandle(currentMetadata.handle)
@@ -158,6 +164,7 @@ export default defineComponent({
                     v-bind:href="
                       metadata_utils.prependHandleUrl(
                         currentMetadata.collectionHandle,
+                        searchStore.handleURLResolver,
                       )
                     "
                     >{{ currentMetadata.collectionHandle }}</a
@@ -174,6 +181,7 @@ export default defineComponent({
                     v-bind:href="
                       metadata_utils.prependHandleUrl(
                         currentMetadata.communityHandle,
+                        searchStore.handleURLResolver,
                       )
                     "
                     >{{ currentMetadata.communityHandle }}</a

@@ -1,0 +1,10 @@
+AboutRest:
+  required:
+    - stage
+    - handleURL
+  type: object
+  properties:
+    stage:
+      type: string
+    handleURL:
+      type: string

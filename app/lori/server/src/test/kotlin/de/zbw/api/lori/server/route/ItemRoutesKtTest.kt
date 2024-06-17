@@ -809,6 +809,8 @@ class ItemRoutesKtTest {
             duoSenderEntityId = "someId",
             sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
             sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
+            stage = "dev",
+            handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
         )
 
         val ITEM_METADATA = MetadataRest(

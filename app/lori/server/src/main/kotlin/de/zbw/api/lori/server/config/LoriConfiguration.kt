@@ -30,6 +30,8 @@ data class LoriConfiguration(
     val duoSenderEntityId: String,
     val sessionSignKey: String,
     val sessionEncryptKey: String,
+    val stage: String,
+    val handleURL: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -55,6 +57,8 @@ data class LoriConfiguration(
             val duoSenderEntityId = KonfigDeclaration.string(prefix, "duo", "senderentityid").required()
             val sessionSignKey = KonfigDeclaration.string(prefix, "session", "sign").secret().required()
             val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
+            val stage = KonfigDeclaration.string(prefix, "stage").required()
+            val handleURL = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "handleurl").required()
             return LoriConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
@@ -72,6 +76,8 @@ data class LoriConfiguration(
                 duoSenderEntityId = source[duoSenderEntityId],
                 sessionSignKey = source[sessionSignKey],
                 sessionEncryptKey = source[sessionEncryptKey],
+                stage = source[stage],
+                handleURL = source[handleURL],
             )
         }
     }

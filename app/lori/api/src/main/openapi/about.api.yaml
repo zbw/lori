@@ -1,0 +1,19 @@
+about:
+  get:
+    tags:
+      - about
+    summary: Get some general information like stages and parameters
+    operationId: getAboutInformation
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              $ref: 'about.model.yaml#/AboutRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'

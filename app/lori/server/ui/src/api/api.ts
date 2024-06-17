@@ -1,4 +1,6 @@
 import {
+  AboutApi,
+  AboutRest,
   Configuration,
   GroupApi,
   GroupIdCreated,
@@ -19,6 +21,7 @@ const configuration = new Configuration({
 const loriItem = new ItemApi(configuration);
 const loriRightApi = new RightApi(configuration);
 const loriGroupApi = new GroupApi(configuration);
+const loriAboutApi = new AboutApi(configuration);
 
 export default {
   /**
@@ -78,6 +81,9 @@ export default {
   },
   deleteItemRelation(metadataId: string, rightId: string): Promise<void> {
     return loriItem.deleteItem({ metadataId: metadataId, rightId: rightId });
+  },
+  getAboutInformation(): Promise<AboutRest> {
+    return loriAboutApi.getAboutInformation();
   },
   searchQuery(
     searchTerm: string,

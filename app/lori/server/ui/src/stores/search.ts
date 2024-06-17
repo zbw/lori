@@ -60,6 +60,10 @@ export const useSearchStore = defineStore("search", () => {
   const templateNameReceived: Ref<Array<TemplateNameWithCountRest>> = ref([]);
   const templateNameSelectedLastSearch: Ref<Array<string>> = ref([]);
 
+  // Deployment Stage
+  const stage = ref("");
+  const handleURLResolver = ref("");
+
   return {
     lastSearchTerm,
     accessStateIdx,
@@ -71,6 +75,7 @@ export const useSearchStore = defineStore("search", () => {
     formalRuleLicenceContract,
     formalRuleOpenContentLicence,
     formalRuleUserAgreement,
+    handleURLResolver,
     hasLicenceContract,
     hasOpenContentLicence,
     hasZbwUserAgreement,
@@ -85,6 +90,7 @@ export const useSearchStore = defineStore("search", () => {
     publicationDateFrom,
     publicationDateTo,
     searchTerm,
+    stage,
     templateNameIdx,
     templateNameReceived,
     templateNameSelectedLastSearch,
