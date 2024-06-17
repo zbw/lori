@@ -35,6 +35,8 @@ class LoriConfigurationTest {
         System.setProperty("lori.duo.senderentityid", expectedConfig.duoSenderEntityId)
         System.setProperty("lori.session.sign", expectedConfig.sessionSignKey)
         System.setProperty("lori.session.encrypt", expectedConfig.sessionEncryptKey)
+        System.setProperty("lori.stage", expectedConfig.stage)
+        System.setProperty("lori.connection.digitalarchive.handleurl", expectedConfig.handleURL)
         val receivedConfig = LoriConfiguration.load(
             "lori",
             ChainedKonfiguration(
@@ -66,6 +68,8 @@ class LoriConfigurationTest {
                 duoSenderEntityId = "someId",
                 sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
                 sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
+                stage = "dev",
+                handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
             )
     }
 }

@@ -16,6 +16,8 @@ tags:
   - name: right management
     description: Managing rights for bibliographic items
 paths:
+  /about:
+    $ref: 'about.api.yaml#/about'
   /bookmark:
     $ref: 'bookmark.api.yaml#/bookmark'
   /bookmark/{id}:

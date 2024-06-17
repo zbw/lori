@@ -1,5 +1,6 @@
 <script lang="ts">
 import {
+  AboutRest,
   AccessStateWithCountRest,
   BookmarkRest,
   ItemInformation,
@@ -207,6 +208,7 @@ export default defineComponent({
       if (!hasMetadataParameter) {
         startSearch();
       }
+      loadBackendParameters();
     });
 
     watch(headersValueVSelect, (currentValue) => {
@@ -276,6 +278,22 @@ export default defineComponent({
       }
       executeSearchByMetadataId("metadataId:" + metadataId);
       return true;
+    };
+
+    const loadBackendParameters = () => {
+      api
+        .getAboutInformation()
+        .then((response: AboutRest) => {
+          searchStore.stage = response.stage;
+          searchStore.handleURLResolver = response.handleURL;
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            loadAlertErrorMessage.value = errMsg;
+            loadAlertError.value = true;
+          });
+        });
     };
 
     const closeTemplateEditDialog = () => {
@@ -897,9 +915,15 @@ export default defineComponent({
           >
             <template v-slot:item.handle="{ item }">
               <td>
-                <a v-bind:href="metadata_utils.hrefHandle(item.handle)">{{
-                  metadata_utils.shortenHandle(item.handle)
-                }}</a>
+                <a
+                  v-bind:href="
+                    metadata_utils.hrefHandle(
+                      item.handle,
+                      searchStore.handleURLResolver,
+                    )
+                  "
+                  >{{ metadata_utils.shortenHandle(item.handle) }}</a
+                >
               </td>
             </template>
             <template v-slot:item.publicationType="{ item }">

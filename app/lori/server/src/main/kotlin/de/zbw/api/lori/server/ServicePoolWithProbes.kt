@@ -5,6 +5,7 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.route.ApiError
+import de.zbw.api.lori.server.route.aboutRoutes
 import de.zbw.api.lori.server.route.bookmarkRoutes
 import de.zbw.api.lori.server.route.bookmarkTemplateRoutes
 import de.zbw.api.lori.server.route.errorRoutes
@@ -147,6 +148,7 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
+            aboutRoutes(backend, tracer)
             bookmarkRoutes(backend, tracer)
             bookmarkTemplateRoutes(backend, tracer)
             errorRoutes(backend, tracer)

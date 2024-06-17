@@ -5,6 +5,7 @@ import RightsEditTabs from "@/components/RightsEditTabs.vue";
 import { computed, defineComponent, PropType, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import metadata_utils from "@/utils/metadata_utils";
+import { useSearchStore } from "@/stores/search";
 
 export default defineComponent({
   computed: {
@@ -32,6 +33,7 @@ export default defineComponent({
   },
 
   setup(props) {
+    const searchStore = useSearchStore();
     const tabDialogActivated = ref(false);
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
@@ -118,6 +120,7 @@ export default defineComponent({
       isNew,
       renderKey,
       headers,
+      searchStore,
       tabDialogActivated,
       // Methods
       activateTabEdit,
@@ -150,9 +153,12 @@ export default defineComponent({
         <v-toolbar flat>
           <v-toolbar-title
             >Rechteinformationen
-            <a v-bind:href="metadata_utils.hrefHandle(handle)">{{
-              metadata_utils.shortenHandle(handle)
-            }}</a>
+            <a
+              v-bind:href="
+                metadata_utils.hrefHandle(handle, searchStore.handleURLResolver)
+              "
+              >{{ metadata_utils.shortenHandle(handle) }}</a
+            >
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
           <v-btn class="mb-2" color="primary" dark @click="newRight()">

@@ -1,4 +1,3 @@
-const HANDLE_URL = "https://hdl.handle.net/";
 export default {
   shortenHandle(handle: string): string {
     if (handle.startsWith("http")) {
@@ -8,21 +7,21 @@ export default {
     }
   },
 
-  hrefHandle(handle: string): string {
+  hrefHandle(handle: string, handleURL: string): string {
     if (handle.startsWith("https")) {
       return handle;
     }
     if (handle.startsWith("http")) {
       return "https" + handle.substring(4);
     }
-    return HANDLE_URL + handle;
+    return handleURL + handle;
   },
 
-  prependHandleUrl(handlePath: string | undefined): string {
+  prependHandleUrl(handlePath: string | undefined, handleURL: string): string {
     if (handlePath == undefined) {
-      return HANDLE_URL;
+      return handleURL;
     }
-    return HANDLE_URL + handlePath;
+    return handleURL + handlePath;
   },
   prettyPrintPublicationType(pubType: string): string {
     switch (pubType) {

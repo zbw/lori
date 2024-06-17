@@ -132,6 +132,8 @@ class ServicePoolWithProbesTest {
             duoSenderEntityId = "someId",
             sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
             sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
+            stage = "dev",
+            handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
         )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
