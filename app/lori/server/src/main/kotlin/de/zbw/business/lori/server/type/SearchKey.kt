@@ -21,6 +21,7 @@ enum class SearchKey(
     LUR(MetadataDB.TS_LICENCE_URL),
     METADATA_ID(MetadataDB.TS_METADATA_ID),
     PAKET_SIGEL(MetadataDB.TS_SIGEL),
+    SUBCOM(MetadataDB.TS_SUBCOMMUNITY_NAME),
     TITLE(MetadataDB.TS_TITLE),
     ZDB_ID(MetadataDB.TS_ZDB_ID);
 
@@ -37,6 +38,7 @@ enum class SearchKey(
             HDL_SUBCOM -> "hdlsubcom"
             LUR -> "lur"
             METADATA_ID -> "metadataid"
+            SUBCOM -> "subcom"
         }
     }
 
@@ -56,6 +58,7 @@ enum class SearchKey(
                 "hdlsubcom" -> HDL_SUBCOM
                 "metadataid" -> METADATA_ID
                 "lur" -> LUR
+                "subcom" -> SUBCOM
                 else -> null
             }
         }
