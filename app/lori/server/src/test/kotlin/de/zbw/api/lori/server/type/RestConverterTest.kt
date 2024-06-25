@@ -1,6 +1,6 @@
 package de.zbw.api.lori.server.type
 
-import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_SUBCOMMUNITY
+import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -64,7 +64,8 @@ class RestConverterTest {
                 publicationType = TEST_METADATA.publicationType.toRest(),
                 publicationDate = TEST_METADATA.publicationDate,
                 rightsK10plus = TEST_METADATA.rightsK10plus,
-                subCommunitiesHandles = TEST_METADATA.subCommunitiesHandles,
+                subCommunityHandle = TEST_METADATA.subCommunityHandle,
+                subCommunityName = TEST_METADATA.subCommunityName,
                 storageDate = TEST_METADATA.storageDate,
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
@@ -142,7 +143,8 @@ class RestConverterTest {
                 0,
                 ZoneOffset.UTC,
             ),
-            subCommunitiesHandles = listOf("11159/1114"),
+            subCommunityHandle = "11159/1114",
+            subCommunityName = "Department",
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
@@ -150,7 +152,7 @@ class RestConverterTest {
         )
 
         // when
-        val receivedItem = TEST_DA_ITEM.toBusiness()
+        val receivedItem = TEST_DA_ITEM.toBusiness(2, DAConnector.LOG)
         // then
         assertThat(receivedItem, `is`(expected))
 
@@ -526,7 +528,8 @@ class RestConverterTest {
             publicationDate = LocalDate.of(2022, 9, 1),
             rightsK10plus = "some rights",
             storageDate = OffsetDateTime.now(),
-            subCommunitiesHandles = listOf("handle1", "handle2"),
+            subCommunityHandle = "11159/1114",
+            subCommunityName = "Department",
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
@@ -632,7 +635,24 @@ class RestConverterTest {
                     introductoryText = null,
                     shortDescription = null,
                     sidebarText = null,
-                    subcommunities = listOf(TEST_SUBCOMMUNITY),
+                    subcommunities = emptyList(),
+                    collections = emptyList(),
+                ),
+                DACommunity(
+                    id = 2,
+                    name = "Department",
+                    handle = "http://hdl.handle.net/11159/1114",
+                    type = null,
+                    countItems = null,
+                    link = "link",
+                    expand = emptyList(),
+                    logo = null,
+                    parentCommunity = null,
+                    copyrightText = null,
+                    introductoryText = null,
+                    shortDescription = null,
+                    sidebarText = null,
+                    subcommunities = emptyList(),
                     collections = emptyList(),
                 )
             ),

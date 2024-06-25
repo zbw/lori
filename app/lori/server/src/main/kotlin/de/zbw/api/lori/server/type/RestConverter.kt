@@ -44,6 +44,7 @@ import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -115,7 +116,8 @@ fun MetadataRest.toBusiness() =
         publicationType = publicationType.toBusiness(),
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
-        subCommunitiesHandles = subCommunitiesHandles,
+        subCommunityHandle = subCommunityHandle,
+        subCommunityName = subCommunityName,
         storageDate = storageDate,
         title = title,
         titleJournal = titleJournal,
@@ -147,7 +149,8 @@ fun ItemMetadata.toRest(): MetadataRest =
         publicationDate = publicationDate,
         rightsK10plus = rightsK10plus,
         storageDate = storageDate,
-        subCommunitiesHandles = subCommunitiesHandles,
+        subCommunityHandle = subCommunityHandle,
+        subCommunityName = subCommunityName,
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
@@ -296,7 +299,7 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.THESIS -> PublicationTypeRest.thesis
     }
 
-fun DAItem.toBusiness(): ItemMetadata? {
+fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? {
     val metadata = this.metadata
     val handle = RestConverter.extractMetadata("dc.identifier.uri", metadata)
     val publicationType = RestConverter.extractMetadata("dc.type", metadata)?.let {
@@ -313,6 +316,22 @@ fun DAItem.toBusiness(): ItemMetadata? {
     ) {
         null
     } else {
+        var subDACommunity: DACommunity? = null
+        val parentDACommunity: DACommunity?
+        when (this.parentCommunityList.size) {
+            2 -> {
+                subDACommunity = this.parentCommunityList.firstOrNull { it.id == directParentCommunityId }
+                parentDACommunity = this.parentCommunityList.firstOrNull { it.id != directParentCommunityId }
+            }
+            1 -> {
+                parentDACommunity = this.parentCommunityList.firstOrNull()
+            }
+            else -> {
+                // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
+                LOG.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")
+                return null
+            }
+        }
         ItemMetadata(
             metadataId = this.id.toString(),
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
@@ -321,10 +340,10 @@ fun DAItem.toBusiness(): ItemMetadata? {
                 RestConverter.parseHandle(it)
             },
             collectionName = this.parentCollection?.name,
-            communityHandle = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.handle?.let {
+            communityHandle = parentDACommunity?.handle?.let {
                 RestConverter.parseHandle(it)
             },
-            communityName = this.parentCommunityList.takeIf { it.isNotEmpty() }?.first()?.name,
+            communityName = parentDACommunity?.name,
             createdBy = null,
             createdOn = null,
             doi = RestConverter.extractMetadata("dc.identifier.pi", metadata),
@@ -339,11 +358,10 @@ fun DAItem.toBusiness(): ItemMetadata? {
             publicationType = publicationType,
             publicationDate = RestConverter.parseToDate(publicationDate),
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
-            subCommunitiesHandles = this
-                .parentCommunityList
-                .map { parent -> parent.subcommunities?.mapNotNull { it.handle } ?: emptyList() }
-                .flatten()
-                .takeIf { it.isNotEmpty() },
+            subCommunityHandle = subDACommunity?.handle?.let {
+                RestConverter.parseHandle(it)
+            },
+            subCommunityName = subDACommunity?.name,
             storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
                 ?.let { OffsetDateTime.parse(it) },
             title = title,

@@ -107,6 +107,13 @@ class SearchKeyTest : DatabaseTest() {
             setOf(METADATA_TEST_2, METADATA_TEST_3),
             "find all items that have a different ZDB-ID or no value at all"
         ),
+        arrayOf(
+            "subcom:'${METADATA_TEST_3.subCommunityName}'",
+            10,
+            0,
+            setOf(METADATA_TEST_3),
+            "search by subcommunity name"
+        ),
     )
 
     @Test(dataProvider = DATA_FOR_METADATA_ID_KEY)
@@ -157,7 +164,8 @@ class SearchKeyTest : DatabaseTest() {
             zdbId = "someotherzdbid",
             licenceUrl = "foobar",
             paketSigel = "someothersigel",
-            handle = "some/other/handle"
+            handle = "some/other/handle",
+            subCommunityName = "department 3",
         )
     }
 }

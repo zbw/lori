@@ -818,14 +818,14 @@ export default defineComponent({
                   <p
                     class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
                   >
-                    col, com, hdl, hdlcol, hdlcom, hdlsubcom, lur, metadataid,
+                    col, com, hdl, hdlcol, hdlcom, subcom, hdlsubcom, lur, metadataid,
                     sig, tit, zdb
                   </p>
 
                   <p class="text-left text-body-2 bg-light-blue-lighten-5">
                     Diese durchsuchen jeweils diese Felder: Collection,
                     Community, Handle, Handle der Metadaten, Handle der
-                    Community, Handle der Subcommunity, Lizenz URL, Metadaten
+                    Community, Name der Subcommunity, Handle der Subcommunity, Lizenz URL, Metadaten
                     ID, Paket-Sigel, Titel and ZDB-ID
                   </p>
 
