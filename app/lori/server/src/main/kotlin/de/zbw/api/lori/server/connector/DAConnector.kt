@@ -27,6 +27,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
 import kotlinx.coroutines.coroutineScope
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import kotlin.math.ceil
 
 /**
@@ -99,14 +100,11 @@ class DAConnector(
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
-                // The parentCommunityList is copied into each item because it would
-                // lack the information of subcommunities otherwise. If this really makes sense
-                // needs to be determined in the future
                 val daItemList: List<DAItem> =
-                    importCollection(loginToken, cId).map { item -> item.copy(parentCommunityList = listOf(community)) }
+                    importCollection(loginToken, cId)
                 val metadataList: List<ItemMetadata> =
                     daItemList
-                        .mapNotNull { it.toBusiness() }
+                        .mapNotNull { it.toBusiness(cId, LOG) }
                         .map { shortenHandle(it) }
                 backend.upsertMetadata(metadataList).filter { it == 1 }.size
             }
@@ -145,7 +143,7 @@ class DAConnector(
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
         private const val HANDLE_URL = "http://hdl.handle.net/"
-        private val LOG = LogManager.getLogger(DAConnector::class.java)
+        internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
 
         internal fun shortenHandle(item: ItemMetadata) = item.copy(
             handle = item.handle.substringAfter(HANDLE_URL)

@@ -65,10 +65,10 @@ MetadataRest:
       format: date
     rightsK10plus:
       type: string
-    subCommunitiesHandles:
-      type: array
-      items:
-        type: string
+    subCommunityHandle:
+      type: string
+    subCommunityName:
+      type: string
     storageDate:
       type: string
       format: date-time
