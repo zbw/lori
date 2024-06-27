@@ -104,7 +104,7 @@ class DAConnector(
                     importCollection(loginToken, cId)
                 val metadataList: List<ItemMetadata> =
                     daItemList
-                        .mapNotNull { it.toBusiness(cId, LOG) }
+                        .mapNotNull { it.toBusiness(community.id, LOG) }
                         .map { shortenHandle(it) }
                 backend.upsertMetadata(metadataList).filter { it == 1 }.size
             }
