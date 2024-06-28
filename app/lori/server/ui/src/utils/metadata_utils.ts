@@ -24,7 +24,7 @@ export default {
     return handleURL + handlePath;
   },
   prettyPrintPublicationType(pubType: string): string {
-    switch (pubType) {
+    switch (pubType.toLowerCase()) {
       case "article":
         return "Aufsatz/Article";
       case "book":
@@ -58,6 +58,8 @@ export default {
         return "Working Paper ";
       case "workingPaper":
         return "Working Paper ";
+      case "other":
+        return "Other";
       default:
         return "Unbekannter Pubikationstyp: " + pubType;
     }

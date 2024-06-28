@@ -61,6 +61,7 @@ enum class PublicationType {
     RESEARCH_REPORT,
     THESIS,
     WORKING_PAPER,
+    OTHER,
 }
 
 enum class BasisStorage {

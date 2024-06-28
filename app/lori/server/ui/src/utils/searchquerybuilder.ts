@@ -393,6 +393,9 @@ export default {
               searchStore.publicationTypeReceived[index].publicationType =
                 "workingPaper";
               break;
+            case "other":
+              modifiedPubTypeFilter = "OTHER";
+              break;
             default:
               modifiedPubTypeFilter = "ERROR";
           }
@@ -472,6 +475,8 @@ export default {
         return PublicationTypeRest.ResearchReport;
       case "thesis":
         return PublicationTypeRest.Thesis;
+      case "other":
+        return PublicationTypeRest.Other;
       default:
         return PublicationTypeRest.WorkingPaper;
     }
