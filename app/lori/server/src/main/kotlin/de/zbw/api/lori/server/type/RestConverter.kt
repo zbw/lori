@@ -29,6 +29,7 @@ import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
+import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
@@ -108,6 +109,7 @@ fun MetadataRest.toBusiness() =
         handle = handle,
         isbn = isbn,
         issn = issn,
+        isPartOfSeries = isPartOfSeries,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceUrl = licenceUrl,
@@ -140,6 +142,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         handle = handle,
         isbn = isbn,
         issn = issn,
+        isPartOfSeries = isPartOfSeries,
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceUrl = licenceUrl,
@@ -360,6 +363,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
             handle = RestConverter.parseHandle(handle),
             isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
             issn = RestConverter.extractMetadata("dc.identifier.issn", metadata),
+            isPartOfSeries = RestConverter.extractMetadata("dc.relation.ispartofseries", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
             licenceUrl = RestConverter.extractMetadata("dc.rights.license", metadata),
@@ -539,7 +543,13 @@ fun SearchQueryResult.toRest(
                 count = it.value.second,
                 rightId = it.key,
             )
-        }
+        },
+        isPartOfSeriesCount = this.isPartOfSeries.entries.map {
+            IsPartOfSeriesCountRest(
+                count = it.value,
+                series = it.key,
+            )
+        }.toList(),
     )
 }
 

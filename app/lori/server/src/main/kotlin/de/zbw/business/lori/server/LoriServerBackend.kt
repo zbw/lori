@@ -353,6 +353,7 @@ class LoriServerBackend(
             publicationType = facets.publicationType,
             templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
             zdbIds = facets.zdbIds,
+            isPartOfSeries = facets.isPartOfSeries,
         )
     }
 

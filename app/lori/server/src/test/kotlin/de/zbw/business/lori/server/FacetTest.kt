@@ -286,6 +286,8 @@ class FacetTest : DatabaseTest() {
                 expectedZDBIds
             )
         )
+        // TODO(CB): Add test for partOfSeries
+
         // Test publication types
         assertThat(
             searchResult.publicationType,

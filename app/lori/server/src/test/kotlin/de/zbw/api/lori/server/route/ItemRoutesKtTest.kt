@@ -591,6 +591,7 @@ class ItemRoutesKtTest {
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
+                isPartOfSeriesCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -611,6 +612,7 @@ class ItemRoutesKtTest {
                         .map { it.toBusiness() },
                     paketSigels = emptyMap(),
                     zdbIds = emptyMap(),
+                    isPartOfSeries = emptyMap(),
                     publicationType = emptyMap(),
                     accessState = emptyMap(),
                     hasOpenContentLicence = false,
@@ -661,6 +663,7 @@ class ItemRoutesKtTest {
                 hasLicenceContract = false,
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
+                isPartOfSeriesCount = emptyList(),
             )
         val backend = mockk<LoriServerBackend>(relaxed = true) {
             every {
@@ -685,8 +688,9 @@ class ItemRoutesKtTest {
                     hasLicenceContract = false,
                     hasZbwUserAgreement = false,
                     templateNamesToOcc = emptyMap(),
+                    isPartOfSeries = emptyMap(),
                 )
-                )
+            )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
         val servicePool = getServicePool(backend)

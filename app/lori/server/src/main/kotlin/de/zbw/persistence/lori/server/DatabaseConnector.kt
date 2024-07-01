@@ -81,6 +81,7 @@ class DatabaseConnector(
         const val COLUMN_METADATA_DOI = "doi"
         const val COLUMN_METADATA_ISBN = "isbn"
         const val COLUMN_METADATA_ISSN = "issn"
+        const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
         const val COLUMN_METADATA_HANDLE = "handle"
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
         const val COLUMN_METADATA_LAST_UPDATED_ON = "last_updated_on"
