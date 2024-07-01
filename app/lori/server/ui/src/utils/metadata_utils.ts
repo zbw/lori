@@ -29,7 +29,7 @@ export default {
         return "Aufsatz/Article";
       case "book":
         return "Buch/Book";
-      case "bookPart":
+      case "bookpart":
         return "Buchaufsatz/Book Part";
       /**
        * IMPORTANT NOTE: Openapis conversion of enums between frontend and backend
@@ -40,23 +40,23 @@ export default {
        */
       case "conference_paper":
         return "Konferenzschrift/\n Conference Paper ";
-      case "conferencePaper":
+      case "conferencepaper":
         return "Konferenzschrift/\n Conference Paper ";
       case "periodical_part":
         return "Zeitschriftenband/\n Periodical Part ";
-      case "periodicalPart":
+      case "periodicalpart":
         return "Zeitschriftenband/\n Periodical Part ";
       case "proceedings":
         return "Konferenzband/\n Proceeding ";
       case "research_report":
         return "Forschungsbericht/\n Research Report ";
-      case "researchReport":
+      case "researchreport":
         return "Forschungsbericht/\n Research Report ";
       case "thesis":
         return "Thesis ";
       case "working_paper":
         return "Working Paper ";
-      case "workingPaper":
+      case "workingpaper":
         return "Working Paper ";
       case "other":
         return "Other";
