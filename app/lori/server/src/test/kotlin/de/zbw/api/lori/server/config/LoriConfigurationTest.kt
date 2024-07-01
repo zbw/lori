@@ -26,7 +26,7 @@ class LoriConfigurationTest {
         System.setProperty("lori.sql.password", expectedConfig.sqlPassword)
         System.setProperty("lori.connection.digitalarchive.address", expectedConfig.digitalArchiveAddress)
         System.setProperty("lori.connection.digitalarchive.basicauth", expectedConfig.digitalArchiveBasicAuth)
-        System.setProperty("lori.connection.digitalarchive.credentials.user", expectedConfig.digitalArchiveUsername)
+        System.setProperty("lori.connection.digitalarchive.credentials.username", expectedConfig.digitalArchiveUsername)
         System.setProperty("lori.connection.digitalarchive.credentials.password", expectedConfig.digitalArchivePassword)
         System.setProperty("lori.jwt.audience", expectedConfig.jwtAudience)
         System.setProperty("lori.jwt.issuer", expectedConfig.jwtIssuer)
