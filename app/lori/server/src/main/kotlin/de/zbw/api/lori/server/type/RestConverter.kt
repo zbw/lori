@@ -284,6 +284,7 @@ internal fun PublicationTypeRest.toBusiness(): PublicationType =
         PublicationTypeRest.proceedings -> PublicationType.PROCEEDINGS
         PublicationTypeRest.thesis -> PublicationType.THESIS
         PublicationTypeRest.conferencePaper -> PublicationType.CONFERENCE_PAPER
+        PublicationTypeRest.other -> PublicationType.OTHER
     }
 
 internal fun PublicationType.toRest(): PublicationTypeRest =
@@ -297,14 +298,21 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.RESEARCH_REPORT -> PublicationTypeRest.researchReport
         PublicationType.PROCEEDINGS -> PublicationTypeRest.proceedings
         PublicationType.THESIS -> PublicationTypeRest.thesis
+        PublicationType.OTHER -> PublicationTypeRest.other
     }
 
 fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? {
     val metadata = this.metadata
     val handle = RestConverter.extractMetadata("dc.identifier.uri", metadata)
-    val publicationType = RestConverter.extractMetadata("dc.type", metadata)?.let {
-        PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
-    }
+    val publicationType =
+        try {
+            RestConverter.extractMetadata("dc.type", metadata)?.let {
+                PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
+            }
+        } catch (iae: IllegalArgumentException) {
+            LOG.error("Unknown PublicationType found for ${this.id}")
+            throw iae
+        }
     val publicationDate = RestConverter.extractMetadata("dc.date.issued", metadata)
     val title = RestConverter.extractMetadata("dc.title", metadata)
 
@@ -323,9 +331,11 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
                 subDACommunity = this.parentCommunityList.firstOrNull { it.id == directParentCommunityId }
                 parentDACommunity = this.parentCommunityList.firstOrNull { it.id != directParentCommunityId }
             }
+
             1 -> {
                 parentDACommunity = this.parentCommunityList.firstOrNull()
             }
+
             else -> {
                 // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
                 LOG.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")

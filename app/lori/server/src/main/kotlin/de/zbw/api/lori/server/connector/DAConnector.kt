@@ -13,6 +13,8 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
@@ -44,6 +46,10 @@ class DAConnector(
         install(ContentNegotiation) {
             gson {}
         }
+        install(Logging) {
+            logger = HttpLogger()
+            level = LogLevel.ALL
+        }
     }
 ) {
     private val restURL = "${config.digitalArchiveAddress}/rest"
@@ -54,6 +60,7 @@ class DAConnector(
             contentType(ContentType.Application.Json)
             headers {
                 append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
+                append(HttpHeaders.Accept, "text/plain")
             }
             setBody(
                 DACredentials(
@@ -115,8 +122,6 @@ class DAConnector(
             headers {
                 append(HttpHeaders.Accept, "application/json")
                 append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
-            }
-            headers {
                 append(DSPACE_TOKEN, loginToken)
             }
         }.body<DACollection>().numberItems ?: 0
