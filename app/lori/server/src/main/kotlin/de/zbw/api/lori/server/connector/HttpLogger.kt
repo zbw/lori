@@ -1,6 +1,6 @@
 package de.zbw.api.lori.server.connector
 
-import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.logging.Logger
 import org.apache.logging.log4j.LogManager
 
 class HttpLogger : Logger {
