@@ -4,8 +4,6 @@ import {
   BookmarkRawApi,
   BookmarkRest,
   Configuration,
-  FilterPublicationDateRest,
-  SearchKeyRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -30,7 +28,8 @@ export default {
     filterValidOn: string | undefined,
     filterPaketSigel: string | undefined,
     filterZDBId: string | undefined,
-    filterNoRightInformation: string | undefined
+    filterNoRightInformation: string | undefined,
+    filterSeries: string | undefined,
   ): Promise<BookmarkIdCreated> {
     return bookmarkRawApi.addBookmarkRaw({
       body: {
@@ -49,43 +48,7 @@ export default {
         filterPaketSigel: filterPaketSigel,
         filterZDBId: filterZDBId,
         filterNoRightInformation: filterNoRightInformation,
-      },
-    });
-  },
-
-  addBookmark(
-    bookmarkName: string,
-    bookmarkDescription: string | undefined,
-    searchKeys: SearchKeyRest[] | undefined,
-    filterPublicationDate: FilterPublicationDateRest | undefined,
-    filterPublicationType: string[] | undefined,
-    filterAccessState: string[] | undefined,
-    filterTemporalValididity: string[] | undefined,
-    filterStartDate: Date | undefined,
-    filterEndDate: Date | undefined,
-    filterFormalRule: string[] | undefined,
-    filterValidOn: Date | undefined,
-    filterPaketSigel: string[] | undefined,
-    filterZDBId: string[] | undefined,
-    filterNoRightInformation: boolean | undefined
-  ): Promise<BookmarkIdCreated> {
-    return bookmarkApi.addBookmark({
-      body: {
-        bookmarkId: -1,
-        bookmarkName: bookmarkName,
-        description: bookmarkDescription,
-        searchKeys: searchKeys,
-        filterPublicationDate: filterPublicationDate,
-        filterPublicationType: filterPublicationType,
-        filterAccessState: filterAccessState,
-        filterTemporalValidity: filterTemporalValididity,
-        filterStartDate: filterStartDate,
-        filterEndDate: filterEndDate,
-        filterFormalRule: filterFormalRule,
-        filterValidOn: filterValidOn,
-        filterPaketSigel: filterPaketSigel,
-        filterZDBId: filterZDBId,
-        filterNoRightInformation: filterNoRightInformation,
+        filterSeries: filterSeries,
       },
     });
   },
@@ -93,44 +56,6 @@ export default {
   deleteBookmark(bookmarkId: number): Promise<void> {
     return bookmarkApi.deleteBookmarkById({
       id: bookmarkId,
-    });
-  },
-
-  updateBookmark(
-    bookmarkId: number,
-    bookmarkName: string,
-    bookmarkDescription: string | undefined,
-    searchKeys: SearchKeyRest[] | undefined,
-    filterPublicationDate: FilterPublicationDateRest | undefined,
-    filterPublicationType: string[] | undefined,
-    filterAccessState: string[] | undefined,
-    filterTemporalValididity: string[] | undefined,
-    filterStartDate: Date | undefined,
-    filterEndDate: Date | undefined,
-    filterFormalRule: string[] | undefined,
-    filterValidOn: Date | undefined,
-    filterPaketSigel: string[] | undefined,
-    filterZDBId: string[] | undefined,
-    filterNoRightInformation: boolean | undefined
-  ): Promise<void> {
-    return bookmarkApi.updateBookmark({
-      body: {
-        bookmarkId: bookmarkId,
-        bookmarkName: bookmarkName,
-        description: bookmarkDescription,
-        searchKeys: searchKeys,
-        filterPublicationDate: filterPublicationDate,
-        filterPublicationType: filterPublicationType,
-        filterAccessState: filterAccessState,
-        filterTemporalValidity: filterTemporalValididity,
-        filterStartDate: filterStartDate,
-        filterEndDate: filterEndDate,
-        filterFormalRule: filterFormalRule,
-        filterValidOn: filterValidOn,
-        filterPaketSigel: filterPaketSigel,
-        filterZDBId: filterZDBId,
-        filterNoRightInformation: filterNoRightInformation,
-      },
     });
   },
 

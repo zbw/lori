@@ -75,6 +75,7 @@ export default defineComponent({
             searchquerybuilder.buildPaketSigelIdFilter(searchStore),
             searchquerybuilder.buildZDBIdFilter(searchStore),
             searchquerybuilder.buildNoRightInformation(searchStore),
+            searchquerybuilder.buildSeriesFilter(searchStore),
           )
           .then((r) => {
             emit("addBookmarkSuccessful", r.bookmarkId);

@@ -29,6 +29,10 @@ ItemInformation:
       type: array
       items:
         $ref: 'item.model.yaml#/TemplateNameWithCountRest'
+    isPartOfSeriesCount:
+      type: array
+      items:
+        $ref: 'item.model.yaml#/IsPartOfSeriesCountRest'
     hasLicenceContract:
       type: boolean
     hasOpenContentLicence:
@@ -107,6 +111,18 @@ ZdbIdWithCountRest:
       type: integer
     zdbId:
       type: string
+
+IsPartOfSeriesCountRest:
+  required:
+    - count
+    - series
+  type: object
+  properties:
+    count:
+      type: integer
+    series:
+      type: string
+
 
 PublicationTypeWithCountRest:
   required:

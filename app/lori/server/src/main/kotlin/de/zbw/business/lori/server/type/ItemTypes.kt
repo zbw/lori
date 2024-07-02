@@ -22,6 +22,7 @@ data class ItemMetadata(
     val handle: String,
     val isbn: String?,
     val issn: String?,
+    val isPartOfSeries: String?,
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
     val licenceUrl: String?,

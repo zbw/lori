@@ -876,6 +876,7 @@ class LoriServerBackendTest : DatabaseTest() {
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            isPartOfSeries = "series",
             lastUpdatedBy = "user2",
             lastUpdatedOn = NOW,
             licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",

@@ -102,6 +102,7 @@ export default {
     filterZDBId: string | undefined,
     filterNoRightInformation: string | undefined,
     filterRightId: string | undefined,
+    filterSeries: string | undefined,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -120,6 +121,7 @@ export default {
       filterZDBId: filterZDBId,
       filterNoRightInformation: filterNoRightInformation,
       filterRightId: filterRightId,
+      filterSeries: filterSeries,
     });
   },
 };

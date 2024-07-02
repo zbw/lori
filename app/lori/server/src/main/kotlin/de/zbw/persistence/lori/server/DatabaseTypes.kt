@@ -11,6 +11,7 @@ import de.zbw.business.lori.server.type.PublicationType
  */
 data class FacetTransient(
     val accessState: AccessState?,
+    val isPartOfSeries: String?,
     val licenceContract: String?,
     val nonStandardsOCL: Boolean,
     val nonStandardsOCLUrl: String?,
@@ -28,6 +29,7 @@ data class FacetTransientSet(
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
+    val isPartOfSeries: Map<String, Int>,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
     val templateIdToOccurence: Map<String, Int>,

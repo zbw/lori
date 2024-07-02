@@ -105,6 +105,39 @@ export default {
     }
   },
 
+  setSeriesFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterSeries == undefined || bookmark.filterSeries.length == 0) {
+      searchStore.seriesIdx = [];
+      return;
+    }
+    searchStore.seriesIdx = Array(bookmark.filterSeries.length).fill(true);
+    searchStore.seriesReceived = Array(bookmark.filterSeries.length);
+    bookmark.filterSeries.forEach((v: string, index: number): void => {
+      searchStore.seriesReceived[index] = {
+        count: 0,
+        zdbId: v,
+      } as ZdbIdWithCountRest;
+    });
+  },
+
+  buildSeriesFilter(searchStore: any): string | undefined {
+    const seriesIds: Array<string> = [];
+    searchStore.seriesIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            seriesIds.push(searchStore.seriesReceived[index].series);
+          }
+        },
+    );
+    // Remind selected ids, for resetting the filter afterward correctly.
+    searchStore.seriesSelectedLastSearch = seriesIds;
+    if (seriesIds.length == 0) {
+      return undefined;
+    } else {
+      return seriesIds.join(",");
+    }
+  },
+
   setRightIdFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (
       bookmark.filterRightId == undefined ||

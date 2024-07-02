@@ -83,6 +83,7 @@ export default defineComponent({
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
+        searchStore.seriesIdx.filter((element) => element).length > 0 ||
         searchStore.templateNameIdx.filter((element) => element).length > 0 ||
         searchStore.publicationTypeIdx.filter((element) => element).length >
           0 ||
@@ -127,6 +128,7 @@ export default defineComponent({
         () => false,
       );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+      searchStore.seriesIdx = searchStore.seriesIdx.map(() => false);
       searchStore.noRightInformation = false;
       emit("startEmptySearch");
     };
@@ -309,16 +311,30 @@ export default defineComponent({
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
+                <v-list-item v-bind="props" title="Serie"></v-list-item>
+              </template>
+              <h6></h6>
+              <v-checkbox
+                  v-for="(item, i) in searchStore.seriesReceived"
+                  :key="i"
+                  :label="ppZDBId(item.series, item.count)"
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.seriesIdx[i]"
+              ></v-checkbox>
+            </v-list-group>
+            <v-list-group sub-group>
+              <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="ZDB-IDs"></v-list-item>
               </template>
               <h6></h6>
               <v-checkbox
-                v-for="(item, i) in searchStore.zdbIdReceived"
-                :key="i"
-                :label="ppZDBId(item.zdbId, item.count)"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.zdbIdIdx[i]"
+                  v-for="(item, i) in searchStore.zdbIdReceived"
+                  :key="i"
+                  :label="ppZDBId(item.zdbId, item.count)"
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.zdbIdIdx[i]"
               ></v-checkbox>
             </v-list-group>
           </v-list>

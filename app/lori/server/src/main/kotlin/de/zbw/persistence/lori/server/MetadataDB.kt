@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -226,6 +227,9 @@ class MetadataDB(
             this.setIfNotNull(28, itemMetadata.subCommunityName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(29, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
     }
 
@@ -235,6 +239,7 @@ class MetadataDB(
         const val TS_COLLECTION = "ts_collection"
         const val TS_COLLECTION_HANDLE = "ts_col_hdl"
         const val TS_HANDLE = "ts_hdl"
+        const val TS_IS_PART_OF_SERIES = "ts_is_part_of_series"
         const val TS_LICENCE_URL = "ts_licence_url"
         const val TS_METADATA_ID = "ts_metadata_id"
         const val TS_SIGEL = "ts_sigel"
@@ -258,7 +263,7 @@ class MetadataDB(
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
-                "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME" +
+                "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_SELECT_ALL_METADATA =
@@ -268,8 +273,8 @@ class MetadataDB(
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle," +
-                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
-                "$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL,$TS_SUBCOMMUNITY_NAME"
+                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
+                "$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL,$TS_SUBCOMMUNITY_NAME,$TS_IS_PART_OF_SERIES"
 
         const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
             " WHERE metadata_id = ANY(?)"
@@ -280,14 +285,15 @@ class MetadataDB(
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME) " +
+            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+            "$COLUMN_METADATA_IS_PART_OF_SERIES) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?,?,?) " +
+            "?,?,?,?) " +
             "ON CONFLICT (metadata_id) " +
             "DO UPDATE SET " +
             "handle = EXCLUDED.handle," +
@@ -314,7 +320,8 @@ class MetadataDB(
             "community_handle = EXCLUDED.community_handle," +
             "collection_handle = EXCLUDED.collection_handle," +
             "licence_url = EXCLUDED.licence_url," +
-            "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME"
+            "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+            "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=?)"
@@ -325,14 +332,15 @@ class MetadataDB(
             "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
             "created_on,last_updated_on,created_by,last_updated_by," +
             "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME) " +
+            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+            "$COLUMN_METADATA_IS_PART_OF_SERIES) " +
             "VALUES(" +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
             "?,?,?,?,?," +
-            "?,?,?)"
+            "?,?,?,?)"
 
         fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
             metadataId = rs.getString(1),
@@ -363,6 +371,7 @@ class MetadataDB(
             collectionHandle = rs.getString(26),
             licenceUrl = rs.getString(27),
             subCommunityName = rs.getString(28),
+            isPartOfSeries = rs.getString(29),
         )
     }
 }

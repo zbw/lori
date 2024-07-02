@@ -139,6 +139,27 @@ class ZDBIdFilter(
     }
 }
 
+class SeriesFilter(
+    val seriesNames: List<String>,
+) : MetadataSearchFilter(
+    DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES
+) {
+    override fun toWhereClause(): String =
+        seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "$dbColumnName = ?"
+        }
+
+    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+        var localCounter = counter
+        seriesNames.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+
+    override fun toString(): String = seriesNames.joinToString(separator = ",")
+}
+
 /**
  * All right related filter options.
  */

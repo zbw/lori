@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
+import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
@@ -76,6 +77,14 @@ object QueryParameterParser {
         }
         val zdbIds: List<String> = s.split(",".toRegex())
         return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilter(it) }
+    }
+
+    fun parseSeriesFilter(s: String?): SeriesFilter? {
+        if (s == null) {
+            return null
+        }
+        val seriesNames: List<String> = s.split(",".toRegex())
+        return seriesNames.takeIf { it.isNotEmpty() }?.let { SeriesFilter(it) }
     }
 
     fun parseAccessStateFilter(s: String?): AccessStateFilter? {

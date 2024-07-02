@@ -48,6 +48,8 @@ MetadataRest:
       type: string
     issn:
       type: string
+    isPartOfSeries:
+      type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:

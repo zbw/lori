@@ -14,6 +14,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.AccessStateWithCountRest
+import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
@@ -56,6 +57,7 @@ class RestConverterTest {
                 handle = TEST_METADATA.handle,
                 isbn = TEST_METADATA.isbn,
                 issn = TEST_METADATA.issn,
+                isPartOfSeries = TEST_METADATA.isPartOfSeries,
                 lastUpdatedBy = TEST_METADATA.lastUpdatedBy,
                 lastUpdatedOn = TEST_METADATA.lastUpdatedOn,
                 licenceUrl = TEST_METADATA.licenceUrl,
@@ -125,6 +127,7 @@ class RestConverterTest {
             handle = "11159/848",
             isbn = null,
             issn = null,
+            isPartOfSeries = "seriespart",
             lastUpdatedBy = null,
             lastUpdatedOn = null,
             licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
@@ -400,6 +403,7 @@ class RestConverterTest {
             publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
             templateNamesToOcc = mapOf("rightId" to ("name" to 2)),
             zdbIds = mapOf("zdb1" to 1),
+            isPartOfSeries = mapOf("series1" to 1),
         )
         val expected = ItemInformation(
             itemArray = listOf(givenItem.toRest()),
@@ -428,15 +432,21 @@ class RestConverterTest {
                 ZdbIdWithCountRest(
                     count = 1,
                     zdbId = "zdb1",
-                )
+                ),
             ),
             templateNameWithCount = listOf(
                 TemplateNameWithCountRest(
                     count = 2,
                     templateName = "name",
                     rightId = "rightId",
-                )
-            )
+                ),
+            ),
+            isPartOfSeriesCount = listOf(
+                IsPartOfSeriesCountRest(
+                    count = 1,
+                    series = "series1",
+                ),
+            ),
         )
 
         assertThat(
@@ -510,6 +520,7 @@ class RestConverterTest {
             handle = "hdl:example.handle.net",
             isbn = "1234567890123",
             issn = "123456",
+            isPartOfSeries = "seriespart",
             lastUpdatedBy = "user2",
             lastUpdatedOn = OffsetDateTime.of(
                 2022,
@@ -700,6 +711,11 @@ class RestConverterTest {
                 DAMetadata(
                     key = "dc.rights.license",
                     value = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                    language = "EN",
+                ),
+                DAMetadata(
+                    key = "dc.relation.ispartofseries",
+                    value = "seriespart",
                     language = "EN",
                 ),
             ),

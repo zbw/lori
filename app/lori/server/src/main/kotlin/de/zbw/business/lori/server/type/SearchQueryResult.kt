@@ -13,6 +13,7 @@ data class SearchQueryResult(
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
+    val isPartOfSeries: Map<String, Int>,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
     val templateNamesToOcc: Map<String, Pair<String, Int>>,

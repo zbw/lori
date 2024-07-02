@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { reactive, Ref, ref } from "vue";
 import {
-  AccessStateWithCountRest,
+  AccessStateWithCountRest, IsPartOfSeriesCountRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
   ZdbIdWithCountRest,
@@ -60,6 +60,10 @@ export const useSearchStore = defineStore("search", () => {
   const templateNameReceived: Ref<Array<TemplateNameWithCountRest>> = ref([]);
   const templateNameSelectedLastSearch: Ref<Array<string>> = ref([]);
 
+  const seriesIdx: Ref<Array<boolean>> = ref([]);
+  const seriesReceived: Ref<Array<IsPartOfSeriesCountRest>> = ref([]);
+  const seriesSelectedLastSearch: Ref<Array<string>> = ref([]);
+
   // Deployment Stage
   const stage = ref("");
   const handleURLResolver = ref("");
@@ -90,6 +94,9 @@ export const useSearchStore = defineStore("search", () => {
     publicationDateFrom,
     publicationDateTo,
     searchTerm,
+    seriesIdx,
+    seriesReceived,
+    seriesSelectedLastSearch,
     stage,
     templateNameIdx,
     templateNameReceived,
