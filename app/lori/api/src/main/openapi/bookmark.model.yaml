@@ -37,6 +37,8 @@ BookmarkRawRest:
       type: string
     filterZDBId:
       type: string
+    filterSeries:
+      type: string
     filterNoRightInformation:
       type: string
     filterRightId:
@@ -109,6 +111,10 @@ BookmarkRest:
       type: array
       items:
         type: string
+    filterSeries:
+      type: array
+      items:
+        type: string
     filterNoRightInformation:
       type: boolean
     filterRightId:
@@ -128,16 +134,3 @@ FilterPublicationDateRest:
       type: integer
     toYear:
       type: integer
-
-SearchKeyRest:
-  required:
-    - key
-    - value
-  type: object
-  properties:
-    key:
-      type: string
-    values:
-      type: array
-      items:
-        type: string

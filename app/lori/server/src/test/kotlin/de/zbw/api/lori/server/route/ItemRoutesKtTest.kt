@@ -690,7 +690,7 @@ class ItemRoutesKtTest {
                     templateNamesToOcc = emptyMap(),
                     isPartOfSeries = emptyMap(),
                 )
-            )
+                )
             every { countMetadataEntries() } returns expectedInformation.numberOfResults
         }
         val servicePool = getServicePool(backend)

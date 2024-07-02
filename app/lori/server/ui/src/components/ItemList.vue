@@ -2,7 +2,7 @@
 import {
   AboutRest,
   AccessStateWithCountRest,
-  BookmarkRest,
+  BookmarkRest, IsPartOfSeriesCountRest,
   ItemInformation,
   ItemRest,
   MetadataRest,
@@ -399,6 +399,7 @@ export default defineComponent({
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       searchquerybuilder.setRightIdFilter(searchStore, bookmark);
+      searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -447,6 +448,7 @@ export default defineComponent({
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
           searchquerybuilder.buildRightIdFilter(searchStore),
+          searchquerybuilder.buildSeriesFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -525,6 +527,15 @@ export default defineComponent({
         },
       );
       searchStore.zdbIdIdx = reduceIdx(searchStore.zdbIdIdx);
+      searchStore.seriesReceived = searchStore.seriesSelectedLastSearch.map(
+          (elem: string) => {
+            return {
+              count: 0,
+              series: elem,
+            } as IsPartOfSeriesCountRest;
+          },
+      );
+      searchStore.seriesIdx = reduceIdx(searchStore.seriesIdx);
     };
 
     const reduceIdx = (idxMap: Array<boolean>): Array<boolean> => {
@@ -584,9 +595,22 @@ export default defineComponent({
         false,
       );
       resetDynamicFilter(
-        searchStore.zdbIdReceived.map((e) => e.zdbId),
-        searchStore.zdbIdSelectedLastSearch,
-        searchStore.zdbIdIdx,
+          searchStore.zdbIdReceived.map((e) => e.zdbId),
+          searchStore.zdbIdSelectedLastSearch,
+          searchStore.zdbIdIdx,
+      );
+      // Reset Series
+      searchStore.seriesReceived =
+          response.isPartOfSeriesCount != undefined
+              ? response.isPartOfSeriesCount
+              : Array(0);
+      searchStore.seriesIdx = Array(searchStore.seriesReceived.length).fill(
+          false,
+      );
+      resetDynamicFilter(
+          searchStore.seriesReceived.map((e) => e.series),
+          searchStore.seriesSelectedLastSearch,
+          searchStore.seriesIdx,
       );
       // Reset Template Names
       searchStore.templateNameReceived =
@@ -819,14 +843,14 @@ export default defineComponent({
                     class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
                   >
                     col, com, hdl, hdlcol, hdlcom, subcom, hdlsubcom, lur, metadataid,
-                    sig, tit, zdb
+                    series, sig, tit, zdb
                   </p>
 
                   <p class="text-left text-body-2 bg-light-blue-lighten-5">
                     Diese durchsuchen jeweils diese Felder: Collection,
                     Community, Handle, Handle der Metadaten, Handle der
                     Community, Name der Subcommunity, Handle der Subcommunity, Lizenz URL, Metadaten
-                    ID, Paket-Sigel, Titel and ZDB-ID
+                    ID, Serie, Paket-Sigel, Titel and ZDB-ID
                   </p>
 
                   <p class="text-left text-body-1 mt-4">

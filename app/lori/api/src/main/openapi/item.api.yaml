@@ -371,6 +371,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterSeries
+        in: query
+        schema:
+          type: string
 
     responses:
       200:

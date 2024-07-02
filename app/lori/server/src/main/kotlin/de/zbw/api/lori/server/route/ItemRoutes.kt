@@ -12,6 +12,7 @@ import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
+import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
@@ -363,6 +364,8 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parsePaketSigelFilter(call.request.queryParameters["filterPaketSigel"])
                     val zdbIdFilter: ZDBIdFilter? =
                         QueryParameterParser.parseZDBIdFilter(call.request.queryParameters["filterZDBId"])
+                    val seriesFilter: SeriesFilter? =
+                        QueryParameterParser.parseSeriesFilter(call.request.queryParameters["filterSeries"])
                     val accessStateFilter: AccessStateFilter? =
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
@@ -441,6 +444,7 @@ fun Routing.itemRoutes(
                         publicationDateFilter,
                         publicationTypeFilter,
                         zdbIdFilter,
+                        seriesFilter,
                     )
                     val rightFilters = listOfNotNull(
                         accessStateFilter,
