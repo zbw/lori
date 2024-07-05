@@ -34,6 +34,14 @@ export default defineComponent({
       }
     };
 
+    const prettyPrintPublicationDate = (d: Date | undefined) => {
+          if (d === undefined) {
+            return "Nicht verfügbar";
+          } else {
+            return d.toLocaleDateString("de");
+          }
+    };
+
     const currentMetadata = computed(() => {
       return props.metadata;
     });
@@ -48,6 +56,7 @@ export default defineComponent({
       prettyPrint,
       parseDateToLocaleString,
       parsePublicationType,
+      prettyPrintPublicationDate,
     };
   },
 });
@@ -176,7 +185,7 @@ export default defineComponent({
             <v-row>
               <v-col>Publikationsjahr</v-col>
               <v-col>{{
-                currentMetadata.publicationDate.toLocaleDateString("de")
+                prettyPrintPublicationDate(currentMetadata.publicationDate)
               }}</v-col>
               <v-col></v-col>
             </v-row>
