@@ -321,10 +321,10 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
 
     return if (
         handle == null ||
-        publicationDate == null ||
         publicationType == null ||
         title == null
     ) {
+        LOG.warn("Required field missing for MetadataId: ${this.id}")
         null
     } else {
         var subDACommunity: DACommunity? = null
@@ -370,7 +370,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
             paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
             ppn = RestConverter.extractMetadata("dc.identifier.ppn", metadata),
             publicationType = publicationType,
-            publicationDate = RestConverter.parseToDate(publicationDate),
+            publicationDate = publicationDate?.let { RestConverter.parseToDate(it) },
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
             subCommunityHandle = subDACommunity?.handle?.let {
                 RestConverter.parseHandle(it)

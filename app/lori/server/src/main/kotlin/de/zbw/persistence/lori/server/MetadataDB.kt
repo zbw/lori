@@ -169,7 +169,9 @@ class MetadataDB(
             this.setIfNotNull(6, itemMetadata.titleSeries) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setDate(7, Date.valueOf(itemMetadata.publicationDate))
+            this.setIfNotNull(7, itemMetadata.publicationDate) { value, idx, prepStmt ->
+                prepStmt.setDate(idx, Date.valueOf(value))
+            }
             this.setIfNotNull(8, itemMetadata.band) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -349,7 +351,7 @@ class MetadataDB(
             title = rs.getString(4),
             titleJournal = rs.getString(5),
             titleSeries = rs.getString(6),
-            publicationDate = rs.getDate(7).toLocalDate(),
+            publicationDate = rs.getDate(7)?.toLocalDate(),
             band = rs.getString(8),
             publicationType = PublicationType.valueOf(rs.getString(9)),
             doi = rs.getString(10),

@@ -17,7 +17,6 @@ MetadataRest:
     - handle
     - metadataId
     - publicationType
-    - publicationDate
     - title
   type: object
   properties:
