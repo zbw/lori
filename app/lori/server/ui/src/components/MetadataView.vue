@@ -230,12 +230,12 @@ export default defineComponent({
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.zdbIdJournal">
-              <v-col>ZDB Zeitschrift ID</v-col>
+              <v-col>ZDB-ID (Zeitschrift)</v-col>
               <v-col>{{ prettyPrint(currentMetadata.zdbIdJournal) }}</v-col>
               <v-col></v-col>
             </v-row>
             <v-row v-show="currentMetadata.zdbIdSeries">
-              <v-col>ZDB Serie ID</v-col>
+              <v-col>ZDB-ID (Serie)</v-col>
               <v-col>{{ prettyPrint(currentMetadata.zdbIdSeries) }}</v-col>
               <v-col></v-col>
             </v-row>
