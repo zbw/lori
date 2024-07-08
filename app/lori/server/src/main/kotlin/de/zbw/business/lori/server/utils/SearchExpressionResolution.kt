@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.type.SEOr
 import de.zbw.business.lori.server.type.SEPar
 import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
 
 object SearchExpressionResolution {
@@ -17,6 +18,27 @@ object SearchExpressionResolution {
         is SEVariable -> expression.searchPair.toWhereClause()
         is SEPar -> "(${resolveSearchExpression(expression.body)})"
         is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
+    }
+
+    /**
+     * When searching for ZDB-IDs two different fields in the database should be considered.
+     */
+    fun extendZDBSearches(expression: SearchExpression): SearchExpression = when (expression) {
+        is SEAnd -> SEAnd(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
+        is SENot -> SENot(extendZDBSearches(expression.body))
+        is SENotPar -> SENot(extendZDBSearches(expression.body))
+        is SEOr -> SEOr(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
+        is SEPar -> SEPar(extendZDBSearches(expression.body))
+        is SEVariable -> when (expression.searchPair.key) {
+            SearchKey.ZDB_ID -> SEPar(
+                SEOr(
+                    expression,
+                    SEVariable(SearchPair(SearchKey.ZDB_ID_SERIES, expression.searchPair.values))
+                )
+            )
+
+            else -> expression
+        }
     }
 
     fun resolveSearchExpressionCoalesce(expression: SearchExpression, columnName: String = "score"): String {

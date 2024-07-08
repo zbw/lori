@@ -60,9 +60,28 @@ class FilterSearchTest : DatabaseTest() {
         ),
     )
 
+    private val zdbIdFilterItems = listOf(
+        TEST_Metadata.copy(
+            metadataId = "journalId only",
+            zdbIdJournal = "555nase",
+            zdbIdSeries = null,
+        ),
+        TEST_Metadata.copy(
+            metadataId = "seriesId only",
+            zdbIdJournal = null,
+            zdbIdSeries = "444nase",
+        ),
+        TEST_Metadata.copy(
+            metadataId = "both zdb ids",
+            zdbIdJournal = "444nase",
+            zdbIdSeries = "333nase",
+        ),
+    )
+
     private fun getInitialMetadata() = listOf(
         publicationDateFilter,
         publicationTypeFilter,
+        zdbIdFilterItems,
     ).flatten()
 
     @BeforeClass
@@ -162,7 +181,7 @@ class FilterSearchTest : DatabaseTest() {
         )
     }
 
-    @DataProvider(name = DATA_FOR_NO_SEARCHTERM)
+    @DataProvider(name = DATA_FOR_NO_SEARCH_TERM)
     fun createDataForNoSearchTerm() = arrayOf(
         arrayOf(
             listOf(
@@ -179,8 +198,67 @@ class FilterSearchTest : DatabaseTest() {
         ),
     )
 
-    @Test(dataProvider = DATA_FOR_NO_SEARCHTERM)
+    @Test(dataProvider = DATA_FOR_NO_SEARCH_TERM)
     fun testFilterNoSearchTerm(
+        searchFilter: List<MetadataSearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult: SearchQueryResult = backend.searchQuery(
+            null,
+            10,
+            0,
+            searchFilter,
+        )
+
+        // then
+        assertThat(
+            description,
+            searchResult.results.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+    }
+
+    @DataProvider(name = DATA_FOR_ZDB_ID)
+    fun createDataForZDBID() = arrayOf(
+        arrayOf(
+            listOf(
+                ZDBIdFilter(
+                    listOf(
+                        "555nase",
+                    )
+                ),
+            ),
+            setOf(zdbIdFilterItems[0]),
+            "Only journal id",
+        ),
+        arrayOf(
+            listOf(
+                ZDBIdFilter(
+                    listOf(
+                        "444nase",
+                    )
+                ),
+            ),
+            setOf(zdbIdFilterItems[1], zdbIdFilterItems[2]),
+            "Series id and journal id",
+        ),
+        arrayOf(
+            listOf(
+                ZDBIdFilter(
+                    listOf(
+                        "333nase",
+                    )
+                ),
+            ),
+            setOf(zdbIdFilterItems[2]),
+            "Only series id",
+        ),
+    )
+
+    @Test(dataProvider = DATA_FOR_ZDB_ID)
+    fun testFilterZDBId(
         searchFilter: List<MetadataSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         description: String,
@@ -216,6 +294,7 @@ class FilterSearchTest : DatabaseTest() {
 
     companion object {
         const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_PUBLICATION_DATE"
-        const val DATA_FOR_NO_SEARCHTERM = "DATA_FOR_NO_SEARCHTERM"
+        const val DATA_FOR_NO_SEARCH_TERM = "DATA_FOR_NO_SEARCH_TERM"
+        const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
     }
 }

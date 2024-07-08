@@ -24,7 +24,8 @@ enum class SearchKey(
     SERIES(MetadataDB.TS_IS_PART_OF_SERIES),
     SUBCOM(MetadataDB.TS_SUBCOMMUNITY_NAME),
     TITLE(MetadataDB.TS_TITLE),
-    ZDB_ID(MetadataDB.TS_ZDB_ID);
+    ZDB_ID(MetadataDB.TS_ZDB_ID_JOURNAL),
+    ZDB_ID_SERIES(MetadataDB.TS_ZDB_ID_SERIES);
 
     fun fromEnum(): String {
         return when (this) {
@@ -41,6 +42,7 @@ enum class SearchKey(
             METADATA_ID -> "metadataid"
             SUBCOM -> "subcom"
             SERIES -> "series"
+            ZDB_ID_SERIES -> "zdbseries"
         }
     }
 
@@ -62,6 +64,7 @@ enum class SearchKey(
                 "lur" -> LUR
                 "subcom" -> SUBCOM
                 "series" -> SERIES
+                "zdbseries" -> ZDB_ID_SERIES
                 else -> null
             }
         }

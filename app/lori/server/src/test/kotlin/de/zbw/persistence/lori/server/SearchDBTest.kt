@@ -19,11 +19,13 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADAT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_JOURNAL
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.SearchDB.Companion.STATEMENT_SELECT_ALL_METADATA_DISTINCT
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -63,14 +65,14 @@ class SearchDBTest : DatabaseTest() {
     @Test
     fun searchMetadata() {
         // given
-        val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbId = "zbdId")
+        val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbIdJournal = "zbdId")
         dbConnector.metadataDB.insertMetadata(testZDB)
 
         // when
         val searchPairsZDB = SEVariable(
             SearchPair(
                 key = SearchKey.ZDB_ID,
-                values = testZDB.zdbId!!
+                values = testZDB.zdbIdJournal!!
             )
         )
         val resultZDB =
@@ -97,7 +99,7 @@ class SearchDBTest : DatabaseTest() {
                 SEVariable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
                 SEAnd(
                     SEVariable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
-                    SEVariable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbId!!))
+                    SEVariable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbIdJournal!!))
                 )
             )
         )
@@ -120,7 +122,7 @@ class SearchDBTest : DatabaseTest() {
         assertThat(numberResultAll, `is`(1))
 
         // Add second metadata with same zbdID
-        val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbId = "zbdId")
+        val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbIdJournal = "zbdId")
         dbConnector.metadataDB.insertMetadata(testZDB2)
         // when
         val resultZBD2 =
@@ -175,7 +177,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple searchkeys",
             ),
             arrayOf(
@@ -185,7 +187,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple words in one searchkey",
             ),
             arrayOf(
@@ -196,7 +198,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple words in multiple searchkeys"
             ),
             arrayOf(
@@ -209,7 +211,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date filter"
             ),
             arrayOf(
@@ -232,7 +234,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ((ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)) OR (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ((ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)) OR (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter"
             ),
         )
@@ -268,7 +270,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
                 false,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM ($SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter only",
             ),
             arrayOf(
@@ -284,7 +286,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
                 false,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM ($SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter combined with metadatafilter",
             ),
             arrayOf(
@@ -300,7 +302,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
                 false,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "return only items without any right information",
             ),
             arrayOf(
@@ -316,7 +318,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
                 false,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "return only items without any right information",
             ),
             arrayOf(
@@ -325,7 +327,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
                 false,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM ($SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
             ),
             arrayOf(
@@ -341,7 +343,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 NoRightInformationFilter(),
                 true,
-                "$SELECT_ALL FROM SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL as sub WHERE NOT metadata_id = ANY(?) ORDER BY metadata_id ASC LIMIT ? OFFSET ?",
+                "$SELECT_ALL FROM $SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL as sub WHERE NOT metadata_id = ANY(?) ORDER BY metadata_id ASC LIMIT ? OFFSET ?",
                 "all the filters except search expression plus metadata ids to filter",
             ),
             arrayOf(
@@ -357,7 +359,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 NoRightInformationFilter(),
                 true,
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT sub.metadata_id = ANY(?) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM ($SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND NOT sub.metadata_id = ANY(?) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "all the filters",
             ),
         )
@@ -404,7 +406,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
                 "count query filter with two searchkeys",
             ),
             arrayOf(
@@ -412,7 +414,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) ORDER BY score DESC) as countsearch",
                 "count query filter with multiple words for one key",
             ),
             arrayOf(
@@ -423,7 +425,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
                 "count query with multiple words for multiple keys",
             ),
             arrayOf(
@@ -436,7 +438,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
                 "count query with one filter",
             ),
             arrayOf(
@@ -446,7 +448,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ((SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_community_handle,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) ORDER BY item_metadata.metadata_id ASC) as countsearch",
+                "SELECT COUNT(*) FROM ((SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_community_handle,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys but with filter",
             ),
             arrayOf(
@@ -462,7 +464,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
-                "SELECT COUNT(*) FROM ((SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_community_handle,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) ORDER BY item_metadata.metadata_id ASC) as countsearch",
+                "SELECT COUNT(*) FROM ((SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,sub_community_handle,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) ORDER BY item_metadata.metadata_id ASC) as countsearch",
                 "count query without keys but with filter",
             ),
             arrayOf(
@@ -558,7 +560,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?) AND item_right.right_id IS NULL) as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
                 "count query with keys and metadata filter and norightinformation filter",
             ),
             arrayOf(
@@ -577,7 +579,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
                 null,
-                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
+                "SELECT COUNT(*) FROM ($SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM ($SELECT_DISTINCT_ON FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC) as countsearch",
                 "count query with keys and with both filter",
             ),
         )
@@ -642,13 +644,14 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*) FROM" +
                     " (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title," +
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
-                    "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
+                    "paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract," +
+                    "storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                    "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
-                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series" +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -662,13 +665,14 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*) FROM" +
                     " (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title," +
                     "title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
-                    "paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on," +
+                    "paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                     "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name," +
-                    "storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract," +
+                    "storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                    "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
-                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series" +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -704,14 +708,14 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
-                    "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn," +
+                    "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state," +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
                     "item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
-                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series" +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -722,14 +726,14 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
-                    "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn," +
+                    "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state," +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
                     "item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
-                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series" +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
@@ -766,21 +770,21 @@ class SearchDBTest : DatabaseTest() {
                 SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_name, sub.is_part_of_series;",
+                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)) as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES;",
                 "query with search and right filter",
             ),
             arrayOf(
                 null,
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_name, sub.is_part_of_series;",
+                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES;",
                 "query with both filters and no searchkey",
             ),
             arrayOf(
                 null,
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 emptyList<RightSearchFilter>(),
-                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id, sub.template_name, sub.is_part_of_series;",
+                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id LEFT JOIN item_right ON item.right_id = item_right.right_id WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) as sub GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES;",
                 "query with metadata filter only",
             ),
         )
@@ -820,7 +824,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.publication_type, COUNT(sub.publication_type) FROM(VALUES (?),(?),(?)) as A(publication_type) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,is_part_of_series,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.publication_type = sub.publication_type  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.publication_type",
+                "SELECT A.publication_type, COUNT(sub.publication_type) FROM(VALUES (?),(?),(?)) as A(publication_type) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id_journal,item_right.access_state,template_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.publication_type = sub.publication_type  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.publication_type",
             ),
             arrayOf(
                 setOf(
@@ -833,7 +837,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.access_state, COUNT(sub.access_state) FROM(VALUES (?),(?),(?)) as A(access_state) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.access_state) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,is_part_of_series,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.access_state = sub.access_state  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.access_state",
+                "SELECT A.access_state, COUNT(sub.access_state) FROM(VALUES (?),(?),(?)) as A(access_state) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.access_state) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id_journal,item_right.access_state,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.access_state = sub.access_state  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.access_state",
             ),
         )
 
@@ -874,7 +878,7 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.template_name, COUNT(sub.template_name) FROM(VALUES (?),(?),(?)) as A(template_name) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.template_name) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id,item_right.access_state,template_name,is_part_of_series,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.template_name = sub.template_name  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.template_name",
+                "SELECT A.template_name, COUNT(sub.template_name) FROM(VALUES (?),(?),(?)) as A(template_name) LEFT JOIN (SELECT DISTINCT ON (item_metadata.metadata_id, item_right.template_name) item_metadata.metadata_id,publication_type,paket_sigel,zdb_id_journal,item_right.access_state,template_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?) WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)) AS sub ON A.template_name = sub.template_name  WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) GROUP BY A.template_name",
             ),
         )
 
@@ -919,12 +923,13 @@ class SearchDBTest : DatabaseTest() {
         const val STATEMENT_GET_METADATA_RANGE =
             "SELECT metadata_id,handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID,issn," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
-        const val SELECT_SUB = "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name, sub.is_part_of_series"
-        const val SELECT_ALL_PRE_TABLE = "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series"
-        const val SELECT_ALL = "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series"
+        const val SELECT_SUB = "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id_journal, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
+        const val SELECT_ALL_PRE_TABLE = "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
+        const val SELECT_ALL = "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES"
+        const val SELECT_DISTINCT_ON = "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
     }
 }

@@ -101,7 +101,7 @@ class SearchKeyTest : DatabaseTest() {
             "search for licence url"
         ),
         arrayOf(
-            "!zdb:'${METADATA_TEST.zdbId}'",
+            "!zdb:'${METADATA_TEST.zdbIdJournal}'",
             10,
             0,
             setOf(METADATA_TEST_2, METADATA_TEST_3),
@@ -155,13 +155,13 @@ class SearchKeyTest : DatabaseTest() {
         val METADATA_TEST_2 = TEST_Metadata.copy(
             metadataId = "second",
             handle = "second/handle",
-            zdbId = null,
+            zdbIdJournal = null,
             licenceUrl = "foobar.baz",
             paketSigel = "someothersigel2",
         )
         val METADATA_TEST_3 = TEST_Metadata.copy(
             metadataId = "third",
-            zdbId = "someotherzdbid",
+            zdbIdJournal = "someotherzdbid",
             licenceUrl = "foobar",
             paketSigel = "someothersigel",
             handle = "some/other/handle",

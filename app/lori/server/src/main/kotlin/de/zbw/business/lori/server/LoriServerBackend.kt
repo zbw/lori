@@ -23,6 +23,7 @@ import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
+import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
@@ -300,7 +301,7 @@ class LoriServerBackend(
                         is Parsed -> it.value
                         is ErrorResult -> throw ParsingException("Parsing error in query: $it")
                     }
-                }
+                }?.let { SearchExpressionResolution.extendZDBSearches(it) }
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
             dbConnector.searchDB.searchMetadataItems(
@@ -352,7 +353,7 @@ class LoriServerBackend(
             paketSigels = facets.paketSigels,
             publicationType = facets.publicationType,
             templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
-            zdbIds = facets.zdbIds,
+            zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
             isPartOfSeries = facets.isPartOfSeries,
         )
     }

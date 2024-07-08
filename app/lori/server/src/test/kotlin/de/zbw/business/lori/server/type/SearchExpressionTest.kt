@@ -5,7 +5,9 @@ import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.ParseResult
 import com.github.h0tk3y.betterParse.parser.Parsed
-import de.zbw.business.lori.server.utils.SearchExpressionResolution
+import de.zbw.business.lori.server.utils.SearchExpressionResolution.extendZDBSearches
+import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearchExpression
+import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearchExpressionCoalesce
 import io.ktor.http.cio.ParserException
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -105,15 +107,18 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND (ts_zdb_id @@ to_tsquery(?) AND ts_zdb_id is not null)) OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
+                "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND ((ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) OR (ts_zdb_id_series @@ to_tsquery(?) AND ts_zdb_id_series is not null))) OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
+                "zdb key searchs on two fields"
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
                 "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
+                "negation, parenthesis, or, and"
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
                 "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
+                "negate term before paranthesis",
             ),
         )
 
@@ -121,9 +126,11 @@ class SearchExpressionTest {
     fun resolveSearchExpression(
         query: String,
         expected: String,
+        reason: String,
     ) {
         assertThat(
-            SearchExpressionResolution.resolveSearchExpression(SearchGrammar.parseToEnd(query)),
+            reason,
+            resolveSearchExpression(extendZDBSearches(SearchGrammar.parseToEnd(query))),
             `is`(expected),
         )
     }
@@ -133,7 +140,8 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "(coalesce(ts_rank_cd(ts_title, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_zdb_id, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1))/3 as score",
+                "(coalesce(ts_rank_cd(ts_title, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_zdb_id_series, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1))/4 as score",
+                "coalesce on complicated query and zdb extension",
             ),
         )
 
@@ -141,9 +149,11 @@ class SearchExpressionTest {
     fun resolveSearchExpressionCoalesce(
         query: String,
         expected: String,
+        reason: String,
     ) {
         assertThat(
-            SearchExpressionResolution.resolveSearchExpressionCoalesce(SearchGrammar.parseToEnd(query)),
+            reason,
+            resolveSearchExpressionCoalesce(extendZDBSearches(SearchGrammar.parseToEnd(query))),
             `is`(expected),
         )
     }

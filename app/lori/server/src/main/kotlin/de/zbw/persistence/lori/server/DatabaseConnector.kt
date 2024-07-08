@@ -97,7 +97,8 @@ class DatabaseConnector(
         const val COLUMN_METADATA_TITLE = "title"
         const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
-        const val COLUMN_METADATA_ZDB_ID = "zdb_id"
+        const val COLUMN_METADATA_ZDB_ID_JOURNAL = "zdb_id_journal"
+        const val COLUMN_METADATA_ZDB_ID_SERIES = "zdb_id_series"
 
         const val COLUMN_RIGHT_ACCESS_STATE = "access_state"
         const val COLUMN_RIGHT_END_DATE = "end_date"
