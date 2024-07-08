@@ -145,7 +145,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         )
         // Update old item from database so it no longer matches for bookmark
-        backend.upsertMetadata(listOf(item1ZDB1.copy(zdbId = "foobar")))
+        backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIdJournal = "foobar")))
 
         // Apply Template
         val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
@@ -266,32 +266,32 @@ class ApplyTemplateTest : DatabaseTest() {
         val item1ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb1",
             collectionName = "common zdb",
-            zdbId = ZDB_1,
+            zdbIdJournal = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
         val item2ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb2",
             collectionName = "common zdb",
-            zdbId = ZDB_1,
+            zdbIdJournal = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
         val item3ZDB1 = TEST_METADATA.copy(
             metadataId = "zdb3",
             collectionName = "common zdb",
-            zdbId = ZDB_1,
+            zdbIdJournal = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
         val item1ZDB2 = TEST_METADATA.copy(
             metadataId = "foo-zdb2",
-            zdbId = ZDB_2,
+            zdbIdJournal = ZDB_2,
             handle = "foo",
         )
         val item2ZDB2 = TEST_METADATA.copy(
             metadataId = "bar-zdb2",
-            zdbId = ZDB_2,
+            zdbIdJournal = ZDB_2,
             handle = "bar",
         )
     }

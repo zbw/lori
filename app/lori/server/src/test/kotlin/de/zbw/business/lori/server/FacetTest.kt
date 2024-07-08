@@ -151,10 +151,11 @@ class FacetTest : DatabaseTest() {
                     itemSigel3.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemZDB1.zdbId to 1,
-                    itemZDB2.zdbId to 1,
-                    itemZDB3.zdbId to 1,
-                    itemSigel1.zdbId to 3,
+                    itemZDB1.zdbIdJournal to 1,
+                    itemZDB2.zdbIdJournal to 1,
+                    itemZDB3.zdbIdJournal to 1,
+                    itemSigel1.zdbIdJournal to 3,
+                    itemZDB1.zdbIdSeries to 6,
                 ).toMap(),
                 listOf(
                     AccessState.OPEN to 2,
@@ -184,7 +185,8 @@ class FacetTest : DatabaseTest() {
                     itemSigel1.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemSigel1.zdbId to 1,
+                    itemSigel1.zdbIdJournal to 1,
+                    itemZDB1.zdbIdSeries to 1,
                 ).toMap(),
                 listOf(AccessState.OPEN to 1).toMap(),
                 "search for all items, filter by PaketSigel Id"
@@ -194,7 +196,7 @@ class FacetTest : DatabaseTest() {
                 listOf(
                     ZDBIdFilter(
                         listOf(
-                            itemZDB1.zdbId!!
+                            itemZDB1.zdbIdJournal!!
                         )
                     ),
                 ),
@@ -210,7 +212,8 @@ class FacetTest : DatabaseTest() {
                     itemZDB1.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemZDB1.zdbId to 1,
+                    itemZDB1.zdbIdJournal to 1,
+                    itemZDB1.zdbIdSeries to 1,
                 ).toMap(),
                 listOf(AccessState.CLOSED to 1).toMap(),
                 "search for all items, filter by ZDB-Id"
@@ -225,7 +228,7 @@ class FacetTest : DatabaseTest() {
                     ),
                     ZDBIdFilter(
                         listOf(
-                            itemZDB1.zdbId!!
+                            itemZDB1.zdbIdJournal!!
                         )
                     ),
                 ),
@@ -286,7 +289,6 @@ class FacetTest : DatabaseTest() {
                 expectedZDBIds
             )
         )
-        // TODO(CB): Add test for partOfSeries
 
         // Test publication types
         assertThat(
@@ -318,7 +320,7 @@ class FacetTest : DatabaseTest() {
         val itemZDB1 = TEST_Metadata.copy(
             metadataId = "zdb1",
             collectionName = "common zdb",
-            zdbId = ZDB_1,
+            zdbIdJournal = ZDB_1,
             publicationDate = LocalDate.of(2010, 1, 1),
             publicationType = PublicationType.BOOK,
         )
@@ -333,7 +335,7 @@ class FacetTest : DatabaseTest() {
         val itemZDB2 = TEST_Metadata.copy(
             metadataId = "zdb2",
             collectionName = "common zdb",
-            zdbId = ZDB_2,
+            zdbIdJournal = ZDB_2,
             publicationDate = LocalDate.of(2012, 1, 1),
             publicationType = PublicationType.CONFERENCE_PAPER,
         )
@@ -348,7 +350,7 @@ class FacetTest : DatabaseTest() {
         val itemZDB3 = TEST_Metadata.copy(
             metadataId = "zdb3",
             collectionName = "common zdb",
-            zdbId = ZDB_3,
+            zdbIdJournal = ZDB_3,
             publicationDate = LocalDate.of(2014, 1, 1),
             publicationType = PublicationType.PROCEEDINGS,
         )

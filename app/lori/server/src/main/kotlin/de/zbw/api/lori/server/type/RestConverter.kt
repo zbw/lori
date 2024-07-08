@@ -124,7 +124,8 @@ fun MetadataRest.toBusiness() =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zdbId = zdbId,
+        zdbIdJournal = zdbIdJournal,
+        zdbIdSeries = zdbIdSeries,
     )
 
 fun ItemMetadata.toRest(): MetadataRest =
@@ -157,7 +158,8 @@ fun ItemMetadata.toRest(): MetadataRest =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zdbId = zdbId,
+        zdbIdJournal = zdbIdJournal,
+        zdbIdSeries = zdbIdSeries,
     )
 
 fun RightRest.toBusiness(): ItemRight =
@@ -304,7 +306,7 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.OTHER -> PublicationTypeRest.other
     }
 
-fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? {
+fun DAItem.toBusiness(directParentCommunityId: Int, logger: Logger): ItemMetadata? {
     val metadata = this.metadata
     val handle = RestConverter.extractMetadata("dc.identifier.uri", metadata)
     val publicationType =
@@ -313,7 +315,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
                 PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
             }
         } catch (iae: IllegalArgumentException) {
-            LOG.error("Unknown PublicationType found for ${this.id}")
+            logger.error("Unknown PublicationType found for ${this.id}")
             throw iae
         }
     val publicationDate = RestConverter.extractMetadata("dc.date.issued", metadata)
@@ -324,7 +326,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
         publicationType == null ||
         title == null
     ) {
-        LOG.warn("Required field missing for MetadataId: ${this.id}")
+        logger.warn("Required field missing for MetadataId: ${this.id}")
         null
     } else {
         var subDACommunity: DACommunity? = null
@@ -341,7 +343,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
 
             else -> {
                 // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
-                LOG.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")
+                logger.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")
                 return null
             }
         }
@@ -381,7 +383,8 @@ fun DAItem.toBusiness(directParentCommunityId: Int, LOG: Logger): ItemMetadata? 
             title = title,
             titleJournal = RestConverter.extractMetadata("dc.journalname", metadata),
             titleSeries = RestConverter.extractMetadata("dc.seriesname", metadata),
-            zdbId = RestConverter.extractMetadata("dc.relation.journalzdbid", metadata),
+            zdbIdJournal = RestConverter.extractMetadata("dc.relation.journalzdbid", metadata),
+            zdbIdSeries = RestConverter.extractMetadata("dc.relation.serieszdbid", metadata),
         )
     }
 }

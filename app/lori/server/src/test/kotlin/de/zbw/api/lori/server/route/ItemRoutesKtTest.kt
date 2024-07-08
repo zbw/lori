@@ -836,7 +836,8 @@ class ItemRoutesKtTest {
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zdbId = null,
+            zdbIdJournal = null,
+            zdbIdSeries = null,
         )
 
         val TEST_ITEM = ItemRest(

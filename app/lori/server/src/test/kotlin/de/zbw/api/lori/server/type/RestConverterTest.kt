@@ -72,7 +72,8 @@ class RestConverterTest {
                 title = TEST_METADATA.title,
                 titleJournal = TEST_METADATA.titleJournal,
                 titleSeries = TEST_METADATA.titleSeries,
-                zdbId = TEST_METADATA.zdbId,
+                zdbIdJournal = TEST_METADATA.zdbIdJournal,
+                zdbIdSeries = TEST_METADATA.zdbIdSeries,
             ),
             rights = listOf(
                 RightRest(
@@ -151,7 +152,8 @@ class RestConverterTest {
             title = "some_title",
             titleJournal = "some_journal",
             titleSeries = "some_series",
-            zdbId = null,
+            zdbIdJournal = null,
+            zdbIdSeries = null,
         )
 
         // when
@@ -544,7 +546,8 @@ class RestConverterTest {
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zdbId = null,
+            zdbIdJournal = null,
+            zdbIdSeries = null,
         )
 
         val TEST_RIGHT = ItemRight(

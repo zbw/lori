@@ -80,5 +80,7 @@ MetadataRest:
       type: string
     titleSeries:
       type: string
-    zdbId:
+    zdbIdJournal:
+      type: string
+    zdbIdSeries:
       type: string

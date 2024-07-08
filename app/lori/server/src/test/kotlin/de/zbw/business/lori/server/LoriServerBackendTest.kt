@@ -421,8 +421,8 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testSearchQuery() {
         // given
         val givenMetadataEntries = arrayOf(
-            TEST_METADATA.copy(metadataId = "search_test_1", zdbId = "zbdTest"),
-            TEST_METADATA.copy(metadataId = "search_test_2", zdbId = "zbdTest"),
+            TEST_METADATA.copy(metadataId = "search_test_1", zdbIdJournal = "zbdTest"),
+            TEST_METADATA.copy(metadataId = "search_test_2", zdbIdJournal = "zbdTest"),
         )
         val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
@@ -431,7 +431,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (number, items) = backend.searchQuery(
-            "zdb:${givenMetadataEntries[0].zdbId!!}",
+            "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
             5,
             0
         )
@@ -891,7 +891,8 @@ class LoriServerBackendTest : DatabaseTest() {
             title = "Important title",
             titleJournal = null,
             titleSeries = null,
-            zdbId = null,
+            zdbIdJournal = null,
+            zdbIdSeries = null,
         )
 
         private val TEST_RIGHT = ItemRight(

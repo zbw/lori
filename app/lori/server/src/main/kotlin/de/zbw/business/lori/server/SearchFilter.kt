@@ -117,16 +117,18 @@ class PaketSigelFilter(
 class ZDBIdFilter(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_ZDB_ID,
+    DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
 ) {
+    // TODO(CB): Add OR statements on COLUMN_METADATA_ZDB_ID_SERIES
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
+            "$dbColumnName = ? OR ${DatabaseConnector.COLUMN_METADATA_ZDB_ID_SERIES} = ?"
         }
 
     override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
         var localCounter = counter
         zdbIds.forEach {
+            preparedStatement.setString(localCounter++, it)
             preparedStatement.setString(localCounter++, it)
         }
         return localCounter
@@ -140,7 +142,7 @@ class ZDBIdFilter(
 }
 
 class SeriesFilter(
-    val seriesNames: List<String>,
+    private val seriesNames: List<String>,
 ) : MetadataSearchFilter(
     DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES
 ) {
