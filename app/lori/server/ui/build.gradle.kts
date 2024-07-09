@@ -106,11 +106,6 @@ tasks.jar {
     dependsOn("npm_run_build")
 }
 
-tasks.inspectClassesForKotlinIC {
-    dependsOn("npm_run_build")
-}
-
-
 tasks.clean {
     delete(packageNpmApp.get().archiveFile)
     delete(testsExecutedMarkerName)
