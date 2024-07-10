@@ -286,56 +286,108 @@ export default defineComponent({
                 ></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                v-for="(item, i) in searchStore.publicationTypeReceived"
-                :key="i"
-                :label="parsePublicationType(item.publicationType, item.count)"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.publicationTypeIdx[i]"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.publicationTypeReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="parsePublicationType(item.publicationType, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.publicationTypeIdx[i]"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="Paketsigel"></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                v-for="(item, i) in searchStore.paketSigelIdReceived"
-                :key="i"
-                :label="ppPaketSigel(item.paketSigel, item.count)"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.paketSigelIdIdx[i]"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.paketSigelIdReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="ppPaketSigel(item.paketSigel, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.paketSigelIdIdx[i]"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="Serie"></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                  v-for="(item, i) in searchStore.seriesReceived"
-                  :key="i"
-                  :label="ppZDBId(item.series, item.count)"
-                  hide-details
-                  class="pl-9 ml-4"
-                  v-model="searchStore.seriesIdx[i]"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.seriesReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="ppZDBId(item.series, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.seriesIdx[i]"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="ZDB-IDs"></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                  v-for="(item, i) in searchStore.zdbIdReceived"
-                  :key="i"
-                  :label="ppZDBId(item.zdbId, item.count)"
-                  hide-details
-                  class="pl-9 ml-4"
-                  v-model="searchStore.zdbIdIdx[i]"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.zdbIdReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="ppZDBId(item.zdbId, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.zdbIdIdx[i]"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
           </v-list>
         </v-col>
