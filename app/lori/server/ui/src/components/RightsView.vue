@@ -54,6 +54,10 @@ export default defineComponent({
         title: "Rechte-ID",
         value: "rightId",
       },
+      {
+        title: "Typ",
+        value: "type",
+      },
     ];
     const isNew = ref(false);
     const renderKey = ref(0);
@@ -171,6 +175,22 @@ export default defineComponent({
       </template>
       <template v-slot:item.startDate="{ item }">
         <td>{{ item.startDate.toLocaleDateString("de") }}</td>
+      </template>
+      <template v-slot:item.type="{ item }">
+        <v-tooltip location="bottom" text="Template">
+          <template v-slot:activator="{ props }">
+              <v-icon v-if="item.isTemplate" v-bind="props">
+                mdi-note-multiple
+            </v-icon>
+          </template>
+        </v-tooltip>
+        <v-tooltip location="bottom" text="Einzelner Rechteeintrag">
+          <template v-slot:activator="{ props }">
+            <v-icon v-if="!item.isTemplate" v-bind="props">
+              mdi-note-outline
+            </v-icon>
+          </template>
+        </v-tooltip>
       </template>
     </v-data-table>
     <v-dialog
