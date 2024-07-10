@@ -282,13 +282,13 @@ internal fun PublicationTypeRest.toBusiness(): PublicationType =
     when (this) {
         PublicationTypeRest.article -> PublicationType.ARTICLE
         PublicationTypeRest.book -> PublicationType.BOOK
-        PublicationTypeRest.bookPart -> PublicationType.BOOK_PART
-        PublicationTypeRest.periodicalPart -> PublicationType.PERIODICAL_PART
-        PublicationTypeRest.workingPaper -> PublicationType.WORKING_PAPER
-        PublicationTypeRest.researchReport -> PublicationType.RESEARCH_REPORT
+        PublicationTypeRest.book_part -> PublicationType.BOOK_PART
+        PublicationTypeRest.periodical_part -> PublicationType.PERIODICAL_PART
+        PublicationTypeRest.working_paper -> PublicationType.WORKING_PAPER
+        PublicationTypeRest.research_report -> PublicationType.RESEARCH_REPORT
         PublicationTypeRest.proceedings -> PublicationType.PROCEEDINGS
         PublicationTypeRest.thesis -> PublicationType.THESIS
-        PublicationTypeRest.conferencePaper -> PublicationType.CONFERENCE_PAPER
+        PublicationTypeRest.conference_paper -> PublicationType.CONFERENCE_PAPER
         PublicationTypeRest.other -> PublicationType.OTHER
     }
 
@@ -296,11 +296,11 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
     when (this) {
         PublicationType.ARTICLE -> PublicationTypeRest.article
         PublicationType.BOOK -> PublicationTypeRest.book
-        PublicationType.BOOK_PART -> PublicationTypeRest.bookPart
-        PublicationType.CONFERENCE_PAPER -> PublicationTypeRest.conferencePaper
-        PublicationType.PERIODICAL_PART -> PublicationTypeRest.periodicalPart
-        PublicationType.WORKING_PAPER -> PublicationTypeRest.workingPaper
-        PublicationType.RESEARCH_REPORT -> PublicationTypeRest.researchReport
+        PublicationType.BOOK_PART -> PublicationTypeRest.book_part
+        PublicationType.CONFERENCE_PAPER -> PublicationTypeRest.conference_paper
+        PublicationType.PERIODICAL_PART -> PublicationTypeRest.periodical_part
+        PublicationType.WORKING_PAPER -> PublicationTypeRest.working_paper
+        PublicationType.RESEARCH_REPORT -> PublicationTypeRest.research_report
         PublicationType.PROCEEDINGS -> PublicationTypeRest.proceedings
         PublicationType.THESIS -> PublicationTypeRest.thesis
         PublicationType.OTHER -> PublicationTypeRest.other
@@ -558,7 +558,7 @@ fun SearchQueryResult.toRest(
 
 fun ConflictType.toRest(): ConflictTypeRest =
     when (this) {
-        ConflictType.DATE_OVERLAP -> ConflictTypeRest.dateOverlap
+        ConflictType.DATE_OVERLAP -> ConflictTypeRest.date_overlap
         ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
     }
 
