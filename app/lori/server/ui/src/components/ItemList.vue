@@ -63,7 +63,7 @@ export default defineComponent({
       {
         title: "Metadata-Id",
         align: "start",
-        sortable: false,
+        sortable: true,
         value: "metadataId",
       },
       {
