@@ -989,6 +989,12 @@ export default defineComponent({
         {{ generalAlertErrorMsg }}
       </v-alert>
       <v-spacer></v-spacer>
+      <v-btn
+          density="compact"
+          icon="mdi-help"
+          href="https://zbwintern/wiki/x/8wPUG"
+          target="_blank"
+      ></v-btn>
       <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
