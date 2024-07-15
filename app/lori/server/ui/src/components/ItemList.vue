@@ -50,7 +50,7 @@ export default defineComponent({
     const items: Ref<Array<ItemRest>> = ref([]);
     const currentItem = ref({} as ItemRest);
     const headersValueVSelect = ref([]);
-    const selectedItems = ref([]);
+    const selectedItems: Ref<Array<string>> = ref([]);
     const tableContentLoading = ref(true);
 
     /**
@@ -178,6 +178,8 @@ export default defineComponent({
       );
       if (item !== undefined) {
         currentItem.value = item;
+        selectedItems.value = [row.item.metadataId];
+        renderKey.value += 1;
       }
     };
 
@@ -191,7 +193,7 @@ export default defineComponent({
         currentItem.value = item;
       }
       selectedItems.value = selectedItems.value.filter(
-        (e: MetadataRest) => e.metadataId == row.item.metadataId,
+        (e: string) => e == row.item.metadataId,
       );
     };
 
@@ -673,6 +675,13 @@ export default defineComponent({
 
     const searchHelpDialog = ref(false);
 
+    const selectedRowColor = (row: any) => {
+      if(selectedItems.value[0] !== undefined && selectedItems.value[0] == row.item.metadataId){
+        return { class: "bg-purple-darken-2"}
+      }
+    };
+    const renderKey = ref(0);
+
     return {
       alertIsActive,
       alertMsg,
@@ -699,6 +708,7 @@ export default defineComponent({
       templateLoadError,
       templateLoadErrorMsg,
       totalPages,
+      renderKey,
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
@@ -715,6 +725,7 @@ export default defineComponent({
       loadTemplateView,
       parsePublicationType,
       searchQuery,
+      selectedRowColor,
       setActiveItem,
       startEmptySearch,
       startSearch,
@@ -932,8 +943,11 @@ export default defineComponent({
             :items-per-page="0"
             item-value="metadataId"
             :loading="tableContentLoading"
+            :key="renderKey"
+            :row-props="selectedRowColor"
             loading-text="Daten werden geladen... Bitte warten."
             show-select
+            select-strategy="single"
             @click:row="addActiveItem"
             @dblclick:row="setActiveItem"
           >
