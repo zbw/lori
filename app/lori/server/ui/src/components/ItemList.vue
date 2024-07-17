@@ -677,7 +677,7 @@ export default defineComponent({
 
     const selectedRowColor = (row: any) => {
       if(selectedItems.value[0] !== undefined && selectedItems.value[0] == row.item.metadataId){
-        return { class: "bg-purple-darken-2"}
+        return { class: "bg-blue-lighten-4"}
       }
     };
     const renderKey = ref(0);
