@@ -7,7 +7,7 @@ import date_utils from "@/utils/date_utils";
 import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
-  emits: ["startEmptySearch"],
+  emits: ["startEmptySearch", "startSearch"],
   setup(props, { emit }) {
     const searchStore = useSearchStore();
     const temporalEvent = -1;
@@ -26,13 +26,13 @@ export default defineComponent({
     ) => boolean = (value: string, siblings: FormState) => {
       return !(
         ((value == "startDate" || value == "endDate") &&
-          startEndDateFormatted.value != "") ||
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue != "") ||
         siblings.tempEventInput != undefined
       );
     };
 
     const rules = {
-      startDateOrEndDateValue: {},
+      startDateOrEndDateFormattedValue: {},
       startDateOrEndDateOption: { tempEventCheckForInput },
     };
 
@@ -41,8 +41,8 @@ export default defineComponent({
     const errorTempEventInput = computed(() => {
       const errors: Array<string> = [];
       if (
-        searchStore.temporalEventState.startDateOrEndDateValue == undefined ||
-        startEndDateFormatted.value == ""
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue == "" ||
+        startDateOrEndDate.value == undefined
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -53,7 +53,8 @@ export default defineComponent({
       const errors: Array<string> = [];
       if (
         !v$.value.startDateOrEndDateOption.$invalid &&
-        searchStore.temporalEventState.startDateOrEndDateValue != undefined
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue != undefined &&
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
       ) {
         errors.push("Wähle eine dieser Optionen aus");
       }
@@ -68,7 +69,7 @@ export default defineComponent({
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.accessStateClosed ||
-        searchStore.temporalEventState.startDateOrEndDateValue != undefined ||
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue != "" ||
         searchStore.temporalEventState.startDateOrEndDateOption != "" ||
         searchStore.accessStateClosed ||
         searchStore.accessStateOpen ||
@@ -79,7 +80,7 @@ export default defineComponent({
         searchStore.temporalValidityFilterFuture ||
         searchStore.temporalValidityFilterPresent ||
         searchStore.temporalValidityFilterPast ||
-        searchStore.temporalValidOn != undefined ||
+        searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
@@ -113,8 +114,8 @@ export default defineComponent({
       searchStore.temporalValidityFilterPresent = false;
       searchStore.temporalValidityFilterPast = false;
 
-      searchStore.temporalValidOn = undefined;
-      searchStore.temporalEventState.startDateOrEndDateValue = undefined;
+      searchStore.temporalValidOnFormatted = "";
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
       searchStore.temporalEventState.startDateOrEndDateOption = "";
 
       searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
@@ -170,52 +171,62 @@ export default defineComponent({
      */
     const isStartEndDateMenuOpen = ref(false);
 
-    const startEndDateFormatted = computed(() => {
-      if (searchStore.temporalEventState.startDateOrEndDateValue != undefined) {
-        return date_utils.dateToIso8601(
-          searchStore.temporalEventState.startDateOrEndDateValue,
-        );
-      } else {
-        return "";
-      }
-    });
+    const startDateOrEndDate = ref(undefined as Date | undefined);
 
-    watch(startEndDateFormatted, () => {
+    const startDateOrEndDateEntered = () => {
+      if (startDateOrEndDate.value != undefined) {
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue =  date_utils.dateToIso8601(startDateOrEndDate.value);
+      } else {
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
+      }
+    };
+
+    watch(startDateOrEndDate, () => {
       isStartEndDateMenuOpen.value = false;
     });
 
     const isValidOnMenuOpen = ref(false);
-    const temporalValidOnFormatted = computed(() => {
-      if (searchStore.temporalValidOn != undefined) {
-        return date_utils.dateToIso8601(searchStore.temporalValidOn);
-      } else {
-        return "";
-      }
-    });
+    const temporalValidOn = ref(undefined as Date | undefined);
 
-    watch(temporalValidOnFormatted, () => {
+    const temporalValidOnEntered = () => {
+      if (temporalValidOn.value != undefined) {
+        searchStore.temporalValidOnFormatted = date_utils.dateToIso8601(temporalValidOn.value);
+      } else {
+        searchStore.temporalValidOnFormatted = "";
+      }
+      emit("startSearch");
+    };
+
+    watch(temporalValidOn, () => {
       isValidOnMenuOpen.value = false;
     });
+
+    const emitSearchStart = () => {
+      emit("startSearch");
+    };
 
     return {
       canReset,
       errorTempEventStartEnd,
       errorTempEventInput,
-      temporalValidOnFormatted,
+      temporalValidOn,
       isStartEndDateMenuOpen,
       isValidOnMenuOpen,
-      startEndDateFormatted,
+      startDateOrEndDate,
       temporalEvent,
       tempEventMenu,
       tempValidOnMenu,
       searchStore,
       v$,
       activateBookmarkSaveDialog,
+      emitSearchStart,
       parseAccessState,
       parsePublicationType,
       ppPaketSigel,
       ppZDBId,
       resetFilter,
+      startDateOrEndDateEntered,
+      temporalValidOnEntered,
     };
   },
 });
@@ -267,12 +278,14 @@ export default defineComponent({
                     <v-text-field
                       label="Von"
                       v-model="searchStore.publicationDateFrom"
+                      @update:modelValue="emitSearchStart"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
                       label="Bis"
                       v-model="searchStore.publicationDateTo"
+                      @update:modelValue="emitSearchStart"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -299,6 +312,7 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.publicationTypeIdx[i]"
+                      @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
                       :thickness="1"
@@ -326,6 +340,7 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.paketSigelIdIdx[i]"
+                      @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
                       :thickness="1"
@@ -353,6 +368,7 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.seriesIdx[i]"
+                      @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
                       :thickness="1"
@@ -380,6 +396,7 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.zdbIdIdx[i]"
+                      @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
                       :thickness="1"
@@ -410,6 +427,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.accessStateIdx[i]"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group sub-group>
@@ -426,15 +444,18 @@ export default defineComponent({
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                    :modelValue="temporalValidOnFormatted"
+                    v-model="searchStore.temporalValidOnFormatted"
                     prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
+                    clearable
+                    @update:modelValue="emitSearchStart"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="searchStore.temporalValidOn"
+                  v-model="temporalValidOn"
                   color="primary"
+                  @update:modelValue="temporalValidOnEntered"
                   ><template v-slot:header></template>
                 </v-date-picker>
               </v-menu>
@@ -454,22 +475,22 @@ export default defineComponent({
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                    :modelValue="startEndDateFormatted"
+                    v-model="searchStore.temporalEventState.startDateOrEndDateFormattedValue"
                     prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
                     required
                     clearable
-                    @change="v$.startDateOrEndDateValue.$touch()"
-                    @blur="v$.startDateOrEndDateValue.$touch()"
+                    @change="v$.startDateOrEndDateFormattedValue.$touch()"
+                    @blur="v$.startDateOrEndDateFormattedValue.$touch()"
                     :error-messages="errorTempEventInput"
+                    @update:modelValue="emitSearchStart"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="
-                    searchStore.temporalEventState.startDateOrEndDateValue
-                  "
+                  v-model="startDateOrEndDate"
                   color="primary"
+                  @update:modelValue="startDateOrEndDateEntered"
                   ><template v-slot:header></template>
                   <v-spacer></v-spacer>
                   <v-btn
@@ -482,9 +503,7 @@ export default defineComponent({
                     text="OK"
                     color="primary"
                     @click="
-                      $refs.tempEventMenu.save(
-                        searchStore.temporalEventState.startDateOrEndDateValue,
-                      )
+                      $refs.tempEventMenu.save(startDateOrEndDate)
                     "
                   ></v-btn>
                 </v-date-picker>
@@ -500,6 +519,7 @@ export default defineComponent({
                     "
                     value="startDate"
                     :error-messages="errorTempEventStartEnd"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                 </v-item>
                 <v-item>
@@ -511,6 +531,7 @@ export default defineComponent({
                     "
                     :error-messages="errorTempEventStartEnd"
                     value="endDate"
+                    @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                 </v-item>
               </v-item-group>
@@ -527,18 +548,21 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.temporalValidityFilterPast"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-checkbox
                 label="Aktuell"
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.temporalValidityFilterPresent"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-checkbox
                 label="Zukunft"
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.temporalValidityFilterFuture"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group sub-group>
@@ -555,6 +579,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleLicenceContract"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-checkbox
                 v-if="searchStore.hasZbwUserAgreement"
@@ -562,6 +587,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleUserAgreement"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-checkbox
                 v-if="searchStore.hasOpenContentLicence"
@@ -569,6 +595,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleOpenContentLicence"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group no-action sub-group eager>
@@ -581,6 +608,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.noRightInformation"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group sub-group>
@@ -598,6 +626,7 @@ export default defineComponent({
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.templateNameIdx[i]"
+                @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
           </v-list>

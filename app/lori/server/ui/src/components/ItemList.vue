@@ -677,7 +677,7 @@ export default defineComponent({
 
     const selectedRowColor = (row: any) => {
       if(selectedItems.value[0] !== undefined && selectedItems.value[0] == row.item.metadataId){
-        return { class: "bg-purple-darken-2"}
+        return { class: "bg-blue-lighten-4"}
       }
     };
     const renderKey = ref(0);
@@ -805,7 +805,10 @@ export default defineComponent({
     </v-dialog>
     <v-row>
       <v-col cols="2">
-        <SearchFilter v-on:startEmptySearch="startEmptySearch"></SearchFilter>
+        <SearchFilter
+            v-on:startEmptySearch="startEmptySearch"
+            v-on:startSearch="startSearch"
+        ></SearchFilter>
       </v-col>
       <v-col cols="6">
         <v-card>
