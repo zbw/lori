@@ -432,8 +432,8 @@ export default {
   },
 
   buildValidOnFilter(searchStore: any): string | undefined {
-    if (searchStore.temporalValidOn != undefined) {
-      return date_utils.dateToIso8601(searchStore.temporalValidOn);
+    if (searchStore.temporalValidOnFormatted != undefined && searchStore.temporalValidOnFormatted != "") {
+      return searchStore.temporalValidOnFormatted;
     } else {
       return undefined;
     }

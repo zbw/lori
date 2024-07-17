@@ -50,7 +50,7 @@ export const useSearchStore = defineStore("search", () => {
   const temporalValidityFilterFuture = ref(false);
   const temporalValidityFilterPresent = ref(false);
   const temporalValidityFilterPast = ref(false);
-  const temporalValidOn = ref(undefined as Date | undefined);
+  const temporalValidOnFormatted = ref("");
 
   const zdbIdIdx: Ref<Array<boolean>> = ref([]);
   const zdbIdReceived: Ref<Array<ZdbIdWithCountRest>> = ref([]);
@@ -105,7 +105,7 @@ export const useSearchStore = defineStore("search", () => {
     temporalValidityFilterFuture,
     temporalValidityFilterPast,
     temporalValidityFilterPresent,
-    temporalValidOn,
+    temporalValidOnFormatted,
     zdbIdIdx,
     zdbIdReceived,
     zdbIdSelectedLastSearch,
