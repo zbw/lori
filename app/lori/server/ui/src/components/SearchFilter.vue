@@ -26,13 +26,13 @@ export default defineComponent({
     ) => boolean = (value: string, siblings: FormState) => {
       return !(
         ((value == "startDate" || value == "endDate") &&
-          startEndDateFormatted.value != "") ||
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue != "") ||
         siblings.tempEventInput != undefined
       );
     };
 
     const rules = {
-      startDateOrEndDateValue: {},
+      startDateOrEndDateFormattedValue: {},
       startDateOrEndDateOption: { tempEventCheckForInput },
     };
 
@@ -41,8 +41,8 @@ export default defineComponent({
     const errorTempEventInput = computed(() => {
       const errors: Array<string> = [];
       if (
-        searchStore.temporalEventState.startDateOrEndDateValue == undefined ||
-        startEndDateFormatted.value == ""
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue == "" ||
+        startDateOrEndDate.value == undefined
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -53,7 +53,8 @@ export default defineComponent({
       const errors: Array<string> = [];
       if (
         !v$.value.startDateOrEndDateOption.$invalid &&
-        searchStore.temporalEventState.startDateOrEndDateValue != undefined
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue != undefined &&
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
       ) {
         errors.push("Wähle eine dieser Optionen aus");
       }
@@ -68,7 +69,7 @@ export default defineComponent({
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.accessStateClosed ||
-        searchStore.temporalEventState.startDateOrEndDateValue != undefined ||
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue != "" ||
         searchStore.temporalEventState.startDateOrEndDateOption != "" ||
         searchStore.accessStateClosed ||
         searchStore.accessStateOpen ||
@@ -79,7 +80,7 @@ export default defineComponent({
         searchStore.temporalValidityFilterFuture ||
         searchStore.temporalValidityFilterPresent ||
         searchStore.temporalValidityFilterPast ||
-        searchStore.temporalValidOnFormatted != undefined ||
+        searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
@@ -113,8 +114,8 @@ export default defineComponent({
       searchStore.temporalValidityFilterPresent = false;
       searchStore.temporalValidityFilterPast = false;
 
-      searchStore.temporalValidOnFormatted = undefined;
-      searchStore.temporalEventState.startDateOrEndDateValue = undefined;
+      searchStore.temporalValidOnFormatted = "";
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
       searchStore.temporalEventState.startDateOrEndDateOption = "";
 
       searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
@@ -170,17 +171,17 @@ export default defineComponent({
      */
     const isStartEndDateMenuOpen = ref(false);
 
-    const startEndDateFormatted = computed(() => {
-      if (searchStore.temporalEventState.startDateOrEndDateValue != undefined) {
-        return date_utils.dateToIso8601(
-          searchStore.temporalEventState.startDateOrEndDateValue,
-        );
-      } else {
-        return "";
-      }
-    });
+    const startDateOrEndDate = ref(undefined as Date | undefined);
 
-    watch(startEndDateFormatted, () => {
+    const startDateOrEndDateEntered = () => {
+      if (startDateOrEndDate.value != undefined) {
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue =  date_utils.dateToIso8601(startDateOrEndDate.value);
+      } else {
+        searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
+      }
+    };
+
+    watch(startDateOrEndDate, () => {
       isStartEndDateMenuOpen.value = false;
     });
 
@@ -211,7 +212,7 @@ export default defineComponent({
       temporalValidOn,
       isStartEndDateMenuOpen,
       isValidOnMenuOpen,
-      startEndDateFormatted,
+      startDateOrEndDate,
       temporalEvent,
       tempEventMenu,
       tempValidOnMenu,
@@ -219,12 +220,13 @@ export default defineComponent({
       v$,
       activateBookmarkSaveDialog,
       emitSearchStart,
-      temporalValidOnEntered,
       parseAccessState,
       parsePublicationType,
       ppPaketSigel,
       ppZDBId,
       resetFilter,
+      startDateOrEndDateEntered,
+      temporalValidOnEntered,
     };
   },
 });
@@ -473,22 +475,22 @@ export default defineComponent({
               >
                 <template v-slot:activator="{ props }">
                   <v-text-field
-                    :modelValue="startEndDateFormatted"
+                    v-model="searchStore.temporalEventState.startDateOrEndDateFormattedValue"
                     prepend-icon="mdi-calendar"
                     v-bind="props"
                     readonly
                     required
                     clearable
-                    @change="v$.startDateOrEndDateValue.$touch()"
-                    @blur="v$.startDateOrEndDateValue.$touch()"
+                    @change="v$.startDateOrEndDateFormattedValue.$touch()"
+                    @blur="v$.startDateOrEndDateFormattedValue.$touch()"
                     :error-messages="errorTempEventInput"
+                    @update:modelValue="emitSearchStart"
                   ></v-text-field>
                 </template>
                 <v-date-picker
-                  v-model="
-                    searchStore.temporalEventState.startDateOrEndDateValue
-                  "
+                  v-model="startDateOrEndDate"
                   color="primary"
+                  @update:modelValue="startDateOrEndDateEntered"
                   ><template v-slot:header></template>
                   <v-spacer></v-spacer>
                   <v-btn
@@ -501,9 +503,7 @@ export default defineComponent({
                     text="OK"
                     color="primary"
                     @click="
-                      $refs.tempEventMenu.save(
-                        searchStore.temporalEventState.startDateOrEndDateValue,
-                      )
+                      $refs.tempEventMenu.save(startDateOrEndDate)
                     "
                   ></v-btn>
                 </v-date-picker>

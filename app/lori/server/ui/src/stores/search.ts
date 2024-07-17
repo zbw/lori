@@ -43,7 +43,7 @@ export const useSearchStore = defineStore("search", () => {
   const publicationTypeSelectedLastSearch: Ref<Array<string>> = ref([]);
 
   const temporalEventState = reactive({
-    startDateOrEndDateValue: undefined as Date | undefined,
+    startDateOrEndDateFormattedValue: "",
     startDateOrEndDateOption: "",
   });
 

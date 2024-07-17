@@ -309,11 +309,10 @@ export default {
   buildStartDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventState.startDateOrEndDateOption == "startDate" &&
-      searchStore.temporalEventState.startDateOrEndDateValue != undefined
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue != undefined &&
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
     ) {
-      return date_utils.dateToIso8601(
-        searchStore.temporalEventState.startDateOrEndDateValue,
-      );
+      return searchStore.temporalEventState.startDateOrEndDateFormattedValue;
     } else {
       return undefined;
     }
@@ -330,11 +329,10 @@ export default {
   buildEndDateAtFilter(searchStore: any): string | undefined {
     if (
       searchStore.temporalEventState.startDateOrEndDateOption == "endDate" &&
-      searchStore.temporalEventState.startDateOrEndDateValue != undefined
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue != undefined &&
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue != ""
     ) {
-      return date_utils.dateToIso8601(
-        searchStore.temporalEventState.startDateOrEndDateValue,
-      );
+      return searchStore.temporalEventState.startDateOrEndDateFormattedValue;
     } else {
       return undefined;
     }
