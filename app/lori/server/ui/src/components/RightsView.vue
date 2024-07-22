@@ -142,7 +142,7 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-card v-if="rights" class="mx-auto" tile>
+  <v-sheet v-if="rights" class="mx-auto" tile>
     <v-alert v-model="addSuccessful" closable type="success">
       Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
     </v-alert>
@@ -228,5 +228,5 @@ export default defineComponent({
         v-on:updateSuccessful="updateRight"
       ></RightsEditTabs>
     </v-dialog>
-  </v-card>
+  </v-sheet>
 </template>

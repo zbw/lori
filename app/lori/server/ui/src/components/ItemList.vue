@@ -143,7 +143,7 @@ export default defineComponent({
 
     const currentPage = ref(1);
     const currentRightId = ref("");
-    const pageSize = ref(25); // Default page size is 25
+    const pageSize = ref(10); // initial page size
     const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
     const totalPages = ref(0);
     const numberOfResults = ref(0);
@@ -179,7 +179,6 @@ export default defineComponent({
       if (item !== undefined) {
         currentItem.value = item;
         selectedItems.value = [row.item.metadataId];
-        renderKey.value += 1;
       }
     };
 
@@ -341,6 +340,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+          undefined,
           rightId,
         )
         .then((response: ItemInformation) => {
@@ -363,6 +363,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           currentPage.value,
+          undefined,
           undefined,
           undefined,
           undefined,
@@ -740,7 +741,14 @@ export default defineComponent({
 }
 </style>
 <template>
-  <v-container>
+  <v-navigation-drawer>
+        <SearchFilter
+            v-on:startEmptySearch="startEmptySearch"
+            v-on:startSearch="startSearch"
+        ></SearchFilter>
+  </v-navigation-drawer>
+  <v-main class="d-flex align-center justify-center">
+  <v-card>
     <v-dialog
       v-model="dialogStore.groupOverviewActivated"
       :retain-focus="false"
@@ -803,14 +811,7 @@ export default defineComponent({
         v-on:editRightClosed="closeTemplateEditDialog"
       ></RightsEditDialog>
     </v-dialog>
-    <v-row>
-      <v-col cols="2">
-        <SearchFilter
-            v-on:startEmptySearch="startEmptySearch"
-            v-on:startSearch="startSearch"
-        ></SearchFilter>
-      </v-col>
-      <v-col cols="6">
+
         <v-card>
           <v-card-title>
             <v-text-field
@@ -951,6 +952,7 @@ export default defineComponent({
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             select-strategy="single"
+            height="550px"
             @click:row="addActiveItem"
             @dblclick:row="setActiveItem"
           >
@@ -996,19 +998,19 @@ export default defineComponent({
             </v-row>
           </v-col>
         </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-          <RightsView
+
+  </v-card>
+  </v-main>
+  <v-navigation-drawer location="right" :width="500">
+      <v-card v-if="currentItem.metadata" class="mx-auto" tile>
+        <RightsView
             :handle="currentItem.metadata.handle"
             :metadataId="currentItem.metadata.metadataId"
             :rights="currentItem.rights"
-          ></RightsView>
-          <MetadataView
+        ></RightsView>
+        <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"
-          ></MetadataView>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+        ></MetadataView>
+      </v-card>
+  </v-navigation-drawer>
 </template>

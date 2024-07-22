@@ -9,9 +9,9 @@ export default defineComponent({
 
 <template>
   <v-app>
-    <TopNavigationBar></TopNavigationBar>
-    <v-main>
+    <v-layout class="rounded rounded-md">
+      <TopNavigationBar></TopNavigationBar>
       <router-view />
-    </v-main>
+    </v-layout>
   </v-app>
 </template>

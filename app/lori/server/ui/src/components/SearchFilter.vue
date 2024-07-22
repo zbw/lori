@@ -236,10 +236,10 @@ export default defineComponent({
     <v-row>
       <v-col cols="auto">
         <v-btn
+          class="ml-8 mt-6"
           color="warning"
           :disabled="!canReset"
           @click="resetFilter"
-          size="large"
         >
           Suche resetten</v-btn
         >
@@ -248,9 +248,9 @@ export default defineComponent({
     <v-row>
       <v-col cols="auto">
         <v-btn
+          class="ml-8"
           color="blue darken-1"
           @click="activateBookmarkSaveDialog"
-          size="large"
         >
           Suchfilter speichern
         </v-btn>
