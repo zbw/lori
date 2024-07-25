@@ -231,8 +231,13 @@ export default defineComponent({
   },
 });
 </script>
+<style scoped>
+.scroll {
+  overflow-y: scroll;
+}
+</style>
 <template>
-  <v-card height="100%">
+  <v-card height="100%" class="scroll">
     <v-row>
       <v-col cols="auto">
         <v-btn
