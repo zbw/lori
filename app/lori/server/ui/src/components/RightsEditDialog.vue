@@ -1153,7 +1153,7 @@ export default defineComponent({
                     color="blue darken-1"
                     @click="selectBookmark"
                     :disabled="!isEditable"
-                    >Suche Bookmark
+                    >Gespeicherte Suche verknüpfen
                   </v-btn>
                   <v-dialog
                     v-model="bookmarkDialogOn"

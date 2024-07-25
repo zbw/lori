@@ -158,7 +158,7 @@ export default defineComponent({
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateBookmarkOverviewDialog"
-            >Bookmarks</v-list-item-title
+            >Gespeicherte Suche</v-list-item-title
           >
         </v-list-item>
       </v-list>

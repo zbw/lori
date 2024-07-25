@@ -252,7 +252,7 @@ export default defineComponent({
           color="blue darken-1"
           @click="activateBookmarkSaveDialog"
         >
-          Suchfilter speichern
+          Suche speichern
         </v-btn>
       </v-col>
     </v-row>

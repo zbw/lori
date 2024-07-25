@@ -47,7 +47,7 @@ export default defineComponent({
         sortable: false,
       },
       {
-        title: "Suchanfrage ausführen",
+        title: "Suche ausführen",
         key: "executeSearch",
         align: "start",
         sortable: false,
@@ -243,8 +243,8 @@ export default defineComponent({
           ></v-btn>
         </template>
         <template v-slot:item.executeSearch="{ item }">
-          <v-btn color="blue darken-1" text @click="executeBookmarkSearch(item)"
-            >Suchanfrage ausführen</v-btn
+          <v-btn color="blue darken-1" @click="executeBookmarkSearch(item)"
+            >Suche ausführen</v-btn
           >
         </template>
         <template v-slot:item.actions="{ item }">
