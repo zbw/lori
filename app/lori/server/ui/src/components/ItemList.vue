@@ -5,7 +5,6 @@ import {
   BookmarkRest, IsPartOfSeriesCountRest,
   ItemInformation,
   ItemRest,
-  MetadataRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
   RightRest,
@@ -143,7 +142,7 @@ export default defineComponent({
 
     const currentPage = ref(1);
     const currentRightId = ref("");
-    const pageSize = ref(25); // Default page size is 25
+    const pageSize = ref(10); // initial page size
     const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
     const totalPages = ref(0);
     const numberOfResults = ref(0);
@@ -172,14 +171,12 @@ export default defineComponent({
      * Single Click
      */
     const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
-      //row.select(true);
       const item: ItemRest | undefined = items.value.find(
         (e) => e.metadata.metadataId === row.item.metadataId,
       );
       if (item !== undefined) {
         currentItem.value = item;
         selectedItems.value = [row.item.metadataId];
-        renderKey.value += 1;
       }
     };
 
@@ -341,6 +338,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+          undefined,
           rightId,
         )
         .then((response: ItemInformation) => {
@@ -363,6 +361,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           currentPage.value,
+          undefined,
           undefined,
           undefined,
           undefined,
@@ -738,9 +737,19 @@ export default defineComponent({
 :deep(tr.v-data-table__selected) {
   background: #7d92f5 !important;
 }
+table.special, th.special, td.special {
+  border:1px solid black;
+}
 </style>
 <template>
-  <v-container>
+  <v-navigation-drawer>
+        <SearchFilter
+            v-on:startEmptySearch="startEmptySearch"
+            v-on:startSearch="startSearch"
+        ></SearchFilter>
+  </v-navigation-drawer>
+  <v-main class="d-flex align-center justify-center">
+  <v-card>
     <v-dialog
       v-model="dialogStore.groupOverviewActivated"
       :retain-focus="false"
@@ -803,14 +812,6 @@ export default defineComponent({
         v-on:editRightClosed="closeTemplateEditDialog"
       ></RightsEditDialog>
     </v-dialog>
-    <v-row>
-      <v-col cols="2">
-        <SearchFilter
-            v-on:startEmptySearch="startEmptySearch"
-            v-on:startSearch="startSearch"
-        ></SearchFilter>
-      </v-col>
-      <v-col cols="6">
         <v-card>
           <v-card-title>
             <v-text-field
@@ -824,7 +825,7 @@ export default defineComponent({
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
             ></v-text-field>
-            <v-dialog v-model="searchHelpDialog" max-width="400px" persistent>
+            <v-dialog v-model="searchHelpDialog" max-width="500px">
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn
                   density="compact"
@@ -833,77 +834,142 @@ export default defineComponent({
                 >
                 </v-btn>
               </template>
-              <v-card>
+              <v-card
+              >
                 <template v-slot:actions>
                   <v-spacer></v-spacer>
-                  <v-btn @click="searchHelpDialog = false"> Zurück </v-btn>
+                  <v-btn color="blue darken-1" @click="searchHelpDialog = false"> Zurück </v-btn>
                 </template>
                 <v-card-title class="text-h5">
                   Syntax der Sucheingabe
                 </v-card-title>
                 <v-card-text>
-                  <p class="text-left text-body-1">Genereller Aufbau:</p>
+                  <p class="text-left text-body-1 font-weight-bold">Genereller Aufbau:</p>
                   <p class="text-center text-body-2 bg-grey-lighten-2">
                     suchschluessel1:"wert1" & suchschluessel2:"wert2"
                   </p>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Wobei " auch durch ' ersetzt werden kann. Beides kann man
-                    weglassen wenn der Wert nur ein Wort ist.
+                    Das " kann auch durch ' ersetzt werden. Beides kann man
+                    weglassen wenn nur ein Wort gesucht wird.
                   </p>
-                  <p class="text-left text-body-1 mt-4">
-                    Unterstützte Suchschlüssel sind:
-                  </p>
-                  <p
-                    class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1"
-                  >
-                    col, com, hdl, hdlcol, hdlcom, subcom, hdlsubcom, lur, metadataid,
-                    series, sig, tit, zdb
-                  </p>
-
-                  <p class="text-left text-body-2 bg-light-blue-lighten-5">
-                    Diese durchsuchen jeweils diese Felder: Collection,
-                    Community, Handle, Handle der Metadaten, Handle der
-                    Community, Name der Subcommunity, Handle der Subcommunity, Lizenz URL, Metadaten
-                    ID, Serie, Paket-Sigel, Titel and ZDB-ID
-                  </p>
-
-                  <p class="text-left text-body-1 mt-4">
-                    Bool'sche Operatoren:
-                  </p>
+                  <table class="special">
+                    <tr class=special>
+                      <th class=special>Suche</th>
+                      <th class=special>Suchschlüssel</th>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Titel</td>
+                      <td class=special>tit</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Handle des Items</td>
+                      <td class=special>hdl</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Community</td>
+                      <td class=special>com</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Handle Community</td>
+                      <td class=special>hdlcom</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Handle Subommunity</td>
+                      <td class=special>hdlsubcom</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Collection</td>
+                      <td class=special>col</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Handle Collection</td>
+                      <td class=special>hdlcol</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>ZDB-Id</td>
+                      <td class=special>zdb</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Paket-Sigel</td>
+                      <td class=special>sig</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Lizenz URL</td>
+                      <td class=special>lur</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Metadata Id Lori</td>
+                      <td class=special>metadataid</td>
+                    </tr>
+                  </table>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Es gibt Veroderungen (|), Verundungen (&), Negationen (!)
-                    und Klammerzeichen. Bool'sche Operatoren funktionieren
-                    innerhalb eines Suchschlüssels und zwischen diesen. Es ist
-                    möglich unter einem Suchschlüssel mehrere Werte gleichzeitig
-                    zu suchen mittels der obigen Operatoren und
-                    Klammersetzungen.
+                  Zeichen die als logische Operatoren dienen, aber Teil der Suche sein sollen,
+                  müssen mit dem Zeichen \ vor und hinter dem entsprechenden Teil der Suche
+                  versehen werden.
                   </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2">
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    Beispiel: Community Asian Development Bank (ADB), Manila <br></br>
+                    com:'Asian Development Bank \(ADB\), Manila'
+                  </p>
+
+                  <p class="text-left text-body-1 mt-4 font-weight-bold">
+                    Bool'sche Operatoren
+                  </p>
+                  <table class="special">
+                    <tr class=special>
+                      <th class=special> </th>
+                      <th class=special> </th>
+                      <th class=special>Beispiele</th>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Und</td>
+                      <td class=special>&</td>
+                      <td class=special>col:'Economics & series'</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Nicht</td>
+                      <td class=special>!</td>
+                      <td class=special>col:'department' & !tit:'geopolitical'</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Oder</td>
+                      <td class=special>|</td>
+                      <td class=special>col:'Economics | series'</td>
+                    </tr>
+                  </table>
+
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Es ist möglich unter einem Suchschlüssel mehrere Werte gleichzeitig
+                    zu suchen mittels der obigen Operatoren und Klammersetzungen.
+                  </p>
+
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     Beispiel: col:"(subject1 | subject2) & !subject3"
                   </p>
+
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Gleiches gilt wenn man auf verschiedenen Feldern suchen
-                    möchte. Auch diese kann mittels der Operatoren verknüpfen.
+                    Gleiches gilt wenn man auf verschiedenen Feldern suchen möchte.
+                    Auch diese Suchen können mittels der Operatoren verknüpft werden.
                   </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2">
+
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
                   </p>
-
-                  <p
-                    class="text-left text-body-2 bg-light-blue-lighten-5 mt-1 mb-1"
-                  >
-                    Diese Operatoren müssen auch verwendet werden bei mehreren
-                    Suchpaaren. Es wird nicht implizit von einer Verundung o.ä.
-                    ausgegangen.
-                  </p>
-
                   <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
                   <p class="text-left text-body-2 mt-1 mb-1">
                     Zeichen die als logische Operatoren dienen, aber teil der
                     Suche sein sollen, müssen mit einem Backslash \ beginnen
                   </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2">
+
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     Beispiel: col:"EU & \(European\)"
+                  </p>
+
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Klammersetzungen sind zulässig, z.B:
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    col:'(subject1 | subject2) & !subject3'
                   </p>
                 </v-card-text>
               </v-card>
@@ -951,6 +1017,7 @@ export default defineComponent({
             loading-text="Daten werden geladen... Bitte warten."
             show-select
             select-strategy="single"
+            height="550px"
             @click:row="addActiveItem"
             @dblclick:row="setActiveItem"
           >
@@ -996,19 +1063,19 @@ export default defineComponent({
             </v-row>
           </v-col>
         </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-          <RightsView
+
+  </v-card>
+  </v-main>
+  <v-navigation-drawer location="right" :width="500">
+      <v-card v-if="currentItem.metadata" class="mx-auto" tile>
+        <RightsView
             :handle="currentItem.metadata.handle"
             :metadataId="currentItem.metadata.metadataId"
             :rights="currentItem.rights"
-          ></RightsView>
-          <MetadataView
+        ></RightsView>
+        <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"
-          ></MetadataView>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+        ></MetadataView>
+      </v-card>
+  </v-navigation-drawer>
 </template>
