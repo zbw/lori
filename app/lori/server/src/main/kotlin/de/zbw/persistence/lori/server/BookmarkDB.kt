@@ -200,7 +200,7 @@ class BookmarkDB(
             "filter_no_right_information,filter_publication_type," +
             "created_on,last_updated_on,created_by,last_updated_by" +
             " FROM $TABLE_NAME_BOOKMARK" +
-            " ORDER BY $COLUMN_BOOKMARK_ID LIMIT ? OFFSET ?;"
+            " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
 
         private fun extractBookmark(rs: ResultSet): Bookmark =
             Bookmark(

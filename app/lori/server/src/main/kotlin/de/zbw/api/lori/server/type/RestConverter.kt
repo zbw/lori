@@ -519,7 +519,7 @@ fun SearchQueryResult.toRest(
     return ItemInformation(
         itemArray = this.results.map { it.toRest() },
         totalPages = totalPages,
-        accessStateWithCount = this.accessState.entries.map {
+        accessStateWithCount = this.accessState.entries.sortedBy { it.key.priority }.map {
             AccessStateWithCountRest(it.key.toRest(), it.value)
         }.toList(),
         hasLicenceContract = this.hasLicenceContract,
@@ -527,8 +527,8 @@ fun SearchQueryResult.toRest(
         hasZbwUserAgreement = this.hasZbwUserAgreement,
         numberOfResults = this.numberOfResults,
         paketSigelWithCount = this.paketSigels.entries
-            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList(),
-        publicationTypeWithCount = this.publicationType.entries.map {
+            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList().sortedBy { it.paketSigel },
+        publicationTypeWithCount = this.publicationType.entries.sortedBy { it.key.priority }.map {
             PublicationTypeWithCountRest(
                 count = it.value,
                 publicationType = it.key.toRest(),
@@ -539,20 +539,20 @@ fun SearchQueryResult.toRest(
                 count = it.value,
                 zdbId = it.key,
             )
-        }.toList(),
+        }.toList().sortedBy { it.count }.reversed(),
         templateNameWithCount = this.templateNamesToOcc.entries.map {
             TemplateNameWithCountRest(
                 templateName = it.value.first,
                 count = it.value.second,
                 rightId = it.key,
             )
-        },
+        }.sortedBy { it.rightId },
         isPartOfSeriesCount = this.isPartOfSeries.entries.map {
             IsPartOfSeriesCountRest(
                 count = it.value,
                 series = it.key,
             )
-        }.toList(),
+        }.toList().sortedBy { it.count }.reversed(),
     )
 }
 

@@ -41,10 +41,10 @@ data class ItemMetadata(
     val zdbIdSeries: String?,
 )
 
-enum class AccessState {
-    CLOSED,
-    OPEN,
-    RESTRICTED,
+enum class AccessState(val priority: Int) {
+    OPEN(1),
+    RESTRICTED(2),
+    CLOSED(3),
 }
 
 enum class TemporalValidity {
@@ -53,17 +53,17 @@ enum class TemporalValidity {
     PRESENT,
 }
 
-enum class PublicationType {
-    ARTICLE,
-    BOOK,
-    BOOK_PART,
-    CONFERENCE_PAPER,
-    PERIODICAL_PART,
-    PROCEEDINGS,
-    RESEARCH_REPORT,
-    THESIS,
-    WORKING_PAPER,
-    OTHER,
+enum class PublicationType(val priority: Int) {
+    ARTICLE(1),
+    BOOK(2),
+    BOOK_PART(3),
+    CONFERENCE_PAPER(6),
+    PERIODICAL_PART(10),
+    PROCEEDINGS(5),
+    RESEARCH_REPORT(4),
+    THESIS(8),
+    WORKING_PAPER(9),
+    OTHER(7),
 }
 
 enum class BasisStorage {

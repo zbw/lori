@@ -575,9 +575,7 @@ export default defineComponent({
       // Reset Publication Type
       searchStore.publicationTypeReceived =
         response.publicationTypeWithCount != undefined
-          ? response.publicationTypeWithCount.sort((a, b) =>
-              b.publicationType.localeCompare(a.publicationType),
-            )
+          ? response.publicationTypeWithCount
           : Array(0);
       searchStore.publicationTypeIdx = Array(
         searchStore.publicationTypeReceived.length,

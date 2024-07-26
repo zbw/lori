@@ -549,7 +549,7 @@ class RightDB(
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_IS_TEMPLATE = true" +
-                " ORDER BY $COLUMN_RIGHT_ID LIMIT ? OFFSET ?"
+                " ORDER BY created_on DESC LIMIT ? OFFSET ?"
 
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
