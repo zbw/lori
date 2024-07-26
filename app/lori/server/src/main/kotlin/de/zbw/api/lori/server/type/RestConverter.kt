@@ -546,7 +546,7 @@ fun SearchQueryResult.toRest(
                 count = it.value.second,
                 rightId = it.key,
             )
-        }.sortedBy { it.rightId },
+        }.sortedBy { it.templateName },
         isPartOfSeriesCount = this.isPartOfSeries.entries.map {
             IsPartOfSeriesCountRest(
                 count = it.value,
