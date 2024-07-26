@@ -587,19 +587,19 @@ export default defineComponent({
                 @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-checkbox
+                  v-if="searchStore.hasOpenContentLicence"
+                  label="Open-Content-Licence"
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.formalRuleOpenContentLicence"
+                  @update:modelValue="emitSearchStart"
+              ></v-checkbox>
+              <v-checkbox
                 v-if="searchStore.hasZbwUserAgreement"
                 label="ZBW-Nutzungsvereinbarung"
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleUserAgreement"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
-              <v-checkbox
-                v-if="searchStore.hasOpenContentLicence"
-                label="Open-Content-Licence"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.formalRuleOpenContentLicence"
                 @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
