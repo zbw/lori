@@ -740,7 +740,7 @@ table.special, th.special, td.special {
 }
 </style>
 <template>
-  <v-navigation-drawer>
+  <v-navigation-drawer permanent>
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
             v-on:startSearch="startSearch"
@@ -1064,7 +1064,7 @@ table.special, th.special, td.special {
 
   </v-card>
   </v-main>
-  <v-navigation-drawer location="right" :width="500">
+  <v-navigation-drawer location="right" :width="500" permanent>
       <v-card v-if="currentItem.metadata" class="mx-auto" tile>
         <RightsView
             :handle="currentItem.metadata.handle"

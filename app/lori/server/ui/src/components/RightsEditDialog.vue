@@ -1156,15 +1156,21 @@ export default defineComponent({
                       :disabled="!isEditable"
                   >Gespeicherte Suche verknüpfen
                   </v-btn>
-                  <v-tooltip location="bottom" text="Die gespeicherte Suche kann nicht verändert werden, weil das Template bereits angewendet wurde.">
+                  <v-tooltip location="bottom">
                     <template v-slot:activator="{ props }">
+                      <div v-bind="props" class="d-inline-block">
                       <v-btn
                         v-if="!isEditable"
+                        :disabled="!isEditable"
                         v-bind="props"
-                        color="grey lighten-1"
+                        color="grey-darken-1"
                         >Gespeicherte Suche verknüpfen
                       </v-btn>
+                      </div>
                     </template>
+                    <span>
+                      Die gespeicherte Suche kann nicht verändert werden, weil das Template bereits angewendet wurde.
+                    </span>
                   </v-tooltip>
                   <v-dialog
                     v-model="bookmarkDialogOn"

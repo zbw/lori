@@ -425,15 +425,28 @@ export default defineComponent({
                 <v-list-item v-bind="props" title="Access-Status"></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                v-for="(item, i) in searchStore.accessStateReceived"
-                :key="i"
-                :label="parseAccessState(item.accessState, item.count)"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.accessStateIdx[i]"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.accessStateReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="parseAccessState(item.accessState, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.accessStateIdx[i]"
+                      @update:modelValue="emitSearchStart"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
@@ -527,6 +540,11 @@ export default defineComponent({
                     @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                 </v-item>
+                <v-divider
+                    :thickness="1"
+                    class="border-opacity-100"
+                    color="grey-lighten-1"
+                ></v-divider>
                 <v-item>
                   <v-checkbox
                     label="Enddatum"
@@ -555,6 +573,11 @@ export default defineComponent({
                 v-model="searchStore.temporalValidityFilterPast"
                 @update:modelValue="emitSearchStart"
               ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
               <v-checkbox
                 label="Aktuell"
                 hide-details
@@ -562,6 +585,11 @@ export default defineComponent({
                 v-model="searchStore.temporalValidityFilterPresent"
                 @update:modelValue="emitSearchStart"
               ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
               <v-checkbox
                 label="Zukunft"
                 hide-details
@@ -586,6 +614,11 @@ export default defineComponent({
                 v-model="searchStore.formalRuleLicenceContract"
                 @update:modelValue="emitSearchStart"
               ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
               <v-checkbox
                   v-if="searchStore.hasOpenContentLicence"
                   label="Open-Content-Licence"
@@ -594,6 +627,11 @@ export default defineComponent({
                   v-model="searchStore.formalRuleOpenContentLicence"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
               <v-checkbox
                 v-if="searchStore.hasZbwUserAgreement"
                 label="ZBW-Nutzungsvereinbarung"
@@ -624,15 +662,28 @@ export default defineComponent({
                 ></v-list-item>
               </template>
               <h6></h6>
-              <v-checkbox
-                v-for="(item, i) in searchStore.templateNameReceived"
-                :key="i"
-                :label="ppZDBId(item.templateName, item.count)"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.templateNameIdx[i]"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.templateNameReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="ppZDBId(item.templateName, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.templateNameIdx[i]"
+                      @update:modelValue="emitSearchStart"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
             </v-list-group>
           </v-list>
         </v-col>
