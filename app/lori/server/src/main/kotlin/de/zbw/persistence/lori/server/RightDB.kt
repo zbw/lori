@@ -39,12 +39,11 @@ class RightDB(
     private val tracer: Tracer,
     private val groupDB: GroupDB,
 ) {
-
     fun insertRight(right: ItemRight): String {
         val prepStmt =
             insertRightSetParameters(
                 right,
-                connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS)
+                connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS),
             )
         val span = tracer.spanBuilder("insertRight").startSpan()
         try {
@@ -54,7 +53,9 @@ class RightDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 rs.getString(1)
-            } else throw IllegalStateException("No row has been inserted.")
+            } else {
+                throw IllegalStateException("No row has been inserted.")
+            }
         } finally {
             span.end()
         }
@@ -64,7 +65,7 @@ class RightDB(
         val prepStmt =
             upsertRightSetParameters(
                 right,
-                connection.prepareStatement(STATEMENT_UPSERT_RIGHT)
+                connection.prepareStatement(STATEMENT_UPSERT_RIGHT),
             )
         val span = tracer.spanBuilder("upsertRight").startSpan()
         try {
@@ -233,9 +234,10 @@ class RightDB(
     }
 
     fun deleteRightsByIds(rightIds: List<String>): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
-            this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
+                this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
+            }
         val span = tracer.spanBuilder("deleteRightsByIds").startSpan()
         return try {
             span.makeCurrent()
@@ -246,74 +248,91 @@ class RightDB(
     }
 
     fun getRightsByIds(rightsIds: List<String>): List<ItemRight> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
-            this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
+                this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
+            }
 
         val span = tracer.spanBuilder("getRightsByIds").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         return generateSequence {
             if (rs.next()) {
                 extractRightFromRS(rs, groupDB)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
     fun rightContainsId(rightId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
-            this.setString(1, rightId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
+                this.setString(1, rightId)
+            }
         val span = tracer.spanBuilder("rightContainsId").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         rs.next()
         return rs.getBoolean(1)
     }
 
     fun getRightIdsByMetadata(metadataId: String): List<String> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
-            this.setString(1, metadataId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
+                this.setString(1, metadataId)
+            }
         val span = tracer.spanBuilder("getRightIdsByMetadata").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         return generateSequence {
             if (rs.next()) {
                 rs.getString(1)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
-    fun getTemplateList(limit: Int, offset: Int): List<ItemRight> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
-        }
+    fun getTemplateList(
+        limit: Int,
+        offset: Int,
+    ): List<ItemRight> {
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
+                this.setInt(1, limit)
+                this.setInt(2, offset)
+            }
 
         val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         return generateSequence {
             if (rs.next()) {
                 extractRightFromRS(rs, groupDB)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
@@ -323,26 +342,30 @@ class RightDB(
     fun getRightIdsForAllTemplates(): List<String> {
         val prepStmt = connection.prepareStatement(STATEMENT_GET_ALL_IDS_OF_TEMPLATES)
         val span = tracer.spanBuilder("getRightIdsForAllTemplates").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
 
         return generateSequence {
             if (rs.next()) {
                 rs.getString(1)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
     fun updateAppliedOnByTemplateId(rightId: String): Int {
         val now = Instant.now()
-        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
-            this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
-            this.setString(2, rightId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
+                this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
+                this.setString(2, rightId)
+            }
         val span = tracer.spanBuilder("updateTemplateById").startSpan()
         return try {
             span.makeCurrent()
@@ -357,21 +380,25 @@ class RightDB(
             return emptyList()
         }
 
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME).apply {
-            this.setArray(1, connection.createArrayOf("varchar", templateNames.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME).apply {
+                this.setArray(1, connection.createArrayOf("varchar", templateNames.toTypedArray()))
+            }
 
         val span = tracer.spanBuilder("getRightIdsByTemplateNames").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         return generateSequence {
             if (rs.next()) {
                 extractRightFromRS(rs, groupDB)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
@@ -379,21 +406,25 @@ class RightDB(
      * Return all Templates that are an exception for the given rightId.
      */
     fun getExceptionsByRightId(rightId: String): List<ItemRight> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID).apply {
-            this.setString(1, rightId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID).apply {
+                this.setString(1, rightId)
+            }
 
         val span = tracer.spanBuilder("getExceptionsByTemplateId").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         return generateSequence {
             if (rs.next()) {
                 extractRightFromRS(rs, groupDB)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
@@ -401,17 +432,19 @@ class RightDB(
      * Checks if a given RightId is an exception.
      */
     fun isException(rightId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_IS_EXCEPTION).apply {
-            this.setString(1, rightId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_IS_EXCEPTION).apply {
+                this.setString(1, rightId)
+            }
 
         val span = tracer.spanBuilder("isTemplateAnException").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         rs.next()
         return (rs.getInt(1) == 1)
     }
@@ -419,11 +452,15 @@ class RightDB(
     /**
      * Connects an exception with a template.
      */
-    fun addExceptionToTemplate(rightIdTemplate: String, rightIdExceptions: List<String>): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
-            this.setString(1, rightIdTemplate)
-            this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
-        }
+    fun addExceptionToTemplate(
+        rightIdTemplate: String,
+        rightIdExceptions: List<String>,
+    ): Int {
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
+                this.setString(1, rightIdTemplate)
+                this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
+            }
         val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
         return try {
             span.makeCurrent()
@@ -446,7 +483,8 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on, $COLUMN_EXCEPTION_FROM," +
@@ -454,31 +492,34 @@ class RightDB(
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
-        const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA = "SELECT right_id" +
-            " FROM $TABLE_NAME_ITEM" +
-            " WHERE metadata_id = ?"
+        const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA =
+            "SELECT right_id" +
+                " FROM $TABLE_NAME_ITEM" +
+                " WHERE metadata_id = ?"
 
         const val STATEMENT_RIGHT_CONTAINS_ID =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_RIGHT WHERE right_id=?)"
 
-        const val STATEMENT_INSERT_RIGHT = "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
-            "(created_on,last_updated_on," +
-            "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
-            "start_date,end_date,notes_general," +
-            "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-            "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-            "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
-            "basis_access_state,notes_process_documentation,notes_management_related," +
-            "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
-            "VALUES(?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?)"
+        const val STATEMENT_INSERT_RIGHT =
+            "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
+                "(created_on,last_updated_on," +
+                "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
+                "start_date,end_date,notes_general," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
+                "basis_access_state,notes_process_documentation,notes_management_related," +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
+                "VALUES(?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -486,7 +527,8 @@ class RightDB(
                 "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
@@ -524,15 +566,17 @@ class RightDB(
                 "author_right_exception = EXCLUDED.author_right_exception," +
                 "$COLUMN_EXCEPTION_FROM = EXCLUDED.$COLUMN_EXCEPTION_FROM;"
 
-        const val STATEMENT_DELETE_RIGHTS = "DELETE " +
-            "FROM $TABLE_NAME_ITEM_RIGHT r " +
-            "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
+        const val STATEMENT_DELETE_RIGHTS =
+            "DELETE " +
+                "FROM $TABLE_NAME_ITEM_RIGHT r " +
+                "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -543,7 +587,8 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -555,7 +600,8 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -577,22 +623,27 @@ class RightDB(
                 " SET $COLUMN_EXCEPTION_FROM=?" +
                 " WHERE $COLUMN_RIGHT_ID=ANY(?)"
 
-        fun extractRightFromRS(rs: ResultSet, groupDB: GroupDB): ItemRight {
+        fun extractRightFromRS(
+            rs: ResultSet,
+            groupDB: GroupDB,
+        ): ItemRight {
             val currentRightId = rs.getString(1)
             return ItemRight(
                 rightId = currentRightId,
-                createdOn = rs.getTimestamp(2)?.let {
-                    OffsetDateTime.ofInstant(
-                        it.toInstant(),
-                        ZoneId.of("UTC+00:00"),
-                    )
-                },
-                lastUpdatedOn = rs.getTimestamp(3)?.let {
-                    OffsetDateTime.ofInstant(
-                        it.toInstant(),
-                        ZoneId.of("UTC+00:00"),
-                    )
-                },
+                createdOn =
+                    rs.getTimestamp(2)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
+                lastUpdatedOn =
+                    rs.getTimestamp(3)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
                 createdBy = rs.getString(4),
                 lastUpdatedBy = rs.getString(5),
                 accessState = rs.getString(6)?.let { AccessState.valueOf(it) },
@@ -614,12 +665,13 @@ class RightDB(
                 isTemplate = rs.getBoolean(22),
                 templateName = rs.getString(23),
                 templateDescription = rs.getString(24),
-                lastAppliedOn = rs.getTimestamp(25)?.let {
-                    OffsetDateTime.ofInstant(
-                        it.toInstant(),
-                        ZoneId.of("UTC+00:00"),
-                    )
-                },
+                lastAppliedOn =
+                    rs.getTimestamp(25)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
                 exceptionFrom = rs.getString(26),
                 groupIds = groupDB.getGroupsByRightId(currentRightId),
             )

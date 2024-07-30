@@ -11,37 +11,44 @@ import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchPair
 
 object SearchExpressionResolution {
-    fun resolveSearchExpression(expression: SearchExpression): String = when (expression) {
-        is SEAnd -> "${resolveSearchExpression(expression.left)} AND ${resolveSearchExpression(expression.right)}"
-        is SEOr -> "${resolveSearchExpression(expression.left)} OR ${resolveSearchExpression(expression.right)}"
-        is SENot -> "NOT ${resolveSearchExpression(expression.body)}"
-        is SEVariable -> expression.searchPair.toWhereClause()
-        is SEPar -> "(${resolveSearchExpression(expression.body)})"
-        is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
-    }
+    fun resolveSearchExpression(expression: SearchExpression): String =
+        when (expression) {
+            is SEAnd -> "${resolveSearchExpression(expression.left)} AND ${resolveSearchExpression(expression.right)}"
+            is SEOr -> "${resolveSearchExpression(expression.left)} OR ${resolveSearchExpression(expression.right)}"
+            is SENot -> "NOT ${resolveSearchExpression(expression.body)}"
+            is SEVariable -> expression.searchPair.toWhereClause()
+            is SEPar -> "(${resolveSearchExpression(expression.body)})"
+            is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
+        }
 
     /**
      * When searching for ZDB-IDs two different fields in the database should be considered.
      */
-    fun extendZDBSearches(expression: SearchExpression): SearchExpression = when (expression) {
-        is SEAnd -> SEAnd(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
-        is SENot -> SENot(extendZDBSearches(expression.body))
-        is SENotPar -> SENot(extendZDBSearches(expression.body))
-        is SEOr -> SEOr(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
-        is SEPar -> SEPar(extendZDBSearches(expression.body))
-        is SEVariable -> when (expression.searchPair.key) {
-            SearchKey.ZDB_ID -> SEPar(
-                SEOr(
-                    expression,
-                    SEVariable(SearchPair(SearchKey.ZDB_ID_SERIES, expression.searchPair.values))
-                )
-            )
+    fun extendZDBSearches(expression: SearchExpression): SearchExpression =
+        when (expression) {
+            is SEAnd -> SEAnd(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
+            is SENot -> SENot(extendZDBSearches(expression.body))
+            is SENotPar -> SENot(extendZDBSearches(expression.body))
+            is SEOr -> SEOr(extendZDBSearches(expression.left), extendZDBSearches(expression.right))
+            is SEPar -> SEPar(extendZDBSearches(expression.body))
+            is SEVariable ->
+                when (expression.searchPair.key) {
+                    SearchKey.ZDB_ID ->
+                        SEPar(
+                            SEOr(
+                                expression,
+                                SEVariable(SearchPair(SearchKey.ZDB_ID_SERIES, expression.searchPair.values)),
+                            ),
+                        )
 
-            else -> expression
+                    else -> expression
+                }
         }
-    }
 
-    fun resolveSearchExpressionCoalesce(expression: SearchExpression, columnName: String = "score"): String {
+    fun resolveSearchExpressionCoalesce(
+        expression: SearchExpression,
+        columnName: String = "score",
+    ): String {
         val searchPairs = getSearchPairs(expression)
         return searchPairs.joinToString(
             prefix = "(",
@@ -67,8 +74,8 @@ object SearchExpressionResolution {
     fun conjungateSearchExpressions(
         expr1: SearchExpression?,
         expr2: SearchExpression?,
-    ): SearchExpression? {
-        return if (expr1 == null && expr2 == null) {
+    ): SearchExpression? =
+        if (expr1 == null && expr2 == null) {
             null
         } else if (expr1 == null) {
             expr2
@@ -77,5 +84,4 @@ object SearchExpressionResolution {
         } else {
             SEAnd(expr1, expr2)
         }
-    }
 }

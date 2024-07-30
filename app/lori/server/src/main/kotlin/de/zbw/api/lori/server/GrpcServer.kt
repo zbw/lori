@@ -15,13 +15,13 @@ import org.slf4j.LoggerFactory
 class GrpcServer(
     private val port: Int,
     private val services: List<BindableService>,
-    private val server: Server = ServerBuilder
-        .forPort(port)
-        .addServices(services.map { it.bindService() })
-        .addService(ProtoReflectionService.newInstance())
-        .build()
+    private val server: Server =
+        ServerBuilder
+            .forPort(port)
+            .addServices(services.map { it.bindService() })
+            .addService(ProtoReflectionService.newInstance())
+            .build(),
 ) : ServiceLifecycle() {
-
     private var ready = false
     private var healthy = false
 
@@ -37,7 +37,7 @@ class GrpcServer(
         Runtime.getRuntime().addShutdownHook(
             Thread {
                 server.shutdown()
-            }
+            },
         )
     }
 

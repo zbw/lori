@@ -39,14 +39,14 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriServerBackendTest : DatabaseTest() {
-
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk(),
+        )
 
     @BeforeClass
     fun fillDatabase() {
@@ -62,10 +62,11 @@ class LoriServerBackendTest : DatabaseTest() {
     @Test
     fun testRoundtrip() {
         // given
-        val givenMetadataEntries = arrayOf(
-            TEST_METADATA.copy(metadataId = "roundtrip"),
-            TEST_METADATA.copy(metadataId = "no_rights"),
-        )
+        val givenMetadataEntries =
+            arrayOf(
+                TEST_METADATA.copy(metadataId = "roundtrip"),
+                TEST_METADATA.copy(metadataId = "no_rights"),
+            )
         val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
         // when
@@ -85,13 +86,14 @@ class LoriServerBackendTest : DatabaseTest() {
     @Test
     fun testGetList() {
         // given
-        val givenMetadata = arrayOf(
-            TEST_METADATA.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
-            TEST_METADATA.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
-            TEST_METADATA.copy(metadataId = "aaa"),
-            TEST_METADATA.copy(metadataId = "abb"),
-            TEST_METADATA.copy(metadataId = "acc"),
-        )
+        val givenMetadata =
+            arrayOf(
+                TEST_METADATA.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
+                TEST_METADATA.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
+                TEST_METADATA.copy(metadataId = "aaa"),
+                TEST_METADATA.copy(metadataId = "abb"),
+                TEST_METADATA.copy(metadataId = "acc"),
+            )
 
         backend.insertMetadataElements(givenMetadata.toList())
         // when
@@ -113,15 +115,17 @@ class LoriServerBackendTest : DatabaseTest() {
                     Item(
                         givenMetadata[4],
                         emptyList(),
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
 
         // no limit
-        val noLimit = backend.getItemList(
-            limit = 0, offset = 0
-        )
+        val noLimit =
+            backend.getItemList(
+                limit = 0,
+                offset = 0,
+            )
         assertThat(noLimit, `is`(emptyList()))
 
         assertTrue(backend.metadataContainsId(givenMetadata[0].metadataId))
@@ -137,8 +141,8 @@ class LoriServerBackendTest : DatabaseTest() {
                     givenMetadata[2],
                     givenMetadata[3],
                     givenMetadata[4],
-                )
-            )
+                ),
+            ),
         )
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
         assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
@@ -179,7 +183,7 @@ class LoriServerBackendTest : DatabaseTest() {
             arrayOf(
                 "bllaaaa",
                 emptyList<SearchPair>(),
-                "no search key pair"
+                "no search key pair",
             ),
             arrayOf(
                 "bllaaaa col:bar",
@@ -187,9 +191,9 @@ class LoriServerBackendTest : DatabaseTest() {
                     SearchPair(
                         SearchKey.COLLECTION,
                         "bar",
-                    )
+                    ),
                 ),
-                "single case with random string"
+                "single case with random string",
             ),
             arrayOf(
                 "col:bar",
@@ -197,9 +201,9 @@ class LoriServerBackendTest : DatabaseTest() {
                     SearchPair(
                         SearchKey.COLLECTION,
                         "bar",
-                    )
+                    ),
                 ),
-                "single case no additional string"
+                "single case no additional string",
             ),
             arrayOf(
                 "                col:bar                             ",
@@ -207,9 +211,9 @@ class LoriServerBackendTest : DatabaseTest() {
                     SearchPair(
                         SearchKey.COLLECTION,
                         "bar",
-                    )
+                    ),
                 ),
-                "single case with whitespace"
+                "single case with whitespace",
             ),
             arrayOf(
                 "col:bar zdb:foo",
@@ -223,7 +227,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "foo",
                     ),
                 ),
-                "two search keys"
+                "two search keys",
             ),
             arrayOf(
                 "col:'foo | bar'",
@@ -231,9 +235,9 @@ class LoriServerBackendTest : DatabaseTest() {
                     SearchPair(
                         SearchKey.COLLECTION,
                         "foo | bar",
-                    )
+                    ),
                 ),
-                "multiple words quoted"
+                "multiple words quoted",
             ),
             arrayOf(
                 "col:'foobar'",
@@ -243,7 +247,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "foobar",
                     ),
                 ),
-                "single word quoted"
+                "single word quoted",
             ),
             arrayOf(
                 "col:\"foobar\"",
@@ -253,7 +257,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "foobar",
                     ),
                 ),
-                "single word doublequoted"
+                "single word doublequoted",
             ),
             arrayOf(
                 "            col:'foobar'           com:'foo & bar'",
@@ -267,7 +271,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "foo & bar",
                     ),
                 ),
-                "mutltiple and single words quoted with whitespaces"
+                "mutltiple and single words quoted with whitespaces",
             ),
             arrayOf(
                 "col:col-foo-bar",
@@ -275,9 +279,9 @@ class LoriServerBackendTest : DatabaseTest() {
                     SearchPair(
                         SearchKey.COLLECTION,
                         "col-foo-bar",
-                    )
+                    ),
                 ),
-                "multiple words minus"
+                "multiple words minus",
             ),
             arrayOf(
                 "col:'col-foo-bar'",
@@ -287,7 +291,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "col-foo-bar",
                     ),
                 ),
-                "multiple words quoted minus"
+                "multiple words quoted minus",
             ),
             arrayOf(
                 "col:'col-;:'",
@@ -297,7 +301,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "col-;\\:",
                     ),
                 ),
-                "handle special characters"
+                "handle special characters",
             ),
             arrayOf(
                 "col:'(subject1 | subject2) & subject3'",
@@ -307,7 +311,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "(subject1 | subject2) & subject3",
                     ),
                 ),
-                "with parentheses"
+                "with parentheses",
             ),
             arrayOf(
                 "col:\"(subject1 | subject2) & subject3\"",
@@ -317,7 +321,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "(subject1 | subject2) & subject3",
                     ),
                 ),
-                "with parentheses and double quotes"
+                "with parentheses and double quotes",
             ),
             arrayOf(
                 "col:\"(anyNumberOfSp\$c!;,~ | subject2) & subject3\"",
@@ -327,7 +331,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "(anyNumberOfSp\$c!;,~ | subject2) & subject3",
                     ),
                 ),
-                "with parentheses and double quotes"
+                "with parentheses and double quotes",
             ),
             arrayOf(
                 "col:\"(subject1 subject2 subject3 | subject4) & subject5\"",
@@ -337,7 +341,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "(subject1 & subject2 & subject3 | subject4) & subject5",
                     ),
                 ),
-                "insert missing & with other logical operations"
+                "insert missing & with other logical operations",
             ),
             arrayOf(
                 "col:\"subject1 subject2 subject3 subject4 subject5\"",
@@ -347,7 +351,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "subject1 & subject2 & subject3 & subject4 & subject5",
                     ),
                 ),
-                "insert missing & standard case"
+                "insert missing & standard case",
             ),
             arrayOf(
                 "col:\'subject1 subject2 subject3 subject4 subject5\'",
@@ -357,7 +361,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         "subject1 & subject2 & subject3 & subject4 & subject5",
                     ),
                 ),
-                "insert missing & standard case"
+                "insert missing & standard case",
             ),
             arrayOf(
                 "col:\'subject1 & subject2 :\'",
@@ -408,33 +412,35 @@ class LoriServerBackendTest : DatabaseTest() {
             arrayOf(
                 "bllaaaa",
                 emptyList<String>(),
-                "no search key pair"
+                "no search key pair",
             ),
             arrayOf(
                 "moo:koo col:foobar cro:moobar",
                 listOf("moo", "cro"),
-                "two invalid keys"
+                "two invalid keys",
             ),
         )
 
     @Test
     fun testSearchQuery() {
         // given
-        val givenMetadataEntries = arrayOf(
-            TEST_METADATA.copy(metadataId = "search_test_1", zdbIdJournal = "zbdTest"),
-            TEST_METADATA.copy(metadataId = "search_test_2", zdbIdJournal = "zbdTest"),
-        )
+        val givenMetadataEntries =
+            arrayOf(
+                TEST_METADATA.copy(metadataId = "search_test_1", zdbIdJournal = "zbdTest"),
+                TEST_METADATA.copy(metadataId = "search_test_2", zdbIdJournal = "zbdTest"),
+            )
         val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
 
         backend.insertMetadataElements(givenMetadataEntries.toList())
         val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
 
         // when
-        val (number, items) = backend.searchQuery(
-            "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
-            5,
-            0
-        )
+        val (number, items) =
+            backend.searchQuery(
+                "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
+                5,
+                0,
+            )
 
         // then
         assertThat(number, `is`(2))
@@ -449,17 +455,18 @@ class LoriServerBackendTest : DatabaseTest() {
                     Item(
                         metadata = givenMetadataEntries[1],
                         rights = emptyList(),
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         )
 
         // when
-        val (numberNoItem, itemsNoItem) = backend.searchQuery(
-            "zdb:NOT_IN_DATABASE_ID",
-            5,
-            0
-        )
+        val (numberNoItem, itemsNoItem) =
+            backend.searchQuery(
+                "zdb:NOT_IN_DATABASE_ID",
+                5,
+                0,
+            )
         assertThat(numberNoItem, `is`(0))
         assertThat(itemsNoItem, `is`(emptyList()))
     }
@@ -502,7 +509,10 @@ class LoriServerBackendTest : DatabaseTest() {
         )
 
     @Test(dataProvider = DATA_FOR_REMOVE_VALID_SEARCH_TOKEN)
-    fun testRemoveValidSearchToken(input: String, expected: Boolean) {
+    fun testRemoveValidSearchToken(
+        input: String,
+        expected: Boolean,
+    ) {
         assertThat(
             "$input was not correctly identified",
             LoriServerBackend.hasSearchTokensWithNoKey(input),
@@ -512,15 +522,17 @@ class LoriServerBackendTest : DatabaseTest() {
 
     @Test
     fun testSearchKeyConversion() {
-        val given = listOf(
-            SearchPair(SearchKey.TITLE, "foobar & baz"),
-            SearchPair(SearchKey.COLLECTION, "col1"),
-            SearchPair(SearchKey.COMMUNITY, "com1"),
-            SearchPair(SearchKey.ZDB_ID, "zdb1"),
-        )
-        val received = LoriServerBackend.parseValidSearchPairs(
-            LoriServerBackend.searchPairsToString(given)
-        )
+        val given =
+            listOf(
+                SearchPair(SearchKey.TITLE, "foobar & baz"),
+                SearchPair(SearchKey.COLLECTION, "col1"),
+                SearchPair(SearchKey.COMMUNITY, "com1"),
+                SearchPair(SearchKey.ZDB_ID, "zdb1"),
+            )
+        val received =
+            LoriServerBackend.parseValidSearchPairs(
+                LoriServerBackend.searchPairsToString(given),
+            )
         received.forEachIndexed { index, searchPair ->
             assertThat(
                 searchPair.values,
@@ -675,7 +687,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 2),
-                    endDate = null
+                    endDate = null,
                 ),
                 true,
                 "Invalid overlap.",
@@ -683,7 +695,7 @@ class LoriServerBackendTest : DatabaseTest() {
             arrayOf(
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 2),
-                    endDate = null
+                    endDate = null,
                 ),
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 1),
@@ -699,7 +711,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2026, 6, 2),
-                    endDate = null
+                    endDate = null,
                 ),
                 false,
                 "No overlap.",
@@ -756,12 +768,13 @@ class LoriServerBackendTest : DatabaseTest() {
         }
 
         val existingRights =
-            backend.getRightsByIds(listOf(givenRight1.rightId!!, givenRight2.rightId!!, givenRight3.rightId!!))
+            backend
+                .getRightsByIds(listOf(givenRight1.rightId!!, givenRight2.rightId!!, givenRight3.rightId!!))
                 .map { it.rightId }
                 .toSet()
         assertThat(
             existingRights,
-            `is`(setOf(givenRight1.rightId!!, givenRight2.rightId!!))
+            `is`(setOf(givenRight1.rightId!!, givenRight2.rightId!!)),
         )
     }
 
@@ -773,7 +786,7 @@ class LoriServerBackendTest : DatabaseTest() {
                     Item(
                         metadata = TEST_METADATA,
                         rights = listOf(TEST_RIGHT),
-                    )
+                    ),
                 ),
                 TEST_RIGHT,
                 emptySet<Item>(),
@@ -785,14 +798,14 @@ class LoriServerBackendTest : DatabaseTest() {
                     Item(
                         metadata = TEST_METADATA,
                         rights = listOf(TEST_RIGHT),
-                    )
+                    ),
                 ),
                 TEST_RIGHT.copy(rightId = "testConflict"),
                 setOf(
                     Item(
                         metadata = TEST_METADATA,
                         rights = listOf(TEST_RIGHT),
-                    )
+                    ),
                 ),
                 1,
                 "Find duplicate",
@@ -811,7 +824,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     rightId = "testConflict",
                     startDate = LocalDate.MIN,
-                    endDate = LocalDate.MIN.plusDays(1)
+                    endDate = LocalDate.MIN.plusDays(1),
                 ),
                 emptySet<Item>(),
                 0,
@@ -827,14 +840,15 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedErrorCount: Int,
         reason: String,
     ) {
-        val received: Pair<Set<Item>, List<RightError>> = LoriServerBackend.findItemsWithConflicts(
-            searchResults,
-            rightConflictToCheck,
-        )
+        val received: Pair<Set<Item>, List<RightError>> =
+            LoriServerBackend.findItemsWithConflicts(
+                searchResults,
+                rightConflictToCheck,
+            )
         assertThat(
             reason,
             received.first,
-            `is`(expected)
+            `is`(expected),
         )
         assertThat(
             reason,
@@ -850,79 +864,82 @@ class LoriServerBackendTest : DatabaseTest() {
         const val DATA_FOR_SEARCH_KEY_PARSING = "DATA_FOR_SEARCH_KEY_PARSING"
         const val DATA_FOR_REMOVE_VALID_SEARCH_TOKEN = "DATA_FOR_REMOVE_VALID_SEARCH_TOKEN"
 
-        val NOW: OffsetDateTime = OffsetDateTime.of(
-            2022,
-            3,
-            1,
-            1,
-            1,
-            0,
-            0,
-            ZoneOffset.UTC,
-        )!!
+        val NOW: OffsetDateTime =
+            OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
 
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
-        val TEST_METADATA = ItemMetadata(
-            metadataId = "that-test",
-            author = "Colbjørnsen, Terje",
-            band = "band",
-            collectionHandle = "colHandle",
-            collectionName = "collectionName",
-            communityHandle = "comHandle",
-            communityName = "communityName",
-            createdBy = "user1",
-            createdOn = NOW,
-            doi = "doi:example.org",
-            handle = "hdl:example.handle.net",
-            isbn = "1234567890123",
-            issn = "123456",
-            isPartOfSeries = "series",
-            lastUpdatedBy = "user2",
-            lastUpdatedOn = NOW,
-            licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
-            paketSigel = "sigel",
-            ppn = "ppn",
-            publicationType = PublicationType.ARTICLE,
-            publicationDate = LocalDate.of(2022, 9, 26),
-            rightsK10plus = "some rights",
-            storageDate = NOW.minusDays(3),
-            subCommunityHandle = "11159/1114",
-            subCommunityName = "Department",
-            title = "Important title",
-            titleJournal = null,
-            titleSeries = null,
-            zdbIdJournal = null,
-            zdbIdSeries = null,
-        )
+        val TEST_METADATA =
+            ItemMetadata(
+                metadataId = "that-test",
+                author = "Colbjørnsen, Terje",
+                band = "band",
+                collectionHandle = "colHandle",
+                collectionName = "collectionName",
+                communityHandle = "comHandle",
+                communityName = "communityName",
+                createdBy = "user1",
+                createdOn = NOW,
+                doi = "doi:example.org",
+                handle = "hdl:example.handle.net",
+                isbn = "1234567890123",
+                issn = "123456",
+                isPartOfSeries = "series",
+                lastUpdatedBy = "user2",
+                lastUpdatedOn = NOW,
+                licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                paketSigel = "sigel",
+                ppn = "ppn",
+                publicationType = PublicationType.ARTICLE,
+                publicationDate = LocalDate.of(2022, 9, 26),
+                rightsK10plus = "some rights",
+                storageDate = NOW.minusDays(3),
+                subCommunityHandle = "11159/1114",
+                subCommunityName = "Department",
+                title = "Important title",
+                titleJournal = null,
+                titleSeries = null,
+                zdbIdJournal = null,
+                zdbIdSeries = null,
+            )
 
-        private val TEST_RIGHT = ItemRight(
-            rightId = "12",
-            accessState = AccessState.OPEN,
-            authorRightException = true,
-            basisAccessState = BasisAccessState.LICENCE_CONTRACT,
-            basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
-            createdBy = "user1",
-            createdOn = NOW,
-            endDate = TODAY,
-            exceptionFrom = null,
-            groupIds = emptyList(),
-            isTemplate = false,
-            lastAppliedOn = null,
-            lastUpdatedBy = "user2",
-            lastUpdatedOn = NOW,
-            licenceContract = "some contract",
-            nonStandardOpenContentLicence = true,
-            nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
-            notesGeneral = "Some general notes",
-            notesFormalRules = "Some formal rule notes",
-            notesProcessDocumentation = "Some process documentation",
-            notesManagementRelated = "Some management related notes",
-            openContentLicence = "some licence",
-            restrictedOpenContentLicence = false,
-            startDate = TODAY.minusDays(1),
-            templateDescription = "descritpion",
-            templateName = null,
-            zbwUserAgreement = true,
-        )
+        private val TEST_RIGHT =
+            ItemRight(
+                rightId = "12",
+                accessState = AccessState.OPEN,
+                authorRightException = true,
+                basisAccessState = BasisAccessState.LICENCE_CONTRACT,
+                basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
+                createdBy = "user1",
+                createdOn = NOW,
+                endDate = TODAY,
+                exceptionFrom = null,
+                groupIds = emptyList(),
+                isTemplate = false,
+                lastAppliedOn = null,
+                lastUpdatedBy = "user2",
+                lastUpdatedOn = NOW,
+                licenceContract = "some contract",
+                nonStandardOpenContentLicence = true,
+                nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
+                notesGeneral = "Some general notes",
+                notesFormalRules = "Some formal rule notes",
+                notesProcessDocumentation = "Some process documentation",
+                notesManagementRelated = "Some management related notes",
+                openContentLicence = "some licence",
+                restrictedOpenContentLicence = false,
+                startDate = TODAY.minusDays(1),
+                templateDescription = "descritpion",
+                templateName = null,
+                zbwUserAgreement = true,
+            )
     }
 }

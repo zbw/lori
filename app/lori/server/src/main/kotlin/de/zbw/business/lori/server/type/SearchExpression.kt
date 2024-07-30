@@ -14,12 +14,31 @@ import de.zbw.business.lori.server.LoriServerBackend
 
 sealed class SearchExpression
 
-data class SEVariable(val searchPair: SearchPair) : SearchExpression()
-data class SENot(val body: SearchExpression) : SearchExpression()
-data class SENotPar(val body: SearchExpression) : SearchExpression()
-data class SEAnd(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
-data class SEOr(val left: SearchExpression, val right: SearchExpression) : SearchExpression()
-data class SEPar(val body: SearchExpression) : SearchExpression()
+data class SEVariable(
+    val searchPair: SearchPair,
+) : SearchExpression()
+
+data class SENot(
+    val body: SearchExpression,
+) : SearchExpression()
+
+data class SENotPar(
+    val body: SearchExpression,
+) : SearchExpression()
+
+data class SEAnd(
+    val left: SearchExpression,
+    val right: SearchExpression,
+) : SearchExpression()
+
+data class SEOr(
+    val left: SearchExpression,
+    val right: SearchExpression,
+) : SearchExpression()
+
+data class SEPar(
+    val body: SearchExpression,
+) : SearchExpression()
 
 object SearchGrammar : Grammar<SearchExpression>() {
     val id by regexToken(LoriServerBackend.SEARCH_KEY_REGEX)
@@ -37,17 +56,19 @@ object SearchGrammar : Grammar<SearchExpression>() {
     private val bracedNegExpression by -not * -lpar * parser(this::orChain) * -rpar map { SEPar(it) }
 
     private val term: Parser<SearchExpression> by
-    (
-        id map { searchPairInQuery ->
-            LoriServerBackend.parseValidSearchPairs(searchPairInQuery.text).takeIf { it.isNotEmpty() }
-                ?.let {
-                    SEVariable(it.first())
-                } ?: throw ParsingException("Invalid Search Pair found in $searchPairInQuery")
-        }
+        (
+            id map { searchPairInQuery ->
+                LoriServerBackend
+                    .parseValidSearchPairs(searchPairInQuery.text)
+                    .takeIf { it.isNotEmpty() }
+                    ?.let {
+                        SEVariable(it.first())
+                    } ?: throw ParsingException("Invalid Search Pair found in $searchPairInQuery")
+            }
         ) or
-        negation or
-        bracedExpression or
-        bracedNegExpression
+            negation or
+            bracedExpression or
+            bracedNegExpression
 
     private val andChain: Parser<SearchExpression> by leftAssociative(term, and) { a, _, b -> SEAnd(a, b) }
     private val orChain by leftAssociative(andChain, or) { a, _, b -> SEOr(a, b) }
@@ -55,4 +76,6 @@ object SearchGrammar : Grammar<SearchExpression>() {
     override val rootParser by orChain
 }
 
-class ParsingException(message: String) : Exception(message)
+class ParsingException(
+    message: String,
+) : Exception(message)

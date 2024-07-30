@@ -27,28 +27,33 @@ abstract class SearchFilter(
      *
      * @return Updated counter.
      */
-    abstract fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int
+    abstract fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int
 
     abstract override fun toString(): String
 }
 
 abstract class MetadataSearchFilter(
-    dbColumnName: String
+    dbColumnName: String,
 ) : SearchFilter(dbColumnName)
 
 class PublicationDateFilter(
     val fromYear: Int,
     val toYear: Int,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
-) {
+        DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
+    ) {
     private val fromDate = LocalDate.of(fromYear, 1, 1)
     private val toDate = LocalDate.of(toYear, 12, 31)
 
-    override fun toWhereClause(): String =
-        "$dbColumnName >= ? AND $dbColumnName <= ?"
+    override fun toWhereClause(): String = "$dbColumnName >= ? AND $dbColumnName <= ?"
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         preparedStatement.setDate(counter, Date.valueOf(fromDate))
         preparedStatement.setDate(counter + 1, Date.valueOf(toDate))
         return counter + 2
@@ -67,14 +72,17 @@ class PublicationDateFilter(
 class PublicationTypeFilter(
     val publicationTypes: List<PublicationType>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
-) {
+        DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
+    ) {
     override fun toWhereClause(): String =
         publicationTypes.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         publicationTypes.forEach {
             preparedStatement.setString(localCounter++, it.toString())
@@ -92,14 +100,17 @@ class PublicationTypeFilter(
 class PaketSigelFilter(
     val paketSigels: List<String>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
-) {
+        DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
+    ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         paketSigels.forEach {
             preparedStatement.setString(localCounter++, it)
@@ -117,15 +128,18 @@ class PaketSigelFilter(
 class ZDBIdFilter(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
-) {
+        DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
+    ) {
     // TODO(CB): Add OR statements on COLUMN_METADATA_ZDB_ID_SERIES
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ? OR ${DatabaseConnector.COLUMN_METADATA_ZDB_ID_SERIES} = ?"
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         zdbIds.forEach {
             preparedStatement.setString(localCounter++, it)
@@ -144,14 +158,17 @@ class ZDBIdFilter(
 class SeriesFilter(
     private val seriesNames: List<String>,
 ) : MetadataSearchFilter(
-    DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES
-) {
+        DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES,
+    ) {
     override fun toWhereClause(): String =
         seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         seriesNames.forEach {
             preparedStatement.setString(localCounter++, it)
@@ -166,7 +183,7 @@ class SeriesFilter(
  * All right related filter options.
  */
 abstract class RightSearchFilter(
-    dbColumnName: String
+    dbColumnName: String,
 ) : SearchFilter(dbColumnName)
 
 class AccessStateFilter(
@@ -177,7 +194,10 @@ class AccessStateFilter(
             "$dbColumnName = ?"
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         accessStates.forEach {
             preparedStatement.setString(localCounter++, it.toString())
@@ -200,11 +220,16 @@ class TemporalValidityFilter(
             when (it) {
                 TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} > ?"
                 TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_RIGHT_END_DATE} < ?"
-                TemporalValidity.PRESENT -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
+                TemporalValidity.PRESENT ->
+                    "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ?" +
+                        " AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
             }
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         temporalValidity.forEach {
             preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
@@ -232,7 +257,10 @@ class RightValidOnFilter(
     override fun toWhereClause(): String =
         "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -249,10 +277,12 @@ class RightValidOnFilter(
 class StartDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_START_DATE) {
-    override fun toWhereClause(): String =
-        "$dbColumnName = ?"
+    override fun toWhereClause(): String = "$dbColumnName = ?"
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         preparedStatement.setDate(counter, Date.valueOf(date))
         return counter + 1
     }
@@ -267,10 +297,12 @@ class StartDateFilter(
 class EndDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_END_DATE) {
-    override fun toWhereClause(): String =
-        "$dbColumnName = ?"
+    override fun toWhereClause(): String = "$dbColumnName = ?"
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         preparedStatement.setDate(counter, Date.valueOf(date))
         return counter + 1
     }
@@ -285,12 +317,16 @@ class EndDateFilter(
 class RightIdFilter(
     private val rightIds: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
-        rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName = ?"
-        }
+    override fun toWhereClause(): String =
+        "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
+            rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+                "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName = ?"
+            }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int {
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
         var localCounter = counter
         rightIds.forEach {
             preparedStatement.setString(localCounter++, it)
@@ -298,8 +334,7 @@ class RightIdFilter(
         return localCounter
     }
 
-    override fun toString(): String =
-        rightIds.joinToString(separator = ",")
+    override fun toString(): String = rightIds.joinToString(separator = ",")
 }
 
 class FormalRuleFilter(
@@ -318,7 +353,11 @@ class FormalRuleFilter(
             }
         }
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int = counter
+
     override fun toString(): String = formalRules.joinToString(separator = ",")
 
     companion object {
@@ -329,7 +368,11 @@ class FormalRuleFilter(
 class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String = "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName IS NULL"
 
-    override fun setSQLParameter(counter: Int, preparedStatement: PreparedStatement): Int = counter
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int = counter
+
     override fun toString(): String = "true" // WAT?
 
     companion object {

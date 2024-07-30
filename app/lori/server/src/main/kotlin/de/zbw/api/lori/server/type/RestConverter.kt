@@ -73,9 +73,10 @@ fun Group.toRest() =
     GroupRest(
         name = this.name,
         description = this.description,
-        ipAddresses = this.entries.joinToString(separator = "\n") {
-            "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
-        },
+        ipAddresses =
+            this.entries.joinToString(separator = "\n") {
+                "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
+            },
         hasCSVHeader = false,
     )
 
@@ -88,10 +89,11 @@ fun GroupRest.toBusiness() =
     Group(
         name = this.name,
         description = this.description,
-        entries = RestConverter.parseToGroup(
-            this.hasCSVHeader,
-            this.ipAddresses
-        )
+        entries =
+            RestConverter.parseToGroup(
+                this.hasCSVHeader,
+                this.ipAddresses,
+            ),
     )
 
 fun MetadataRest.toBusiness() =
@@ -306,7 +308,10 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.OTHER -> PublicationTypeRest.other
     }
 
-fun DAItem.toBusiness(directParentCommunityId: Int, logger: Logger): ItemMetadata? {
+fun DAItem.toBusiness(
+    directParentCommunityId: Int,
+    logger: Logger,
+): ItemMetadata? {
     val metadata = this.metadata
     val handle = RestConverter.extractMetadata("dc.identifier.uri", metadata)
     val publicationType =
@@ -350,14 +355,17 @@ fun DAItem.toBusiness(directParentCommunityId: Int, logger: Logger): ItemMetadat
         ItemMetadata(
             metadataId = this.id.toString(),
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
-            band = null, // Not in DA yet
-            collectionHandle = this.parentCollection?.handle?.let {
-                RestConverter.parseHandle(it)
-            },
+            // Not in DA yet
+            band = null,
+            collectionHandle =
+                this.parentCollection?.handle?.let {
+                    RestConverter.parseHandle(it)
+                },
             collectionName = this.parentCollection?.name,
-            communityHandle = parentDACommunity?.handle?.let {
-                RestConverter.parseHandle(it)
-            },
+            communityHandle =
+                parentDACommunity?.handle?.let {
+                    RestConverter.parseHandle(it)
+                },
             communityName = parentDACommunity?.name,
             createdBy = null,
             createdOn = null,
@@ -374,12 +382,15 @@ fun DAItem.toBusiness(directParentCommunityId: Int, logger: Logger): ItemMetadat
             publicationType = publicationType,
             publicationDate = publicationDate?.let { RestConverter.parseToDate(it) },
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
-            subCommunityHandle = subDACommunity?.handle?.let {
-                RestConverter.parseHandle(it)
-            },
+            subCommunityHandle =
+                subDACommunity?.handle?.let {
+                    RestConverter.parseHandle(it)
+                },
             subCommunityName = subDACommunity?.name,
-            storageDate = RestConverter.extractMetadata("dc.date.accessioned", metadata)
-                ?.let { OffsetDateTime.parse(it) },
+            storageDate =
+                RestConverter
+                    .extractMetadata("dc.date.accessioned", metadata)
+                    ?.let { OffsetDateTime.parse(it) },
             title = title,
             titleJournal = RestConverter.extractMetadata("dc.journalname", metadata),
             titleSeries = RestConverter.extractMetadata("dc.seriesname", metadata),
@@ -446,23 +457,26 @@ fun BookmarkRest.toBusiness(): Bookmark =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchTerm = this.searchTerm,
-        publicationDateFilter = PublicationDateFilter(
-            fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
-            toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
-        ),
-        publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(
-            this.filterPublicationType?.joinToString(
-                separator = ","
-            )
-        ),
+        publicationDateFilter =
+            PublicationDateFilter(
+                fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
+                toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
+            ),
+        publicationTypeFilter =
+            QueryParameterParser.parsePublicationTypeFilter(
+                this.filterPublicationType?.joinToString(
+                    separator = ",",
+                ),
+            ),
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId?.joinToString(separator = ",")),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
-        temporalValidityFilter = QueryParameterParser.parseTemporalValidity(
-            this.filterTemporalValidity?.joinToString(
-                separator = ","
-            )
-        ),
+        temporalValidityFilter =
+            QueryParameterParser.parseTemporalValidity(
+                this.filterTemporalValidity?.joinToString(
+                    separator = ",",
+                ),
+            ),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
@@ -480,10 +494,11 @@ fun Bookmark.toRest(): BookmarkRest =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchTerm = this.searchTerm,
-        filterPublicationDate = FilterPublicationDateRest(
-            fromYear = this.publicationDateFilter?.fromYear,
-            toYear = this.publicationDateFilter?.toYear,
-        ),
+        filterPublicationDate =
+            FilterPublicationDateRest(
+                fromYear = this.publicationDateFilter?.fromYear,
+                toYear = this.publicationDateFilter?.toYear,
+            ),
         filterPublicationType = this.publicationTypeFilter?.publicationTypes?.map { it.toString() },
         filterAccessState = this.accessStateFilter?.accessStates?.map { it.toString() },
         filterTemporalValidity = this.temporalValidityFilter?.temporalValidity?.map { it.toString() },
@@ -512,48 +527,64 @@ fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
         rightId = this.rightId,
     )
 
-fun SearchQueryResult.toRest(
-    pageSize: Int,
-): ItemInformation {
+fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
     val totalPages = ceil(this.numberOfResults.toDouble() / pageSize.toDouble()).toInt()
     return ItemInformation(
         itemArray = this.results.map { it.toRest() },
         totalPages = totalPages,
-        accessStateWithCount = this.accessState.entries.sortedBy { it.key.priority }.map {
-            AccessStateWithCountRest(it.key.toRest(), it.value)
-        }.toList(),
+        accessStateWithCount =
+            this.accessState.entries
+                .sortedBy { it.key.priority }
+                .map {
+                    AccessStateWithCountRest(it.key.toRest(), it.value)
+                }.toList(),
         hasLicenceContract = this.hasLicenceContract,
         hasOpenContentLicence = this.hasOpenContentLicence,
         hasZbwUserAgreement = this.hasZbwUserAgreement,
         numberOfResults = this.numberOfResults,
-        paketSigelWithCount = this.paketSigels.entries
-            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList()
-            .sortedBy { it.paketSigel.lowercase() },
-        publicationTypeWithCount = this.publicationType.entries.sortedBy { it.key.priority }.map {
-            PublicationTypeWithCountRest(
-                count = it.value,
-                publicationType = it.key.toRest(),
-            )
-        }.toList(),
-        zdbIdWithCount = this.zdbIds.entries.map {
-            ZdbIdWithCountRest(
-                count = it.value,
-                zdbId = it.key,
-            )
-        }.toList().sortedBy { it.count }.reversed(),
-        templateNameWithCount = this.templateNamesToOcc.entries.map {
-            TemplateNameWithCountRest(
-                templateName = it.value.first,
-                count = it.value.second,
-                rightId = it.key,
-            )
-        }.sortedBy { it.templateName.lowercase() },
-        isPartOfSeriesCount = this.isPartOfSeries.entries.map {
-            IsPartOfSeriesCountRest(
-                count = it.value,
-                series = it.key,
-            )
-        }.toList().sortedBy { it.count }.reversed(),
+        paketSigelWithCount =
+            this.paketSigels.entries
+                .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }
+                .toList()
+                .sortedBy { it.paketSigel.lowercase() },
+        publicationTypeWithCount =
+            this.publicationType.entries
+                .sortedBy { it.key.priority }
+                .map {
+                    PublicationTypeWithCountRest(
+                        count = it.value,
+                        publicationType = it.key.toRest(),
+                    )
+                }.toList(),
+        zdbIdWithCount =
+            this.zdbIds.entries
+                .map {
+                    ZdbIdWithCountRest(
+                        count = it.value,
+                        zdbId = it.key,
+                    )
+                }.toList()
+                .sortedBy { it.count }
+                .reversed(),
+        templateNameWithCount =
+            this.templateNamesToOcc.entries
+                .map {
+                    TemplateNameWithCountRest(
+                        templateName = it.value.first,
+                        count = it.value.second,
+                        rightId = it.key,
+                    )
+                }.sortedBy { it.templateName.lowercase() },
+        isPartOfSeriesCount =
+            this.isPartOfSeries.entries
+                .map {
+                    IsPartOfSeriesCountRest(
+                        count = it.value,
+                        series = it.key,
+                    )
+                }.toList()
+                .sortedBy { it.count }
+                .reversed(),
     )
 }
 
@@ -580,18 +611,25 @@ fun RightError.toRest(): RightErrorRest =
  * REST to Business Objects and vice versa.
  */
 object RestConverter {
-    fun extractMetadata(key: String, metadata: List<DAMetadata>): String? =
-        metadata.filter { dam -> dam.key == key }.takeIf { it.isNotEmpty() }?.first()?.value
+    fun extractMetadata(
+        key: String,
+        metadata: List<DAMetadata>,
+    ): String? =
+        metadata
+            .filter { dam -> dam.key == key }
+            .takeIf { it.isNotEmpty() }
+            ?.first()
+            ?.value
 
-    fun parseToDate(s: String): LocalDate {
-        return if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
+    fun parseToDate(s: String): LocalDate =
+        if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
             LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
         } else if (s.matches("\\d{4}-\\d{2}".toRegex())) {
             LocalDate.parse("$s-01", DateTimeFormatter.ISO_LOCAL_DATE)
         } else if (s.matches("\\d{4}/\\d{2}".toRegex())) {
             LocalDate.parse(
                 "${s.substringBefore('/')}-${s.substringAfter('/')}-01",
-                DateTimeFormatter.ISO_LOCAL_DATE
+                DateTimeFormatter.ISO_LOCAL_DATE,
             )
         } else if (s.matches("\\d{4}".toRegex())) {
             LocalDate.parse("$s-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
@@ -599,7 +637,6 @@ object RestConverter {
             LOG.warn("Date format can't be recognized: $s")
             LocalDate.parse("1970-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
         }
-    }
 
     /**
      * Parse CSV formatted string.
@@ -608,17 +645,21 @@ object RestConverter {
      */
     fun parseToGroup(
         hasCSVHeader: Boolean,
-        ipAddressesCSV: String
+        ipAddressesCSV: String,
     ): List<GroupEntry> =
         try {
-            val csvFormat: CSVFormat = CSVFormat.Builder.create()
-                .setDelimiter(';')
-                .setQuote(Character.valueOf('"'))
-                .setRecordSeparator("\r\n")
-                .build()
-            CSVFormat.Builder.create(csvFormat).apply {
-                setIgnoreSurroundingSpaces(true)
-            }.build()
+            val csvFormat: CSVFormat =
+                CSVFormat.Builder
+                    .create()
+                    .setDelimiter(';')
+                    .setQuote(Character.valueOf('"'))
+                    .setRecordSeparator("\r\n")
+                    .build()
+            CSVFormat.Builder
+                .create(csvFormat)
+                .apply {
+                    setIgnoreSurroundingSpaces(true)
+                }.build()
                 .let { CSVParser.parse(ipAddressesCSV, it) }
                 .let {
                     if (hasCSVHeader) {
@@ -637,8 +678,7 @@ object RestConverter {
             throw IllegalArgumentException()
         }
 
-    fun parseHandle(given: String): String =
-        given.replace("^[\\D]*".toRegex(), "")
+    fun parseHandle(given: String): String = given.replace("^[\\D]*".toRegex(), "")
 
     private val LOG = LogManager.getLogger(RestConverter::class.java)
     const val CSV_DELIMITER = ";"

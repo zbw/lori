@@ -22,24 +22,28 @@ class DatabaseConnector(
     val connection: Connection,
     private val tracer: Tracer,
     internal val bookmarkDB: BookmarkDB = BookmarkDB(connection, tracer),
-    internal val groupDB: GroupDB = GroupDB(
-        connection,
-        tracer,
-        Gson().newBuilder().create(),
-    ),
-    internal val itemDB: ItemDB = ItemDB(
-        connection,
-        tracer,
-    ),
-    internal val metadataDB: MetadataDB = MetadataDB(
-        connection,
-        tracer,
-    ),
-    internal val rightDB: RightDB = RightDB(
-        connection,
-        tracer,
-        groupDB,
-    ),
+    internal val groupDB: GroupDB =
+        GroupDB(
+            connection,
+            tracer,
+            Gson().newBuilder().create(),
+        ),
+    internal val itemDB: ItemDB =
+        ItemDB(
+            connection,
+            tracer,
+        ),
+    internal val metadataDB: MetadataDB =
+        MetadataDB(
+            connection,
+            tracer,
+        ),
+    internal val rightDB: RightDB =
+        RightDB(
+            connection,
+            tracer,
+            groupDB,
+        ),
     internal val searchDB: SearchDB = SearchDB(connection, tracer),
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connection, tracer),
     internal val userDB: UserDB = UserDB(connection, tracer),
@@ -119,7 +123,10 @@ class DatabaseConnector(
                 ZoneId.of("UTC+00:00"),
             )
 
-        fun <T> runInTransaction(connection: Connection, block: () -> T): T =
+        fun <T> runInTransaction(
+            connection: Connection,
+            block: () -> T,
+        ): T =
             try {
                 block().also { connection.commit() }
             } catch (e: Exception) {

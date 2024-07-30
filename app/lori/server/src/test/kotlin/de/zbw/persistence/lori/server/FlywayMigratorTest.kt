@@ -16,24 +16,25 @@ import org.testng.annotations.Test
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class FlywayMigratorTest {
-
     @Test(expectedExceptions = [FlywayException::class])
     fun flywayMigrationException() {
-
         // given
-        val flyway: FlywayMigrator = spyk(
-            FlywayMigrator(
-                mockk(),
-                mockk() {
-                    every { migrate() } throws FlywayValidateException(
-                        ErrorDetails(
-                            ErrorCode.VALIDATE_ERROR, "error"
-                        ),
-                        "foo"
-                    )
-                }
+        val flyway: FlywayMigrator =
+            spyk(
+                FlywayMigrator(
+                    mockk(),
+                    mockk {
+                        every { migrate() } throws
+                            FlywayValidateException(
+                                ErrorDetails(
+                                    ErrorCode.VALIDATE_ERROR,
+                                    "error",
+                                ),
+                                "foo",
+                            )
+                    },
+                ),
             )
-        )
 
         // when
         flyway.migrate()

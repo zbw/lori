@@ -26,22 +26,25 @@ import java.time.Instant
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MultipleWordSearchTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk(),
+        )
 
-    private val multipleWords = TEST_Metadata.copy(
-        metadataId = "multiple word",
-        collectionName = "subject1 subject2 subject3"
-    )
+    private val multipleWords =
+        TEST_Metadata.copy(
+            metadataId = "multiple word",
+            collectionName = "subject1 subject2 subject3",
+        )
 
-    private fun getInitialMetadata() = listOf(
-        multipleWords,
-    )
+    private fun getInitialMetadata() =
+        listOf(
+            multipleWords,
+        )
 
     @BeforeClass
     fun fillDB() {
@@ -58,24 +61,25 @@ class MultipleWordSearchTest : DatabaseTest() {
     }
 
     @DataProvider(name = DATA_FOR_MULTIPLE_WORDS)
-    fun createDataForMultipleWords() = arrayOf(
+    fun createDataForMultipleWords() =
         arrayOf(
-            "col:'subject1 & subject2'",
-            10,
-            0,
-            multipleWords,
-            1,
-            "search for two words next to each other"
-        ),
-        arrayOf(
-            "col:'subject1 & subject3'",
-            10,
-            0,
-            multipleWords,
-            1,
-            "search for two words separated from each other"
-        ),
-    )
+            arrayOf(
+                "col:'subject1 & subject2'",
+                10,
+                0,
+                multipleWords,
+                1,
+                "search for two words next to each other",
+            ),
+            arrayOf(
+                "col:'subject1 & subject3'",
+                10,
+                0,
+                multipleWords,
+                1,
+                "search for two words separated from each other",
+            ),
+        )
 
     @Test(dataProvider = DATA_FOR_MULTIPLE_WORDS)
     fun findMultipleWords(

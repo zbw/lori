@@ -26,38 +26,41 @@ import java.time.LocalDate
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LogicalOperationQueriesTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LogicalOperationQueriesTest"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LogicalOperationQueriesTest"),
+            ),
+            mockk(),
+        )
 
-    private val initialData = listOf(
-        ItemDBTest.TEST_Metadata.copy(
-            collectionName = "subject1",
-            metadataId = "subject1",
-            publicationType = PublicationType.PROCEEDINGS,
-            publicationDate = LocalDate.of(2022, 1, 1)
-        ),
-        ItemDBTest.TEST_Metadata.copy(
-            collectionName = "subject2 subject3",
-            metadataId = "subject2&3",
-            publicationType = PublicationType.WORKING_PAPER,
-            publicationDate = LocalDate.of(2020, 1, 1)
-        ),
-        ItemDBTest.TEST_Metadata.copy(
-            collectionName = "subject4",
-            metadataId = "subject4",
-            publicationType = PublicationType.WORKING_PAPER,
-            publicationDate = LocalDate.of(2020, 1, 1)
-        ),
-    )
+    private val initialData =
+        listOf(
+            ItemDBTest.TEST_Metadata.copy(
+                collectionName = "subject1",
+                metadataId = "subject1",
+                publicationType = PublicationType.PROCEEDINGS,
+                publicationDate = LocalDate.of(2022, 1, 1),
+            ),
+            ItemDBTest.TEST_Metadata.copy(
+                collectionName = "subject2 subject3",
+                metadataId = "subject2&3",
+                publicationType = PublicationType.WORKING_PAPER,
+                publicationDate = LocalDate.of(2020, 1, 1),
+            ),
+            ItemDBTest.TEST_Metadata.copy(
+                collectionName = "subject4",
+                metadataId = "subject4",
+                publicationType = PublicationType.WORKING_PAPER,
+                publicationDate = LocalDate.of(2020, 1, 1),
+            ),
+        )
 
-    private fun getInitialMetadata() = listOf(
-        initialData
-    ).flatten()
+    private fun getInitialMetadata() =
+        listOf(
+            initialData,
+        ).flatten()
 
     @BeforeClass
     fun fillDB() {
@@ -74,26 +77,27 @@ class LogicalOperationQueriesTest : DatabaseTest() {
     }
 
     @DataProvider(name = DATA_FOR_LOGIC_OP)
-    fun createDataForLogicalOperation() = arrayOf(
+    fun createDataForLogicalOperation() =
         arrayOf(
-            "col:'subject1 | subject4'",
-            listOf(initialData[0], initialData[2]).toSet(),
-            2,
-            "Test simple OR operator",
-        ),
-        arrayOf(
-            "col:'((subject2 | subject4) & subject3)'",
-            listOf(initialData[1]).toSet(),
-            1,
-            "Group with parentheses. Combine AND and OR operator",
-        ),
-        arrayOf(
-            "col:'((subject2 | subject4) & !subject3)'",
-            listOf(initialData[2]).toSet(),
-            1,
-            "Test NOT operator",
-        ),
-    )
+            arrayOf(
+                "col:'subject1 | subject4'",
+                listOf(initialData[0], initialData[2]).toSet(),
+                2,
+                "Test simple OR operator",
+            ),
+            arrayOf(
+                "col:'((subject2 | subject4) & subject3)'",
+                listOf(initialData[1]).toSet(),
+                1,
+                "Group with parentheses. Combine AND and OR operator",
+            ),
+            arrayOf(
+                "col:'((subject2 | subject4) & !subject3)'",
+                listOf(initialData[2]).toSet(),
+                1,
+                "Test NOT operator",
+            ),
+        )
 
     @Test(dataProvider = DATA_FOR_LOGIC_OP)
     fun testLogicalOperationsInQueries(
@@ -103,11 +107,12 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val (numberOfResults, searchResult) = backend.searchQuery(
-            searchTerm,
-            10,
-            0,
-        )
+        val (numberOfResults, searchResult) =
+            backend.searchQuery(
+                searchTerm,
+                10,
+                0,
+            )
 
         // then
         assertThat(

@@ -353,6 +353,7 @@ export default defineComponent({
         });
     };
 
+    // TODO(CB): Remove this method?
     const executeSearchByMetadataId = (searchTerm: string) => {
       searchStore.isLastSearchForTemplates = false;
       api

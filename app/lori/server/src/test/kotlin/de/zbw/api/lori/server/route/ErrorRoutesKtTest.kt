@@ -31,15 +31,16 @@ class ErrorRoutesKtTest {
         val limit = 50
         val offset = 0
         val expected = listOf(TEST_ERROR.toRest())
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getRightErrorList(limit, offset) } returns listOf(TEST_ERROR)
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getRightErrorList(limit, offset) } returns listOf(TEST_ERROR)
+            }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/errors/rights/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -50,25 +51,27 @@ class ErrorRoutesKtTest {
     }
 
     companion object {
-        val NOW: OffsetDateTime = OffsetDateTime.of(
-            2022,
-            3,
-            1,
-            1,
-            1,
-            0,
-            0,
-            ZoneOffset.UTC,
-        )!!
-        val TEST_ERROR = RightError(
-            errorId = 1,
-            message = "Timing conflict",
-            rightIdSource = "sourceRightId",
-            conflictingRightId = "conflictingRightId",
-            handleId = "somehandle",
-            createdOn = NOW,
-            metadataId = "metadataId",
-            conflictType = ConflictType.DATE_OVERLAP,
-        )
+        val NOW: OffsetDateTime =
+            OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
+        val TEST_ERROR =
+            RightError(
+                errorId = 1,
+                message = "Timing conflict",
+                rightIdSource = "sourceRightId",
+                conflictingRightId = "conflictingRightId",
+                handleId = "somehandle",
+                createdOn = NOW,
+                metadataId = "metadataId",
+                conflictType = ConflictType.DATE_OVERLAP,
+            )
     }
 }

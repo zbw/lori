@@ -7,6 +7,11 @@ package de.zbw.api.lori.server.type
  * @author Christian Bay (c.bay@zbw.eu)
  */
 sealed class Either<out A, out B> {
-    class Left<A>(val value: A) : Either<A, Nothing>()
-    class Right<B>(val value: B) : Either<Nothing, B>()
+    class Left<A>(
+        val value: A,
+    ) : Either<A, Nothing>()
+
+    class Right<B>(
+        val value: B,
+    ) : Either<Nothing, B>()
 }

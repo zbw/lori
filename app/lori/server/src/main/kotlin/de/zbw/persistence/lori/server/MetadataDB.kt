@@ -36,9 +36,10 @@ class MetadataDB(
     private val tracer: Tracer,
 ) {
     fun deleteMetadata(metadataIds: List<String>): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
-            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
+                this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+            }
         val span = tracer.spanBuilder("deleteMetadata").startSpan()
         return try {
             span.makeCurrent()
@@ -49,16 +50,18 @@ class MetadataDB(
     }
 
     fun metadataContainsId(metadataId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
-            this.setString(1, metadataId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
+                this.setString(1, metadataId)
+            }
         val span = tracer.spanBuilder("metadataContainsId").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         rs.next()
         return rs.getBoolean(1)
     }
@@ -67,51 +70,62 @@ class MetadataDB(
         limit: Int,
         offset: Int,
     ): List<ItemMetadata> {
-        val prepStmt: PreparedStatement = connection.prepareStatement(
-            STATEMENT_SELECT_ALL_METADATA_FROM +
-                " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;"
-        ).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
-        }
+        val prepStmt: PreparedStatement =
+            connection
+                .prepareStatement(
+                    STATEMENT_SELECT_ALL_METADATA_FROM +
+                        " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
+                ).apply {
+                    this.setInt(1, limit)
+                    this.setInt(2, offset)
+                }
         val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
         return runMetadataStatement(prepStmt, span)
     }
 
-    private fun runMetadataStatement(prepStmt: PreparedStatement, span: Span): List<ItemMetadata> {
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+    private fun runMetadataStatement(
+        prepStmt: PreparedStatement,
+        span: Span,
+    ): List<ItemMetadata> {
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
 
         return generateSequence {
             if (rs.next()) {
                 extractMetadataRS(rs)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
     fun itemContainsMetadata(metadataId: String): Boolean {
-        val prepStmt = connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
-            this.setString(1, metadataId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
+                this.setString(1, metadataId)
+            }
         val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
         rs.next()
         return rs.getBoolean(1)
     }
 
     fun getMetadata(metadataIds: List<String>): List<ItemMetadata> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_METADATA).apply {
-            this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_METADATA).apply {
+                this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+            }
 
         val span = tracer.spanBuilder("getMetadata").startSpan()
         return runMetadataStatement(prepStmt, span)
@@ -133,10 +147,11 @@ class MetadataDB(
     }
 
     fun insertMetadata(itemMetadata: ItemMetadata): String {
-        val prepStmt = insertUpsertMetadataSetParameters(
-            itemMetadata,
-            connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
-        )
+        val prepStmt =
+            insertUpsertMetadataSetParameters(
+                itemMetadata,
+                connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
+            )
 
         val span = tracer.spanBuilder("insertMetadata").startSpan()
         try {
@@ -146,7 +161,9 @@ class MetadataDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 rs.getString(1)
-            } else throw IllegalStateException("No row has been inserted.")
+            } else {
+                throw IllegalStateException("No row has been inserted.")
+            }
         } finally {
             span.end()
         }
@@ -283,107 +300,112 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle," +
                 "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID_JOURNAL,$TS_COLLECTION_HANDLE,$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE," +
-                "$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL,$TS_SUBCOMMUNITY_NAME,$TS_IS_PART_OF_SERIES,$TS_ZDB_ID_SERIES"
+                "$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID_JOURNAL,$TS_COLLECTION_HANDLE," +
+                "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL," +
+                "$TS_SUBCOMMUNITY_NAME,$TS_IS_PART_OF_SERIES,$TS_ZDB_ID_SERIES"
 
-        const val STATEMENT_GET_METADATA = STATEMENT_SELECT_ALL_METADATA_FROM +
-            " WHERE metadata_id = ANY(?)"
+        const val STATEMENT_GET_METADATA =
+            STATEMENT_SELECT_ALL_METADATA_FROM +
+                " WHERE metadata_id = ANY(?)"
 
-        const val STATEMENT_UPSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-            "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-            "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by," +
-            "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-            "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES) " +
-            "VALUES(" +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?) " +
-            "ON CONFLICT (metadata_id) " +
-            "DO UPDATE SET " +
-            "handle = EXCLUDED.handle," +
-            "ppn = EXCLUDED.ppn," +
-            "title = EXCLUDED.title," +
-            "title_journal = EXCLUDED.title_journal," +
-            "title_series = EXCLUDED.title_series," +
-            "$COLUMN_METADATA_PUBLICATION_DATE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_DATE," +
-            "band = EXCLUDED.band," +
-            "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
-            "doi = EXCLUDED.doi," +
-            "isbn = EXCLUDED.isbn," +
-            "rights_k10plus = EXCLUDED.rights_k10plus," +
-            "$COLUMN_METADATA_PAKET_SIGEL = EXCLUDED.$COLUMN_METADATA_PAKET_SIGEL," +
-            "$COLUMN_METADATA_ZDB_ID_JOURNAL = EXCLUDED.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-            "issn = EXCLUDED.issn," +
-            "last_updated_on = EXCLUDED.last_updated_on," +
-            "last_updated_by = EXCLUDED.last_updated_by," +
-            "author = EXCLUDED.author," +
-            "collection_name = EXCLUDED.collection_name," +
-            "community_name = EXCLUDED.community_name," +
-            "storage_date = EXCLUDED.storage_date," +
-            "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-            "community_handle = EXCLUDED.community_handle," +
-            "collection_handle = EXCLUDED.collection_handle," +
-            "licence_url = EXCLUDED.licence_url," +
-            "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-            "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-            "$COLUMN_METADATA_ZDB_ID_SERIES = EXCLUDED.$COLUMN_METADATA_ZDB_ID_SERIES"
+        const val STATEMENT_UPSERT_METADATA =
+            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+                "(metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "created_on,last_updated_on,created_by,last_updated_by," +
+                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES) " +
+                "VALUES(" +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?) " +
+                "ON CONFLICT (metadata_id) " +
+                "DO UPDATE SET " +
+                "handle = EXCLUDED.handle," +
+                "ppn = EXCLUDED.ppn," +
+                "title = EXCLUDED.title," +
+                "title_journal = EXCLUDED.title_journal," +
+                "title_series = EXCLUDED.title_series," +
+                "$COLUMN_METADATA_PUBLICATION_DATE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_DATE," +
+                "band = EXCLUDED.band," +
+                "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "doi = EXCLUDED.doi," +
+                "isbn = EXCLUDED.isbn," +
+                "rights_k10plus = EXCLUDED.rights_k10plus," +
+                "$COLUMN_METADATA_PAKET_SIGEL = EXCLUDED.$COLUMN_METADATA_PAKET_SIGEL," +
+                "$COLUMN_METADATA_ZDB_ID_JOURNAL = EXCLUDED.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                "issn = EXCLUDED.issn," +
+                "last_updated_on = EXCLUDED.last_updated_on," +
+                "last_updated_by = EXCLUDED.last_updated_by," +
+                "author = EXCLUDED.author," +
+                "collection_name = EXCLUDED.collection_name," +
+                "community_name = EXCLUDED.community_name," +
+                "storage_date = EXCLUDED.storage_date," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "community_handle = EXCLUDED.community_handle," +
+                "collection_handle = EXCLUDED.collection_handle," +
+                "licence_url = EXCLUDED.licence_url," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
+                "$COLUMN_METADATA_ZDB_ID_SERIES = EXCLUDED.$COLUMN_METADATA_ZDB_ID_SERIES"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE metadata_id=?)"
 
-        const val STATEMENT_INSERT_METADATA = "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-            "(metadata_id,handle,ppn,title,title_journal," +
-            "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-            "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
-            "created_on,last_updated_on,created_by,last_updated_by," +
-            "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-            "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-            "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES) " +
-            "VALUES(" +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?," +
-            "?,?,?,?,?)"
+        const val STATEMENT_INSERT_METADATA =
+            "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
+                "(metadata_id,handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "created_on,last_updated_on,created_by,last_updated_by," +
+                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES) " +
+                "VALUES(" +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?," +
+                "?,?,?,?,?)"
 
-        fun extractMetadataRS(rs: ResultSet) = ItemMetadata(
-            metadataId = rs.getString(1),
-            handle = rs.getString(2),
-            ppn = rs.getString(3),
-            title = rs.getString(4),
-            titleJournal = rs.getString(5),
-            titleSeries = rs.getString(6),
-            publicationDate = rs.getDate(7)?.toLocalDate(),
-            band = rs.getString(8),
-            publicationType = PublicationType.valueOf(rs.getString(9)),
-            doi = rs.getString(10),
-            isbn = rs.getString(11),
-            rightsK10plus = rs.getString(12),
-            paketSigel = rs.getString(13),
-            zdbIdJournal = rs.getString(14),
-            issn = rs.getString(15),
-            createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
-            lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
-            createdBy = rs.getString(18),
-            lastUpdatedBy = rs.getString(19),
-            author = rs.getString(20),
-            collectionName = rs.getString(21),
-            communityName = rs.getString(22),
-            storageDate = rs.getTimestamp(23)?.toOffsetDateTime(),
-            subCommunityHandle = rs.getString(24),
-            communityHandle = rs.getString(25),
-            collectionHandle = rs.getString(26),
-            licenceUrl = rs.getString(27),
-            subCommunityName = rs.getString(28),
-            isPartOfSeries = rs.getString(29),
-            zdbIdSeries = rs.getString(30),
-        )
+        fun extractMetadataRS(rs: ResultSet) =
+            ItemMetadata(
+                metadataId = rs.getString(1),
+                handle = rs.getString(2),
+                ppn = rs.getString(3),
+                title = rs.getString(4),
+                titleJournal = rs.getString(5),
+                titleSeries = rs.getString(6),
+                publicationDate = rs.getDate(7)?.toLocalDate(),
+                band = rs.getString(8),
+                publicationType = PublicationType.valueOf(rs.getString(9)),
+                doi = rs.getString(10),
+                isbn = rs.getString(11),
+                rightsK10plus = rs.getString(12),
+                paketSigel = rs.getString(13),
+                zdbIdJournal = rs.getString(14),
+                issn = rs.getString(15),
+                createdOn = rs.getTimestamp(16)?.toOffsetDateTime(),
+                lastUpdatedOn = rs.getTimestamp(17)?.toOffsetDateTime(),
+                createdBy = rs.getString(18),
+                lastUpdatedBy = rs.getString(19),
+                author = rs.getString(20),
+                collectionName = rs.getString(21),
+                communityName = rs.getString(22),
+                storageDate = rs.getTimestamp(23)?.toOffsetDateTime(),
+                subCommunityHandle = rs.getString(24),
+                communityHandle = rs.getString(25),
+                collectionHandle = rs.getString(26),
+                licenceUrl = rs.getString(27),
+                subCommunityName = rs.getString(28),
+                isPartOfSeries = rs.getString(29),
+                zdbIdSeries = rs.getString(30),
+            )
     }
 }

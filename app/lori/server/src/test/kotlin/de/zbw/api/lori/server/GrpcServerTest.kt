@@ -12,16 +12,16 @@ import org.testng.annotations.Test
  * Created on 07-12-2021.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class GrpcServerTest() {
-
+class GrpcServerTest {
     @Test
     fun testReadyness() {
         // given
-        val grpcServer = GrpcServer(
-            port = 9000,
-            services = listOf<BindableService>(),
-            server = mockk<Server>(relaxed = true),
-        )
+        val grpcServer =
+            GrpcServer(
+                port = 9000,
+                services = listOf<BindableService>(),
+                server = mockk<Server>(relaxed = true),
+            )
 
         // when
         grpcServer.start()

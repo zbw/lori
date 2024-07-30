@@ -45,11 +45,13 @@ import java.time.Instant
  * Created on 03-17-2023.
  * @author Christian Bay (c.bay@zbw.eu)
  */
+@Suppress("ktlint:standard:max-line-length")
 class SearchDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
 
     @BeforeMethod
     fun beforeTest() {
@@ -69,12 +71,13 @@ class SearchDBTest : DatabaseTest() {
         dbConnector.metadataDB.insertMetadata(testZDB)
 
         // when
-        val searchPairsZDB = SEVariable(
-            SearchPair(
-                key = SearchKey.ZDB_ID,
-                values = testZDB.zdbIdJournal!!
+        val searchPairsZDB =
+            SEVariable(
+                SearchPair(
+                    key = SearchKey.ZDB_ID,
+                    values = testZDB.zdbIdJournal!!,
+                ),
             )
-        )
         val resultZDB =
             dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsZDB,
@@ -84,25 +87,27 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
             )
-        val numberResultZDB = dbConnector.searchDB.countSearchMetadata(
-            searchExpression = searchPairsZDB,
-            metadataSearchFilter = emptyList(),
-            noRightInformationFilter = null,
-        )
+        val numberResultZDB =
+            dbConnector.searchDB.countSearchMetadata(
+                searchExpression = searchPairsZDB,
+                metadataSearchFilter = emptyList(),
+                noRightInformationFilter = null,
+            )
         // then
         assertThat(resultZDB[0], `is`(testZDB))
         assertThat(numberResultZDB, `is`(1))
         // when
-        val searchPairsAll = SEAnd(
-            SEVariable(SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!)),
+        val searchPairsAll =
             SEAnd(
-                SEVariable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
+                SEVariable(SearchPair(SearchKey.COLLECTION, testZDB.collectionName!!)),
                 SEAnd(
-                    SEVariable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
-                    SEVariable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbIdJournal!!))
-                )
+                    SEVariable(SearchPair(SearchKey.COMMUNITY, testZDB.communityName!!)),
+                    SEAnd(
+                        SEVariable(SearchPair(SearchKey.PAKET_SIGEL, testZDB.paketSigel!!)),
+                        SEVariable(SearchPair(SearchKey.ZDB_ID, testZDB.zdbIdJournal!!)),
+                    ),
+                ),
             )
-        )
         val resultAll =
             dbConnector.searchDB.searchMetadataItems(
                 searchExpression = searchPairsAll,
@@ -112,11 +117,12 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
             )
-        val numberResultAll = dbConnector.searchDB.countSearchMetadata(
-            searchExpression = searchPairsAll,
-            metadataSearchFilter = emptyList(),
-            noRightInformationFilter = null,
-        )
+        val numberResultAll =
+            dbConnector.searchDB.countSearchMetadata(
+                searchExpression = searchPairsAll,
+                metadataSearchFilter = emptyList(),
+                noRightInformationFilter = null,
+            )
         // then
         assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
         assertThat(numberResultAll, `is`(1))
@@ -134,11 +140,12 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = null,
             )
-        val numberResultZDB2 = dbConnector.searchDB.countSearchMetadata(
-            searchExpression = searchPairsAll,
-            metadataSearchFilter = emptyList(),
-            noRightInformationFilter = null,
-        )
+        val numberResultZDB2 =
+            dbConnector.searchDB.countSearchMetadata(
+                searchExpression = searchPairsAll,
+                metadataSearchFilter = emptyList(),
+                noRightInformationFilter = null,
+            )
         // then
         assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
         assertThat(numberResultZDB2, `is`(2))
@@ -154,7 +161,8 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter = null,
             )
         assertThat(
-            resultZDB2Offset.size, `is`(1)
+            resultZDB2Offset.size,
+            `is`(1),
         )
     }
 
@@ -166,7 +174,8 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_collection, to_tsquery(?)),1))/1 as score FROM item_metadata as sub" +
+                    " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
             arrayOf(
@@ -177,7 +186,11 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1)" +
+                    " + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score" +
+                    " FROM item_metadata as sub" +
+                    " WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null)" +
+                    " AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple searchkeys",
             ),
             arrayOf(
@@ -187,7 +200,10 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1))/1 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1))/1 as score" +
+                    " FROM item_metadata as sub" +
+                    " WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null)" +
+                    " ORDER BY score DESC LIMIT ? OFFSET ?",
                 "query for multiple words in one searchkey",
             ),
             arrayOf(
@@ -198,8 +214,13 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM item_metadata as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "query for multiple words in multiple searchkeys"
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1)" +
+                    " + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score" +
+                    " FROM item_metadata as sub" +
+                    " WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null)" +
+                    " AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null)" +
+                    " ORDER BY score DESC LIMIT ? OFFSET ?",
+                "query for multiple words in multiple searchkeys",
             ),
             arrayOf(
                 SEAnd(
@@ -211,8 +232,23 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ?) as sub WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "query for publication date filter"
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1)" +
+                    " + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/2 as score" +
+                    " FROM " +
+                    "(SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date," +
+                    "band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on," +
+                    "item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author," +
+                    "collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
+                    "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                    "ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
+                    " FROM item_metadata" +
+                    " WHERE publication_date >= ? AND publication_date <= ?)" +
+                    " as sub" +
+                    " WHERE (ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null)" +
+                    " AND (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null)" +
+                    " ORDER BY score DESC LIMIT ? OFFSET ?",
+                "query for publication date filter",
             ),
             arrayOf(
                 SEOr(
@@ -228,14 +264,33 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 null,
                 emptyList<MetadataSearchFilter>(),
-                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community,ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES FROM item_metadata WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ? OR publication_type = ?)) as sub WHERE ((ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)) OR (ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) ORDER BY score DESC LIMIT ? OFFSET ?",
-                "query for publication date and publication type filter"
+                "$SELECT_ALL,(coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1)" +
+                    " + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1)" +
+                    " + coalesce(ts_rank_cd(ts_sigel, to_tsquery(?)),1))/3 as score" +
+                    " FROM (SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date," +
+                    "band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
+                    "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
+                    "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url," +
+                    "sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,ts_community," +
+                    "ts_collection,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
+                    " FROM item_metadata" +
+                    " WHERE publication_date >= ? AND publication_date <= ?" +
+                    " AND (publication_type = ? OR publication_type = ?)" +
+                    ") as sub" +
+                    " WHERE ((ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null)" +
+                    " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)) OR (ts_sigel @@ to_tsquery(?)" +
+                    " AND ts_sigel is not null)" +
+                    " ORDER BY score DESC LIMIT ? OFFSET ?",
+                "query for publication date and publication type filter",
             ),
         )
 
@@ -257,7 +312,7 @@ class SearchDBTest : DatabaseTest() {
                 null,
                 hasMetadataIdsToIgnore = false,
             ),
-            `is`(expectedWhereClause)
+            `is`(expectedWhereClause),
         )
     }
 
@@ -279,9 +334,10 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
@@ -295,9 +351,10 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
@@ -311,9 +368,10 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
@@ -336,9 +394,10 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 NoRightInformationFilter(),
@@ -352,9 +411,10 @@ class SearchDBTest : DatabaseTest() {
                     PublicationDateFilter(fromYear = 2016, toYear = 2022),
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.ARTICLE, PublicationType.PROCEEDINGS
-                        )
-                    )
+                            PublicationType.ARTICLE,
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 NoRightInformationFilter(),
@@ -383,7 +443,7 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter,
                 hasMetadataItemToIgnore,
             ),
-            `is`(expectedWhereClause)
+            `is`(expectedWhereClause),
         )
     }
 
@@ -459,8 +519,8 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 emptyList<RightSearchFilter>(),
                 null,
@@ -490,8 +550,8 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
                 null,
@@ -528,8 +588,8 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
@@ -555,8 +615,8 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 emptyList<RightSearchFilter>(),
                 NoRightInformationFilter(),
@@ -574,8 +634,8 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
-                    )
+                        ),
+                    ),
                 ),
                 listOf(AccessStateFilter(listOf(AccessState.RESTRICTED, AccessState.CLOSED))),
                 null,
@@ -602,7 +662,7 @@ class SearchDBTest : DatabaseTest() {
                 noRightInformationFilter,
                 hasMetadataIdsToIgnore = false,
             ),
-            `is`(expectedWhereClause)
+            `is`(expectedWhereClause),
         )
     }
 
@@ -626,7 +686,7 @@ class SearchDBTest : DatabaseTest() {
                         listOf(
                             PublicationType.ARTICLE,
                             PublicationType.PROCEEDINGS,
-                        )
+                        ),
                     ),
                 ),
                 STATEMENT_GET_METADATA_RANGE + " WHERE publication_date >= ? AND publication_date <= ? AND" +
@@ -650,14 +710,15 @@ class SearchDBTest : DatabaseTest() {
                     "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id," +
                     "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " WHERE publication_date >= ? AND publication_date <= ? AND (publication_type = ?)" +
                     " ORDER BY item_metadata.metadata_id ASC) as countsearch",
-                "both filter"
+                "both filter",
             ),
             arrayOf(
                 emptyList<MetadataSearchFilter>(),
@@ -671,13 +732,14 @@ class SearchDBTest : DatabaseTest() {
                     "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id," +
                     "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
                     " JOIN item_right ON item.right_id = item_right.right_id AND (access_state = ? OR access_state = ?)" +
                     " ORDER BY item_metadata.metadata_id ASC) as countsearch",
-                "only right filter"
+                "only right filter",
             ),
         )
 
@@ -710,11 +772,14 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
                     "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
+                    "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                    "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
                     "item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id," +
                     "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
@@ -728,11 +793,14 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal," +
                     "title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                     "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by," +
-                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
+                    "item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
+                    "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                    "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state," +
                     "item_right.licence_contract," +
                     "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
                     "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
-                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id," +
+                    "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                    "ts_hdl,ts_metadata_id," +
                     "ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES" +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
@@ -759,7 +827,7 @@ class SearchDBTest : DatabaseTest() {
                 null,
                 hasMetadataIdsToIgnore = false,
             ),
-            `is`(expectedSQLQuery)
+            `is`(expectedSQLQuery),
         )
     }
 
@@ -806,7 +874,7 @@ class SearchDBTest : DatabaseTest() {
                 null,
                 true,
             ),
-            `is`(expectedSQLQuery)
+            `is`(expectedSQLQuery),
         )
     }
 
@@ -817,7 +885,7 @@ class SearchDBTest : DatabaseTest() {
                 setOf(
                     PublicationType.ARTICLE.toString(),
                     PublicationType.PROCEEDINGS.toString(),
-                    PublicationType.PERIODICAL_PART.toString()
+                    PublicationType.PERIODICAL_PART.toString(),
                 ),
                 COLUMN_METADATA_PUBLICATION_TYPE,
                 SEVariable(SearchPair(SearchKey.COLLECTION, "foo")),
@@ -860,7 +928,7 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilters,
                 noRightInformationFilter,
             ),
-            `is`(expectedQuery)
+            `is`(expectedQuery),
         )
     }
 
@@ -901,7 +969,7 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilters,
                 noRightInformationFilter,
             ),
-            `is`(expectedQuery)
+            `is`(expectedQuery),
         )
     }
 
@@ -925,11 +993,41 @@ class SearchDBTest : DatabaseTest() {
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle " +
+                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "community_handle,collection_handle " +
                 "FROM $TABLE_NAME_ITEM_METADATA"
-        const val SELECT_SUB = "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id_journal, sub.access_state, sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
-        const val SELECT_ALL_PRE_TABLE = "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_name,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
-        const val SELECT_ALL = "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,created_on,last_updated_on,created_by,last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES"
-        const val SELECT_DISTINCT_ON = "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url,item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement,ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
+        const val SELECT_SUB =
+            "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id_journal, sub.access_state," +
+                " sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
+                " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name," +
+                " sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
+        const val SELECT_ALL_PRE_TABLE =
+            "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series," +
+                "publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
+                "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
+                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
+                "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "item_right.access_state,item_right.licence_contract,item_right.non_standard_open_content_licence," +
+                "item_right.non_standard_open_content_licence_url,item_right.open_content_licence," +
+                "item_right.restricted_open_content_licence,item_right.zbw_user_agreement,item_right.template_name," +
+                "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
+        const val SELECT_ALL =
+            "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band," +
+                "publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,created_on,last_updated_on," +
+                "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES"
+        const val SELECT_DISTINCT_ON =
+            "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle," +
+                "ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
+                "paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on," +
+                "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
+                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,item_right.access_state,item_right.licence_contract," +
+                "item_right.non_standard_open_content_licence,item_right.non_standard_open_content_licence_url," +
+                "item_right.open_content_licence,item_right.restricted_open_content_licence,item_right.zbw_user_agreement," +
+                "ts_collection,ts_community,ts_sigel,ts_title,ts_zdb_id_journal,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name,ts_is_part_of_series,$TS_ZDB_ID_SERIES"
     }
 }

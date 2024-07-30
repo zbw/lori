@@ -36,19 +36,21 @@ fun Routing.bookmarkTemplateRoutes(
     route("/api/v1/bookmarktemplates") {
         authenticate("auth-login") {
             post {
-                val span: Span = tracer
-                    .spanBuilder("lori.LoriService.POST/api/v1/bookmarktemplates")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span: Span =
+                    tracer
+                        .spanBuilder("lori.LoriService.POST/api/v1/bookmarktemplates")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val bookmarkTemplate: BookmarkTemplateRest = call.receive(BookmarkTemplateRest::class)
                         span.setAttribute("Bookmark-Id", bookmarkTemplate.bookmarkId.toString())
                         span.setAttribute("Right-Id", bookmarkTemplate.rightId)
-                        val created = backend.insertBookmarkTemplatePair(
-                            bookmarkId = bookmarkTemplate.bookmarkId,
-                            rightId = bookmarkTemplate.rightId,
-                        )
+                        val created =
+                            backend.insertBookmarkTemplatePair(
+                                bookmarkId = bookmarkTemplate.bookmarkId,
+                                rightId = bookmarkTemplate.rightId,
+                            )
                         if (created == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.Created)
@@ -68,7 +70,7 @@ fun Routing.bookmarkTemplateRoutes(
                                 HttpStatusCode.Conflict,
                                 ApiError.conflictError(
                                     detail = "Ein Bookmark mit diesem Namen existiert bereits.",
-                                )
+                                ),
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
@@ -76,7 +78,7 @@ fun Routing.bookmarkTemplateRoutes(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
                                     detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                                )
+                                ),
                             )
                         }
                     } catch (e: Exception) {
@@ -97,10 +99,11 @@ fun Routing.bookmarkTemplateRoutes(
              * Delete Bookmark Template Pair.
              */
             delete {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.DELETE/api/v1/bookmarktemplates")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.DELETE/api/v1/bookmarktemplates")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val bookmarkId: Int? = call.request.queryParameters["bookmarkid"]?.toInt()
@@ -109,7 +112,7 @@ fun Routing.bookmarkTemplateRoutes(
                         if (bookmarkId == null || rightId == null) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the query parameters."
+                                "BadRequest: No valid id has been provided in the query parameters.",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
@@ -118,10 +121,11 @@ fun Routing.bookmarkTemplateRoutes(
                                 ),
                             )
                         } else {
-                            val entriesDeleted = backend.deleteBookmarkTemplatePair(
-                                bookmarkId = bookmarkId,
-                                rightId = rightId,
-                            )
+                            val entriesDeleted =
+                                backend.deleteBookmarkTemplatePair(
+                                    bookmarkId = bookmarkId,
+                                    rightId = rightId,
+                                )
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)
                                 call.respond(HttpStatusCode.OK)
@@ -151,10 +155,11 @@ fun Routing.bookmarkTemplateRoutes(
 
             route("/batch") {
                 delete {
-                    val span: Span = tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/bookmarktemplates/batch")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span: Span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/bookmarktemplates/batch")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val bookmarkTemplatePairs: BookmarkTemplateBatchRest =
@@ -163,7 +168,7 @@ fun Routing.bookmarkTemplateRoutes(
                             val deletedItems: Int =
                                 backend.deleteBookmarkTemplatePairs(
                                     bookmarkTemplatePairs.batch?.map { it.toBusiness() }
-                                        ?: emptyList()
+                                        ?: emptyList(),
                                 )
                             call.respond(HttpStatusCode.OK, deletedItems)
                         } catch (e: Exception) {
@@ -179,10 +184,11 @@ fun Routing.bookmarkTemplateRoutes(
                 }
 
                 post {
-                    val span: Span = tracer
-                        .spanBuilder("lori.LoriService.POST/api/v1/bookmarktemplates/batch")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span: Span =
+                        tracer
+                            .spanBuilder("lori.LoriService.POST/api/v1/bookmarktemplates/batch")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val bookmarkTemplatePairs: BookmarkTemplateBatchRest =
@@ -191,7 +197,7 @@ fun Routing.bookmarkTemplateRoutes(
                             val createdEntries: List<BookmarkTemplate> =
                                 backend.upsertBookmarkTemplatePairs(
                                     bookmarkTemplatePairs.batch?.map { it.toBusiness() }
-                                        ?: emptyList()
+                                        ?: emptyList(),
                                 )
                             call.respond(HttpStatusCode.Created, createdEntries.map { it.toRest() })
                         } catch (e: Exception) {

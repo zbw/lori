@@ -27,31 +27,37 @@ import java.time.LocalDate
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class TemplateRightFilterTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk(),
+        )
 
-    private val itemRightWithTemplate = TEST_Metadata.copy(
-        metadataId = "withTemplate",
-        collectionName = "subject3",
-    )
-    private val itemRightWithoutTemplate = TEST_Metadata.copy(
-        metadataId = "withoutTemplate",
-        collectionName = "subject3",
-    )
+    private val itemRightWithTemplate =
+        TEST_Metadata.copy(
+            metadataId = "withTemplate",
+            collectionName = "subject3",
+        )
+    private val itemRightWithoutTemplate =
+        TEST_Metadata.copy(
+            metadataId = "withoutTemplate",
+            collectionName = "subject3",
+        )
 
-    private fun getInitialData(): Map<ItemMetadata, List<ItemRight>> = mapOf(
-        itemRightWithTemplate to listOf(
-            RightFilterTest.TEST_RIGHT.copy(isTemplate = true, templateName = "some template"),
-        ),
-        itemRightWithoutTemplate to listOf(
-            RightFilterTest.TEST_RIGHT.copy(isTemplate = false)
-        ),
-    )
+    private fun getInitialData(): Map<ItemMetadata, List<ItemRight>> =
+        mapOf(
+            itemRightWithTemplate to
+                listOf(
+                    RightFilterTest.TEST_RIGHT.copy(isTemplate = true, templateName = "some template"),
+                ),
+            itemRightWithoutTemplate to
+                listOf(
+                    RightFilterTest.TEST_RIGHT.copy(isTemplate = false),
+                ),
+        )
 
     @BeforeClass
     fun fillDB() {
@@ -77,13 +83,14 @@ class TemplateRightFilterTest : DatabaseTest() {
     fun testTemplateFilter() {
         val rightId = backend.getTemplateList(10, 0).first().rightId!!
         val rightSearchFilter = listOf(RightIdFilter(listOf(rightId)))
-        val searchResult: SearchQueryResult = backend.searchQuery(
-            "col:subject3",
-            10,
-            0,
-            emptyList(),
-            rightSearchFilter,
-        )
+        val searchResult: SearchQueryResult =
+            backend.searchQuery(
+                "col:subject3",
+                10,
+                0,
+                emptyList(),
+                rightSearchFilter,
+            )
 
         assertThat(
             searchResult.results.map { it.metadata }.toSet(),

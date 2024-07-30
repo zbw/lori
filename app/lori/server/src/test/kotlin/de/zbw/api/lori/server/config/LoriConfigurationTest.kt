@@ -8,7 +8,6 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 class LoriConfigurationTest {
-
     @DataProvider(name = DATA_FOR_LORI_CONFIGURATION)
     fun createDataForLoriConfigurationTest() =
         arrayOf(
@@ -37,14 +36,15 @@ class LoriConfigurationTest {
         System.setProperty("lori.session.encrypt", expectedConfig.sessionEncryptKey)
         System.setProperty("lori.stage", expectedConfig.stage)
         System.setProperty("lori.connection.digitalarchive.handleurl", expectedConfig.handleURL)
-        val receivedConfig = LoriConfiguration.load(
-            "lori",
-            ChainedKonfiguration(
-                listOf(
-                    SystemPropertiesKonfiguration(),
-                )
+        val receivedConfig =
+            LoriConfiguration.load(
+                "lori",
+                ChainedKonfiguration(
+                    listOf(
+                        SystemPropertiesKonfiguration(),
+                    ),
+                ),
             )
-        )
         assertThat(receivedConfig, `is`(expectedConfig))
     }
 

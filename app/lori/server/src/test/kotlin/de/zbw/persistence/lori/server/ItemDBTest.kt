@@ -29,10 +29,11 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class ItemDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
 
     @BeforeMethod
     fun beforeTest() {
@@ -59,7 +60,7 @@ class ItemDBTest : DatabaseTest() {
         // then
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId))
+            `is`(listOf(generatedRightId)),
         )
 
         val deletedItems = dbConnector.itemDB.deleteItem(expectedMetadata.metadataId, generatedRightId)
@@ -70,7 +71,7 @@ class ItemDBTest : DatabaseTest() {
 
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
     }
 
@@ -88,7 +89,7 @@ class ItemDBTest : DatabaseTest() {
         // then
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId))
+            `is`(listOf(generatedRightId)),
         )
 
         val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadataId(expectedMetadata.metadataId)
@@ -99,7 +100,7 @@ class ItemDBTest : DatabaseTest() {
 
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
 
         // when
@@ -107,7 +108,7 @@ class ItemDBTest : DatabaseTest() {
         // then
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId))
+            `is`(listOf(generatedRightId)),
         )
 
         val deletedItemsByRight = dbConnector.itemDB.deleteItemByRightId(generatedRightId)
@@ -118,7 +119,7 @@ class ItemDBTest : DatabaseTest() {
 
         assertThat(
             dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
     }
 
@@ -144,80 +145,83 @@ class ItemDBTest : DatabaseTest() {
     }
 
     companion object {
-        val NOW: OffsetDateTime = OffsetDateTime.of(
-            2022,
-            3,
-            1,
-            1,
-            1,
-            0,
-            0,
-            ZoneOffset.UTC,
-        )!!
+        val NOW: OffsetDateTime =
+            OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
 
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
-        val TEST_Metadata = ItemMetadata(
-            metadataId = "that-test",
-            author = "Colbjørnsen, Terje",
-            band = "band",
-            collectionName = "collectionName",
-            collectionHandle = "colHandle",
-            communityHandle = "comHandle",
-            communityName = "communityName",
-            createdBy = "user1",
-            createdOn = NOW,
-            doi = "doi:example.org",
-            handle = "hdl:example.handle.net",
-            isbn = "1234567890123",
-            issn = "123456",
-            isPartOfSeries = "series123",
-            lastUpdatedBy = "user2",
-            lastUpdatedOn = NOW,
-            licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
-            paketSigel = "sigel",
-            ppn = "ppn",
-            publicationType = PublicationType.ARTICLE,
-            publicationDate = LocalDate.of(2022, 9, 26),
-            rightsK10plus = "some rights",
-            subCommunityHandle = "11509/1111",
-            subCommunityName = "Department of University of Foo",
-            storageDate = NOW.minusDays(3),
-            title = "Important title",
-            titleJournal = "anything",
-            titleSeries = null,
-            zdbIdJournal = "some journal id",
-            zdbIdSeries = "some series id",
-        )
+        val TEST_Metadata =
+            ItemMetadata(
+                metadataId = "that-test",
+                author = "Colbjørnsen, Terje",
+                band = "band",
+                collectionName = "collectionName",
+                collectionHandle = "colHandle",
+                communityHandle = "comHandle",
+                communityName = "communityName",
+                createdBy = "user1",
+                createdOn = NOW,
+                doi = "doi:example.org",
+                handle = "hdl:example.handle.net",
+                isbn = "1234567890123",
+                issn = "123456",
+                isPartOfSeries = "series123",
+                lastUpdatedBy = "user2",
+                lastUpdatedOn = NOW,
+                licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                paketSigel = "sigel",
+                ppn = "ppn",
+                publicationType = PublicationType.ARTICLE,
+                publicationDate = LocalDate.of(2022, 9, 26),
+                rightsK10plus = "some rights",
+                subCommunityHandle = "11509/1111",
+                subCommunityName = "Department of University of Foo",
+                storageDate = NOW.minusDays(3),
+                title = "Important title",
+                titleJournal = "anything",
+                titleSeries = null,
+                zdbIdJournal = "some journal id",
+                zdbIdSeries = "some series id",
+            )
 
-        val TEST_RIGHT = ItemRight(
-            rightId = "testright",
-            accessState = AccessState.OPEN,
-            authorRightException = true,
-            basisAccessState = BasisAccessState.LICENCE_CONTRACT,
-            basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
-            createdBy = "user1",
-            createdOn = NOW,
-            endDate = TODAY,
-            exceptionFrom = null,
-            groupIds = emptyList(),
-            isTemplate = false,
-            lastUpdatedBy = "user2",
-            lastUpdatedOn = NOW,
-            lastAppliedOn = NOW.minusDays(1),
-            licenceContract = "some contract",
-            nonStandardOpenContentLicence = true,
-            nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
-            notesGeneral = "Some general notes",
-            notesFormalRules = "Some formal rule notes",
-            notesProcessDocumentation = "Some process documentation",
-            notesManagementRelated = "Some management related notes",
-            openContentLicence = "some licence",
-            restrictedOpenContentLicence = false,
-            startDate = TODAY.minusDays(1),
-            templateDescription = "description",
-            templateName = "name",
-            zbwUserAgreement = true,
-        )
+        val TEST_RIGHT =
+            ItemRight(
+                rightId = "testright",
+                accessState = AccessState.OPEN,
+                authorRightException = true,
+                basisAccessState = BasisAccessState.LICENCE_CONTRACT,
+                basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
+                createdBy = "user1",
+                createdOn = NOW,
+                endDate = TODAY,
+                exceptionFrom = null,
+                groupIds = emptyList(),
+                isTemplate = false,
+                lastUpdatedBy = "user2",
+                lastUpdatedOn = NOW,
+                lastAppliedOn = NOW.minusDays(1),
+                licenceContract = "some contract",
+                nonStandardOpenContentLicence = true,
+                nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
+                notesGeneral = "Some general notes",
+                notesFormalRules = "Some formal rule notes",
+                notesProcessDocumentation = "Some process documentation",
+                notesManagementRelated = "Some management related notes",
+                openContentLicence = "some licence",
+                restrictedOpenContentLicence = false,
+                startDate = TODAY.minusDays(1),
+                templateDescription = "description",
+                templateName = "name",
+                zbwUserAgreement = true,
+            )
     }
 }

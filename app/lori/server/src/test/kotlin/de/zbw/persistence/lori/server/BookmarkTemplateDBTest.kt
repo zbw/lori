@@ -21,10 +21,11 @@ import java.time.Instant
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class BookmarkTemplateDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
     private val bookmarkTemplateDB = dbConnector.bookmarkTemplateDB
     private val bookmarkDB = dbConnector.bookmarkDB
     private val rightDB = dbConnector.rightDB
@@ -51,13 +52,13 @@ class BookmarkTemplateDBTest : DatabaseTest() {
             BookmarkTemplate(
                 rightId = rightId,
                 bookmarkId = bookmarkId,
-            )
+            ),
         )
 
         // Query Table
         assertThat(
             bookmarkTemplateDB.getBookmarkIdsByRightId(rightId),
-            `is`(listOf(bookmarkId))
+            `is`(listOf(bookmarkId)),
         )
 
         // Delete Pair
@@ -66,13 +67,13 @@ class BookmarkTemplateDBTest : DatabaseTest() {
                 BookmarkTemplate(
                     rightId = rightId,
                     bookmarkId = bookmarkId,
-                )
+                ),
             ),
-            `is`(1)
+            `is`(1),
         )
         assertThat(
             bookmarkTemplateDB.getBookmarkIdsByRightId(rightId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
 
         // Insert second bookmark  and test if deleting by template id works
@@ -81,22 +82,22 @@ class BookmarkTemplateDBTest : DatabaseTest() {
             BookmarkTemplate(
                 rightId = rightId,
                 bookmarkId = bookmarkId,
-            )
+            ),
         )
         bookmarkTemplateDB.insertTemplateBookmarkPair(
             BookmarkTemplate(
                 rightId = rightId,
                 bookmarkId = bookmarkId2,
-            )
+            ),
         )
         assertThat(
             bookmarkTemplateDB.getBookmarkIdsByRightId(rightId),
-            `is`(listOf(bookmarkId, bookmarkId2))
+            `is`(listOf(bookmarkId, bookmarkId2)),
         )
 
         assertThat(
             bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId),
-            `is`(listOf(rightId))
+            `is`(listOf(rightId)),
         )
 
         val deleted = bookmarkTemplateDB.deletePairsByRightId(rightId)
@@ -107,12 +108,12 @@ class BookmarkTemplateDBTest : DatabaseTest() {
 
         assertThat(
             bookmarkTemplateDB.getBookmarkIdsByRightId(rightId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
 
         assertThat(
             bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId),
-            `is`(emptyList())
+            `is`(emptyList()),
         )
 
         // Delete Template and Bookmark

@@ -41,7 +41,9 @@ data class ItemMetadata(
     val zdbIdSeries: String?,
 )
 
-enum class AccessState(val priority: Int) {
+enum class AccessState(
+    val priority: Int,
+) {
     OPEN(1),
     RESTRICTED(2),
     CLOSED(3),
@@ -53,7 +55,9 @@ enum class TemporalValidity {
     PRESENT,
 }
 
-enum class PublicationType(val priority: Int) {
+enum class PublicationType(
+    val priority: Int,
+) {
     ARTICLE(1),
     BOOK(2),
     BOOK_PART(3),
@@ -117,5 +121,5 @@ data class ItemRight(
 enum class FormalRule {
     LICENCE_CONTRACT,
     OPEN_CONTENT_LICENCE,
-    ZBW_USER_AGREEMENT;
+    ZBW_USER_AGREEMENT,
 }

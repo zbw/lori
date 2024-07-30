@@ -26,10 +26,11 @@ fun Routing.aboutRoutes(
 ) {
     route("/api/v1/about") {
         get {
-            val span = tracer
-                .spanBuilder("lori.LoriService.GET/api/v1/about")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
+            val span =
+                tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/about")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
             withContext(span.asContextElement()) {
                 try {
                     span.setStatus(StatusCode.OK)
@@ -37,7 +38,7 @@ fun Routing.aboutRoutes(
                         AboutRest(
                             stage = backend.config.stage,
                             handleURL = backend.config.handleURL,
-                        )
+                        ),
                     )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")

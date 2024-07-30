@@ -16,3 +16,4 @@ bin/
 **/*/build/
 **/*/out/
 /app/lori/server/src/main/resources/lori.properties_with_credentials
+LOGIN_SOURCES.sh

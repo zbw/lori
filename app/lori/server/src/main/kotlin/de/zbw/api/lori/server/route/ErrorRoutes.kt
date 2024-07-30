@@ -30,7 +30,9 @@ fun Routing.errorRoutes(
         route("/rights") {
             get("/list") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.GET/api/v1/errors/right/list").setSpanKind(SpanKind.SERVER)
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/errors/right/list")
+                        .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
@@ -38,7 +40,8 @@ fun Routing.errorRoutes(
                         val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                         if (limit < 1 || limit > 200) {
                             span.setStatus(
-                                StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between 1 and 200."
+                                StatusCode.ERROR,
+                                "BadRequest: Limit parameter is expected to be between 1 and 200.",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,

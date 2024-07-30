@@ -22,11 +22,11 @@ class RightErrorDB(
     val connection: Connection,
     private val tracer: Tracer,
 ) {
-
     fun deleteErrorById(errorId: Int): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_ID).apply {
-            this.setInt(1, errorId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_ID).apply {
+                this.setInt(1, errorId)
+            }
         val span = tracer.spanBuilder("deleteRightErrorById").startSpan()
         return try {
             span.makeCurrent()
@@ -37,9 +37,10 @@ class RightErrorDB(
     }
 
     fun deleteErrorByAge(isOlderThan: Instant): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_AGE).apply {
-            this.setTimestamp(1, Timestamp.from(isOlderThan))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_AGE).apply {
+                this.setTimestamp(1, Timestamp.from(isOlderThan))
+            }
         val span = tracer.spanBuilder("deleteRightErrorByAge").startSpan()
         return try {
             span.makeCurrent()
@@ -53,18 +54,20 @@ class RightErrorDB(
         limit: Int,
         offset: Int,
     ): List<RightError> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_RIGHT_LIST).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_RIGHT_LIST).apply {
+                this.setInt(1, limit)
+                this.setInt(2, offset)
+            }
 
         val span = tracer.spanBuilder("getRightErrorList").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
 
         return generateSequence {
             if (rs.next()) {
@@ -78,13 +81,16 @@ class RightErrorDB(
                     createdOn = rs.getTimestamp(7).toOffsetDateTime(),
                     conflictType = ConflictType.valueOf(rs.getString(8)),
                 )
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
     fun insertError(rightError: RightError): Int {
         val prepStmt =
-            connection.prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
+            connection
+                .prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
                 .apply {
                     this.setString(1, rightError.metadataId)
                     this.setString(2, rightError.handleId)
@@ -102,7 +108,9 @@ class RightErrorDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 rs.getInt(1)
-            } else throw IllegalStateException("No row has been inserted.")
+            } else {
+                throw IllegalStateException("No row has been inserted.")
+            }
         } finally {
             span.end()
         }
@@ -118,26 +126,30 @@ class RightErrorDB(
         private const val COLUMN_RIGHT_ID_SOURCE = "right_id_source"
         private const val COLUMN_MESSAGE = "message"
 
-        const val STATEMENT_GET_RIGHT_LIST = "SELECT" +
-            " $COLUMN_ERROR_ID,$COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
-            "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE" +
-            " FROM $TABLE_NAME_RIGHT_ERROR" +
-            " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;"
+        const val STATEMENT_GET_RIGHT_LIST =
+            "SELECT" +
+                " $COLUMN_ERROR_ID,$COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
+                "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE" +
+                " FROM $TABLE_NAME_RIGHT_ERROR" +
+                " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;"
 
-        const val STATEMENT_INSERT_RIGHT_ERROR = "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
-            "($COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
-            "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-            "$COLUMN_CONFLICTING_TYPE)" +
-            " VALUES(?,?,?," +
-            "?,?,?," +
-            "?)"
+        const val STATEMENT_INSERT_RIGHT_ERROR =
+            "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
+                "($COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_RIGHT_ID_SOURCE," +
+                "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
+                "$COLUMN_CONFLICTING_TYPE)" +
+                " VALUES(?,?,?," +
+                "?,?,?," +
+                "?)"
 
-        const val STATEMENT_DELETE_ERROR_BY_ID = "DELETE " +
-            "FROM $TABLE_NAME_RIGHT_ERROR " +
-            "WHERE $COLUMN_ERROR_ID = ?"
+        const val STATEMENT_DELETE_ERROR_BY_ID =
+            "DELETE " +
+                "FROM $TABLE_NAME_RIGHT_ERROR " +
+                "WHERE $COLUMN_ERROR_ID = ?"
 
-        const val STATEMENT_DELETE_ERROR_BY_AGE = "DELETE " +
-            "FROM $TABLE_NAME_RIGHT_ERROR " +
-            "WHERE $COLUMN_CREATED_ON < ?"
+        const val STATEMENT_DELETE_ERROR_BY_AGE =
+            "DELETE " +
+                "FROM $TABLE_NAME_RIGHT_ERROR " +
+                "WHERE $COLUMN_CREATED_ON < ?"
     }
 }

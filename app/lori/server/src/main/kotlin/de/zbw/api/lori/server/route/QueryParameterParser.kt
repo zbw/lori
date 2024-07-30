@@ -37,12 +37,14 @@ object QueryParameterParser {
         val both = s.matches("\\d+-\\d+".toRegex())
         return if (noFromYear || noToYear || both) {
             PublicationDateFilter(
-                noFromYear.takeIf { !it }
+                noFromYear
+                    .takeIf { !it }
                     ?.let { s.substringBefore("-").toInt() }
                     ?: PublicationDateFilter.MIN_YEAR,
-                noToYear.takeIf { !it }
+                noToYear
+                    .takeIf { !it }
                     ?.let { s.substringAfter("-").toInt() }
-                    ?: PublicationDateFilter.MAX_YEAR
+                    ?: PublicationDateFilter.MAX_YEAR,
             )
         } else {
             null
@@ -53,13 +55,14 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val receivedPubTypes: List<PublicationType> = s.split(",".toRegex()).mapNotNull {
-            try {
-                PublicationType.valueOf(it)
-            } catch (iae: IllegalArgumentException) {
-                null
+        val receivedPubTypes: List<PublicationType> =
+            s.split(",".toRegex()).mapNotNull {
+                try {
+                    PublicationType.valueOf(it)
+                } catch (iae: IllegalArgumentException) {
+                    null
+                }
             }
-        }
         return receivedPubTypes.takeIf { it.isNotEmpty() }?.let { PublicationTypeFilter(it) }
     }
 
@@ -91,13 +94,14 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val accessStates: List<AccessState> = s.split(",".toRegex()).mapNotNull {
-            try {
-                AccessState.valueOf(it)
-            } catch (iae: IllegalArgumentException) {
-                null
+        val accessStates: List<AccessState> =
+            s.split(",".toRegex()).mapNotNull {
+                try {
+                    AccessState.valueOf(it)
+                } catch (iae: IllegalArgumentException) {
+                    null
+                }
             }
-        }
         return accessStates.takeIf { it.isNotEmpty() }?.let { AccessStateFilter(it) }
     }
 
@@ -105,13 +109,14 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val temporalValidity: List<TemporalValidity> = s.split(",".toRegex()).mapNotNull {
-            try {
-                TemporalValidity.valueOf(it)
-            } catch (iae: IllegalArgumentException) {
-                null
+        val temporalValidity: List<TemporalValidity> =
+            s.split(",".toRegex()).mapNotNull {
+                try {
+                    TemporalValidity.valueOf(it)
+                } catch (iae: IllegalArgumentException) {
+                    null
+                }
             }
-        }
         return temporalValidity.takeIf { it.isNotEmpty() }?.let { TemporalValidityFilter(it) }
     }
 
@@ -130,23 +135,23 @@ object QueryParameterParser {
             ?.let { parseDate(it) }
             ?.let { RightValidOnFilter(it) }
 
-    private fun parseDate(s: String): LocalDate? {
-        return try {
+    private fun parseDate(s: String): LocalDate? =
+        try {
             LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
         } catch (dte: DateTimeException) {
             null
         }
-    }
 
     fun parseFormalRuleFilter(s: String?): FormalRuleFilter? =
         s?.let { input ->
-            val formalRules: List<FormalRule> = input.split(",".toRegex()).mapNotNull {
-                try {
-                    FormalRule.valueOf(it.uppercase())
-                } catch (iae: IllegalArgumentException) {
-                    null
+            val formalRules: List<FormalRule> =
+                input.split(",".toRegex()).mapNotNull {
+                    try {
+                        FormalRule.valueOf(it.uppercase())
+                    } catch (iae: IllegalArgumentException) {
+                        null
+                    }
                 }
-            }
             return formalRules.takeIf { it.isNotEmpty() }?.let { FormalRuleFilter(it) }
         }
 
@@ -160,7 +165,8 @@ object QueryParameterParser {
         }
 
     fun parseRightIdFilter(s: String?): RightIdFilter? =
-        s?.split(",".toRegex())
+        s
+            ?.split(",".toRegex())
             ?.takeIf {
                 it.isNotEmpty()
             }?.let {

@@ -45,7 +45,8 @@ class SamlUtils(
 ) {
     init {
         ConfigurationService.register(
-            XMLObjectProviderRegistry::class.java, registry
+            XMLObjectProviderRegistry::class.java,
+            registry,
         )
         registry.parserPool = getParserPool()
         InitializationService.initialize()
@@ -55,23 +56,25 @@ class SamlUtils(
     private val metadataCredentialResolver: MetadataCredentialResolver = getMetadataCredentialResolver()
 
     private fun getParserPool(): ParserPool {
-        val parserPool = BasicParserPool().apply {
-            maxPoolSize = 100
-            isCoalescing = true
-            isIgnoreComments = true
-            isIgnoreElementContentWhitespace = true
-            isNamespaceAware = true
-            isExpandEntityReferences = false
-            isXincludeAware = false
-        }
+        val parserPool =
+            BasicParserPool().apply {
+                maxPoolSize = 100
+                isCoalescing = true
+                isIgnoreComments = true
+                isIgnoreElementContentWhitespace = true
+                isNamespaceAware = true
+                isExpandEntityReferences = false
+                isXincludeAware = false
+            }
 
-        val features: Map<String, Boolean> = mapOf(
-            "http://xml.org/sax/features/external-general-entities" to false,
-            "http://xml.org/sax/features/external-parameter-entities" to false,
-            "http://apache.org/xml/features/disallow-doctype-decl" to true,
-            "http://apache.org/xml/features/validation/schema/normalized-value" to false,
-            "http://javax.xml.XMLConstants/feature/secure-processing" to true,
-        )
+        val features: Map<String, Boolean> =
+            mapOf(
+                "http://xml.org/sax/features/external-general-entities" to false,
+                "http://xml.org/sax/features/external-parameter-entities" to false,
+                "http://apache.org/xml/features/disallow-doctype-decl" to true,
+                "http://apache.org/xml/features/validation/schema/normalized-value" to false,
+                "http://javax.xml.XMLConstants/feature/secure-processing" to true,
+            )
         parserPool.setBuilderFeatures(features)
         parserPool.setBuilderAttributes(HashMap())
         try {
@@ -82,7 +85,10 @@ class SamlUtils(
         return parserPool
     }
 
-    inline fun <reified T : Any> unmarshallSAMLObject(clazz: Class<T>, responseMessage: String): T? {
+    inline fun <reified T : Any> unmarshallSAMLObject(
+        clazz: Class<T>,
+        responseMessage: String,
+    ): T? {
         try {
             val documentBuilderFactory = DocumentBuilderFactory.newInstance()
             documentBuilderFactory.isNamespaceAware = true
@@ -100,16 +106,18 @@ class SamlUtils(
 
     fun verifySignatureUsingSignatureValidator(signature: Signature) {
         // Set criterion to get relevant certificate
-        val criteriaSet = CriteriaSet().apply {
-            add(UsageCriterion(UsageType.SIGNING))
-            add(EntityRoleCriterion(IDPSSODescriptor.DEFAULT_ELEMENT_NAME))
-            add(ProtocolCriterion(SAMLConstants.SAML20P_NS))
-            add(EntityIdCriterion(senderEntityId))
-        }
+        val criteriaSet =
+            CriteriaSet().apply {
+                add(UsageCriterion(UsageType.SIGNING))
+                add(EntityRoleCriterion(IDPSSODescriptor.DEFAULT_ELEMENT_NAME))
+                add(ProtocolCriterion(SAMLConstants.SAML20P_NS))
+                add(EntityIdCriterion(senderEntityId))
+            }
 
         // Resolve credential
-        val credential = metadataCredentialResolver.resolveSingle(criteriaSet)
-            ?: throw SecurityException("Criterion does not match entry in metadata file")
+        val credential =
+            metadataCredentialResolver.resolveSingle(criteriaSet)
+                ?: throw SecurityException("Criterion does not match entry in metadata file")
 
         // Verify signature format
         val profileValidator = SAMLSignatureProfileValidator()
@@ -121,17 +129,20 @@ class SamlUtils(
 
     private fun getMetadataCredentialResolver(): MetadataCredentialResolver {
         val metadataCredentialResolver = MetadataCredentialResolver()
-        val metadataFile = javaClass.classLoader.getResource(SENDER_METADATA_PATH)
-            ?.toURI()
-            ?.let { File(it) }
-            ?: throw FileNotFoundException("Metadata file was not found under path $SENDER_METADATA_PATH")
+        val metadataFile =
+            javaClass.classLoader
+                .getResource(SENDER_METADATA_PATH)
+                ?.toURI()
+                ?.let { File(it) }
+                ?: throw FileNotFoundException("Metadata file was not found under path $SENDER_METADATA_PATH")
         val metadataResolver = FilesystemMetadataResolver(metadataFile)
         metadataResolver.setId(metadataResolver.javaClass.canonicalName)
         metadataResolver.parserPool = getParserPool()
         metadataResolver.initialize()
         val roleResolver = PredicateRoleDescriptorResolver(metadataResolver)
-        val keyResolver = DefaultSecurityConfigurationBootstrap
-            .buildBasicInlineKeyInfoCredentialResolver()
+        val keyResolver =
+            DefaultSecurityConfigurationBootstrap
+                .buildBasicInlineKeyInfoCredentialResolver()
         metadataCredentialResolver.keyInfoCredentialResolver = keyResolver
         metadataCredentialResolver.roleDescriptorResolver = roleResolver
         metadataCredentialResolver.initialize()
@@ -151,11 +162,11 @@ class SamlUtils(
         fun getAttributeValuesByName(
             assertion: Assertion,
             attributeName: String,
-        ): List<XMLObject> {
-            return assertion.attributeStatements.flatMap { attrStmt ->
-                val attributes = attrStmt.attributes.filter { attr -> attr.name == attributeName }
-                attributes.map { it.attributeValues }
-            }.flatten()
-        }
+        ): List<XMLObject> =
+            assertion.attributeStatements
+                .flatMap { attrStmt ->
+                    val attributes = attrStmt.attributes.filter { attr -> attr.name == attributeName }
+                    attributes.map { it.attributeValues }
+                }.flatten()
     }
 }

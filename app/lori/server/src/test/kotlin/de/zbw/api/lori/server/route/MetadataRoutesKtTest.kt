@@ -34,53 +34,56 @@ import java.time.LocalDate
 
 @InternalAPI
 class MetadataRoutesKtTest {
-
     @Test
     fun testMetadataPostCreated() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(TEST_METADATA.metadataId) } returns false
-            every { insertMetadataElement(any()) } returns "foo"
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                every { insertMetadataElement(any()) } returns "foo"
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.post("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.post("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return Accepted",
                 response.status,
-                `is`(HttpStatusCode.Created)
+                `is`(HttpStatusCode.Created),
             )
         }
     }
 
     @Test
     fun testMetadataPostConflict() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(TEST_METADATA.metadataId) } returns true
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(TEST_METADATA.metadataId) } returns true
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.post("/api/v1/metadata") {
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.post("/api/v1/metadata") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return Conflict",
                 response.status,
-                `is`(HttpStatusCode.Conflict)
+                `is`(HttpStatusCode.Conflict),
             )
         }
     }
@@ -93,42 +96,45 @@ class MetadataRoutesKtTest {
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.post("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-            }
+            val response =
+                client.post("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
+                }
             assertThat(
                 "Should return BadRequest",
                 response.status,
-                `is`(HttpStatusCode.BadRequest)
+                `is`(HttpStatusCode.BadRequest),
             )
         }
     }
 
     @Test
     fun testMetadataPostInternal() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.post("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.post("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return Internal Server Error",
                 response.status,
-                `is`(HttpStatusCode.InternalServerError)
+                `is`(HttpStatusCode.InternalServerError),
             )
         }
     }
@@ -137,16 +143,17 @@ class MetadataRoutesKtTest {
     fun testDeleteRightOK() {
         // given
         val metadataId = "123"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsMetadata(metadataId) } returns false
-            every { deleteMetadata(metadataId) } returns 1
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { itemContainsMetadata(metadataId) } returns false
+                every { deleteMetadata(metadataId) } returns 1
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
@@ -159,15 +166,16 @@ class MetadataRoutesKtTest {
     fun testDeleteRightConflict() {
         // given
         val metadataId = "123"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsMetadata(metadataId) } returns true
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { itemContainsMetadata(metadataId) } returns true
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
@@ -178,31 +186,34 @@ class MetadataRoutesKtTest {
     fun testDeleteRightInternal() {
         // given
         val metadataId = "123"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { itemContainsMetadata(metadataId) } throws SQLException()
-        }
-        val servicePool = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { itemContainsMetadata(metadataId) } throws SQLException()
+            }
+        val servicePool =
+            ServicePoolWithProbes(
+                services =
+                    listOf(
+                        mockk {
+                            every { isReady() } returns true
+                            every { isHealthy() } returns true
+                        },
+                    ),
+                config = CONFIG,
+                backend = backend,
+                tracer = tracer,
+            )
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat(
                 "Should return Internal Server Error",
                 response.status,
-                `is`(HttpStatusCode.InternalServerError)
+                `is`(HttpStatusCode.InternalServerError),
             )
         }
     }
@@ -212,15 +223,16 @@ class MetadataRoutesKtTest {
         // given
         val testId = "someId"
         val expected = TEST_METADATA
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getMetadataElementsByIds(listOf(testId)) } returns listOf(expected.toBusiness())
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getMetadataElementsByIds(listOf(testId)) } returns listOf(expected.toBusiness())
+            }
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/$testId")
             val content: String = response.bodyAsText()
@@ -234,21 +246,22 @@ class MetadataRoutesKtTest {
     fun testGetMetadataNotFound() {
         // given
         val testId = "someId"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getMetadataElementsByIds(listOf(testId)) } returns emptyList()
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getMetadataElementsByIds(listOf(testId)) } returns emptyList()
+            }
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/$testId")
             assertThat(
                 "Should return NotFound",
                 response.status,
-                `is`(HttpStatusCode.NotFound)
+                `is`(HttpStatusCode.NotFound),
             )
         }
     }
@@ -257,73 +270,78 @@ class MetadataRoutesKtTest {
     fun testGetMetadataInternal() {
         // given
         val testId = "someId"
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getMetadataElementsByIds(listOf(testId)) } throws SQLException()
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getMetadataElementsByIds(listOf(testId)) } throws SQLException()
+            }
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/$testId")
             assertThat(
                 "Should return InternalServerError",
                 response.status,
-                `is`(HttpStatusCode.InternalServerError)
+                `is`(HttpStatusCode.InternalServerError),
             )
         }
     }
 
     @Test
     fun testMetadataPutNoContent() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(TEST_METADATA.metadataId) } returns true
-            every { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                every { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.put("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.put("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return NoContent",
                 response.status,
-                `is`(HttpStatusCode.NoContent)
+                `is`(HttpStatusCode.NoContent),
             )
         }
     }
 
     @Test
     fun testMetadataPutCreated() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(TEST_METADATA.metadataId) } returns false
-            every { insertMetadataElement(any()) } returns "foo"
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                every { insertMetadataElement(any()) } returns "foo"
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.put("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.put("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return Created",
                 response.status,
-                `is`(HttpStatusCode.Created)
+                `is`(HttpStatusCode.Created),
             )
         }
     }
@@ -336,42 +354,45 @@ class MetadataRoutesKtTest {
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.put("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
-            }
+            val response =
+                client.put("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemRoutesKtTest.TEST_ITEM))
+                }
             assertThat(
                 "Should return BadRequest",
                 response.status,
-                `is`(HttpStatusCode.BadRequest)
+                `is`(HttpStatusCode.BadRequest),
             )
         }
     }
 
     @Test
     fun testMetadataPutInternal() {
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { metadataContainsId(any()) } throws SQLException()
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { metadataContainsId(any()) } throws SQLException()
+            }
         val servicePool = getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
-            val response = client.put("/api/v1/metadata") {
-                header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
-                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                setBody(jsonAsString(TEST_METADATA))
-            }
+            val response =
+                client.put("/api/v1/metadata") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_METADATA))
+                }
             assertThat(
                 "Should return InternalServerError",
                 response.status,
-                `is`(HttpStatusCode.InternalServerError)
+                `is`(HttpStatusCode.InternalServerError),
             )
         }
     }
@@ -382,16 +403,17 @@ class MetadataRoutesKtTest {
         val offset = 2
         val limit = 5
         val expectedMetadata = TEST_METADATA
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getMetadataList(limit, offset) } returns listOf(expectedMetadata.toBusiness())
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getMetadataList(limit, offset) } returns listOf(expectedMetadata.toBusiness())
+            }
         val servicePool = getServicePool(backend)
 
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
             val content: String = response.bodyAsText()
@@ -408,20 +430,21 @@ class MetadataRoutesKtTest {
         val defaultLimit = 25
         val defaultOffset = 0
         val expectedMetadata = TEST_METADATA
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every {
-                getMetadataList(
-                    defaultLimit,
-                    defaultOffset
-                )
-            } returns listOf(expectedMetadata.toBusiness())
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every {
+                    getMetadataList(
+                        defaultLimit,
+                        defaultOffset,
+                    )
+                } returns listOf(expectedMetadata.toBusiness())
+            }
         val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/list")
             val content: String = response.bodyAsText()
@@ -441,7 +464,7 @@ class MetadataRoutesKtTest {
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/list?limit=0")
             assertThat(
@@ -461,7 +484,7 @@ class MetadataRoutesKtTest {
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/list?offset=-1")
             assertThat(
@@ -477,16 +500,17 @@ class MetadataRoutesKtTest {
         // given
         val offset = 2
         val limit = 5
-        val backend = mockk<LoriServerBackend>(relaxed = true) {
-            every { getMetadataList(limit, offset) } throws SQLException()
-        }
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                every { getMetadataList(limit, offset) } throws SQLException()
+            }
         val servicePool = getServicePool(backend)
 
         // when + then
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val response = client.get("/api/v1/metadata/list?limit=$limit&offset=$offset")
             assertThat(
@@ -498,63 +522,68 @@ class MetadataRoutesKtTest {
     }
 
     companion object {
-        val CONFIG = LoriConfiguration(
-            grpcPort = 9092,
-            httpPort = 8080,
-            sqlUser = "postgres",
-            sqlPassword = "postgres",
-            sqlUrl = "jdbc:someurl",
-            digitalArchiveAddress = "https://archiveaddress",
-            digitalArchiveUsername = "testuser",
-            digitalArchivePassword = "password",
-            digitalArchiveBasicAuth = "basicauth",
-            jwtAudience = "0.0.0.0:8080/ui",
-            jwtIssuer = "0.0.0.0:8080",
-            jwtRealm = "Lori ui",
-            jwtSecret = "foobar",
-            duoSenderEntityId = "someId",
-            sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
-            sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
-            stage = "dev",
-            handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
-        )
+        val CONFIG =
+            LoriConfiguration(
+                grpcPort = 9092,
+                httpPort = 8080,
+                sqlUser = "postgres",
+                sqlPassword = "postgres",
+                sqlUrl = "jdbc:someurl",
+                digitalArchiveAddress = "https://archiveaddress",
+                digitalArchiveUsername = "testuser",
+                digitalArchivePassword = "password",
+                digitalArchiveBasicAuth = "basicauth",
+                jwtAudience = "0.0.0.0:8080/ui",
+                jwtIssuer = "0.0.0.0:8080",
+                jwtRealm = "Lori ui",
+                jwtSecret = "foobar",
+                duoSenderEntityId = "someId",
+                sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
+                sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
+                stage = "dev",
+                handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+            )
 
-        val TEST_METADATA = MetadataRest(
-            metadataId = "foo",
-            author = "Colbjørnsen, Terje",
-            band = "band",
-            collectionName = "collectionName",
-            communityName = "communityName",
-            doi = "doi:example.org",
-            handle = "hdl:example.handle.net",
-            isbn = "1234567890123",
-            issn = "123456",
-            paketSigel = "sigel",
-            ppn = "ppn",
-            publicationType = PublicationTypeRest.book,
-            publicationDate = LocalDate.of(2022, 9, 26),
-            rightsK10plus = "some rights",
-            storageDate = NOW.minusDays(3),
-            title = "Important title",
-            titleJournal = null,
-            titleSeries = null,
-            zdbIdJournal = null,
-            zdbIdSeries = null,
-        )
+        val TEST_METADATA =
+            MetadataRest(
+                metadataId = "foo",
+                author = "Colbjørnsen, Terje",
+                band = "band",
+                collectionName = "collectionName",
+                communityName = "communityName",
+                doi = "doi:example.org",
+                handle = "hdl:example.handle.net",
+                isbn = "1234567890123",
+                issn = "123456",
+                paketSigel = "sigel",
+                ppn = "ppn",
+                publicationType = PublicationTypeRest.book,
+                publicationDate = LocalDate.of(2022, 9, 26),
+                rightsK10plus = "some rights",
+                storageDate = NOW.minusDays(3),
+                title = "Important title",
+                titleJournal = null,
+                titleSeries = null,
+                zdbIdJournal = null,
+                zdbIdSeries = null,
+            )
 
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
+
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
 
-        fun getServicePool(backend: LoriServerBackend) = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns true
-                    every { isHealthy() } returns true
-                }
-            ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-        )
+        fun getServicePool(backend: LoriServerBackend) =
+            ServicePoolWithProbes(
+                services =
+                    listOf(
+                        mockk {
+                            every { isReady() } returns true
+                            every { isHealthy() } returns true
+                        },
+                    ),
+                config = CONFIG,
+                backend = backend,
+                tracer = tracer,
+            )
     }
 }

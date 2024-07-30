@@ -21,19 +21,21 @@ import org.testng.annotations.Test
 import java.time.Instant
 
 class SearchKeyTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk(),
+        )
 
-    private fun getInitialMetadata() = listOf(
-        METADATA_TEST,
-        METADATA_TEST_2,
-        METADATA_TEST_3,
-    )
+    private fun getInitialMetadata() =
+        listOf(
+            METADATA_TEST,
+            METADATA_TEST_2,
+            METADATA_TEST_3,
+        )
 
     @BeforeClass
     fun fillDB() {
@@ -50,71 +52,72 @@ class SearchKeyTest : DatabaseTest() {
     }
 
     @DataProvider(name = DATA_FOR_METADATA_ID_KEY)
-    fun createDataForMetadataId() = arrayOf(
+    fun createDataForMetadataId() =
         arrayOf(
-            "metadataid:'${METADATA_TEST.metadataId}'",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "search for specific metadata id"
-        ),
-        arrayOf(
-            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}')",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "search for specific metadata id with complex query"
-        ),
-        arrayOf(
-            "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}' & !tit:'stupid title')",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "search for specific metadata id with even complexer query"
-        ),
-        arrayOf(
-            "metadataid:'$NO_VALID_METADATA_ID'",
-            10,
-            0,
-            emptySet<ItemMetadata>(),
-            "fail to find a metadata id"
-        ),
-        arrayOf(
-            "sig:'${METADATA_TEST.paketSigel}' & (!hdl:'nonse' & !tit:'stupid title')",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "search for specific metadata id with even complexer query ensuring parantheses works as expected"
-        ),
-        arrayOf(
-            "sig:'${METADATA_TEST.paketSigel}' & !(hdl:'nonse' | tit:'stupid title')",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "negation around parantheses"
-        ),
-        arrayOf(
-            "lur:'${METADATA_TEST.licenceUrl}'",
-            10,
-            0,
-            setOf(METADATA_TEST),
-            "search for licence url"
-        ),
-        arrayOf(
-            "!zdb:'${METADATA_TEST.zdbIdJournal}'",
-            10,
-            0,
-            setOf(METADATA_TEST_2, METADATA_TEST_3),
-            "find all items that have a different ZDB-ID or no value at all"
-        ),
-        arrayOf(
-            "subcom:'${METADATA_TEST_3.subCommunityName}'",
-            10,
-            0,
-            setOf(METADATA_TEST_3),
-            "search by subcommunity name"
-        ),
-    )
+            arrayOf(
+                "metadataid:'${METADATA_TEST.metadataId}'",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "search for specific metadata id",
+            ),
+            arrayOf(
+                "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}')",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "search for specific metadata id with complex query",
+            ),
+            arrayOf(
+                "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}' & !tit:'stupid title')",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "search for specific metadata id with even complexer query",
+            ),
+            arrayOf(
+                "metadataid:'$NO_VALID_METADATA_ID'",
+                10,
+                0,
+                emptySet<ItemMetadata>(),
+                "fail to find a metadata id",
+            ),
+            arrayOf(
+                "sig:'${METADATA_TEST.paketSigel}' & (!hdl:'nonse' & !tit:'stupid title')",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "search for specific metadata id with even complexer query ensuring parantheses works as expected",
+            ),
+            arrayOf(
+                "sig:'${METADATA_TEST.paketSigel}' & !(hdl:'nonse' | tit:'stupid title')",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "negation around parantheses",
+            ),
+            arrayOf(
+                "lur:'${METADATA_TEST.licenceUrl}'",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "search for licence url",
+            ),
+            arrayOf(
+                "!zdb:'${METADATA_TEST.zdbIdJournal}'",
+                10,
+                0,
+                setOf(METADATA_TEST_2, METADATA_TEST_3),
+                "find all items that have a different ZDB-ID or no value at all",
+            ),
+            arrayOf(
+                "subcom:'${METADATA_TEST_3.subCommunityName}'",
+                10,
+                0,
+                setOf(METADATA_TEST_3),
+                "search by subcommunity name",
+            ),
+        )
 
     @Test(dataProvider = DATA_FOR_METADATA_ID_KEY)
     fun findMetadataId(
@@ -149,23 +152,26 @@ class SearchKeyTest : DatabaseTest() {
         const val DATA_FOR_METADATA_ID_KEY = "DATA_FOR_METADATA_ID_KEY "
         const val NO_VALID_METADATA_ID = "INVALID"
         private const val TEST_METADATA_ID = "some metadata id"
-        val METADATA_TEST = TEST_Metadata.copy(
-            metadataId = TEST_METADATA_ID,
-        )
-        val METADATA_TEST_2 = TEST_Metadata.copy(
-            metadataId = "second",
-            handle = "second/handle",
-            zdbIdJournal = null,
-            licenceUrl = "foobar.baz",
-            paketSigel = "someothersigel2",
-        )
-        val METADATA_TEST_3 = TEST_Metadata.copy(
-            metadataId = "third",
-            zdbIdJournal = "someotherzdbid",
-            licenceUrl = "foobar",
-            paketSigel = "someothersigel",
-            handle = "some/other/handle",
-            subCommunityName = "department 3",
-        )
+        val METADATA_TEST =
+            TEST_Metadata.copy(
+                metadataId = TEST_METADATA_ID,
+            )
+        val METADATA_TEST_2 =
+            TEST_Metadata.copy(
+                metadataId = "second",
+                handle = "second/handle",
+                zdbIdJournal = null,
+                licenceUrl = "foobar.baz",
+                paketSigel = "someothersigel2",
+            )
+        val METADATA_TEST_3 =
+            TEST_Metadata.copy(
+                metadataId = "third",
+                zdbIdJournal = "someotherzdbid",
+                licenceUrl = "foobar",
+                paketSigel = "someothersigel",
+                handle = "some/other/handle",
+                subCommunityName = "department 3",
+            )
     }
 }

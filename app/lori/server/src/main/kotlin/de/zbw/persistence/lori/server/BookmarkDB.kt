@@ -35,11 +35,11 @@ class BookmarkDB(
     val connection: Connection,
     private val tracer: Tracer,
 ) {
-
     fun deleteBookmarkById(bookmarkId: Int): Int {
-        val prepStmt = connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
-            this.setInt(1, bookmarkId)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
+                this.setInt(1, bookmarkId)
+            }
         val span = tracer.spanBuilder("deleteBookmarkById").startSpan()
         return try {
             span.makeCurrent()
@@ -50,10 +50,11 @@ class BookmarkDB(
     }
 
     fun insertBookmark(bookmarkRest: Bookmark): Int {
-        val prepStmt = insertUpdateSetParameters(
-            bookmarkRest,
-            connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS)
-        )
+        val prepStmt =
+            insertUpdateSetParameters(
+                bookmarkRest,
+                connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS),
+            )
         val span = tracer.spanBuilder("insertBookmark").startSpan()
         try {
             span.makeCurrent()
@@ -62,38 +63,48 @@ class BookmarkDB(
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
                 rs.getInt(1)
-            } else throw IllegalStateException("No row has been inserted.")
+            } else {
+                throw IllegalStateException("No row has been inserted.")
+            }
         } finally {
             span.end()
         }
     }
 
     fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
-            this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
+                this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
+            }
         val span = tracer.spanBuilder("getBookmarksByIds").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
 
         return generateSequence {
             if (rs.next()) {
                 extractBookmark(rs)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
-    fun updateBookmarkById(bookmarkId: Int, bookmark: Bookmark): Int {
-        val prepStmt = insertUpdateSetParameters(
-            bookmark,
-            connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK)
-        ).apply {
-            this.setInt(19, bookmarkId)
-        }
+    fun updateBookmarkById(
+        bookmarkId: Int,
+        bookmark: Bookmark,
+    ): Int {
+        val prepStmt =
+            insertUpdateSetParameters(
+                bookmark,
+                connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
+            ).apply {
+                this.setInt(19, bookmarkId)
+            }
         val span = tracer.spanBuilder("updateBookmarkById").startSpan()
         try {
             span.makeCurrent()
@@ -107,56 +118,63 @@ class BookmarkDB(
         limit: Int,
         offset: Int,
     ): List<Bookmark> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
-            this.setInt(1, limit)
-            this.setInt(2, offset)
-        }
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
+                this.setInt(1, limit)
+                this.setInt(2, offset)
+            }
 
         val span = tracer.spanBuilder("getBookmarkList").startSpan()
-        val rs = try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.executeQuery() }
-        } finally {
-            span.end()
-        }
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
 
         return generateSequence {
             if (rs.next()) {
                 extractBookmark(rs)
-            } else null
+            } else {
+                null
+            }
         }.takeWhile { true }.toList()
     }
 
     companion object {
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
 
-        const val STATEMENT_GET_BOOKMARKS = "SELECT " +
-            "bookmark_id,bookmark_name,description,search_term," +
-            "filter_publication_date,filter_access_state,filter_temporal_validity," +
-            "filter_start_date,filter_end_date,filter_formal_rule," +
-            "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
-            "filter_no_right_information,filter_publication_type," +
-            "created_on,last_updated_on,created_by,last_updated_by" +
-            " FROM $TABLE_NAME_BOOKMARK" +
-            " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
+        const val STATEMENT_GET_BOOKMARKS =
+            "SELECT " +
+                "bookmark_id,bookmark_name,description,search_term," +
+                "filter_publication_date,filter_access_state,filter_temporal_validity," +
+                "filter_start_date,filter_end_date,filter_formal_rule," +
+                "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+                "filter_no_right_information,filter_publication_type," +
+                "created_on,last_updated_on,created_by,last_updated_by" +
+                " FROM $TABLE_NAME_BOOKMARK" +
+                " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
 
-        const val STATEMENT_INSERT_BOOKMARK = "INSERT INTO $TABLE_NAME_BOOKMARK" +
-            "(bookmark_name,search_term,description,filter_publication_date," +
-            "filter_access_state,filter_temporal_validity,filter_start_date," +
-            "filter_end_date,filter_formal_rule,filter_valid_on," +
-            "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
-            "filter_publication_type,created_on,last_updated_on,created_by,last_updated_by" +
-            ")" +
-            " VALUES(?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?," +
-            "?,?,?)"
+        const val STATEMENT_INSERT_BOOKMARK =
+            "INSERT INTO $TABLE_NAME_BOOKMARK" +
+                "(bookmark_name,search_term,description,filter_publication_date," +
+                "filter_access_state,filter_temporal_validity,filter_start_date," +
+                "filter_end_date,filter_formal_rule,filter_valid_on," +
+                "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
+                "filter_publication_type,created_on,last_updated_on,created_by,last_updated_by" +
+                ")" +
+                " VALUES(?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?)"
 
-        const val STATEMENT_DELETE_BOOKMARK_BY_ID = "DELETE " +
-            "FROM $TABLE_NAME_BOOKMARK" +
-            " WHERE $COLUMN_BOOKMARK_ID = ?"
+        const val STATEMENT_DELETE_BOOKMARK_BY_ID =
+            "DELETE " +
+                "FROM $TABLE_NAME_BOOKMARK" +
+                " WHERE $COLUMN_BOOKMARK_ID = ?"
 
         const val STATEMENT_UPDATE_BOOKMARK =
             "INSERT INTO $TABLE_NAME_BOOKMARK" +
@@ -192,15 +210,16 @@ class BookmarkDB(
                 " last_updated_on = EXCLUDED.last_updated_on," +
                 " last_updated_by = EXCLUDED.last_updated_by;" // Don't overwrite created fields
 
-        const val STATEMENT_GET_BOOKMARK_LIST = "SELECT" +
-            " bookmark_id,bookmark_name,description,search_term," +
-            "filter_publication_date,filter_access_state,filter_temporal_validity," +
-            "filter_start_date,filter_end_date,filter_formal_rule," +
-            "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
-            "filter_no_right_information,filter_publication_type," +
-            "created_on,last_updated_on,created_by,last_updated_by" +
-            " FROM $TABLE_NAME_BOOKMARK" +
-            " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
+        const val STATEMENT_GET_BOOKMARK_LIST =
+            "SELECT" +
+                " bookmark_id,bookmark_name,description,search_term," +
+                "filter_publication_date,filter_access_state,filter_temporal_validity," +
+                "filter_start_date,filter_end_date,filter_formal_rule," +
+                "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+                "filter_no_right_information,filter_publication_type," +
+                "created_on,last_updated_on,created_by,last_updated_by" +
+                " FROM $TABLE_NAME_BOOKMARK" +
+                " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
 
         private fun extractBookmark(rs: ResultSet): Bookmark =
             Bookmark(
@@ -219,18 +238,20 @@ class BookmarkDB(
                 zdbIdFilter = ZDBIdFilter.fromString(rs.getString(13)),
                 noRightInformationFilter = NoRightInformationFilter.fromString(rs.getBoolean(14).toString()),
                 publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(15)),
-                createdOn = rs.getTimestamp(16)?.let {
-                    OffsetDateTime.ofInstant(
-                        it.toInstant(),
-                        ZoneId.of("UTC+00:00"),
-                    )
-                },
-                lastUpdatedOn = rs.getTimestamp(17)?.let {
-                    OffsetDateTime.ofInstant(
-                        it.toInstant(),
-                        ZoneId.of("UTC+00:00"),
-                    )
-                },
+                createdOn =
+                    rs.getTimestamp(16)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
+                lastUpdatedOn =
+                    rs.getTimestamp(17)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
                 createdBy = rs.getString(18),
                 lastUpdatedBy = rs.getString(19),
             )

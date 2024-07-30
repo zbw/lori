@@ -15,10 +15,11 @@ import kotlin.test.assertNull
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class GroupDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    ).groupDB
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        ).groupDB
 
     @Test
     fun testGroupRoundtrip() {
@@ -29,7 +30,7 @@ class GroupDBTest : DatabaseTest() {
         assertThat(
             receivedGroupId,
             `is`(
-                TEST_GROUP.name
+                TEST_GROUP.name,
             ),
         )
 
@@ -38,7 +39,7 @@ class GroupDBTest : DatabaseTest() {
         assertThat(
             dbConnector.getGroupById(TEST_GROUP.name),
             `is`(
-                TEST_GROUP
+                TEST_GROUP,
             ),
         )
 
@@ -54,7 +55,7 @@ class GroupDBTest : DatabaseTest() {
         assertThat(
             dbConnector.getGroupById(TEST_GROUP.name),
             `is`(
-                updated
+                updated,
             ),
         )
 
@@ -62,7 +63,7 @@ class GroupDBTest : DatabaseTest() {
         assertThat(
             dbConnector.deleteGroupById(TEST_GROUP.name),
             `is`(
-                1
+                1,
             ),
         )
 
@@ -80,9 +81,9 @@ class GroupDBTest : DatabaseTest() {
             dbConnector.getGroupList(50, 0),
             `is`(
                 listOf(
-                    group1
-                )
-            )
+                    group1,
+                ),
+            ),
         )
 
         val group2 = TEST_GROUP.copy(name = "testGetGroupList2")
@@ -94,21 +95,23 @@ class GroupDBTest : DatabaseTest() {
                 listOf(
                     group1,
                     group2,
-                )
-            )
+                ),
+            ),
         )
     }
 
     companion object {
-        val TEST_GROUP = Group(
-            name = "test group",
-            description = "some description",
-            entries = listOf(
-                GroupEntry(
-                    organisationName = "some organisation",
-                    ipAddresses = "192.168.0.0",
-                ),
-            ),
-        )
+        val TEST_GROUP =
+            Group(
+                name = "test group",
+                description = "some description",
+                entries =
+                    listOf(
+                        GroupEntry(
+                            organisationName = "some organisation",
+                            ipAddresses = "192.168.0.0",
+                        ),
+                    ),
+            )
     }
 }
