@@ -338,8 +338,8 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            rightId,
           undefined,
-          rightId,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
