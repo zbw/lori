@@ -527,7 +527,8 @@ fun SearchQueryResult.toRest(
         hasZbwUserAgreement = this.hasZbwUserAgreement,
         numberOfResults = this.numberOfResults,
         paketSigelWithCount = this.paketSigels.entries
-            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList().sortedBy { it.paketSigel },
+            .map { PaketSigelWithCountRest(count = it.value, paketSigel = it.key) }.toList()
+            .sortedBy { it.paketSigel.lowercase() },
         publicationTypeWithCount = this.publicationType.entries.sortedBy { it.key.priority }.map {
             PublicationTypeWithCountRest(
                 count = it.value,
@@ -546,7 +547,7 @@ fun SearchQueryResult.toRest(
                 count = it.value.second,
                 rightId = it.key,
             )
-        }.sortedBy { it.templateName },
+        }.sortedBy { it.templateName.lowercase() },
         isPartOfSeriesCount = this.isPartOfSeries.entries.map {
             IsPartOfSeriesCountRest(
                 count = it.value,
