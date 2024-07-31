@@ -8,16 +8,23 @@ import io.ktor.server.testing.ApplicationTestBuilder
 import io.mockk.every
 import io.mockk.mockk
 
-val jwtPrincipal = mockk<UserSession> {
-    every { email } returns "foo@bar.com"
-}
-class MockAuthProvider(config: Config) : AuthenticationProvider(config) {
+val jwtPrincipal =
+    mockk<UserSession> {
+        every { email } returns "foo@bar.com"
+    }
+
+class MockAuthProvider(
+    config: Config,
+) : AuthenticationProvider(config) {
     override suspend fun onAuthenticate(context: AuthenticationContext) {
         context.principal(jwtPrincipal)
     }
 }
 
-class DummyConfig(name: String) : AuthenticationProvider.Config(name)
+class DummyConfig(
+    name: String,
+) : AuthenticationProvider.Config(name)
+
 fun ApplicationTestBuilder.moduleAuthForTests() {
     install(Authentication) {
         register(MockAuthProvider(DummyConfig("auth-login")))

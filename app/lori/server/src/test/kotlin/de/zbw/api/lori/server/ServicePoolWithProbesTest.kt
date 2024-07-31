@@ -24,7 +24,6 @@ import org.testng.annotations.Test
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class ServicePoolWithProbesTest {
-
     @DataProvider(name = DATA_FOR_TEST_APPLICATION)
     private fun createDataForTestApplication() =
         arrayOf(
@@ -51,12 +50,11 @@ class ServicePoolWithProbesTest {
         ready: Boolean,
         healthy: Boolean,
     ) {
-
         val servicePool = getServicePool(mockk(), ready, healthy)
         testApplication {
             moduleAuthForTests()
             application(
-                servicePool.testApplication()
+                servicePool.testApplication(),
             )
             val readyResonse = client.get("/ready")
             if (ready) {
@@ -76,28 +74,30 @@ class ServicePoolWithProbesTest {
     @Test
     fun testApplicationStartAndStop() {
         // given
-        val services: List<ServiceLifecycle> = listOf(
-            mockk {
-                every { start() } returns Unit
-                every { stop() } returns Unit
-            },
-            mockk {
-                every { start() } returns Unit
-                every { stop() } returns Unit
-            }
-        )
-        val serverMock: NettyApplicationEngine = mockk(relaxed = true)
-        val servicePool = spyk(
-            ServicePoolWithProbes(
-                services = services,
-                config = TEST_CONFIG,
-                backend = mockk(),
-                tracer = mockk(),
-                samlUtils = mockk(),
+        val services: List<ServiceLifecycle> =
+            listOf(
+                mockk {
+                    every { start() } returns Unit
+                    every { stop() } returns Unit
+                },
+                mockk {
+                    every { start() } returns Unit
+                    every { stop() } returns Unit
+                },
             )
-        ) {
-            every { getHttpServer() } returns serverMock
-        }
+        val serverMock: NettyApplicationEngine = mockk(relaxed = true)
+        val servicePool =
+            spyk(
+                ServicePoolWithProbes(
+                    services = services,
+                    config = TEST_CONFIG,
+                    backend = mockk(),
+                    tracer = mockk(),
+                    samlUtils = mockk(),
+                ),
+            ) {
+                every { getHttpServer() } returns serverMock
+            }
 
         // when
         servicePool.start()
@@ -115,35 +115,42 @@ class ServicePoolWithProbesTest {
     companion object {
         const val DATA_FOR_TEST_APPLICATION = "DATA_FOR_TEST_APPLICATION"
 
-        val TEST_CONFIG = LoriConfiguration(
-            grpcPort = 9092,
-            httpPort = 8080,
-            sqlUrl = "jdbc:localhost",
-            sqlUser = "postgres",
-            sqlPassword = "postgres",
-            digitalArchiveAddress = "https://archiveaddress",
-            digitalArchiveUsername = "testuser",
-            digitalArchivePassword = "password",
-            digitalArchiveBasicAuth = "basicauth",
-            jwtAudience = "0.0.0.0:8080/ui",
-            jwtIssuer = "0.0.0.0:8080",
-            jwtRealm = "Lori ui",
-            jwtSecret = "foobar",
-            duoSenderEntityId = "someId",
-            sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
-            sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
-            stage = "dev",
-            handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
-        )
+        val TEST_CONFIG =
+            LoriConfiguration(
+                grpcPort = 9092,
+                httpPort = 8080,
+                sqlUrl = "jdbc:localhost",
+                sqlUser = "postgres",
+                sqlPassword = "postgres",
+                digitalArchiveAddress = "https://archiveaddress",
+                digitalArchiveUsername = "testuser",
+                digitalArchivePassword = "password",
+                digitalArchiveBasicAuth = "basicauth",
+                jwtAudience = "0.0.0.0:8080/ui",
+                jwtIssuer = "0.0.0.0:8080",
+                jwtRealm = "Lori ui",
+                jwtSecret = "foobar",
+                duoSenderEntityId = "someId",
+                sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
+                sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
+                stage = "dev",
+                handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+            )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
-        fun getServicePool(backend: LoriServerBackend, isReady: Boolean, isHealthy: Boolean) = ServicePoolWithProbes(
-            services = listOf(
-                mockk {
-                    every { isReady() } returns isReady
-                    every { isHealthy() } returns isHealthy
-                }
-            ),
+
+        fun getServicePool(
+            backend: LoriServerBackend,
+            isReady: Boolean,
+            isHealthy: Boolean,
+        ) = ServicePoolWithProbes(
+            services =
+                listOf(
+                    mockk {
+                        every { isReady() } returns isReady
+                        every { isHealthy() } returns isHealthy
+                    },
+                ),
             config = TEST_CONFIG,
             backend = backend,
             tracer = tracer,

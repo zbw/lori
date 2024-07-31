@@ -21,13 +21,14 @@ import org.testng.annotations.Test
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightGroupTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("foo"),
-        ),
-        mockk(),
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("foo"),
+            ),
+            mockk(),
+        )
 
     @Test
     fun rightGroupRoundtrip() {
@@ -37,12 +38,13 @@ class RightGroupTest : DatabaseTest() {
             Group(
                 name = groupName1,
                 description = null,
-                entries = listOf(
-                    GroupEntry(
-                        organisationName = "orga1",
-                        ipAddresses = "192.168.1.*",
-                    )
-                )
+                entries =
+                    listOf(
+                        GroupEntry(
+                            organisationName = "orga1",
+                            ipAddresses = "192.168.1.*",
+                        ),
+                    ),
             )
 
         // Insert group
@@ -53,9 +55,10 @@ class RightGroupTest : DatabaseTest() {
         )
 
         // Insert Right using the group
-        val initialRight: ItemRight = TEST_RIGHT.copy(
-            groupIds = listOf(groupId1),
-        )
+        val initialRight: ItemRight =
+            TEST_RIGHT.copy(
+                groupIds = listOf(groupId1),
+            )
 
         val rightId1 = backend.insertRight(initialRight)
 
@@ -69,7 +72,7 @@ class RightGroupTest : DatabaseTest() {
             backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
             `is`(
                 listOf(groupName1),
-            )
+            ),
         )
 
         // Update Right with another group
@@ -78,42 +81,49 @@ class RightGroupTest : DatabaseTest() {
             Group(
                 name = groupName2,
                 description = null,
-                entries = listOf(
-                    GroupEntry(
-                        organisationName = "orga2",
-                        ipAddresses = "192.168.1.*",
-                    )
-                )
+                entries =
+                    listOf(
+                        GroupEntry(
+                            organisationName = "orga2",
+                            ipAddresses = "192.168.1.*",
+                        ),
+                    ),
             )
 
         val groupId2 = backend.insertGroup(group2)
-        val rightUpdated = TEST_RIGHT.copy(
-            rightId = rightId1,
-            groupIds = listOf(groupId1, groupId2)
-        )
+        val rightUpdated =
+            TEST_RIGHT.copy(
+                rightId = rightId1,
+                groupIds = listOf(groupId1, groupId2),
+            )
         backend.upsertRight(rightUpdated)
 
         // Verify group update was successful
         assertThat(
-            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB
+                .getGroupsByRightId(rightId1)
+                .toSet(),
             `is`(
                 setOf(groupId1, groupId2),
-            )
+            ),
         )
 
         // Another update, this time a group is removed
-        val rightUpdated2 = TEST_RIGHT.copy(
-            rightId = rightId1,
-            groupIds = listOf(groupId2)
-        )
+        val rightUpdated2 =
+            TEST_RIGHT.copy(
+                rightId = rightId1,
+                groupIds = listOf(groupId2),
+            )
         backend.upsertRight(rightUpdated2)
 
         // Verify update again
         assertThat(
-            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB
+                .getGroupsByRightId(rightId1)
+                .toSet(),
             `is`(
                 setOf(groupId2),
-            )
+            ),
         )
 
         // Try to delete Group that is still bond to Right
@@ -127,7 +137,9 @@ class RightGroupTest : DatabaseTest() {
         // Delete Right
         backend.deleteRight(rightId1)
         assertThat(
-            backend.dbConnector.groupDB.getGroupsByRightId(rightId1).toSet(),
+            backend.dbConnector.groupDB
+                .getGroupsByRightId(rightId1)
+                .toSet(),
             `is`(emptySet()),
         )
 

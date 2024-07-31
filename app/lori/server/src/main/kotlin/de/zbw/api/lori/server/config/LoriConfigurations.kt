@@ -13,11 +13,12 @@ import de.gfelbing.konfig.core.source.PropertiesFileKonfiguration
 object LoriConfigurations {
     private const val SERVICE_NAME = "lori"
 
-    private val configSources = ChainedKonfiguration(
-        listOf(
-            EnvironmentKonfiguration(),
-            PropertiesFileKonfiguration("$SERVICE_NAME.properties")
+    private val configSources =
+        ChainedKonfiguration(
+            listOf(
+                EnvironmentKonfiguration(),
+                PropertiesFileKonfiguration("$SERVICE_NAME.properties"),
+            ),
         )
-    )
     val serverConfig by lazy { LoriConfiguration.load(SERVICE_NAME, configSources) }
 }

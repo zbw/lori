@@ -16,14 +16,15 @@ import javax.sql.DataSource
  */
 class FlywayMigrator(
     dataSource: DataSource,
-    private val flyway: Flyway = Flyway
-        .configure()
-        .baselineOnMigrate(true)
-        .baselineVersion(MigrationVersion.fromVersion("0"))
-        .validateMigrationNaming(true)
-        .locations("db/migration")
-        .dataSource(dataSource)
-        .load()
+    private val flyway: Flyway =
+        Flyway
+            .configure()
+            .baselineOnMigrate(true)
+            .baselineVersion(MigrationVersion.fromVersion("0"))
+            .validateMigrationNaming(true)
+            .locations("db/migration")
+            .dataSource(dataSource)
+            .load(),
 ) {
     constructor(
         config: LoriConfiguration,
@@ -32,7 +33,7 @@ class FlywayMigrator(
             config.sqlUrl,
             config.sqlUser,
             config.sqlPassword,
-        )
+        ),
     )
 
     fun migrate() {
@@ -58,7 +59,7 @@ class FlywayMigrator(
                 DRIVER_CLASS,
                 sqlUrl,
                 sqlUser,
-                sqlPassword
+                sqlPassword,
             )
     }
 }

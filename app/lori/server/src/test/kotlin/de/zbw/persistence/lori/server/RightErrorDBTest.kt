@@ -21,10 +21,11 @@ import java.time.ZoneOffset
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightErrorDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    ).rightErrorDB
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        ).rightErrorDB
 
     @AfterTest
     fun afterTest() {
@@ -67,26 +68,28 @@ class RightErrorDBTest : DatabaseTest() {
     }
 
     companion object {
-        val TEST_RIGHT_ERROR = RightError(
-            errorId = null,
-            message = "Timing conflict",
-            rightIdSource = "sourceRightId",
-            conflictingRightId = "conflictingRightId",
-            handleId = "somehandle",
-            createdOn = null,
-            metadataId = "metadataId",
-            conflictType = ConflictType.DATE_OVERLAP,
-        )
+        val TEST_RIGHT_ERROR =
+            RightError(
+                errorId = null,
+                message = "Timing conflict",
+                rightIdSource = "sourceRightId",
+                conflictingRightId = "conflictingRightId",
+                handleId = "somehandle",
+                createdOn = null,
+                metadataId = "metadataId",
+                conflictType = ConflictType.DATE_OVERLAP,
+            )
 
-        val NOW: OffsetDateTime = OffsetDateTime.of(
-            2022,
-            3,
-            1,
-            1,
-            1,
-            0,
-            0,
-            ZoneOffset.UTC,
-        )!!
+        val NOW: OffsetDateTime =
+            OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
     }
 }

@@ -12,7 +12,7 @@ import io.ktor.server.routing.Route
  * @author Christian Bay (c.bay@zbw.eu)
  */
 fun Route.staticRoutes() {
-    static() {
+    static {
         resources("dist")
         defaultResource("index.html", "dist")
     }

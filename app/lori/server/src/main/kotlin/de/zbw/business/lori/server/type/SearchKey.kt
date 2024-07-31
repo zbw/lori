@@ -25,10 +25,11 @@ enum class SearchKey(
     SUBCOM(MetadataDB.TS_SUBCOMMUNITY_NAME),
     TITLE(MetadataDB.TS_TITLE),
     ZDB_ID(MetadataDB.TS_ZDB_ID_JOURNAL),
-    ZDB_ID_SERIES(MetadataDB.TS_ZDB_ID_SERIES);
+    ZDB_ID_SERIES(MetadataDB.TS_ZDB_ID_SERIES),
+    ;
 
-    fun fromEnum(): String {
-        return when (this) {
+    fun fromEnum(): String =
+        when (this) {
             COMMUNITY -> "com"
             COLLECTION -> "col"
             PAKET_SIGEL -> "sig"
@@ -44,13 +45,12 @@ enum class SearchKey(
             SERIES -> "series"
             ZDB_ID_SERIES -> "zdbseries"
         }
-    }
 
     companion object {
         const val SUBQUERY_NAME = "sub"
 
-        fun toEnum(s: String): SearchKey? {
-            return when (s.lowercase()) {
+        fun toEnum(s: String): SearchKey? =
+            when (s.lowercase()) {
                 "com" -> COMMUNITY
                 "col" -> COLLECTION
                 "hdl" -> HDL
@@ -67,6 +67,5 @@ enum class SearchKey(
                 "zdbseries" -> ZDB_ID_SERIES
                 else -> null
             }
-        }
     }
 }

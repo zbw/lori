@@ -17,17 +17,18 @@ import kotlin.test.assertNull
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class UserDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
 
     @Test
     fun testRoundtripSessions() {
         val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
         assertThat(
             dbConnector.userDB.getSessionById(sessionId),
-            `is`(TEST_SESSION.copy(sessionID = sessionId))
+            `is`(TEST_SESSION.copy(sessionID = sessionId)),
         )
         dbConnector.userDB.deleteSessionById(sessionId)
         assertNull(
@@ -36,22 +37,25 @@ class UserDBTest : DatabaseTest() {
     }
 
     companion object {
-        private val TEST_SESSION = Session(
-            sessionID = null,
-            authenticated = true,
-            firstName = "some",
-            lastName = "name",
-            permissions = listOf(UserPermission.WRITE, UserPermission.READ),
-            validUntil = OffsetDateTime.of(
-                2022,
-                3,
-                2,
-                1,
-                1,
-                0,
-                0,
-                ZoneOffset.UTC,
-            ).toInstant(),
-        )
+        private val TEST_SESSION =
+            Session(
+                sessionID = null,
+                authenticated = true,
+                firstName = "some",
+                lastName = "name",
+                permissions = listOf(UserPermission.WRITE, UserPermission.READ),
+                validUntil =
+                    OffsetDateTime
+                        .of(
+                            2022,
+                            3,
+                            2,
+                            1,
+                            1,
+                            0,
+                            0,
+                            ZoneOffset.UTC,
+                        ).toInstant(),
+            )
     }
 }

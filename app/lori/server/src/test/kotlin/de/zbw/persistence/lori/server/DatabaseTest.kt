@@ -10,24 +10,24 @@ import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
  * @author Christian Bay (c.bay@zbw.eu)
  */
 abstract class DatabaseTest {
-
     private val embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.start()
-    protected val dataSource: ComboPooledDataSource = ComboPooledDataSource().apply {
-        jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
-        driverClass = "org.postgresql.Driver"
-        user = "postgres"
-        dataSourceName = "foo"
-        maxAdministrativeTaskTime = 300
-        unreturnedConnectionTimeout = 0
-        acquireIncrement = 10
-        maxIdleTime = 1800
-        idleConnectionTestPeriod = 0
-        isTestConnectionOnCheckin = false
-        isTestConnectionOnCheckout = true
-        numHelperThreads = 32
-        maxPoolSize = 10
-        minPoolSize = 1
-    }
+    protected val dataSource: ComboPooledDataSource =
+        ComboPooledDataSource().apply {
+            jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
+            driverClass = "org.postgresql.Driver"
+            user = "postgres"
+            dataSourceName = "foo"
+            maxAdministrativeTaskTime = 300
+            unreturnedConnectionTimeout = 0
+            acquireIncrement = 10
+            maxIdleTime = 1800
+            idleConnectionTestPeriod = 0
+            isTestConnectionOnCheckin = false
+            isTestConnectionOnCheckout = true
+            numHelperThreads = 32
+            maxPoolSize = 10
+            minPoolSize = 1
+        }
 
     init {
         // TODO: This doesn't work for some reason

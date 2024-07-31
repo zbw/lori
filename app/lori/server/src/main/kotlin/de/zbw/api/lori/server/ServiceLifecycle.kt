@@ -7,7 +7,6 @@ package de.zbw.api.lori.server
  * @author Christian Bay (c.bay@zbw.eu)
  */
 abstract class ServiceLifecycle {
-
     /**
      * Returns if the service is ready.
      */

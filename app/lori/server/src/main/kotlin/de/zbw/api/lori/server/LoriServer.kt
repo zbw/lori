@@ -20,10 +20,8 @@ object LoriServer {
     fun main(args: Array<String>) {
         LOG.info("Starting LoriServer :)")
 
-        val tracer: Tracer = AutoConfiguredOpenTelemetrySdk
-            .initialize()
-            .openTelemetrySdk
-            .getTracer("de.zbw.api.lori.server.LoriServer")
+        val tracer: Tracer =
+            AutoConfiguredOpenTelemetrySdk.initialize().openTelemetrySdk.getTracer("de.zbw.api.lori.server.LoriServer")
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)
@@ -34,18 +32,20 @@ object LoriServer {
         // TODO: Add Service for DB connection test
         ServicePoolWithProbes(
             config = config,
-            services = listOf(
-                GrpcServer(
-                    port = config.grpcPort,
-                    services = listOf(
-                        LoriGrpcServer(
-                            config = config,
-                            backend = backend,
-                            tracer = tracer
-                        ),
+            services =
+                listOf(
+                    GrpcServer(
+                        port = config.grpcPort,
+                        services =
+                            listOf(
+                                LoriGrpcServer(
+                                    config = config,
+                                    backend = backend,
+                                    tracer = tracer,
+                                ),
+                            ),
                     ),
                 ),
-            ),
             backend = backend,
             tracer = tracer,
         ).apply {

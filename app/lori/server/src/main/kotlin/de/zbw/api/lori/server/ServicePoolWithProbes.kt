@@ -62,25 +62,27 @@ class ServicePoolWithProbes(
     private val tracer: Tracer,
     private val samlUtils: SamlUtils = SamlUtils(backend.config.duoSenderEntityId),
 ) : ServiceLifecycle() {
-
-    private var server: NettyApplicationEngine = embeddedServer(
-        Netty,
-        port = config.httpPort,
-        module = application(),
-    )
+    private var server: NettyApplicationEngine =
+        embeddedServer(
+            Netty,
+            port = config.httpPort,
+            module = application(),
+        )
 
     // This method is a hack due to ktors extension based design. It makes
     // testing a lot easier here.
     internal fun getHttpServer(): NettyApplicationEngine = server
 
-    private fun application(): Application.() -> Unit = {
-        auth()
-        allNonAuth()
-    }
+    private fun application(): Application.() -> Unit =
+        {
+            auth()
+            allNonAuth()
+        }
 
-    internal fun testApplication(): Application.() -> Unit = {
-        allNonAuth()
-    }
+    internal fun testApplication(): Application.() -> Unit =
+        {
+            allNonAuth()
+        }
 
     private fun Application.allNonAuth() {
         install(ContentNegotiation) {
@@ -89,27 +91,28 @@ class ServicePoolWithProbes(
                 registerTypeAdapter(
                     OffsetDateTime::class.java,
                     JsonDeserializer { json, _, _ ->
-                        ZonedDateTime.parse(json.asString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
+                        ZonedDateTime
+                            .parse(json.asString, DateTimeFormatter.ISO_ZONED_DATE_TIME)
                             .toOffsetDateTime()
-                    }
+                    },
                 )
                 registerTypeAdapter(
                     OffsetDateTime::class.java,
                     JsonSerializer<OffsetDateTime> { obj, _, _ ->
                         JsonPrimitive(obj.toString())
-                    }
+                    },
                 )
                 registerTypeAdapter(
                     LocalDate::class.java,
                     JsonDeserializer { json, _, _ ->
                         LocalDate.parse(json.asString, DateTimeFormatter.ISO_LOCAL_DATE)
-                    }
+                    },
                 )
                 registerTypeAdapter(
                     LocalDate::class.java,
                     JsonSerializer<LocalDate> { obj, _, _ ->
                         JsonPrimitive(obj.toString())
-                    }
+                    },
                 )
             }
         }
@@ -167,14 +170,16 @@ class ServicePoolWithProbes(
         install(Authentication) {
             session<UserSession>("auth-session") {
                 validate { session: UserSession ->
-                    backend.getSessionById(session.sessionId)
+                    backend
+                        .getSessionById(session.sessionId)
                         ?.takeIf { s ->
                             s.validUntil > Instant.now() &&
                                 (
-                                    s.permissions.contains(UserPermission.WRITE) || s.permissions.contains(
-                                        UserPermission.ADMIN
-                                    )
-                                    )
+                                    s.permissions.contains(UserPermission.WRITE) ||
+                                        s.permissions.contains(
+                                            UserPermission.ADMIN,
+                                        )
+                                )
                         }?.let { session }
                 }
                 challenge {
@@ -185,7 +190,8 @@ class ServicePoolWithProbes(
             }
             session<UserSession>("auth-login") {
                 validate { session: UserSession ->
-                    backend.getSessionById(session.sessionId)
+                    backend
+                        .getSessionById(session.sessionId)
                         ?.takeIf { s ->
                             s.validUntil > Instant.now() &&
                                 s.firstName == session.email
@@ -202,14 +208,16 @@ class ServicePoolWithProbes(
     }
 
     override fun isReady(): Boolean =
-        services.map {
-            it.isReady()
-        }.all { it }
+        services
+            .map {
+                it.isReady()
+            }.all { it }
 
     override fun isHealthy(): Boolean =
-        services.map {
-            it.isHealthy()
-        }.all { it }
+        services
+            .map {
+                it.isHealthy()
+            }.all { it }
 
     override fun start() {
         services.forEach {

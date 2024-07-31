@@ -52,15 +52,17 @@ fun Routing.itemRoutes(
     route("/api/v1/item") {
         authenticate("auth-login") {
             post {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.POST/api/v1/item")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.POST/api/v1/item")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         @Suppress("SENSELESS_COMPARISON")
                         val item: ItemEntry =
-                            call.receive(ItemEntry::class)
+                            call
+                                .receive(ItemEntry::class)
                                 .takeIf { it.metadataId != null && it.rightId != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("item", item.toString())
@@ -69,7 +71,7 @@ fun Routing.itemRoutes(
                             call.respond(
                                 HttpStatusCode.Conflict,
                                 ApiError.conflictError(
-                                    ApiError.RESOURCE_STILL_IN_USE
+                                    ApiError.RESOURCE_STILL_IN_USE,
                                 ),
                             )
                         } else {
@@ -90,7 +92,7 @@ fun Routing.itemRoutes(
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
-                            ApiError.badRequestError(ApiError.INVALID_JSON)
+                            ApiError.badRequestError(ApiError.INVALID_JSON),
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
@@ -105,10 +107,11 @@ fun Routing.itemRoutes(
         route("/metadata") {
             authenticate("auth-login") {
                 delete("{metadataId}") {
-                    val span = tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/item/metadata/{metadataId}")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/item/metadata/{metadataId}")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val metadataId = call.parameters["metadataId"]
@@ -116,7 +119,7 @@ fun Routing.itemRoutes(
                             if (metadataId == null) {
                                 span.setStatus(
                                     StatusCode.ERROR,
-                                    "BadRequest: No valid id has been provided in the url."
+                                    "BadRequest: No valid id has been provided in the url.",
                                 )
                                 call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                             } else {
@@ -134,10 +137,11 @@ fun Routing.itemRoutes(
                 }
             }
             get("{metadataId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/item/metadata/{metadataId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/item/metadata/{metadataId}")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val metadataId = call.parameters["metadataId"]
@@ -145,14 +149,14 @@ fun Routing.itemRoutes(
                         if (metadataId == null) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
+                                "BadRequest: No valid id has been provided in the url.",
                             )
                             call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
                             if (!backend.metadataContainsId(metadataId)) {
                                 call.respond(
                                     HttpStatusCode.NotFound,
-                                    ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID)
+                                    ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
                                 )
                             } else {
                                 val rights = backend.getRightEntriesByMetadataId(metadataId)
@@ -173,10 +177,11 @@ fun Routing.itemRoutes(
         route("/right") {
             authenticate("auth-login") {
                 delete("{rightId}") {
-                    val span = tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/item/right/{rightId}")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/item/right/{rightId}")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val rightId = call.parameters["rightId"]
@@ -184,7 +189,7 @@ fun Routing.itemRoutes(
                             if (rightId == null) {
                                 span.setStatus(
                                     StatusCode.ERROR,
-                                    "BadRequest: No valid id has been provided in the url."
+                                    "BadRequest: No valid id has been provided in the url.",
                                 )
                                 call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                             } else {
@@ -205,10 +210,11 @@ fun Routing.itemRoutes(
 
         route("/count/right") {
             get("{rightId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/item/count/right/{rightId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/item/count/right/{rightId}")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val rightId = call.parameters["rightId"]
@@ -216,7 +222,7 @@ fun Routing.itemRoutes(
                         if (rightId == null) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url."
+                                "BadRequest: No valid id has been provided in the url.",
                             )
                             call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
@@ -226,7 +232,7 @@ fun Routing.itemRoutes(
                                 ItemCountByRight(
                                     rightId = rightId,
                                     count = count,
-                                )
+                                ),
                             )
                         }
                     } catch (e: Exception) {
@@ -241,10 +247,11 @@ fun Routing.itemRoutes(
 
         authenticate("auth-login") {
             delete("{metadataId}/{rightId}") {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.DELETE/api/v1/item/{metadataId}/{rightId}")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.DELETE/api/v1/item/{metadataId}/{rightId}")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val metadataId = call.parameters["metadataId"]
@@ -274,10 +281,11 @@ fun Routing.itemRoutes(
 
         route("/list") {
             get {
-                val span = tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/item/list")
-                    .setSpanKind(SpanKind.SERVER)
-                    .startSpan()
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/item/list")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
                 withContext(span.asContextElement()) {
                     try {
                         val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
@@ -286,33 +294,33 @@ fun Routing.itemRoutes(
                         if (limit < 1 || limit > 100) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: Limit parameter is expected to be between (0,100]"
+                                "BadRequest: Limit parameter is expected to be between (0,100]",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Limit parameter is expected to be between (0,100]")
+                                ApiError.badRequestError("Limit parameter is expected to be between (0,100]"),
                             )
                         } else if (offset < 0) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: Offset parameter is expected to be larger or equal zero"
+                                "BadRequest: Offset parameter is expected to be larger or equal zero",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
                                 ApiError.badRequestError(
-                                    "Offset parameter is expected to be larger or equal zero"
-                                )
+                                    "Offset parameter is expected to be larger or equal zero",
+                                ),
                             )
                         } else if (pageSize < 0) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: PageSize parameter is expected to be between (0,100]"
+                                "BadRequest: PageSize parameter is expected to be between (0,100]",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
                                 ApiError.badRequestError(
-                                    "PageSize parameter is expected to be between (0,100]"
-                                )
+                                    "PageSize parameter is expected to be between (0,100]",
+                                ),
                             )
                         } else {
                             val items = backend.getItemList(limit, offset)
@@ -324,7 +332,7 @@ fun Routing.itemRoutes(
                                     itemArray = items.map { it.toRest() },
                                     totalPages = totalPages,
                                     numberOfResults = entries,
-                                )
+                                ),
                             )
                         }
                     } catch (e: NumberFormatException) {
@@ -332,8 +340,8 @@ fun Routing.itemRoutes(
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
-                                "Parameters have a bad format"
-                            )
+                                "Parameters have a bad format",
+                            ),
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
@@ -346,10 +354,11 @@ fun Routing.itemRoutes(
         }
 
         get("search") {
-            val span = tracer
-                .spanBuilder("lori.LoriService.GET/api/v1/item/search")
-                .setSpanKind(SpanKind.SERVER)
-                .startSpan()
+            val span =
+                tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/item/search")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
             withContext(span.asContextElement()) {
                 try {
                     val searchTerm: String? = call.request.queryParameters["searchTerm"]
@@ -370,29 +379,30 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
                         QueryParameterParser.parseTemporalValidity(call.request.queryParameters["filterTemporalValidity"])
-                    val formalRuleFilter: FormalRuleFilter? = QueryParameterParser.parseFormalRuleFilter(
-                        call.request.queryParameters["filterFormalRule"]
-                    )
+                    val formalRuleFilter: FormalRuleFilter? =
+                        QueryParameterParser.parseFormalRuleFilter(
+                            call.request.queryParameters["filterFormalRule"],
+                        )
                     val startDateFilter: StartDateFilter? =
                         QueryParameterParser.parseStartDateFilter(
-                            call.request.queryParameters["filterStartDate"]
+                            call.request.queryParameters["filterStartDate"],
                         )
                     val endDateFilter: EndDateFilter? =
                         QueryParameterParser.parseEndDateFilter(
-                            call.request.queryParameters["filterEndDate"]
+                            call.request.queryParameters["filterEndDate"],
                         )
                     val validOnFilter: RightValidOnFilter? =
                         QueryParameterParser.parseRightValidOnFilter(
-                            call.request.queryParameters["filterValidOn"]
+                            call.request.queryParameters["filterValidOn"],
                         )
                     val noRightInformationFilter: NoRightInformationFilter? =
                         QueryParameterParser.parseNoRightInformationFilter(
-                            call.request.queryParameters["filterNoRightInformation"]
+                            call.request.queryParameters["filterNoRightInformation"],
                         )
 
                     val rightIdsFilter: RightIdFilter? =
                         QueryParameterParser.parseRightIdFilter(
-                            call.request.queryParameters["filterRightId"]
+                            call.request.queryParameters["filterRightId"],
                         )
 
                     span.setAttribute("searchTerm", searchTerm ?: "")
@@ -403,71 +413,74 @@ fun Routing.itemRoutes(
                     if (limit < 1 || limit > 100) {
                         span.setStatus(
                             StatusCode.ERROR,
-                            "BadRequest: Limit parameter is expected to be between (0,100]"
+                            "BadRequest: Limit parameter is expected to be between (0,100]",
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
-                                "Limit parameter is expected to be between 1 and 100"
-                            )
+                                "Limit parameter is expected to be between 1 and 100",
+                            ),
                         )
                         return@withContext
                     }
                     if (offset < 0) {
                         span.setStatus(
                             StatusCode.ERROR,
-                            "BadRequest: Offset parameter is expected to be larger or equal zero"
+                            "BadRequest: Offset parameter is expected to be larger or equal zero",
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
-                                "Offset parameter is expected to be larger or equal zero"
-                            )
+                                "Offset parameter is expected to be larger or equal zero",
+                            ),
                         )
                         return@withContext
                     }
                     if (pageSize < 0) {
                         span.setStatus(
                             StatusCode.ERROR,
-                            "BadRequest: PageSize parameter is expected to be between (0,100]"
+                            "BadRequest: PageSize parameter is expected to be between (0,100]",
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
-                                "PageSize parameter is expected to be between 1 and 100"
-                            )
+                                "PageSize parameter is expected to be between 1 and 100",
+                            ),
                         )
                         return@withContext
                     }
-                    val metadataFilters = listOfNotNull(
-                        paketSigelFilter,
-                        publicationDateFilter,
-                        publicationTypeFilter,
-                        zdbIdFilter,
-                        seriesFilter,
-                    )
-                    val rightFilters = listOfNotNull(
-                        accessStateFilter,
-                        endDateFilter,
-                        formalRuleFilter,
-                        startDateFilter,
-                        temporalValidityFilter,
-                        validOnFilter,
-                        rightIdsFilter,
-                    )
+                    val metadataFilters =
+                        listOfNotNull(
+                            paketSigelFilter,
+                            publicationDateFilter,
+                            publicationTypeFilter,
+                            zdbIdFilter,
+                            seriesFilter,
+                        )
+                    val rightFilters =
+                        listOfNotNull(
+                            accessStateFilter,
+                            endDateFilter,
+                            formalRuleFilter,
+                            startDateFilter,
+                            temporalValidityFilter,
+                            validOnFilter,
+                            rightIdsFilter,
+                        )
 
-                    val queryResult: SearchQueryResult = backend.searchQuery(
-                        searchTerm,
-                        limit,
-                        offset,
-                        metadataFilters,
-                        rightFilters,
-                        noRightInformationFilter,
-                        emptyList(),
-                    )
+                    val queryResult: SearchQueryResult =
+                        backend.searchQuery(
+                            searchTerm,
+                            limit,
+                            offset,
+                            metadataFilters,
+                            rightFilters,
+                            noRightInformationFilter,
+                            emptyList(),
+                        )
                     span.setStatus(StatusCode.OK)
                     call.respond(
-                        queryResult.toRest(pageSize)
+                        queryResult.toRest(pageSize),
                     )
                 } catch (e: NumberFormatException) {
                     span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
@@ -476,7 +489,7 @@ fun Routing.itemRoutes(
                     span.setStatus(StatusCode.ERROR, "ParsingException: ${pe.message}")
                     call.respond(
                         HttpStatusCode.BadRequest,
-                        ApiError.badRequestError("Search Query ist ungültig. Siehe ? Button für mehr Informationen")
+                        ApiError.badRequestError("Search Query ist ungültig. Siehe ? Button für mehr Informationen"),
                     )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")

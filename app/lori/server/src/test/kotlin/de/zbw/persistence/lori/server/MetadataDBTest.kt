@@ -28,10 +28,11 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MetadataDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
 
     @BeforeMethod
     fun beforeTest() {
@@ -46,7 +47,6 @@ class MetadataDBTest : DatabaseTest() {
 
     @Test(expectedExceptions = [SQLException::class])
     fun testInsertHeaderException() {
-
         // given
         val testHeaderId = "double_entry"
         val testMetadata = TEST_Metadata.copy(metadataId = testHeaderId)
@@ -61,16 +61,18 @@ class MetadataDBTest : DatabaseTest() {
     @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertMetadataNoInsertError() {
         // given
-        val prepStmt = spyk(dbConnector.connection.prepareStatement(MetadataDB.STATEMENT_INSERT_METADATA)) {
-            every { executeUpdate() } returns 0
-        }
-        val dbConnectorMockked = DatabaseConnector(
-            mockk(relaxed = true) {
-                every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            },
-            tracer,
-            mockk(),
-        )
+        val prepStmt =
+            spyk(dbConnector.connection.prepareStatement(MetadataDB.STATEMENT_INSERT_METADATA)) {
+                every { executeUpdate() } returns 0
+            }
+        val dbConnectorMockked =
+            DatabaseConnector(
+                mockk(relaxed = true) {
+                    every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
+                },
+                tracer,
+                mockk(),
+            )
         // when
         dbConnectorMockked.metadataDB.insertMetadata(TEST_Metadata)
         // then exception
@@ -93,12 +95,14 @@ class MetadataDBTest : DatabaseTest() {
 
         // then
         assertThat(
-            receivedMetadata.first(), `is`(testMetadata)
+            receivedMetadata.first(),
+            `is`(testMetadata),
         )
 
         // when
         assertThat(
-            dbConnector.metadataDB.getMetadata(listOf("not_in_db")), `is`(listOf())
+            dbConnector.metadataDB.getMetadata(listOf("not_in_db")),
+            `is`(listOf()),
         )
 
         // when
@@ -128,14 +132,16 @@ class MetadataDBTest : DatabaseTest() {
 
         // then
         assertThat(
-            receivedM1.first(), `is`(m1)
+            receivedM1.first(),
+            `is`(m1),
         )
 
         val receivedM2: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id2))
 
         // then
         assertThat(
-            receivedM2.first(), `is`(m2)
+            receivedM2.first(),
+            `is`(m2),
         )
 
         // when
@@ -156,32 +162,34 @@ class MetadataDBTest : DatabaseTest() {
 
         // then
         assertThat(
-            receivedM1Changed.first(), `is`(m1Changed)
+            receivedM1Changed.first(),
+            `is`(m1Changed),
         )
 
         val receivedM2Changed: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id2))
 
         // then
         assertThat(
-            receivedM2Changed.first(), `is`(m2Changed)
+            receivedM2Changed.first(),
+            `is`(m2Changed),
         )
     }
 
     @Test(expectedExceptions = [SQLException::class])
     fun testGetMetadataException() {
-        val dbConnector = DatabaseConnector(
-            mockk(relaxed = true) {
-                every { prepareStatement(any()) } throws SQLException()
-            },
-            tracer,
-            mockk(),
-        )
+        val dbConnector =
+            DatabaseConnector(
+                mockk(relaxed = true) {
+                    every { prepareStatement(any()) } throws SQLException()
+                },
+                tracer,
+                mockk(),
+            )
         dbConnector.metadataDB.getMetadata(listOf("foo"))
     }
 
     @Test
     fun testContainsMetadata() {
-
         // given
         val metadataId = "metadataIdContainCheck"
         val expectedMetadata = TEST_Metadata.copy(metadataId = metadataId)
@@ -213,11 +221,11 @@ class MetadataDBTest : DatabaseTest() {
         // then
         assertThat(
             dbConnector.metadataDB.getMetadataRange(limit = 3, offset = 0).toSet(),
-            `is`(givenMetadata.toSet())
+            `is`(givenMetadata.toSet()),
         )
         assertThat(
             dbConnector.metadataDB.getMetadataRange(limit = 2, offset = 1).toSet(),
-            `is`(givenMetadata.subList(1, 3).toSet())
+            `is`(givenMetadata.subList(1, 3).toSet()),
         )
     }
 

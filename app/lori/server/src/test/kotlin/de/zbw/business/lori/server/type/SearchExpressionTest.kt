@@ -17,7 +17,6 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 class SearchExpressionTest {
-
     @DataProvider(name = DATA_FOR_PARSING_SEARCH_QUERY)
     fun createDataForParsing() =
         arrayOf(
@@ -49,31 +48,38 @@ class SearchExpressionTest {
                 "tit:'foo' & zdb:'123'",
                 "SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))",
                 false,
-                "And search pairs"
+                "And search pairs",
             ),
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123))), right=SEVariable(searchPair=HDL:123))",
+                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchPair=TITLE:foo), right=SEVariable(searchPair=ZDB_ID:123)))," +
+                    " right=SEVariable(searchPair=HDL:123))",
                 false,
-                "Or, And, parentheses"
+                "Or, And, parentheses",
             ),
             arrayOf(
                 "com:2764793-6 & (metadataid:4633 | zdb:4566)",
-                "SEAnd(left=SEVariable(searchPair=COMMUNITY:2764793-6), right=SEPar(body=SEOr(left=SEVariable(searchPair=METADATA_ID:4633), right=SEVariable(searchPair=ZDB_ID:4566))))",
+                "SEAnd(left=SEVariable(searchPair=COMMUNITY:2764793-6)," +
+                    " right=SEPar(body=SEOr(left=SEVariable(searchPair=METADATA_ID:4633)," +
+                    " right=SEVariable(searchPair=ZDB_ID:4566))))",
                 false,
-                "Verify that ) after key:value without \"' works"
+                "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
+                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen)," +
+                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86))," +
+                    " right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
                 false,
-                "Verify that ) after key:value without \"' works"
+                "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86)), right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
+                "SEAnd(left=SEVariable(searchPair=PAKET_SIGEL:zdb-33-sfen)," +
+                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchPair=HDL:11159/86))," +
+                    " right=SENot(body=SEVariable(searchPair=HDL:11159/993)))))",
                 false,
-                "Verify that ) after key:value without \"' works"
+                "Verify that ) after key:value without \"' works",
             ),
         )
 
@@ -107,17 +113,23 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND ((ts_zdb_id_journal @@ to_tsquery(?) AND ts_zdb_id_journal is not null) OR (ts_zdb_id_series @@ to_tsquery(?) AND ts_zdb_id_series is not null))) OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
-                "zdb key searchs on two fields"
+                "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND ((ts_zdb_id_journal @@ to_tsquery(?)" +
+                    " AND ts_zdb_id_journal is not null)" +
+                    " OR (ts_zdb_id_series @@ to_tsquery(?) AND ts_zdb_id_series is not null)))" +
+                    " OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
+                "zdb key searchs on two fields",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
-                "negation, parenthesis, or, and"
+                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND (NOT (ts_hdl @@ to_tsquery(?)" +
+                    " AND ts_hdl is not null) OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
+                "negation, parenthesis, or, and",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null) AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
+                "(ts_sigel @@ to_tsquery(?) AND ts_sigel is not null)" +
+                    " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND (ts_hdl @@ to_tsquery(?)" +
+                    " AND ts_hdl is not null))",
                 "negate term before paranthesis",
             ),
         )
@@ -140,7 +152,10 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "(coalesce(ts_rank_cd(ts_title, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_zdb_id_series, to_tsquery(?)),1) + coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1))/4 as score",
+                "(coalesce(ts_rank_cd(ts_title, to_tsquery(?)),1) + " +
+                    "coalesce(ts_rank_cd(ts_zdb_id_journal, to_tsquery(?)),1) +" +
+                    " coalesce(ts_rank_cd(ts_zdb_id_series, to_tsquery(?)),1) +" +
+                    " coalesce(ts_rank_cd(ts_hdl, to_tsquery(?)),1))/4 as score",
                 "coalesce on complicated query and zdb extension",
             ),
         )

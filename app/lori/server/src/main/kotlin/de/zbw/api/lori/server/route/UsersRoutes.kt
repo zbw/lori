@@ -32,10 +32,11 @@ fun Routing.usersRoutes(
         route("/sessions") {
             authenticate("auth-login") {
                 get {
-                    val span = tracer
-                        .spanBuilder("lori.LoriService.GET/api/v1/sessions")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.GET/api/v1/sessions")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val userSession: UserSession? = call.principal<UserSession>()
@@ -57,10 +58,11 @@ fun Routing.usersRoutes(
                     }
                 }
                 delete {
-                    val span = tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/sessions")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/sessions")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
                     withContext(span.asContextElement()) {
                         try {
                             val userSession: UserSession? = call.principal<UserSession>()

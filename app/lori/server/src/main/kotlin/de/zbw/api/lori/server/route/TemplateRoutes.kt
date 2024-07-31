@@ -57,15 +57,17 @@ fun Routing.templateRoutes(
                         val right: RightRest = call.receive(RightRest::class)
                         span.setAttribute("template", right.toString())
 
-                        val userSession: UserSession = call.principal<UserSession>()
-                            ?: return@withContext call.respond(
-                                HttpStatusCode.Unauthorized,
-                                ApiError.unauthorizedError("User is not authorized"),
-                            ) // This should never happen
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
+                                ) // This should never happen
                         val pk: String = backend.insertTemplate(right.toBusiness().copy(createdBy = userSession.email))
                         span.setStatus(StatusCode.OK)
                         call.respond(
-                            HttpStatusCode.Created, RightIdCreated(rightId = pk)
+                            HttpStatusCode.Created,
+                            RightIdCreated(rightId = pk),
                         )
                     } catch (pe: PSQLException) {
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
@@ -74,7 +76,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.Conflict,
                                 ApiError.conflictError(
                                     detail = "Ein Template mit diesem Namen existiert bereits.",
-                                )
+                                ),
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
@@ -82,7 +84,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
                                     detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                                )
+                                ),
                             )
                         }
                     } catch (e: Exception) {
@@ -107,15 +109,17 @@ fun Routing.templateRoutes(
                 withContext(span.asContextElement()) {
                     try {
                         val right: RightRest =
-                            call.receive(RightRest::class)
+                            call
+                                .receive(RightRest::class)
                                 .takeIf { it.rightId != null && it.isTemplate && it.templateName != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("template", right.toString())
-                        val userSession: UserSession = call.principal<UserSession>()
-                            ?: return@withContext call.respond(
-                                HttpStatusCode.Unauthorized,
-                                ApiError.unauthorizedError("User is not authorized"),
-                            ) // This should never happen
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
+                                ) // This should never happen
                         val insertedRows = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
@@ -126,7 +130,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
                                     detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
-                                )
+                                ),
                             )
                         }
                     } catch (pe: PSQLException) {
@@ -136,7 +140,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.Conflict,
                                 ApiError.conflictError(
                                     detail = "Ein Template mit diesem Namen existiert bereits.",
-                                )
+                                ),
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
@@ -144,7 +148,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
                                     detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                                )
+                                ),
                             )
                         }
                     } catch (e: BadRequestException) {
@@ -169,13 +173,13 @@ fun Routing.templateRoutes(
         }
     }
     route("/api/v1/template") {
-
         /**
          * Return all bookmarks connected to a given RightId.
          */
         get("{id}/bookmarks") {
             val span =
-                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks")
+                tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/template/{id}/bookmarks")
                     .setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
@@ -207,7 +211,9 @@ fun Routing.templateRoutes(
          */
         get("{id}") {
             val span =
-                tracer.spanBuilder("lori.LoriService.GET/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
+                tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/template/{id}")
+                    .setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
@@ -227,7 +233,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
                                     detail = "Für das Template mit Id: $rightId existiert kein Eintrag.",
-                                )
+                                ),
                             )
                         }
                     }
@@ -249,7 +255,8 @@ fun Routing.templateRoutes(
              */
             post("/applications") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/applications")
+                    tracer
+                        .spanBuilder("lori.LoriService.POST/api/v1/template/applications")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
@@ -266,27 +273,29 @@ fun Routing.templateRoutes(
                             } else {
                                 backend.applyTemplates(rightIds)
                             }
-                        val result = TemplateApplicationsRest(
-                            templateApplication =
-                            appliedMap.map { e: TemplateApplicationResult ->
-                                TemplateApplicationRest(
-                                    rightId = e.rightId,
-                                    templateName = e.templateName,
-                                    metadataIds = e.appliedMetadataIds,
-                                    errors = e.errors.map { it.toRest() },
-                                    numberOfAppliedEntries = e.appliedMetadataIds.size,
-                                    exceptionTemplateApplications = e.exceptionTemplateApplicationResult.map { exc ->
+                        val result =
+                            TemplateApplicationsRest(
+                                templateApplication =
+                                    appliedMap.map { e: TemplateApplicationResult ->
                                         TemplateApplicationRest(
-                                            rightId = exc.rightId,
-                                            metadataIds = exc.appliedMetadataIds,
+                                            rightId = e.rightId,
                                             templateName = e.templateName,
-                                            errors = exc.errors.map { it.toRest() },
-                                            numberOfAppliedEntries = exc.appliedMetadataIds.size,
+                                            metadataIds = e.appliedMetadataIds,
+                                            errors = e.errors.map { it.toRest() },
+                                            numberOfAppliedEntries = e.appliedMetadataIds.size,
+                                            exceptionTemplateApplications =
+                                                e.exceptionTemplateApplicationResult.map { exc ->
+                                                    TemplateApplicationRest(
+                                                        rightId = exc.rightId,
+                                                        metadataIds = exc.appliedMetadataIds,
+                                                        templateName = e.templateName,
+                                                        errors = exc.errors.map { it.toRest() },
+                                                        numberOfAppliedEntries = exc.appliedMetadataIds.size,
+                                                    )
+                                                },
                                         )
-                                    }
-                                )
-                            }
-                        )
+                                    },
+                            )
                         call.respond(result)
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
@@ -310,7 +319,8 @@ fun Routing.templateRoutes(
 
             post("{id}/bookmarks") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks")
+                    tracer
+                        .spanBuilder("lori.LoriService.POST/api/v1/template/{id}/bookmarks")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
@@ -328,16 +338,18 @@ fun Routing.templateRoutes(
                             if (deleteOld) {
                                 backend.deleteBookmarkTemplatePairsByRightId(rightId)
                             }
-                            val generatedPairs: List<BookmarkTemplate> = backend.upsertBookmarkTemplatePairs(
-                                bookmarkIds.map {
-                                    BookmarkTemplate(
-                                        bookmarkId = it,
-                                        rightId = rightId,
-                                    )
-                                }
-                            )
+                            val generatedPairs: List<BookmarkTemplate> =
+                                backend.upsertBookmarkTemplatePairs(
+                                    bookmarkIds.map {
+                                        BookmarkTemplate(
+                                            bookmarkId = it,
+                                            rightId = rightId,
+                                        )
+                                    },
+                                )
                             call.respond(
-                                HttpStatusCode.Created, generatedPairs.map { it.toRest() }
+                                HttpStatusCode.Created,
+                                generatedPairs.map { it.toRest() },
                             )
                         }
                     } catch (e: Exception) {
@@ -357,7 +369,9 @@ fun Routing.templateRoutes(
              */
             delete("{id}") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}").setSpanKind(SpanKind.SERVER)
+                    tracer
+                        .spanBuilder("lori.LoriService.DELETE/api/v1/template/{id}")
+                        .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
@@ -407,7 +421,8 @@ fun Routing.templateRoutes(
         route("/exceptions") {
             get("{id}") {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/exceptions/{id}")
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/template/exceptions/{id}")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
@@ -418,7 +433,7 @@ fun Routing.templateRoutes(
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                "No valid id has been provided in the url."
+                                "No valid id has been provided in the url.",
                             )
                         }
                         val exceptions = backend.getExceptionsByRightId(rightId)
@@ -440,7 +455,8 @@ fun Routing.templateRoutes(
             authenticate("auth-login") {
                 post {
                     val span =
-                        tracer.spanBuilder("lori.LoriService.POST/api/v1/template/exceptions")
+                        tracer
+                            .spanBuilder("lori.LoriService.POST/api/v1/template/exceptions")
                             .setSpanKind(SpanKind.SERVER)
                             .startSpan()
                     withContext(span.asContextElement()) {
@@ -455,7 +471,7 @@ fun Routing.templateRoutes(
                                 span.setStatus(StatusCode.ERROR)
                                 return@withContext call.respond(
                                     HttpStatusCode.BadRequest,
-                                    ApiError.badRequestError("Ein Template kann nicht seine eigene Exception sein")
+                                    ApiError.badRequestError("Ein Template kann nicht seine eigene Exception sein"),
                                 )
                             }
                             // Prevent deeper exception loops -> max depth = 1
@@ -463,17 +479,17 @@ fun Routing.templateRoutes(
                                 span.setStatus(StatusCode.ERROR)
                                 return@withContext call.respond(
                                     HttpStatusCode.BadRequest,
-                                    ApiError.badRequestError("Exception existiert nicht")
+                                    ApiError.badRequestError("Exception existiert nicht"),
                                 )
                             }
                             backend.addExceptionToTemplate(
                                 rightIdTemplate = idOfTemplate,
-                                rightIdExceptions = idsOfExceptions
+                                rightIdExceptions = idsOfExceptions,
                             )
 
                             span.setStatus(StatusCode.OK)
                             call.respond(
-                                HttpStatusCode.OK
+                                HttpStatusCode.OK,
                             )
                         } catch (e: Exception) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
@@ -492,7 +508,9 @@ fun Routing.templateRoutes(
         route("/list") {
             get {
                 val span =
-                    tracer.spanBuilder("lori.LoriService.GET/api/v1/template/list").setSpanKind(SpanKind.SERVER)
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/template/list")
+                        .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
@@ -500,7 +518,8 @@ fun Routing.templateRoutes(
                         val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                         if (limit < 1 || limit > 200) {
                             span.setStatus(
-                                StatusCode.ERROR, "BadRequest: Limit parameter is expected to be between 1 and 200."
+                                StatusCode.ERROR,
+                                "BadRequest: Limit parameter is expected to be between 1 and 200.",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,

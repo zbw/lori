@@ -11,11 +11,9 @@ class SearchPair(
     val key: SearchKey,
     val values: String,
 ) {
-    fun toWhereClause(): String =
-        "(${key.tsVectorColumn} @@ $SQL_FUNC_TO_TS_QUERY(?) AND ${key.tsVectorColumn} is not null)"
+    fun toWhereClause(): String = "(${key.tsVectorColumn} @@ $SQL_FUNC_TO_TS_QUERY(?) AND ${key.tsVectorColumn} is not null)"
 
-    fun getCoalesce(): String =
-        "$SQL_FUNC_COALESCE($SQL_FUNC_TS_RANK_CD(${key.tsVectorColumn}, $SQL_FUNC_TO_TS_QUERY(?)),1)"
+    fun getCoalesce(): String = "$SQL_FUNC_COALESCE($SQL_FUNC_TS_RANK_CD(${key.tsVectorColumn}, $SQL_FUNC_TO_TS_QUERY(?)),1)"
 
     fun getValuesAsString(): String = values
 

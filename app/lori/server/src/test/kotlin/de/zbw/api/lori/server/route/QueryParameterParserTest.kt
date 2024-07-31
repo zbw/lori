@@ -23,7 +23,6 @@ import kotlin.test.assertNull
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class QueryParameterParserTest {
-
     @DataProvider(name = DATA_FOR_PARSE_PUBLICATION_DATE)
     fun createDataForParsePublicationDate() =
         arrayOf(
@@ -61,13 +60,13 @@ class QueryParameterParserTest {
                 received!!.fromYear,
                 `is`(
                     expectedFilter.fromYear,
-                )
+                ),
             )
             assertThat(
                 received.toYear,
                 `is`(
-                    expectedFilter.toYear
-                )
+                    expectedFilter.toYear,
+                ),
             )
         }
     }
@@ -80,7 +79,7 @@ class QueryParameterParserTest {
                 PublicationTypeFilter(
                     listOf(
                         PublicationType.WORKING_PAPER,
-                        PublicationType.ARTICLE
+                        PublicationType.ARTICLE,
                     ),
                 ),
             ),
@@ -114,7 +113,7 @@ class QueryParameterParserTest {
                 received!!.publicationTypes.toSet(),
                 `is`(
                     expectedFilter.publicationTypes.toSet(),
-                )
+                ),
             )
         }
     }
@@ -162,7 +161,7 @@ class QueryParameterParserTest {
                 received!!.accessStates.toSet(),
                 `is`(
                     expectedFilter.accessStates.toSet(),
-                )
+                ),
             )
         }
     }
@@ -170,12 +169,14 @@ class QueryParameterParserTest {
     @Test
     fun testParseDateFilter() {
         // given
-        val expectedStartFilter = StartDateFilter(
-            LocalDate.of(2000, 10, 1)
-        )
-        val expectedEndFilter = EndDateFilter(
-            LocalDate.of(2000, 12, 1)
-        )
+        val expectedStartFilter =
+            StartDateFilter(
+                LocalDate.of(2000, 10, 1),
+            )
+        val expectedEndFilter =
+            EndDateFilter(
+                LocalDate.of(2000, 12, 1),
+            )
 
         // when + then
         assertThat(
@@ -186,7 +187,7 @@ class QueryParameterParserTest {
         // when + then
         assertThat(
             QueryParameterParser.parseEndDateFilter("2000-12-01")!!.date,
-            `is`(expectedEndFilter.date)
+            `is`(expectedEndFilter.date),
         )
 
         // when + then

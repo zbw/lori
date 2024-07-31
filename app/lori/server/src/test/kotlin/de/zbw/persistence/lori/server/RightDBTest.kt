@@ -33,10 +33,11 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightDBTest : DatabaseTest() {
-    private val dbConnector = DatabaseConnector(
-        connection = dataSource.connection,
-        tracer = OpenTelemetry.noop().getTracer("foo"),
-    )
+    private val dbConnector =
+        DatabaseConnector(
+            connection = dataSource.connection,
+            tracer = OpenTelemetry.noop().getTracer("foo"),
+        )
 
     @BeforeMethod
     fun beforeTest() {
@@ -52,16 +53,18 @@ class RightDBTest : DatabaseTest() {
     @Test(expectedExceptions = [IllegalStateException::class])
     fun testInsertRightNoRowInsertedError() {
         // given
-        val prepStmt = spyk(dbConnector.connection.prepareStatement(RightDB.STATEMENT_INSERT_RIGHT)) {
-            every { executeUpdate() } returns 0
-        }
-        val dbConnectorMockked = DatabaseConnector(
-            mockk(relaxed = true) {
-                every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
-            },
-            tracer,
-            mockk(),
-        )
+        val prepStmt =
+            spyk(dbConnector.connection.prepareStatement(RightDB.STATEMENT_INSERT_RIGHT)) {
+                every { executeUpdate() } returns 0
+            }
+        val dbConnectorMockked =
+            DatabaseConnector(
+                mockk(relaxed = true) {
+                    every { prepareStatement(any(), Statement.RETURN_GENERATED_KEYS) } returns prepStmt
+                },
+                tracer,
+                mockk(),
+            )
         // when
         dbConnectorMockked.rightDB.insertRight(TEST_RIGHT)
         // then exception
@@ -99,7 +102,7 @@ class RightDBTest : DatabaseTest() {
         val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
         assertThat(
             receivedUpdatedRights.first(),
-            `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null))
+            `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null)),
         )
 
         // delete
@@ -116,13 +119,14 @@ class RightDBTest : DatabaseTest() {
 
     @Test(expectedExceptions = [SQLException::class])
     fun testGetRightException() {
-        val dbConnector = DatabaseConnector(
-            mockk(relaxed = true) {
-                every { prepareStatement(any()) } throws SQLException()
-            },
-            tracer,
-            mockk(),
-        )
+        val dbConnector =
+            DatabaseConnector(
+                mockk(relaxed = true) {
+                    every { prepareStatement(any()) } throws SQLException()
+                },
+                tracer,
+                mockk(),
+            )
         dbConnector.rightDB.getRightsByIds(listOf("1"))
     }
 
@@ -132,9 +136,11 @@ class RightDBTest : DatabaseTest() {
         val templateName2 = "baz"
         val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
         val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2))
-        val receivedRightIds = dbConnector.rightDB.getRightsByTemplateNames(listOf(templateName2, templateName1))
-            .map { it.rightId }
-            .toSet()
+        val receivedRightIds =
+            dbConnector.rightDB
+                .getRightsByTemplateNames(listOf(templateName2, templateName1))
+                .map { it.rightId }
+                .toSet()
 
         assertThat(
             receivedRightIds,
@@ -151,13 +157,14 @@ class RightDBTest : DatabaseTest() {
         val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
 
         // Create Template which is an exception of the first one.
-        val rightId2 = dbConnector.rightDB.insertRight(
-            TEST_RIGHT.copy(
-                isTemplate = true,
-                templateName = templateName2,
-                exceptionFrom = rightId1
+        val rightId2 =
+            dbConnector.rightDB.insertRight(
+                TEST_RIGHT.copy(
+                    isTemplate = true,
+                    templateName = templateName2,
+                    exceptionFrom = rightId1,
+                ),
             )
-        )
 
         val exceptionRights: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId1)
         assertThat(
@@ -191,8 +198,8 @@ class RightDBTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     isTemplate = true,
                     lastAppliedOn = null,
-                    templateName = templateNameUpper
-                )
+                    templateName = templateNameUpper,
+                ),
             )
         val templateNameException = "exception"
         val exceptionTemplate1 =
@@ -207,7 +214,7 @@ class RightDBTest : DatabaseTest() {
         )
         dbConnector.rightDB.addExceptionToTemplate(
             rightIdExceptions = listOf(excID1, excID2),
-            rightIdTemplate = upperID
+            rightIdTemplate = upperID,
         )
         assertFalse(
             dbConnector.rightDB.isException(upperID),
@@ -224,42 +231,43 @@ class RightDBTest : DatabaseTest() {
             `is`(
                 setOf(
                     exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
-                    exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID)
-                )
+                    exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID),
+                ),
             ),
         )
     }
 
     companion object {
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.RightDBTest")
-        val TEST_UPDATED_RIGHT = ItemRight(
-            rightId = "testupdated",
-            accessState = AccessState.RESTRICTED,
-            authorRightException = false,
-            basisAccessState = BasisAccessState.ZBW_POLICY,
-            basisStorage = BasisStorage.LICENCE_CONTRACT,
-            createdBy = TEST_RIGHT.createdBy,
-            createdOn = TEST_RIGHT.createdOn,
-            endDate = TEST_RIGHT.endDate!!.plusDays(1),
-            exceptionFrom = null,
-            groupIds = TEST_RIGHT.groupIds,
-            isTemplate = true,
-            lastUpdatedBy = "user4",
-            lastAppliedOn = TEST_RIGHT.lastAppliedOn,
-            lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
-            licenceContract = "foo licence",
-            nonStandardOpenContentLicence = false,
-            nonStandardOpenContentLicenceURL = "https://foobar.de",
-            notesGeneral = "Some more general notes",
-            notesFormalRules = "Some more formal rule notes",
-            notesProcessDocumentation = "Some more process documentation",
-            notesManagementRelated = "Some more management related notes",
-            openContentLicence = "some more licence",
-            restrictedOpenContentLicence = true,
-            startDate = TEST_RIGHT.startDate.minusDays(10),
-            templateDescription = "description foo",
-            templateName = "name foo",
-            zbwUserAgreement = true,
-        )
+        val TEST_UPDATED_RIGHT =
+            ItemRight(
+                rightId = "testupdated",
+                accessState = AccessState.RESTRICTED,
+                authorRightException = false,
+                basisAccessState = BasisAccessState.ZBW_POLICY,
+                basisStorage = BasisStorage.LICENCE_CONTRACT,
+                createdBy = TEST_RIGHT.createdBy,
+                createdOn = TEST_RIGHT.createdOn,
+                endDate = TEST_RIGHT.endDate!!.plusDays(1),
+                exceptionFrom = null,
+                groupIds = TEST_RIGHT.groupIds,
+                isTemplate = true,
+                lastUpdatedBy = "user4",
+                lastAppliedOn = TEST_RIGHT.lastAppliedOn,
+                lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
+                licenceContract = "foo licence",
+                nonStandardOpenContentLicence = false,
+                nonStandardOpenContentLicenceURL = "https://foobar.de",
+                notesGeneral = "Some more general notes",
+                notesFormalRules = "Some more formal rule notes",
+                notesProcessDocumentation = "Some more process documentation",
+                notesManagementRelated = "Some more management related notes",
+                openContentLicence = "some more licence",
+                restrictedOpenContentLicence = true,
+                startDate = TEST_RIGHT.startDate.minusDays(10),
+                templateDescription = "description foo",
+                templateName = "name foo",
+                zbwUserAgreement = true,
+            )
     }
 }

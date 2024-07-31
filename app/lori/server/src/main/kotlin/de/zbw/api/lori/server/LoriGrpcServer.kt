@@ -39,12 +39,12 @@ class LoriGrpcServer(
     private val daConnector: DAConnector = DAConnector(config, backend),
     private val tracer: Tracer,
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
-
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
-        val span = tracer
-            .spanBuilder("lori.LoriService/FullImport")
-            .setSpanKind(SpanKind.SERVER)
-            .startSpan()
+        val span =
+            tracer
+                .spanBuilder("lori.LoriService/FullImport")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
         return withContext(span.asContextElement()) {
             try {
                 val token = daConnector.login()
@@ -58,8 +58,9 @@ class LoriGrpcServer(
             } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
-                    Status.INTERNAL.withCause(e.cause)
-                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+                    Status.INTERNAL
+                        .withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}"),
                 )
             } finally {
                 span.end()
@@ -68,17 +69,19 @@ class LoriGrpcServer(
     }
 
     override suspend fun applyTemplates(request: ApplyTemplatesRequest): ApplyTemplatesResponse {
-        val span = tracer
-            .spanBuilder("lori.LoriService/ApplyTemplates")
-            .setSpanKind(SpanKind.SERVER)
-            .startSpan()
+        val span =
+            tracer
+                .spanBuilder("lori.LoriService/ApplyTemplates")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val backendResponse: List<TemplateApplicationResult> = if (request.all) {
-                    daConnector.backend.applyAllTemplates()
-                } else {
-                    daConnector.backend.applyTemplates(request.rightIdsList)
-                }
+                val backendResponse: List<TemplateApplicationResult> =
+                    if (request.all) {
+                        daConnector.backend.applyAllTemplates()
+                    } else {
+                        daConnector.backend.applyTemplates(request.rightIdsList)
+                    }
                 val templateApplications: List<TemplateApplication> =
                     backendResponse.map { e: TemplateApplicationResult ->
                         TemplateApplication
@@ -89,7 +92,8 @@ class LoriGrpcServer(
                             .addAllMetadataIds(e.appliedMetadataIds)
                             .addAllErrors(
                                 e.errors.map {
-                                    TemplateError.newBuilder()
+                                    TemplateError
+                                        .newBuilder()
                                         .setErrorId(it.errorId ?: -1)
                                         .setMessage(it.message)
                                         .setRightIdSource(it.rightIdSource ?: "")
@@ -98,9 +102,8 @@ class LoriGrpcServer(
                                         .setConflictingRightId(it.conflictingRightId)
                                         .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
                                         .build()
-                                }
-                            )
-                            .addAllExceptions(
+                                },
+                            ).addAllExceptions(
                                 e.exceptionTemplateApplicationResult.map { exc ->
                                     TemplateApplication
                                         .newBuilder()
@@ -110,7 +113,8 @@ class LoriGrpcServer(
                                         .addAllMetadataIds(exc.appliedMetadataIds)
                                         .addAllErrors(
                                             exc.errors.map {
-                                                TemplateError.newBuilder()
+                                                TemplateError
+                                                    .newBuilder()
                                                     .setErrorId(it.errorId ?: -1)
                                                     .setMessage(it.message)
                                                     .setRightIdSource(it.rightIdSource ?: "")
@@ -119,12 +123,10 @@ class LoriGrpcServer(
                                                     .setConflictingRightId(it.conflictingRightId)
                                                     .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
                                                     .build()
-                                            }
-                                        )
-                                        .build()
-                                }
-                            )
-                            .build()
+                                            },
+                                        ).build()
+                                },
+                            ).build()
                     }
                 ApplyTemplatesResponse
                     .newBuilder()
@@ -133,14 +135,18 @@ class LoriGrpcServer(
             } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
-                    Status.INTERNAL.withCause(e.cause)
-                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}")
+                    Status.INTERNAL
+                        .withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}"),
                 )
             }
         }
     }
 
-    private suspend fun runImports(communityIds: List<Int>, token: String): Int {
+    private suspend fun runImports(
+        communityIds: List<Int>,
+        token: String,
+    ): Int {
         val semaphore = Semaphore(3)
         val mutex = Mutex()
         var importCount = 0
@@ -159,7 +165,10 @@ class LoriGrpcServer(
         return importCount
     }
 
-    private suspend fun importCommunity(token: String, communityId: Int): Int {
+    private suspend fun importCommunity(
+        token: String,
+        communityId: Int,
+    ): Int {
         LOG.info("Start importing community $communityId")
         val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
         val import = daConnector.startFullImport(token, daCommunity)

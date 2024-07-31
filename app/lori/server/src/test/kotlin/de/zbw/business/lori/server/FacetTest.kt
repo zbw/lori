@@ -31,74 +31,82 @@ import java.time.LocalDate
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class FacetTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
-
-    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
-        itemZDB1 to listOf(
-            TEST_RIGHT.copy(
-                startDate = LocalDate.of(2000, 1, 1),
-                endDate = LocalDate.of(2000, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-        itemZDB2 to listOf(
-            TEST_RIGHT.copy(
-                startDate = LocalDate.of(2001, 1, 1),
-                endDate = LocalDate.of(2001, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-        itemZDB3 to listOf(
-            TEST_RIGHT.copy(
-                startDate = LocalDate.of(2002, 1, 1),
-                endDate = LocalDate.of(2002, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-        itemSigel1 to listOf(
-            TEST_RIGHT.copy(
-                accessState = AccessState.OPEN,
-                startDate = LocalDate.of(2003, 1, 1),
-                endDate = LocalDate.of(2003, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-        itemSigel2 to listOf(
-            TEST_RIGHT.copy(
-                accessState = AccessState.RESTRICTED,
-                startDate = LocalDate.of(2004, 1, 1),
-                endDate = LocalDate.of(2004, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-        itemSigel3 to listOf(
-            TEST_RIGHT.copy(
-                accessState = AccessState.CLOSED,
-                startDate = LocalDate.of(2005, 1, 1),
-                endDate = LocalDate.of(2005, 12, 31),
-                isTemplate = false,
-                templateName = null,
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
-            TEST_RIGHT.copy(
-                accessState = AccessState.OPEN,
-                startDate = LocalDate.of(2003, 1, 1),
-                endDate = LocalDate.of(2003, 12, 31),
-                isTemplate = false,
-                templateName = null,
-            )
-        ),
-    )
+            mockk(),
+        )
+
+    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
+        mapOf(
+            itemZDB1 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2000, 1, 1),
+                        endDate = LocalDate.of(2000, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            itemZDB2 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2001, 1, 1),
+                        endDate = LocalDate.of(2001, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            itemZDB3 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2002, 1, 1),
+                        endDate = LocalDate.of(2002, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            itemSigel1 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.OPEN,
+                        startDate = LocalDate.of(2003, 1, 1),
+                        endDate = LocalDate.of(2003, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            itemSigel2 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.RESTRICTED,
+                        startDate = LocalDate.of(2004, 1, 1),
+                        endDate = LocalDate.of(2004, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            itemSigel3 to
+                listOf(
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.CLOSED,
+                        startDate = LocalDate.of(2005, 1, 1),
+                        endDate = LocalDate.of(2005, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.OPEN,
+                        startDate = LocalDate.of(2003, 1, 1),
+                        endDate = LocalDate.of(2003, 12, 31),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+        )
 
     @BeforeClass
     fun fillDB() {
@@ -162,15 +170,15 @@ class FacetTest : DatabaseTest() {
                     AccessState.RESTRICTED to 1,
                     AccessState.CLOSED to 4,
                 ).toMap(),
-                "search for all items, no filter"
+                "search for all items, no filter",
             ),
             arrayOf(
                 "col:'common'",
                 listOf(
                     PaketSigelFilter(
                         listOf(
-                            itemSigel1.paketSigel!!
-                        )
+                            itemSigel1.paketSigel!!,
+                        ),
                     ),
                 ),
                 emptyList<RightSearchFilter>(),
@@ -189,15 +197,15 @@ class FacetTest : DatabaseTest() {
                     itemZDB1.zdbIdSeries to 1,
                 ).toMap(),
                 listOf(AccessState.OPEN to 1).toMap(),
-                "search for all items, filter by PaketSigel Id"
+                "search for all items, filter by PaketSigel Id",
             ),
             arrayOf(
                 "col:'common'",
                 listOf(
                     ZDBIdFilter(
                         listOf(
-                            itemZDB1.zdbIdJournal!!
-                        )
+                            itemZDB1.zdbIdJournal!!,
+                        ),
                     ),
                 ),
                 emptyList<RightSearchFilter>(),
@@ -216,20 +224,20 @@ class FacetTest : DatabaseTest() {
                     itemZDB1.zdbIdSeries to 1,
                 ).toMap(),
                 listOf(AccessState.CLOSED to 1).toMap(),
-                "search for all items, filter by ZDB-Id"
+                "search for all items, filter by ZDB-Id",
             ),
             arrayOf(
                 "col:'common'",
                 listOf(
                     PaketSigelFilter(
                         listOf(
-                            itemSigel1.paketSigel!!
-                        )
+                            itemSigel1.paketSigel!!,
+                        ),
                     ),
                     ZDBIdFilter(
                         listOf(
-                            itemZDB1.zdbIdJournal!!
-                        )
+                            itemZDB1.zdbIdJournal!!,
+                        ),
                     ),
                 ),
                 emptyList<RightSearchFilter>(),
@@ -239,7 +247,7 @@ class FacetTest : DatabaseTest() {
                 emptyMap<String, Int>(),
                 emptyMap<String, Int>(),
                 emptyMap<AccessState, Int>(),
-                "search for all items, filter by ZDB-Id and PaketSigel"
+                "search for all items, filter by ZDB-Id and PaketSigel",
             ),
         )
 
@@ -257,13 +265,14 @@ class FacetTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchResult: SearchQueryResult = backend.searchQuery(
-            givenSearchTerm,
-            10,
-            0,
-            metadataSearchFilter,
-            rightsSearchFilter,
-        )
+        val searchResult: SearchQueryResult =
+            backend.searchQuery(
+                givenSearchTerm,
+                10,
+                0,
+                metadataSearchFilter,
+                rightsSearchFilter,
+            )
 
         // then
         assertThat(
@@ -274,20 +283,20 @@ class FacetTest : DatabaseTest() {
         assertThat(
             searchResult.numberOfResults,
             `is`(
-                expectedNumberOfResults
+                expectedNumberOfResults,
             ),
         )
         assertThat(
             searchResult.paketSigels,
             `is`(
-                expectedPaketSigelIds
-            )
+                expectedPaketSigelIds,
+            ),
         )
         assertThat(
             searchResult.zdbIds,
             `is`(
-                expectedZDBIds
-            )
+                expectedZDBIds,
+            ),
         )
 
         // Test publication types
@@ -295,14 +304,14 @@ class FacetTest : DatabaseTest() {
             searchResult.publicationType,
             `is`(
                 expectedPublicationType,
-            )
+            ),
         )
         // Test access state
         assertThat(
             searchResult.accessState,
             `is`(
-                expectedAccessState
-            )
+                expectedAccessState,
+            ),
         )
     }
 
@@ -317,50 +326,56 @@ class FacetTest : DatabaseTest() {
         private const val ZDB_2 = "zdb2"
         private const val ZDB_3 = "zdb3"
 
-        val itemZDB1 = TEST_Metadata.copy(
-            metadataId = "zdb1",
-            collectionName = "common zdb",
-            zdbIdJournal = ZDB_1,
-            publicationDate = LocalDate.of(2010, 1, 1),
-            publicationType = PublicationType.BOOK,
-        )
-        val itemSigel1 = TEST_Metadata.copy(
-            metadataId = "sigel1",
-            collectionName = "common sigel",
-            paketSigel = SIGEL_1,
-            publicationDate = LocalDate.of(2011, 1, 1),
-            publicationType = PublicationType.BOOK_PART,
-        )
+        val itemZDB1 =
+            TEST_Metadata.copy(
+                metadataId = "zdb1",
+                collectionName = "common zdb",
+                zdbIdJournal = ZDB_1,
+                publicationDate = LocalDate.of(2010, 1, 1),
+                publicationType = PublicationType.BOOK,
+            )
+        val itemSigel1 =
+            TEST_Metadata.copy(
+                metadataId = "sigel1",
+                collectionName = "common sigel",
+                paketSigel = SIGEL_1,
+                publicationDate = LocalDate.of(2011, 1, 1),
+                publicationType = PublicationType.BOOK_PART,
+            )
 
-        val itemZDB2 = TEST_Metadata.copy(
-            metadataId = "zdb2",
-            collectionName = "common zdb",
-            zdbIdJournal = ZDB_2,
-            publicationDate = LocalDate.of(2012, 1, 1),
-            publicationType = PublicationType.CONFERENCE_PAPER,
-        )
-        val itemSigel2 = TEST_Metadata.copy(
-            metadataId = "sigel2",
-            collectionName = "common sigel",
-            paketSigel = SIGEL_2,
-            publicationDate = LocalDate.of(2013, 1, 1),
-            publicationType = PublicationType.PERIODICAL_PART,
-        )
+        val itemZDB2 =
+            TEST_Metadata.copy(
+                metadataId = "zdb2",
+                collectionName = "common zdb",
+                zdbIdJournal = ZDB_2,
+                publicationDate = LocalDate.of(2012, 1, 1),
+                publicationType = PublicationType.CONFERENCE_PAPER,
+            )
+        val itemSigel2 =
+            TEST_Metadata.copy(
+                metadataId = "sigel2",
+                collectionName = "common sigel",
+                paketSigel = SIGEL_2,
+                publicationDate = LocalDate.of(2013, 1, 1),
+                publicationType = PublicationType.PERIODICAL_PART,
+            )
 
-        val itemZDB3 = TEST_Metadata.copy(
-            metadataId = "zdb3",
-            collectionName = "common zdb",
-            zdbIdJournal = ZDB_3,
-            publicationDate = LocalDate.of(2014, 1, 1),
-            publicationType = PublicationType.PROCEEDINGS,
-        )
-        val itemSigel3 = TEST_Metadata.copy(
-            metadataId = "sigel3",
-            collectionName = "common sigel",
-            paketSigel = SIGEL_3,
-            publicationDate = LocalDate.of(2015, 1, 1),
-            publicationType = PublicationType.THESIS,
-        )
+        val itemZDB3 =
+            TEST_Metadata.copy(
+                metadataId = "zdb3",
+                collectionName = "common zdb",
+                zdbIdJournal = ZDB_3,
+                publicationDate = LocalDate.of(2014, 1, 1),
+                publicationType = PublicationType.PROCEEDINGS,
+            )
+        val itemSigel3 =
+            TEST_Metadata.copy(
+                metadataId = "sigel3",
+                collectionName = "common sigel",
+                paketSigel = SIGEL_3,
+                publicationDate = LocalDate.of(2015, 1, 1),
+                publicationType = PublicationType.THESIS,
+            )
 
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT
     }

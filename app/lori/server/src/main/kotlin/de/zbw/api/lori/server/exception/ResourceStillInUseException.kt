@@ -7,4 +7,6 @@ package de.zbw.api.lori.server.exception
  * Created on 01-19-2023.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class ResourceStillInUseException(message: String) : Exception(message)
+class ResourceStillInUseException(
+    message: String,
+) : Exception(message)

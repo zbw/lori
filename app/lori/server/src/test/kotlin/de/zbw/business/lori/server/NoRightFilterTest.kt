@@ -32,28 +32,32 @@ import java.time.LocalDate
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class NoRightFilterTest : DatabaseTest() {
-    private val backend = LoriServerBackend(
-        DatabaseConnector(
-            connection = dataSource.connection,
-            tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
-        ),
-        mockk(),
-    )
-    private val itemRightRestricted = TEST_Metadata.copy(
-        metadataId = "restricted right",
-        collectionName = "subject1",
-        publicationType = PublicationType.PROCEEDINGS,
-    )
-    private val itemNoRight = TEST_Metadata.copy(
-        metadataId = "no rights",
-        collectionName = "subject1",
-        publicationType = PublicationType.PROCEEDINGS,
-    )
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connection = dataSource.connection,
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk(),
+        )
+    private val itemRightRestricted =
+        TEST_Metadata.copy(
+            metadataId = "restricted right",
+            collectionName = "subject1",
+            publicationType = PublicationType.PROCEEDINGS,
+        )
+    private val itemNoRight =
+        TEST_Metadata.copy(
+            metadataId = "no rights",
+            collectionName = "subject1",
+            publicationType = PublicationType.PROCEEDINGS,
+        )
 
-    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> = mapOf(
-        itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
-        itemNoRight to emptyList(),
-    )
+    private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
+        mapOf(
+            itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
+            itemNoRight to emptyList(),
+        )
 
     @BeforeClass
     fun fillDB() {
@@ -96,7 +100,7 @@ class NoRightFilterTest : DatabaseTest() {
                     PublicationTypeFilter(
                         listOf(
                             PublicationType.PROCEEDINGS,
-                        )
+                        ),
                     ),
                 ),
                 null,
@@ -108,7 +112,7 @@ class NoRightFilterTest : DatabaseTest() {
                     PublicationTypeFilter(
                         listOf(
                             PublicationType.PROCEEDINGS,
-                        )
+                        ),
                     ),
                 ),
                 NoRightInformationFilter(),
@@ -123,14 +127,15 @@ class NoRightFilterTest : DatabaseTest() {
         noRightInformationFilter: NoRightInformationFilter?,
         expectedResult: Set<ItemMetadata>,
     ) {
-        val searchResult: SearchQueryResult = backend.searchQuery(
-            givenSearchTerm,
-            10,
-            0,
-            metadataSearchFilter,
-            emptyList(),
-            noRightInformationFilter,
-        )
+        val searchResult: SearchQueryResult =
+            backend.searchQuery(
+                givenSearchTerm,
+                10,
+                0,
+                metadataSearchFilter,
+                emptyList(),
+                noRightInformationFilter,
+            )
         assertThat(
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),

@@ -338,8 +338,8 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            rightId,
           undefined,
-          rightId,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -353,6 +353,7 @@ export default defineComponent({
         });
     };
 
+    // TODO(CB): Remove this method?
     const executeSearchByMetadataId = (searchTerm: string) => {
       searchStore.isLastSearchForTemplates = false;
       api

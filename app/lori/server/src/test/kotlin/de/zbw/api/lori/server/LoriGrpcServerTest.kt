@@ -28,53 +28,57 @@ import java.nio.channels.UnresolvedAddressException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class LoriGrpcServerTest {
-
     @Test
     fun testApplyTemplatesAll() {
         runBlocking {
             // given
-            val expectedResult = listOf(
-                TemplateApplicationResult(
-                    rightId = "1",
-                    errors = emptyList(),
-                    appliedMetadataIds = listOf("2"),
-                    templateName = "foobar",
-                    exceptionTemplateApplicationResult = emptyList(),
+            val expectedResult =
+                listOf(
+                    TemplateApplicationResult(
+                        rightId = "1",
+                        errors = emptyList(),
+                        appliedMetadataIds = listOf("2"),
+                        templateName = "foobar",
+                        exceptionTemplateApplicationResult = emptyList(),
+                    ),
                 )
-            )
-            val expectedResponse = ApplyTemplatesResponse
-                .newBuilder()
-                .addAllTemplateApplications(
-                    listOf(
-                        TemplateApplication
-                            .newBuilder()
-                            .addMetadataIds("2")
-                            .setRightId("1")
-                            .setTemplateName("foobar")
-                            .setNumberAppliedEntries(1)
-                            .build()
-                    )
-                )
-                .build()
+            val expectedResponse =
+                ApplyTemplatesResponse
+                    .newBuilder()
+                    .addAllTemplateApplications(
+                        listOf(
+                            TemplateApplication
+                                .newBuilder()
+                                .addMetadataIds("2")
+                                .setRightId("1")
+                                .setTemplateName("foobar")
+                                .setNumberAppliedEntries(1)
+                                .build(),
+                        ),
+                    ).build()
 
-            val request = ApplyTemplatesRequest
-                .newBuilder()
-                .setAll(true)
-                .build()
-            val backendMock = mockk<LoriServerBackend> {
-                every {
-                    applyAllTemplates()
-                } returns expectedResult
-            }
+            val request =
+                ApplyTemplatesRequest
+                    .newBuilder()
+                    .setAll(true)
+                    .build()
+            val backendMock =
+                mockk<LoriServerBackend> {
+                    every {
+                        applyAllTemplates()
+                    } returns expectedResult
+                }
             // when
-            val grpcServer = LoriGrpcServer(
-                config = mockk(),
-                backend = backendMock,
-                daConnector = mockk() {
-                    every { backend } returns backendMock
-                },
-                tracer = tracer,
-            )
+            val grpcServer =
+                LoriGrpcServer(
+                    config = mockk(),
+                    backend = backendMock,
+                    daConnector =
+                        mockk {
+                            every { backend } returns backendMock
+                        },
+                    tracer = tracer,
+                )
             val response = grpcServer.applyTemplates(request)
 
             // then
@@ -86,49 +90,54 @@ class LoriGrpcServerTest {
     fun testApplyTemplatesIds() {
         runBlocking {
             // given
-            val expectedResult = listOf(
-                TemplateApplicationResult(
-                    rightId = "1",
-                    errors = emptyList(),
-                    appliedMetadataIds = listOf("2"),
-                    templateName = "foobar",
-                    exceptionTemplateApplicationResult = emptyList(),
+            val expectedResult =
+                listOf(
+                    TemplateApplicationResult(
+                        rightId = "1",
+                        errors = emptyList(),
+                        appliedMetadataIds = listOf("2"),
+                        templateName = "foobar",
+                        exceptionTemplateApplicationResult = emptyList(),
+                    ),
                 )
-            )
-            val expectedResponse = ApplyTemplatesResponse
-                .newBuilder()
-                .addAllTemplateApplications(
-                    listOf(
-                        TemplateApplication
-                            .newBuilder()
-                            .addMetadataIds("2")
-                            .setRightId("1")
-                            .setTemplateName("foobar")
-                            .setNumberAppliedEntries(1)
-                            .build()
-                    )
-                )
-                .build()
+            val expectedResponse =
+                ApplyTemplatesResponse
+                    .newBuilder()
+                    .addAllTemplateApplications(
+                        listOf(
+                            TemplateApplication
+                                .newBuilder()
+                                .addMetadataIds("2")
+                                .setRightId("1")
+                                .setTemplateName("foobar")
+                                .setNumberAppliedEntries(1)
+                                .build(),
+                        ),
+                    ).build()
 
-            val request = ApplyTemplatesRequest
-                .newBuilder()
-                .setAll(false)
-                .addAllRightIds(listOf("1"))
-                .build()
-            val backendMock = mockk<LoriServerBackend> {
-                every {
-                    applyTemplates(any())
-                } returns expectedResult
-            }
+            val request =
+                ApplyTemplatesRequest
+                    .newBuilder()
+                    .setAll(false)
+                    .addAllRightIds(listOf("1"))
+                    .build()
+            val backendMock =
+                mockk<LoriServerBackend> {
+                    every {
+                        applyTemplates(any())
+                    } returns expectedResult
+                }
             // when
-            val grpcServer = LoriGrpcServer(
-                config = mockk(),
-                backend = backendMock,
-                daConnector = mockk {
-                    every { backend } returns backendMock
-                },
-                tracer = tracer,
-            )
+            val grpcServer =
+                LoriGrpcServer(
+                    config = mockk(),
+                    backend = backendMock,
+                    daConnector =
+                        mockk {
+                            every { backend } returns backendMock
+                        },
+                    tracer = tracer,
+                )
             val response = grpcServer.applyTemplates(request)
 
             // then
@@ -143,47 +152,53 @@ class LoriGrpcServerTest {
             val token = "SOME_TOKEN"
             val importsPerCommunity = 3
             val communityIds = listOf("4")
-            val community = DACommunity(
-                id = 5,
-                name = "Some name",
-                handle = null,
-                type = null,
-                link = "some link",
-                expand = emptyList(),
-                logo = null,
-                parentCommunity = null,
-                copyrightText = null,
-                introductoryText = null,
-                shortDescription = null,
-                sidebarText = null,
-                subcommunities = emptyList(),
-                collections = listOf(
-                    mockk {
-                        every { id } returns 101
-                    }
-                ),
-                countItems = 1,
-            )
+            val community =
+                DACommunity(
+                    id = 5,
+                    name = "Some name",
+                    handle = null,
+                    type = null,
+                    link = "some link",
+                    expand = emptyList(),
+                    logo = null,
+                    parentCommunity = null,
+                    copyrightText = null,
+                    introductoryText = null,
+                    shortDescription = null,
+                    sidebarText = null,
+                    subcommunities = emptyList(),
+                    collections =
+                        listOf(
+                            mockk {
+                                every { id } returns 101
+                            },
+                        ),
+                    countItems = 1,
+                )
 
-            val importer = mockk<DAConnector> {
-                coEvery { login() } returns token
-                coEvery { getCommunity(token, any()) } returns community
-                coEvery { getAllCommunityIds(token) } returns listOf(community.id)
-                coEvery { startFullImport(token, any()) } returns listOf(importsPerCommunity)
-            }
+            val importer =
+                mockk<DAConnector> {
+                    coEvery { login() } returns token
+                    coEvery { getCommunity(token, any()) } returns community
+                    coEvery { getAllCommunityIds(token) } returns listOf(community.id)
+                    coEvery { startFullImport(token, any()) } returns listOf(importsPerCommunity)
+                }
 
-            val expected = FullImportResponse.newBuilder()
-                .setItemsImported(communityIds.size * importsPerCommunity)
-                .build()
+            val expected =
+                FullImportResponse
+                    .newBuilder()
+                    .setItemsImported(communityIds.size * importsPerCommunity)
+                    .build()
 
             val request = FullImportRequest.getDefaultInstance()
             // when
-            val response = LoriGrpcServer(
-                mockk(),
-                mockk(),
-                importer,
-                tracer,
-            ).fullImport(request)
+            val response =
+                LoriGrpcServer(
+                    mockk(),
+                    mockk(),
+                    importer,
+                    tracer,
+                ).fullImport(request)
 
             // then
             assertThat(response, `is`(expected))
@@ -194,9 +209,10 @@ class LoriGrpcServerTest {
     fun testFullImportLoginError() {
         runBlocking {
             // given
-            val importer = mockk<DAConnector> {
-                coEvery { login() } throws UnresolvedAddressException()
-            }
+            val importer =
+                mockk<DAConnector> {
+                    coEvery { login() } throws UnresolvedAddressException()
+                }
 
             val request = FullImportRequest.getDefaultInstance()
             // when
