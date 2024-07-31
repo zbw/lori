@@ -20,25 +20,29 @@ import org.slf4j.LoggerFactory
 object Main {
     @JvmStatic
     fun main(args: Array<String>) {
-
-        val openTelemetry = AutoConfiguredOpenTelemetrySdk
-            .initialize()
-            .openTelemetrySdk
+        val openTelemetry =
+            AutoConfiguredOpenTelemetrySdk
+                .initialize()
+                .openTelemetrySdk
         val tracer = openTelemetry.getTracer("de.zbw.job.loriiimport.Main")
 
-        val span = tracer
-            .spanBuilder("main")
-            .setSpanKind(SpanKind.CLIENT)
-            .startSpan()
+        val span =
+            tracer
+                .spanBuilder("main")
+                .setSpanKind(SpanKind.CLIENT)
+                .startSpan()
 
-        val loriClient = LoriClient(
-            configuration = LoriClientConfiguration(
-                9092,
-                "lori",
-                3600000 // Wait for one hour max. Anything above that is at least worth investigating.
-            ),
-            openTelemetry = openTelemetry,
-        )
+        val loriClient =
+            LoriClient(
+                configuration =
+                    LoriClientConfiguration(
+                        9092,
+                        "lori",
+                        // Wait for one hour max. Anything above that is at least worth investigating.
+                        3600000,
+                    ),
+                openTelemetry = openTelemetry,
+            )
 
         runBlocking {
             try {
