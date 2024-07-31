@@ -52,12 +52,6 @@ export default defineComponent({
     const selectedItems: Ref<Array<string>> = ref([]);
     const tableContentLoading = ref(true);
 
-    /**
-     * Error handling>
-     */
-    const loadAlertError = ref(false);
-    const loadAlertErrorMessage = ref("");
-
     const headers = [
       {
         title: "Metadata-Id",
@@ -194,10 +188,6 @@ export default defineComponent({
       );
     };
 
-    const getAlertLoad = () => {
-      return loadAlertError;
-    };
-
     onMounted(() => {
       const hasTemplateParameter = loadTemplateView();
       if (!hasTemplateParameter) {
@@ -289,8 +279,8 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            loadAlertErrorMessage.value = errMsg;
-            loadAlertError.value = true;
+            errorMsg.value = "Laden der bibliographischen Daten war nicht erfolgreich: " + errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -299,23 +289,25 @@ export default defineComponent({
       rightEditActivated.value = false;
     };
 
+    // Messages
+    const successMsgIsActive = ref(false);
+    const successMsg = ref("");
+    const errorMsgIsActive = ref(false);
+    const errorMsg = ref("");
+
     // Search
     const searchStore = useSearchStore();
-
-    const alertIsActive = ref(false);
-    const alertMsg = ref("");
-
     const templateSearchIsActive = ref(false);
     const initSearchByRightId = (rightId: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
       currentRightId.value = rightId;
       closeTemplateOverview();
-      alertMsg.value =
+      successMsg.value =
         "Alle gespeicherten Suchen für Template-ID " +
         rightId +
         " wurden ausgeführt.";
-      alertIsActive.value = true;
+      successMsgIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
       executeSearchByRightId(rightId);
     };
@@ -347,8 +339,8 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            loadAlertErrorMessage.value = errMsg;
-            loadAlertError.value = true;
+            errorMsg.value = "Fehler beim ausführen der Suche: " + errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -382,8 +374,8 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            loadAlertErrorMessage.value = errMsg;
-            loadAlertError.value = true;
+            errorMsg.value = "Fehler beim ausführen der Suche " + errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -405,11 +397,11 @@ export default defineComponent({
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
-      alertMsg.value =
+      successMsg.value =
         "Eine gespeicherte Suche '" +
         bookmark.bookmarkName +
         "' und wurde erfolgreich ausgeführt.";
-      alertIsActive.value = true;
+      successMsgIsActive.value = true;
       startSearch();
     };
 
@@ -458,8 +450,8 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            loadAlertErrorMessage.value = errMsg;
-            loadAlertError.value = true;
+            errorMsg.value = "Fehler beim ausführen der Suche " + errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -664,11 +656,11 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
     };
 
-    const bookmarkSuccessfulMsg = ref(false);
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number) => {
       newBookmarkId.value = bookmarkId;
-      bookmarkSuccessfulMsg.value = true;
+      successMsg.value = "Bookmark erfolgreich hinzugefügt mit Id " + newBookmarkId + "."
+      successMsgIsActive.value = true;
     };
 
     const searchHelpDialog = ref(false);
@@ -681,9 +673,10 @@ export default defineComponent({
     const renderKey = ref(0);
 
     return {
-      alertIsActive,
-      alertMsg,
-      bookmarkSuccessfulMsg,
+      successMsgIsActive,
+      successMsg,
+      errorMsgIsActive,
+      errorMsg,
       currentItem,
       currentPage,
       queryParameterRight,
@@ -691,8 +684,6 @@ export default defineComponent({
       headers,
       headersValueVSelect,
       items,
-      loadAlertError,
-      loadAlertErrorMessage,
       newBookmarkId,
       numberOfResults,
       pageSize,
@@ -717,7 +708,6 @@ export default defineComponent({
       closeTemplateOverview,
       executeBookmarkSearch,
       initSearchByRightId,
-      getAlertLoad,
       handlePageChange,
       handlePageSizeChange,
       loadTemplateView,
@@ -748,7 +738,7 @@ table.special, th.special, td.special {
         ></SearchFilter>
   </v-navigation-drawer>
   <v-main class="d-flex align-center justify-center">
-  <v-card>
+  <v-card position="relative">
     <v-dialog
       v-model="dialogStore.groupOverviewActivated"
       :retain-focus="false"
@@ -811,7 +801,7 @@ table.special, th.special, td.special {
         v-on:editRightClosed="closeTemplateEditDialog"
       ></RightsEditDialog>
     </v-dialog>
-        <v-card>
+        <v-card position="relative">
           <v-card-title>
             <v-text-field
               v-model="searchStore.searchTerm"
@@ -975,17 +965,29 @@ table.special, th.special, td.special {
             </v-dialog>
           </v-card-title>
           <v-spacer></v-spacer>
-          <v-alert v-model="loadAlertError" closable type="error">
-            Laden der bibliographischen Daten war nicht erfolgreich:
-            {{ loadAlertErrorMessage }}
-          </v-alert>
-          <v-alert v-model="bookmarkSuccessfulMsg" closable type="success">
-            Bookmark erfolgreich hinzugefügt mit Id
-            {{ newBookmarkId.toString() }}.
-          </v-alert>
-          <v-alert v-model="alertIsActive" closable type="success">
-            {{ alertMsg }}
-          </v-alert>
+          <v-snackbar
+            contained
+            multi-line
+            location="top"
+            timer="true"
+            timeout="10000"
+            v-model="errorMsgIsActive"
+            color="error"
+          >
+            {{ errorMsg }}
+          </v-snackbar>
+          <v-snackbar
+              contained
+              multi-line
+              location="top"
+              timer="true"
+              timeout="10000"
+              v-model="successMsgIsActive"
+              color="success"
+          >
+            {{ successMsg }}
+          </v-snackbar>
+
           <v-select
             v-model="headersValueVSelect"
             :items="headers"
@@ -995,7 +997,7 @@ table.special, th.special, td.special {
           >
             <template v-slot:selection="{ item, index }">
               <v-chip v-if="index === 0">
-                <span>{{ item.text }}</span>
+                <span>{{ item.title }}</span>
               </v-chip>
               <span v-if="index === 1" class="grey--text caption"
                 >(+{{ headersValueVSelect.length - 1 }} others)</span

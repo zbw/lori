@@ -38,8 +38,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            bookmarkLoadErrorMsg.value = errMsg;
-            bookmarkLoadError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -59,8 +59,8 @@ export default defineComponent({
     /**
      * Error messages.
      */
-    const bookmarkLoadError = ref(false);
-    const bookmarkLoadErrorMsg = ref("");
+    const errorMsgIsActive = ref(false);
+    const errorMsg = ref("");
 
     onMounted(() => getBookmarkList());
     const computedReinitCounter = computed(() => props.reinitCounter);
@@ -73,8 +73,8 @@ export default defineComponent({
     return {
       headers,
       bookmarkItems,
-      bookmarkLoadError,
-      bookmarkLoadErrorMsg,
+      errorMsgIsActive,
+      errorMsg,
       searchTerm,
       selectedBookmarks,
       close,
@@ -87,12 +87,20 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-card>
+  <v-card position="relative">
     <v-container>
       <v-card-title>Auswahl Bookmarks</v-card-title>
-      <v-alert v-model="bookmarkLoadError" closable type="error">
-        {{ bookmarkLoadErrorMsg }}"
-      </v-alert>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="errorMsgIsActive"
+          color="error"
+      >
+        {{ errorMsg }}
+      </v-snackbar>
       <v-text-field
         v-model="searchTerm"
         append-icon="mdi-magnify"

@@ -42,8 +42,7 @@ export default defineComponent({
      */
     const activateGroupEditDialog = () => {
       dialogStore.groupEditActivated = true;
-      addSuccessfulNotification.value = false;
-      updateSuccessfulNotification.value = false;
+      successMsgIsActive.value = false;
     };
 
     const closeGroupEditDialog = () => {
@@ -68,8 +67,8 @@ export default defineComponent({
     /**
      * Update list of groups.
      */
-    const addSuccessfulNotification = ref(false);
-    const updateSuccessfulNotification = ref(false);
+    const successMsgIsActive = ref(false);
+    const successMsg = ref("");
     const lastModifiedGroup = ref({} as GroupRest);
     const addGroupEntry = (groupId: string) => {
       api
@@ -77,8 +76,8 @@ export default defineComponent({
         .then((group) => {
           groupItems.value.unshift(group);
           renderKey.value += 1;
-          addSuccessfulNotification.value = true;
-          lastModifiedGroup.value = group;
+          successMsgIsActive.value = true;
+          successMsg.value = "Gruppe " + lastModifiedGroup.value.name + " erfolgreich hinzugefügt.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -93,8 +92,9 @@ export default defineComponent({
         .then((group) => {
           groupItems.value[index.value] = group;
           renderKey.value += 1;
-          updateSuccessfulNotification.value = true;
+          successMsgIsActive.value = true;
           lastModifiedGroup.value = group;
+          successMsg.value = "Gruppe " + lastModifiedGroup.value.name + " erfolgreich geupdated.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -110,7 +110,6 @@ export default defineComponent({
     };
 
     return {
-      addSuccessfulNotification,
       currentGroup,
       dialogStore,
       groupLoadError,
@@ -120,7 +119,8 @@ export default defineComponent({
       items: groupItems,
       lastModifiedGroup,
       renderKey,
-      updateSuccessfulNotification,
+      successMsgIsActive,
+      successMsg,
       activateGroupEditDialog,
       addGroupEntry,
       closeGroupEditDialog,
@@ -136,16 +136,28 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
-    <v-alert v-model="addSuccessfulNotification" closable type="success">
-      Gruppe {{ lastModifiedGroup.name }} erfolgreich hinzugefügt.
-    </v-alert>
-
-    <v-alert v-model="groupLoadError" closable type="error">
+    <v-snackbar
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="10000"
+        v-model="successMsgIsActive"
+        color="success"
+    >
+      {{ successMsg }}
+    </v-snackbar>
+    <v-snackbar
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="10000"
+        v-model="groupLoadError"
+        color="error"
+    >
       {{ groupLoadErrorMsg }}
-    </v-alert>
-    <v-alert v-model="updateSuccessfulNotification" closable type="success">
-      Gruppe {{ lastModifiedGroup.name }} erfolgreich geupdated.
-    </v-alert>
+    </v-snackbar>
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn color="blue darken-1" @click="createNewGroup"

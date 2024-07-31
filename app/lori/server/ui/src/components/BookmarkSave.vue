@@ -109,7 +109,7 @@ export default defineComponent({
 <style scoped></style>
 
 <template>
-  <v-card>
+  <v-card position="relative">
     <v-container>
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
@@ -154,9 +154,17 @@ export default defineComponent({
           @click="save"
         ></v-btn>
       </v-card-actions>
-      <v-alert v-model="saveAlertError" closable type="error">
-        Speichern war nicht erfolgreich: {{ saveAlertErrorMessage }}
-      </v-alert>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="saveAlertError"
+          color="error"
+      >
+        {{ saveAlertErrorMessage }}
+      </v-snackbar>
     </v-container>
   </v-card>
 </template>

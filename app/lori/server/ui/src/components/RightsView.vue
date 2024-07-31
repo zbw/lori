@@ -62,7 +62,8 @@ export default defineComponent({
     const isNew = ref(false);
     const renderKey = ref(0);
     const updateSuccessful = ref(false);
-    const addSuccessful = ref(false);
+    const successMsgIsActive = ref(false);
+    const successMsg = ref("");
 
     const activateTabEdit = () => {
       tabDialogActivated.value = true;
@@ -77,7 +78,7 @@ export default defineComponent({
       dialogStore.editRightActivated = true;
       currentRight.value = {} as RightRest;
       updateSuccessful.value = false;
-      addSuccessful.value = false;
+      successMsgIsActive.value = false;
       currentIndex.value = -1;
       isNew.value = true;
     };
@@ -89,7 +90,8 @@ export default defineComponent({
       currentRights.value.unshift(right);
       renderKey.value += 1;
       dialogStore.editRightActivated = false;
-      addSuccessful.value = true;
+      successMsgIsActive.value = true;
+      successMsg.value = "Rechteinformation erfolgreich für Item " + props.metadataId + " hinzugefügt.";
     };
 
     const updateRight = (right: RightRest, index: number) => {
@@ -117,7 +119,6 @@ export default defineComponent({
 
     return {
       // Variables
-      addSuccessful,
       currentRight,
       currentIndex,
       dialogStore,
@@ -125,6 +126,8 @@ export default defineComponent({
       renderKey,
       headers,
       searchStore,
+      successMsg,
+      successMsgIsActive,
       tabDialogActivated,
       // Methods
       activateTabEdit,
@@ -143,9 +146,17 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-sheet v-if="rights" class="mx-auto" tile>
-    <v-alert v-model="addSuccessful" closable type="success">
-      Rechteinformation erfolgreich für Item {{ metadataId }} hinzugefügt.
-    </v-alert>
+    <v-snackbar
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="10000"
+        v-model="successMsgIsActive"
+        color="success"
+    >
+      {{ successMsg }}
+    </v-snackbar>
     <v-divider></v-divider>
     <v-data-table
       :key="renderKey"
