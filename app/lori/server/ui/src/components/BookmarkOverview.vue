@@ -192,14 +192,30 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-card>
+  <v-card position="relative">
     <v-container>
-      <v-alert v-model="alertSuccessful" closable type="success">
-        {{ alertSuccessfulMsg }}
-      </v-alert>
-      <v-alert v-model="bookmarkError" closable type="error">
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="bookmarkError"
+          color="error"
+      >
         {{ bookmarkErrorMsg }}
-      </v-alert>
+      </v-snackbar>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="alertSuccessful"
+          color="success"
+      >
+        {{ alertSuccessfulMsg }}
+      </v-snackbar>
       <v-card-title>Gespeicherte Suchen verwalten</v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">
         <v-card>

@@ -217,12 +217,10 @@ export default defineComponent({
     const dialogDeleteTemplate = ref(false);
     const menuEndDate = ref(false);
     const menuStartDate = ref(false);
-    const saveAlertError = ref(false);
-    const saveAlertErrorMsg = ref("");
     const updateConfirmDialog = ref(false);
     const updateInProgress = ref(false);
-    const updateSuccessful = ref(false);
-    const updateSuccessfulMsg = ref("");
+    const successMsgIsActive = ref(false);
+    const successMsg = ref("");
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
 
@@ -231,14 +229,12 @@ export default defineComponent({
     };
 
     const close = () => {
-      generalAlertError.value = false;
-      generalAlertErrorMsg.value = "";
-      saveAlertError.value = false;
-      saveAlertErrorMsg.value = "";
+      errorMsgIsActive.value = false;
+      errorMsg.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
-      updateSuccessful.value = false;
-      updateSuccessfulMsg.value = "";
+      successMsgIsActive.value = false;
+      successMsg.value = "";
       formState.formTemplateName = "";
       v$.value.$reset();
       emitClosedDialog();
@@ -310,16 +306,16 @@ export default defineComponent({
             })
             .catch((e) => {
               error.errorHandling(e, (errMsg: string) => {
-                saveAlertError.value = true;
-                saveAlertErrorMsg.value = errMsg;
+                errorMsgIsActive.value = true;
+                errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
                 updateConfirmDialog.value = false;
               });
             });
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            saveAlertError.value = true;
-            saveAlertErrorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+            errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
             updateConfirmDialog.value = false;
           });
         });
@@ -334,16 +330,16 @@ export default defineComponent({
             rightId: tmpRight.value.rightId,
           });
           emit("updateSuccessful", tmpRight.value, props.index);
-          updateSuccessfulMsg.value =
+          successMsg.value =
             "Rechteinformation " +
             tmpRight.value.rightId +
             " erfolgreich geupdated";
-          updateSuccessful.value = true;
+          successMsgIsActive.value = true;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            saveAlertError.value = true;
-            saveAlertErrorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+            errorMsg.value = "Update war nicht erfolgreich: " +  errMsg;
             updateConfirmDialog.value = false;
           });
         });
@@ -369,8 +365,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -381,9 +377,9 @@ export default defineComponent({
         .updateTemplate(tmpRight.value)
         .then(() => {
           if (tmpRight.value.rightId == undefined) {
-            generalAlertErrorMsg.value =
+            errorMsg.value =
               "No RightId found when updating. This should NOT happen.";
-            generalAlertError.value = true;
+            errorMsgIsActive.value = true;
           } else {
             const exceptionIds: string[] = exceptionTemplateItems.value.flatMap(
               (e) => (e.rightId ? [e.rightId] : []),
@@ -393,11 +389,11 @@ export default defineComponent({
               exceptionIds,
               () => {
                 updateBookmarks(tmpRight.value.rightId, () => {
-                  updateSuccessfulMsg.value =
+                  successMsg.value =
                     "Template " +
                     tmpRight.value.templateName +
                     " erfolgreich geupdated";
-                  updateSuccessful.value = true;
+                  successMsgIsActive.value = true;
                   emit("updateTemplateSuccessful", formState.formTemplateName);
                 });
               },
@@ -406,8 +402,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -427,8 +423,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -450,8 +446,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -804,8 +800,8 @@ export default defineComponent({
       if (entry.rightId != undefined) {
         templateApi.deleteTemplateById(entry.rightId).catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
       }
@@ -814,9 +810,9 @@ export default defineComponent({
     // Load Bookmarks
     const loadBookmarks = () => {
       if (computedRightId.value == undefined) {
-        generalAlertErrorMsg.value =
+        errorMsg.value =
           "Error while loading bookmarks. Invalid Template ID.";
-        generalAlertError.value = true;
+        errorMsgIsActive.value = true;
       } else {
         templateApi
           .getBookmarksByRightId(computedRightId.value)
@@ -825,8 +821,8 @@ export default defineComponent({
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              generalAlertErrorMsg.value = errMsg;
-              generalAlertError.value = true;
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
             });
           });
       }
@@ -834,9 +830,9 @@ export default defineComponent({
 
     const loadExceptions = () => {
       if (computedRightId.value == undefined) {
-        generalAlertErrorMsg.value =
+        errorMsg.value =
           "Error while loading bookmarks. Invalid Template ID.";
-        generalAlertError.value = true;
+        errorMsgIsActive.value = true;
       } else {
         templateApi
           .getExceptionsById(computedRightId.value)
@@ -845,8 +841,8 @@ export default defineComponent({
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              generalAlertErrorMsg.value = errMsg;
-              generalAlertError.value = true;
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
             });
           });
       }
@@ -867,8 +863,8 @@ export default defineComponent({
     };
 
     // Groups
-    const generalAlertError = ref(false);
-    const generalAlertErrorMsg = ref("");
+    const errorMsgIsActive = ref(false);
+    const errorMsg = ref("");
     const groupItems: Ref<Array<string>> = ref([]);
     const getGroupList = () => {
       api
@@ -878,8 +874,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            generalAlertErrorMsg.value = errMsg;
-            generalAlertError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -908,8 +904,8 @@ export default defineComponent({
       isTemplateAndException,
       isNew,
       isTemplate,
-      generalAlertError,
-      generalAlertErrorMsg,
+      errorMsgIsActive,
+      errorMsg,
       groupItems,
       historyStore,
       isStartDateMenuOpen,
@@ -921,14 +917,12 @@ export default defineComponent({
       openBookmarkSearch,
       renderBookmarkKey,
       renderTemplateKey,
-      saveAlertError,
-      saveAlertErrorMsg,
       startDateFormatted,
       exceptionTemplateItems,
       exceptionTemplateHeaders,
       updateConfirmDialog,
-      updateSuccessful,
-      updateSuccessfulMsg,
+      successMsgIsActive,
+      successMsg,
       tmpRight,
       updateInProgress,
       // methods
@@ -961,7 +955,7 @@ export default defineComponent({
 </style>
 
 <template>
-  <v-card class="my-scroll" max-height="700px">
+  <v-card class="my-scroll" max-height="700px" position="relative">
     <v-card-title>
       <v-row>
         <v-col>
@@ -979,15 +973,28 @@ export default defineComponent({
       </v-row>
     </v-card-title>
     <v-card-actions>
-      <v-alert v-model="updateSuccessful" closable type="success">
-        {{ updateSuccessfulMsg }}
-      </v-alert>
-      <v-alert v-model="saveAlertError" closable type="error">
-        Speichern war nicht erfolgreich: {{ saveAlertErrorMsg }}
-      </v-alert>
-      <v-alert v-model="generalAlertError" closable type="error">
-        {{ generalAlertErrorMsg }}
-      </v-alert>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="errorMsgIsActive"
+          color="error"
+      >
+        {{ errorMsg }}
+      </v-snackbar>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="successMsgIsActive"
+          color="success"
+      >
+        {{ successMsg }}
+      </v-snackbar>
       <v-spacer></v-spacer>
       <v-btn
           density="compact"

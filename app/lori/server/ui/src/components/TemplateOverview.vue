@@ -55,8 +55,8 @@ export default defineComponent({
     /**
      * Error messages.
      */
-    const templateLoadError = ref(false);
-    const templateLoadErrorMsg = ref("");
+    const errorMsgIsActive = ref(false);
+    const errorMsg = ref("");
     const templateApplyError = ref(false);
     const templateApplyErrorMsg = ref("");
     const templateApplyErrorNumber = ref(-1);
@@ -76,14 +76,14 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            templateLoadErrorMsg.value = errMsg;
-            templateLoadError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
 
     const activateTemplateEditDialog = () => {
-      alertSuccessful.value = false;
+      successMsgIsActive.value = false;
       dialogStore.templateEditActivated = true;
     };
     const createNewTemplate = () => {
@@ -115,8 +115,8 @@ export default defineComponent({
           const infoMsg = constructApplicationInfoText(
             templateApplicationResult,
           );
-          alertSuccessful.value = true;
-          alertSuccessfulMsg.value = infoMsg;
+          successMsgIsActive.value = true;
+          successMsg.value = infoMsg;
           templateApplyItemsApplied.value = r.templateApplication.length; // TODO: Handle error messages for exceptions
 
           // Check for errors
@@ -144,8 +144,8 @@ export default defineComponent({
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
-            templateLoadErrorMsg.value = errMsg;
-            templateLoadError.value = true;
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
           });
         });
     };
@@ -182,8 +182,8 @@ export default defineComponent({
     /**
      * Alerts:
      */
-    const alertSuccessful = ref(false);
-    const alertSuccessfulMsg = ref("");
+    const successMsgIsActive = ref(false);
+    const successMsg = ref("");
 
     /**
      * Child events:
@@ -192,8 +192,8 @@ export default defineComponent({
     const childTemplateAdded = (template: RightRest) => {
       lastModifiedTemplateName.value =
         template.templateName == undefined ? "invalid" : template.templateName;
-      alertSuccessful.value = true;
-      alertSuccessfulMsg.value =
+      successMsgIsActive.value = true;
+      successMsg.value =
         "Template " +
         lastModifiedTemplateName.value +
         " erfolgreich hinzugefügt.";
@@ -202,16 +202,16 @@ export default defineComponent({
 
     const childTemplateDeleted = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
-      alertSuccessful.value = true;
-      alertSuccessfulMsg.value =
+      successMsgIsActive.value = true;
+      successMsg.value =
         "Template " + lastModifiedTemplateName.value + " erfolgreich gelöscht.";
       updateTemplateOverview();
     };
 
     const childTemplateUpdated = (templateName: string) => {
       lastModifiedTemplateName.value = templateName;
-      alertSuccessful.value = true;
-      alertSuccessfulMsg.value =
+      successMsgIsActive.value = true;
+      successMsg.value =
         "Template " + lastModifiedTemplateName.value + " erfolgreich editiert.";
       updateTemplateOverview();
       closeTemplateEditDialog();
@@ -234,8 +234,6 @@ export default defineComponent({
     onMounted(() => getTemplateList());
 
     return {
-      alertSuccessful,
-      alertSuccessfulMsg,
       currentTemplate,
       dialogStore,
       headers,
@@ -244,12 +242,14 @@ export default defineComponent({
       reinitCounter,
       renderKey,
       searchTerm,
+      successMsgIsActive,
+      successMsg,
       templateApplyError,
       templateApplyErrorMsg,
       templateApplyErrorNumber,
       templateApplyItemsApplied,
-      templateLoadError,
-      templateLoadErrorMsg,
+      errorMsgIsActive,
+      errorMsg,
       templateItems,
       applyTemplate,
       childTemplateAdded,
@@ -273,19 +273,30 @@ export default defineComponent({
 }
 </style>
 <template>
-  <v-card>
+  <v-card position="relative">
     <v-container>
-      <v-alert
-        v-model="alertSuccessful"
-        closable
-        type="success"
-        class="multi-line"
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="successMsgIsActive"
+          color="success"
       >
-        {{ alertSuccessfulMsg }}
-      </v-alert>
-      <v-alert v-model="templateLoadError" closable type="error">
-        {{ templateLoadErrorMsg }}
-      </v-alert>
+        {{ successMsg }}
+      </v-snackbar>
+      <v-snackbar
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          v-model="errorMsgIsActive"
+          color="error"
+      >
+        {{ errorMsg }}
+      </v-snackbar>
       <v-dialog v-model="templateApplyError" max-width="500px">
         <v-card>
           <v-card-title class="text-h5"
