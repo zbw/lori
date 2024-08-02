@@ -1147,13 +1147,29 @@ export default defineComponent({
                     loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.actions="{ item }">
-                      <v-icon
-                        small
-                        @click="deleteBookmarkEntry(item)"
-                        :disabled="!isEditable"
+                      <v-tooltip
+                          location="bottom"
+                          :disabled="right?.lastAppliedOn == undefined"
                       >
-                        mdi-delete
-                      </v-icon>
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-btn
+                                :disabled="!isEditable || !(right?.lastAppliedOn == undefined)"
+                                @click="deleteBookmarkEntry(item)"
+                                >
+                            <v-icon
+                                small
+                            >
+                              mdi-delete
+                            </v-icon>
+                            </v-btn>
+                          </div>
+                        </template>
+                        <span>
+                          Verknüpfte Suche kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
+                        </span>
+                      </v-tooltip>
+
                     </template>
                   </v-data-table>
                   <v-btn
