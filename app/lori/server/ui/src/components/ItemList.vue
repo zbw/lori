@@ -966,7 +966,6 @@ table.special, th.special, td.special {
           </v-card-title>
           <v-spacer></v-spacer>
           <v-snackbar
-            contained
             multi-line
             location="top"
             timer="true"
@@ -977,7 +976,6 @@ table.special, th.special, td.special {
             {{ errorMsg }}
           </v-snackbar>
           <v-snackbar
-              contained
               multi-line
               location="top"
               timer="true"
