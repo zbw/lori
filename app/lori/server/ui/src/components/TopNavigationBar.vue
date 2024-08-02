@@ -194,17 +194,46 @@ export default defineComponent({
           <v-icon dark>mdi-account</v-icon>
         </v-btn>
       </template>
-      <v-list v-if="!userStore.isLoggedIn">
-        <v-list-item :key="0">
-          <v-list-item-title @click="login(false)">Login</v-list-item-title>
-        </v-list-item>
+      <v-list v-if="!userStore.isLoggedIn" class="cursor-pointer">
+        <v-hover>
+          <template v-slot:default="{isHovering, props }">
+            <v-list-item
+                v-bind="props"
+                :key="1"
+                :value="1"
+                :base-color="isHovering ? 'primary' : undefined"
+            >
+              <v-list-item-title @click="login(false)">Login</v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-hover>
       </v-list>
-      <v-list v-if="userStore.isLoggedIn">
-        <v-list-item :key="1">
-          <v-list-item-title>{{ userStore.emailAddress }}</v-list-item-title>
-        </v-list-item>
-        <v-list-item :key="2">
-          <v-list-item-title @click="logout">Logout</v-list-item-title>
+      <v-list v-if="userStore.isLoggedIn" class="cursor-pointer">
+        <v-hover>
+          <template v-slot:default="{isHovering, props }">
+            <v-list-item
+                v-bind="props"
+                :key="1"
+                :value="1"
+                :base-color="isHovering ? 'primary' : undefined"
+            >
+              <v-list-item-title>{{ userStore.emailAddress }}</v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-hover>
+        <v-list-item :key="2" :value="2">
+          <v-hover>
+            <template v-slot:default="{isHovering, props }">
+              <v-list-item
+                  v-bind="props"
+                  :key="1"
+                  :value="1"
+                  :base-color="isHovering ? 'primary' : undefined"
+              >
+                <v-list-item-title @click="logout">Logout</v-list-item-title>
+              </v-list-item>
+            </template>
+          </v-hover>
         </v-list-item>
       </v-list>
     </v-menu>

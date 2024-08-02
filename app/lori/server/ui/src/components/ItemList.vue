@@ -918,7 +918,11 @@ table.special, th.special, td.special {
                     <tr class=special>
                       <td class=special>Nicht</td>
                       <td class=special>!</td>
-                      <td class=special>col:'department' & !tit:'geopolitical'</td>
+                      <td class=special>
+                        !metadataid:'1234' <br>
+                        !(metadataid:'1234' | tit:'geopolitical') <br>
+                        col:'department' & !tit:'geopolitical'
+                      </td>
                     </tr>
                     <tr class=special>
                       <td class=special>Oder</td>
@@ -966,7 +970,6 @@ table.special, th.special, td.special {
           </v-card-title>
           <v-spacer></v-spacer>
           <v-snackbar
-            contained
             multi-line
             location="top"
             timer="true"
@@ -977,7 +980,6 @@ table.special, th.special, td.special {
             {{ errorMsg }}
           </v-snackbar>
           <v-snackbar
-              contained
               multi-line
               location="top"
               timer="true"
