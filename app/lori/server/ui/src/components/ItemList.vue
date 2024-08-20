@@ -27,6 +27,7 @@ import BookmarkOverview from "@/components/BookmarkOverview.vue";
 import templateApi from "@/api/templateApi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import metadata_utils from "@/utils/metadata_utils";
+import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
 
 export default defineComponent({
   computed: {
@@ -35,6 +36,7 @@ export default defineComponent({
     },
   },
   components: {
+    VResizeDrawer,
     RightsEditDialog,
     BookmarkOverview,
     TemplateOverview,
@@ -731,12 +733,12 @@ table.special, th.special, td.special {
 }
 </style>
 <template>
-  <v-navigation-drawer permanent>
+  <VResizeDrawer permanent width="300px">
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
             v-on:startSearch="startSearch"
         ></SearchFilter>
-  </v-navigation-drawer>
+  </VResizeDrawer>
   <v-main class="d-flex align-center justify-center">
   <v-card position="relative">
     <v-dialog
@@ -1069,7 +1071,7 @@ table.special, th.special, td.special {
 
   </v-card>
   </v-main>
-  <v-navigation-drawer location="right" :width="500" permanent>
+  <VResizeDrawer location="right" width="400px" permanent>
       <v-card v-if="currentItem.metadata" class="mx-auto" tile>
         <RightsView
             :handle="currentItem.metadata.handle"
@@ -1080,5 +1082,5 @@ table.special, th.special, td.special {
             :metadata="Object.assign({}, currentItem.metadata)"
         ></MetadataView>
       </v-card>
-  </v-navigation-drawer>
+  </VResizeDrawer>
 </template>
