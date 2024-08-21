@@ -300,14 +300,14 @@ export default defineComponent({
     // Search
     const searchStore = useSearchStore();
     const templateSearchIsActive = ref(false);
-    const initSearchByRightId = (rightId: string) => {
+    const initSearchByRightId = (rightId: string, templateName: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
       currentRightId.value = rightId;
       closeTemplateOverview();
       successMsg.value =
-        "Alle gespeicherten Suchen für Template-ID " +
-        rightId +
+        "Alle gespeicherten Suchen für Template " +
+        "'" + templateName + " (" + rightId + ")'" +
         " wurden ausgeführt.";
       successMsgIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
@@ -400,9 +400,9 @@ export default defineComponent({
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
       successMsg.value =
-        "Eine gespeicherte Suche '" +
-        bookmark.bookmarkName +
-        "' und wurde erfolgreich ausgeführt.";
+        "Die gespeicherte Suche " +
+        "'" + bookmark.bookmarkName + " (" + bookmark.bookmarkId + ")'" +
+        " wurde erfolgreich ausgeführt.";
       successMsgIsActive.value = true;
       startSearch();
     };
@@ -659,9 +659,11 @@ export default defineComponent({
     };
 
     const newBookmarkId = ref(-1);
-    const addBookmarkSuccessful = (bookmarkId: number) => {
+    const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
-      successMsg.value = "Bookmark erfolgreich hinzugefügt mit Id " + newBookmarkId + "."
+      successMsg.value = "Bookmark " +
+          "'" + bookmarkName + " (" + bookmarkId + ")'" +
+          " erfolgreich hinzugefügt."
       successMsgIsActive.value = true;
     };
 
@@ -1077,6 +1079,7 @@ table.special, th.special, td.special {
             :handle="currentItem.metadata.handle"
             :metadataId="currentItem.metadata.metadataId"
             :rights="currentItem.rights"
+            :title="currentItem.metadata.title"
         ></RightsView>
         <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"

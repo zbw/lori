@@ -77,7 +77,9 @@ export default defineComponent({
           groupItems.value.unshift(group);
           renderKey.value += 1;
           successMsgIsActive.value = true;
-          successMsg.value = "Gruppe " + lastModifiedGroup.value.name + " erfolgreich hinzugefügt.";
+          successMsg.value = "Gruppe " +
+              "'" + lastModifiedGroup.value.name + " (" + groupId + ")'" +
+              " erfolgreich hinzugefügt.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -94,7 +96,9 @@ export default defineComponent({
           renderKey.value += 1;
           successMsgIsActive.value = true;
           lastModifiedGroup.value = group;
-          successMsg.value = "Gruppe " + lastModifiedGroup.value.name + " erfolgreich geupdated.";
+          successMsg.value = "Gruppe " +
+              "'" + lastModifiedGroup.value.name + " (" + groupId + ")'" +
+              " erfolgreich geupdated.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {

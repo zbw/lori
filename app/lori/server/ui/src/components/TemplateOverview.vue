@@ -225,9 +225,12 @@ export default defineComponent({
     /**
      * EMITS
      */
-    const emitGetItemsByRightId = (rightId?: string) => {
-      if (rightId != undefined) {
-        emit("getItemsByRightId", rightId);
+    const emitGetItemsByRightId = (rightId?: string, templateName?: string) => {
+      if (rightId != undefined && templateName != undefined) {
+        emit("getItemsByRightId", rightId, templateName);
+      } else {
+        console.log("Error: RightId or TemplateName where undefined: RightId: "
+            + rightId + "; Template Name: " + templateName);
       }
     };
 
@@ -347,7 +350,7 @@ export default defineComponent({
         <template v-slot:item.displayConnectedItems="{ item }">
           <v-btn
             color="blue darken-1"
-            @click="emitGetItemsByRightId(item.rightId)"
+            @click="emitGetItemsByRightId(item.rightId, item.templateName)"
             >Alle verknüpften Items anzeigen
           </v-btn>
         </template>
