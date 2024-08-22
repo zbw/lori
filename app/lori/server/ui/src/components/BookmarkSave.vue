@@ -7,6 +7,7 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
+import {BookmarkIdCreated} from "@/generated-sources/openapi";
 
 export default defineComponent({
   emits: ["addBookmarkSuccessful"],
@@ -58,10 +59,11 @@ export default defineComponent({
         if (!isValid) {
           return;
         }
+        let bookmarkName = formState.name;
         updateInProgress.value = true;
         bookmarkApi
           .addRawBookmark(
-            formState.name,
+            bookmarkName,
             description.value,
             searchStore.lastSearchTerm,
             searchquerybuilder.buildPublicationDateFilter(searchStore),
@@ -77,8 +79,8 @@ export default defineComponent({
             searchquerybuilder.buildNoRightInformation(searchStore),
             searchquerybuilder.buildSeriesFilter(searchStore),
           )
-          .then((r) => {
-            emit("addBookmarkSuccessful", r.bookmarkId);
+          .then((r: BookmarkIdCreated) => {
+            emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
             close();
           })
           .catch((e) => {

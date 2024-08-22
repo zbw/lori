@@ -26,6 +26,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    title: {
+      type: String,
+      required: true,
+    },
   },
   components: {
     RightsEditDialog,
@@ -91,7 +95,8 @@ export default defineComponent({
       renderKey.value += 1;
       dialogStore.editRightActivated = false;
       successMsgIsActive.value = true;
-      successMsg.value = "Rechteinformation erfolgreich für Item " + props.metadataId + " hinzugefügt.";
+      successMsg.value = "Rechteinformation erfolgreich für Item " +
+          "'" + props.title + " (" + props.metadataId + ")' hinzugefügt.";
     };
 
     const updateRight = (right: RightRest, index: number) => {

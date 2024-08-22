@@ -251,9 +251,18 @@ class LoriServerBackend(
         return if (receivedRights.isEmpty()) {
             dbConnector.groupDB.deleteGroupById(groupId)
         } else {
-            throw ResourceStillInUseException(
-                "Gruppe wird noch von folgenden Rechte-Ids verwendet: " + receivedRights.joinToString(separator = ","),
-            )
+            val group = dbConnector.groupDB.getGroupById(groupId)
+            if (group == null) {
+                return 0
+            } else {
+                val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
+                throw ResourceStillInUseException(
+                    "Gruppe '${group.name} ($groupId)' wird noch von folgenden Rechten verwendet: " +
+                        templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
+                            "'" + right.templateName + " (" + right.rightId + ")'"
+                        },
+                )
+            }
         }
     }
 
@@ -392,13 +401,22 @@ class LoriServerBackend(
     fun insertBookmark(bookmark: Bookmark): Int = dbConnector.bookmarkDB.insertBookmark(bookmark)
 
     fun deleteBookmark(bookmarkId: Int): Int {
-        val receivedTemplateIds = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)
+        val receivedTemplateIds: List<String> = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)
         return if (receivedTemplateIds.isEmpty()) {
             dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
         } else {
-            throw ResourceStillInUseException(
-                "Bookmark wird noch von folgenden Template-Ids verwendet: " + receivedTemplateIds.joinToString(separator = ","),
-            )
+            val bookmark = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
+            if (bookmark == null) {
+                return 0
+            } else {
+                val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedTemplateIds)
+                throw ResourceStillInUseException(
+                    "Bookmark '${bookmark.bookmarkName} ($bookmarkId)' wird noch von folgenden Templates verwendet: " +
+                        templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
+                            "'" + right.templateName + " (" + right.rightId + ")'"
+                        },
+                )
+            }
         }
     }
 
