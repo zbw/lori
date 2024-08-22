@@ -252,15 +252,15 @@ class LoriServerBackend(
             dbConnector.groupDB.deleteGroupById(groupId)
         } else {
             val group = dbConnector.groupDB.getGroupById(groupId)
-            if (group == null){
+            if (group == null) {
                 return 0
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
                 throw ResourceStillInUseException(
-                    "Gruppe '${group.name} (${groupId})' wird noch von folgenden Rechten verwendet: " +
-                        templatesBlocking.joinToString(separator = ","){ right: ItemRight -> 
-                            "'" + right.templateName + " (" + right.rightId +")'"
-                    },
+                    "Gruppe '${group.name} ($groupId)' wird noch von folgenden Rechten verwendet: " +
+                        templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
+                            "'" + right.templateName + " (" + right.rightId + ")'"
+                        },
                 )
             }
         }
@@ -406,15 +406,15 @@ class LoriServerBackend(
             dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
         } else {
             val bookmark = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
-            if (bookmark == null){
+            if (bookmark == null) {
                 return 0
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedTemplateIds)
                 throw ResourceStillInUseException(
-                    "Bookmark '${bookmark.bookmarkName} (${bookmarkId})' wird noch von folgenden Templates verwendet: " +
-                        templatesBlocking.joinToString(separator = ","){ right: ItemRight -> 
-                            "'" + right.templateName + " (" + right.rightId +")'"
-                    },
+                    "Bookmark '${bookmark.bookmarkName} ($bookmarkId)' wird noch von folgenden Templates verwendet: " +
+                        templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
+                            "'" + right.templateName + " (" + right.rightId + ")'"
+                        },
                 )
             }
         }
