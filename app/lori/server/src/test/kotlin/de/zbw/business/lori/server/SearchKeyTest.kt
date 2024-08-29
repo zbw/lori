@@ -1,7 +1,6 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
-import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -55,6 +54,13 @@ class SearchKeyTest : DatabaseTest() {
     fun createDataForMetadataId() =
         arrayOf(
             arrayOf(
+                "!zdb:'${METADATA_TEST.zdbIdJournal}'",
+                10,
+                0,
+                setOf(METADATA_TEST_2, METADATA_TEST_3),
+                "find all items that have a different ZDB-ID or no value at all",
+            ),
+            arrayOf(
                 "metadataid:'${METADATA_TEST.metadataId}'",
                 10,
                 0,
@@ -104,13 +110,6 @@ class SearchKeyTest : DatabaseTest() {
                 "search for licence url",
             ),
             arrayOf(
-                "!zdb:'${METADATA_TEST.zdbIdJournal}'",
-                10,
-                0,
-                setOf(METADATA_TEST_2, METADATA_TEST_3),
-                "find all items that have a different ZDB-ID or no value at all",
-            ),
-            arrayOf(
                 "subcom:'${METADATA_TEST_3.subCommunityName}'",
                 10,
                 0,
@@ -136,16 +135,6 @@ class SearchKeyTest : DatabaseTest() {
             searchQueryResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
-    }
-
-    @Test
-    fun testBijectivity() {
-        SearchKey.values().map { key ->
-            assertThat(
-                SearchKey.toEnum(key.fromEnum()),
-                `is`(key),
-            )
-        }
     }
 
     companion object {

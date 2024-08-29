@@ -270,36 +270,36 @@ class BookmarkDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(4, bookmark.publicationDateFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(5, bookmark.accessStateFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(6, bookmark.temporalValidityFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(7, bookmark.startDateFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(8, bookmark.endDateFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(9, bookmark.formalRuleFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(10, bookmark.validOnFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(11, bookmark.paketSigelFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(12, bookmark.zdbIdFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toString())
+                    prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(13, bookmark.noRightInformationFilter) { _, idx, prepStmt ->
                     prepStmt.setBoolean(idx, true)
                 }
-                this.setIfNotNull(14, bookmark.publicationTypeFilter?.toString()) { value, idx, prepStmt ->
+                this.setIfNotNull(14, bookmark.publicationTypeFilter?.toSQLString()) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
                 this.setTimestamp(15, Timestamp.from(now))

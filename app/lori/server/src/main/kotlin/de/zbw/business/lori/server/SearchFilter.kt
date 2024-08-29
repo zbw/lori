@@ -6,6 +6,11 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
+import de.zbw.persistence.lori.server.MetadataDB
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.time.LocalDate
@@ -33,11 +38,176 @@ abstract class SearchFilter(
     ): Int
 
     abstract override fun toString(): String
+
+    abstract fun toSQLString(): String
+
+    abstract fun getFilterType(): FilterType
+
+    companion object {
+        fun toSearchFilter(
+            searchKey: String,
+            searchValue: String,
+        ): SearchFilter? =
+            when (searchKey) {
+                "com" -> CommunityNameFilter(searchValue)
+                "col" -> CollectionNameFilter(searchValue)
+                "hdl" -> HandleFilter(searchValue)
+                "sig" -> QueryParameterParser.parsePaketSigelFilter(searchValue)
+                "tit" -> TitleFilter(searchValue)
+                "zdb" -> QueryParameterParser.parseZDBIdFilter(searchValue)
+                "hdlcol" -> CollectionHandleFilter(searchValue)
+                "hdlcom" -> CommunityHandleFilter(searchValue)
+                "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
+                "metadataid" -> MetadataIdFilter(searchValue)
+                "lur" -> LicenceUrlFilter(searchValue)
+                "subcom" -> SubcommunityNameFilter(searchValue)
+                "series" -> QueryParameterParser.parseSeriesFilter(searchValue)
+                "typ" ->
+                    QueryParameterParser.parsePublicationTypeFilter(
+                        searchValue.replace(" ", "_").uppercase(),
+                    )
+                "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
+                else -> null
+            }
+    }
 }
 
 abstract class MetadataSearchFilter(
     dbColumnName: String,
 ) : SearchFilter(dbColumnName)
+
+abstract class TSVectorMetadataSearchFilter(
+    dbColumnName: String,
+    private val value: String,
+) : MetadataSearchFilter(dbColumnName) {
+    override fun toWhereClause(): String = "($dbColumnName @@ $SQL_FUNC_TO_TS_QUERY(?) AND $dbColumnName is not null)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        preparedStatement.setString(localCounter++, insertDefaultAndOperator(value))
+        return localCounter
+    }
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun toSQLString(): String = value
+
+    companion object {
+        private const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
+        private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
+
+        fun insertDefaultAndOperator(v: String): String {
+            val tokens: List<String> = v.split("\\s+".toRegex())
+            return List(tokens.size) { idx ->
+                if (idx == 0) {
+                    return@List listOf(tokens[0])
+                }
+                if (!LOGICAL_OPERATIONS.contains(tokens[idx]) &&
+                    !LOGICAL_OPERATIONS.contains(tokens[idx - 1])
+                ) {
+                    return@List listOf("&", tokens[idx])
+                } else {
+                    return@List listOf(tokens[idx])
+                }
+            }.flatten().joinToString(separator = " ") { s: String ->
+                s.replace(":", "\\:").replace("\\\\:", "\\:")
+            } // Filter out :
+        }
+    }
+}
+
+class TitleFilter(
+    val title: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_TITLE,
+        value = title,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.TITLE
+}
+
+class CommunityNameFilter(
+    communityName: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_COMMUNITY,
+        value = communityName,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.COMMUNITY_NAME
+}
+
+class CollectionNameFilter(
+    collectionName: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_COLLECTION,
+        value = collectionName,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.COLLECTION_NAME
+}
+
+class HandleFilter(
+    handleName: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_HANDLE,
+        value = handleName,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.HANDLE
+}
+
+class CommunityHandleFilter(
+    communityHandle: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_COMMUNITY_HANDLE,
+        value = communityHandle,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.COMMUNITY_HANDLE
+}
+
+class CollectionHandleFilter(
+    collectionHandle: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_COLLECTION_HANDLE,
+        value = collectionHandle,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.COLLECTION_HANDLE
+}
+
+class SubcommunityHandleFilter(
+    subcommunityHandle: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_SUBCOMMUNITY_HANDLE,
+        value = subcommunityHandle,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_HANDLE
+}
+
+class SubcommunityNameFilter(
+    subcommunityName: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_SUBCOMMUNITY_NAME,
+        value = subcommunityName,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_NAME
+}
+
+class MetadataIdFilter(
+    metadataId: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_METADATA_ID,
+        value = metadataId,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.METADATA_ID
+}
+
+class LicenceUrlFilter(
+    licenceUrl: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_LICENCE_URL,
+        value = licenceUrl,
+    ) {
+    override fun getFilterType(): FilterType = FilterType.LICENCE_URL
+}
 
 class PublicationDateFilter(
     val fromYear: Int,
@@ -48,7 +218,7 @@ class PublicationDateFilter(
     private val fromDate = LocalDate.of(fromYear, 1, 1)
     private val toDate = LocalDate.of(toYear, 12, 31)
 
-    override fun toWhereClause(): String = "$dbColumnName >= ? AND $dbColumnName <= ?"
+    override fun toWhereClause(): String = "($dbColumnName >= ? AND $dbColumnName <= ? AND $dbColumnName is not null)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -59,7 +229,11 @@ class PublicationDateFilter(
         return counter + 2
     }
 
-    override fun toString(): String = "$fromYear-$toYear"
+    override fun toString(): String = "${getFilterType()}:$fromYear-$toYear"
+
+    override fun toSQLString(): String = "$fromYear-$toYear"
+
+    override fun getFilterType(): FilterType = FilterType.PUBLICATION_DATE
 
     companion object {
         const val MIN_YEAR = 1800
@@ -76,7 +250,7 @@ class PublicationTypeFilter(
     ) {
     override fun toWhereClause(): String =
         publicationTypes.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
+            "LOWER($dbColumnName) = LOWER(?)"
         }
 
     override fun setSQLParameter(
@@ -90,7 +264,11 @@ class PublicationTypeFilter(
         return localCounter
     }
 
-    override fun toString(): String = publicationTypes.joinToString(separator = ",")
+    override fun toString(): String = "${getFilterType()}:${publicationTypes.joinToString(separator = ",")}"
+
+    override fun toSQLString(): String = publicationTypes.joinToString(separator = ",")
+
+    override fun getFilterType(): FilterType = FilterType.PUBLICATION_TYPE
 
     companion object {
         fun fromString(s: String?): PublicationTypeFilter? = QueryParameterParser.parsePublicationTypeFilter(s)
@@ -104,7 +282,7 @@ class PaketSigelFilter(
     ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
+            "(LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null)"
         }
 
     override fun setSQLParameter(
@@ -118,7 +296,11 @@ class PaketSigelFilter(
         return localCounter
     }
 
-    override fun toString(): String = paketSigels.joinToString(separator = ",")
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun toSQLString(): String = paketSigels.joinToString(separator = ",")
+
+    override fun getFilterType(): FilterType = FilterType.PAKET_SIGEL
 
     companion object {
         fun fromString(s: String?): PaketSigelFilter? = QueryParameterParser.parsePaketSigelFilter(s)
@@ -130,10 +312,10 @@ class ZDBIdFilter(
 ) : MetadataSearchFilter(
         DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
     ) {
-    // TODO(CB): Add OR statements on COLUMN_METADATA_ZDB_ID_SERIES
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ? OR ${DatabaseConnector.COLUMN_METADATA_ZDB_ID_SERIES} = ?"
+            "(LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null) OR " +
+                "(LOWER($COLUMN_METADATA_ZDB_ID_SERIES) = LOWER(?) AND $COLUMN_METADATA_ZDB_ID_SERIES is not null)"
         }
 
     override fun setSQLParameter(
@@ -148,7 +330,11 @@ class ZDBIdFilter(
         return localCounter
     }
 
-    override fun toString(): String = zdbIds.joinToString(separator = ",")
+    override fun toSQLString(): String = zdbIds.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.ZDB_ID
 
     companion object {
         fun fromString(s: String?): ZDBIdFilter? = QueryParameterParser.parseZDBIdFilter(s)
@@ -162,7 +348,7 @@ class SeriesFilter(
     ) {
     override fun toWhereClause(): String =
         seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
+            "LOWER($dbColumnName) = LOWER(?) and $dbColumnName is not null"
         }
 
     override fun setSQLParameter(
@@ -176,7 +362,11 @@ class SeriesFilter(
         return localCounter
     }
 
-    override fun toString(): String = seriesNames.joinToString(separator = ",")
+    override fun getFilterType(): FilterType = FilterType.SERIES
+
+    override fun toSQLString(): String = seriesNames.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
 }
 
 /**
@@ -191,7 +381,7 @@ class AccessStateFilter(
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
         accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
+            "$dbColumnName = ? AND $dbColumnName is not null"
         }
 
     override fun setSQLParameter(
@@ -205,7 +395,11 @@ class AccessStateFilter(
         return localCounter
     }
 
-    override fun toString(): String = accessStates.joinToString(separator = ",")
+    override fun getFilterType(): FilterType = FilterType.ACCESS
+
+    override fun toSQLString(): String = accessStates.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
 
     companion object {
         fun fromString(s: String?): AccessStateFilter? = QueryParameterParser.parseAccessStateFilter(s)
@@ -218,11 +412,11 @@ class TemporalValidityFilter(
     override fun toWhereClause(): String =
         temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             when (it) {
-                TemporalValidity.FUTURE -> "${DatabaseConnector.COLUMN_RIGHT_START_DATE} > ?"
-                TemporalValidity.PAST -> "${DatabaseConnector.COLUMN_RIGHT_END_DATE} < ?"
+                TemporalValidity.FUTURE -> "$COLUMN_RIGHT_START_DATE > ?"
+                TemporalValidity.PAST -> "$COLUMN_RIGHT_END_DATE < ?"
                 TemporalValidity.PRESENT ->
-                    "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ?" +
-                        " AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
+                    "$COLUMN_RIGHT_START_DATE <= ?" +
+                        " AND $COLUMN_RIGHT_END_DATE >= ?"
             }
         }
 
@@ -240,7 +434,11 @@ class TemporalValidityFilter(
         return localCounter
     }
 
-    override fun toString(): String = temporalValidity.joinToString(separator = ",")
+    override fun getFilterType(): FilterType = FilterType.TEMPORAL_VALIDITY
+
+    override fun toSQLString(): String = temporalValidity.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
 
     companion object {
         fun fromString(s: String?): TemporalValidityFilter? = QueryParameterParser.parseTemporalValidity(s)
@@ -255,7 +453,9 @@ class RightValidOnFilter(
     val date: LocalDate,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        "${DatabaseConnector.COLUMN_RIGHT_START_DATE} <= ? AND ${DatabaseConnector.COLUMN_RIGHT_END_DATE} >= ?"
+        "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+            " $COLUMN_RIGHT_START_DATE is not null AND" +
+            " $COLUMN_RIGHT_END_DATE is not null)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -267,7 +467,11 @@ class RightValidOnFilter(
         return localCounter
     }
 
-    override fun toString(): String = date.toString()
+    override fun toSQLString(): String = date.toString()
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.RIGHT_VALID_ON
 
     companion object {
         fun fromString(s: String?) = QueryParameterParser.parseRightValidOnFilter(s)
@@ -276,8 +480,8 @@ class RightValidOnFilter(
 
 class StartDateFilter(
     val date: LocalDate,
-) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_START_DATE) {
-    override fun toWhereClause(): String = "$dbColumnName = ?"
+) : RightSearchFilter(COLUMN_RIGHT_START_DATE) {
+    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -287,7 +491,11 @@ class StartDateFilter(
         return counter + 1
     }
 
-    override fun toString(): String = date.toString()
+    override fun toSQLString(): String = date.toString()
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.START_DATE
 
     companion object {
         fun fromString(s: String?): StartDateFilter? = QueryParameterParser.parseStartDateFilter(s)
@@ -296,8 +504,8 @@ class StartDateFilter(
 
 class EndDateFilter(
     val date: LocalDate,
-) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_END_DATE) {
-    override fun toWhereClause(): String = "$dbColumnName = ?"
+) : RightSearchFilter(COLUMN_RIGHT_END_DATE) {
+    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -307,7 +515,11 @@ class EndDateFilter(
         return counter + 1
     }
 
-    override fun toString(): String = date.toString()
+    override fun toSQLString(): String = date.toString()
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.END_DATE
 
     companion object {
         fun fromString(s: String?): EndDateFilter? = QueryParameterParser.parseEndDateFilter(s)
@@ -320,7 +532,7 @@ class RightIdFilter(
     override fun toWhereClause(): String =
         "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
             rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName = ?"
+                "($TABLE_NAME_ITEM_RIGHT.$dbColumnName = ? AND $TABLE_NAME_ITEM_RIGHT.$dbColumnName is not null)"
             }
 
     override fun setSQLParameter(
@@ -334,7 +546,11 @@ class RightIdFilter(
         return localCounter
     }
 
-    override fun toString(): String = rightIds.joinToString(separator = ",")
+    override fun getFilterType(): FilterType = FilterType.RIGHT_ID
+
+    override fun toSQLString(): String = rightIds.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
 }
 
 class FormalRuleFilter(
@@ -358,7 +574,11 @@ class FormalRuleFilter(
         preparedStatement: PreparedStatement,
     ): Int = counter
 
-    override fun toString(): String = formalRules.joinToString(separator = ",")
+    override fun toSQLString(): String = formalRules.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.FORMAL_RULE
 
     companion object {
         fun fromString(s: String?): FormalRuleFilter? = QueryParameterParser.parseFormalRuleFilter(s)
@@ -366,16 +586,46 @@ class FormalRuleFilter(
 }
 
 class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "${DatabaseConnector.TABLE_NAME_ITEM_RIGHT}.$dbColumnName IS NULL"
+    override fun toWhereClause(): String = "$TABLE_NAME_ITEM_RIGHT.$dbColumnName IS NULL"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int = counter
 
-    override fun toString(): String = "true" // WAT?
+    override fun toSQLString(): String = "true"
+
+    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    override fun getFilterType(): FilterType = FilterType.NO_RIGHTS
 
     companion object {
         fun fromString(s: String?): NoRightInformationFilter? = QueryParameterParser.parseNoRightInformationFilter(s)
     }
+}
+
+enum class FilterType {
+    TITLE,
+    PUBLICATION_DATE,
+    PUBLICATION_TYPE,
+    PAKET_SIGEL,
+    ZDB_ID,
+    SERIES,
+    ACCESS,
+    TEMPORAL_VALIDITY,
+    RIGHT_VALID_ON,
+    START_DATE,
+    END_DATE,
+    RIGHT_ID,
+    FORMAL_RULE,
+    NO_RIGHTS,
+    COLLECTION_NAME,
+    COMMUNITY_NAME,
+    HANDLE,
+    COMMUNITY_HANDLE,
+    COLLECTION_HANDLE,
+    SUB_COMMUNITY_NAME,
+    SUB_COMMUNITY_HANDLE,
+    METADATA_ID,
+    LICENCE_URL,
 }

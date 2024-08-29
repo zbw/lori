@@ -61,13 +61,13 @@ enum class PublicationType(
     ARTICLE(1),
     BOOK(2),
     BOOK_PART(3),
-    CONFERENCE_PAPER(6),
-    PERIODICAL_PART(10),
-    PROCEEDINGS(5),
-    RESEARCH_REPORT(4),
-    THESIS(8),
-    WORKING_PAPER(9),
-    OTHER(7),
+    CONFERENCE_PAPER(4),
+    OTHER(5),
+    PERIODICAL_PART(6),
+    PROCEEDINGS(7),
+    RESEARCH_REPORT(8),
+    THESIS(9),
+    WORKING_PAPER(10),
 }
 
 enum class BasisStorage {

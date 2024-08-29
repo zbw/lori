@@ -7,15 +7,23 @@ import com.github.h0tk3y.betterParse.combinators.times
 import com.github.h0tk3y.betterParse.combinators.unaryMinus
 import com.github.h0tk3y.betterParse.grammar.Grammar
 import com.github.h0tk3y.betterParse.grammar.parser
+import com.github.h0tk3y.betterParse.lexer.TokenMatch
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.SearchFilter
 
+/**
+ * Search expressions represented as an algebraic datatype.
+ *
+ * Created on 03-21-2024
+ * @author Christian Bay (c.bay@zbw.eu)
+ */
 sealed class SearchExpression
 
 data class SEVariable(
-    val searchPair: SearchPair,
+    val searchFilter: SearchFilter,
 ) : SearchExpression()
 
 data class SENot(
@@ -48,7 +56,7 @@ object SearchGrammar : Grammar<SearchExpression>() {
     val and by literalToken("&")
     val or by literalToken("|")
 
-    // Even if not used the variable seems to be necessary according to documentation
+    // Even if not used this variable seems to be necessary according to documentation
     val ws by regexToken("\\s+", ignore = true)
 
     private val negation by -not * parser(this::term) map { SENot(it) }
@@ -57,13 +65,13 @@ object SearchGrammar : Grammar<SearchExpression>() {
 
     private val term: Parser<SearchExpression> by
         (
-            id map { searchPairInQuery ->
+            id map { searchPairInQuery: TokenMatch ->
                 LoriServerBackend
                     .parseValidSearchPairs(searchPairInQuery.text)
                     .takeIf { it.isNotEmpty() }
-                    ?.let {
+                    ?.let { it: List<SearchFilter> ->
                         SEVariable(it.first())
-                    } ?: throw ParsingException("Invalid Search Pair found in $searchPairInQuery")
+                    } ?: throw ParsingException("Invalid SearchFilter found in $searchPairInQuery")
             }
         ) or
             negation or
