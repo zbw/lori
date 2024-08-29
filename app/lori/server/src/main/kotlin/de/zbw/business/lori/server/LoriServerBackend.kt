@@ -18,12 +18,9 @@ import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
-import de.zbw.business.lori.server.type.SearchKey
-import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
-import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
@@ -317,7 +314,7 @@ class LoriServerBackend(
                         is Parsed -> it.value
                         is ErrorResult -> throw ParsingException("Parsing error in query: $it")
                     }
-                }?.let { SearchExpressionResolution.extendZDBSearches(it) }
+                }
         // Acquire search results
         val receivedMetadata: List<ItemMetadata> =
             dbConnector.searchDB.searchMetadataItems(
@@ -623,44 +620,16 @@ class LoriServerBackend(
          * Valid special characters: '-:;'
          */
         val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
-        private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         // parseValidSearchKeys . searchKeysToString == id
-        fun parseValidSearchPairs(s: String?): List<SearchPair> =
+        fun parseValidSearchPairs(s: String?): List<SearchFilter> =
             s?.let { tokenizeSearchInput(it) }?.mapNotNull {
-                val key: SearchKey? = SearchKey.toEnum(it.substringBefore(":"))
-                if (key == null) {
-                    null
-                } else {
-                    SearchPair(
-                        key = key,
-                        values = it.substringAfter(":").trim().let { v -> insertDefaultAndOperator(v) },
-                    )
-                }
-            } ?: emptyList()
-
-        fun searchPairsToString(keys: List<SearchPair>): String =
-            keys.joinToString(separator = " ") { e ->
-                "${e.key.fromEnum()}:'${e.values}'"
+                SearchFilter.toSearchFilter(
+                    it.substringBefore(":"),
+                    it.substringAfter(":").trim(),
+                )
             }
-
-        private fun insertDefaultAndOperator(v: String): String {
-            val tokens: List<String> = v.split("\\s+".toRegex())
-            return List(tokens.size) { idx ->
-                if (idx == 0) {
-                    return@List listOf(tokens[0])
-                }
-                if (!LOGICAL_OPERATIONS.contains(tokens[idx]) &&
-                    !LOGICAL_OPERATIONS.contains(tokens[idx - 1])
-                ) {
-                    return@List listOf("&", tokens[idx])
-                } else {
-                    return@List listOf(tokens[idx])
-                }
-            }.flatten().joinToString(separator = " ") { s: String ->
-                s.replace(":", "\\:").replace("\\\\:", "\\:")
-            } // Filter out :
-        }
+                ?: emptyList()
 
         private fun tokenizeSearchInput(s: String): List<String> {
             val iter = SEARCH_KEY_REGEX.findAll(s).iterator()

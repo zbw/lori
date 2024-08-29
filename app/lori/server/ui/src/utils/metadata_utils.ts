@@ -26,11 +26,11 @@ export default {
   prettyPrintPublicationType(pubType: string): string {
     switch (pubType.toLowerCase()) {
       case "article":
-        return "Aufsatz/Article";
+        return "Article";
       case "book":
-        return "Buch/Book";
+        return "Book";
       case "book_part":
-        return "Buchaufsatz/Book Part";
+        return "Book Part";
       /**
        * IMPORTANT NOTE: Openapis conversion of enums between frontend and backend
        * has issues with multiple word entries. The entries aren't always
@@ -39,17 +39,17 @@ export default {
        * these conversions contain both variants.
        */
       case "conference_paper":
-        return "Konferenzschrift/\n Conference Paper ";
+        return "Conference Paper";
       case "periodical_part":
-        return "Zeitschriftenband/\n Periodical Part ";
+        return "Periodical Part";
       case "proceedings":
-        return "Konferenzband/\n Proceeding ";
+        return "Proceeding";
       case "research_report":
-        return "Forschungsbericht/\n Research Report ";
+        return "Research Report";
       case "thesis":
-        return "Thesis ";
+        return "Thesis";
       case "working_paper":
-        return "Working Paper ";
+        return "Working Paper";
       case "other":
         return "Other";
       default:

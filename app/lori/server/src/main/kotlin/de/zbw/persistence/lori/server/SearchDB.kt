@@ -7,7 +7,6 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
-import de.zbw.business.lori.server.type.SearchKey
 import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearchExpression
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_AUTHOR
@@ -92,12 +91,13 @@ class SearchDB(
                     rightSearchFilter.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
-                    metadataSearchFilter.forEach { f ->
+                    val searchPairs =
+                        searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
+                    searchPairs.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
-                    val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                    searchPairs.forEach { entry ->
-                        this.setString(counter++, entry.values)
+                    metadataSearchFilter.forEach { f ->
+                        counter = f.setSQLParameter(counter, this)
                     }
                 }
         val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
@@ -267,12 +267,13 @@ class SearchDB(
                     rightSearchFilter.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
-                    metadataSearchFilter.forEach { f ->
+                    val searchPairs =
+                        searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
+                    searchPairs.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
-                    val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                    searchPairs.forEach { pair ->
-                        this.setString(counter++, pair.values)
+                    metadataSearchFilter.forEach { f ->
+                        counter = f.setSQLParameter(counter, this)
                     }
                 }
         val span = tracer.spanBuilder("searchForOccurrence").startSpan()
@@ -323,18 +324,16 @@ class SearchDB(
                     ),
                 ).apply {
                     var counter = 1
-                    val searchPairs = searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                    searchPairs.forEach { pair ->
-                        this.setString(counter++, pair.getValuesAsString())
-                    }
+                    val searchPairs =
+                        searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
                     rightSearchFilter.forEach { f ->
+                        counter = f.setSQLParameter(counter, this)
+                    }
+                    searchPairs.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
                     metadataSearchFilter.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
-                    }
-                    searchPairs.forEach { pair ->
-                        this.setString(counter++, pair.getValuesAsString())
                     }
                 }
         val span = tracer.spanBuilder("countMetadataSearch").startSpan()
@@ -379,17 +378,14 @@ class SearchDB(
                         searchExpression
                             ?.let { SearchExpressionResolution.getSearchPairs(it) }
                             ?: emptyList()
-                    searchPairs.forEach { pair ->
-                        this.setString(counter++, pair.getValuesAsString())
-                    }
                     rightSearchFilter.forEach { f ->
+                        counter = f.setSQLParameter(counter, this)
+                    }
+                    searchPairs.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
                     }
                     metadataSearchFilter.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
-                    }
-                    searchPairs.forEach { pair ->
-                        this.setString(counter++, pair.getValuesAsString())
                     }
                     if (metadataIdsToIgnore.isNotEmpty()) {
                         this.setArray(counter++, connection.createArrayOf("text", metadataIdsToIgnore.toTypedArray()))
@@ -467,6 +463,7 @@ class SearchDB(
     }
 
     companion object {
+        const val SUBQUERY_NAME = "sub"
         private const val STATEMENT_SELECT_ALL_FACETS =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_DATE," +
@@ -488,10 +485,10 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_NAME," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID_JOURNAL}," +
+                "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME},${MetadataDB.TS_IS_PART_OF_SERIES},${MetadataDB.TS_ZDB_ID_SERIES}"
+                MetadataDB.TS_SUBCOMMUNITY_NAME
 
         private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
@@ -500,10 +497,10 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID_JOURNAL}," +
+                "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME},${MetadataDB.TS_IS_PART_OF_SERIES},${MetadataDB.TS_ZDB_ID_SERIES}"
+                MetadataDB.TS_SUBCOMMUNITY_NAME
 
         private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id," +
@@ -512,10 +509,10 @@ class SearchDB(
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID_JOURNAL}," +
+                "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME},${MetadataDB.TS_IS_PART_OF_SERIES},${MetadataDB.TS_ZDB_ID_SERIES}"
+                "${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_NAME =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ID, $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_NAME)" +
@@ -525,10 +522,10 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID_JOURNAL}," +
+                "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME},${MetadataDB.TS_IS_PART_OF_SERIES},${MetadataDB.TS_ZDB_ID_SERIES}"
+                "${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT $COLUMN_METADATA_ID,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
@@ -543,19 +540,19 @@ class SearchDB(
 
         private const val STATEMENT_SELECT_FACET =
             "SELECT" +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES"
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
@@ -577,10 +574,10 @@ class SearchDB(
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_SIGEL},${MetadataDB.TS_TITLE},${MetadataDB.TS_ZDB_ID_JOURNAL}," +
+                "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME},${MetadataDB.TS_IS_PART_OF_SERIES},${MetadataDB.TS_ZDB_ID_SERIES}"
+                MetadataDB.TS_SUBCOMMUNITY_NAME
 
         fun buildSearchQuery(
             searchExpression: SearchExpression?,
@@ -613,72 +610,38 @@ class SearchDB(
                 ) {
                     buildSearchQuerySelect(hasRightSearchFilter = false) + " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
+                            null,
                             metadataSearchFilters,
                         )
                 } else if (
                     rightSearchFilters.isEmpty() &&
-                    metadataSearchFilters.isEmpty() &&
-                    noRightInformationFilter == null
+                    noRightInformationFilter == null &&
+                    SearchExpressionResolution.hasRightQueries(searchExpression).not()
                 ) {
-                    TABLE_NAME_ITEM_METADATA
-                } else if (
-                    rightSearchFilters.isEmpty() &&
-                    noRightInformationFilter == null
-                ) {
-                    "(" +
-                        buildSearchQuerySelect(hasRightSearchFilter = false) +
+                    buildSearchQuerySelect(hasRightSearchFilter = false) +
                         " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
+                            searchExpression,
                             metadataSearchFilters,
-                        ) +
-                        ")"
-                } else if (searchExpression != null) {
-                    "(" + buildSearchQuerySelect(hasRightSearchFilter = rightSearchFilters.isNotEmpty()) +
-                        " FROM $TABLE_NAME_ITEM_METADATA" +
-                        buildSearchQueryHelper(
-                            metadataSearchFilters,
-                            rightSearchFilters,
-                            noRightInformationFilter,
-                        ) + ")"
+                        )
                 } else {
                     buildSearchQuerySelect(hasRightSearchFilter = rightSearchFilters.isNotEmpty()) +
                         " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
+                            searchExpression,
                             metadataSearchFilters,
                             rightSearchFilters,
                             noRightInformationFilter,
                         )
                 }
 
-            return if (searchExpression == null && hasMetadataIdsToIgnore) {
+            return if (hasMetadataIdsToIgnore) {
                 val filterMetadataIds = "WHERE NOT metadata_id = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
-                    " FROM $subquery as ${SearchKey.SUBQUERY_NAME}" +
+                    " FROM ($subquery) as $SUBQUERY_NAME" +
                     " $filterMetadataIds ORDER BY metadata_id ASC$limit$offset"
-            } else if (searchExpression == null) {
-                "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             } else {
-                val filterMetadataIds =
-                    if (hasMetadataIdsToIgnore) {
-                        "NOT sub.metadata_id = ANY(?)"
-                    } else {
-                        ""
-                    }
-                val trgmWhere =
-                    listOf(resolveSearchExpression(searchExpression), filterMetadataIds)
-                        .filter { it.isNotBlank() }
-                        .joinToString(separator = " AND ")
-                        .takeIf { it.isNotBlank() }
-                        ?.let { " WHERE $it" }
-                        ?: ""
-                val coalesceScore =
-                    SearchExpressionResolution.resolveSearchExpressionCoalesce(searchExpression, "score")
-                "$STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES,$coalesceScore" +
-                    " FROM $subquery as ${SearchKey.SUBQUERY_NAME}" +
-                    trgmWhere +
-                    " ORDER BY score DESC" +
-                    limit +
-                    offset
+                "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
             }
         }
 
@@ -716,24 +679,17 @@ class SearchDB(
                     collectOccurrencesTemplateName = columnName == COLUMN_RIGHT_TEMPLATE_NAME,
                 ) + " FROM $TABLE_NAME_ITEM_METADATA" +
                     buildSearchQueryHelper(
+                        searchExpression = searchExpression,
                         metadataSearchFilter = metadataSearchFilters,
                         rightSearchFilter = rightSearchFilters,
                         noRightInformationFilter = noRightInformationFilter,
                         collectFacets = true,
                     )
 
-            val trgmWhere =
-                if (searchExpression == null) {
-                    ""
-                } else {
-                    " WHERE " + resolveSearchExpression(searchExpression)
-                }
-
-            return "SELECT A.$columnName, COUNT(${SearchKey.SUBQUERY_NAME}.$columnName)" +
+            return "SELECT A.$columnName, COUNT(${SUBQUERY_NAME}.$columnName)" +
                 " FROM($values) as A($columnName)" +
-                " LEFT JOIN ($subquery) AS ${SearchKey.SUBQUERY_NAME}" +
-                " ON A.$columnName = ${SearchKey.SUBQUERY_NAME}.$columnName " +
-                trgmWhere +
+                " LEFT JOIN ($subquery) AS ${SUBQUERY_NAME}" +
+                " ON A.$columnName = ${SUBQUERY_NAME}.$columnName " +
                 " GROUP BY A.$columnName"
         }
 
@@ -751,6 +707,7 @@ class SearchDB(
                     buildSearchQuerySelect(hasRightSearchFilter = false) +
                         " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
+                            null,
                             metadataSearchFilters,
                         )
                 } else {
@@ -760,39 +717,40 @@ class SearchDB(
                     ) +
                         " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
-                            metadataSearchFilters,
-                            rightSearchFilters,
-                            noRightInformationFilter,
-                            collectFacets,
+                            searchExpression = searchExpression,
+                            metadataSearchFilter = metadataSearchFilters,
+                            rightSearchFilter = rightSearchFilters,
+                            noRightInformationFilter = noRightInformationFilter,
+                            collectFacets = collectFacets,
                         )
-                }
-            val trgmWhere =
-                if (searchExpression == null) {
-                    ""
-                } else {
-                    " WHERE " + resolveSearchExpression(searchExpression)
                 }
 
             return STATEMENT_SELECT_FACET +
-                " FROM ($subquery) as ${SearchKey.SUBQUERY_NAME}" +
-                trgmWhere +
+                " FROM ($subquery) as $SUBQUERY_NAME" +
                 " GROUP BY" +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                " ${SearchKey.SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES;"
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES;"
         }
 
-        private fun buildSearchQueryHelper(metadataSearchFilter: List<MetadataSearchFilter>): String {
+        private fun buildSearchQueryHelper(
+            searchExpression: SearchExpression?,
+            metadataSearchFilter: List<MetadataSearchFilter>,
+        ): String {
+            val searchExpressionFilters: String =
+                searchExpression?.let {
+                    resolveSearchExpression(it)
+                } ?: ""
             val metadataFilters =
                 metadataSearchFilter
                     .joinToString(separator = " AND ") { f ->
@@ -800,6 +758,7 @@ class SearchDB(
                     }.takeIf { it.isNotBlank() }
                     ?: ""
             return listOf(
+                searchExpressionFilters,
                 metadataFilters,
             ).filter { it.isNotBlank() }
                 .joinToString(separator = " AND ")
@@ -809,6 +768,7 @@ class SearchDB(
         }
 
         private fun buildSearchQueryHelper(
+            searchExpression: SearchExpression?,
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
@@ -819,11 +779,30 @@ class SearchDB(
                     f.toWhereClause()
                 }
             val noRightInformationFilterClause: String = noRightInformationFilter?.toWhereClause() ?: ""
+            val searchExpressionFilters: String =
+                searchExpression?.let {
+                    resolveSearchExpression(it)
+                } ?: ""
+            val searchExprUsesRights =
+                searchExpression?.let {
+                    SearchExpressionResolution.hasRightQueries(searchExpression)
+                } ?: false
+            val whereClauseList =
+                if (searchExprUsesRights) {
+                    listOf(
+                        metadataFilters,
+                        noRightInformationFilterClause,
+                    )
+                } else {
+                    listOf(
+                        searchExpressionFilters,
+                        metadataFilters,
+                        noRightInformationFilterClause,
+                    )
+                }
             val whereClause =
-                listOf(
-                    metadataFilters,
-                    noRightInformationFilterClause,
-                ).filter { it.isNotBlank() }
+                whereClauseList
+                    .filter { it.isNotBlank() }
                     .joinToString(separator = " AND ")
                     .takeIf { it.isNotBlank() }
                     ?.let { " WHERE $it" }
@@ -839,8 +818,17 @@ class SearchDB(
                 rightSearchFilter.joinToString(separator = " AND ") { f ->
                     f.toWhereClause()
                 }
+            val rightFilterClause =
+                if (searchExprUsesRights) {
+                    listOf(
+                        rightFilters,
+                        searchExpressionFilters,
+                    )
+                } else {
+                    listOf(rightFilters)
+                }
             val extendedRightFilter =
-                listOf(rightFilters)
+                rightFilterClause
                     .filter { it.isNotBlank() }
                     .joinToString(separator = " AND ")
                     .takeIf { it.isNotBlank() }
@@ -849,8 +837,13 @@ class SearchDB(
 
             val joinItemRight =
                 if (
-                    (collectFacets && rightSearchFilter.isEmpty()) ||
+                    (
+                        collectFacets &&
+                            rightSearchFilter.isEmpty() &&
+                            searchExprUsesRights.not()
+                    ) ||
                     noRightInformationFilterClause.isNotBlank()
+
                 ) {
                     "LEFT JOIN"
                 } else {

@@ -262,15 +262,11 @@ class MetadataDB(
         const val TS_COLLECTION = "ts_collection"
         const val TS_COLLECTION_HANDLE = "ts_col_hdl"
         const val TS_HANDLE = "ts_hdl"
-        const val TS_IS_PART_OF_SERIES = "ts_is_part_of_series"
         const val TS_LICENCE_URL = "ts_licence_url"
         const val TS_METADATA_ID = "ts_metadata_id"
-        const val TS_SIGEL = "ts_sigel"
         const val TS_SUBCOMMUNITY_HANDLE = "ts_subcom_hdl"
         const val TS_SUBCOMMUNITY_NAME = "ts_subcom_name"
         const val TS_TITLE = "ts_title"
-        const val TS_ZDB_ID_JOURNAL = "ts_zdb_id_journal"
-        const val TS_ZDB_ID_SERIES = "ts_zdb_id_series"
 
         const val STATEMENT_METADATA_CONTAINS_ID =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE metadata_id=?)"
@@ -300,9 +296,9 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle," +
                 "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$TS_COMMUNITY,$TS_COLLECTION,$TS_SIGEL,$TS_TITLE,$TS_ZDB_ID_JOURNAL,$TS_COLLECTION_HANDLE," +
+                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_METADATA_ID,$TS_LICENCE_URL," +
-                "$TS_SUBCOMMUNITY_NAME,$TS_IS_PART_OF_SERIES,$TS_ZDB_ID_SERIES"
+                "$TS_SUBCOMMUNITY_NAME"
 
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +

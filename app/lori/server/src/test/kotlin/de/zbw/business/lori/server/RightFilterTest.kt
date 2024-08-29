@@ -210,7 +210,7 @@ class RightFilterTest : DatabaseTest() {
     fun createDataForSearchWithRightFilter() =
         arrayOf(
             arrayOf(
-                "col:'subject1 | subject3'",
+                "col:'subject1' | col:'subject3'",
                 listOf(
                     PublicationTypeFilter(
                         listOf(

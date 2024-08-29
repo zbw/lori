@@ -9,8 +9,6 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
-import de.zbw.business.lori.server.type.SearchKey
-import de.zbw.business.lori.server.type.SearchPair
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import io.mockk.every
@@ -182,228 +180,100 @@ class LoriServerBackendTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 "bllaaaa",
-                emptyList<SearchPair>(),
+                "",
                 "no search key pair",
             ),
             arrayOf(
                 "bllaaaa col:bar",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "bar",
-                    ),
-                ),
+                "COLLECTION_NAME:bar",
                 "single case with random string",
             ),
             arrayOf(
                 "col:bar",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "bar",
-                    ),
-                ),
+                "COLLECTION_NAME:bar",
                 "single case no additional string",
             ),
             arrayOf(
                 "                col:bar                             ",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "bar",
-                    ),
-                ),
+                "COLLECTION_NAME:bar",
                 "single case with whitespace",
             ),
             arrayOf(
                 "col:bar zdb:foo",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "bar",
-                    ),
-                    SearchPair(
-                        SearchKey.ZDB_ID,
-                        "foo",
-                    ),
-                ),
+                "COLLECTION_NAME:bar,ZDB_ID:foo",
                 "two search keys",
             ),
             arrayOf(
-                "col:'foo | bar'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "foo | bar",
-                    ),
-                ),
-                "multiple words quoted",
-            ),
-            arrayOf(
-                "col:'foobar'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "foobar",
-                    ),
-                ),
+                "col:\"foobar\"",
+                "COLLECTION_NAME:foobar",
                 "single word quoted",
             ),
             arrayOf(
                 "col:\"foobar\"",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "foobar",
-                    ),
-                ),
+                "COLLECTION_NAME:foobar",
                 "single word doublequoted",
             ),
             arrayOf(
-                "            col:'foobar'           com:'foo & bar'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "foobar",
-                    ),
-                    SearchPair(
-                        SearchKey.COMMUNITY,
-                        "foo & bar",
-                    ),
-                ),
+                "            col:\"foobar\"           com:\"foo & bar\"",
+                "COLLECTION_NAME:foobar,COMMUNITY_NAME:foo & bar",
                 "mutltiple and single words quoted with whitespaces",
             ),
             arrayOf(
                 "col:col-foo-bar",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "col-foo-bar",
-                    ),
-                ),
+                "COLLECTION_NAME:col-foo-bar",
                 "multiple words minus",
             ),
             arrayOf(
-                "col:'col-foo-bar'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "col-foo-bar",
-                    ),
-                ),
+                "col:\"col-foo-bar\"",
+                "COLLECTION_NAME:col-foo-bar",
                 "multiple words quoted minus",
             ),
             arrayOf(
-                "col:'col-;:'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "col-;\\:",
-                    ),
-                ),
+                "col:\"col-;:\"",
+                "COLLECTION_NAME:col-;:",
                 "handle special characters",
             ),
             arrayOf(
-                "col:'(subject1 | subject2) & subject3'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "(subject1 | subject2) & subject3",
-                    ),
-                ),
-                "with parentheses",
+                "series:\"subject1 subject2 subject3 subject4 subject5\"",
+                "SERIES:subject1 subject2 subject3 subject4 subject5",
+                "direct access multiple words",
             ),
             arrayOf(
-                "col:\"(subject1 | subject2) & subject3\"",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "(subject1 | subject2) & subject3",
-                    ),
-                ),
-                "with parentheses and double quotes",
+                "tit:\"subject1 subject2 subject3 subject4 subject5\"",
+                "TITLE:subject1 subject2 subject3 subject4 subject5",
+                "TSVector access and multiple words",
             ),
             arrayOf(
-                "col:\"(anyNumberOfSp\$c!;,~ | subject2) & subject3\"",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "(anyNumberOfSp\$c!;,~ | subject2) & subject3",
-                    ),
-                ),
-                "with parentheses and double quotes",
+                "jah:\"2011-2013\"",
+                "PUBLICATION_DATE:2011-2013",
+                "Publication Date from and to",
             ),
             arrayOf(
-                "col:\"(subject1 subject2 subject3 | subject4) & subject5\"",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "(subject1 & subject2 & subject3 | subject4) & subject5",
-                    ),
-                ),
-                "insert missing & with other logical operations",
+                "jah:\"2011-\"",
+                "PUBLICATION_DATE:2011-2200",
+                "Publication Date from",
             ),
             arrayOf(
-                "col:\"subject1 subject2 subject3 subject4 subject5\"",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "subject1 & subject2 & subject3 & subject4 & subject5",
-                    ),
-                ),
-                "insert missing & standard case",
-            ),
-            arrayOf(
-                "col:\'subject1 subject2 subject3 subject4 subject5\'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "subject1 & subject2 & subject3 & subject4 & subject5",
-                    ),
-                ),
-                "insert missing & standard case",
-            ),
-            arrayOf(
-                "col:\'subject1 & subject2 :\'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "subject1 & subject2 & \\:",
-                    ),
-                ),
-                "escape : char",
-            ),
-            arrayOf(
-                "col:\'subject1 & subject2 \\:\'",
-                listOf(
-                    SearchPair(
-                        SearchKey.COLLECTION,
-                        "subject1 & subject2 & \\:",
-                    ),
-                ),
-                "escape : char but not doubled",
+                "jah:\"-2013\"",
+                "PUBLICATION_DATE:1800-2013",
+                "Publication Date to",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_KEY_PARSING)
     fun testParseSearchKeys(
         searchTerm: String,
-        expectedKeys: List<SearchPair>,
+        expectedKeys: String,
         description: String,
     ) {
-        val receivedPairs: List<SearchPair> = LoriServerBackend.parseValidSearchPairs(searchTerm)
-        receivedPairs.forEachIndexed { index, searchPair ->
-            assertThat(
-                description,
-                searchPair.values,
-                `is`(expectedKeys[index].values),
-            )
-            assertThat(
-                description,
-                searchPair.key,
-                `is`(expectedKeys[index].key),
-            )
-        }
+        val receivedPairs = LoriServerBackend.parseValidSearchPairs(searchTerm)
+        assertThat(
+            description,
+            expectedKeys,
+            `is`(
+                receivedPairs.joinToString(separator = ","),
+            ),
+        )
     }
 
     @DataProvider(name = DATA_FOR_INVALID_SEARCH_KEY_PARSING)
@@ -479,15 +349,15 @@ class LoriServerBackendTest : DatabaseTest() {
                 false,
             ),
             arrayOf(
-                "  foo:'bar baz' abc  bcd\t",
+                "  foo:\"bar baz\" abc  bcd\t",
                 true,
             ),
             arrayOf(
-                "  col:'bar'  \t  ",
+                "  col:\"bar\"  \t  ",
                 false,
             ),
             arrayOf(
-                "  baaaa col:'bar'  \t  ",
+                "  baaaa col:\"bar\"  \t  ",
                 true,
             ),
             arrayOf(
@@ -499,7 +369,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 true,
             ),
             arrayOf(
-                "  col:'bar baz'  \t  ",
+                "  col:\"bar baz\"  \t  ",
                 false,
             ),
             arrayOf(
@@ -518,31 +388,6 @@ class LoriServerBackendTest : DatabaseTest() {
             LoriServerBackend.hasSearchTokensWithNoKey(input),
             `is`(expected),
         )
-    }
-
-    @Test
-    fun testSearchKeyConversion() {
-        val given =
-            listOf(
-                SearchPair(SearchKey.TITLE, "foobar & baz"),
-                SearchPair(SearchKey.COLLECTION, "col1"),
-                SearchPair(SearchKey.COMMUNITY, "com1"),
-                SearchPair(SearchKey.ZDB_ID, "zdb1"),
-            )
-        val received =
-            LoriServerBackend.parseValidSearchPairs(
-                LoriServerBackend.searchPairsToString(given),
-            )
-        received.forEachIndexed { index, searchPair ->
-            assertThat(
-                searchPair.values,
-                `is`(given[index].values),
-            )
-            assertThat(
-                searchPair.key,
-                `is`(given[index].key),
-            )
-        }
     }
 
     @DataProvider(name = DATA_FOR_CHECK_RIGHT_CONFLICTS)
