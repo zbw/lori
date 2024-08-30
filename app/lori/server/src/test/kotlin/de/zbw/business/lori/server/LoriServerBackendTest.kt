@@ -234,7 +234,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 "handle special characters",
             ),
             arrayOf(
-                "series:\"subject1 subject2 subject3 subject4 subject5\"",
+                "ser:\"subject1 subject2 subject3 subject4 subject5\"",
                 "SERIES:subject1 subject2 subject3 subject4 subject5",
                 "direct access multiple words",
             ),

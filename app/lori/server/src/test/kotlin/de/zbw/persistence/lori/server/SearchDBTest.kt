@@ -261,16 +261,11 @@ class SearchDBTest : DatabaseTest() {
     fun createDataForBuildSearchQueryBoth() =
         arrayOf(
             arrayOf(
-                SEVariable(AccessStateFilter(listOf(AccessState.OPEN))),
-                listOf(
-                    PublicationDateFilter(fromYear = 2016, toYear = 2022),
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.ARTICLE,
-                            PublicationType.PROCEEDINGS,
-                        ),
-                    ),
+                SEAnd(
+                    left = SEVariable(AccessStateFilter(listOf(AccessState.OPEN))),
+                    right = SEVariable(AccessStateFilter(listOf(AccessState.RESTRICTED))),
                 ),
+                emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 null,
                 false,
@@ -508,17 +503,6 @@ class SearchDBTest : DatabaseTest() {
     private fun createQueryFilterSearchForSigelAndZDB() =
         arrayOf(
             arrayOf(
-                SEVariable(CollectionNameFilter("foo")),
-                emptyList<MetadataSearchFilter>(),
-                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata" +
-                    " $JOIN_RIGHT" +
-                    " AND (access_state = ? AND access_state is not null OR access_state = ? AND access_state is not null) WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    ") as sub" +
-                    " $GROUP_BY_SEARCH_BAR_FILTER;",
-                "query with search and right filter",
-            ),
-            arrayOf(
                 null,
                 listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
@@ -528,6 +512,17 @@ class SearchDBTest : DatabaseTest() {
                     ") as sub" +
                     " $GROUP_BY_SEARCH_BAR_FILTER;",
                 "query with both filters and no searchkey",
+            ),
+            arrayOf(
+                SEVariable(CollectionNameFilter("foo")),
+                emptyList<MetadataSearchFilter>(),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata" +
+                    " $JOIN_RIGHT" +
+                    " AND (access_state = ? AND access_state is not null OR access_state = ? AND access_state is not null) WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    ") as sub" +
+                    " $GROUP_BY_SEARCH_BAR_FILTER;",
+                "query with search and right filter",
             ),
             arrayOf(
                 null,

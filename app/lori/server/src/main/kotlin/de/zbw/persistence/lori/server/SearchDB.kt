@@ -625,7 +625,10 @@ class SearchDB(
                             metadataSearchFilters,
                         )
                 } else {
-                    buildSearchQuerySelect(hasRightSearchFilter = rightSearchFilters.isNotEmpty()) +
+                    buildSearchQuerySelect(
+                        hasRightSearchFilter =
+                            rightSearchFilters.isNotEmpty() || SearchExpressionResolution.hasRightQueries(searchExpression),
+                    ) +
                         " FROM $TABLE_NAME_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             searchExpression,

@@ -74,12 +74,37 @@ abstract class SearchFilter(
                                 }
                             },
                         )
-
                     "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
                     "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
                     "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
                     "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
-                    "zga" -> QueryParameterParser.parseTemporalValidity(searchValue.uppercase())
+                    "zga" ->
+                        QueryParameterParser.parseTemporalValidity(
+                            when (searchValue.uppercase()) {
+                                "VERGANGENHEIT" -> TemporalValidity.PAST.toString()
+                                "ZUKUNFT" -> TemporalValidity.FUTURE.toString()
+                                "AKTUELL" -> TemporalValidity.PRESENT.toString()
+                                else -> null
+                            },
+                        )
+                    "reg" ->
+                        QueryParameterParser.parseFormalRuleFilter(
+                            when (searchValue.uppercase()) {
+                                "LIZENZVERTRAG" -> FormalRule.LICENCE_CONTRACT.toString()
+                                "OPEN-CONTENT-LICENSE" -> FormalRule.OPEN_CONTENT_LICENCE.toString()
+                                "ZBW-NUTZUNGSVEREINBARUNG" -> FormalRule.ZBW_USER_AGREEMENT.toString()
+                                else -> null
+                            },
+                        )
+                    "nor" ->
+                        QueryParameterParser.parseNoRightInformationFilter(
+                            when (searchValue.lowercase()) {
+                                "on" -> "true"
+                                else -> null
+                            },
+                        )
+                    "tpl" ->
+                        QueryParameterParser.parseRightIdFilter(searchValue)
                     else -> null
                 }
             } catch (iae: IllegalArgumentException) {
