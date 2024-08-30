@@ -48,26 +48,42 @@ abstract class SearchFilter(
             searchKey: String,
             searchValue: String,
         ): SearchFilter? =
-            when (searchKey) {
-                "com" -> CommunityNameFilter(searchValue)
-                "col" -> CollectionNameFilter(searchValue)
-                "hdl" -> HandleFilter(searchValue)
-                "sig" -> QueryParameterParser.parsePaketSigelFilter(searchValue)
-                "tit" -> TitleFilter(searchValue)
-                "zdb" -> QueryParameterParser.parseZDBIdFilter(searchValue)
-                "hdlcol" -> CollectionHandleFilter(searchValue)
-                "hdlcom" -> CommunityHandleFilter(searchValue)
-                "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
-                "metadataid" -> MetadataIdFilter(searchValue)
-                "lur" -> LicenceUrlFilter(searchValue)
-                "subcom" -> SubcommunityNameFilter(searchValue)
-                "series" -> QueryParameterParser.parseSeriesFilter(searchValue)
-                "typ" ->
-                    QueryParameterParser.parsePublicationTypeFilter(
-                        searchValue.replace(" ", "_").uppercase(),
-                    )
-                "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
-                else -> null
+            try {
+                when (searchKey) {
+                    "acc" -> QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
+                    "com" -> CommunityNameFilter(searchValue)
+                    "col" -> CollectionNameFilter(searchValue)
+                    "hdl" -> HandleFilter(searchValue)
+                    "sig" -> QueryParameterParser.parsePaketSigelFilter(searchValue)
+                    "tit" -> TitleFilter(searchValue)
+                    "zdb" -> QueryParameterParser.parseZDBIdFilter(searchValue)
+                    "hdlcol" -> CollectionHandleFilter(searchValue)
+                    "hdlcom" -> CommunityHandleFilter(searchValue)
+                    "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
+                    "metadataid" -> MetadataIdFilter(searchValue)
+                    "lur" -> LicenceUrlFilter(searchValue)
+                    "subcom" -> SubcommunityNameFilter(searchValue)
+                    "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
+                    "typ" ->
+                        QueryParameterParser.parsePublicationTypeFilter(
+                            searchValue.replace(" ", "_").uppercase().let {
+                                if (it == "PROCEEDING") {
+                                    "PROCEEDINGS"
+                                } else {
+                                    it
+                                }
+                            },
+                        )
+
+                    "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
+                    "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
+                    "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
+                    "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
+                    "zga" -> QueryParameterParser.parseTemporalValidity(searchValue.uppercase())
+                    else -> null
+                }
+            } catch (iae: IllegalArgumentException) {
+                null
             }
     }
 }
@@ -381,7 +397,7 @@ class AccessStateFilter(
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
         accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ? AND $dbColumnName is not null"
+            "($dbColumnName = ? AND $dbColumnName is not null)"
         }
 
     override fun setSQLParameter(

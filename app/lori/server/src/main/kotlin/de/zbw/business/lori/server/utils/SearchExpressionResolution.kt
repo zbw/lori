@@ -13,19 +13,18 @@ import de.zbw.business.lori.server.type.SearchExpression
 object SearchExpressionResolution {
     fun resolveSearchExpression(expression: SearchExpression): String =
         when (expression) {
-            is SEAnd -> "${resolveSearchExpression(
+            is SEAnd -> "(${resolveSearchExpression(
                 expression.left,
-            )} AND ${resolveSearchExpression(expression.right)}"
-            is SEOr -> "${resolveSearchExpression(
+            )} AND ${resolveSearchExpression(expression.right)})"
+            is SEOr -> "(${resolveSearchExpression(
                 expression.left,
-            )} OR ${resolveSearchExpression(expression.right)}"
-            is SENot -> "NOT ${resolveSearchExpression(expression.body)}"
+            )} OR ${resolveSearchExpression(expression.right)})"
+            is SENot -> "NOT (${resolveSearchExpression(expression.body)})"
             is SEVariable -> expression.searchFilter.toWhereClause()
             is SEPar -> "(${resolveSearchExpression(expression.body)})"
             is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
         }
 
-    // TODO(CB): Testing!
     fun hasRightQueries(expression: SearchExpression?): Boolean =
         if (expression == null) {
             false
