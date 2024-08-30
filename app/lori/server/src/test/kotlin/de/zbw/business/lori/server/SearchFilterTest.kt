@@ -28,7 +28,7 @@ import java.time.LocalDate
  * Created on 09-19-2022.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class FilterSearchTest : DatabaseTest() {
+class SearchFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(

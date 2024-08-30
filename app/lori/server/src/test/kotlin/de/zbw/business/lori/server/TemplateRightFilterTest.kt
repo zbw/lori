@@ -96,5 +96,18 @@ class TemplateRightFilterTest : DatabaseTest() {
             searchResult.results.map { it.metadata }.toSet(),
             `is`(setOf(itemRightWithTemplate)),
         )
+        val searchResult2: SearchQueryResult =
+            backend.searchQuery(
+                "col:subject3 & tpl:$rightId",
+                10,
+                0,
+                emptyList(),
+                emptyList(),
+            )
+
+        assertThat(
+            searchResult2.results.map { it.metadata }.toSet(),
+            `is`(setOf(itemRightWithTemplate)),
+        )
     }
 }

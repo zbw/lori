@@ -137,11 +137,11 @@ export default defineComponent({
     const parseAccessState = (accessState: string, count: number) => {
       switch (accessState) {
         case "closed":
-          return "Closed Access " + "(" + count + ")";
+          return "Closed " + "(" + count + ")";
         case "open":
-          return "Open Access " + "(" + count + ")";
+          return "Open " + "(" + count + ")";
         case "restricted":
-          return "Restricted Access " + "(" + count + ")";
+          return "Restricted " + "(" + count + ")";
       }
     };
     const parsePublicationType = (pubType: string, count: number) => {
@@ -205,6 +205,12 @@ export default defineComponent({
       emit("startSearch");
     };
 
+    const emitSearchStartPublicationDate = (date: string) => {
+      if (date.length == 4){
+        emit("startSearch");
+      }
+    };
+
     return {
       canReset,
       errorTempEventStartEnd,
@@ -220,6 +226,7 @@ export default defineComponent({
       v$,
       activateBookmarkSaveDialog,
       emitSearchStart,
+      emitSearchStartPublicationDate,
       parseAccessState,
       parsePublicationType,
       ppPaketSigel,
@@ -283,14 +290,14 @@ export default defineComponent({
                     <v-text-field
                       label="Von"
                       v-model="searchStore.publicationDateFrom"
-                      @update:modelValue="emitSearchStart"
+                      @update:modelValue="emitSearchStartPublicationDate(searchStore.publicationDateFrom)"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
                       label="Bis"
                       v-model="searchStore.publicationDateTo"
-                      @update:modelValue="emitSearchStart"
+                      @update:modelValue="emitSearchStartPublicationDate(searchStore.publicationDateTo)"
                     ></v-text-field>
                   </v-col>
                 </v-row>

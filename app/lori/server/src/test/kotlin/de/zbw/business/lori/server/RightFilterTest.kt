@@ -102,7 +102,12 @@ class RightFilterTest : DatabaseTest() {
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
-            itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
+            itemRightRestricted to
+                listOf(
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.RESTRICTED,
+                    ),
+                ),
             itemRightRestrictedOpen to
                 listOf(
                     TEST_RIGHT.copy(
@@ -267,7 +272,15 @@ class RightFilterTest : DatabaseTest() {
                 ),
                 setOf(startEndDateFilter),
                 1,
-                "Filter for End Date",
+                "Filter for Start Date",
+            ),
+            arrayOf(
+                "col:startAndEnd & zgb:2000-10-01",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                setOf(startEndDateFilter),
+                1,
+                "Filter for Start Date search upper",
             ),
             arrayOf(
                 "col:startAndEnd",
@@ -280,6 +293,14 @@ class RightFilterTest : DatabaseTest() {
                 setOf(startEndDateFilter),
                 1,
                 "Filter for End Date",
+            ),
+            arrayOf(
+                "col:startAndEnd & zge:2000-12-01",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                setOf(startEndDateFilter),
+                1,
+                "Filter for End Date search upper",
             ),
         )
 
@@ -418,32 +439,69 @@ class RightFilterTest : DatabaseTest() {
     fun createDataForNoSearchTemValFilter() =
         arrayOf(
             arrayOf(
+                null,
                 emptyList<MetadataSearchFilter>(),
                 listOf(
                     TemporalValidityFilter(
                         temporalValidity = listOf(TemporalValidity.PRESENT),
                     ),
                 ),
+                1,
                 setOf(tempValFilterPresent),
                 "Filter for all items that have an active right information",
             ),
             arrayOf(
+                "zga:aktuell",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                1,
+                setOf(tempValFilterPresent),
+                "Filter for all items that have an active right information",
+            ),
+            arrayOf(
+                null,
                 emptyList<MetadataSearchFilter>(),
                 listOf(
                     TemporalValidityFilter(
                         temporalValidity = listOf(TemporalValidity.PAST),
                     ),
                 ),
+                2,
                 setOf(tempValFilterPast, startEndDateFilter),
                 "Filter for all items that have an active right in the past",
             ),
             arrayOf(
+                "zga:vergangenheit",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                2,
+                setOf(tempValFilterPast, startEndDateFilter),
+                "Filter for all items that have an active right information in upper search bar",
+            ),
+            arrayOf(
+                null,
                 emptyList<MetadataSearchFilter>(),
                 listOf(
                     TemporalValidityFilter(
                         temporalValidity = listOf(TemporalValidity.FUTURE),
                     ),
                 ),
+                6,
+                setOf(
+                    tempValFilterFuture,
+                    itemRightRestricted,
+                    itemRightRestrictedOpen,
+                    formalRuleLicenceContract,
+                    formalRuleOCL,
+                    formalRuleUserAgreement,
+                ),
+                "Filter for all items that have an active right in the future",
+            ),
+            arrayOf(
+                "zga:zukunft",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                6,
                 setOf(
                     tempValFilterFuture,
                     itemRightRestricted,
@@ -458,15 +516,17 @@ class RightFilterTest : DatabaseTest() {
 
     @Test(dataProvider = DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER)
     fun testNoSearchTemporalValidityFilter(
+        searchTerm: String?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightsSearchFilter: List<RightSearchFilter>,
+        numberOfResults: Int,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {
         // when
         val searchResult: SearchQueryResult =
             backend.searchQuery(
-                null,
+                searchTerm,
                 10,
                 0,
                 metadataSearchFilter,
@@ -474,6 +534,11 @@ class RightFilterTest : DatabaseTest() {
             )
 
         // then
+        assertThat(
+            description,
+            searchResult.results.size,
+            `is`(numberOfResults),
+        )
         assertThat(
             description,
             searchResult.results.map { it.metadata }.toSet(),
@@ -534,6 +599,13 @@ class RightFilterTest : DatabaseTest() {
                 setOf(tempValFilterFuture),
                 "Filter for items having an active right information at a certain point in time",
             ),
+            arrayOf(
+                "col:validity & zgp:2021-10-01",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                setOf(tempValFilterFuture),
+                "use filter in upper search bar",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
@@ -579,8 +651,17 @@ class RightFilterTest : DatabaseTest() {
                         formalRules = listOf(FormalRule.LICENCE_CONTRACT),
                     ),
                 ),
+                1,
                 setOf(formalRuleLicenceContract),
                 "formal rule licence contract",
+            ),
+            arrayOf(
+                "col:formalRuleLicence & reg:lizenzvertrag",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                1,
+                setOf(formalRuleLicenceContract),
+                "formal rule licence contract with upper search bar",
             ),
             arrayOf(
                 "col:formalRuleUserAgreement",
@@ -590,8 +671,17 @@ class RightFilterTest : DatabaseTest() {
                         formalRules = listOf(FormalRule.ZBW_USER_AGREEMENT),
                     ),
                 ),
+                1,
                 setOf(formalRuleUserAgreement),
                 "formal rule zbw agreement",
+            ),
+            arrayOf(
+                "col:formalRuleUserAgreement & reg:Open-Content-License",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                1,
+                setOf(formalRuleUserAgreement),
+                "formal rule zbw agreement with upper search bar",
             ),
             arrayOf(
                 "col:ocl",
@@ -601,8 +691,17 @@ class RightFilterTest : DatabaseTest() {
                         formalRules = listOf(FormalRule.OPEN_CONTENT_LICENCE),
                     ),
                 ),
+                1,
                 setOf(formalRuleOCL),
                 "formal rule ocl",
+            ),
+            arrayOf(
+                "col:ocl & reg:Open-Content-License",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                1,
+                setOf(formalRuleOCL),
+                "formal rule ocl with upper search bar",
             ),
             arrayOf(
                 "col:formal",
@@ -617,8 +716,17 @@ class RightFilterTest : DatabaseTest() {
                             ),
                     ),
                 ),
+                3,
                 setOf(formalRuleOCL, formalRuleUserAgreement, formalRuleLicenceContract),
                 "formal rule all",
+            ),
+            arrayOf(
+                "col:formal & (reg:Open-Content-License | reg:ZBW-Nutzungsvereinbarung | reg:Lizenzvertrag)",
+                emptyList<MetadataSearchFilter>(),
+                emptyList<RightSearchFilter>(),
+                3,
+                setOf(formalRuleOCL, formalRuleUserAgreement, formalRuleLicenceContract),
+                "formal rule all with upper search bar",
             ),
         )
 
@@ -627,6 +735,7 @@ class RightFilterTest : DatabaseTest() {
         givenSearchTerm: String,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightsSearchFilter: List<RightSearchFilter>,
+        numberOfResults: Int,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {
@@ -643,6 +752,12 @@ class RightFilterTest : DatabaseTest() {
         // then
         assertThat(
             description,
+            searchResult.results.size,
+            `is`(numberOfResults),
+        )
+
+        assertThat(
+            description,
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
@@ -654,7 +769,55 @@ class RightFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_ACCESS_STATE)
+    fun createDataForAccessState() =
+        arrayOf(
+            arrayOf(
+                "acc:'Open'",
+                emptyList<RightSearchFilter>(),
+                listOf(itemRightRestrictedOpen).toSet(),
+                "Simple search bar",
+            ),
+            arrayOf(
+                "acc:'Open' | acc:'Restricted'",
+                emptyList<RightSearchFilter>(),
+                listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
+                "OR search bar",
+            ),
+            arrayOf(
+                "!acc:'closed'",
+                emptyList<RightSearchFilter>(),
+                listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
+                "Negation search bar",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_ACCESS_STATE)
+    fun testFilterAccess(
+        searchTerm: String,
+        searchFilter: List<RightSearchFilter>,
+        expectedResult: Set<ItemMetadata>,
+        description: String,
+    ) {
+        // when
+        val searchResult: SearchQueryResult =
+            backend.searchQuery(
+                searchTerm = searchTerm,
+                limit = 10,
+                offset = 0,
+                rightSearchFilter = searchFilter,
+            )
+
+        // then
+        assertThat(
+            description,
+            searchResult.results.map { it.metadata }.toSet(),
+            `is`(expectedResult),
+        )
+    }
+
     companion object {
+        const val DATA_FOR_ACCESS_STATE = "DATA_FOR_ACCESS_STATE"
         const val DATA_FOR_SEARCH_WITH_RIGHT_FILTER = "DATA_FOR_SEARCH_WITH_RIGHT_FILTER"
         const val DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER = "DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER"
         const val DATA_FOR_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_SEARCH_TEMP_VAL_FILTER"

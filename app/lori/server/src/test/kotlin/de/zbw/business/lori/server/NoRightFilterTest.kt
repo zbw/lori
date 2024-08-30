@@ -83,10 +83,40 @@ class NoRightFilterTest : DatabaseTest() {
     fun createDataForSearchWithNoRightFilter() =
         arrayOf(
             arrayOf(
+                "col:subject1 & nor:on",
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
+                ),
+                null,
+                setOf(itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1 & nor:on",
+                emptyList<MetadataSearchFilter>(),
+                null,
+                setOf(itemNoRight),
+            ),
+            arrayOf(
                 "col:subject1",
                 emptyList<MetadataSearchFilter>(),
                 null,
                 setOf(itemRightRestricted, itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1 & !nor:on",
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
+                ),
+                null,
+                setOf(itemRightRestricted),
             ),
             arrayOf(
                 "col:subject1",
@@ -139,6 +169,10 @@ class NoRightFilterTest : DatabaseTest() {
         assertThat(
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
+        )
+        assertThat(
+            searchResult.results.map { it.metadata }.size,
+            `is`(expectedResult.size),
         )
     }
 

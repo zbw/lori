@@ -25,7 +25,6 @@ object SearchExpressionResolution {
             is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
         }
 
-    // TODO(CB): Testing!
     fun hasRightQueries(expression: SearchExpression?): Boolean =
         if (expression == null) {
             false
