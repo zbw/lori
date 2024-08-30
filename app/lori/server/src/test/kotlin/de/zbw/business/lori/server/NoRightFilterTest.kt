@@ -84,24 +84,6 @@ class NoRightFilterTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 "col:subject1 & nor:on",
-                emptyList<MetadataSearchFilter>(),
-                null,
-                setOf(itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                emptyList<MetadataSearchFilter>(),
-                null,
-                setOf(itemRightRestricted, itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                emptyList<MetadataSearchFilter>(),
-                NoRightInformationFilter(),
-                setOf(itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
                 listOf(
                     PublicationTypeFilter(
                         listOf(
@@ -110,22 +92,22 @@ class NoRightFilterTest : DatabaseTest() {
                     ),
                 ),
                 null,
-                setOf(itemRightRestricted, itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                listOf(
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.PROCEEDINGS,
-                        ),
-                    ),
-                ),
-                NoRightInformationFilter(),
                 setOf(itemNoRight),
             ),
             arrayOf(
                 "col:subject1 & nor:on",
+                emptyList<MetadataSearchFilter>(),
+                null,
+                setOf(itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1",
+                emptyList<MetadataSearchFilter>(),
+                null,
+                setOf(itemRightRestricted, itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1 & !nor:on",
                 listOf(
                     PublicationTypeFilter(
                         listOf(
@@ -134,6 +116,36 @@ class NoRightFilterTest : DatabaseTest() {
                     ),
                 ),
                 null,
+                setOf(itemRightRestricted),
+            ),
+            arrayOf(
+                "col:subject1",
+                emptyList<MetadataSearchFilter>(),
+                NoRightInformationFilter(),
+                setOf(itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1",
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
+                ),
+                null,
+                setOf(itemRightRestricted, itemNoRight),
+            ),
+            arrayOf(
+                "col:subject1",
+                listOf(
+                    PublicationTypeFilter(
+                        listOf(
+                            PublicationType.PROCEEDINGS,
+                        ),
+                    ),
+                ),
+                NoRightInformationFilter(),
                 setOf(itemNoRight),
             ),
         )

@@ -9,7 +9,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.MetadataDB
 import java.sql.Date
 import java.sql.PreparedStatement
@@ -323,7 +322,7 @@ class PaketSigelFilter(
     ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "(LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null)"
+            "LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null"
         }
 
     override fun setSQLParameter(
@@ -415,15 +414,21 @@ class SeriesFilter(
  */
 abstract class RightSearchFilter(
     dbColumnName: String,
-) : SearchFilter(dbColumnName)
+) : SearchFilter(dbColumnName) {
+    companion object {
+        const val WHERE_REQUIRE_RIGHT_ID = "o.${DatabaseConnector.COLUMN_RIGHT_ID} IS NOT NULL"
+    }
+}
 
 class AccessStateFilter(
     val accessStates: List<AccessState>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
-        accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "($dbColumnName = ? AND $dbColumnName is not null)"
-        }
+        "(" +
+            accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+                "($dbColumnName = ? AND $dbColumnName is not null)"
+            } +
+            " AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -451,15 +456,16 @@ class TemporalValidityFilter(
     val temporalValidity: List<TemporalValidity>,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            when (it) {
-                TemporalValidity.FUTURE -> "$COLUMN_RIGHT_START_DATE > ?"
-                TemporalValidity.PAST -> "$COLUMN_RIGHT_END_DATE < ?"
-                TemporalValidity.PRESENT ->
-                    "$COLUMN_RIGHT_START_DATE <= ?" +
-                        " AND $COLUMN_RIGHT_END_DATE >= ?"
-            }
-        }
+        "(" +
+            temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+                when (it) {
+                    TemporalValidity.FUTURE -> "$COLUMN_RIGHT_START_DATE > ?"
+                    TemporalValidity.PAST -> "$COLUMN_RIGHT_END_DATE < ?"
+                    TemporalValidity.PRESENT ->
+                        "$COLUMN_RIGHT_START_DATE <= ?" +
+                            " AND $COLUMN_RIGHT_END_DATE >= ?"
+                }
+            } + " AND ${WHERE_REQUIRE_RIGHT_ID})"
 
     override fun setSQLParameter(
         counter: Int,
@@ -496,7 +502,7 @@ class RightValidOnFilter(
     override fun toWhereClause(): String =
         "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
             " $COLUMN_RIGHT_START_DATE is not null AND" +
-            " $COLUMN_RIGHT_END_DATE is not null)"
+            " $COLUMN_RIGHT_END_DATE is not null AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -522,7 +528,7 @@ class RightValidOnFilter(
 class StartDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(COLUMN_RIGHT_START_DATE) {
-    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -546,7 +552,7 @@ class StartDateFilter(
 class EndDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(COLUMN_RIGHT_END_DATE) {
-    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -571,10 +577,10 @@ class RightIdFilter(
     private val rightIds: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String =
-        "${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
+        "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
             rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "($TABLE_NAME_ITEM_RIGHT.$dbColumnName = ? AND $TABLE_NAME_ITEM_RIGHT.$dbColumnName is not null)"
-            }
+                "(o.$dbColumnName = ? AND o.$dbColumnName is not null)"
+            } + " AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -608,7 +614,7 @@ class FormalRuleFilter(
                         " ${DatabaseConnector.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL} <> '' OR" +
                         " ${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true)"
             }
-        }
+        } + " AND $WHERE_REQUIRE_RIGHT_ID"
 
     override fun setSQLParameter(
         counter: Int,
@@ -626,8 +632,8 @@ class FormalRuleFilter(
     }
 }
 
-class NoRightInformationFilter : SearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "$TABLE_NAME_ITEM_RIGHT.$dbColumnName IS NULL"
+class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
+    override fun toWhereClause(): String = "o.${DatabaseConnector.COLUMN_RIGHT_ID} IS NULL"
 
     override fun setSQLParameter(
         counter: Int,

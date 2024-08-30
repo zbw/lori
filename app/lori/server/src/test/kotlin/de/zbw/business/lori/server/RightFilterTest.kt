@@ -519,7 +519,7 @@ class RightFilterTest : DatabaseTest() {
         searchTerm: String?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightsSearchFilter: List<RightSearchFilter>,
-        numberOfResults: Int, // Check explicitly to detect if results are returned multiple times
+        numberOfResults: Int,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {

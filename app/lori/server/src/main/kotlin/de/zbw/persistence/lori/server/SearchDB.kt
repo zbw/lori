@@ -464,6 +464,7 @@ class SearchDB(
 
     companion object {
         const val SUBQUERY_NAME = "sub"
+        const val ALIAS_ITEM_RIGHT = "o"
         private const val STATEMENT_SELECT_ALL_FACETS =
             "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_DATE," +
@@ -476,25 +477,25 @@ class SearchDB(
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_NAME," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_TEMPLATE_NAME," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
-        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
+        const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
@@ -502,24 +503,24 @@ class SearchDB(
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
-        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
+        const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id," +
-                " $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+                " ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.metadata_id," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME}"
+                MetadataDB.TS_SUBCOMMUNITY_NAME
 
-        private const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_NAME =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ID, $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_TEMPLATE_NAME)" +
+        const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_NAME =
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ID, ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_TEMPLATE_NAME)" +
                 " $TABLE_NAME_ITEM_METADATA.metadata_id," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
@@ -566,13 +567,13 @@ class SearchDB(
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ACCESS_STATE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                "$TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
+                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
@@ -803,13 +804,6 @@ class SearchDB(
                         noRightInformationFilterClause,
                     )
                 }
-            val whereClause =
-                whereClauseList
-                    .filter { it.isNotBlank() }
-                    .joinToString(separator = " AND ")
-                    .takeIf { it.isNotBlank() }
-                    ?.let { " WHERE $it" }
-                    ?: ""
 
             /**
              * metadataFilter: String?
@@ -835,27 +829,29 @@ class SearchDB(
                     .filter { it.isNotBlank() }
                     .joinToString(separator = " AND ")
                     .takeIf { it.isNotBlank() }
-                    ?.let { " AND $it" }
+                    ?.let {
+                        " WHERE $it"
+                    }
                     ?: ""
 
-            val joinItemRight =
-                if (
-                    (
-                        collectFacets &&
-                            rightSearchFilter.isEmpty() &&
-                            searchExprUsesRights.not()
-                    ) ||
-                    noRightInformationFilterClause.isNotBlank()
+            val whereClause =
+                whereClauseList
+                    .filter { it.isNotBlank() }
+                    .joinToString(separator = " AND ")
+                    .takeIf { it.isNotBlank() }
+                    ?.let {
+                        if (extendedRightFilter.isNotBlank()) {
+                            " AND $it"
+                        } else {
+                            " WHERE $it"
+                        }
+                    }
+                    ?: ""
 
-                ) {
-                    "LEFT JOIN"
-                } else {
-                    "JOIN"
-                }
             return " LEFT JOIN $TABLE_NAME_ITEM" +
                 " ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id" +
-                " $joinItemRight $TABLE_NAME_ITEM_RIGHT" +
-                " ON $TABLE_NAME_ITEM.right_id = $TABLE_NAME_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
+                " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT" +
+                " ON $TABLE_NAME_ITEM.right_id = ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ID" +
                 extendedRightFilter +
                 whereClause
         }
