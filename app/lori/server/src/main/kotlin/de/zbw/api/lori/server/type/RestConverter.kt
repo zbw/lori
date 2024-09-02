@@ -574,7 +574,6 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                     TemplateNameWithCountRest(
                         templateName = it.value.first,
                         count = it.value.second,
-                        rightId = it.key,
                     )
                 }.sortedBy { it.templateName.lowercase() },
         isPartOfSeriesCount =

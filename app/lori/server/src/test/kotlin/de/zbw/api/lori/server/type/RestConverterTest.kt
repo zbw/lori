@@ -457,7 +457,6 @@ class RestConverterTest {
                         TemplateNameWithCountRest(
                             count = 2,
                             templateName = "name",
-                            rightId = "rightId",
                         ),
                     ),
                 isPartOfSeriesCount =
