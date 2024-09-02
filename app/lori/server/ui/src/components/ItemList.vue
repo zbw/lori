@@ -818,7 +818,7 @@ table.special, th.special, td.special {
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
             ></v-text-field>
-            <v-dialog v-model="searchHelpDialog" max-width="500px">
+            <v-dialog v-model="searchHelpDialog" max-width="600px">
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn
                   density="compact"
@@ -849,65 +849,119 @@ table.special, th.special, td.special {
                     <tr class=special>
                       <th class=special>Suche</th>
                       <th class=special>Suchschlüssel</th>
+                      <th class=special>Format</th>
                     </tr>
                     <tr class=special>
                       <td class=special>Titel</td>
                       <td class=special>tit</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Handle des Items</td>
                       <td class=special>hdl</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Community</td>
                       <td class=special>com</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Handle Community</td>
                       <td class=special>hdlcom</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Handle Subommunity</td>
                       <td class=special>hdlsubcom</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Collection</td>
                       <td class=special>col</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Handle Collection</td>
                       <td class=special>hdlcol</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>ZDB-Id</td>
                       <td class=special>zdb</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Paket-Sigel</td>
                       <td class=special>sig</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Lizenz URL</td>
                       <td class=special>lur</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Metadata Id Lori</td>
                       <td class=special>metadataid</td>
+                      <td class=special></td>
                     </tr>
                     <tr class=special>
                       <td class=special>Series</td>
                       <td class=special>ser</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Template Namen</td>
+                      <td class=special>tpl</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Publikationsjahr</td>
+                      <td class=special>jah</td>
+                      <td class=special>Begin-Ende</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Publikationstyp</td>
+                      <td class=special>typ</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Access</td>
+                      <td class=special>acc</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Zeitliche Gültigkeit am</td>
+                      <td class=special>zgp</td>
+                      <td class=special>YYYY-MM-DD</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Zeitliche Gültigkeit Beginn</td>
+                      <td class=special>zgb</td>
+                      <td class=special>YYYY-MM-DD</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Zeitliche Gültigkeit Ende</td>
+                      <td class=special>zge</td>
+                      <td class=special>YYYY-MM-DD</td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Zeitliche Gültigkeit Abschnitte</td>
+                      <td class=special>zga</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Formale Regelungen</td>
+                      <td class=special>reg</td>
+                      <td class=special></td>
+                    </tr>
+                    <tr class=special>
+                      <td class=special>Keine Rechteeinträge</td>
+                      <td class=special>nor</td>
+                      <td class=special>nor:on</td>
                     </tr>
                   </table>
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                  Zeichen die als logische Operatoren dienen, aber Teil der Suche sein sollen,
-                  müssen mit dem Zeichen \ vor und hinter dem entsprechenden Teil der Suche
-                  versehen werden.
-                  </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    Beispiel: Community Asian Development Bank (ADB), Manila <br></br>
-                    com:'Asian Development Bank \(ADB\), Manila'
-                  </p>
 
                   <p class="text-left text-body-1 mt-4 font-weight-bold">
                     Bool'sche Operatoren
@@ -948,14 +1002,6 @@ table.special, th.special, td.special {
                     Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
                   </p>
                   <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Zeichen die als logische Operatoren dienen, aber teil der
-                    Suche sein sollen, müssen mit einem Backslash \ beginnen
-                  </p>
-
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    Beispiel: col:"EU & \(European\)"
-                  </p>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
                     Klammersetzungen sind zulässig, z.B:

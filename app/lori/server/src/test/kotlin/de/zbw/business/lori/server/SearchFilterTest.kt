@@ -107,7 +107,7 @@ class SearchFilterTest : DatabaseTest() {
     fun createDataForPublicationDate() =
         arrayOf(
             arrayOf(
-                "col:'subject1 | subject4'",
+                "col:subject1 | col:subject4",
                 listOf(PublicationDateFilter(2021, 2023)),
                 listOf(publicationDateFilter[0], publicationTypeFilter[0]).toSet(),
                 2,
@@ -303,9 +303,33 @@ class SearchFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_PREPARE_VALUE)
+    fun createDataForPrepareValue() =
+        arrayOf(
+            arrayOf(
+                "(FOO & BAR | BAZ)",
+                "\\(FOO & \\& & BAR & \\| & BAZ\\)",
+                "Correct escaping of operators",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_PREPARE_VALUE)
+    fun testPrepareTSVectorValues(
+        input: String,
+        expected: String,
+        reason: String,
+    ) {
+        assertThat(
+            reason,
+            TSVectorMetadataSearchFilter.prepareValue(input),
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_PUBLICATION_DATE"
         const val DATA_FOR_NO_SEARCH_TERM = "DATA_FOR_NO_SEARCH_TERM"
         const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
+        const val DATA_FOR_PREPARE_VALUE = "DATA_FOR_PREPARE_VALUE"
     }
 }

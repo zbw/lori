@@ -130,7 +130,7 @@ abstract class TSVectorMetadataSearchFilter(
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        preparedStatement.setString(localCounter++, insertDefaultAndOperator(value))
+        preparedStatement.setString(localCounter++, prepareValue(value))
         return localCounter
     }
 
@@ -142,7 +142,19 @@ abstract class TSVectorMetadataSearchFilter(
         private const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
-        fun insertDefaultAndOperator(v: String): String {
+        fun prepareValue(v: String): String =
+            insertDefaultAndOperator(
+                escapeSpecialChars(v),
+            )
+
+        private fun escapeSpecialChars(v: String): String =
+            v
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("&", "\\&")
+                .replace("|", "\\|")
+
+        private fun insertDefaultAndOperator(v: String): String {
             val tokens: List<String> = v.split("\\s+".toRegex())
             return List(tokens.size) { idx ->
                 if (idx == 0) {
