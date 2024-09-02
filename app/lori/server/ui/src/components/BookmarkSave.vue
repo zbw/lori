@@ -78,6 +78,7 @@ export default defineComponent({
             searchquerybuilder.buildZDBIdFilter(searchStore),
             searchquerybuilder.buildNoRightInformation(searchStore),
             searchquerybuilder.buildSeriesFilter(searchStore),
+            searchquerybuilder.buildTemplateNameFilter(searchStore),
           )
           .then((r: BookmarkIdCreated) => {
             emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);

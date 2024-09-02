@@ -10,6 +10,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADAT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.time.LocalDate
@@ -103,7 +104,9 @@ abstract class SearchFilter(
                             },
                         )
                     "tpl" ->
-                        QueryParameterParser.parseRightIdFilter(searchValue)
+                        QueryParameterParser.parseTemplateNameFilter(
+                            searchValue,
+                        )
                     else -> null
                 }
             } catch (iae: IllegalArgumentException) {
@@ -127,7 +130,7 @@ abstract class TSVectorMetadataSearchFilter(
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        preparedStatement.setString(localCounter++, insertDefaultAndOperator(value))
+        preparedStatement.setString(localCounter++, prepareValue(value))
         return localCounter
     }
 
@@ -139,7 +142,19 @@ abstract class TSVectorMetadataSearchFilter(
         private const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
-        fun insertDefaultAndOperator(v: String): String {
+        fun prepareValue(v: String): String =
+            insertDefaultAndOperator(
+                escapeSpecialChars(v),
+            )
+
+        private fun escapeSpecialChars(v: String): String =
+            v
+                .replace("(", "\\(")
+                .replace(")", "\\)")
+                .replace("&", "\\&")
+                .replace("|", "\\|")
+
+        private fun insertDefaultAndOperator(v: String): String {
             val tokens: List<String> = v.split("\\s+".toRegex())
             return List(tokens.size) { idx ->
                 if (idx == 0) {
@@ -382,7 +397,7 @@ class ZDBIdFilter(
 }
 
 class SeriesFilter(
-    private val seriesNames: List<String>,
+    val seriesNames: List<String>,
 ) : MetadataSearchFilter(
         DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES,
     ) {
@@ -407,6 +422,10 @@ class SeriesFilter(
     override fun toSQLString(): String = seriesNames.joinToString(separator = ",")
 
     override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    companion object {
+        fun fromString(s: String?): SeriesFilter? = QueryParameterParser.parseSeriesFilter(s)
+    }
 }
 
 /**
@@ -416,7 +435,7 @@ abstract class RightSearchFilter(
     dbColumnName: String,
 ) : SearchFilter(dbColumnName) {
     companion object {
-        const val WHERE_REQUIRE_RIGHT_ID = "o.${DatabaseConnector.COLUMN_RIGHT_ID} IS NOT NULL"
+        const val WHERE_REQUIRE_RIGHT_ID = "${ALIAS_ITEM_RIGHT}.${DatabaseConnector.COLUMN_RIGHT_ID} IS NOT NULL"
     }
 }
 
@@ -573,13 +592,13 @@ class EndDateFilter(
     }
 }
 
-class RightIdFilter(
-    private val rightIds: List<String>,
-) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
+class TemplateNameFilter(
+    val templateNames: List<String>,
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_TEMPLATE_NAME) {
     override fun toWhereClause(): String =
         "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
-            rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "(o.$dbColumnName = ? AND o.$dbColumnName is not null)"
+            templateNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+                "(LOWER(${ALIAS_ITEM_RIGHT}.$dbColumnName) = LOWER(?) AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null)"
             } + " AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
@@ -587,7 +606,7 @@ class RightIdFilter(
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        rightIds.forEach {
+        templateNames.forEach {
             preparedStatement.setString(localCounter++, it)
         }
         return localCounter
@@ -595,9 +614,13 @@ class RightIdFilter(
 
     override fun getFilterType(): FilterType = FilterType.RIGHT_ID
 
-    override fun toSQLString(): String = rightIds.joinToString(separator = ",")
+    override fun toSQLString(): String = templateNames.joinToString(separator = ",")
 
     override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+
+    companion object {
+        fun fromString(s: String?): TemplateNameFilter? = QueryParameterParser.parseTemplateNameFilter(s)
+    }
 }
 
 class FormalRuleFilter(
@@ -633,7 +656,7 @@ class FormalRuleFilter(
 }
 
 class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "o.${DatabaseConnector.COLUMN_RIGHT_ID} IS NULL"
+    override fun toWhereClause(): String = "${ALIAS_ITEM_RIGHT}.${DatabaseConnector.COLUMN_RIGHT_ID} IS NULL"
 
     override fun setSQLParameter(
         counter: Int,

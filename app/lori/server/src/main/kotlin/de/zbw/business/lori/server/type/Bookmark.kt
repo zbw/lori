@@ -8,7 +8,9 @@ import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.RightValidOnFilter
+import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import java.time.OffsetDateTime
@@ -39,4 +41,6 @@ data class Bookmark(
     val endDateFilter: EndDateFilter? = null,
     val validOnFilter: RightValidOnFilter? = null,
     val noRightInformationFilter: NoRightInformationFilter? = null,
+    val seriesFilter: SeriesFilter? = null,
+    val templateNameFilter: TemplateNameFilter? = null,
 )

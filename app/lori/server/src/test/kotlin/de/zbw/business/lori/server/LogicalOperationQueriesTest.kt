@@ -80,19 +80,19 @@ class LogicalOperationQueriesTest : DatabaseTest() {
     fun createDataForLogicalOperation() =
         arrayOf(
             arrayOf(
-                "col:'subject1 | subject4'",
+                "col:'subject1' | col:'subject4'",
                 listOf(initialData[0], initialData[2]).toSet(),
                 2,
                 "Test simple OR operator",
             ),
             arrayOf(
-                "col:'((subject2 | subject4) & subject3)'",
+                "(col:subject2 | col:subject4) & col:subject3",
                 listOf(initialData[1]).toSet(),
                 1,
                 "Group with parentheses. Combine AND and OR operator",
             ),
             arrayOf(
-                "col:'((subject2 | subject4) & !subject3)'",
+                "(col:subject2 | col:subject4) & !col:subject3",
                 listOf(initialData[2]).toSet(),
                 1,
                 "Test NOT operator",

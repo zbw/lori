@@ -10,10 +10,10 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
-import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.ParsingException
@@ -400,8 +400,8 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterNoRightInformation"],
                         )
 
-                    val rightIdsFilter: RightIdFilter? =
-                        QueryParameterParser.parseRightIdFilter(
+                    val rightIdsFilter: TemplateNameFilter? =
+                        QueryParameterParser.parseTemplateNameFilter(
                             call.request.queryParameters["filterRightId"],
                         )
 

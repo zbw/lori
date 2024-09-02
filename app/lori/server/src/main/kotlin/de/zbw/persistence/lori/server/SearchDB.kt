@@ -526,7 +526,7 @@ class SearchDB(
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
-                "${MetadataDB.TS_SUBCOMMUNITY_NAME}"
+                MetadataDB.TS_SUBCOMMUNITY_NAME
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT $COLUMN_METADATA_ID,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +

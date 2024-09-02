@@ -513,6 +513,8 @@ fun Bookmark.toRest(): BookmarkRest =
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
         lastUpdatedOn = this.lastUpdatedOn,
+        filterSeries = this.seriesFilter?.seriesNames,
+        filterTemplateName = this.templateNameFilter?.templateNames,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
@@ -572,7 +574,6 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                     TemplateNameWithCountRest(
                         templateName = it.value.first,
                         count = it.value.second,
-                        rightId = it.key,
                     )
                 }.sortedBy { it.templateName.lowercase() },
         isPartOfSeriesCount =
