@@ -81,15 +81,15 @@ class TemplateRightFilterTest : DatabaseTest() {
 
     @Test
     fun testTemplateFilter() {
-        val rightId = backend.getTemplateList(10, 0).first().rightId!!
-        val rightSearchFilter = listOf(RightIdFilter(listOf(rightId)))
+        val templateName: String = backend.getTemplateList(10, 0).first().templateName!!
+        val templateNameFilter = listOf(TemplateNameFilter(listOf(templateName)))
         val searchResult: SearchQueryResult =
             backend.searchQuery(
                 "col:subject3",
                 10,
                 0,
                 emptyList(),
-                rightSearchFilter,
+                templateNameFilter,
             )
 
         assertThat(
@@ -98,7 +98,7 @@ class TemplateRightFilterTest : DatabaseTest() {
         )
         val searchResult2: SearchQueryResult =
             backend.searchQuery(
-                "col:subject3 & tpl:$rightId",
+                "col:subject3 & tpl:\"$templateName\"",
                 10,
                 0,
                 emptyList(),

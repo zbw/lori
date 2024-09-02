@@ -138,31 +138,30 @@ export default {
     }
   },
 
-  setRightIdFilter(searchStore: any, bookmark: BookmarkRest): void {
+  setTemplateNameFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (
-      bookmark.filterRightId == undefined ||
-      bookmark.filterRightId.length == 0
+      bookmark.filterTemplateName == undefined ||
+      bookmark.filterTemplateName.length == 0
     ) {
       searchStore.templateNameIdx = [];
       return;
     }
-    searchStore.templateNameIdx = Array(bookmark.filterRightId.length).fill(true);
-    searchStore.templateNameReceived = Array(bookmark.filterRightId.length);
-    bookmark.filterRightId.forEach((v: string, index: number): void => {
+    searchStore.templateNameIdx = Array(bookmark.filterTemplateName.length).fill(true);
+    searchStore.templateNameReceived = Array(bookmark.filterTemplateName.length);
+    bookmark.filterTemplateName.forEach((v: string, index: number): void => {
       searchStore.templateNameReceived[index] = {
         count: 0,
-        templateName: "",
-        rightId: v,
+        templateName: v,
       } as TemplateNameWithCountRest;
     });
   },
 
-  buildRightIdFilter(searchStore: any): string | undefined {
+  buildTemplateNameFilter(searchStore: any): string | undefined {
     const rightIds: Array<string> = [];
     searchStore.templateNameIdx.forEach(
       (i: boolean | undefined, index: number): void => {
         if (i) {
-          rightIds.push(searchStore.templateNameReceived[index].rightId);
+          rightIds.push(searchStore.templateNameReceived[index].templateName);
         }
       },
     );

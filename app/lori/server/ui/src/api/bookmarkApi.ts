@@ -30,6 +30,7 @@ export default {
     filterZDBId: string | undefined,
     filterNoRightInformation: string | undefined,
     filterSeries: string | undefined,
+    filterTemplateName: string | undefined,
   ): Promise<BookmarkIdCreated> {
     return bookmarkRawApi.addBookmarkRaw({
       body: {
@@ -49,6 +50,7 @@ export default {
         filterZDBId: filterZDBId,
         filterNoRightInformation: filterNoRightInformation,
         filterSeries: filterSeries,
+        filterTemplateName: filterTemplateName,
       },
     });
   },

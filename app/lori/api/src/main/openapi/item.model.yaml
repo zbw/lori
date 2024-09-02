@@ -138,13 +138,10 @@ PublicationTypeWithCountRest:
 TemplateNameWithCountRest:
   required:
     - count
-    - rightId
     - templateName
   type: object
   properties:
     count:
       type: integer
-    rightId:
-      type: string
     templateName:
       type: string

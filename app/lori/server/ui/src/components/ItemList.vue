@@ -311,7 +311,7 @@ export default defineComponent({
         " wurden ausgeführt.";
       successMsgIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
-      executeSearchByRightId(rightId);
+      executeSearchByRightId(templateName);
     };
 
     const executeSearchByRightId = (rightId: string) => {
@@ -394,7 +394,7 @@ export default defineComponent({
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
-      searchquerybuilder.setRightIdFilter(searchStore, bookmark);
+      searchquerybuilder.setTemplateNameFilter(searchStore, bookmark);
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
@@ -443,7 +443,7 @@ export default defineComponent({
           searchquerybuilder.buildPaketSigelIdFilter(searchStore),
           searchquerybuilder.buildZDBIdFilter(searchStore),
           searchquerybuilder.buildNoRightInformation(searchStore),
-          searchquerybuilder.buildRightIdFilter(searchStore),
+          searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
         )
         .then((response: ItemInformation) => {
@@ -615,7 +615,7 @@ export default defineComponent({
         searchStore.templateNameReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateNameReceived.map((e) => e.rightId),
+        searchStore.templateNameReceived.map((e) => e.templateName),
         searchStore.templateNameSelectedLastSearch,
         searchStore.templateNameIdx,
       );
@@ -894,6 +894,10 @@ table.special, th.special, td.special {
                       <td class=special>Metadata Id Lori</td>
                       <td class=special>metadataid</td>
                     </tr>
+                    <tr class=special>
+                      <td class=special>Series</td>
+                      <td class=special>ser</td>
+                    </tr>
                   </table>
                   <p class="text-left text-body-2 mt-1 mb-1">
                   Zeichen die als logische Operatoren dienen, aber Teil der Suche sein sollen,
@@ -931,22 +935,13 @@ table.special, th.special, td.special {
                     <tr class=special>
                       <td class=special>Oder</td>
                       <td class=special>|</td>
-                      <td class=special>col:'Economics | series'</td>
+                      <td class=special>col:'Economics' | ser:'some series'</td>
                     </tr>
                   </table>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Es ist möglich unter einem Suchschlüssel mehrere Werte gleichzeitig
-                    zu suchen mittels der obigen Operatoren und Klammersetzungen.
-                  </p>
-
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    Beispiel: col:"(subject1 | subject2) & !subject3"
-                  </p>
-
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Gleiches gilt wenn man auf verschiedenen Feldern suchen möchte.
-                    Auch diese Suchen können mittels der Operatoren verknüpft werden.
+                    Es ist möglich die verschiedenen Operatoren in einem Term
+                    zu verwenden und mittels Klammern zu strukturieren.
                   </p>
 
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">

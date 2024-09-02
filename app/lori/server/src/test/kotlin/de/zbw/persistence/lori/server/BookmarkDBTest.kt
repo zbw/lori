@@ -145,6 +145,8 @@ class BookmarkDBTest : DatabaseTest() {
                 createdOn = null,
                 lastUpdatedBy = null,
                 lastUpdatedOn = null,
+                seriesFilter = QueryParameterParser.parseSeriesFilter("some series"),
+                templateNameFilter = QueryParameterParser.parseTemplateNameFilter("some template"),
             )
     }
 }

@@ -513,6 +513,8 @@ fun Bookmark.toRest(): BookmarkRest =
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
         lastUpdatedOn = this.lastUpdatedOn,
+        filterSeries = this.seriesFilter?.seriesNames,
+        filterTemplateName = this.templateNameFilter?.templateNames,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =

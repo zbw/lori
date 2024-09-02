@@ -41,7 +41,7 @@ BookmarkRawRest:
       type: string
     filterNoRightInformation:
       type: string
-    filterRightId:
+    filterTemplateName:
       type: string
     lastUpdatedBy:
       type: string
@@ -117,7 +117,7 @@ BookmarkRest:
         type: string
     filterNoRightInformation:
       type: boolean
-    filterRightId:
+    filterTemplateName:
       type: array
       items:
         type: string

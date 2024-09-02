@@ -87,7 +87,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter =
                     listOf(
-                        RightIdFilter(
+                        TemplateNameFilter(
                             listOf(
                                 rightIds[templateIdIdx],
                             ),
