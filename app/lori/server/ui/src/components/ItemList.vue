@@ -341,7 +341,7 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim ausführen der Suche: " + errMsg;
+            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
             errorMsgIsActive.value = true;
           });
         });
@@ -376,7 +376,7 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim ausführen der Suche " + errMsg;
+            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
             errorMsgIsActive.value = true;
           });
         });
@@ -452,7 +452,7 @@ export default defineComponent({
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim ausführen der Suche " + errMsg;
+            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
             errorMsgIsActive.value = true;
           });
         });
