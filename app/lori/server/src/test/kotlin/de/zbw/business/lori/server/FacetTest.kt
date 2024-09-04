@@ -366,7 +366,7 @@ class FacetTest : DatabaseTest() {
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_3,
                 publicationDate = LocalDate.of(2014, 1, 1),
-                publicationType = PublicationType.PROCEEDINGS,
+                publicationType = PublicationType.PROCEEDING,
             )
         val itemSigel3 =
             TEST_Metadata.copy(

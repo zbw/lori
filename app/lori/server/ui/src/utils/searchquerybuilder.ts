@@ -386,8 +386,8 @@ export default {
             case "periodical_part":
               modifiedPubTypeFilter = "PERIODICAL_PART";
               break;
-            case "proceedings":
-              modifiedPubTypeFilter = "PROCEEDINGS";
+            case "proceeding":
+              modifiedPubTypeFilter = "PROCEEDING";
               break;
             case "research_report":
               modifiedPubTypeFilter = "RESEARCH_REPORT";

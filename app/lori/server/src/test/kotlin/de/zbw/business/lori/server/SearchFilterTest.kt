@@ -1,8 +1,12 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
@@ -52,7 +56,7 @@ class SearchFilterTest : DatabaseTest() {
             TEST_Metadata.copy(
                 collectionName = "subject4",
                 metadataId = "publicationTypeArticle",
-                publicationType = PublicationType.PROCEEDINGS,
+                publicationType = PublicationType.PROCEEDING,
                 publicationDate = LocalDate.of(2022, 1, 1),
             ),
             TEST_Metadata.copy(
@@ -122,7 +126,7 @@ class SearchFilterTest : DatabaseTest() {
             ),
             arrayOf(
                 "col:'subject4'",
-                listOf(PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 setOf(publicationTypeFilter[0]),
                 1,
                 "search with publication type filter for articles",
@@ -132,7 +136,7 @@ class SearchFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                             PublicationType.WORKING_PAPER,
                         ),
                     ),
@@ -146,7 +150,7 @@ class SearchFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                             PublicationType.WORKING_PAPER,
                         ),
                     ),
@@ -195,7 +199,7 @@ class SearchFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                             PublicationType.WORKING_PAPER,
                         ),
                     ),
@@ -326,10 +330,120 @@ class SearchFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_TO_STRING)
+    fun createDataForToString() =
+        arrayOf(
+            arrayOf(
+                emptyList<SearchFilter?>(),
+                null,
+                "",
+                "nothing",
+            ),
+            arrayOf(
+                emptyList<SearchFilter?>(),
+                "tit:\"internationl law\"",
+                "tit:\"internationl law\"",
+                "EmptyList and searchterm",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    CollectionNameFilter("collection"),
+                ),
+                "",
+                "col:\"collection\"",
+                "One search filter, no search term",
+            ),
+            arrayOf(
+                listOf<SearchFilter?>(null),
+                "tit:\"internationl law\"",
+                "tit:\"internationl law\"",
+                "List with nulls and searchterm",
+            ),
+            arrayOf(
+                listOf(
+                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED)),
+                    CollectionNameFilter("collection"),
+                    CollectionHandleFilter("12345/nase"),
+                    CommunityNameFilter("community"),
+                    CommunityHandleFilter("12345/hut"),
+                    QueryParameterParser.parseEndDateFilter("2022-06-01"),
+                    QueryParameterParser.parseStartDateFilter("2022-06-01"),
+                    TitleFilter("some title"),
+                    TitleFilter("another"),
+                    PublicationDateFilter(2000, 2020),
+                    NoRightInformationFilter(),
+                    SeriesFilter(listOf("series1", "series2")),
+                    PublicationTypeFilter(listOf(PublicationType.PROCEEDING, PublicationType.BOOK_PART)),
+                    FormalRuleFilter(
+                        listOf(
+                            FormalRule.LICENCE_CONTRACT,
+                            FormalRule.ZBW_USER_AGREEMENT,
+                            FormalRule.OPEN_CONTENT_LICENCE,
+                        ),
+                    ),
+                    TemporalValidityFilter(
+                        listOf(
+                            TemporalValidity.PAST,
+                            TemporalValidity.PRESENT,
+                            TemporalValidity.FUTURE,
+                        ),
+                    ),
+                    TemplateNameFilter(listOf("555nase")),
+                ),
+                "tit:\"internationl law\"",
+                "tit:\"internationl law\"" +
+                    " & acc:\"OPEN,RESTRICTED\"" +
+                    " & col:\"collection\"" +
+                    " & hdlcol:\"12345/nase\"" +
+                    " & com:\"community\"" +
+                    " & hdlcom:\"12345/hut\"" +
+                    " & zge:\"2022-06-01\"" +
+                    " & zgb:\"2022-06-01\"" +
+                    " & tit:\"some title\"" +
+                    " & tit:\"another\"" +
+                    " & jah:2000-2020" +
+                    " & nor:on" +
+                    " & ser:\"series1,series2\"" +
+                    " & typ:\"PROCEEDING,BOOK_PART\"" +
+                    " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
+                    " & zga:\"PAST,PRESENT,FUTURE\"" +
+                    " & tpl:\"555nase\"",
+                "All filters + searchterm",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_TO_STRING)
+    fun testToString(
+        filters: List<SearchFilter?>,
+        searchTerm: String?,
+        expected: String,
+        reason: String,
+    ) {
+        val searchTermReceived = SearchFilter.filtersToString(filters, searchTerm)
+        assertThat(
+            reason,
+            searchTermReceived,
+            `is`(expected),
+        )
+        val roundTripFilters =
+            LoriServerBackend.parseSearchTermToFilters(
+                searchTermReceived.replace(" & ", " "),
+            )
+        val searchTermFilters = LoriServerBackend.parseSearchTermToFilters(searchTerm)
+        assertThat(
+            reason,
+            roundTripFilters.toString(),
+            `is`(
+                (searchTermFilters + filters).filterNotNull().toString(),
+            ),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_PUBLICATION_DATE"
         const val DATA_FOR_NO_SEARCH_TERM = "DATA_FOR_NO_SEARCH_TERM"
         const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
         const val DATA_FOR_PREPARE_VALUE = "DATA_FOR_PREPARE_VALUE"
+        const val DATA_FOR_TO_STRING = "DATA_FOR_TO_STRING"
     }
 }

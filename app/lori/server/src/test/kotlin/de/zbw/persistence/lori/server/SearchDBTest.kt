@@ -219,7 +219,7 @@ class SearchDBTest : DatabaseTest() {
                     PublicationTypeFilter(
                         listOf(
                             PublicationType.ARTICLE,
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -302,7 +302,7 @@ class SearchDBTest : DatabaseTest() {
                     PublicationTypeFilter(
                         listOf(
                             PublicationType.ARTICLE,
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -407,7 +407,7 @@ class SearchDBTest : DatabaseTest() {
                     PublicationTypeFilter(
                         listOf(
                             PublicationType.ARTICLE,
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -421,7 +421,7 @@ class SearchDBTest : DatabaseTest() {
     private fun createBuildCountQueryRightFilterNoSearch() =
         arrayOf(
             arrayOf(
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT COUNT(*) FROM (" +
                     SELECT_DISTINCT_ON +
@@ -486,7 +486,7 @@ class SearchDBTest : DatabaseTest() {
                 "query only right filter",
             ),
             arrayOf(
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
@@ -524,7 +524,7 @@ class SearchDBTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 null,
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
@@ -548,7 +548,7 @@ class SearchDBTest : DatabaseTest() {
             ),
             arrayOf(
                 null,
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 emptyList<RightSearchFilter>(),
                 "$SELECT_SUB FROM ($SELECT_ALL_PRE_TABLE FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
@@ -586,12 +586,12 @@ class SearchDBTest : DatabaseTest() {
             arrayOf(
                 setOf(
                     PublicationType.ARTICLE.toString(),
-                    PublicationType.PROCEEDINGS.toString(),
+                    PublicationType.PROCEEDING.toString(),
                     PublicationType.PERIODICAL_PART.toString(),
                 ),
                 COLUMN_METADATA_PUBLICATION_TYPE,
                 SEVariable(CollectionNameFilter("foo")),
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "SELECT A.publication_type, COUNT(sub.publication_type)" +
@@ -612,7 +612,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE,
                 SEVariable(CollectionNameFilter("foo")),
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "SELECT A.access_state, COUNT(sub.access_state)" +
@@ -633,7 +633,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 DatabaseConnector.COLUMN_RIGHT_TEMPLATE_NAME,
                 SEVariable(CollectionNameFilter("foo")),
-                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDINGS))),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "SELECT A.template_name, COUNT(sub.template_name)" +

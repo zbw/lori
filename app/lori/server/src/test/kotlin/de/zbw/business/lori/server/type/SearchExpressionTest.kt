@@ -24,62 +24,55 @@ class SearchExpressionTest {
         arrayOf(
             arrayOf(
                 "tit:'foo'",
-                "SEVariable(searchFilter=TITLE:foo)",
+                "SEVariable(searchFilter=tit:\"foo\")",
                 false,
                 "Single Search Pair",
             ),
             arrayOf(
                 "!tit:'foo'",
-                "SENot(body=SEVariable(searchFilter=TITLE:foo))",
+                "SENot(body=SEVariable(searchFilter=tit:\"foo\"))",
                 false,
                 "One negation",
             ),
             arrayOf(
                 "tit:'foo'|zdb:'123'",
-                "SEOr(left=SEVariable(searchFilter=TITLE:foo), right=SEVariable(searchFilter=ZDB_ID:123))",
+                "SEOr(left=SEVariable(searchFilter=tit:\"foo\"), right=SEVariable(searchFilter=zdb:\"123\"))",
                 false,
                 "Or search pairs no whitespace",
             ),
             arrayOf(
                 "tit:'foo' | zdb:'123'",
-                "SEOr(left=SEVariable(searchFilter=TITLE:foo), right=SEVariable(searchFilter=ZDB_ID:123))",
+                "SEOr(left=SEVariable(searchFilter=tit:\"foo\"), right=SEVariable(searchFilter=zdb:\"123\"))",
                 false,
                 "Or search pairs",
             ),
             arrayOf(
                 "tit:'foo' & zdb:'123'",
-                "SEAnd(left=SEVariable(searchFilter=TITLE:foo), right=SEVariable(searchFilter=ZDB_ID:123))",
+                "SEAnd(left=SEVariable(searchFilter=tit:\"foo\"), right=SEVariable(searchFilter=zdb:\"123\"))",
                 false,
                 "And search pairs",
             ),
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchFilter=TITLE:foo), right=SEVariable(searchFilter=ZDB_ID:123)))," +
-                    " right=SEVariable(searchFilter=HANDLE:123))",
+                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchFilter=tit:\"foo\"), right=SEVariable(searchFilter=zdb:\"123\"))), right=SEVariable(searchFilter=hdl:\"123\"))",
                 false,
                 "Or, And, parentheses",
             ),
             arrayOf(
                 "com:2764793-6 & (metadataid:4633 | zdb:4566)",
-                "SEAnd(left=SEVariable(searchFilter=COMMUNITY_NAME:2764793-6)," +
-                    " right=SEPar(body=SEOr(left=SEVariable(searchFilter=METADATA_ID:4633)," +
-                    " right=SEVariable(searchFilter=ZDB_ID:4566))))",
+                "SEAnd(left=SEVariable(searchFilter=com:\"2764793-6\"), right=SEPar(body=SEOr(left=SEVariable(searchFilter=metadataid:\"4633\"), right=SEVariable(searchFilter=zdb:\"4566\"))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchFilter=PAKET_SIGEL:zdb-33-sfen)," +
-                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=HANDLE:11159/86))," +
-                    " right=SENot(body=SEVariable(searchFilter=HANDLE:11159/993)))))",
+                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\"), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\")), right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchFilter=PAKET_SIGEL:zdb-33-sfen)," +
-                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=HANDLE:11159/86))," +
-                    " right=SENot(body=SEVariable(searchFilter=HANDLE:11159/993)))))",
+                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\"), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\")), right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),

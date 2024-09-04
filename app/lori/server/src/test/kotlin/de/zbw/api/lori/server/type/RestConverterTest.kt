@@ -417,6 +417,7 @@ class RestConverterTest {
                 templateNamesToOcc = mapOf("rightId" to ("name" to 2)),
                 zdbIds = mapOf("zdb1" to 1),
                 isPartOfSeries = mapOf("series1" to 1),
+                searchBarEquivalent = "foobar",
             )
         val expected =
             ItemInformation(
@@ -466,6 +467,7 @@ class RestConverterTest {
                             series = "series1",
                         ),
                     ),
+                searchBarEquivalent = "foobar",
             )
 
         assertThat(

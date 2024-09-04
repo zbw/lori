@@ -50,13 +50,13 @@ class RightFilterTest : DatabaseTest() {
         TEST_Metadata.copy(
             metadataId = "restricted right",
             collectionName = "subject1 subject2",
-            publicationType = PublicationType.PROCEEDINGS,
+            publicationType = PublicationType.PROCEEDING,
         )
     private val itemRightRestrictedOpen =
         TEST_Metadata.copy(
             metadataId = "restricted and open right",
             collectionName = "subject3",
-            publicationType = PublicationType.PROCEEDINGS,
+            publicationType = PublicationType.PROCEEDING,
         )
     private val tempValFilterPresent =
         TEST_Metadata.copy(
@@ -219,7 +219,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -235,7 +235,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -251,7 +251,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -344,7 +344,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -358,7 +358,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -372,7 +372,7 @@ class RightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),

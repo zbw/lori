@@ -369,6 +369,11 @@ class LoriServerBackend(
             publicationType = facets.publicationType,
             templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
             zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
+            searchBarEquivalent =
+                SearchFilter.filtersToString(
+                    filters = (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter)),
+                    searchTerm = searchTerm,
+                ),
             isPartOfSeries = facets.isPartOfSeries,
         )
     }
@@ -621,8 +626,7 @@ class LoriServerBackend(
          */
         val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
 
-        // parseValidSearchKeys . searchKeysToString == id
-        fun parseValidSearchPairs(s: String?): List<SearchFilter> =
+        fun parseSearchTermToFilters(s: String?): List<SearchFilter> =
             s?.let { tokenizeSearchInput(it) }?.mapNotNull {
                 SearchFilter.toSearchFilter(
                     it.substringBefore(":"),

@@ -42,7 +42,7 @@ export default {
         return "Conference Paper";
       case "periodical_part":
         return "Periodical Part";
-      case "proceedings":
+      case "proceeding":
         return "Proceeding";
       case "research_report":
         return "Research Report";

@@ -459,6 +459,7 @@ export default defineComponent({
     };
 
     const processSearchResult = (response: ItemInformation) => {
+      searchStore.searchTerm = response.searchBarEquivalent != undefined ? response.searchBarEquivalent : searchStore.searchTerm;
       items.value = response.itemArray;
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;

@@ -288,7 +288,7 @@ internal fun PublicationTypeRest.toBusiness(): PublicationType =
         PublicationTypeRest.periodical_part -> PublicationType.PERIODICAL_PART
         PublicationTypeRest.working_paper -> PublicationType.WORKING_PAPER
         PublicationTypeRest.research_report -> PublicationType.RESEARCH_REPORT
-        PublicationTypeRest.proceedings -> PublicationType.PROCEEDINGS
+        PublicationTypeRest.proceeding -> PublicationType.PROCEEDING
         PublicationTypeRest.thesis -> PublicationType.THESIS
         PublicationTypeRest.conference_paper -> PublicationType.CONFERENCE_PAPER
         PublicationTypeRest.other -> PublicationType.OTHER
@@ -303,7 +303,7 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.PERIODICAL_PART -> PublicationTypeRest.periodical_part
         PublicationType.WORKING_PAPER -> PublicationTypeRest.working_paper
         PublicationType.RESEARCH_REPORT -> PublicationTypeRest.research_report
-        PublicationType.PROCEEDINGS -> PublicationTypeRest.proceedings
+        PublicationType.PROCEEDING -> PublicationTypeRest.proceeding
         PublicationType.THESIS -> PublicationTypeRest.thesis
         PublicationType.OTHER -> PublicationTypeRest.other
     }
@@ -586,6 +586,7 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                 }.toList()
                 .sortedBy { it.count }
                 .reversed(),
+        searchBarEquivalent = searchBarEquivalent,
     )
 }
 

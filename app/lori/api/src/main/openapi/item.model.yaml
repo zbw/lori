@@ -39,6 +39,8 @@ ItemInformation:
       type: boolean
     hasZbwUserAgreement:
       type: boolean
+    searchBarEquivalent:
+      type: string
     itemArray:
       type: array
       items:

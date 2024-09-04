@@ -18,6 +18,7 @@ data class SearchQueryResult(
     val isPartOfSeries: Map<String, Int>,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
+    val searchBarEquivalent: String,
     val templateNamesToOcc: Map<String, Pair<String, Int>>,
     val zdbIds: Map<String, Int>,
 )

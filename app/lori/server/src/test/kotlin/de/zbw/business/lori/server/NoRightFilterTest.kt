@@ -44,13 +44,13 @@ class NoRightFilterTest : DatabaseTest() {
         TEST_Metadata.copy(
             metadataId = "restricted right",
             collectionName = "subject1",
-            publicationType = PublicationType.PROCEEDINGS,
+            publicationType = PublicationType.PROCEEDING,
         )
     private val itemNoRight =
         TEST_Metadata.copy(
             metadataId = "no rights",
             collectionName = "subject1",
-            publicationType = PublicationType.PROCEEDINGS,
+            publicationType = PublicationType.PROCEEDING,
         )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
@@ -87,7 +87,7 @@ class NoRightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -111,7 +111,7 @@ class NoRightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -129,7 +129,7 @@ class NoRightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
@@ -141,7 +141,7 @@ class NoRightFilterTest : DatabaseTest() {
                 listOf(
                     PublicationTypeFilter(
                         listOf(
-                            PublicationType.PROCEEDINGS,
+                            PublicationType.PROCEEDING,
                         ),
                     ),
                 ),
