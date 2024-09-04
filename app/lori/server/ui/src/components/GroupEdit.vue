@@ -39,7 +39,7 @@ export default defineComponent({
      */
     type ValidatingFields = {
       name: string;
-      ipAddressesFile: File | null;
+      ipAddressesFile: File[] | undefined;
       ipAddressesText: string;
     };
 
@@ -58,7 +58,7 @@ export default defineComponent({
     const formState = reactive({
       name: "",
       description: "" as string | undefined,
-      ipAddressesFile: null as File | null,
+      ipAddressesFile: undefined as File[] | undefined,
       ipAddressesText: "",
     });
 
@@ -125,12 +125,12 @@ export default defineComponent({
         hasNoCSVHeader.value = false;
         formState.name = "";
         formState.ipAddressesText = "";
-        formState.ipAddressesFile = null;
+        formState.ipAddressesFile = undefined;
         formState.description = "";
       } else {
         formState.name = groupTmp.value.name;
         formState.ipAddressesText = groupTmp.value.ipAddresses;
-        formState.ipAddressesFile = null;
+        formState.ipAddressesFile = undefined;
         formState.description = groupTmp.value.description;
         hasNoCSVHeader.value = !groupTmp.value.hasCSVHeader;
       }
@@ -182,9 +182,9 @@ export default defineComponent({
         groupTmp.value.description = formState.description;
         if (
           formState.ipAddressesText == "" &&
-          formState.ipAddressesFile != null
+          formState.ipAddressesFile != undefined
         ) {
-          formState.ipAddressesFile
+          formState.ipAddressesFile[0]
             .text()
             .then((r) => {
               groupTmp.value.ipAddresses = r;
