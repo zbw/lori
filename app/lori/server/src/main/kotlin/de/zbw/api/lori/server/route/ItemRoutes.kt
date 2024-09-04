@@ -489,7 +489,7 @@ fun Routing.itemRoutes(
                     span.setStatus(StatusCode.ERROR, "ParsingException: ${pe.message}")
                     call.respond(
                         HttpStatusCode.BadRequest,
-                        ApiError.badRequestError("Search Query ist ungültig. Siehe ? Button für mehr Informationen"),
+                        ApiError.badRequestError("Such-Anfrage ist ungültig. Siehe ?-Icon für mehr Informationen"),
                     )
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
