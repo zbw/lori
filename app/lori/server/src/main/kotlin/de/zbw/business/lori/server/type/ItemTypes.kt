@@ -64,7 +64,7 @@ enum class PublicationType(
     CONFERENCE_PAPER(4),
     OTHER(5),
     PERIODICAL_PART(6),
-    PROCEEDINGS(7),
+    PROCEEDING(7),
     RESEARCH_REPORT(8),
     THESIS(9),
     WORKING_PAPER(10),

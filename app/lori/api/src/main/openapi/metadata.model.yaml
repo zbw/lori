@@ -6,7 +6,7 @@ PublicationTypeRest:
     - book_part
     - conference_paper
     - periodical_part
-    - proceedings
+    - proceeding
     - research_report
     - thesis
     - working_paper

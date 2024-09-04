@@ -65,36 +65,26 @@ abstract class SearchFilter(
                     "subcom" -> SubcommunityNameFilter(searchValue)
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
                     "typ" ->
-                        QueryParameterParser.parsePublicationTypeFilter(
-                            searchValue.replace(" ", "_").uppercase().let {
-                                if (it == "PROCEEDING") {
-                                    "PROCEEDINGS"
-                                } else {
-                                    it
-                                }
-                            },
-                        )
+                        QueryParameterParser.parsePublicationTypeFilter(searchValue)
                     "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
                     "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
                     "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
                     "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
                     "zga" ->
                         QueryParameterParser.parseTemporalValidity(
-                            when (searchValue.uppercase()) {
-                                "VERGANGENHEIT" -> TemporalValidity.PAST.toString()
-                                "ZUKUNFT" -> TemporalValidity.FUTURE.toString()
-                                "AKTUELL" -> TemporalValidity.PRESENT.toString()
-                                else -> null
-                            },
+                            searchValue
+                                .uppercase()
+                                .replace("VERGANGENHEIT", TemporalValidity.PAST.toString())
+                                .replace("ZUKUNFT", TemporalValidity.FUTURE.toString())
+                                .replace("AKTUELL", TemporalValidity.PRESENT.toString()),
                         )
                     "reg" ->
                         QueryParameterParser.parseFormalRuleFilter(
-                            when (searchValue.uppercase()) {
-                                "LIZENZVERTRAG" -> FormalRule.LICENCE_CONTRACT.toString()
-                                "OPEN-CONTENT-LICENSE" -> FormalRule.OPEN_CONTENT_LICENCE.toString()
-                                "ZBW-NUTZUNGSVEREINBARUNG" -> FormalRule.ZBW_USER_AGREEMENT.toString()
-                                else -> null
-                            },
+                            searchValue
+                                .uppercase()
+                                .replace("LIZENZVERTRAG", FormalRule.LICENCE_CONTRACT.toString())
+                                .replace("OPEN-CONTENT-LICENSE", FormalRule.OPEN_CONTENT_LICENCE.toString())
+                                .replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
                         )
                     "nor" ->
                         QueryParameterParser.parseNoRightInformationFilter(
@@ -112,6 +102,23 @@ abstract class SearchFilter(
             } catch (iae: IllegalArgumentException) {
                 null
             }
+
+        fun filtersToString(
+            filters: List<SearchFilter?>,
+            searchTerm: String? = null,
+        ): String {
+            val filtersAsString =
+                filters
+                    .filterNotNull()
+                    .joinToString(separator = " & ") { filter: SearchFilter ->
+                        filter.toString()
+                    }.takeIf { it.isNotBlank() }
+
+            return listOfNotNull(
+                searchTerm?.takeIf { it.isNotBlank() },
+                filtersAsString,
+            ).joinToString(separator = " & ")
+        }
     }
 }
 
@@ -134,7 +141,7 @@ abstract class TSVectorMetadataSearchFilter(
         return localCounter
     }
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun toSQLString(): String = value
 
@@ -284,7 +291,7 @@ class PublicationDateFilter(
         return counter + 2
     }
 
-    override fun toString(): String = "${getFilterType()}:$fromYear-$toYear"
+    override fun toString(): String = "${getFilterType().keyAlias}:$fromYear-$toYear"
 
     override fun toSQLString(): String = "$fromYear-$toYear"
 
@@ -319,7 +326,7 @@ class PublicationTypeFilter(
         return localCounter
     }
 
-    override fun toString(): String = "${getFilterType()}:${publicationTypes.joinToString(separator = ",")}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${publicationTypes.joinToString(separator = ",")}\""
 
     override fun toSQLString(): String = publicationTypes.joinToString(separator = ",")
 
@@ -351,7 +358,7 @@ class PaketSigelFilter(
         return localCounter
     }
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun toSQLString(): String = paketSigels.joinToString(separator = ",")
 
@@ -387,7 +394,7 @@ class ZDBIdFilter(
 
     override fun toSQLString(): String = zdbIds.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.ZDB_ID
 
@@ -421,7 +428,7 @@ class SeriesFilter(
 
     override fun toSQLString(): String = seriesNames.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
         fun fromString(s: String?): SeriesFilter? = QueryParameterParser.parseSeriesFilter(s)
@@ -464,7 +471,7 @@ class AccessStateFilter(
 
     override fun toSQLString(): String = accessStates.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
         fun fromString(s: String?): AccessStateFilter? = QueryParameterParser.parseAccessStateFilter(s)
@@ -504,7 +511,7 @@ class TemporalValidityFilter(
 
     override fun toSQLString(): String = temporalValidity.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
         fun fromString(s: String?): TemporalValidityFilter? = QueryParameterParser.parseTemporalValidity(s)
@@ -535,7 +542,7 @@ class RightValidOnFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.RIGHT_VALID_ON
 
@@ -559,7 +566,7 @@ class StartDateFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.START_DATE
 
@@ -583,7 +590,7 @@ class EndDateFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.END_DATE
 
@@ -612,11 +619,11 @@ class TemplateNameFilter(
         return localCounter
     }
 
-    override fun getFilterType(): FilterType = FilterType.RIGHT_ID
+    override fun getFilterType(): FilterType = FilterType.TEMPLATE_NAME
 
     override fun toSQLString(): String = templateNames.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
         fun fromString(s: String?): TemplateNameFilter? = QueryParameterParser.parseTemplateNameFilter(s)
@@ -646,7 +653,7 @@ class FormalRuleFilter(
 
     override fun toSQLString(): String = formalRules.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.FORMAL_RULE
 
@@ -665,7 +672,7 @@ class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGH
 
     override fun toSQLString(): String = "true"
 
-    override fun toString(): String = "${getFilterType()}:${toSQLString()}"
+    override fun toString(): String = "${getFilterType().keyAlias}:on"
 
     override fun getFilterType(): FilterType = FilterType.NO_RIGHTS
 
@@ -674,28 +681,30 @@ class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGH
     }
 }
 
-enum class FilterType {
-    TITLE,
-    PUBLICATION_DATE,
-    PUBLICATION_TYPE,
-    PAKET_SIGEL,
-    ZDB_ID,
-    SERIES,
-    ACCESS,
-    TEMPORAL_VALIDITY,
-    RIGHT_VALID_ON,
-    START_DATE,
-    END_DATE,
-    RIGHT_ID,
-    FORMAL_RULE,
-    NO_RIGHTS,
-    COLLECTION_NAME,
-    COMMUNITY_NAME,
-    HANDLE,
-    COMMUNITY_HANDLE,
-    COLLECTION_HANDLE,
-    SUB_COMMUNITY_NAME,
-    SUB_COMMUNITY_HANDLE,
-    METADATA_ID,
-    LICENCE_URL,
+enum class FilterType(
+    val keyAlias: String,
+) {
+    ACCESS("acc"),
+    COLLECTION_HANDLE("hdlcol"),
+    COLLECTION_NAME("col"),
+    COMMUNITY_HANDLE("hdlcom"),
+    COMMUNITY_NAME("com"),
+    END_DATE("zge"),
+    FORMAL_RULE("reg"),
+    HANDLE("hdl"),
+    LICENCE_URL("lur"),
+    METADATA_ID("metadataid"),
+    NO_RIGHTS("nor"),
+    PUBLICATION_DATE("jah"),
+    PUBLICATION_TYPE("typ"),
+    PAKET_SIGEL("sig"),
+    TEMPLATE_NAME("tpl"),
+    RIGHT_VALID_ON("zgp"),
+    SERIES("ser"),
+    START_DATE("zgb"),
+    SUB_COMMUNITY_NAME("subcom"),
+    SUB_COMMUNITY_HANDLE("hdlsubcom"),
+    TEMPORAL_VALIDITY("zga"),
+    TITLE("tit"),
+    ZDB_ID("zdb"),
 }

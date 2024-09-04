@@ -67,7 +67,7 @@ object SearchGrammar : Grammar<SearchExpression>() {
         (
             id map { searchPairInQuery: TokenMatch ->
                 LoriServerBackend
-                    .parseValidSearchPairs(searchPairInQuery.text)
+                    .parseSearchTermToFilters(searchPairInQuery.text)
                     .takeIf { it.isNotEmpty() }
                     ?.let { it: List<SearchFilter> ->
                         SEVariable(it.first())

@@ -185,77 +185,77 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 "bllaaaa col:bar",
-                "COLLECTION_NAME:bar",
+                "col:\"bar\"",
                 "single case with random string",
             ),
             arrayOf(
                 "col:bar",
-                "COLLECTION_NAME:bar",
+                "col:\"bar\"",
                 "single case no additional string",
             ),
             arrayOf(
                 "                col:bar                             ",
-                "COLLECTION_NAME:bar",
+                "col:\"bar\"",
                 "single case with whitespace",
             ),
             arrayOf(
                 "col:bar zdb:foo",
-                "COLLECTION_NAME:bar,ZDB_ID:foo",
+                "col:\"bar\",zdb:\"foo\"",
                 "two search keys",
             ),
             arrayOf(
                 "col:\"foobar\"",
-                "COLLECTION_NAME:foobar",
+                "col:\"foobar\"",
                 "single word quoted",
             ),
             arrayOf(
                 "col:\"foobar\"",
-                "COLLECTION_NAME:foobar",
+                "col:\"foobar\"",
                 "single word doublequoted",
             ),
             arrayOf(
                 "            col:\"foobar\"           com:\"foo & bar\"",
-                "COLLECTION_NAME:foobar,COMMUNITY_NAME:foo & bar",
+                "col:\"foobar\",com:\"foo & bar\"",
                 "mutltiple and single words quoted with whitespaces",
             ),
             arrayOf(
                 "col:col-foo-bar",
-                "COLLECTION_NAME:col-foo-bar",
+                "col:\"col-foo-bar\"",
                 "multiple words minus",
             ),
             arrayOf(
                 "col:\"col-foo-bar\"",
-                "COLLECTION_NAME:col-foo-bar",
+                "col:\"col-foo-bar\"",
                 "multiple words quoted minus",
             ),
             arrayOf(
                 "col:\"col-;:\"",
-                "COLLECTION_NAME:col-;:",
+                "col:\"col-;:\"",
                 "handle special characters",
             ),
             arrayOf(
                 "ser:\"subject1 subject2 subject3 subject4 subject5\"",
-                "SERIES:subject1 subject2 subject3 subject4 subject5",
+                "ser:\"subject1 subject2 subject3 subject4 subject5\"",
                 "direct access multiple words",
             ),
             arrayOf(
                 "tit:\"subject1 subject2 subject3 subject4 subject5\"",
-                "TITLE:subject1 subject2 subject3 subject4 subject5",
+                "tit:\"subject1 subject2 subject3 subject4 subject5\"",
                 "TSVector access and multiple words",
             ),
             arrayOf(
                 "jah:\"2011-2013\"",
-                "PUBLICATION_DATE:2011-2013",
+                "jah:2011-2013",
                 "Publication Date from and to",
             ),
             arrayOf(
                 "jah:\"2011-\"",
-                "PUBLICATION_DATE:2011-2200",
+                "jah:2011-2200",
                 "Publication Date from",
             ),
             arrayOf(
                 "jah:\"-2013\"",
-                "PUBLICATION_DATE:1800-2013",
+                "jah:1800-2013",
                 "Publication Date to",
             ),
         )
@@ -266,12 +266,12 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedKeys: String,
         description: String,
     ) {
-        val receivedPairs = LoriServerBackend.parseValidSearchPairs(searchTerm)
+        val receivedPairs = LoriServerBackend.parseSearchTermToFilters(searchTerm)
         assertThat(
             description,
-            expectedKeys,
+            receivedPairs.joinToString(separator = ","),
             `is`(
-                receivedPairs.joinToString(separator = ","),
+                expectedKeys,
             ),
         )
     }

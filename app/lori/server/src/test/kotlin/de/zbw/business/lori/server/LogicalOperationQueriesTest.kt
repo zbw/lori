@@ -40,7 +40,7 @@ class LogicalOperationQueriesTest : DatabaseTest() {
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject1",
                 metadataId = "subject1",
-                publicationType = PublicationType.PROCEEDINGS,
+                publicationType = PublicationType.PROCEEDING,
                 publicationDate = LocalDate.of(2022, 1, 1),
             ),
             ItemDBTest.TEST_Metadata.copy(
