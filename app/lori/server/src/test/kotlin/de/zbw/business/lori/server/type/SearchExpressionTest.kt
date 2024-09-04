@@ -54,25 +54,33 @@ class SearchExpressionTest {
             ),
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
-                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchFilter=tit:\"foo\"), right=SEVariable(searchFilter=zdb:\"123\"))), right=SEVariable(searchFilter=hdl:\"123\"))",
+                "SEOr(left=SEPar(body=SEAnd(left=SEVariable(searchFilter=tit:\"foo\")," +
+                    " right=SEVariable(searchFilter=zdb:\"123\")))," +
+                    " right=SEVariable(searchFilter=hdl:\"123\"))",
                 false,
                 "Or, And, parentheses",
             ),
             arrayOf(
                 "com:2764793-6 & (metadataid:4633 | zdb:4566)",
-                "SEAnd(left=SEVariable(searchFilter=com:\"2764793-6\"), right=SEPar(body=SEOr(left=SEVariable(searchFilter=metadataid:\"4633\"), right=SEVariable(searchFilter=zdb:\"4566\"))))",
+                "SEAnd(left=SEVariable(searchFilter=com:\"2764793-6\"), " +
+                    "right=SEPar(body=SEOr(left=SEVariable(searchFilter=metadataid:\"4633\")," +
+                    " right=SEVariable(searchFilter=zdb:\"4566\"))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\"), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\")), right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
+                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\")," +
+                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\"))," +
+                    " right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\"), right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\")), right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
+                "SEAnd(left=SEVariable(searchFilter=sig:\"zdb-33-sfen\")," +
+                    " right=SEPar(body=SEOr(left=SENot(body=SEVariable(searchFilter=hdl:\"11159/86\"))," +
+                    " right=SENot(body=SEVariable(searchFilter=hdl:\"11159/993\")))))",
                 false,
                 "Verify that ) after key:value without \"' works",
             ),
