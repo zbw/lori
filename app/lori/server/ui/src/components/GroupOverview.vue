@@ -12,7 +12,7 @@ export default defineComponent({
     const renderKey = ref(0);
     const headers = [
       {
-        text: "Liste aller Gruppen",
+        title: "Liste aller Gruppen",
         align: "start",
         value: "name",
       },
@@ -57,9 +57,9 @@ export default defineComponent({
       currentGroup.value = {} as GroupRest;
       activateGroupEditDialog();
     };
-    const editGroup = (group: GroupRest, row: any) => {
+    const editGroup = (mouseEvent: MouseEvent, row: any) => {
       isNew.value = false;
-      currentGroup.value = group;
+      currentGroup.value = row.item;
       index.value = row.index;
       activateGroupEditDialog();
     };
