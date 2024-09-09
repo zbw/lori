@@ -204,6 +204,7 @@ class ItemDBTest : DatabaseTest() {
                 createdOn = NOW,
                 endDate = TODAY,
                 exceptionFrom = null,
+                groups = emptyList(),
                 groupIds = emptyList(),
                 isTemplate = false,
                 lastUpdatedBy = "user2",

@@ -628,6 +628,7 @@ class RightDB(
             groupDB: GroupDB,
         ): ItemRight {
             val currentRightId = rs.getString(1)
+            val groups = groupDB.getGroupsByRightId(currentRightId)
             return ItemRight(
                 rightId = currentRightId,
                 createdOn =
@@ -673,7 +674,8 @@ class RightDB(
                         )
                     },
                 exceptionFrom = rs.getString(26),
-                groupIds = groupDB.getGroupsByRightId(currentRightId),
+                groups = groups,
+                groupIds = groups.map { it.groupId },
             )
         }
     }

@@ -71,13 +71,14 @@ fun Item.toRest() =
 
 fun Group.toRest() =
     GroupRest(
-        name = this.name,
+        groupId = this.groupId,
         description = this.description,
         ipAddresses =
             this.entries.joinToString(separator = "\n") {
                 "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
             },
         hasCSVHeader = false,
+        title = title,
     )
 
 /**
@@ -87,13 +88,14 @@ fun Group.toRest() =
  */
 fun GroupRest.toBusiness() =
     Group(
-        name = this.name,
+        groupId = this.groupId,
         description = this.description,
         entries =
             RestConverter.parseToGroup(
                 this.hasCSVHeader,
                 this.ipAddresses,
             ),
+        title = title,
     )
 
 fun MetadataRest.toBusiness() =
@@ -175,6 +177,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdOn = createdOn,
         endDate = endDate,
         exceptionFrom = exceptionFrom,
+        groups = groups?.map { it.toBusiness() },
         groupIds = groupIds,
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
@@ -206,7 +209,8 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         exceptionFrom = exceptionFrom,
-        groupIds = groupIds,
+        groupIds = groups?.map { it.groupId },
+        groups = groups?.map { it.toRest() },
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,

@@ -27,25 +27,23 @@ class GroupDBTest : DatabaseTest() {
 
         // when + then
         val receivedGroupId = dbConnector.insertGroup(TEST_GROUP)
-        assertThat(
-            receivedGroupId,
-            `is`(
-                TEST_GROUP.name,
-            ),
-        )
+        val expectedGroup = TEST_GROUP.copy(groupId = receivedGroupId)
 
         // Get
         // when + then
         assertThat(
-            dbConnector.getGroupById(TEST_GROUP.name),
+            dbConnector.getGroupById(receivedGroupId),
             `is`(
-                TEST_GROUP,
+                expectedGroup,
             ),
         )
 
         // Update
         // given
-        val updated = TEST_GROUP.copy(description = "baz")
+        val updated =
+            expectedGroup.copy(
+                description = "baz",
+            )
         assertThat(
             dbConnector.updateGroup(updated),
             `is`(1),
@@ -53,7 +51,7 @@ class GroupDBTest : DatabaseTest() {
 
         // when + then
         assertThat(
-            dbConnector.getGroupById(TEST_GROUP.name),
+            dbConnector.getGroupById(expectedGroup.groupId),
             `is`(
                 updated,
             ),
@@ -61,7 +59,7 @@ class GroupDBTest : DatabaseTest() {
 
         // Delete
         assertThat(
-            dbConnector.deleteGroupById(TEST_GROUP.name),
+            dbConnector.deleteGroupById(expectedGroup.groupId),
             `is`(
                 1,
             ),
@@ -69,32 +67,47 @@ class GroupDBTest : DatabaseTest() {
 
         // Get no result
         assertNull(
-            dbConnector.getGroupById(TEST_GROUP.name),
+            dbConnector.getGroupById(expectedGroup.groupId),
         )
     }
 
     @Test
     fun testGetGroupList() {
-        val group1 = TEST_GROUP.copy(name = "testGetGroupList")
-        dbConnector.insertGroup(group1)
+        val receivedGroupId1 = dbConnector.insertGroup(TEST_GROUP)
+        val expectedGroup1 = TEST_GROUP.copy(groupId = receivedGroupId1)
         assertThat(
             dbConnector.getGroupList(50, 0),
             `is`(
                 listOf(
-                    group1,
+                    expectedGroup1,
                 ),
             ),
         )
 
-        val group2 = TEST_GROUP.copy(name = "testGetGroupList2")
-        dbConnector.insertGroup(group2)
+        val secondGroup =
+            TEST_GROUP.copy(
+                title = "another titler",
+                description = "big description",
+                entries =
+                    listOf(
+                        GroupEntry(
+                            organisationName = "some other organisation",
+                            ipAddresses = "192.168.0.1",
+                        ),
+                    ),
+            )
+        val receivedGroupId2 =
+            dbConnector.insertGroup(
+                secondGroup,
+            )
+        val expectedGroup2 = secondGroup.copy(groupId = receivedGroupId2)
 
         assertThat(
             dbConnector.getGroupList(50, 0),
             `is`(
                 listOf(
-                    group1,
-                    group2,
+                    expectedGroup1,
+                    expectedGroup2,
                 ),
             ),
         )
@@ -103,7 +116,7 @@ class GroupDBTest : DatabaseTest() {
     companion object {
         val TEST_GROUP =
             Group(
-                name = "test group",
+                groupId = 1,
                 description = "some description",
                 entries =
                     listOf(
@@ -112,6 +125,7 @@ class GroupDBTest : DatabaseTest() {
                             ipAddresses = "192.168.0.0",
                         ),
                     ),
+                title = "test group",
             )
     }
 }

@@ -33,10 +33,9 @@ class RightGroupTest : DatabaseTest() {
     @Test
     fun rightGroupRoundtrip() {
         // Given group
-        val groupName1 = "group1"
         val group1 =
             Group(
-                name = groupName1,
+                groupId = 55,
                 description = null,
                 entries =
                     listOf(
@@ -45,41 +44,42 @@ class RightGroupTest : DatabaseTest() {
                             ipAddresses = "192.168.1.*",
                         ),
                     ),
+                title = "some title",
             )
 
         // Insert group
-        val groupId1 = backend.insertGroup(group1)
-        assertThat(
-            groupId1,
-            `is`(groupName1),
-        )
+        val receivedGroupId1 = backend.insertGroup(group1)
+        val expectedGroup1 = group1.copy(groupId = receivedGroupId1)
 
         // Insert Right using the group
         val initialRight: ItemRight =
             TEST_RIGHT.copy(
-                groupIds = listOf(groupId1),
+                groups =
+                    listOf(
+                        expectedGroup1,
+                    ),
             )
 
         val rightId1 = backend.insertRight(initialRight)
 
         // Verify insertions
         assertThat(
-            backend.getGroupById(groupId1),
-            `is`(group1),
+            backend.getGroupById(receivedGroupId1),
+            `is`(expectedGroup1),
         )
 
         assertThat(
             backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
             `is`(
-                listOf(groupName1),
+                listOf(expectedGroup1),
             ),
         )
 
         // Update Right with another group
-        val groupName2 = "group2"
+        val groupName2 = 2
         val group2 =
             Group(
-                name = groupName2,
+                groupId = groupName2,
                 description = null,
                 entries =
                     listOf(
@@ -88,13 +88,19 @@ class RightGroupTest : DatabaseTest() {
                             ipAddresses = "192.168.1.*",
                         ),
                     ),
+                title = "some title2",
             )
 
-        val groupId2 = backend.insertGroup(group2)
+        val receivedGroupId2 = backend.insertGroup(group2)
+        val expectedGroup2 = group2.copy(groupId = receivedGroupId2)
         val rightUpdated =
             TEST_RIGHT.copy(
                 rightId = rightId1,
-                groupIds = listOf(groupId1, groupId2),
+                groupIds =
+                    listOf(
+                        receivedGroupId2,
+                        receivedGroupId1,
+                    ),
             )
         backend.upsertRight(rightUpdated)
 
@@ -104,7 +110,7 @@ class RightGroupTest : DatabaseTest() {
                 .getGroupsByRightId(rightId1)
                 .toSet(),
             `is`(
-                setOf(groupId1, groupId2),
+                setOf(expectedGroup1, expectedGroup2),
             ),
         )
 
@@ -112,7 +118,7 @@ class RightGroupTest : DatabaseTest() {
         val rightUpdated2 =
             TEST_RIGHT.copy(
                 rightId = rightId1,
-                groupIds = listOf(groupId2),
+                groupIds = listOf(receivedGroupId2),
             )
         backend.upsertRight(rightUpdated2)
 
@@ -122,13 +128,37 @@ class RightGroupTest : DatabaseTest() {
                 .getGroupsByRightId(rightId1)
                 .toSet(),
             `is`(
-                setOf(groupId2),
+                setOf(expectedGroup2),
+            ),
+        )
+
+        // Try to update remaining via Right update path -> not allowed
+        val rightUpdated3 =
+            TEST_RIGHT.copy(
+                rightId = rightId1,
+                groups =
+                    listOf(
+                        expectedGroup2.copy(
+                            description = "some nonesense",
+                        ),
+                    ),
+                groupIds = listOf(receivedGroupId2),
+            )
+        backend.upsertRight(rightUpdated3)
+
+        // Verify update again
+        assertThat(
+            backend.dbConnector.groupDB
+                .getGroupsByRightId(rightId1)
+                .toSet(),
+            `is`(
+                setOf(expectedGroup2),
             ),
         )
 
         // Try to delete Group that is still bond to Right
         try {
-            backend.deleteGroup(groupId2)
+            backend.deleteGroup(receivedGroupId2)
             // An exception should be thrown
             fail()
         } catch (_: ResourceStillInUseException) {
@@ -145,7 +175,7 @@ class RightGroupTest : DatabaseTest() {
 
         // Delete Group finally
         assertThat(
-            backend.deleteGroup(groupId2),
+            backend.deleteGroup(receivedGroupId2),
             `is`(1),
         )
     }

@@ -25,19 +25,19 @@ class GroupDB(
     private val tracer: Tracer,
     private val gson: Gson,
 ) {
-    fun insertGroup(group: Group): String {
+    fun insertGroup(group: Group): Int {
         val prepStmt: PreparedStatement =
             connection
                 .prepareStatement(STATEMENT_INSERT_GROUP, Statement.RETURN_GENERATED_KEYS)
                 .apply {
-                    this.setString(1, group.name)
-                    this.setIfNotNull(2, group.description) { value, idx, prepStmt ->
+                    this.setIfNotNull(1, group.description) { value, idx, prepStmt ->
                         prepStmt.setString(idx, value)
                     }
                     val jsonObj = PGobject()
                     jsonObj.type = "json"
                     jsonObj.value = gson.toJson(group.entries)
-                    this.setObject(3, jsonObj)
+                    this.setObject(2, jsonObj)
+                    this.setString(3, group.title)
                 }
         val span = tracer.spanBuilder("insertGroup").startSpan()
         try {
@@ -46,7 +46,7 @@ class GroupDB(
             return if (affectedRows > 0) {
                 val rs: ResultSet = prepStmt.generatedKeys
                 rs.next()
-                rs.getString(1)
+                rs.getInt(1)
             } else {
                 throw IllegalStateException("No row has been inserted.")
             }
@@ -55,10 +55,33 @@ class GroupDB(
         }
     }
 
-    fun getGroupById(groupId: String): Group? {
+    fun getGroupsByIds(groupIds: List<Int>): List<Group> {
+        val prepStmt =
+            connection.prepareStatement(STATEMENT_GET_GROUPS_BY_IDS).apply {
+                this.setArray(1, connection.createArrayOf("integer", groupIds.toTypedArray()))
+            }
+        val span = tracer.spanBuilder("getGroupsByIds").startSpan()
+        val rs =
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.executeQuery() }
+            } finally {
+                span.end()
+            }
+
+        return generateSequence {
+            if (rs.next()) {
+                extractGroupRS(rs, gson)
+            } else {
+                null
+            }
+        }.takeWhile { true }.toList()
+    }
+
+    fun getGroupById(groupId: Int): Group? {
         val prepStmt =
             connection.prepareStatement(STATEMENT_GET_GROUP_BY_ID).apply {
-                this.setString(1, groupId)
+                this.setInt(1, groupId)
             }
 
         val span = tracer.spanBuilder("getGroupById").startSpan()
@@ -78,12 +101,12 @@ class GroupDB(
     }
 
     fun deleteGroupPair(
-        groupId: String,
+        groupId: Int,
         rightId: String,
     ): Int {
         val prepStmt =
             connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR).apply {
-                this.setString(1, groupId)
+                this.setInt(1, groupId)
                 this.setString(2, rightId)
             }
         val span = tracer.spanBuilder("deleteGroupPair").startSpan()
@@ -95,10 +118,10 @@ class GroupDB(
         }
     }
 
-    fun deleteGroupPairsByRightId(groupId: String): Int {
+    fun deleteGroupPairsByRightId(rightId: String): Int {
         val prepStmt =
             connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID).apply {
-                this.setString(1, groupId)
+                this.setString(1, rightId)
             }
         val span = tracer.spanBuilder("deleteGroupPairsByRightId").startSpan()
         return try {
@@ -112,10 +135,10 @@ class GroupDB(
     /**
      * Get the ids of all rights that use a given group-id.
      */
-    fun getRightsByGroupId(groupId: String): List<String> {
+    fun getRightsByGroupId(groupId: Int): List<String> {
         val prepStmt =
             connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_GROUP_ID).apply {
-                this.setString(1, groupId)
+                this.setInt(1, groupId)
             }
         val span = tracer.spanBuilder("getRightsByGroupId").startSpan()
         val rs =
@@ -135,7 +158,7 @@ class GroupDB(
         }.takeWhile { true }.toList()
     }
 
-    fun getGroupsByRightId(rightId: String): List<String> {
+    fun getGroupsByRightId(rightId: String): List<Group> {
         val prepStmt =
             connection.prepareStatement(STATEMENT_GET_GROUPS_BY_RIGHT_ID).apply {
                 this.setString(1, rightId)
@@ -149,24 +172,27 @@ class GroupDB(
                 span.end()
             }
 
-        return generateSequence {
-            if (rs.next()) {
-                rs.getString(1)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
+        val groupIds: List<Int> =
+            generateSequence {
+                if (rs.next()) {
+                    rs.getInt(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+
+        return getGroupsByIds(groupIds)
     }
 
     fun insertGroupRightPair(
         rightId: String,
-        groupId: String,
+        groupId: Int,
     ): String {
         val prepStmt =
             connection
                 .prepareStatement(STATEMENT_INSERT_GROUP_RIGHT_PAIR, Statement.RETURN_GENERATED_KEYS)
                 .apply {
-                    this.setString(1, groupId)
+                    this.setInt(1, groupId)
                     this.setString(2, rightId)
                 }
         val span = tracer.spanBuilder("insertGroupRightPair").startSpan()
@@ -216,7 +242,7 @@ class GroupDB(
     fun getGroupListIdsOnly(
         limit: Int,
         offset: Int,
-    ): List<String> {
+    ): List<Int> {
         val prepStmt =
             connection.prepareStatement(STATEMENT_GET_GROUP_LIST_ID_ONLY).apply {
                 this.setInt(1, limit)
@@ -234,17 +260,17 @@ class GroupDB(
 
         return generateSequence {
             if (rs.next()) {
-                rs.getString(1)
+                rs.getInt(1)
             } else {
                 null
             }
         }.takeWhile { true }.toList()
     }
 
-    fun deleteGroupById(groupId: String): Int {
+    fun deleteGroupById(groupId: Int): Int {
         val prepStmt =
             connection.prepareStatement(STATEMENT_DELETE_GROUP_BY_ID).apply {
-                this.setString(1, groupId)
+                this.setInt(1, groupId)
             }
         val span = tracer.spanBuilder("deleteGroup").startSpan()
         return try {
@@ -265,7 +291,8 @@ class GroupDB(
                 jsonObj.type = "json"
                 jsonObj.value = gson.toJson(group.entries)
                 this.setObject(2, jsonObj)
-                this.setString(3, group.name)
+                this.setString(3, group.title)
+                this.setInt(4, group.groupId)
             }
         val span = tracer.spanBuilder("updateGroup").startSpan()
         try {
@@ -281,23 +308,23 @@ class GroupDB(
         private const val TABLE_NAME_RIGHT_GROUP = "right_group"
         const val STATEMENT_INSERT_GROUP =
             "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
-                " (group_id, description, ip_addresses)" +
+                " (description, ip_addresses, title)" +
                 " VALUES(?,?,?)"
 
         const val STATEMENT_GET_GROUP_BY_ID =
-            "SELECT group_id, description, ip_addresses" +
+            "SELECT group_id, description, ip_addresses, title" +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
                 " WHERE group_id = ?"
 
         const val STATEMENT_GET_GROUP_LIST =
-            "SELECT group_id, description, ip_addresses" +
+            "SELECT group_id, description, ip_addresses, title" +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " ORDER BY group_id ASC LIMIT ? OFFSET ?;"
+                " ORDER BY group_id LIMIT ? OFFSET ?;"
 
         const val STATEMENT_GET_GROUP_LIST_ID_ONLY =
             "SELECT group_id" +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " ORDER BY group_id ASC LIMIT ? OFFSET ?;"
+                " ORDER BY group_id LIMIT ? OFFSET ?;"
 
         const val STATEMENT_INSERT_GROUP_RIGHT_PAIR =
             "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +
@@ -330,27 +357,34 @@ class GroupDB(
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
                 " WHERE right_id = ?"
 
+        const val STATEMENT_GET_GROUPS_BY_IDS =
+            "SELECT group_id, description, ip_addresses, title" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE group_id = ANY(?)"
+
         const val STATEMENT_UPDATE_GROUP =
-            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=? WHERE group_id=?;"
+            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=?, title=? WHERE group_id=?;"
 
         private fun extractGroupRS(
             rs: ResultSet,
             gson: Gson,
         ): Group {
             val groupListType: Type = object : TypeToken<ArrayList<GroupEntry>>() {}.type
-            val name = rs.getString(1)
+            val groupId = rs.getInt(1)
             val description = rs.getString(2)
             val ipAddressJson: String? =
                 rs
                     .getObject(3, PGobject::class.java)
                     .value
+            val title = rs.getString(4)
             return Group(
-                name = name,
+                groupId = groupId,
                 description = description,
                 entries =
                     ipAddressJson
                         ?.let { gson.fromJson(it, groupListType) }
                         ?: emptyList(),
+                title = title,
             )
         }
     }

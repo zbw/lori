@@ -88,6 +88,8 @@ class RestConverterTest {
                             createdBy = TEST_RIGHT.createdBy,
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
+                            groupIds = TEST_RIGHT.groupIds,
+                            groups = TEST_RIGHT.groups?.map { it.toRest() },
                             isTemplate = TEST_RIGHT.isTemplate,
                             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
                             lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
@@ -200,7 +202,7 @@ class RestConverterTest {
     fun testGroupConverter() {
         val givenGroup =
             Group(
-                name = "some name",
+                groupId = 1,
                 description = "description",
                 entries =
                     listOf(
@@ -209,6 +211,7 @@ class RestConverterTest {
                             ipAddresses = "123.456.1.127",
                         ),
                     ),
+                title = "some title",
             )
         assertThat(
             (givenGroup.toRest()).toBusiness(),
@@ -593,7 +596,22 @@ class RestConverterTest {
                     ),
                 endDate = TODAY,
                 exceptionFrom = null,
-                groupIds = null,
+                groups =
+                    listOf(
+                        Group(
+                            groupId = 1,
+                            description = "some description",
+                            entries =
+                                listOf(
+                                    GroupEntry(
+                                        organisationName = "orga",
+                                        ipAddresses = "*.*.*.*",
+                                    ),
+                                ),
+                            title = "title",
+                        ),
+                    ),
+                groupIds = listOf(1),
                 isTemplate = true,
                 lastAppliedOn =
                     OffsetDateTime.of(

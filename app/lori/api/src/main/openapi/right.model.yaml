@@ -45,10 +45,15 @@ RightRest:
       format: date
     exceptionFrom:
       type: string
+    groups:
+      type: array
+      description: 'Only read only. Modify groups via its own path .'
+      items:
+        $ref: 'group.model.yaml#/GroupRest'
     groupIds:
       type: array
       items:
-        type: string
+        type: integer
     isTemplate:
       type: boolean
     lastAppliedOn:

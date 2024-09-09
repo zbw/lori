@@ -54,7 +54,7 @@ fun Routing.groupRoutes(
                         val group: GroupRest =
                             call
                                 .receive(GroupRest::class)
-                                .takeIf { it.name != null && it.ipAddresses != null }
+                                .takeIf { it.groupId != null && it.ipAddresses != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
                         val pk = backend.insertGroup(group.toBusiness())
@@ -123,7 +123,7 @@ fun Routing.groupRoutes(
                         val group: GroupRest =
                             call
                                 .receive(GroupRest::class)
-                                .takeIf { it.name != null && it.ipAddresses != null }
+                                .takeIf { it.groupId != null && it.ipAddresses != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
                         val insertedRows = backend.updateGroup(group.toBusiness())
@@ -135,7 +135,7 @@ fun Routing.groupRoutes(
                             call.respond(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
-                                    detail = "Für die Gruppe ${group.name} existiert kein Eintrag.",
+                                    detail = "Für die Gruppe '${group.title} (${group.groupId})' existiert kein Eintrag.",
                                 ),
                             )
                         }
@@ -178,8 +178,8 @@ fun Routing.groupRoutes(
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val groupId = call.parameters["id"]
-                        span.setAttribute("groupId", groupId ?: "null")
+                        val groupId = call.parameters["id"]?.toIntOrNull()
+                        span.setAttribute("groupId", groupId?.toString() ?: "null")
                         if (groupId == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
@@ -193,7 +193,7 @@ fun Routing.groupRoutes(
                                 call.respond(
                                     HttpStatusCode.NotFound,
                                     ApiError.notFoundError(
-                                        detail = "Für die Gruppe $groupId existiert kein Eintrag.",
+                                        detail = "Für die Gruppe mit der ID '$groupId' existiert kein Eintrag.",
                                     ),
                                 )
                             }
@@ -232,8 +232,8 @@ fun Routing.groupRoutes(
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val groupId = call.parameters["id"]
-                    span.setAttribute("groupId", groupId ?: "null")
+                    val groupId = call.parameters["id"]?.toIntOrNull()
+                    span.setAttribute("groupId", groupId?.toString() ?: "null")
                     if (groupId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
@@ -247,7 +247,7 @@ fun Routing.groupRoutes(
                             call.respond(
                                 HttpStatusCode.NotFound,
                                 ApiError.notFoundError(
-                                    detail = "Für die Gruppe $groupId existiert kein Eintrag.",
+                                    detail = "Für die Gruppe mit der ID '$groupId' existiert kein Eintrag.",
                                 ),
                             )
                         }

@@ -86,16 +86,16 @@ class LoriServerBackend(
 
     fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> = metadataElems.map { insertMetadataElement(it) }
 
-    fun insertGroup(group: Group): String = dbConnector.groupDB.insertGroup(group)
+    fun insertGroup(group: Group): Int = dbConnector.groupDB.insertGroup(group)
 
     fun insertMetadataElement(metadata: ItemMetadata): String = dbConnector.metadataDB.insertMetadata(metadata)
 
     fun insertRight(right: ItemRight): String {
         val generatedRightId = dbConnector.rightDB.insertRight(right)
-        right.groupIds?.forEach { gId ->
+        right.groups?.forEach { group ->
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
-                groupId = gId,
+                groupId = group.groupId,
             )
         }
         return generatedRightId
@@ -105,7 +105,11 @@ class LoriServerBackend(
 
     fun upsertRight(right: ItemRight): Int {
         val rightId = right.rightId!!
-        val oldGroupIds = dbConnector.groupDB.getGroupsByRightId(rightId).toSet()
+        val oldGroupIds =
+            dbConnector.groupDB
+                .getGroupsByRightId(rightId)
+                .map { it.groupId }
+                .toSet()
         val newGroupIds = right.groupIds?.toSet() ?: emptySet()
 
         val toAdd = newGroupIds.subtract(oldGroupIds)
@@ -166,7 +170,7 @@ class LoriServerBackend(
                 )
             }
 
-    fun getGroupById(groupId: String): Group? = dbConnector.groupDB.getGroupById(groupId)
+    fun getGroupById(groupId: Int): Group? = dbConnector.groupDB.getGroupById(groupId)
 
     fun getGroupList(
         limit: Int,
@@ -181,9 +185,10 @@ class LoriServerBackend(
             .getGroupListIdsOnly(limit, offset)
             .map {
                 Group(
-                    name = it,
+                    groupId = it,
                     entries = emptyList(),
                     description = null,
+                    title = "",
                 )
             }
 
@@ -243,7 +248,7 @@ class LoriServerBackend(
 
     fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRightId(rightId)
 
-    fun deleteGroup(groupId: String): Int {
+    fun deleteGroup(groupId: Int): Int {
         val receivedRights: List<String> = dbConnector.groupDB.getRightsByGroupId(groupId)
         return if (receivedRights.isEmpty()) {
             dbConnector.groupDB.deleteGroupById(groupId)
@@ -254,7 +259,7 @@ class LoriServerBackend(
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
                 throw ResourceStillInUseException(
-                    "Gruppe '${group.name} ($groupId)' wird noch von folgenden Rechten verwendet: " +
+                    "Gruppe '${group.groupId} ($groupId)' wird noch von folgenden Rechten verwendet: " +
                         templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
                             "'" + right.templateName + " (" + right.rightId + ")'"
                         },
