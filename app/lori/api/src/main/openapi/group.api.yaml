@@ -136,7 +136,7 @@ group-id:
         description: Group id queried
         required: true
         schema:
-          type: string
+          type: integer
     responses:
       200:
         description: Successful operation

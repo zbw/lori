@@ -88,8 +88,8 @@ class RestConverterTest {
                             createdBy = TEST_RIGHT.createdBy,
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
-                            groupIds = TEST_RIGHT.groupIds,
-                            groups = TEST_RIGHT.groups?.map { it.toRest() },
+                            groupIds = null,
+                            groups = null,
                             isTemplate = TEST_RIGHT.isTemplate,
                             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
                             lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
@@ -596,22 +596,8 @@ class RestConverterTest {
                     ),
                 endDate = TODAY,
                 exceptionFrom = null,
-                groups =
-                    listOf(
-                        Group(
-                            groupId = 1,
-                            description = "some description",
-                            entries =
-                                listOf(
-                                    GroupEntry(
-                                        organisationName = "orga",
-                                        ipAddresses = "*.*.*.*",
-                                    ),
-                                ),
-                            title = "title",
-                        ),
-                    ),
-                groupIds = listOf(1),
+                groups = null,
+                groupIds = null,
                 isTemplate = true,
                 lastAppliedOn =
                     OffsetDateTime.of(
