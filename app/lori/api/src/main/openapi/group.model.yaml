@@ -2,17 +2,20 @@ GroupRest:
   required:
     - hasCSVHeader
     - ipAddresses
-    - name
+    - groupId
+    - title
   type: object
   properties:
-    name:
-      type: string
+    groupId:
+      type: integer
     description:
       type: string
     hasCSVHeader:
       type: boolean
       default: false
     ipAddresses:
+      type: string
+    title:
       type: string
 
 GroupIdCreated:
@@ -21,4 +24,4 @@ GroupIdCreated:
   type: object
   properties:
     groupId:
-      type: string
+      type: integer

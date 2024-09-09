@@ -15,6 +15,7 @@ import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 import error from "@/utils/error";
+import {GroupIdCreated} from "@/generated-sources/openapi";
 
 export default defineComponent({
   components: { GroupDeleteDialog },
@@ -38,7 +39,7 @@ export default defineComponent({
      * Vuelidate.
      */
     type ValidatingFields = {
-      name: string;
+      title: string;
       ipAddressesFile: File[] | undefined;
       ipAddressesText: string;
     };
@@ -50,13 +51,14 @@ export default defineComponent({
     };
 
     const rules = {
-      name: { required },
+      title: { required },
       ipAddressesFile: { ipAddressCheck },
       ipAddressesText: { ipAddressCheck },
     };
 
     const formState = reactive({
-      name: "",
+      groupId: 0 as number | undefined,
+      title: "",
       description: "" as string | undefined,
       ipAddressesFile: undefined as File[] | undefined,
       ipAddressesText: "",
@@ -81,7 +83,7 @@ export default defineComponent({
     });
     const errorName = computed(() => {
       const errors: Array<string> = [];
-      if (v$.value.name.$invalid && v$.value.name.$dirty) {
+      if (v$.value.title.$invalid && v$.value.title.$dirty) {
         errors.push("Es wird ein Name benötigt.");
       }
       return errors;
@@ -123,12 +125,13 @@ export default defineComponent({
       groupTmp.value = Object.assign({}, newValue);
       if (props.isNew) {
         hasNoCSVHeader.value = false;
-        formState.name = "";
+        formState.title = "";
         formState.ipAddressesText = "";
         formState.ipAddressesFile = undefined;
         formState.description = "";
       } else {
-        formState.name = groupTmp.value.name;
+        formState.groupId = groupTmp.value.groupId;
+        formState.title = groupTmp.value.title;
         formState.ipAddressesText = groupTmp.value.ipAddresses;
         formState.ipAddressesFile = undefined;
         formState.description = groupTmp.value.description;
@@ -145,8 +148,9 @@ export default defineComponent({
     const createGroup = () => {
       api
         .addGroup(groupTmp.value)
-        .then(() => {
-          emit("addGroupSuccessful", groupTmp.value.name);
+        .then((gIdC: GroupIdCreated) => {
+          formState.groupId = gIdC.groupId;
+          emit("addGroupSuccessful", groupTmp.value.groupId);
           close();
         })
         .catch((e) => {
@@ -161,7 +165,7 @@ export default defineComponent({
       api
         .updateGroup(groupTmp.value)
         .then(() => {
-          emit("updateGroupSuccessful", groupTmp.value.name);
+          emit("updateGroupSuccessful", groupTmp.value.groupId);
           close();
         })
         .catch((e) => {
@@ -178,7 +182,7 @@ export default defineComponent({
           return;
         }
         groupTmp.value.hasCSVHeader = !hasNoCSVHeader.value;
-        groupTmp.value.name = formState.name;
+        groupTmp.value.title = formState.title;
         groupTmp.value.description = formState.description;
         if (
           formState.ipAddressesText == "" &&
@@ -216,7 +220,7 @@ export default defineComponent({
 
     // Delete Group
     const initiateDeleteDialog = () => {
-      groupTmp.value.name = formState.name;
+      groupTmp.value.title = formState.title;
       dialogStore.groupDeleteActivated = true;
     };
 
@@ -259,7 +263,7 @@ export default defineComponent({
       </v-alert>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
         <GroupDeleteDialog
-          :group-id="groupTmp.name"
+          :group-id="groupTmp.title"
           v-on:deleteGroupSuccessful="deleteGroupSuccessful"
         ></GroupDeleteDialog>
       </v-dialog>
@@ -270,16 +274,27 @@ export default defineComponent({
               v-if="isNew"
               variant="outlined"
               label="Name der Berechtigungsgruppe"
-              v-model="formState.name"
+              v-model="formState.title"
               :error-messages="errorName"
             ></v-text-field>
             <v-text-field
               v-if="!isNew"
               variant="outlined"
               label="Name der Berechtigungsgruppe"
-              v-model="formState.name"
+              v-model="formState.title"
               :error-messages="errorName"
               disabled
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-text-field
+                v-model="formState.groupId"
+                disabled
+                hint="ID der Berechtigungsgruppe"
+                variant="outlined"
+                label="ID der Berechtigungsgruppe"
             ></v-text-field>
           </v-col>
         </v-row>

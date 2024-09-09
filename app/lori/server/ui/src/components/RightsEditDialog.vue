@@ -865,12 +865,12 @@ export default defineComponent({
     // Groups
     const errorMsgIsActive = ref(false);
     const errorMsg = ref("");
-    const groupItems: Ref<Array<string>> = ref([]);
+    const groupItems: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
-        .getGroupList(0, 100, true)
+        .getGroupList(0, 100, false)
         .then((r: Array<GroupRest>) => {
-          groupItems.value = r.map((value) => value.name);
+          groupItems.value = r;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -1358,12 +1358,16 @@ export default defineComponent({
                   v-model="tmpRight.groupIds"
                   :items="groupItems"
                   :disabled="!isEditable"
+                  item-title="groupId"
                   chips
                   counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
                   multiple
                   variant="outlined"
                 >
+                  <template v-slot:item="{ props, item}">
+                    <v-list-item v-bind="props" :subtitle="'Titel: ' + item.raw.title"></v-list-item>
+                  </template>
                 </v-select>
               </v-col>
             </v-row>

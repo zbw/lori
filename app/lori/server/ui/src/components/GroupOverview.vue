@@ -12,9 +12,14 @@ export default defineComponent({
     const renderKey = ref(0);
     const headers = [
       {
-        title: "Liste aller Gruppen",
+        title: "Name",
         align: "start",
-        value: "name",
+        value: "title",
+      },
+      {
+        title: "ID",
+        align: "start",
+        value: "groupId",
       },
     ];
     const groupItems: Ref<Array<GroupRest>> = ref([]);
@@ -70,7 +75,7 @@ export default defineComponent({
     const successMsgIsActive = ref(false);
     const successMsg = ref("");
     const lastModifiedGroup = ref({} as GroupRest);
-    const addGroupEntry = (groupId: string) => {
+    const addGroupEntry = (groupId: number) => {
       api
         .getGroupById(groupId)
         .then((group) => {
@@ -78,7 +83,7 @@ export default defineComponent({
           renderKey.value += 1;
           successMsgIsActive.value = true;
           successMsg.value = "Gruppe " +
-              "'" + lastModifiedGroup.value.name + " (" + groupId + ")'" +
+              "'" + group.title + " (" + groupId + ")'" +
               " erfolgreich hinzugefügt.";
         })
         .catch((e) => {
@@ -88,7 +93,7 @@ export default defineComponent({
           });
         });
     };
-    const updateGroupEntry = (groupId: string) => {
+    const updateGroupEntry = (groupId: number) => {
       api
         .getGroupById(groupId)
         .then((group) => {
@@ -97,7 +102,7 @@ export default defineComponent({
           successMsgIsActive.value = true;
           lastModifiedGroup.value = group;
           successMsg.value = "Gruppe " +
-              "'" + lastModifiedGroup.value.name + " (" + groupId + ")'" +
+              "'" + group.title + " (" + groupId + ")'" +
               " erfolgreich geupdated.";
         })
         .catch((e) => {

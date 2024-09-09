@@ -37,7 +37,7 @@ export default {
       id: groupId,
     });
   },
-  getGroupById(groupId: string): Promise<GroupRest> {
+  getGroupById(groupId: number): Promise<GroupRest> {
     return loriGroupApi.getGroupById({
       id: groupId,
     });

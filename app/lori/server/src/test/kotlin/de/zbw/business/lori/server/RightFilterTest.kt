@@ -882,7 +882,8 @@ class RightFilterTest : DatabaseTest() {
                 zbwUserAgreement = true,
                 templateDescription = "some description",
                 templateName = "exampleTemplate",
-                groupIds = null,
+                groups = null,
+                groupIds = emptyList(),
             )
     }
 }

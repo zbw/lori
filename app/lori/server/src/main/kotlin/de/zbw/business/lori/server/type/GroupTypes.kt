@@ -10,9 +10,10 @@ package de.zbw.business.lori.server.type
  */
 @kotlinx.serialization.Serializable
 data class Group(
-    val name: String,
+    val groupId: Int,
     val description: String?,
     val entries: List<GroupEntry>,
+    val title: String,
 )
 
 @kotlinx.serialization.Serializable
