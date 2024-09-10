@@ -7,7 +7,7 @@ import error from "@/utils/error";
 export default defineComponent({
   props: {
     groupId: {
-      type: String,
+      type: Number,
       required: true,
     },
   },

@@ -150,7 +150,7 @@ export default defineComponent({
         .addGroup(groupTmp.value)
         .then((gIdC: GroupIdCreated) => {
           formState.groupId = gIdC.groupId;
-          emit("addGroupSuccessful", groupTmp.value.groupId);
+          emit("addGroupSuccessful", gIdC.groupId);
           close();
         })
         .catch((e) => {
@@ -263,7 +263,7 @@ export default defineComponent({
       </v-alert>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
         <GroupDeleteDialog
-          :group-id="groupTmp.title"
+          :group-id="groupTmp.groupId"
           v-on:deleteGroupSuccessful="deleteGroupSuccessful"
         ></GroupDeleteDialog>
       </v-dialog>
