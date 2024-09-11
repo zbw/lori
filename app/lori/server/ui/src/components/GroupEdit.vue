@@ -41,7 +41,7 @@ export default defineComponent({
     type ValidatingFields = {
       title: string;
       ipAddressesFile: File[] | undefined;
-      ipAddressesText: string;
+      ipAddressesText: string | undefined;
     };
 
     const ipAddressCheck = (value: string, siblings: ValidatingFields) => {
@@ -61,7 +61,7 @@ export default defineComponent({
       title: "",
       description: "" as string | undefined,
       ipAddressesFile: undefined as File[] | undefined,
-      ipAddressesText: "",
+      ipAddressesText: "" as string | undefined,
     });
 
     const v$ = useVuelidate(rules, formState);
@@ -132,7 +132,7 @@ export default defineComponent({
       } else {
         formState.groupId = groupTmp.value.groupId;
         formState.title = groupTmp.value.title;
-        formState.ipAddressesText = groupTmp.value.ipAddresses;
+        formState.ipAddressesText = groupTmp.value.allowedAddressesRaw;
         formState.ipAddressesFile = undefined;
         formState.description = groupTmp.value.description;
         hasNoCSVHeader.value = !groupTmp.value.hasCSVHeader;
@@ -191,7 +191,7 @@ export default defineComponent({
           formState.ipAddressesFile[0]
             .text()
             .then((r) => {
-              groupTmp.value.ipAddresses = r;
+              groupTmp.value.allowedAddressesRaw = r;
               if (props.isNew) {
                 createGroup();
               } else {
@@ -206,7 +206,7 @@ export default defineComponent({
             });
           return;
         }
-        groupTmp.value.ipAddresses = formState.ipAddressesText;
+        groupTmp.value.allowedAddressesRaw = formState.ipAddressesText;
         if (props.isNew) {
           createGroup();
         } else {
@@ -258,9 +258,17 @@ export default defineComponent({
   <v-card>
     <v-container>
       <v-card-title>{{ dialogTitle }}</v-card-title>
-      <v-alert v-model="saveAlertError" closable type="error">
+      <v-snackbar
+          v-model="saveAlertError"
+          closable
+          contained
+          multi-line
+          location="top"
+          timer="true"
+          timeout="10000"
+          color="error">
         {{ saveAlertErrorMessage }}
-      </v-alert>
+      </v-snackbar>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
         <GroupDeleteDialog
           :group-id="groupTmp.groupId"

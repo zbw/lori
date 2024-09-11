@@ -33,6 +33,7 @@ import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
 import de.zbw.lori.model.MetadataRest
+import de.zbw.lori.model.OrganisationToIp
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
@@ -73,12 +74,19 @@ fun Group.toRest() =
     GroupRest(
         groupId = this.groupId,
         description = this.description,
-        ipAddresses =
+        allowedAddressesRaw =
             this.entries.joinToString(separator = "\n") {
                 "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
             },
         hasCSVHeader = false,
         title = title,
+        allowedAddresses =
+            this.entries.map {
+                OrganisationToIp(
+                    ipv4Allowed = it.ipAddresses,
+                    organisation = it.organisationName,
+                )
+            },
     )
 
 /**
@@ -91,10 +99,12 @@ fun GroupRest.toBusiness() =
         groupId = this.groupId,
         description = this.description,
         entries =
-            RestConverter.parseToGroup(
-                this.hasCSVHeader,
-                this.ipAddresses,
-            ),
+            this.allowedAddressesRaw?.let {
+                RestConverter.parseToGroup(
+                    this.hasCSVHeader,
+                    it,
+                )
+            } ?: emptyList(),
         title = title,
     )
 

@@ -54,7 +54,7 @@ fun Routing.groupRoutes(
                         val group: GroupRest =
                             call
                                 .receive(GroupRest::class)
-                                .takeIf { it.groupId != null && it.ipAddresses != null && it.title != null }
+                                .takeIf { it.groupId != null && it.allowedAddressesRaw != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
                         val pk = backend.insertGroup(group.toBusiness())
@@ -123,7 +123,7 @@ fun Routing.groupRoutes(
                         val group: GroupRest =
                             call
                                 .receive(GroupRest::class)
-                                .takeIf { it.groupId != null && it.ipAddresses != null && it.title != null }
+                                .takeIf { it.groupId != null && it.allowedAddressesRaw != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
                         val insertedRows = backend.updateGroup(group.toBusiness())

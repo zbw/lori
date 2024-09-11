@@ -1360,9 +1360,9 @@ export default defineComponent({
                   :disabled="!isEditable"
                   item-title="groupId"
                   chips
+                  multiple
                   counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
-                  multiple
                   variant="outlined"
                 >
                   <template v-slot:item="{ props, item}">

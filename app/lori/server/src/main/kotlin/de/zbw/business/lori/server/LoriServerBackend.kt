@@ -257,11 +257,11 @@ class LoriServerBackend(
             if (group == null) {
                 return 0
             } else {
-                val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
+                val rightsBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
                 throw ResourceStillInUseException(
-                    "Gruppe '${group.groupId} ($groupId)' wird noch von folgenden Rechten verwendet: " +
-                        templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
-                            "'" + right.templateName + " (" + right.rightId + ")'"
+                    "Gruppe '${group.title} ($groupId)' wird noch von folgenden Rechten verwendet: " +
+                        rightsBlocking.joinToString(separator = ",") { right: ItemRight ->
+                            "ID: " + right.rightId + "; "
                         },
                 )
             }
