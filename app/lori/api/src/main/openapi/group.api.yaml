@@ -97,7 +97,7 @@ group-id:
         description: Group id to delete
         required: true
         schema:
-          type: string
+          type: integer
     responses:
       200:
         description: Deletion of the group was successful

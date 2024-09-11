@@ -114,8 +114,13 @@ export default defineComponent({
     };
 
     const deleteGroupEntry = () => {
+      const deletedGroup: GroupRest = groupItems.value[index.value];
+      successMsg.value = "Gruppe " +
+          "'" + deletedGroup.title + " (" + deletedGroup.groupId + ")'" +
+          " erfolgreich gelöscht.";
       groupItems.value.splice(index.value, 1);
       renderKey.value += 1;
+      successMsgIsActive.value = true;
     };
 
     return {

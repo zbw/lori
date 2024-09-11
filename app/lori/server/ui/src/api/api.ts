@@ -32,7 +32,7 @@ export default {
       body: newGroup,
     });
   },
-  deleteGroup(groupId: string): Promise<void> {
+  deleteGroup(groupId: number): Promise<void> {
     return loriGroupApi.deleteGroupById({
       id: groupId,
     });

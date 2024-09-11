@@ -1,7 +1,6 @@
 GroupRest:
   required:
     - hasCSVHeader
-    - ipAddresses
     - groupId
     - title
   type: object
@@ -13,9 +12,23 @@ GroupRest:
     hasCSVHeader:
       type: boolean
       default: false
-    ipAddresses:
+    allowedAddresses:
+      type: array
+      items:
+        $ref: 'group.model.yaml#/OrganisationToIp'
+    allowedAddressesRaw:
       type: string
     title:
+      type: string
+
+OrganisationToIp:
+  required:
+    - organisation
+    - ipv4Allowed
+  properties:
+    organisation:
+      type: string
+    ipv4Allowed:
       type: string
 
 GroupIdCreated:

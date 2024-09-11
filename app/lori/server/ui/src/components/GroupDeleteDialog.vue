@@ -7,7 +7,7 @@ import error from "@/utils/error";
 export default defineComponent({
   props: {
     groupId: {
-      type: String,
+      type: Number,
       required: true,
     },
   },
@@ -58,9 +58,17 @@ export default defineComponent({
 <template>
   <v-card>
     <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
-    <v-alert v-model="deleteAlertError" closable type="error">
+    <v-snackbar
+        contained
+        multi-line
+        location="top"
+        timer="true"
+        timeout="10000"
+        v-model="deleteAlertError"
+        color="error"
+    >
       {{ deleteAlertErrorMessage }}
-    </v-alert>
+    </v-snackbar>
     <v-card-text> Soll diese Gruppe wirklich gelöscht werden? </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
