@@ -376,7 +376,9 @@ class LoriServerBackend(
             zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
             searchBarEquivalent =
                 SearchFilter.filtersToString(
-                    filters = (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter)),
+                    filters =
+                        (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter))
+                            .filterNotNull(),
                     searchTerm = searchTerm,
                 ),
             isPartOfSeries = facets.isPartOfSeries,

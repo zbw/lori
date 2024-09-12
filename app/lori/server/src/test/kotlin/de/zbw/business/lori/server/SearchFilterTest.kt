@@ -337,12 +337,14 @@ class SearchFilterTest : DatabaseTest() {
                 emptyList<SearchFilter?>(),
                 null,
                 "",
+                false,
                 "nothing",
             ),
             arrayOf(
                 emptyList<SearchFilter?>(),
                 "tit:\"internationl law\"",
                 "tit:\"internationl law\"",
+                false,
                 "EmptyList and searchterm",
             ),
             arrayOf(
@@ -351,12 +353,14 @@ class SearchFilterTest : DatabaseTest() {
                 ),
                 "",
                 "col:\"collection\"",
+                false,
                 "One search filter, no search term",
             ),
             arrayOf(
                 listOf<SearchFilter?>(null),
                 "tit:\"internationl law\"",
                 "tit:\"internationl law\"",
+                false,
                 "List with nulls and searchterm",
             ),
             arrayOf(
@@ -408,7 +412,36 @@ class SearchFilterTest : DatabaseTest() {
                     " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
                     " & zga:\"PAST,PRESENT,FUTURE\"" +
                     " & tpl:\"555nase\"",
+                false,
                 "All filters + searchterm",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    CollectionNameFilter("collection"),
+                ),
+                "col:\"collection\"",
+                "col:\"collection\"",
+                true,
+                "Don't duplicate search bar values - search bar equals filters",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    CollectionNameFilter("collection"),
+                ),
+                "tit:foobar & col:\"collection\"",
+                "tit:foobar & col:\"collection\"",
+                true,
+                "Don't duplicate search bar values - search bar partly equals filters",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    CollectionNameFilter("collection"),
+                    SeriesFilter(listOf("series")),
+                ),
+                "tit:foobar & col:\"collection\"",
+                "tit:foobar & col:\"collection\" & ser:\"series\"",
+                true,
+                "Don't duplicate search bar values - search bar partly equals filters",
             ),
         )
 
@@ -417,26 +450,30 @@ class SearchFilterTest : DatabaseTest() {
         filters: List<SearchFilter?>,
         searchTerm: String?,
         expected: String,
+        hasDuplication: Boolean,
         reason: String,
     ) {
-        val searchTermReceived = SearchFilter.filtersToString(filters, searchTerm)
+        val searchTermReceived = SearchFilter.filtersToString(filters.filterNotNull(), searchTerm)
         assertThat(
             reason,
             searchTermReceived,
             `is`(expected),
         )
-        val roundTripFilters =
-            LoriServerBackend.parseSearchTermToFilters(
-                searchTermReceived.replace(" & ", " "),
+
+        if (!hasDuplication) {
+            val roundTripFilters =
+                LoriServerBackend.parseSearchTermToFilters(
+                    searchTermReceived.replace(" & ", " "),
+                )
+            val searchTermFilters = LoriServerBackend.parseSearchTermToFilters(searchTerm)
+            assertThat(
+                reason,
+                roundTripFilters.toString(),
+                `is`(
+                    (searchTermFilters + filters).filterNotNull().toString(),
+                ),
             )
-        val searchTermFilters = LoriServerBackend.parseSearchTermToFilters(searchTerm)
-        assertThat(
-            reason,
-            roundTripFilters.toString(),
-            `is`(
-                (searchTermFilters + filters).filterNotNull().toString(),
-            ),
-        )
+        }
     }
 
     companion object {
