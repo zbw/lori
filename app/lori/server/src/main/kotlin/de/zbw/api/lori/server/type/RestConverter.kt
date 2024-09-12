@@ -473,8 +473,8 @@ fun BookmarkRest.toBusiness(): Bookmark =
         searchTerm = this.searchTerm,
         publicationDateFilter =
             PublicationDateFilter(
-                fromYear = this.filterPublicationDate?.fromYear ?: PublicationDateFilter.MIN_YEAR,
-                toYear = this.filterPublicationDate?.toYear ?: PublicationDateFilter.MAX_YEAR,
+                fromYear = this.filterPublicationDate?.fromYear,
+                toYear = this.filterPublicationDate?.toYear,
             ),
         publicationTypeFilter =
             QueryParameterParser.parsePublicationTypeFilter(

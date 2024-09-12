@@ -32,11 +32,11 @@ class QueryParameterParserTest {
             ),
             arrayOf(
                 "2000-",
-                PublicationDateFilter(2000, PublicationDateFilter.MAX_YEAR),
+                PublicationDateFilter(2000, null),
             ),
             arrayOf(
                 "-2000",
-                PublicationDateFilter(PublicationDateFilter.MIN_YEAR, 2000),
+                PublicationDateFilter(null, 2000),
             ),
             arrayOf(
                 "foobar",

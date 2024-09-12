@@ -250,12 +250,12 @@ class LoriServerBackendTest : DatabaseTest() {
             ),
             arrayOf(
                 "jah:\"2011-\"",
-                "jah:2011-2200",
+                "jah:2011-",
                 "Publication Date from",
             ),
             arrayOf(
                 "jah:\"-2013\"",
-                "jah:1800-2013",
+                "jah:-2013",
                 "Publication Date to",
             ),
         )
