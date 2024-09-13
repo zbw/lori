@@ -104,21 +104,52 @@ abstract class SearchFilter(
             }
 
         fun filtersToString(
-            filters: List<SearchFilter?>,
+            filters: List<SearchFilter>,
             searchTerm: String? = null,
         ): String {
             val filtersAsString =
                 filters
-                    .filterNotNull()
                     .joinToString(separator = " & ") { filter: SearchFilter ->
                         filter.toString()
                     }.takeIf { it.isNotBlank() }
 
             return listOfNotNull(
-                searchTerm?.takeIf { it.isNotBlank() },
+                fixPointReduce(filters, searchTerm)
+                    ?.takeIf { it.isNotBlank() },
                 filtersAsString,
             ).joinToString(separator = " & ")
         }
+
+        private fun fixPointReduce(
+            filters: List<SearchFilter>,
+            searchTerm: String?,
+        ): String? {
+            if (searchTerm == null) {
+                return null
+            }
+            val reducedSearchTerm = fixPointHelper(filters, searchTerm)
+            return if (reducedSearchTerm == searchTerm) {
+                searchTerm
+            } else {
+                fixPointReduce(
+                    filters,
+                    reducedSearchTerm,
+                )
+            }
+        }
+
+        fun fixPointHelper(
+            filters: List<SearchFilter>,
+            searchTerm: String,
+        ): String =
+            filters.fold(searchTerm) { acc, f ->
+                val filterS = f.toString()
+                if (acc == filterS) {
+                    ""
+                } else {
+                    acc.substringBefore(" & " + f.toString())
+                }
+            }
     }
 }
 
@@ -272,35 +303,65 @@ class LicenceUrlFilter(
 }
 
 class PublicationDateFilter(
-    val fromYear: Int,
-    val toYear: Int,
+    val fromYear: Int?,
+    val toYear: Int?,
 ) : MetadataSearchFilter(
         DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
     ) {
-    private val fromDate = LocalDate.of(fromYear, 1, 1)
-    private val toDate = LocalDate.of(toYear, 12, 31)
-
-    override fun toWhereClause(): String = "($dbColumnName >= ? AND $dbColumnName <= ? AND $dbColumnName is not null)"
+    override fun toWhereClause(): String =
+        if (fromYear == null && toYear == null) {
+            ""
+        } else if (fromYear == null) {
+            "($dbColumnName <= ? AND $dbColumnName is not null)"
+        } else if (toYear == null) {
+            "($dbColumnName >= ? AND $dbColumnName is not null)"
+        } else {
+            "($dbColumnName >= ? AND $dbColumnName <= ? AND $dbColumnName is not null)"
+        }
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-    ): Int {
-        preparedStatement.setDate(counter, Date.valueOf(fromDate))
-        preparedStatement.setDate(counter + 1, Date.valueOf(toDate))
-        return counter + 2
-    }
+    ): Int =
+        if (fromYear == null && toYear == null) {
+            counter
+        } else if (fromYear == null) {
+            val toDate = LocalDate.of(toYear!!, 12, 31)
+            preparedStatement.setDate(counter, Date.valueOf(toDate))
+            counter + 1
+        } else if (toYear == null) {
+            val fromDate = LocalDate.of(fromYear, 1, 1)
+            preparedStatement.setDate(counter, Date.valueOf(fromDate))
+            counter + 1
+        } else {
+            val fromDate = LocalDate.of(fromYear, 1, 1)
+            val toDate = LocalDate.of(toYear, 12, 31)
+            preparedStatement.setDate(counter, Date.valueOf(fromDate))
+            preparedStatement.setDate(counter + 1, Date.valueOf(toDate))
+            counter + 2
+        }
 
-    override fun toString(): String = "${getFilterType().keyAlias}:$fromYear-$toYear"
+    override fun toString(): String {
+        val fromYearString =
+            if (fromYear == null) {
+                ""
+            } else {
+                fromYear.toString()
+            }
+        val toYearString =
+            if (toYear == null) {
+                ""
+            } else {
+                toYear.toString()
+            }
+        return "${getFilterType().keyAlias}:$fromYearString-$toYearString"
+    }
 
     override fun toSQLString(): String = "$fromYear-$toYear"
 
     override fun getFilterType(): FilterType = FilterType.PUBLICATION_DATE
 
     companion object {
-        const val MIN_YEAR = 1800
-        const val MAX_YEAR = 2200
-
         fun fromString(s: String?): PublicationDateFilter? = QueryParameterParser.parsePublicationDateFilter(s)
     }
 }

@@ -39,12 +39,10 @@ object QueryParameterParser {
             PublicationDateFilter(
                 noFromYear
                     .takeIf { !it }
-                    ?.let { s.substringBefore("-").toInt() }
-                    ?: PublicationDateFilter.MIN_YEAR,
+                    ?.let { s.substringBefore("-").toInt() },
                 noToYear
                     .takeIf { !it }
-                    ?.let { s.substringAfter("-").toInt() }
-                    ?: PublicationDateFilter.MAX_YEAR,
+                    ?.let { s.substringAfter("-").toInt() },
             )
         } else {
             null
