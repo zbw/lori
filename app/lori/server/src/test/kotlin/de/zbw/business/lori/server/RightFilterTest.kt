@@ -19,6 +19,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -315,13 +316,15 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                givenSearchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    givenSearchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -413,13 +416,15 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                null,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -525,13 +530,15 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                searchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -618,13 +625,15 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                givenSearchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    givenSearchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -741,13 +750,15 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                givenSearchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    givenSearchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -801,12 +812,14 @@ class RightFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                searchTerm = searchTerm,
-                limit = 10,
-                offset = 0,
-                rightSearchFilter = searchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    rightSearchFilter = searchFilter,
+                )
+            }
 
         // then
         assertThat(

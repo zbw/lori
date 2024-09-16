@@ -56,6 +56,9 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransacti
 import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import java.lang.Integer.max
 import java.sql.Connection
 import java.sql.ResultSet
@@ -70,140 +73,168 @@ class SearchDB(
     val connection: Connection,
     private val tracer: Tracer,
 ) {
-    fun searchForFacets(
+    suspend fun searchForFacets(
         searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
-    ): FacetTransientSet {
-        val prepStmt =
-            connection
-                .prepareStatement(
-                    buildSearchQueryForFacets(
-                        searchExpression,
-                        metadataSearchFilter,
-                        rightSearchFilter,
-                        noRightInformationFilter,
-                        true,
-                    ),
-                ).apply {
-                    var counter = 1
-                    rightSearchFilter.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
+    ): FacetTransientSet =
+        coroutineScope {
+            val prepStmt =
+                connection
+                    .prepareStatement(
+                        buildSearchQueryForFacets(
+                            searchExpression,
+                            metadataSearchFilter,
+                            rightSearchFilter,
+                            noRightInformationFilter,
+                            true,
+                        ),
+                    ).apply {
+                        var counter = 1
+                        rightSearchFilter.forEach { f ->
+                            counter = f.setSQLParameter(counter, this)
+                        }
+                        val searchPairs =
+                            searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
+                        searchPairs.forEach { f ->
+                            counter = f.setSQLParameter(counter, this)
+                        }
+                        metadataSearchFilter.forEach { f ->
+                            counter = f.setSQLParameter(counter, this)
+                        }
                     }
-                    val searchPairs =
-                        searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                    searchPairs.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
-                    }
-                    metadataSearchFilter.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
-                    }
+            val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                } finally {
+                    span.end()
                 }
-        val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-            } finally {
-                span.end()
-            }
 
-        val received: List<FacetTransient> =
-            generateSequence {
-                if (rs.next()) {
-                    FacetTransient(
-                        paketSigel = rs.getString(1),
-                        publicationType = PublicationType.valueOf(rs.getString(2)),
-                        zdbIdJournal = rs.getString(3),
-                        accessState = rs.getString(4)?.let { AccessState.valueOf(it) },
-                        licenceContract = rs.getString(5),
-                        nonStandardsOCL = rs.getBoolean(6),
-                        nonStandardsOCLUrl = rs.getString(7),
-                        oclRestricted = rs.getBoolean(8),
-                        ocl = rs.getString(9),
-                        zbwUserAgreement = rs.getBoolean(10),
-                        templateName = rs.getString(11),
-                        isPartOfSeries = rs.getString(12),
-                        zdbIdSeries = rs.getString(13),
+            val received: List<FacetTransient> =
+                generateSequence {
+                    if (rs.next()) {
+                        FacetTransient(
+                            paketSigel = rs.getString(1),
+                            publicationType = PublicationType.valueOf(rs.getString(2)),
+                            zdbIdJournal = rs.getString(3),
+                            accessState = rs.getString(4)?.let { AccessState.valueOf(it) },
+                            licenceContract = rs.getString(5),
+                            nonStandardsOCL = rs.getBoolean(6),
+                            nonStandardsOCLUrl = rs.getString(7),
+                            oclRestricted = rs.getBoolean(8),
+                            ocl = rs.getString(9),
+                            zbwUserAgreement = rs.getBoolean(10),
+                            templateName = rs.getString(11),
+                            isPartOfSeries = rs.getString(12),
+                            zdbIdSeries = rs.getString(13),
+                        )
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            val accessStateFacet: Deferred<Map<AccessState, Int>> =
+                async {
+                    getAccessStateOccurrences(
+                        givenAccessState = received.mapNotNull { it.accessState }.toSet(),
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
                     )
-                } else {
-                    null
                 }
-            }.takeWhile { true }.toList()
-        return FacetTransientSet(
-            accessState =
-                getAccessStateOccurrences(
-                    givenAccessState = received.mapNotNull { it.accessState }.toSet(),
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            paketSigels =
-                searchOccurrences(
-                    givenValues = received.mapNotNull { it.paketSigel }.toSet(),
-                    occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            publicationType =
-                getPublicationTypeOccurrences(
-                    givenPublicationType = received.map { it.publicationType }.toSet(),
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            zdbIdsJournal =
-                searchOccurrences(
-                    givenValues = received.mapNotNull { it.zdbIdJournal }.toSet(),
-                    occurrenceForColumn = COLUMN_METADATA_ZDB_ID_JOURNAL,
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            zdbIdsSeries =
-                searchOccurrences(
-                    givenValues = received.mapNotNull { it.zdbIdSeries }.toSet(),
-                    occurrenceForColumn = COLUMN_METADATA_ZDB_ID_SERIES,
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            isPartOfSeries =
-                searchOccurrences(
-                    givenValues = received.mapNotNull { it.isPartOfSeries }.toSet(),
-                    occurrenceForColumn = COLUMN_METADATA_IS_PART_OF_SERIES,
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-            hasLicenceContract = received.any { it.licenceContract?.isNotBlank() ?: false },
-            hasZbwUserAgreement = received.any { it.zbwUserAgreement },
-            hasOpenContentLicence =
-                listOf(
-                    received.any { it.ocl?.isNotBlank() ?: false },
-                    received.any { it.nonStandardsOCL },
-                    received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
-                    received.any { it.oclRestricted },
-                ).any { it },
-            templateIdToOccurence =
-                searchOccurrences(
-                    givenValues = received.mapNotNull { it.templateName }.toSet(),
-                    occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_NAME,
-                    searchExpression = searchExpression,
-                    metadataSearchFilter = metadataSearchFilter,
-                    rightSearchFilter = rightSearchFilter,
-                    noRightInformationFilter = noRightInformationFilter,
-                ),
-        )
-    }
+
+            val paketSigelFacet =
+                async {
+                    searchOccurrences(
+                        givenValues = received.mapNotNull { it.paketSigel }.toSet(),
+                        occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val publicationTypeFacet =
+                async {
+                    getPublicationTypeOccurrences(
+                        givenPublicationType = received.map { it.publicationType }.toSet(),
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val zdbIDsJournalFacet =
+                async {
+                    searchOccurrences(
+                        givenValues = received.mapNotNull { it.zdbIdJournal }.toSet(),
+                        occurrenceForColumn = COLUMN_METADATA_ZDB_ID_JOURNAL,
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+            val zdbIDsSeriesFacet =
+                async {
+                    searchOccurrences(
+                        givenValues = received.mapNotNull { it.zdbIdSeries }.toSet(),
+                        occurrenceForColumn = COLUMN_METADATA_ZDB_ID_SERIES,
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val isPartOfSeriesFacet =
+                async {
+                    searchOccurrences(
+                        givenValues = received.mapNotNull { it.isPartOfSeries }.toSet(),
+                        occurrenceForColumn = COLUMN_METADATA_IS_PART_OF_SERIES,
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val templateIdFacet =
+                async {
+                    searchOccurrences(
+                        givenValues = received.mapNotNull { it.templateName }.toSet(),
+                        occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_NAME,
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilter,
+                        rightSearchFilter = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            FacetTransientSet(
+                accessState = accessStateFacet.await(),
+                paketSigels = paketSigelFacet.await(),
+                publicationType = publicationTypeFacet.await(),
+                zdbIdsJournal = zdbIDsJournalFacet.await(),
+                zdbIdsSeries = zdbIDsSeriesFacet.await(),
+                isPartOfSeries = isPartOfSeriesFacet.await(),
+                hasLicenceContract = received.any { it.licenceContract?.isNotBlank() ?: false },
+                hasZbwUserAgreement = received.any { it.zbwUserAgreement },
+                hasOpenContentLicence =
+                    listOf(
+                        received.any { it.ocl?.isNotBlank() ?: false },
+                        received.any { it.nonStandardsOCL },
+                        received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
+                        received.any { it.oclRestricted },
+                    ).any { it },
+                templateIdToOccurence = templateIdFacet.await(),
+            )
+        }
 
     private fun getAccessStateOccurrences(
         searchExpression: SearchExpression?,

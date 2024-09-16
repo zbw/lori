@@ -14,6 +14,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -266,13 +267,15 @@ class FacetTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                givenSearchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                rightsSearchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    givenSearchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    rightsSearchFilter,
+                )
+            }
 
         // then
         assertThat(

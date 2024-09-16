@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -91,7 +92,10 @@ class MultipleWordSearchTest : DatabaseTest() {
         description: String,
     ) {
         // when
-        val searchQueryResult: SearchQueryResult = backend.searchQuery(searchTerm, limit, offset)
+        val searchQueryResult: SearchQueryResult =
+            runBlocking {
+                backend.searchQuery(searchTerm, limit, offset)
+            }
 
         // then
         assertThat(
