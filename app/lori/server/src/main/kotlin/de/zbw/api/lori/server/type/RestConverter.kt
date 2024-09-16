@@ -331,7 +331,12 @@ fun DAItem.toBusiness(
     val publicationType =
         try {
             RestConverter.extractMetadata("dc.type", metadata)?.let {
-                PublicationType.valueOf(it.uppercase().replace(oldChar = ' ', newChar = '_'))
+                PublicationType.valueOf(
+                    it
+                        .uppercase()
+                        .replace(oldChar = ' ', newChar = '_')
+                        .replace("PROCEEDINGS", "PROCEEDING"),
+                )
             }
         } catch (iae: IllegalArgumentException) {
             logger.error("Unknown PublicationType found for ${this.id}")
