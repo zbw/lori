@@ -18,12 +18,11 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 
@@ -148,30 +147,27 @@ class LoriGrpcServer(
         token: String,
     ): Int {
         val semaphore = Semaphore(3)
-        val mutex = Mutex()
-        var importCount = 0
-        coroutineScope {
-            launch(Dispatchers.IO) {
-                repeat(communityIds.size) {
-                    semaphore.acquire()
-                    val imports = importCommunity(token, communityIds[it])
-                    mutex.withLock {
-                        importCount += imports
-                    }
-                    semaphore.release()
+        val numberImportsDeferred: List<Deferred<Int>> =
+            coroutineScope {
+                communityIds.map {
+                    val import = async { importCommunity(token, it, semaphore) }
+                    import
                 }
             }
-        }
-        return importCount
+        return numberImportsDeferred.awaitAll().sum()
     }
 
     private suspend fun importCommunity(
         token: String,
         communityId: Int,
+        semaphore: Semaphore,
     ): Int {
+        semaphore.acquire()
         LOG.info("Start importing community $communityId")
         val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
         val import = daConnector.startFullImport(token, daCommunity)
+        semaphore.release()
+        LOG.info("Finished importing community $communityId")
         return import.sum()
     }
 
