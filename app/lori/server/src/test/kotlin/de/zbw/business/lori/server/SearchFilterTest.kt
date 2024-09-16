@@ -431,7 +431,16 @@ class SearchFilterTest : DatabaseTest() {
                 "tit:foobar & col:\"collection\"",
                 "tit:foobar & col:\"collection\"",
                 true,
-                "Don't duplicate search bar values - search bar partly equals filters",
+                "Don't duplicate search bar values - end of search bar partly equals filters",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    PublicationDateFilter(toYear = 2009, fromYear = null),
+                ),
+                "jah:-2009 & typ:\"BOOK\"",
+                "typ:\"BOOK\" & jah:-2009",
+                true,
+                "Don't duplicate search bar values - begin of search bar partly equals filters",
             ),
             arrayOf(
                 listOf<SearchFilter>(
