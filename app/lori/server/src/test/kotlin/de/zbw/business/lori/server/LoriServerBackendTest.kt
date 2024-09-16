@@ -16,6 +16,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert
@@ -306,11 +307,13 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (number, items) =
-            backend.searchQuery(
-                "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
-                5,
-                0,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
+                    5,
+                    0,
+                )
+            }
 
         // then
         assertThat(number, `is`(2))
@@ -332,11 +335,13 @@ class LoriServerBackendTest : DatabaseTest() {
 
         // when
         val (numberNoItem, itemsNoItem) =
-            backend.searchQuery(
-                "zdb:NOT_IN_DATABASE_ID",
-                5,
-                0,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    "zdb:NOT_IN_DATABASE_ID",
+                    5,
+                    0,
+                )
+            }
         assertThat(numberNoItem, `is`(0))
         assertThat(itemsNoItem, `is`(emptyList()))
     }

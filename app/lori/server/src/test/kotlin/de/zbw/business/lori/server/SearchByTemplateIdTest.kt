@@ -8,6 +8,7 @@ import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -80,20 +81,22 @@ class SearchByTemplateIdTest : DatabaseTest() {
     ) {
         // When
         val result: SearchQueryResult =
-            backend.searchQuery(
-                searchTerm = "",
-                limit = 10,
-                offset = 0,
-                metadataSearchFilter = emptyList(),
-                rightSearchFilter =
-                    listOf(
-                        TemplateNameFilter(
-                            listOf(
-                                rightIds[templateIdIdx],
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm = "",
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter =
+                        listOf(
+                            TemplateNameFilter(
+                                listOf(
+                                    rightIds[templateIdIdx],
+                                ),
                             ),
                         ),
-                    ),
-            )
+                )
+            }
 
         assertThat(
             result.numberOfResults,

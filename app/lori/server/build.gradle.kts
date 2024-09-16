@@ -1,6 +1,7 @@
 plugins {
     id("zbw.kotlin-application")
     id("zbw.kotlin-conventions")
+    id("zbw.kotlin-coroutines")
     id("zbw.kotlin-microservice-scaffold")
     id("zbw.kotlin-tests")
     id("zbw.tracing")

@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -108,11 +109,13 @@ class LogicalOperationQueriesTest : DatabaseTest() {
     ) {
         // when
         val (numberOfResults, searchResult) =
-            backend.searchQuery(
-                searchTerm,
-                10,
-                0,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm,
+                    10,
+                    0,
+                )
+            }
 
         // then
         assertThat(

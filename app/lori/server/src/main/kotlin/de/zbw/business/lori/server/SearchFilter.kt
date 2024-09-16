@@ -127,7 +127,11 @@ abstract class SearchFilter(
             if (searchTerm == null) {
                 return null
             }
-            val reducedSearchTerm = fixPointHelper(filters, searchTerm)
+            val reducedSearchTerm =
+                fixPointHelperPrepend(
+                    filters,
+                    fixPointHelperAppend(filters, searchTerm),
+                )
             return if (reducedSearchTerm == searchTerm) {
                 searchTerm
             } else {
@@ -138,7 +142,7 @@ abstract class SearchFilter(
             }
         }
 
-        fun fixPointHelper(
+        private fun fixPointHelperAppend(
             filters: List<SearchFilter>,
             searchTerm: String,
         ): String =
@@ -147,7 +151,20 @@ abstract class SearchFilter(
                 if (acc == filterS) {
                     ""
                 } else {
-                    acc.substringBefore(" & " + f.toString())
+                    acc.substringBefore(" & $f")
+                }
+            }
+
+        private fun fixPointHelperPrepend(
+            filters: List<SearchFilter>,
+            searchTerm: String,
+        ): String =
+            filters.fold(searchTerm) { acc, f ->
+                val filterS = f.toString()
+                if (acc == filterS) {
+                    ""
+                } else {
+                    acc.substringAfter("$f & ")
                 }
             }
     }

@@ -15,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
@@ -158,14 +159,16 @@ class NoRightFilterTest : DatabaseTest() {
         expectedResult: Set<ItemMetadata>,
     ) {
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                givenSearchTerm,
-                10,
-                0,
-                metadataSearchFilter,
-                emptyList(),
-                noRightInformationFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    givenSearchTerm,
+                    10,
+                    0,
+                    metadataSearchFilter,
+                    emptyList(),
+                    noRightInformationFilter,
+                )
+            }
         assertThat(
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),

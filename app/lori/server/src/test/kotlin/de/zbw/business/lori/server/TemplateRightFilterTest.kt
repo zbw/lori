@@ -12,6 +12,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -84,26 +85,30 @@ class TemplateRightFilterTest : DatabaseTest() {
         val templateName: String = backend.getTemplateList(10, 0).first().templateName!!
         val templateNameFilter = listOf(TemplateNameFilter(listOf(templateName)))
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                "col:subject3",
-                10,
-                0,
-                emptyList(),
-                templateNameFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    "col:subject3",
+                    10,
+                    0,
+                    emptyList(),
+                    templateNameFilter,
+                )
+            }
 
         assertThat(
             searchResult.results.map { it.metadata }.toSet(),
             `is`(setOf(itemRightWithTemplate)),
         )
         val searchResult2: SearchQueryResult =
-            backend.searchQuery(
-                "col:subject3 & tpl:\"$templateName\"",
-                10,
-                0,
-                emptyList(),
-                emptyList(),
-            )
+            runBlocking {
+                backend.searchQuery(
+                    "col:subject3 & tpl:\"$templateName\"",
+                    10,
+                    0,
+                    emptyList(),
+                    emptyList(),
+                )
+            }
 
         assertThat(
             searchResult2.results.map { it.metadata }.toSet(),

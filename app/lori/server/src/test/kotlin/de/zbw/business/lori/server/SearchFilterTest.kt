@@ -16,6 +16,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.AfterClass
@@ -172,12 +173,14 @@ class SearchFilterTest : DatabaseTest() {
     ) {
         // when
         val (numberOfResults, searchResult) =
-            backend.searchQuery(
-                searchTerm,
-                10,
-                0,
-                searchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm,
+                    10,
+                    0,
+                    searchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -218,12 +221,14 @@ class SearchFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                null,
-                10,
-                0,
-                searchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    searchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -279,12 +284,14 @@ class SearchFilterTest : DatabaseTest() {
     ) {
         // when
         val searchResult: SearchQueryResult =
-            backend.searchQuery(
-                null,
-                10,
-                0,
-                searchFilter,
-            )
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    searchFilter,
+                )
+            }
 
         // then
         assertThat(
@@ -431,7 +438,16 @@ class SearchFilterTest : DatabaseTest() {
                 "tit:foobar & col:\"collection\"",
                 "tit:foobar & col:\"collection\"",
                 true,
-                "Don't duplicate search bar values - search bar partly equals filters",
+                "Don't duplicate search bar values - end of search bar partly equals filters",
+            ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    PublicationDateFilter(toYear = 2009, fromYear = null),
+                ),
+                "jah:-2009 & typ:\"BOOK\"",
+                "typ:\"BOOK\" & jah:-2009",
+                true,
+                "Don't duplicate search bar values - begin of search bar partly equals filters",
             ),
             arrayOf(
                 listOf<SearchFilter>(

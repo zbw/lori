@@ -23,9 +23,11 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.FacetTransientSet
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.OffsetDateTime
@@ -301,7 +303,7 @@ class LoriServerBackend(
         }
     }
 
-    fun searchQuery(
+    suspend fun searchQuery(
         searchTerm: String?,
         limit: Int?,
         offset: Int?,
@@ -309,81 +311,89 @@ class LoriServerBackend(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
         metadataIdsToIgnore: List<String> = emptyList(),
-    ): SearchQueryResult {
-        val searchExpression: SearchExpression? =
-            searchTerm
-                ?.takeIf { it.isNotBlank() }
-                ?.let { SearchGrammar.tryParseToEnd(it) }
-                ?.let {
-                    when (it) {
-                        is Parsed -> it.value
-                        is ErrorResult -> throw ParsingException("Parsing error in query: $it")
+    ): SearchQueryResult =
+        coroutineScope {
+            val searchExpression: SearchExpression? =
+                searchTerm
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { SearchGrammar.tryParseToEnd(it) }
+                    ?.let {
+                        when (it) {
+                            is Parsed -> it.value
+                            is ErrorResult -> throw ParsingException("Parsing error in query: $it")
+                        }
                     }
+            // Acquire search results
+            val receivedMetadata: List<ItemMetadata> =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression,
+                    limit,
+                    offset,
+                    metadataSearchFilter,
+                    rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                    noRightInformationFilter,
+                    metadataIdsToIgnore,
+                )
+
+            // Combine Metadata entries with their rights
+            val items: List<Item> =
+                receivedMetadata
+                    .takeIf {
+                        it.isNotEmpty()
+                    }?.let { metadata ->
+                        getRightsForMetadata(metadata)
+                    } ?: (emptyList())
+
+            // Acquire number of results
+            val numberOfResults =
+                async {
+                    items
+                        .takeIf { it.isNotEmpty() || offset != 0 }
+                        ?.let {
+                            dbConnector.searchDB.countSearchMetadata(
+                                searchExpression,
+                                metadataSearchFilter,
+                                rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                                noRightInformationFilter,
+                            )
+                        }
+                        ?: 0
                 }
-        // Acquire search results
-        val receivedMetadata: List<ItemMetadata> =
-            dbConnector.searchDB.searchMetadataItems(
-                searchExpression,
-                limit,
-                offset,
-                metadataSearchFilter,
-                rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
-                noRightInformationFilter,
-                metadataIdsToIgnore,
-            )
 
-        // Combine Metadata entries with their rights
-        val items: List<Item> =
-            receivedMetadata
-                .takeIf {
-                    it.isNotEmpty()
-                }?.let { metadata ->
-                    getRightsForMetadata(metadata)
-                } ?: (emptyList())
-
-        // Acquire number of results
-        val numberOfResults =
-            items
-                .takeIf { it.isNotEmpty() || offset != 0 }
-                ?.let {
-                    dbConnector.searchDB.countSearchMetadata(
+            // Collect all publication types, zdbIds and paketSigels
+            val facetsDef =
+                async {
+                    dbConnector.searchDB.searchForFacets(
                         searchExpression,
                         metadataSearchFilter,
-                        rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                        rightSearchFilter,
                         noRightInformationFilter,
                     )
                 }
-                ?: 0
 
-        // Collect all publication types, zdbIds and paketSigels
-        val facets: FacetTransientSet =
-            dbConnector.searchDB.searchForFacets(
-                searchExpression,
-                metadataSearchFilter,
-                rightSearchFilter,
-                noRightInformationFilter,
+            val facets = facetsDef.await()
+
+            SearchQueryResult(
+                numberOfResults = numberOfResults.await(),
+                results = items,
+                accessState = facets.accessState,
+                hasLicenceContract = facets.hasLicenceContract,
+                hasOpenContentLicence = facets.hasOpenContentLicence,
+                hasZbwUserAgreement = facets.hasZbwUserAgreement,
+                paketSigels = facets.paketSigels,
+                publicationType = facets.publicationType,
+                templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
+                zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
+                searchBarEquivalent =
+                    SearchFilter.filtersToString(
+                        filters =
+                            (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter))
+                                .filterNotNull(),
+                        searchTerm = searchTerm,
+                    ),
+                isPartOfSeries = facets.isPartOfSeries,
             )
-        return SearchQueryResult(
-            numberOfResults = numberOfResults,
-            results = items,
-            accessState = facets.accessState,
-            hasLicenceContract = facets.hasLicenceContract,
-            hasOpenContentLicence = facets.hasOpenContentLicence,
-            hasZbwUserAgreement = facets.hasZbwUserAgreement,
-            paketSigels = facets.paketSigels,
-            publicationType = facets.publicationType,
-            templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
-            zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
-            searchBarEquivalent =
-                SearchFilter.filtersToString(
-                    filters =
-                        (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter))
-                            .filterNotNull(),
-                    searchTerm = searchTerm,
-                ),
-            isPartOfSeries = facets.isPartOfSeries,
-        )
-    }
+        }
 
     private fun getRightIdsByTemplateNames(idToCount: Map<String, Int>): Map<String, Pair<String, Int>> {
         return dbConnector.rightDB
@@ -564,29 +574,31 @@ class LoriServerBackend(
             bookmarks
                 .asSequence()
                 .flatMap { b ->
-                    searchQuery(
-                        searchTerm = b.searchTerm,
-                        limit = null,
-                        offset = null,
-                        metadataSearchFilter =
-                            listOfNotNull(
-                                b.paketSigelFilter,
-                                b.publicationDateFilter,
-                                b.publicationTypeFilter,
-                                b.zdbIdFilter,
-                            ),
-                        rightSearchFilter =
-                            listOfNotNull(
-                                b.accessStateFilter,
-                                b.temporalValidityFilter,
-                                b.validOnFilter,
-                                b.startDateFilter,
-                                b.endDateFilter,
-                                b.formalRuleFilter,
-                            ),
-                        noRightInformationFilter = b.noRightInformationFilter,
-                        searchResultsExceptions.toList(),
-                    ).results
+                    runBlocking {
+                        searchQuery(
+                            searchTerm = b.searchTerm,
+                            limit = null,
+                            offset = null,
+                            metadataSearchFilter =
+                                listOfNotNull(
+                                    b.paketSigelFilter,
+                                    b.publicationDateFilter,
+                                    b.publicationTypeFilter,
+                                    b.zdbIdFilter,
+                                ),
+                            rightSearchFilter =
+                                listOfNotNull(
+                                    b.accessStateFilter,
+                                    b.temporalValidityFilter,
+                                    b.validOnFilter,
+                                    b.startDateFilter,
+                                    b.endDateFilter,
+                                    b.formalRuleFilter,
+                                ),
+                            noRightInformationFilter = b.noRightInformationFilter,
+                            searchResultsExceptions.toList(),
+                        )
+                    }.results
                 }.toSet()
 
         // Delete all template connections

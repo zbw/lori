@@ -26,6 +26,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -627,7 +628,7 @@ class ItemRoutesKtTest {
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     searchQuery(
                         searchTerm,
                         any(),
@@ -707,7 +708,7 @@ class ItemRoutesKtTest {
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     searchQuery(
                         any(),
                         defaultLimit,
@@ -801,7 +802,7 @@ class ItemRoutesKtTest {
         val searchTerm = "com:foobar"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { searchQuery(searchTerm, any(), any()) } throws SQLException()
+                coEvery { searchQuery(searchTerm, any(), any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -822,7 +823,7 @@ class ItemRoutesKtTest {
         val searchTerm = "com:foobar"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { searchQuery(searchTerm, any(), any()) } throws ParsingException("some parsing error")
+                coEvery { searchQuery(searchTerm, any(), any()) } throws ParsingException("some parsing error")
             }
         val servicePool = getServicePool(backend)
 
