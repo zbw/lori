@@ -151,7 +151,11 @@ abstract class SearchFilter(
                 if (acc == filterS) {
                     ""
                 } else {
-                    acc.substringBefore(" & $f")
+                    if (acc.endsWith(" & $f")) {
+                        acc.substringBeforeLast(" & $f")
+                    } else {
+                        acc
+                    }
                 }
             }
 
@@ -164,7 +168,11 @@ abstract class SearchFilter(
                 if (acc == filterS) {
                     ""
                 } else {
-                    acc.substringAfter("$f & ")
+                    if (acc.startsWith("$f & ")) {
+                        acc.substringAfter("$f & ")
+                    } else {
+                        acc
+                    }
                 }
             }
     }

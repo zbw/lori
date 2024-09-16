@@ -459,6 +459,15 @@ class SearchFilterTest : DatabaseTest() {
                 true,
                 "Don't duplicate search bar values - search bar partly equals filters",
             ),
+            arrayOf(
+                listOf<SearchFilter>(
+                    PublicationTypeFilter(listOf(PublicationType.BOOK)),
+                ),
+                "sig:\"ZDB-1-EWE\" & typ:\"BOOK\" & ser:\"Edward Elgar E-Book Archive\"",
+                "sig:\"ZDB-1-EWE\" & typ:\"BOOK\" & ser:\"Edward Elgar E-Book Archive\" & typ:\"BOOK\"",
+                false,
+                "Don't cut anything out if in the middle",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_TO_STRING)
