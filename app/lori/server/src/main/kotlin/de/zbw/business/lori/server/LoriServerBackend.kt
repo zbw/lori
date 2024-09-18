@@ -25,6 +25,7 @@ import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -53,7 +54,7 @@ class LoriServerBackend(
         config,
     )
 
-    internal fun insertRightForMetadataIds(
+    internal suspend fun insertRightForMetadataIds(
         right: ItemRight,
         metadataIds: List<String>,
     ): String {
@@ -64,7 +65,7 @@ class LoriServerBackend(
         return pkRight
     }
 
-    fun insertItemEntry(
+    suspend fun insertItemEntry(
         metadataId: String,
         rightId: String,
         deleteOnConflict: Boolean = false,
@@ -86,13 +87,13 @@ class LoriServerBackend(
                 ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
         }
 
-    fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> = metadataElems.map { insertMetadataElement(it) }
+    suspend fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> = metadataElems.map { insertMetadataElement(it) }
 
-    fun insertGroup(group: Group): Int = dbConnector.groupDB.insertGroup(group)
+    suspend fun insertGroup(group: Group): Int = dbConnector.groupDB.insertGroup(group)
 
-    fun insertMetadataElement(metadata: ItemMetadata): String = dbConnector.metadataDB.insertMetadata(metadata)
+    suspend fun insertMetadataElement(metadata: ItemMetadata): String = dbConnector.metadataDB.insertMetadata(metadata)
 
-    fun insertRight(right: ItemRight): String {
+    suspend fun insertRight(right: ItemRight): String {
         val generatedRightId = dbConnector.rightDB.insertRight(right)
         right.groups?.forEach { group ->
             dbConnector.groupDB.insertGroupRightPair(
@@ -103,9 +104,9 @@ class LoriServerBackend(
         return generatedRightId
     }
 
-    fun updateGroup(group: Group): Int = dbConnector.groupDB.updateGroup(group)
+    suspend fun updateGroup(group: Group): Int = dbConnector.groupDB.updateGroup(group)
 
-    fun upsertRight(right: ItemRight): Int {
+    suspend fun upsertRight(right: ItemRight): Int {
         val rightId = right.rightId!!
         val oldGroupIds =
             dbConnector.groupDB
@@ -133,12 +134,12 @@ class LoriServerBackend(
         return dbConnector.rightDB.upsertRight(right)
     }
 
-    fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
+    suspend fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
         dbConnector.metadataDB.upsertMetadataBatch(metadataElems.map { it })
 
-    fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
+    suspend fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
 
-    fun getMetadataList(
+    suspend fun getMetadataList(
         limit: Int,
         offset: Int,
     ): List<ItemMetadata> =
@@ -150,13 +151,13 @@ class LoriServerBackend(
                 metadataList.sortedBy { it.metadataId }
             } ?: emptyList()
 
-    fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(metadataIds)
+    suspend fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(metadataIds)
 
-    fun metadataContainsId(id: String): Boolean = dbConnector.metadataDB.metadataContainsId(id)
+    suspend fun metadataContainsId(id: String): Boolean = dbConnector.metadataDB.metadataContainsId(id)
 
-    fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
+    suspend fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
 
-    fun getItemByMetadataId(metadataId: String): Item? =
+    suspend fun getItemByMetadataId(metadataId: String): Item? =
         dbConnector.metadataDB
             .getMetadata(listOf(metadataId))
             .takeIf { it.isNotEmpty() }
@@ -172,14 +173,14 @@ class LoriServerBackend(
                 )
             }
 
-    fun getGroupById(groupId: Int): Group? = dbConnector.groupDB.getGroupById(groupId)
+    suspend fun getGroupById(groupId: Int): Group? = dbConnector.groupDB.getGroupById(groupId)
 
-    fun getGroupList(
+    suspend fun getGroupList(
         limit: Int,
         offset: Int,
     ): List<Group> = dbConnector.groupDB.getGroupList(limit, offset)
 
-    fun getGroupListIdsOnly(
+    suspend fun getGroupListIdsOnly(
         limit: Int,
         offset: Int,
     ): List<Group> =
@@ -194,11 +195,11 @@ class LoriServerBackend(
                 )
             }
 
-    fun getRightById(rightId: String): ItemRight? = getRightsByIds(listOf(rightId)).firstOrNull()
+    suspend fun getRightById(rightId: String): ItemRight? = getRightsByIds(listOf(rightId)).firstOrNull()
 
-    fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.rightDB.getRightsByIds(rightIds)
+    suspend fun getRightsByIds(rightIds: List<String>): List<ItemRight> = dbConnector.rightDB.getRightsByIds(rightIds)
 
-    fun getItemList(
+    suspend fun getItemList(
         limit: Int,
         offset: Int,
     ): List<Item> {
@@ -207,31 +208,35 @@ class LoriServerBackend(
             .takeIf {
                 it.isNotEmpty()
             }?.let { metadataList ->
-                getRightsForMetadata(metadataList)
+                runBlocking {
+                    getRightsForMetadata(metadataList)
+                }
             } ?: emptyList()
     }
 
-    private fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> {
-        val metadataToRights =
-            metadataList.map { metadata ->
-                metadata to dbConnector.rightDB.getRightIdsByMetadata(metadata.metadataId)
+    private suspend fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> =
+        coroutineScope {
+            val metadataToRights =
+                metadataList.map { metadata ->
+                    metadata to async { dbConnector.rightDB.getRightIdsByMetadata(metadata.metadataId) }
+                }
+
+            return@coroutineScope metadataToRights.map { p ->
+                Item(
+                    p.first,
+                    dbConnector.rightDB.getRightsByIds(p.second.await()),
+                )
             }
-        return metadataToRights.map { p ->
-            Item(
-                p.first,
-                dbConnector.rightDB.getRightsByIds(p.second),
-            )
         }
-    }
 
-    fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
+    suspend fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
 
-    fun itemContainsEntry(
+    suspend fun itemContainsEntry(
         metadataId: String,
         rightId: String,
     ): Boolean = dbConnector.itemDB.itemContainsEntry(metadataId, rightId)
 
-    fun countMetadataEntries(): Int =
+    suspend fun countMetadataEntries(): Int =
         dbConnector.searchDB.countSearchMetadata(
             null,
             emptyList(),
@@ -239,18 +244,18 @@ class LoriServerBackend(
             null,
         )
 
-    fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
+    suspend fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
 
-    fun deleteItemEntry(
+    suspend fun deleteItemEntry(
         metadataId: String,
         rightId: String,
     ) = dbConnector.itemDB.deleteItem(metadataId, rightId)
 
-    fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadataId(metadataId)
+    suspend fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadataId(metadataId)
 
-    fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRightId(rightId)
+    suspend fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRightId(rightId)
 
-    fun deleteGroup(groupId: Int): Int {
+    suspend fun deleteGroup(groupId: Int): Int {
         val receivedRights: List<String> = dbConnector.groupDB.getRightsByGroupId(groupId)
         return if (receivedRights.isEmpty()) {
             dbConnector.groupDB.deleteGroupById(groupId)
@@ -270,25 +275,25 @@ class LoriServerBackend(
         }
     }
 
-    fun deleteMetadata(metadataId: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(metadataId))
+    suspend fun deleteMetadata(metadataId: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(metadataId))
 
-    fun deleteRight(rightId: String): Int {
+    suspend fun deleteRight(rightId: String): Int {
         dbConnector.groupDB.deleteGroupPairsByRightId(rightId)
         return dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
     }
 
-    fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
+    suspend fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
         dbConnector.rightDB.getRightIdsByMetadata(metadataId).let {
             dbConnector.rightDB.getRightsByIds(it)
         }
 
-    fun deleteSessionById(sessionID: String) = dbConnector.userDB.deleteSessionById(sessionID)
+    suspend fun deleteSessionById(sessionID: String) = dbConnector.userDB.deleteSessionById(sessionID)
 
-    fun getSessionById(sessionID: String): Session? = dbConnector.userDB.getSessionById(sessionID)
+    suspend fun getSessionById(sessionID: String): Session? = dbConnector.userDB.getSessionById(sessionID)
 
-    fun insertSession(session: Session): String = dbConnector.userDB.insertSession(session)
+    suspend fun insertSession(session: Session): String = dbConnector.userDB.insertSession(session)
 
-    private fun checkRightConflicts(
+    private suspend fun checkRightConflicts(
         metadataId: String,
         newRightId: String,
     ): Boolean {
@@ -324,20 +329,34 @@ class LoriServerBackend(
                         }
                     }
             // Acquire search results
-            val receivedMetadata: List<ItemMetadata> =
-                dbConnector.searchDB.searchMetadataItems(
-                    searchExpression,
-                    limit,
-                    offset,
-                    metadataSearchFilter,
-                    rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
-                    noRightInformationFilter,
-                    metadataIdsToIgnore,
-                )
+            val receivedMetadata: Deferred<List<ItemMetadata>> =
+                async {
+                    dbConnector.searchDB.searchMetadataItems(
+                        searchExpression,
+                        limit,
+                        offset,
+                        metadataSearchFilter,
+                        rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                        noRightInformationFilter,
+                        metadataIdsToIgnore,
+                    )
+                }
+
+            // Collect all publication types, zdbIds and paketSigels
+            val facetsDef =
+                async {
+                    dbConnector.searchDB.searchForFacets(
+                        searchExpression,
+                        metadataSearchFilter,
+                        rightSearchFilter,
+                        noRightInformationFilter,
+                    )
+                }
 
             // Combine Metadata entries with their rights
             val items: List<Item> =
                 receivedMetadata
+                    .await()
                     .takeIf {
                         it.isNotEmpty()
                     }?.let { metadata ->
@@ -358,17 +377,6 @@ class LoriServerBackend(
                             )
                         }
                         ?: 0
-                }
-
-            // Collect all publication types, zdbIds and paketSigels
-            val facetsDef =
-                async {
-                    dbConnector.searchDB.searchForFacets(
-                        searchExpression,
-                        metadataSearchFilter,
-                        rightSearchFilter,
-                        noRightInformationFilter,
-                    )
                 }
 
             val facets = facetsDef.await()
@@ -395,7 +403,7 @@ class LoriServerBackend(
             )
         }
 
-    private fun getRightIdsByTemplateNames(idToCount: Map<String, Int>): Map<String, Pair<String, Int>> {
+    private suspend fun getRightIdsByTemplateNames(idToCount: Map<String, Int>): Map<String, Pair<String, Int>> {
         return dbConnector.rightDB
             .getRightsByTemplateNames(idToCount.keys.toList())
             .mapNotNull { right ->
@@ -406,9 +414,9 @@ class LoriServerBackend(
             }.toMap()
     }
 
-    fun isException(rightId: String): Boolean = dbConnector.rightDB.isException(rightId)
+    suspend fun isException(rightId: String): Boolean = dbConnector.rightDB.isException(rightId)
 
-    fun addExceptionToTemplate(
+    suspend fun addExceptionToTemplate(
         rightIdTemplate: String,
         rightIdExceptions: List<String>,
     ): Int =
@@ -417,9 +425,9 @@ class LoriServerBackend(
             rightIdExceptions = rightIdExceptions,
         )
 
-    fun insertBookmark(bookmark: Bookmark): Int = dbConnector.bookmarkDB.insertBookmark(bookmark)
+    suspend fun insertBookmark(bookmark: Bookmark): Int = dbConnector.bookmarkDB.insertBookmark(bookmark)
 
-    fun deleteBookmark(bookmarkId: Int): Int {
+    suspend fun deleteBookmark(bookmarkId: Int): Int {
         val receivedTemplateIds: List<String> = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)
         return if (receivedTemplateIds.isEmpty()) {
             dbConnector.bookmarkDB.deleteBookmarkById(bookmarkId)
@@ -439,14 +447,14 @@ class LoriServerBackend(
         }
     }
 
-    fun updateBookmark(
+    suspend fun updateBookmark(
         bookmarkId: Int,
         bookmark: Bookmark,
     ): Int = dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
 
-    fun getBookmarkById(bookmarkId: Int): Bookmark? = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
+    suspend fun getBookmarkById(bookmarkId: Int): Bookmark? = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 
-    fun getBookmarkList(
+    suspend fun getBookmarkList(
         limit: Int,
         offset: Int,
     ): List<Bookmark> = dbConnector.bookmarkDB.getBookmarkList(limit, offset)
@@ -454,9 +462,9 @@ class LoriServerBackend(
     /**
      * Insert template.
      */
-    fun insertTemplate(right: ItemRight): String = dbConnector.rightDB.insertRight(right)
+    suspend fun insertTemplate(right: ItemRight): String = dbConnector.rightDB.insertRight(right)
 
-    fun getTemplateList(
+    suspend fun getTemplateList(
         limit: Int,
         offset: Int,
     ): List<ItemRight> = dbConnector.rightDB.getTemplateList(limit, offset)
@@ -464,12 +472,12 @@ class LoriServerBackend(
     /**
      * Template-Bookmark Pair.
      */
-    fun getBookmarksByRightId(rightId: String): List<Bookmark> {
+    suspend fun getBookmarksByRightId(rightId: String): List<Bookmark> {
         val bookmarkIds = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
         return dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
     }
 
-    fun deleteBookmarkTemplatePair(
+    suspend fun deleteBookmarkTemplatePair(
         rightId: String,
         bookmarkId: Int,
     ): Int =
@@ -480,7 +488,7 @@ class LoriServerBackend(
             ),
         )
 
-    fun insertBookmarkTemplatePair(
+    suspend fun insertBookmarkTemplatePair(
         bookmarkId: Int,
         rightId: String,
     ): Int =
@@ -491,27 +499,27 @@ class LoriServerBackend(
             ),
         )
 
-    fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
+    suspend fun upsertBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
         dbConnector.bookmarkTemplateDB.upsertTemplateBookmarkBatch(bookmarkTemplates)
 
-    fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
+    suspend fun deleteBookmarkTemplatePairs(bookmarkTemplates: List<BookmarkTemplate>): Int =
         bookmarkTemplates.sumOf {
             dbConnector.bookmarkTemplateDB.deleteTemplateBookmarkPair(it)
         }
 
-    fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int = dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
+    suspend fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int = dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
-    fun applyAllTemplates(): List<TemplateApplicationResult> =
+    suspend fun applyAllTemplates(): List<TemplateApplicationResult> =
         dbConnector.rightDB
             .getRightIdsForAllTemplates()
             .let { applyTemplates(it) }
 
-    fun applyTemplates(rightIds: List<String>): List<TemplateApplicationResult> =
+    suspend fun applyTemplates(rightIds: List<String>): List<TemplateApplicationResult> =
         rightIds.mapNotNull { rightId ->
             applyTemplate(rightId)
         }
 
-    internal fun applyTemplate(rightId: String): TemplateApplicationResult? {
+    internal suspend fun applyTemplate(rightId: String): TemplateApplicationResult? {
         // Get Right object
         val right: ItemRight =
             dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
@@ -528,7 +536,6 @@ class LoriServerBackend(
 
         val searchResultsExceptions: Set<String> =
             bookmarksExceptions
-                .asSequence()
                 .flatMap { b ->
                     val searchExpression: SearchExpression? =
                         b.searchTerm
@@ -628,12 +635,12 @@ class LoriServerBackend(
         )
     }
 
-    fun getExceptionsByRightId(rightId: String): List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
+    suspend fun getExceptionsByRightId(rightId: String): List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
 
     /**
      * Errors.
      */
-    fun getRightErrorList(
+    suspend fun getRightErrorList(
         limit: Int,
         offset: Int,
     ): List<RightError> = dbConnector.rightErrorDB.getErrorList(limit = limit, offset = offset)

@@ -27,9 +27,9 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
@@ -55,8 +55,8 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsEntry(givenMetadataId, givenRightId) } returns false
-                every { insertItemEntry(givenMetadataId, givenRightId, any()) } returns Either.Right("foo")
+                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns false
+                coEvery { insertItemEntry(givenMetadataId, givenRightId, any()) } returns Either.Right("foo")
             }
         val servicePool = getServicePool(backend)
 
@@ -84,7 +84,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -111,7 +111,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -139,7 +139,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsEntry(givenMetadataId, givenRightId) } throws SQLException()
+                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -171,9 +171,9 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
-                every { countItemByRightId(givenRightId) } returns 0
-                every { deleteRight(givenRightId) } returns 1
+                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+                coEvery { countItemByRightId(givenRightId) } returns 0
+                coEvery { deleteRight(givenRightId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -184,7 +184,7 @@ class ItemRoutesKtTest {
             )
             val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
+            coVerify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
         }
     }
 
@@ -196,8 +196,8 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
-                every { countItemByRightId(givenRightId) } returns 1
+                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+                coEvery { countItemByRightId(givenRightId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -208,7 +208,7 @@ class ItemRoutesKtTest {
             )
             val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
+            coVerify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
         }
     }
 
@@ -220,7 +220,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntry(givenMetadataId, givenRightId) } throws SQLException()
+                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -241,8 +241,8 @@ class ItemRoutesKtTest {
         val expected = listOf(TEST_RIGHT)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightEntriesByMetadataId(givenMetadataId) } returns expected.map { it.toBusiness() }
-                every { metadataContainsId(givenMetadataId) } returns true
+                coEvery { getRightEntriesByMetadataId(givenMetadataId) } returns expected.map { it.toBusiness() }
+                coEvery { metadataContainsId(givenMetadataId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -265,7 +265,7 @@ class ItemRoutesKtTest {
         val givenMetadataId = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(givenMetadataId) } returns false
+                coEvery { metadataContainsId(givenMetadataId) } returns false
             }
         val servicePool = getServicePool(backend)
 
@@ -285,7 +285,7 @@ class ItemRoutesKtTest {
         val givenMetadataId = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(givenMetadataId) } throws SQLException()
+                coEvery { metadataContainsId(givenMetadataId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -306,7 +306,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntriesByMetadataId(givenMetadataId) } returns 1
+                coEvery { deleteItemEntriesByMetadataId(givenMetadataId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -327,7 +327,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntriesByMetadataId(givenMetadataId) } throws SQLException()
+                coEvery { deleteItemEntriesByMetadataId(givenMetadataId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -348,7 +348,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntriesByRightId(givenRightId) } returns 1
+                coEvery { deleteItemEntriesByRightId(givenRightId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -369,7 +369,7 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteItemEntriesByRightId(givenRightId) } throws SQLException()
+                coEvery { deleteItemEntriesByRightId(givenRightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -403,11 +403,11 @@ class ItemRoutesKtTest {
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getItemList(limit, offset) } returns
+                coEvery { getItemList(limit, offset) } returns
                     expectedInformation
                         .itemArray
                         .map { it.toBusiness() }
-                every { countMetadataEntries() } returns expectedInformation.numberOfResults
+                coEvery { countMetadataEntries() } returns expectedInformation.numberOfResults
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -422,7 +422,7 @@ class ItemRoutesKtTest {
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
             assertThat(received, `is`(expectedInformation))
         }
-        verify(exactly = 1) { backend.getItemList(limit, offset) }
+        coVerify(exactly = 1) { backend.getItemList(limit, offset) }
     }
 
     @Test
@@ -444,7 +444,7 @@ class ItemRoutesKtTest {
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     getItemList(
                         defaultLimit,
                         defaultOffset,
@@ -479,7 +479,7 @@ class ItemRoutesKtTest {
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
             assertThat(received, `is`(expectedInformation))
         }
-        verify(exactly = 1) { backend.getItemList(defaultLimit, defaultOffset) }
+        coVerify(exactly = 1) { backend.getItemList(defaultLimit, defaultOffset) }
     }
 
     @DataProvider(name = DATA_FOR_INVALID_LIST_PARAM)
@@ -554,7 +554,7 @@ class ItemRoutesKtTest {
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     countItemByRightId(expectedAnswer.rightId)
                 } returns expectedAnswer.count
             }
@@ -579,7 +579,7 @@ class ItemRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     countItemByRightId(rightId)
                 } throws SQLException()
             }
@@ -735,7 +735,7 @@ class ItemRoutesKtTest {
                         searchBarEquivalent = "",
                     )
                 )
-                every { countMetadataEntries() } returns expectedInformation.numberOfResults
+                coEvery { countMetadataEntries() } returns expectedInformation.numberOfResults
             }
         val servicePool = getServicePool(backend)
 

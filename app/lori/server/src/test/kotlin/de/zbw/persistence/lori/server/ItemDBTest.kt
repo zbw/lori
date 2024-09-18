@@ -10,6 +10,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterMethod
@@ -31,7 +32,7 @@ import kotlin.test.assertTrue
 class ItemDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
-            connection = dataSource.connection,
+            connectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
@@ -47,102 +48,105 @@ class ItemDBTest : DatabaseTest() {
     }
 
     @Test
-    fun testDeleteItem() {
-        // given
-        val expectedMetadata = TEST_Metadata.copy(metadataId = "item_roundtrip_meta")
-        val expectedRight = TEST_RIGHT
+    fun testDeleteItem() =
+        runBlocking {
+            // given
+            val expectedMetadata = TEST_Metadata.copy(metadataId = "item_roundtrip_meta")
+            val expectedRight = TEST_RIGHT
 
-        // when
-        dbConnector.metadataDB.insertMetadata(expectedMetadata)
-        val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-        dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            // when
+            dbConnector.metadataDB.insertMetadata(expectedMetadata)
+            val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
+            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
 
-        // then
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId)),
-        )
+            // then
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(listOf(generatedRightId)),
+            )
 
-        val deletedItems = dbConnector.itemDB.deleteItem(expectedMetadata.metadataId, generatedRightId)
-        assertThat(
-            deletedItems,
-            `is`(1),
-        )
+            val deletedItems = dbConnector.itemDB.deleteItem(expectedMetadata.metadataId, generatedRightId)
+            assertThat(
+                deletedItems,
+                `is`(1),
+            )
 
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList()),
-        )
-    }
-
-    @Test
-    fun testDeleteItemBy() {
-        // given
-        val expectedMetadata = TEST_Metadata.copy(metadataId = "delete_item_meta")
-        val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
-
-        // when
-        dbConnector.metadataDB.insertMetadata(expectedMetadata)
-        val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-        dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
-
-        // then
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId)),
-        )
-
-        val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadataId(expectedMetadata.metadataId)
-        assertThat(
-            deletedItemsByMetadata,
-            `is`(1),
-        )
-
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList()),
-        )
-
-        // when
-        dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
-        // then
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(listOf(generatedRightId)),
-        )
-
-        val deletedItemsByRight = dbConnector.itemDB.deleteItemByRightId(generatedRightId)
-        assertThat(
-            deletedItemsByRight,
-            `is`(1),
-        )
-
-        assertThat(
-            dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
-            `is`(emptyList()),
-        )
-    }
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(emptyList()),
+            )
+        }
 
     @Test
-    fun testItemExists() {
-        // given
-        val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
-        val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
+    fun testDeleteItemBy() =
+        runBlocking {
+            // given
+            val expectedMetadata = TEST_Metadata.copy(metadataId = "delete_item_meta")
+            val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
-        assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
-        assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId!!))
-        assertFalse(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
-        // when
-        dbConnector.metadataDB.insertMetadata(expectedMetadata)
-        val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-        dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            // when
+            dbConnector.metadataDB.insertMetadata(expectedMetadata)
+            val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
+            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
 
-        // then
-        assertTrue(dbConnector.itemDB.itemContainsRightId(generatedRightId))
-        assertTrue(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
-        assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, generatedRightId))
-        assertThat(dbConnector.itemDB.countItemByRightId(generatedRightId), `is`(1))
-    }
+            // then
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(listOf(generatedRightId)),
+            )
+
+            val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadataId(expectedMetadata.metadataId)
+            assertThat(
+                deletedItemsByMetadata,
+                `is`(1),
+            )
+
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(emptyList()),
+            )
+
+            // when
+            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            // then
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(listOf(generatedRightId)),
+            )
+
+            val deletedItemsByRight = dbConnector.itemDB.deleteItemByRightId(generatedRightId)
+            assertThat(
+                deletedItemsByRight,
+                `is`(1),
+            )
+
+            assertThat(
+                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                `is`(emptyList()),
+            )
+        }
+
+    @Test
+    fun testItemExists() =
+        runBlocking {
+            // given
+            val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
+            val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
+
+            assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
+            assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId!!))
+            assertFalse(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
+            // when
+            dbConnector.metadataDB.insertMetadata(expectedMetadata)
+            val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
+            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+
+            // then
+            assertTrue(dbConnector.itemDB.itemContainsRightId(generatedRightId))
+            assertTrue(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
+            assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, generatedRightId))
+            assertThat(dbConnector.itemDB.countItemByRightId(generatedRightId), `is`(1))
+        }
 
     companion object {
         val NOW: OffsetDateTime =

@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest
@@ -30,7 +31,7 @@ class LogicalOperationQueriesTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
-                connection = dataSource.connection,
+                connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LogicalOperationQueriesTest"),
             ),
             mockk(),
@@ -64,13 +65,14 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         ).flatten()
 
     @BeforeClass
-    fun fillDB() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns ItemDBTest.NOW.toInstant()
-        getInitialMetadata().forEach {
-            backend.insertMetadataElement(it)
+    fun fillDB() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns ItemDBTest.NOW.toInstant()
+            getInitialMetadata().forEach {
+                backend.insertMetadataElement(it)
+            }
         }
-    }
 
     @AfterClass
     fun afterTests() {

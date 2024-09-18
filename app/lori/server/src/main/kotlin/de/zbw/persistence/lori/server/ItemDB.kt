@@ -5,7 +5,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_I
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
-import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Statement
 
@@ -16,161 +15,169 @@ import java.sql.Statement
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class ItemDB(
-    val connection: Connection,
+    val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
-    fun getRightIdsByMetadataId(metadataId: String): List<String> {
-        val span = tracer.spanBuilder("getRightIdsByMetadataId").startSpan()
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID).apply {
-                this.setString(1, metadataId)
-            }
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        return generateSequence {
-            if (rs.next()) {
-                rs.getString(1)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
+    suspend fun getRightIdsByMetadataId(metadataId: String): List<String> =
+        connectionPool.useConnection { connection ->
+            val span = tracer.spanBuilder("getRightIdsByMetadataId").startSpan()
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID).apply {
+                    this.setString(1, metadataId)
+                }
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
 
-    fun itemContainsEntry(
+    suspend fun itemContainsEntry(
         metadataId: String,
         rightId: String,
-    ): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
-                this.setString(1, metadataId)
-                this.setString(2, rightId)
-            }
-        val span = tracer.spanBuilder("itemContainsEntry").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        rs.next()
-        return rs.getBoolean(1)
-    }
+    ): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
+                    this.setString(1, metadataId)
+                    this.setString(2, rightId)
+                }
+            val span = tracer.spanBuilder("itemContainsEntry").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection rs.getBoolean(1)
+        }
 
     /**
      * Check if a given rightId is still used in the table.
      */
-    fun itemContainsRightId(rightId: String): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_ITEM_CONTAINS_RIGHT).apply {
-                this.setString(1, rightId)
-            }
-        val span = tracer.spanBuilder("itemContainsRight").startSpan()
-        val rs =
+    suspend fun itemContainsRightId(rightId: String): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_RIGHT).apply {
+                    this.setString(1, rightId)
+                }
+            val span = tracer.spanBuilder("itemContainsRight").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection rs.getBoolean(1)
+        }
+
+    suspend fun insertItem(
+        metadataId: String,
+        rightId: String,
+    ): String? =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
+                    this.setString(1, metadataId)
+                    this.setString(2, rightId)
+                }
+
+            val span = tracer.spanBuilder("insertItem").startSpan()
             try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+                return@useConnection affectedRows.takeIf { it > 0 }?.let {
+                    val rs: ResultSet = prepStmt.generatedKeys
+                    rs.next()
+                    rs.getString(1)
+                }
             } finally {
                 span.end()
             }
-        rs.next()
-        return rs.getBoolean(1)
-    }
+        }
 
-    fun insertItem(
+    suspend fun deleteItem(
         metadataId: String,
         rightId: String,
-    ): String? {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
-                this.setString(1, metadataId)
-                this.setString(2, rightId)
-            }
-
-        val span = tracer.spanBuilder("insertItem").startSpan()
-        try {
-            span.makeCurrent()
-            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            return affectedRows.takeIf { it > 0 }?.let {
-                val rs: ResultSet = prepStmt.generatedKeys
-                rs.next()
-                rs.getString(1)
-            }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun deleteItem(
-        metadataId: String,
-        rightId: String,
-    ): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
-                this.setString(1, rightId)
-                this.setString(2, metadataId)
-            }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun countItemByRightId(rightId: String): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
-                this.setString(1, rightId)
-            }
-        val span = tracer.spanBuilder("countItemByRightId").startSpan()
-        val rs =
-            try {
+    ): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
+                    this.setString(1, rightId)
+                    this.setString(2, metadataId)
+                }
+            val span = tracer.spanBuilder("deleteItem").startSpan()
+            return@useConnection try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             } finally {
                 span.end()
             }
-        if (rs.next()) {
-            return rs.getInt(1)
-        } else {
-            throw IllegalStateException("No count found.")
         }
-    }
 
-    fun deleteItemByMetadataId(metadataId: String): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
-                this.setString(1, metadataId)
+    suspend fun countItemByRightId(rightId: String): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
+                    this.setString(1, rightId)
+                }
+            val span = tracer.spanBuilder("countItemByRightId").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                } finally {
+                    span.end()
+                }
+            if (rs.next()) {
+                return@useConnection rs.getInt(1)
+            } else {
+                throw IllegalStateException("No count found.")
             }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
         }
-    }
 
-    fun deleteItemByRightId(rightId: String): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
-                this.setString(1, rightId)
+    suspend fun deleteItemByMetadataId(metadataId: String): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
+                    this.setString(1, metadataId)
+                }
+            val span = tracer.spanBuilder("deleteItem").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
             }
-        val span = tracer.spanBuilder("deleteItem").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
         }
-    }
+
+    suspend fun deleteItemByRightId(rightId: String): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
+                    this.setString(1, rightId)
+                }
+            val span = tracer.spanBuilder("deleteItem").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
 
     companion object {
         const val CONSTRAINT_ITEM_PKEY = "item_pkey"

@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.TemporalValidity
+import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
@@ -37,7 +38,7 @@ class SearchFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
-                connection = dataSource.connection,
+                connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),
@@ -95,13 +96,14 @@ class SearchFilterTest : DatabaseTest() {
         ).flatten()
 
     @BeforeClass
-    fun fillDB() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns NOW.toInstant()
-        getInitialMetadata().forEach {
-            backend.insertMetadataElement(it)
+    fun fillDB() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+            getInitialMetadata().forEach {
+                backend.insertMetadataElement(it)
+            }
         }
-    }
 
     @AfterClass
     fun afterTests() {

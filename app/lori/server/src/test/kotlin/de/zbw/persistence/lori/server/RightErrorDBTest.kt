@@ -6,6 +6,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterTest
@@ -23,7 +24,7 @@ import java.time.ZoneOffset
 class RightErrorDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
-            connection = dataSource.connection,
+            connectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         ).rightErrorDB
 
@@ -33,39 +34,40 @@ class RightErrorDBTest : DatabaseTest() {
     }
 
     @Test
-    fun testRightErrorRoundtrip() {
-        // Mock time
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns NOW.toInstant()
-        assertThat(
-            dbConnector.getErrorList(10, 0).size,
-            `is`(0),
-        )
-        val errorId = dbConnector.insertError(TEST_RIGHT_ERROR)
-        val receivedError: RightError? = dbConnector.getErrorList(10, 0).firstOrNull()
-        assertThat(
-            receivedError?.toString() ?: "",
-            `is`(TEST_RIGHT_ERROR.copy(errorId = errorId, createdOn = NOW).toString()),
-        )
+    fun testRightErrorRoundtrip() =
+        runBlocking {
+            // Mock time
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(0),
+            )
+            val errorId = dbConnector.insertError(TEST_RIGHT_ERROR)
+            val receivedError: RightError? = dbConnector.getErrorList(10, 0).firstOrNull()
+            assertThat(
+                receivedError?.toString() ?: "",
+                `is`(TEST_RIGHT_ERROR.copy(errorId = errorId, createdOn = NOW).toString()),
+            )
 
-        // Delete by AGE
-        dbConnector.deleteErrorByAge(NOW.plusDays(1).toInstant())
-        assertThat(
-            dbConnector.getErrorList(10, 0).size,
-            `is`(0),
-        )
-        // Delete by Id
-        val errorId2 = dbConnector.insertError(TEST_RIGHT_ERROR)
-        assertThat(
-            dbConnector.getErrorList(10, 0).size,
-            `is`(1),
-        )
-        dbConnector.deleteErrorById(errorId2)
-        assertThat(
-            dbConnector.getErrorList(10, 0).size,
-            `is`(0),
-        )
-    }
+            // Delete by AGE
+            dbConnector.deleteErrorByAge(NOW.plusDays(1).toInstant())
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(0),
+            )
+            // Delete by Id
+            val errorId2 = dbConnector.insertError(TEST_RIGHT_ERROR)
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(1),
+            )
+            dbConnector.deleteErrorById(errorId2)
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(0),
+            )
+        }
 
     companion object {
         val TEST_RIGHT_ERROR =

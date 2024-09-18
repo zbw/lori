@@ -64,7 +64,7 @@ class LoriGrpcServerTest {
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
-                    every {
+                    coEvery {
                         applyAllTemplates()
                     } returns expectedResult
                 }
@@ -123,7 +123,7 @@ class LoriGrpcServerTest {
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
-                    every {
+                    coEvery {
                         applyTemplates(any())
                     } returns expectedResult
                 }

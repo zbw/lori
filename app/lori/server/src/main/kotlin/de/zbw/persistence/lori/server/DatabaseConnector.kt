@@ -3,8 +3,8 @@ package de.zbw.persistence.lori.server
 import com.google.gson.Gson
 import de.zbw.api.lori.server.config.LoriConfiguration
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.coroutines.runBlocking
 import java.sql.Connection
-import java.sql.DriverManager
 import java.sql.PreparedStatement
 import java.sql.Timestamp
 import java.sql.Types
@@ -19,50 +19,53 @@ import java.util.function.BiFunction
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DatabaseConnector(
-    val connection: Connection,
+    val connectionPool: ConnectionPool,
     private val tracer: Tracer,
-    internal val bookmarkDB: BookmarkDB = BookmarkDB(connection, tracer),
+    internal val bookmarkDB: BookmarkDB = BookmarkDB(connectionPool, tracer),
     internal val groupDB: GroupDB =
         GroupDB(
-            connection,
+            connectionPool,
             tracer,
             Gson().newBuilder().create(),
         ),
     internal val itemDB: ItemDB =
         ItemDB(
-            connection,
+            connectionPool,
             tracer,
         ),
     internal val metadataDB: MetadataDB =
         MetadataDB(
-            connection,
+            connectionPool,
             tracer,
         ),
     internal val rightDB: RightDB =
         RightDB(
-            connection,
+            connectionPool,
             tracer,
             groupDB,
         ),
-    internal val searchDB: SearchDB = SearchDB(connection, tracer),
-    internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connection, tracer),
-    internal val userDB: UserDB = UserDB(connection, tracer),
-    internal val rightErrorDB: RightErrorDB = RightErrorDB(connection, tracer),
+    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer),
+    internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
+    internal val userDB: UserDB = UserDB(connectionPool, tracer),
+    internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),
 ) {
     constructor(
         config: LoriConfiguration,
         tracer: Tracer,
     ) : this(
-        DriverManager.getConnection(config.sqlUrl, config.sqlUser, config.sqlPassword),
+        ConnectionPool(config),
         tracer,
     )
 
     init {
-        connection.autoCommit = false
-        connection
-            .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
-            .execute()
-        connection.commit()
+        runBlocking {
+            connectionPool.useConnection { connection ->
+                connection
+                    .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
+                    .execute()
+                connection.commit()
+            }
+        }
     }
 
     companion object {

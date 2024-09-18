@@ -21,6 +21,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
@@ -44,7 +45,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } returns 5
+                coEvery { insertBookmark(any()) } returns 5
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -68,7 +69,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } throws
+                coEvery { insertBookmark(any()) } throws
                     mockk<PSQLException> {
                         every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                         every { message } returns "error"
@@ -96,7 +97,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } throws SQLException()
+                coEvery { insertBookmark(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -121,7 +122,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 4
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteBookmark(bookmarkId) } returns 1
+                coEvery { deleteBookmark(bookmarkId) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -141,7 +142,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 4
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteBookmark(bookmarkId) } throws ResourceStillInUseException("foo")
+                coEvery { deleteBookmark(bookmarkId) } throws ResourceStillInUseException("foo")
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -161,7 +162,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 4
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteBookmark(bookmarkId) } returns 0
+                coEvery { deleteBookmark(bookmarkId) } returns 0
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -181,7 +182,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 4
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteBookmark(bookmarkId) } throws SQLException()
+                coEvery { deleteBookmark(bookmarkId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -200,7 +201,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } returns 1
+                coEvery { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -224,7 +225,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } throws SQLException()
+                coEvery { updateBookmark(TEST_BOOKMARK.bookmarkId, any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -250,7 +251,7 @@ class BookmarkRoutesKtTest {
         val expected = TEST_BOOKMARK.toRest()
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkById(bookmarkId) } returns TEST_BOOKMARK
+                coEvery { getBookmarkById(bookmarkId) } returns TEST_BOOKMARK
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -273,7 +274,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 45
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkById(bookmarkId) } returns null
+                coEvery { getBookmarkById(bookmarkId) } returns null
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -293,7 +294,7 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 45
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkById(bookmarkId) } throws SQLException()
+                coEvery { getBookmarkById(bookmarkId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -312,7 +313,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } returns 5
+                coEvery { insertBookmark(any()) } returns 5
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -336,7 +337,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } throws
+                coEvery { insertBookmark(any()) } throws
                     mockk<PSQLException> {
                         every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                         every { message } returns "error"
@@ -364,7 +365,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertBookmark(any()) } throws SQLException()
+                coEvery { insertBookmark(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -388,7 +389,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } returns 1
+                coEvery { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -412,7 +413,7 @@ class BookmarkRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } throws SQLException()
+                coEvery { updateBookmark(TEST_BOOKMARKRAW.bookmarkId, any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -439,7 +440,7 @@ class BookmarkRoutesKtTest {
         val expected = listOf(TEST_BOOKMARK.toRest())
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkList(limit, offset) } returns listOf(TEST_BOOKMARK)
+                coEvery { getBookmarkList(limit, offset) } returns listOf(TEST_BOOKMARK)
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -465,7 +466,7 @@ class BookmarkRoutesKtTest {
         val expected = listOf(givenBookmark.toRest())
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkList(limit, offset) } returns listOf(givenBookmark)
+                coEvery { getBookmarkList(limit, offset) } returns listOf(givenBookmark)
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -507,7 +508,7 @@ class BookmarkRoutesKtTest {
         val offset = 0
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarkList(limit, offset) } throws SQLException()
+                coEvery { getBookmarkList(limit, offset) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then

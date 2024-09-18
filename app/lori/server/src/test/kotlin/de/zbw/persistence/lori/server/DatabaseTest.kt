@@ -1,6 +1,7 @@
 package de.zbw.persistence.lori.server
 
-import com.mchange.v2.c3p0.ComboPooledDataSource
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
 
 /**
@@ -11,30 +12,31 @@ import io.zonky.test.db.postgres.embedded.EmbeddedPostgres
  */
 abstract class DatabaseTest {
     private val embeddedPostgres: EmbeddedPostgres = EmbeddedPostgres.start()
-    protected val dataSource: ComboPooledDataSource =
-        ComboPooledDataSource().apply {
-            jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
-            driverClass = "org.postgresql.Driver"
-            user = "postgres"
-            dataSourceName = "foo"
-            maxAdministrativeTaskTime = 300
-            unreturnedConnectionTimeout = 0
-            acquireIncrement = 10
-            maxIdleTime = 1800
-            idleConnectionTestPeriod = 0
-            isTestConnectionOnCheckin = false
-            isTestConnectionOnCheckout = true
-            numHelperThreads = 32
-            maxPoolSize = 10
-            minPoolSize = 1
-        }
+    protected val testDataSource: HikariDataSource = initDataSource(embeddedPostgres)
 
     init {
-        // TODO: This doesn't work for some reason
-        dataSource.connection.autoCommit = false
-        dataSource.connection
-            .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
-            .execute()
-        FlywayMigrator(dataSource).migrate()
+        val conn = testDataSource.connection
+        conn.use { c ->
+            c
+                .prepareStatement("create EXTENSION IF NOT EXISTS \"pg_trgm\"")
+                .execute()
+            c.commit()
+        }
+
+        FlywayMigrator(testDataSource).migrate()
+    }
+
+    private fun initDataSource(embeddedPostgres: EmbeddedPostgres): HikariDataSource {
+        val hiConfig = HikariConfig()
+        hiConfig.jdbcUrl = embeddedPostgres.getJdbcUrl("postgres", "postgres")
+        hiConfig.username = "postgres"
+        hiConfig.password = "postgres"
+        hiConfig.addDataSourceProperty("cachePrepStmts", "true")
+        hiConfig.addDataSourceProperty("prepStmtCacheSize", "250")
+        hiConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+        hiConfig.isAutoCommit = false
+        hiConfig.maximumPoolSize = 5
+        hiConfig.driverClassName = "org.postgresql.Driver"
+        return HikariDataSource(hiConfig)
     }
 }

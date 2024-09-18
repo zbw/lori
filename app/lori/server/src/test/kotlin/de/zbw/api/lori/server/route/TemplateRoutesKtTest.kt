@@ -31,9 +31,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.postgresql.util.PSQLException
@@ -55,8 +56,8 @@ class TemplateRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } returns 1
-                every { deleteItemEntriesByRightId(rightId) } returns 5
+                coEvery { deleteRight(rightId) } returns 1
+                coEvery { deleteItemEntriesByRightId(rightId) } returns 5
             }
         val servicePool = getServicePool(backend)
 
@@ -67,8 +68,8 @@ class TemplateRoutesKtTest {
             )
             val response = client.delete("/api/v1/template/$rightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 1) { backend.deleteRight(rightId) }
-            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+            coVerify(exactly = 1) { backend.deleteRight(rightId) }
+            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
         }
     }
 
@@ -78,8 +79,8 @@ class TemplateRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } returns 0
-                every { deleteItemEntriesByRightId(rightId) } returns 0
+                coEvery { deleteRight(rightId) } returns 0
+                coEvery { deleteItemEntriesByRightId(rightId) } returns 0
             }
         val servicePool = getServicePool(backend)
 
@@ -90,8 +91,8 @@ class TemplateRoutesKtTest {
             )
             val response = client.delete("/api/v1/template/$rightId")
             assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
-            verify(exactly = 1) { backend.deleteRight(rightId) }
-            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+            coVerify(exactly = 1) { backend.deleteRight(rightId) }
+            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
         }
     }
 
@@ -101,7 +102,7 @@ class TemplateRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } throws SQLException("foo")
+                coEvery { deleteRight(rightId) } throws SQLException("foo")
             }
         val servicePool = getServicePool(backend)
 
@@ -120,7 +121,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertTemplate(any()) } returns "1"
+                coEvery { insertTemplate(any()) } returns "1"
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -144,7 +145,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertTemplate(any()) } throws
+                coEvery { insertTemplate(any()) } throws
                     mockk<PSQLException> {
                         every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                         every { message } returns "error"
@@ -172,7 +173,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertTemplate(any()) } throws SQLException()
+                coEvery { insertTemplate(any()) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -196,7 +197,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { upsertRight(any()) } returns 1
+                coEvery { upsertRight(any()) } returns 1
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -245,7 +246,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { upsertRight(any()) } throws SQLException()
+                coEvery { upsertRight(any()) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -270,7 +271,7 @@ class TemplateRoutesKtTest {
         val rightId = "45"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightById(rightId) } returns TEST_RIGHT.toBusiness()
+                coEvery { getRightById(rightId) } returns TEST_RIGHT.toBusiness()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -293,7 +294,7 @@ class TemplateRoutesKtTest {
         val rightId = "45"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightById(rightId) } returns null
+                coEvery { getRightById(rightId) } returns null
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -313,7 +314,7 @@ class TemplateRoutesKtTest {
         val rightId = "45"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightById(rightId) } throws SQLException()
+                coEvery { getRightById(rightId) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -335,7 +336,7 @@ class TemplateRoutesKtTest {
         val expected = listOf(TEST_RIGHT)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getTemplateList(limit, offset) } returns listOf(TEST_RIGHT.toBusiness())
+                coEvery { getTemplateList(limit, offset) } returns listOf(TEST_RIGHT.toBusiness())
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -377,7 +378,7 @@ class TemplateRoutesKtTest {
         val offset = 0
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getTemplateList(limit, offset) } throws SQLException()
+                coEvery { getTemplateList(limit, offset) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -396,7 +397,7 @@ class TemplateRoutesKtTest {
         val givenRightId = "5"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarksByRightId(givenRightId) } returns listOf(TEST_BOOKMARK)
+                coEvery { getBookmarksByRightId(givenRightId) } returns listOf(TEST_BOOKMARK)
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -418,7 +419,7 @@ class TemplateRoutesKtTest {
         val givenRightId = "5"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getBookmarksByRightId(givenRightId) } throws SQLException()
+                coEvery { getBookmarksByRightId(givenRightId) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -439,12 +440,12 @@ class TemplateRoutesKtTest {
         val givenBookmarkTemplate = BookmarkTemplate(bookmarkId = givenBookmarkId, rightId = givenRightId)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     upsertBookmarkTemplatePairs(
                         listOf(givenBookmarkTemplate),
                     )
                 } returns listOf(givenBookmarkTemplate)
-                every { deleteBookmarkTemplatePairsByRightId(givenRightId) } returns 0
+                coEvery { deleteBookmarkTemplatePairsByRightId(givenRightId) } returns 0
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -472,7 +473,7 @@ class TemplateRoutesKtTest {
             val pairsCreated: Type = object : TypeToken<Array<BookmarkTemplateRest>>() {}.type
             val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
             assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
-            verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByRightId(givenRightId) }
+            coVerify(exactly = 1) { backend.deleteBookmarkTemplatePairsByRightId(givenRightId) }
         }
 
         testApplication {
@@ -499,7 +500,7 @@ class TemplateRoutesKtTest {
             val pairsCreated: Type = object : TypeToken<Array<BookmarkTemplateRest>>() {}.type
             val received: Array<BookmarkTemplateRest> = ItemRoutesKtTest.GSON.fromJson(content, pairsCreated)
             assertThat(received.toList(), `is`(listOf(givenBookmarkTemplate.toRest())))
-            verify(exactly = 1) { backend.deleteBookmarkTemplatePairsByRightId(givenRightId) }
+            coVerify(exactly = 1) { backend.deleteBookmarkTemplatePairsByRightId(givenRightId) }
         }
     }
 
@@ -510,7 +511,7 @@ class TemplateRoutesKtTest {
         val expectedMetadataIds = listOf("metadataId1", "metadataId2")
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { applyTemplates(listOf(givenRightId)) } returns
+                coEvery { applyTemplates(listOf(givenRightId)) } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -520,7 +521,7 @@ class TemplateRoutesKtTest {
                             exceptionTemplateApplicationResult = emptyList(),
                         ),
                     )
-                every { applyAllTemplates() } returns
+                coEvery { applyAllTemplates() } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -655,7 +656,7 @@ class TemplateRoutesKtTest {
         // Internal Service Error Path
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { applyTemplates(listOf(givenRightId)) } throws SQLException()
+                coEvery { applyTemplates(listOf(givenRightId)) } throws SQLException()
             }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
         testApplication {
@@ -687,13 +688,13 @@ class TemplateRoutesKtTest {
         // Test OK Path
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
                         rightIdExceptions = givenRightIdException,
                     )
                 } returns 1
-                every { isException(givenRightIdTemplate) } returns false
+                coEvery { isException(givenRightIdTemplate) } returns false
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         testApplication {
@@ -720,13 +721,13 @@ class TemplateRoutesKtTest {
         // Test Bad Request Part 1: Given Template is an exception already
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
                         rightIdExceptions = givenRightIdException,
                     )
                 } returns 1
-                every { isException(givenRightIdTemplate) } returns true
+                coEvery { isException(givenRightIdTemplate) } returns true
             }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
         testApplication {
@@ -753,13 +754,13 @@ class TemplateRoutesKtTest {
         // Test Bad Request Part 2: Trying to add an exception to itself
         val backend3 =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
                         rightIdExceptions = givenRightIdException + givenRightIdTemplate,
                     )
                 } returns 1
-                every { isException(givenRightIdTemplate) } returns false
+                coEvery { isException(givenRightIdTemplate) } returns false
             }
         val servicePool3 = ItemRoutesKtTest.getServicePool(backend3)
         testApplication {
@@ -786,7 +787,7 @@ class TemplateRoutesKtTest {
         // Test 500 Path
         val backend4 =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { isException(givenRightIdTemplate) } throws PSQLException(ServerErrorMessage("foo"))
+                coEvery { isException(givenRightIdTemplate) } throws PSQLException(ServerErrorMessage("foo"))
             }
         val servicePool4 = ItemRoutesKtTest.getServicePool(backend4)
         testApplication {
@@ -819,7 +820,7 @@ class TemplateRoutesKtTest {
         // Test OK Path
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     getExceptionsByRightId(givenRightIdTemplate)
                 } returns listOf(expected.toBusiness())
             }
@@ -840,7 +841,7 @@ class TemplateRoutesKtTest {
         // Test internal error path
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     getExceptionsByRightId(givenRightIdTemplate)
                 } throws PSQLException(ServerErrorMessage("foo"))
             }

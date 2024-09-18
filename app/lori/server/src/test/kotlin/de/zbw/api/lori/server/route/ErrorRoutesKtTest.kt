@@ -9,7 +9,7 @@ import de.zbw.lori.model.RightErrorRest
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.server.testing.testApplication
-import io.mockk.every
+import io.mockk.coEvery
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers
 import org.hamcrest.MatcherAssert
@@ -33,7 +33,7 @@ class ErrorRoutesKtTest {
         val expected = listOf(TEST_ERROR.toRest())
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightErrorList(limit, offset) } returns listOf(TEST_ERROR)
+                coEvery { getRightErrorList(limit, offset) } returns listOf(TEST_ERROR)
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then

@@ -18,7 +18,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOO
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
-import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
@@ -34,115 +33,120 @@ import java.time.ZoneId
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class BookmarkDB(
-    val connection: Connection,
+    val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
-    fun deleteBookmarkById(bookmarkId: Int): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
-                this.setInt(1, bookmarkId)
-            }
-        val span = tracer.spanBuilder("deleteBookmarkById").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun insertBookmark(bookmarkRest: Bookmark): Int {
-        val prepStmt =
-            insertUpdateSetParameters(
-                bookmarkRest,
-                connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS),
-            )
-        val span = tracer.spanBuilder("insertBookmark").startSpan()
-        try {
-            span.makeCurrent()
-            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            return if (affectedRows > 0) {
-                val rs: ResultSet = prepStmt.generatedKeys
-                rs.next()
-                rs.getInt(1)
-            } else {
-                throw IllegalStateException("No row has been inserted.")
-            }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
-                this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
-            }
-        val span = tracer.spanBuilder("getBookmarksByIds").startSpan()
-        val rs =
-            try {
+    suspend fun deleteBookmarkById(bookmarkId: Int): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
+                    this.setInt(1, bookmarkId)
+                }
+            val span = tracer.spanBuilder("deleteBookmarkById").startSpan()
+            return@useConnection try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             } finally {
                 span.end()
             }
+        }
 
-        return generateSequence {
-            if (rs.next()) {
-                extractBookmark(rs)
-            } else {
-                null
+    suspend fun insertBookmark(bookmarkRest: Bookmark): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                insertUpdateSetParameters(
+                    bookmarkRest,
+                    connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS),
+                )
+            val span = tracer.spanBuilder("insertBookmark").startSpan()
+            try {
+                span.makeCurrent()
+                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+                return@useConnection if (affectedRows > 0) {
+                    val rs: ResultSet = prepStmt.generatedKeys
+                    rs.next()
+                    rs.getInt(1)
+                } else {
+                    throw IllegalStateException("No row has been inserted.")
+                }
+            } finally {
+                span.end()
             }
-        }.takeWhile { true }.toList()
-    }
+        }
 
-    fun updateBookmarkById(
+    suspend fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
+                    this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("getBookmarksByIds").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    extractBookmark(rs)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
+    suspend fun updateBookmarkById(
         bookmarkId: Int,
         bookmark: Bookmark,
-    ): Int {
-        val prepStmt =
-            insertUpdateSetParameters(
-                bookmark,
-                connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
-            ).apply {
-                this.setInt(21, bookmarkId)
-            }
-        val span = tracer.spanBuilder("updateBookmarkById").startSpan()
-        try {
-            span.makeCurrent()
-            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun getBookmarkList(
-        limit: Int,
-        offset: Int,
-    ): List<Bookmark> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
-                this.setInt(1, limit)
-                this.setInt(2, offset)
-            }
-
-        val span = tracer.spanBuilder("getBookmarkList").startSpan()
-        val rs =
+    ): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                insertUpdateSetParameters(
+                    bookmark,
+                    connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
+                ).apply {
+                    this.setInt(21, bookmarkId)
+                }
+            val span = tracer.spanBuilder("updateBookmarkById").startSpan()
             try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                return@useConnection runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             } finally {
                 span.end()
             }
+        }
 
-        return generateSequence {
-            if (rs.next()) {
-                extractBookmark(rs)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
+    suspend fun getBookmarkList(
+        limit: Int,
+        offset: Int,
+    ): List<Bookmark> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
+                    this.setInt(1, limit)
+                    this.setInt(2, offset)
+                }
+
+            val span = tracer.spanBuilder("getBookmarkList").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    extractBookmark(rs)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
 
     companion object {
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"

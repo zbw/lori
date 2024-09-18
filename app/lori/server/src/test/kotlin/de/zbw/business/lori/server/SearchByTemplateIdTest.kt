@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
@@ -28,7 +29,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
-                connection = dataSource.connection,
+                connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),
@@ -37,20 +38,21 @@ class SearchByTemplateIdTest : DatabaseTest() {
     private var rightIds: List<String> = emptyList()
 
     @BeforeClass
-    fun fillDB() {
-        rightIds =
-            initialTemplates.map {
-                backend.insertTemplate(
-                    it,
-                )
-            }
-        initialItems.forEach { entry: Map.Entry<ItemMetadata, List<Int>> ->
-            val metadataId: String = backend.insertMetadataElement(entry.key)
-            entry.value.forEach { templateKey ->
-                backend.insertItemEntry(metadataId, rightIds[templateKey])
+    fun fillDB() =
+        runBlocking {
+            rightIds =
+                initialTemplates.map {
+                    backend.insertTemplate(
+                        it,
+                    )
+                }
+            initialItems.forEach { entry: Map.Entry<ItemMetadata, List<Int>> ->
+                val metadataId: String = backend.insertMetadataElement(entry.key)
+                entry.value.forEach { templateKey ->
+                    backend.insertItemEntry(metadataId, rightIds[templateKey])
+                }
             }
         }
-    }
 
     @AfterClass
     fun afterTests() {

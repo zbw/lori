@@ -14,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
@@ -35,7 +36,7 @@ class BookmarkTemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     insertBookmarkTemplatePair(
                         bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
                         rightId = TEST_BOOKMARK_TEMPLATE.rightId,
@@ -78,7 +79,7 @@ class BookmarkTemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     insertBookmarkTemplatePair(
                         bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
                         rightId = TEST_BOOKMARK_TEMPLATE.rightId,
@@ -125,7 +126,7 @@ class BookmarkTemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     deleteBookmarkTemplatePair(
                         bookmarkId = TEST_BOOKMARK_TEMPLATE.bookmarkId,
                         rightId = TEST_BOOKMARK_TEMPLATE.rightId,
@@ -174,7 +175,7 @@ class BookmarkTemplateRoutesKtTest {
         // given
         var backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     deleteBookmarkTemplatePairs(TEST_BOOKMARK_TEMPLATE_BATCH.batch!!.map { it.toBusiness() })
                 } returns 1
             }
@@ -201,7 +202,7 @@ class BookmarkTemplateRoutesKtTest {
 
         backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     deleteBookmarkTemplatePairs(TEST_BOOKMARK_TEMPLATE_BATCH.batch!!.map { it.toBusiness() })
                 } throws SQLException()
             }
@@ -227,7 +228,7 @@ class BookmarkTemplateRoutesKtTest {
         // given
         var backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     upsertBookmarkTemplatePairs(TEST_BOOKMARK_TEMPLATE_BATCH.batch!!.map { it.toBusiness() })
                 } returns listOf(TEST_BOOKMARK_TEMPLATE.toBusiness())
             }
@@ -264,7 +265,7 @@ class BookmarkTemplateRoutesKtTest {
 
         backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     upsertBookmarkTemplatePairs(TEST_BOOKMARK_TEMPLATE_BATCH.batch!!.map { it.toBusiness() })
                 } throws SQLException()
             }

@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.TemporalValidity
+import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
@@ -41,7 +42,7 @@ class RightFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
-                connection = dataSource.connection,
+                connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),
@@ -193,19 +194,20 @@ class RightFilterTest : DatabaseTest() {
         )
 
     @BeforeClass
-    fun fillDB() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns NOW.toInstant()
-        mockkStatic(LocalDate::class)
-        every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
-        getInitialMetadata().forEach { entry ->
-            backend.insertMetadataElement(entry.key)
-            entry.value.forEach { right ->
-                val r = backend.insertRight(right)
-                backend.insertItemEntry(entry.key.metadataId, r)
+    fun fillDB() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+            mockkStatic(LocalDate::class)
+            every { LocalDate.now() } returns LocalDate.of(2021, 7, 1)
+            getInitialMetadata().forEach { entry ->
+                backend.insertMetadataElement(entry.key)
+                entry.value.forEach { right ->
+                    val r = backend.insertRight(right)
+                    backend.insertItemEntry(entry.key.metadataId, r)
+                }
             }
         }
-    }
 
     @AfterClass
     fun afterTests() {

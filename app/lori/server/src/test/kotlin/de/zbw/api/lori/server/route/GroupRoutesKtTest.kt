@@ -21,6 +21,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
@@ -44,7 +45,7 @@ class GroupRoutesKtTest {
         val expected = TEST_GROUP.toRest()
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupById(groupId) } returns TEST_GROUP
+                coEvery { getGroupById(groupId) } returns TEST_GROUP
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -67,7 +68,7 @@ class GroupRoutesKtTest {
         val groupId = 1
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupById(groupId) } returns null
+                coEvery { getGroupById(groupId) } returns null
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -87,7 +88,7 @@ class GroupRoutesKtTest {
         val groupId = 1
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupById(groupId) } throws SQLException()
+                coEvery { getGroupById(groupId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -107,7 +108,7 @@ class GroupRoutesKtTest {
         val groupId = 1
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteGroup(groupId) } returns 1
+                coEvery { deleteGroup(groupId) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -127,7 +128,7 @@ class GroupRoutesKtTest {
         val groupId = 1
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteGroup(groupId) } returns 0
+                coEvery { deleteGroup(groupId) } returns 0
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -147,7 +148,7 @@ class GroupRoutesKtTest {
         val groupId = 1
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteGroup(groupId) } throws SQLException()
+                coEvery { deleteGroup(groupId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -166,7 +167,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertGroup(any()) } returns 2
+                coEvery { insertGroup(any()) } returns 2
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -190,7 +191,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertGroup(any()) } returns 2
+                coEvery { insertGroup(any()) } returns 2
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -214,7 +215,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertGroup(any()) } throws
+                coEvery { insertGroup(any()) } throws
                     mockk<PSQLException> {
                         every { sqlState } returns ApiError.PSQL_CONFLICT_ERR_CODE
                         every { message } returns "error"
@@ -242,7 +243,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertGroup(any()) } throws IllegalArgumentException()
+                coEvery { insertGroup(any()) } throws IllegalArgumentException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -266,7 +267,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertGroup(any()) } throws SQLException()
+                coEvery { insertGroup(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -290,7 +291,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateGroup(any()) } returns 1
+                coEvery { updateGroup(any()) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -314,7 +315,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateGroup(any()) } returns 1
+                coEvery { updateGroup(any()) } returns 1
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -338,7 +339,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateGroup(any()) } returns 0
+                coEvery { updateGroup(any()) } returns 0
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -362,7 +363,7 @@ class GroupRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { updateGroup(any()) } throws SQLException()
+                coEvery { updateGroup(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -389,7 +390,7 @@ class GroupRoutesKtTest {
         val expected = listOf(TEST_GROUP.toRest())
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupList(limit, offset) } returns listOf(TEST_GROUP)
+                coEvery { getGroupList(limit, offset) } returns listOf(TEST_GROUP)
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -421,7 +422,7 @@ class GroupRoutesKtTest {
         val expected = listOf(givenGroup.toRest())
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupListIdsOnly(limit, offset) } returns listOf(givenGroup)
+                coEvery { getGroupListIdsOnly(limit, offset) } returns listOf(givenGroup)
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -463,7 +464,7 @@ class GroupRoutesKtTest {
         val offset = 0
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getGroupList(limit, offset) } throws SQLException()
+                coEvery { getGroupList(limit, offset) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
