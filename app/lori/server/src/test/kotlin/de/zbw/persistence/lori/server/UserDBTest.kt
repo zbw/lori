@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserPermission
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
@@ -19,22 +20,23 @@ import kotlin.test.assertNull
 class UserDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
-            connection = dataSource.connection,
+            connectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
     @Test
-    fun testRoundtripSessions() {
-        val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
-        assertThat(
-            dbConnector.userDB.getSessionById(sessionId),
-            `is`(TEST_SESSION.copy(sessionID = sessionId)),
-        )
-        dbConnector.userDB.deleteSessionById(sessionId)
-        assertNull(
-            dbConnector.userDB.getSessionById(sessionId),
-        )
-    }
+    fun testRoundtripSessions() =
+        runBlocking {
+            val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
+            assertThat(
+                dbConnector.userDB.getSessionById(sessionId),
+                `is`(TEST_SESSION.copy(sessionID = sessionId)),
+            )
+            dbConnector.userDB.deleteSessionById(sessionId)
+            assertNull(
+                dbConnector.userDB.getSessionById(sessionId),
+            )
+        }
 
     companion object {
         private val TEST_SESSION =

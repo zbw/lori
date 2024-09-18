@@ -20,9 +20,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.ktor.util.InternalAPI
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
@@ -38,8 +39,8 @@ class MetadataRoutesKtTest {
     fun testMetadataPostCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(TEST_METADATA.metadataId) } returns false
-                every { insertMetadataElement(any()) } returns "foo"
+                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
 
@@ -66,7 +67,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostConflict() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -116,7 +117,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
+                coEvery { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -145,8 +146,8 @@ class MetadataRoutesKtTest {
         val metadataId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsMetadata(metadataId) } returns false
-                every { deleteMetadata(metadataId) } returns 1
+                coEvery { itemContainsMetadata(metadataId) } returns false
+                coEvery { deleteMetadata(metadataId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -157,8 +158,8 @@ class MetadataRoutesKtTest {
             )
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
-            verify(exactly = 1) { backend.deleteMetadata(metadataId) }
+            coVerify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
+            coVerify(exactly = 1) { backend.deleteMetadata(metadataId) }
         }
     }
 
@@ -168,7 +169,7 @@ class MetadataRoutesKtTest {
         val metadataId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsMetadata(metadataId) } returns true
+                coEvery { itemContainsMetadata(metadataId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -188,15 +189,15 @@ class MetadataRoutesKtTest {
         val metadataId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { itemContainsMetadata(metadataId) } throws SQLException()
+                coEvery { itemContainsMetadata(metadataId) } throws SQLException()
             }
         val servicePool =
             ServicePoolWithProbes(
                 services =
                     listOf(
                         mockk {
-                            every { isReady() } returns true
-                            every { isHealthy() } returns true
+                            coEvery { isReady() } returns true
+                            coEvery { isHealthy() } returns true
                         },
                     ),
                 config = CONFIG,
@@ -225,7 +226,7 @@ class MetadataRoutesKtTest {
         val expected = TEST_METADATA
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getMetadataElementsByIds(listOf(testId)) } returns listOf(expected.toBusiness())
+                coEvery { getMetadataElementsByIds(listOf(testId)) } returns listOf(expected.toBusiness())
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -248,7 +249,7 @@ class MetadataRoutesKtTest {
         val testId = "someId"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getMetadataElementsByIds(listOf(testId)) } returns emptyList()
+                coEvery { getMetadataElementsByIds(listOf(testId)) } returns emptyList()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -272,7 +273,7 @@ class MetadataRoutesKtTest {
         val testId = "someId"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getMetadataElementsByIds(listOf(testId)) } throws SQLException()
+                coEvery { getMetadataElementsByIds(listOf(testId)) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -294,8 +295,8 @@ class MetadataRoutesKtTest {
     fun testMetadataPutNoContent() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(TEST_METADATA.metadataId) } returns true
-                every { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
+                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
             }
         val servicePool = getServicePool(backend)
 
@@ -322,8 +323,8 @@ class MetadataRoutesKtTest {
     fun testMetadataPutCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(TEST_METADATA.metadataId) } returns false
-                every { insertMetadataElement(any()) } returns "foo"
+                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
 
@@ -374,7 +375,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { metadataContainsId(any()) } throws SQLException()
+                coEvery { metadataContainsId(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -405,7 +406,7 @@ class MetadataRoutesKtTest {
         val expectedMetadata = TEST_METADATA
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getMetadataList(limit, offset) } returns listOf(expectedMetadata.toBusiness())
+                coEvery { getMetadataList(limit, offset) } returns listOf(expectedMetadata.toBusiness())
             }
         val servicePool = getServicePool(backend)
 
@@ -421,7 +422,7 @@ class MetadataRoutesKtTest {
             val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
             assertThat(received.toList(), `is`(listOf(expectedMetadata)))
         }
-        verify(exactly = 1) { backend.getMetadataList(limit, offset) }
+        coVerify(exactly = 1) { backend.getMetadataList(limit, offset) }
     }
 
     @Test
@@ -432,7 +433,7 @@ class MetadataRoutesKtTest {
         val expectedMetadata = TEST_METADATA
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every {
+                coEvery {
                     getMetadataList(
                         defaultLimit,
                         defaultOffset,
@@ -452,7 +453,7 @@ class MetadataRoutesKtTest {
             val received: ArrayList<MetadataRest> = RightRoutesKtTest.GSON.fromJson(content, groupListType)
             assertThat(received.toList(), `is`(listOf(expectedMetadata)))
         }
-        verify(exactly = 1) { backend.getMetadataList(defaultLimit, defaultOffset) }
+        coVerify(exactly = 1) { backend.getMetadataList(defaultLimit, defaultOffset) }
     }
 
     @Test
@@ -502,7 +503,7 @@ class MetadataRoutesKtTest {
         val limit = 5
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getMetadataList(limit, offset) } throws SQLException()
+                coEvery { getMetadataList(limit, offset) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 

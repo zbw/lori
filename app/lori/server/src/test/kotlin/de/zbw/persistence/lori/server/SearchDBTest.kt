@@ -35,6 +35,7 @@ import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterMethod
@@ -53,7 +54,7 @@ import java.time.Instant
 class SearchDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
-            connection = dataSource.connection,
+            connectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
@@ -69,105 +70,106 @@ class SearchDBTest : DatabaseTest() {
     }
 
     @Test
-    fun searchMetadata() {
-        // given
-        val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbIdJournal = "zbdId")
-        dbConnector.metadataDB.insertMetadata(testZDB)
+    fun searchMetadata() =
+        runBlocking {
+            // given
+            val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbIdJournal = "zbdId")
+            dbConnector.metadataDB.insertMetadata(testZDB)
 
-        // when
-        val searchPairsZDB =
-            SEVariable(
-                ZDBIdFilter(listOf(testZDB.zdbIdJournal!!)),
-            )
-        val resultZDB =
-            dbConnector.searchDB.searchMetadataItems(
-                searchExpression = searchPairsZDB,
-                limit = 5,
-                offset = 0,
-                metadataSearchFilter = emptyList(),
-                rightSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        val numberResultZDB =
-            dbConnector.searchDB.countSearchMetadata(
-                searchExpression = searchPairsZDB,
-                metadataSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        // then
-        assertThat(resultZDB[0], `is`(testZDB))
-        assertThat(numberResultZDB, `is`(1))
-        // when
-        val searchPairsAll =
-            SEAnd(
-                SEVariable(CollectionNameFilter(testZDB.collectionName!!)),
+            // when
+            val searchPairsZDB =
+                SEVariable(
+                    ZDBIdFilter(listOf(testZDB.zdbIdJournal!!)),
+                )
+            val resultZDB =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression = searchPairsZDB,
+                    limit = 5,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            val numberResultZDB =
+                dbConnector.searchDB.countSearchMetadata(
+                    searchExpression = searchPairsZDB,
+                    metadataSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            // then
+            assertThat(resultZDB[0], `is`(testZDB))
+            assertThat(numberResultZDB, `is`(1))
+            // when
+            val searchPairsAll =
                 SEAnd(
-                    SEVariable(CommunityNameFilter(testZDB.communityName!!)),
+                    SEVariable(CollectionNameFilter(testZDB.collectionName!!)),
                     SEAnd(
-                        SEVariable(
-                            PaketSigelFilter(listOf(testZDB.paketSigel!!)),
+                        SEVariable(CommunityNameFilter(testZDB.communityName!!)),
+                        SEAnd(
+                            SEVariable(
+                                PaketSigelFilter(listOf(testZDB.paketSigel!!)),
+                            ),
+                            SEVariable(ZDBIdFilter(listOf(testZDB.zdbIdJournal!!))),
                         ),
-                        SEVariable(ZDBIdFilter(listOf(testZDB.zdbIdJournal!!))),
                     ),
-                ),
-            )
-        val resultAll =
-            dbConnector.searchDB.searchMetadataItems(
-                searchExpression = searchPairsAll,
-                limit = 5,
-                offset = 0,
-                metadataSearchFilter = emptyList(),
-                rightSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        val numberResultAll =
-            dbConnector.searchDB.countSearchMetadata(
-                searchExpression = searchPairsAll,
-                metadataSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        // then
-        assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
-        assertThat(numberResultAll, `is`(1))
+                )
+            val resultAll =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression = searchPairsAll,
+                    limit = 5,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            val numberResultAll =
+                dbConnector.searchDB.countSearchMetadata(
+                    searchExpression = searchPairsAll,
+                    metadataSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            // then
+            assertThat(resultAll.toSet(), `is`(setOf(testZDB)))
+            assertThat(numberResultAll, `is`(1))
 
-        // Add second metadata with same zbdID
-        val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbIdJournal = "zbdId")
-        dbConnector.metadataDB.insertMetadata(testZDB2)
-        // when
-        val resultZBD2 =
-            dbConnector.searchDB.searchMetadataItems(
-                searchExpression = searchPairsZDB,
-                limit = 5,
-                offset = 0,
-                metadataSearchFilter = emptyList(),
-                rightSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        val numberResultZDB2 =
-            dbConnector.searchDB.countSearchMetadata(
-                searchExpression = searchPairsAll,
-                metadataSearchFilter = emptyList(),
-                noRightInformationFilter = null,
-            )
-        // then
-        assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
-        assertThat(numberResultZDB2, `is`(2))
+            // Add second metadata with same zbdID
+            val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbIdJournal = "zbdId")
+            dbConnector.metadataDB.insertMetadata(testZDB2)
+            // when
+            val resultZBD2 =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression = searchPairsZDB,
+                    limit = 5,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            val numberResultZDB2 =
+                dbConnector.searchDB.countSearchMetadata(
+                    searchExpression = searchPairsAll,
+                    metadataSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            // then
+            assertThat(resultZBD2.toSet(), `is`(setOf(testZDB, testZDB2)))
+            assertThat(numberResultZDB2, `is`(2))
 
-        // when
-        val resultZDB2Offset =
-            dbConnector.searchDB.searchMetadataItems(
-                searchExpression = searchPairsZDB,
-                limit = 5,
-                offset = 1,
-                metadataSearchFilter = emptyList(),
-                rightSearchFilter = emptyList(),
-                noRightInformationFilter = null,
+            // when
+            val resultZDB2Offset =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression = searchPairsZDB,
+                    limit = 5,
+                    offset = 1,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                )
+            assertThat(
+                resultZDB2Offset.size,
+                `is`(1),
             )
-        assertThat(
-            resultZDB2Offset.size,
-            `is`(1),
-        )
-    }
+        }
 
     @DataProvider(name = DATA_FOR_BUILD_METADATA_FILTER_SEARCH_QUERY)
     private fun createBuildSearchQueryDataMetadataFilter() =

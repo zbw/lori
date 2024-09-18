@@ -32,60 +32,64 @@ import java.time.Instant
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MetadataDB(
-    val connection: Connection,
+    val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
-    fun deleteMetadata(metadataIds: List<String>): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
-                this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
-            }
-        val span = tracer.spanBuilder("deleteMetadata").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun metadataContainsId(metadataId: String): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
-                this.setString(1, metadataId)
-            }
-        val span = tracer.spanBuilder("metadataContainsId").startSpan()
-        val rs =
-            try {
+    suspend fun deleteMetadata(metadataIds: List<String>): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
+                    this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("deleteMetadata").startSpan()
+            return@useConnection try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             } finally {
                 span.end()
             }
-        rs.next()
-        return rs.getBoolean(1)
-    }
+        }
 
-    fun getMetadataRange(
+    suspend fun metadataContainsId(metadataId: String): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_METADATA_CONTAINS_ID).apply {
+                    this.setString(1, metadataId)
+                }
+            val span = tracer.spanBuilder("metadataContainsId").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection rs.getBoolean(1)
+        }
+
+    suspend fun getMetadataRange(
         limit: Int,
         offset: Int,
-    ): List<ItemMetadata> {
-        val prepStmt: PreparedStatement =
-            connection
-                .prepareStatement(
-                    STATEMENT_SELECT_ALL_METADATA_FROM +
-                        " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
-                ).apply {
-                    this.setInt(1, limit)
-                    this.setInt(2, offset)
-                }
-        val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
-        return runMetadataStatement(prepStmt, span)
-    }
+    ): List<ItemMetadata> =
+        connectionPool.useConnection { connection: Connection ->
+            val prepStmt: PreparedStatement =
+                connection
+                    .prepareStatement(
+                        STATEMENT_SELECT_ALL_METADATA_FROM +
+                            " ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
+                    ).apply {
+                        this.setInt(1, limit)
+                        this.setInt(2, offset)
+                    }
+            val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
+            return@useConnection runMetadataStatement(prepStmt, span, connection)
+        }
 
     private fun runMetadataStatement(
         prepStmt: PreparedStatement,
         span: Span,
+        connection: Connection,
     ): List<ItemMetadata> {
         val rs =
             try {
@@ -104,70 +108,74 @@ class MetadataDB(
         }.takeWhile { true }.toList()
     }
 
-    fun itemContainsMetadata(metadataId: String): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
-                this.setString(1, metadataId)
+    suspend fun itemContainsMetadata(metadataId: String): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
+                    this.setString(1, metadataId)
+                }
+            val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection rs.getBoolean(1)
+        }
+
+    suspend fun getMetadata(metadataIds: List<String>): List<ItemMetadata> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_METADATA).apply {
+                    this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+                }
+
+            val span = tracer.spanBuilder("getMetadata").startSpan()
+            return@useConnection runMetadataStatement(prepStmt, span, connection)
+        }
+
+    suspend fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray =
+        connectionPool.useConnection { connection ->
+            val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
+            itemMetadatas.map {
+                val p = insertUpsertMetadataSetParameters(it, prep)
+                p.addBatch()
             }
-        val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
-        val rs =
+            val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
             try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                return@useConnection runInTransaction(connection) { prep.executeBatch() }
             } finally {
                 span.end()
             }
-        rs.next()
-        return rs.getBoolean(1)
-    }
+        }
 
-    fun getMetadata(metadataIds: List<String>): List<ItemMetadata> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_METADATA).apply {
-                this.setArray(1, connection.createArrayOf("text", metadataIds.toTypedArray()))
+    suspend fun insertMetadata(itemMetadata: ItemMetadata): String =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                insertUpsertMetadataSetParameters(
+                    itemMetadata,
+                    connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
+                )
+
+            val span = tracer.spanBuilder("insertMetadata").startSpan()
+            try {
+                span.makeCurrent()
+                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+                return@useConnection if (affectedRows > 0) {
+                    val rs: ResultSet = prepStmt.generatedKeys
+                    rs.next()
+                    rs.getString(1)
+                } else {
+                    throw IllegalStateException("No row has been inserted.")
+                }
+            } finally {
+                span.end()
             }
-
-        val span = tracer.spanBuilder("getMetadata").startSpan()
-        return runMetadataStatement(prepStmt, span)
-    }
-
-    fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray {
-        val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
-        itemMetadatas.map {
-            val p = insertUpsertMetadataSetParameters(it, prep)
-            p.addBatch()
         }
-        val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
-        try {
-            span.makeCurrent()
-            return runInTransaction(connection) { prep.executeBatch() }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun insertMetadata(itemMetadata: ItemMetadata): String {
-        val prepStmt =
-            insertUpsertMetadataSetParameters(
-                itemMetadata,
-                connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
-            )
-
-        val span = tracer.spanBuilder("insertMetadata").startSpan()
-        try {
-            span.makeCurrent()
-            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            return if (affectedRows > 0) {
-                val rs: ResultSet = prepStmt.generatedKeys
-                rs.next()
-                rs.getString(1)
-            } else {
-                throw IllegalStateException("No row has been inserted.")
-            }
-        } finally {
-            span.end()
-        }
-    }
 
     private fun insertUpsertMetadataSetParameters(
         itemMetadata: ItemMetadata,

@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemplateApplicationResult
+import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
 import de.zbw.persistence.lori.server.ItemDBTest
@@ -14,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
+import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
@@ -35,7 +37,7 @@ class ApplyTemplateTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
-                connection = dataSource.connection,
+                connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),
@@ -55,17 +57,18 @@ class ApplyTemplateTest : DatabaseTest() {
         )
 
     @BeforeClass
-    fun fillDB() {
-        mockkStatic(Instant::class)
-        every { Instant.now() } returns ItemDBTest.NOW.toInstant()
-        getInitialMetadata().forEach { entry ->
-            backend.insertMetadataElement(entry.key)
-            entry.value.forEach { right ->
-                val r = backend.insertRight(right)
-                backend.insertItemEntry(entry.key.metadataId, r)
+    fun fillDB() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns ItemDBTest.NOW.toInstant()
+            getInitialMetadata().forEach { entry ->
+                backend.insertMetadataElement(entry.key)
+                entry.value.forEach { right ->
+                    val r = backend.insertRight(right)
+                    backend.insertItemEntry(entry.key.metadataId, r)
+                }
             }
         }
-    }
 
     @AfterClass
     fun afterTests() {
@@ -73,205 +76,207 @@ class ApplyTemplateTest : DatabaseTest() {
     }
 
     @Test
-    fun testApplyTemplate() {
-        // Create Bookmark
-        val bookmarkId =
-            backend.insertBookmark(
-                Bookmark(
-                    bookmarkName = "applyBookmark",
-                    bookmarkId = 0,
-                    zdbIdFilter =
-                        ZDBIdFilter(
-                            zdbIds =
-                                listOf(
-                                    ZDB_1,
-                                ),
-                        ),
-                    lastUpdatedOn =
-                        OffsetDateTime.of(
-                            2022,
-                            3,
-                            2,
-                            1,
-                            1,
-                            0,
-                            0,
-                            ZoneOffset.UTC,
-                        ),
-                    lastUpdatedBy = "user2",
-                    createdBy = "user1",
-                    createdOn =
-                        OffsetDateTime.of(
-                            2022,
-                            3,
-                            2,
-                            1,
-                            1,
-                            0,
-                            0,
-                            ZoneOffset.UTC,
-                        ),
+    fun testApplyTemplate() =
+        runBlocking {
+            // Create Bookmark
+            val bookmarkId =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "applyBookmark",
+                        bookmarkId = 0,
+                        zdbIdFilter =
+                            ZDBIdFilter(
+                                zdbIds =
+                                    listOf(
+                                        ZDB_1,
+                                    ),
+                            ),
+                        lastUpdatedOn =
+                            OffsetDateTime.of(
+                                2022,
+                                3,
+                                2,
+                                1,
+                                1,
+                                0,
+                                0,
+                                ZoneOffset.UTC,
+                            ),
+                        lastUpdatedBy = "user2",
+                        createdBy = "user1",
+                        createdOn =
+                            OffsetDateTime.of(
+                                2022,
+                                3,
+                                2,
+                                1,
+                                1,
+                                0,
+                                0,
+                                ZoneOffset.UTC,
+                            ),
+                    ),
+                )
+
+            // Create Template
+            val rightId = backend.insertTemplate(TEST_RIGHT.copy(templateName = "test", isTemplate = true))
+
+            // Connect Bookmark and Template
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = rightId,
+            )
+
+            val received = backend.applyTemplate(rightId)
+            assertThat(
+                received!!.appliedMetadataIds,
+                `is`(listOf(item1ZDB1.metadataId)),
+            )
+
+            // Verify that new right is assigned to metadata id
+            val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
+            assertTrue(rightIds.contains(rightId))
+
+            assertThat(
+                backend.getRightById(rightId)!!.lastAppliedOn,
+                `is`(ItemDBTest.NOW),
+            )
+
+            // Repeat Apply Operation without duplicate entries errors
+            val received2: TemplateApplicationResult? = backend.applyTemplate(rightId)
+            assertThat(
+                received2!!.appliedMetadataIds,
+                `is`(listOf(item1ZDB1.metadataId)),
+            )
+
+            // Add two new items to database matching bookmark
+            backend.insertMetadataElements(
+                listOf(
+                    item2ZDB1,
+                    item3ZDB1,
+                ),
+            )
+            // Update old item from database so it no longer matches for bookmark
+            backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIdJournal = "foobar")))
+
+            // Apply Template
+            val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
+            assertThat(
+                received3!!.appliedMetadataIds,
+                `is`(
+                    listOf(
+                        item2ZDB1.metadataId,
+                        item3ZDB1.metadataId,
+                    ),
+                ),
+            )
+            // Verify that only the new items are connected to template
+            assertThat(
+                backend.dbConnector.itemDB.countItemByRightId(rightId),
+                `is`(2),
+            )
+
+            val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates()
+            assertThat(
+                applyAllReceived.map { it.appliedMetadataIds }.flatten().toSet(),
+                `is`(
+                    setOf(
+                        item2ZDB1.metadataId,
+                        item3ZDB1.metadataId,
+                    ),
                 ),
             )
 
-        // Create Template
-        val rightId = backend.insertTemplate(TEST_RIGHT.copy(templateName = "test", isTemplate = true))
+            // Create conflicting template
+            val rightIdConflict = backend.insertTemplate(TEST_RIGHT.copy(isTemplate = true, templateName = "conflicting"))
 
-        // Connect Bookmark and Template
-        backend.insertBookmarkTemplatePair(
-            bookmarkId = bookmarkId,
-            rightId = rightId,
-        )
-
-        val received = backend.applyTemplate(rightId)
-        assertThat(
-            received!!.appliedMetadataIds,
-            `is`(listOf(item1ZDB1.metadataId)),
-        )
-
-        // Verify that new right is assigned to metadata id
-        val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
-        assertTrue(rightIds.contains(rightId))
-
-        assertThat(
-            backend.getRightById(rightId)!!.lastAppliedOn,
-            `is`(ItemDBTest.NOW),
-        )
-
-        // Repeat Apply Operation without duplicate entries errors
-        val received2: TemplateApplicationResult? = backend.applyTemplate(rightId)
-        assertThat(
-            received2!!.appliedMetadataIds,
-            `is`(listOf(item1ZDB1.metadataId)),
-        )
-
-        // Add two new items to database matching bookmark
-        backend.insertMetadataElements(
-            listOf(
-                item2ZDB1,
-                item3ZDB1,
-            ),
-        )
-        // Update old item from database so it no longer matches for bookmark
-        backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIdJournal = "foobar")))
-
-        // Apply Template
-        val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
-        assertThat(
-            received3!!.appliedMetadataIds,
-            `is`(
-                listOf(
-                    item2ZDB1.metadataId,
-                    item3ZDB1.metadataId,
-                ),
-            ),
-        )
-        // Verify that only the new items are connected to template
-        assertThat(
-            backend.dbConnector.itemDB.countItemByRightId(rightId),
-            `is`(2),
-        )
-
-        val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates()
-        assertThat(
-            applyAllReceived.map { it.appliedMetadataIds }.flatten().toSet(),
-            `is`(
-                setOf(
-                    item2ZDB1.metadataId,
-                    item3ZDB1.metadataId,
-                ),
-            ),
-        )
-
-        // Create conflicting template
-        val rightIdConflict = backend.insertTemplate(TEST_RIGHT.copy(isTemplate = true, templateName = "conflicting"))
-
-        // Connect Bookmark and Template
-        backend.insertBookmarkTemplatePair(
-            bookmarkId = bookmarkId,
-            rightId = rightIdConflict,
-        )
-        val receivedConflict = backend.applyTemplate(rightIdConflict)
-        assertThat(
-            receivedConflict!!.errors.size,
-            `is`(2),
-        )
-    }
+            // Connect Bookmark and Template
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = rightIdConflict,
+            )
+            val receivedConflict = backend.applyTemplate(rightIdConflict)
+            assertThat(
+                receivedConflict!!.errors.size,
+                `is`(2),
+            )
+        }
 
     @Test
-    fun testApplyTemplateWithException() {
-        // Create Bookmarks
-        val bookmarkIdUpper =
-            backend.insertBookmark(
-                Bookmark(
-                    bookmarkName = "allZDB2",
-                    bookmarkId = 10,
-                    zdbIdFilter =
-                        ZDBIdFilter(
-                            zdbIds =
-                                listOf(
-                                    ZDB_2,
-                                ),
-                        ),
-                ),
+    fun testApplyTemplateWithException() =
+        runBlocking {
+            // Create Bookmarks
+            val bookmarkIdUpper =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "allZDB2",
+                        bookmarkId = 10,
+                        zdbIdFilter =
+                            ZDBIdFilter(
+                                zdbIds =
+                                    listOf(
+                                        ZDB_2,
+                                    ),
+                            ),
+                    ),
+                )
+
+            val bookmarkIdException =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "zdb2AndHandle",
+                        bookmarkId = 20,
+                        zdbIdFilter =
+                            ZDBIdFilter(
+                                zdbIds =
+                                    listOf(
+                                        ZDB_2,
+                                    ),
+                            ),
+                        searchTerm = "hdl:bar",
+                    ),
+                )
+
+            // Create Templates
+            val rightIdUpper =
+                backend.insertTemplate(TEST_RIGHT.copy(templateName = "upper", isTemplate = true))
+
+            // Connect Bookmarks and Templates
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkIdUpper,
+                rightId = rightIdUpper,
             )
 
-        val bookmarkIdException =
-            backend.insertBookmark(
-                Bookmark(
-                    bookmarkName = "zdb2AndHandle",
-                    bookmarkId = 20,
-                    zdbIdFilter =
-                        ZDBIdFilter(
-                            zdbIds =
-                                listOf(
-                                    ZDB_2,
-                                ),
-                        ),
-                    searchTerm = "hdl:bar",
-                ),
+            // Without exception
+            val rightIdException =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "exception",
+                        isTemplate = true,
+                        exceptionFrom = rightIdUpper,
+                    ),
+                )
+
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkIdException,
+                rightId = rightIdException,
             )
 
-        // Create Templates
-        val rightIdUpper =
-            backend.insertTemplate(TEST_RIGHT.copy(templateName = "upper", isTemplate = true))
-
-        // Connect Bookmarks and Templates
-        backend.insertBookmarkTemplatePair(
-            bookmarkId = bookmarkIdUpper,
-            rightId = rightIdUpper,
-        )
-
-        // Without exception
-        val rightIdException =
-            backend.insertTemplate(
-                TEST_RIGHT.copy(
-                    templateName = "exception",
-                    isTemplate = true,
-                    exceptionFrom = rightIdUpper,
-                ),
+            val receivedUpperWithExc = backend.applyTemplate(rightIdUpper)!!
+            assertThat(
+                receivedUpperWithExc.appliedMetadataIds.toSet(),
+                `is`(setOf(item1ZDB2.metadataId)),
             )
-
-        backend.insertBookmarkTemplatePair(
-            bookmarkId = bookmarkIdException,
-            rightId = rightIdException,
-        )
-
-        val receivedUpperWithExc = backend.applyTemplate(rightIdUpper)!!
-        assertThat(
-            receivedUpperWithExc.appliedMetadataIds.toSet(),
-            `is`(setOf(item1ZDB2.metadataId)),
-        )
-        assertThat(
-            receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataIds }.toSet(),
-            `is`(setOf(item2ZDB2.metadataId)),
-        )
-        val receivedException = backend.applyTemplate(rightIdException)!!
-        assertThat(
-            receivedException.appliedMetadataIds,
-            `is`(listOf(item2ZDB2.metadataId)),
-        )
-    }
+            assertThat(
+                receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataIds }.toSet(),
+                `is`(setOf(item2ZDB2.metadataId)),
+            )
+            val receivedException = backend.applyTemplate(rightIdException)!!
+            assertThat(
+                receivedException.appliedMetadataIds,
+                `is`(listOf(item2ZDB2.metadataId)),
+            )
+        }
 
     companion object {
         const val ZDB_1 = "zdb1"

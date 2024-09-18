@@ -18,7 +18,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
-import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -35,46 +34,48 @@ import java.time.ZoneId
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightDB(
-    val connection: Connection,
+    val connectionPool: ConnectionPool,
     private val tracer: Tracer,
     private val groupDB: GroupDB,
 ) {
-    fun insertRight(right: ItemRight): String {
-        val prepStmt =
-            insertRightSetParameters(
-                right,
-                connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS),
-            )
-        val span = tracer.spanBuilder("insertRight").startSpan()
-        try {
-            span.makeCurrent()
-            val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            return if (affectedRows > 0) {
-                val rs: ResultSet = prepStmt.generatedKeys
-                rs.next()
-                rs.getString(1)
-            } else {
-                throw IllegalStateException("No row has been inserted.")
+    suspend fun insertRight(right: ItemRight): String =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                insertRightSetParameters(
+                    right,
+                    connection.prepareStatement(STATEMENT_INSERT_RIGHT, Statement.RETURN_GENERATED_KEYS),
+                )
+            val span = tracer.spanBuilder("insertRight").startSpan()
+            try {
+                span.makeCurrent()
+                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+                return@useConnection if (affectedRows > 0) {
+                    val rs: ResultSet = prepStmt.generatedKeys
+                    rs.next()
+                    rs.getString(1)
+                } else {
+                    throw IllegalStateException("No row has been inserted.")
+                }
+            } finally {
+                span.end()
             }
-        } finally {
-            span.end()
         }
-    }
 
-    fun upsertRight(right: ItemRight): Int {
-        val prepStmt =
-            upsertRightSetParameters(
-                right,
-                connection.prepareStatement(STATEMENT_UPSERT_RIGHT),
-            )
-        val span = tracer.spanBuilder("upsertRight").startSpan()
-        try {
-            span.makeCurrent()
-            return runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
+    suspend fun upsertRight(right: ItemRight): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                upsertRightSetParameters(
+                    right,
+                    connection.prepareStatement(STATEMENT_UPSERT_RIGHT),
+                )
+            val span = tracer.spanBuilder("upsertRight").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
         }
-    }
 
     private fun upsertRightSetParameters(
         right: ItemRight,
@@ -233,242 +234,280 @@ class RightDB(
         }
     }
 
-    fun deleteRightsByIds(rightIds: List<String>): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
-                this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
+    suspend fun deleteRightsByIds(rightIds: List<String>): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_RIGHTS).apply {
+                    this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("deleteRightsByIds").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
             }
-        val span = tracer.spanBuilder("deleteRightsByIds").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
+        }
+
+    suspend fun getRightsByIds(rightsIds: List<String>): List<ItemRight> {
+        val rights: List<ItemRight> =
+            connectionPool.useConnection { connection ->
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
+                        this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
+                    }
+
+                val span = tracer.spanBuilder("getRightsByIds").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
+                return@useConnection generateSequence {
+                    if (rs.next()) {
+                        extractRightFromRS(rs)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            }
+        return rights.map { r ->
+            val groups = groupDB.getGroupsByRightId(r.rightId!!)
+            r.copy(
+                groups = groups,
+                groupIds = groups.map { it.groupId },
+            )
         }
     }
 
-    fun getRightsByIds(rightsIds: List<String>): List<ItemRight> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_RIGHTS).apply {
-                this.setArray(1, connection.createArrayOf("text", rightsIds.toTypedArray()))
-            }
+    suspend fun rightContainsId(rightId: String): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
+                    this.setString(1, rightId)
+                }
+            val span = tracer.spanBuilder("rightContainsId").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection rs.getBoolean(1)
+        }
 
-        val span = tracer.spanBuilder("getRightsByIds").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        return generateSequence {
-            if (rs.next()) {
-                extractRightFromRS(rs, groupDB)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
+    suspend fun getRightIdsByMetadata(metadataId: String): List<String> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
+                    this.setString(1, metadataId)
+                }
+            val span = tracer.spanBuilder("getRightIdsByMetadata").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
 
-    fun rightContainsId(rightId: String): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_RIGHT_CONTAINS_ID).apply {
-                this.setString(1, rightId)
-            }
-        val span = tracer.spanBuilder("rightContainsId").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        rs.next()
-        return rs.getBoolean(1)
-    }
-
-    fun getRightIdsByMetadata(metadataId: String): List<String> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
-                this.setString(1, metadataId)
-            }
-        val span = tracer.spanBuilder("getRightIdsByMetadata").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        return generateSequence {
-            if (rs.next()) {
-                rs.getString(1)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
-
-    fun getTemplateList(
+    suspend fun getTemplateList(
         limit: Int,
         offset: Int,
-    ): List<ItemRight> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
-                this.setInt(1, limit)
-                this.setInt(2, offset)
-            }
+    ): List<ItemRight> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
+                    this.setInt(1, limit)
+                    this.setInt(2, offset)
+                }
 
-        val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        return generateSequence {
-            if (rs.next()) {
-                extractRightFromRS(rs, groupDB)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
+            val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    extractRightFromRS(rs)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
 
     /**
      * Get all RightIds for all templates.
      */
-    fun getRightIdsForAllTemplates(): List<String> {
-        val prepStmt = connection.prepareStatement(STATEMENT_GET_ALL_IDS_OF_TEMPLATES)
-        val span = tracer.spanBuilder("getRightIdsForAllTemplates").startSpan()
-        val rs =
-            try {
+    suspend fun getRightIdsForAllTemplates(): List<String> =
+        connectionPool.useConnection { connection ->
+            val prepStmt = connection.prepareStatement(STATEMENT_GET_ALL_IDS_OF_TEMPLATES)
+            val span = tracer.spanBuilder("getRightIdsForAllTemplates").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
+    suspend fun updateAppliedOnByTemplateId(rightId: String): Int =
+        connectionPool.useConnection { connection ->
+            val now = Instant.now()
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
+                    this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
+                    this.setString(2, rightId)
+                }
+            val span = tracer.spanBuilder("updateTemplateById").startSpan()
+            return@useConnection try {
                 span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
             } finally {
                 span.end()
             }
-
-        return generateSequence {
-            if (rs.next()) {
-                rs.getString(1)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
-    }
-
-    fun updateAppliedOnByTemplateId(rightId: String): Int {
-        val now = Instant.now()
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
-                this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
-                this.setString(2, rightId)
-            }
-        val span = tracer.spanBuilder("updateTemplateById").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
-        }
-    }
-
-    fun getRightsByTemplateNames(templateNames: List<String>): List<ItemRight> {
-        if (templateNames.isEmpty()) {
-            return emptyList()
         }
 
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME).apply {
-                this.setArray(1, connection.createArrayOf("varchar", templateNames.toTypedArray()))
-            }
+    suspend fun getRightsByTemplateNames(templateNames: List<String>): List<ItemRight> {
+        val rights =
+            connectionPool.useConnection { connection ->
+                if (templateNames.isEmpty()) {
+                    emptyList<ItemRight>()
+                }
 
-        val span = tracer.spanBuilder("getRightIdsByTemplateNames").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME).apply {
+                        this.setArray(1, connection.createArrayOf("varchar", templateNames.toTypedArray()))
+                    }
+
+                val span = tracer.spanBuilder("getRightIdsByTemplateNames").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
+                return@useConnection generateSequence {
+                    if (rs.next()) {
+                        extractRightFromRS(rs)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
             }
-        return generateSequence {
-            if (rs.next()) {
-                extractRightFromRS(rs, groupDB)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
+        return rights.map { r ->
+            val groups = groupDB.getGroupsByRightId(r.rightId!!)
+            r.copy(
+                groups = groups,
+                groupIds = groups.map { it.groupId },
+            )
+        }
     }
 
     /**
      * Return all Templates that are an exception for the given rightId.
      */
-    fun getExceptionsByRightId(rightId: String): List<ItemRight> {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID).apply {
-                this.setString(1, rightId)
-            }
+    suspend fun getExceptionsByRightId(rightId: String): List<ItemRight> {
+        val rights =
+            connectionPool.useConnection { connection ->
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID).apply {
+                        this.setString(1, rightId)
+                    }
 
-        val span = tracer.spanBuilder("getExceptionsByTemplateId").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
+                val span = tracer.spanBuilder("getExceptionsByTemplateId").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
+                return@useConnection generateSequence {
+                    if (rs.next()) {
+                        extractRightFromRS(rs)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
             }
-        return generateSequence {
-            if (rs.next()) {
-                extractRightFromRS(rs, groupDB)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
+        return rights.map { r ->
+            val groups = groupDB.getGroupsByRightId(r.rightId!!)
+            r.copy(
+                groups = groups,
+                groupIds = groups.map { it.groupId },
+            )
+        }
     }
 
     /**
      * Checks if a given RightId is an exception.
      */
-    fun isException(rightId: String): Boolean {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_IS_EXCEPTION).apply {
-                this.setString(1, rightId)
-            }
+    suspend fun isException(rightId: String): Boolean =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_IS_EXCEPTION).apply {
+                    this.setString(1, rightId)
+                }
 
-        val span = tracer.spanBuilder("isTemplateAnException").startSpan()
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-        rs.next()
-        return (rs.getInt(1) == 1)
-    }
+            val span = tracer.spanBuilder("isTemplateAnException").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            rs.next()
+            return@useConnection (rs.getInt(1) == 1)
+        }
 
     /**
      * Connects an exception with a template.
      */
-    fun addExceptionToTemplate(
+    suspend fun addExceptionToTemplate(
         rightIdTemplate: String,
         rightIdExceptions: List<String>,
-    ): Int {
-        val prepStmt =
-            connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
-                this.setString(1, rightIdTemplate)
-                this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
+    ): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
+                    this.setString(1, rightIdTemplate)
+                    this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
             }
-        val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
-        return try {
-            span.makeCurrent()
-            runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-        } finally {
-            span.end()
         }
-    }
 
     companion object {
         private const val COLUMN_IS_TEMPLATE = "is_template"
@@ -623,12 +662,8 @@ class RightDB(
                 " SET $COLUMN_EXCEPTION_FROM=?" +
                 " WHERE $COLUMN_RIGHT_ID=ANY(?)"
 
-        fun extractRightFromRS(
-            rs: ResultSet,
-            groupDB: GroupDB,
-        ): ItemRight {
+        fun extractRightFromRS(rs: ResultSet): ItemRight {
             val currentRightId = rs.getString(1)
-            val groups = groupDB.getGroupsByRightId(currentRightId)
             return ItemRight(
                 rightId = currentRightId,
                 createdOn =
@@ -674,8 +709,8 @@ class RightDB(
                         )
                     },
                 exceptionFrom = rs.getString(26),
-                groups = groups,
-                groupIds = groups.map { it.groupId },
+                groups = null,
+                groupIds = null,
             )
         }
     }

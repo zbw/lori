@@ -23,9 +23,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
@@ -47,7 +48,7 @@ class RightRoutesKtTest {
         val expected = TEST_RIGHT
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightsByIds(listOf(rightId)) } returns listOf(expected.toBusiness())
+                coEvery { getRightsByIds(listOf(rightId)) } returns listOf(expected.toBusiness())
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -70,7 +71,7 @@ class RightRoutesKtTest {
         val testId = "someId"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightsByIds(listOf(testId)) } returns emptyList()
+                coEvery { getRightsByIds(listOf(testId)) } returns emptyList()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -94,7 +95,7 @@ class RightRoutesKtTest {
         val rightId = "someId"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { getRightsByIds(listOf(rightId)) } throws SQLException()
+                coEvery { getRightsByIds(listOf(rightId)) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         // when + then
@@ -118,8 +119,8 @@ class RightRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } returns 1
-                every { deleteItemEntriesByRightId(rightId) } returns 5
+                coEvery { deleteRight(rightId) } returns 1
+                coEvery { deleteItemEntriesByRightId(rightId) } returns 5
             }
         val servicePool = getServicePool(backend)
 
@@ -130,8 +131,8 @@ class RightRoutesKtTest {
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
-            verify(exactly = 1) { backend.deleteRight(rightId) }
+            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+            coVerify(exactly = 1) { backend.deleteRight(rightId) }
         }
     }
 
@@ -141,8 +142,8 @@ class RightRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } returns 0
-                every { deleteItemEntriesByRightId(rightId) } returns 0
+                coEvery { deleteRight(rightId) } returns 0
+                coEvery { deleteItemEntriesByRightId(rightId) } returns 0
             }
         val servicePool = getServicePool(backend)
 
@@ -153,8 +154,8 @@ class RightRoutesKtTest {
             )
             val response = client.delete("/api/v1/right/$rightId")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.NotFound))
-            verify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
-            verify(exactly = 1) { backend.deleteRight(rightId) }
+            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
+            coVerify(exactly = 1) { backend.deleteRight(rightId) }
         }
     }
 
@@ -164,7 +165,7 @@ class RightRoutesKtTest {
         val rightId = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { deleteRight(rightId) } throws SQLException()
+                coEvery { deleteRight(rightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -186,7 +187,7 @@ class RightRoutesKtTest {
     fun testPostRightOK() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertRight(any()) } returns "5"
+                coEvery { insertRight(any()) } returns "5"
             }
         val servicePool = getServicePool(backend)
 
@@ -209,7 +210,7 @@ class RightRoutesKtTest {
     fun testPostRightInternalError() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { insertRight(any()) } throws SQLException()
+                coEvery { insertRight(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
         testApplication {
@@ -259,8 +260,8 @@ class RightRoutesKtTest {
     fun testPutRightNoContent() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { rightContainsId(TEST_RIGHT.rightId!!) } returns true
-                every { upsertRight(any()) } returns 1
+                coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns true
+                coEvery { upsertRight(any()) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -283,8 +284,8 @@ class RightRoutesKtTest {
     fun testPutRightCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { rightContainsId(TEST_RIGHT.rightId!!) } returns false
-                every { insertRight(any()) } returns "1"
+                coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns false
+                coEvery { insertRight(any()) } returns "1"
             }
         val servicePool = getServicePool(backend)
 
@@ -307,8 +308,8 @@ class RightRoutesKtTest {
     fun testPutRightBadRequest() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { rightContainsId(TEST_RIGHT.rightId!!) } returns true
-                every { upsertRight(any()) } returns 1
+                coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns true
+                coEvery { upsertRight(any()) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -331,7 +332,7 @@ class RightRoutesKtTest {
     fun testPutRightInternalError() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                every { rightContainsId(TEST_RIGHT.rightId!!) } throws SQLException()
+                coEvery { rightContainsId(TEST_RIGHT.rightId!!) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 

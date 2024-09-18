@@ -24,7 +24,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hamcrest.MatcherAssert.assertThat
@@ -115,7 +114,7 @@ class DAConnectorTest {
                 spyk(
                     LoriServerBackend(
                         mockk {
-                            every { metadataDB.upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
+                            coEvery { metadataDB.upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
                         },
                         mockk<LoriConfiguration>(),
                     ),
