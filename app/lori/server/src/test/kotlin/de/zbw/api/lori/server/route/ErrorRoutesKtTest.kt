@@ -66,12 +66,13 @@ class ErrorRoutesKtTest {
             RightError(
                 errorId = 1,
                 message = "Timing conflict",
-                rightIdSource = "sourceRightId",
-                conflictingRightId = "conflictingRightId",
+                conflictingWithRightId = "sourceRightId",
+                conflictByRightId = "conflictingRightId",
                 handleId = "somehandle",
                 createdOn = NOW,
                 metadataId = "metadataId",
                 conflictType = ConflictType.DATE_OVERLAP,
+                conflictByTemplateName = "template name",
             )
     }
 }

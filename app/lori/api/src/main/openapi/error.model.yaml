@@ -1,22 +1,33 @@
 RightErrorRest:
+  required:
+    - metadataId
+    - message
+    - handleId
+    - conflictByRightId
+    - conflictType
+    - createdOn
+    - errorId
+    - conflictingWithRightId
   type: object
   properties:
-    conflictingRightId:
+    conflictByRightId:
+      type: string
+    conflictByTemplateName:
       type: string
     conflictType:
       $ref: 'error.model.yaml#/ConflictTypeRest'
+    conflictingWithRightId:
+      type: string
     createdOn:
       type: string
       format: date-time
-    message:
-      type: string
     errorId:
       type: integer
     handleId:
       type: string
-    metadataId:
+    message:
       type: string
-    rightIdSource:
+    metadataId:
       type: string
 
 ConflictTypeRest:

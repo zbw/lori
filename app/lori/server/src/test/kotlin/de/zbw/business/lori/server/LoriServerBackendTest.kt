@@ -696,19 +696,19 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedErrorCount: Int,
         reason: String,
     ) {
-        val received: Pair<Set<Item>, List<RightError>> =
+        val received: Map<Item, List<RightError>> =
             LoriServerBackend.findItemsWithConflicts(
                 searchResults,
                 rightConflictToCheck,
             )
         assertThat(
             reason,
-            received.first,
+            received.keys,
             `is`(expected),
         )
         assertThat(
             reason,
-            received.second.size,
+            received.values.flatten().size,
             `is`(expectedErrorCount),
         )
     }
