@@ -5,6 +5,7 @@ import {defineComponent, onMounted, Ref, ref} from "vue";
 import {RightErrorRest, RightRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
+import searchquerybuilder from "@/utils/searchquerybuilder";
 
 export default defineComponent({
   components: {},
@@ -62,11 +63,13 @@ export default defineComponent({
     const searchTerm = ref("");
 
     const createHandleHref = (handleId : string) => {
-      return window.location.origin + window.location.pathname +  "?dashboardHandleSearch=hdl:" + handleId;
+      return window.location.origin + window.location.pathname + "?" +
+          searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
     };
 
     const createTemplateHref = (rightId : string) => {
-      return window.location.origin + window.location.pathname +  "?templateId=" + rightId;
+      return window.location.origin + window.location.pathname + "?" +
+          searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
     };
     /**
      * Alerts:

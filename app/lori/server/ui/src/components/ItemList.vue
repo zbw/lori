@@ -224,7 +224,7 @@ export default defineComponent({
     const rightEditActivated = ref(false);
     const loadTemplateView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const templateId: string | null = urlParams.get("templateId");
+      const templateId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID);
       if (templateId == null || templateId == "") {
         return false;
       }
@@ -245,7 +245,7 @@ export default defineComponent({
 
     const loadRightView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const rightId: string | null = urlParams.get("rightId");
+      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
       if (rightId == null || rightId == "") {
         return false;
       }
@@ -266,7 +266,7 @@ export default defineComponent({
 
     const loadMetadataView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const metadataId: string | null = urlParams.get("metadataId");
+      const metadataId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_METADATA_ID);
       if (metadataId == null || metadataId == "") {
         return false;
       }
@@ -276,7 +276,7 @@ export default defineComponent({
 
     const loadInitSearchQuery: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const searchQuery: string | null = urlParams.get("dashboardHandleSearch");
+      const searchQuery: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
       if (searchQuery == null || searchQuery == "") {
         return false;
       }
