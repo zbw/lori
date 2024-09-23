@@ -21,6 +21,10 @@ export default defineComponent({
       dialogStore.templateOverviewActivated = true;
     };
 
+    const activateDashboardDialog = () => {
+      dialogStore.dashboardViewActivated = true;
+    };
+
     const activateBookmarkOverviewDialog = () => {
       dialogStore.bookmarkOverviewActivated = true;
     };
@@ -115,6 +119,7 @@ export default defineComponent({
       menuTopics,
       userStore,
       activateBookmarkOverviewDialog,
+      activateDashboardDialog,
       activateGroupDialog,
       activateTemplateDialog,
       deactivateLoginDialog,
@@ -146,6 +151,11 @@ export default defineComponent({
       </template>
 
       <v-list>
+        <v-list-item link>
+          <v-list-item-title @click="activateDashboardDialog"
+          >Dashboard</v-list-item-title
+          >
+        </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateGroupDialog"
             >IP-Gruppen</v-list-item-title

@@ -7,6 +7,7 @@ import { ref } from "vue";
 export const useDialogsStore = defineStore("dialog", () => {
   const bookmarkSaveActivated = ref(false);
   const bookmarkOverviewActivated = ref(false);
+  const dashboardViewActivated = ref(false);
   const groupOverviewActivated = ref(false);
   const groupDeleteActivated = ref(false);
   const groupEditActivated = ref(false);
@@ -17,6 +18,7 @@ export const useDialogsStore = defineStore("dialog", () => {
   return {
     bookmarkOverviewActivated,
     bookmarkSaveActivated,
+    dashboardViewActivated,
     editRightActivated,
     groupDeleteActivated,
     groupEditActivated,
