@@ -393,12 +393,11 @@ class LoriServerBackend(
                 publicationType = facets.publicationType,
                 templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
                 zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
-                searchBarEquivalent =
+                filtersAsQuery =
                     SearchFilter.filtersToString(
                         filters =
                             (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter))
                                 .filterNotNull(),
-                        searchTerm = searchTerm,
                     ),
                 isPartOfSeries = facets.isPartOfSeries,
             )
