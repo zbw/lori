@@ -617,14 +617,15 @@ fun ConflictType.toRest(): ConflictTypeRest =
 
 fun RightError.toRest(): RightErrorRest =
     RightErrorRest(
-        errorId = errorId,
-        conflictingRightId = conflictingRightId,
+        conflictByRightId = conflictByRightId,
+        conflictByTemplateName = conflictByTemplateName,
         createdOn = createdOn,
         message = message,
         handleId = handleId,
         metadataId = metadataId,
-        rightIdSource = rightIdSource,
-        conflictType = conflictType?.toRest(),
+        conflictingWithRightId = conflictingWithRightId,
+        conflictType = conflictType.toRest(),
+        errorId = errorId ?: -1,
     )
 
 /**

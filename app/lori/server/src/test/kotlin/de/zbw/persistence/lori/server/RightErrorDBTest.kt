@@ -67,21 +67,28 @@ class RightErrorDBTest : DatabaseTest() {
                 dbConnector.getErrorList(10, 0).size,
                 `is`(0),
             )
+
+            // Test Deletion by Template/RightId causing the errors
+            val templateError1 = TEST_RIGHT_ERROR.copy(conflictByRightId = "foo")
+            val templateError2 = TEST_RIGHT_ERROR.copy(conflictByRightId = "bar")
+            dbConnector.insertError(templateError1)
+            val errorIdTemplate2 = dbConnector.insertError(templateError2)
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(2),
+            )
+            dbConnector.deleteByCausingRightId(templateError1.conflictByRightId)
+            assertThat(
+                dbConnector.getErrorList(10, 0).size,
+                `is`(1),
+            )
+            assertThat(
+                dbConnector.getErrorList(10, 0).firstOrNull()?.toString() ?: "",
+                `is`(templateError2.copy(errorId = errorIdTemplate2, createdOn = NOW).toString()),
+            )
         }
 
     companion object {
-        val TEST_RIGHT_ERROR =
-            RightError(
-                errorId = null,
-                message = "Timing conflict",
-                rightIdSource = "sourceRightId",
-                conflictingRightId = "conflictingRightId",
-                handleId = "somehandle",
-                createdOn = null,
-                metadataId = "metadataId",
-                conflictType = ConflictType.DATE_OVERLAP,
-            )
-
         val NOW: OffsetDateTime =
             OffsetDateTime.of(
                 2022,
@@ -93,5 +100,18 @@ class RightErrorDBTest : DatabaseTest() {
                 0,
                 ZoneOffset.UTC,
             )!!
+
+        val TEST_RIGHT_ERROR =
+            RightError(
+                errorId = null,
+                message = "Timing conflict",
+                conflictingWithRightId = "sourceRightId",
+                conflictByRightId = "conflictingRightId",
+                handleId = "somehandle",
+                createdOn = NOW,
+                metadataId = "metadataId",
+                conflictType = ConflictType.DATE_OVERLAP,
+                conflictByTemplateName = "template name",
+            )
     }
 }

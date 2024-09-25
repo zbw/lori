@@ -32,6 +32,7 @@ import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Backend for the Lori-Server.
@@ -615,9 +616,13 @@ class LoriServerBackend(
         dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
 
         // Connect Template to all results
-        val itemsWithConflicts: Pair<Set<Item>, List<RightError>> =
+        val itemsWithConflicts: Map<Item, List<RightError>> =
             findItemsWithConflicts(searchResults, right)
-        val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.first)
+        dbConnector.rightErrorDB.deleteByCausingRightId(right.rightId!!)
+        itemsWithConflicts.values.flatten().forEach {
+            dbConnector.rightErrorDB.insertError(it)
+        }
+        val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.keys)
         val appliedMetadataIds =
             searchResultsWithoutConflict.map { result ->
                 dbConnector.itemDB.insertItem(
@@ -629,7 +634,7 @@ class LoriServerBackend(
         return TemplateApplicationResult(
             rightId = rightId,
             appliedMetadataIds = appliedMetadataIds,
-            errors = itemsWithConflicts.second,
+            errors = itemsWithConflicts.values.flatten(),
             exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
             templateName = right.templateName ?: "Missing Template Name",
         )
@@ -703,46 +708,50 @@ class LoriServerBackend(
 
         fun findItemsWithConflicts(
             searchResults: Set<Item>,
-            right: ItemRight,
-        ): Pair<Set<Item>, List<RightError>> {
-            val conflictErrors = emptyList<RightError>().toMutableList()
-            val conflictingItems: Set<Item> =
-                searchResults
-                    .toList()
-                    .filter { item ->
-                        val rights = item.rights
-                        rights
-                            .map { r ->
-                                if (r.rightId == right.rightId) {
-                                    false
-                                } else {
-                                    val hasConflict = checkForDateConflict(r, right)
-                                    if (hasConflict) {
-                                        conflictErrors.add(
-                                            RightError(
-                                                metadataId = item.metadata.metadataId,
-                                                conflictType = ConflictType.DATE_OVERLAP,
-                                                conflictingRightId = right.rightId ?: "Unknown",
-                                                createdOn = OffsetDateTime.now(),
-                                                errorId = null,
-                                                // TODO: Not sure if this is correct
-                                                rightIdSource = right.rightId,
-                                                handleId = item.metadata.handle,
-                                                message =
-                                                    "Start/End-Datum Konflikt: Template '${right.templateName}' steht im Widerspruch" +
-                                                        " mit einer Rechteinformation (Id: ${r.rightId}), welche an die" +
-                                                        " Metadata-ID ${item.metadata.metadataId} angebunden ist.",
-                                            ),
-                                        )
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }
-                            }.any { it }
-                    }.toSet()
-            return Pair(conflictingItems, conflictErrors.toList())
-        }
+            template: ItemRight,
+        ): Map<Item, List<RightError>> =
+            searchResults
+                .toList()
+                .mapNotNull { item ->
+                    val errors =
+                        checkApplicationForErrorsByItem(
+                            item,
+                            template,
+                        )
+                    if (errors.isEmpty()) {
+                        null
+                    } else {
+                        item to errors
+                    }
+                }.toMap()
+
+        private fun checkApplicationForErrorsByItem(
+            item: Item,
+            template: ItemRight,
+        ): List<RightError> =
+            item.rights
+                .filter { r ->
+                    (r.rightId != template.rightId)
+                }.mapNotNull { r ->
+                    checkForDateConflict(r, template)
+                        .takeIf { it }
+                        ?.let {
+                            RightError(
+                                metadataId = item.metadata.metadataId,
+                                handleId = item.metadata.handle,
+                                conflictingWithRightId = r.rightId ?: "No Right Id",
+                                conflictType = ConflictType.DATE_OVERLAP,
+                                conflictByRightId = template.rightId ?: "No Right Id",
+                                conflictByTemplateName = template.templateName,
+                                createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                                errorId = null,
+                                message =
+                                    "Start/End-Datum Konflikt: Template '${template.templateName}' steht im Widerspruch" +
+                                        " mit einer Rechteinformation (Id: ${r.rightId}), welche an die" +
+                                        " Metadata-ID ${item.metadata.metadataId} angebunden ist.",
+                            )
+                        }
+                }
 
         fun checkForDateConflict(
             r1: ItemRight,

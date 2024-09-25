@@ -10,14 +10,15 @@ import java.time.OffsetDateTime
  * @author Christian Bay (c.bay@zbw.eu)
  */
 data class RightError(
-    val conflictingRightId: String?,
-    val conflictType: ConflictType?,
-    val createdOn: OffsetDateTime?,
-    val message: String?,
+    val conflictByRightId: String,
+    val conflictByTemplateName: String?,
+    val conflictType: ConflictType,
+    val createdOn: OffsetDateTime,
+    val message: String,
+    val handleId: String,
+    val metadataId: String,
     val errorId: Int?,
-    val handleId: String?,
-    val metadataId: String?,
-    val rightIdSource: String?,
+    val conflictingWithRightId: String,
 )
 
 enum class ConflictType {

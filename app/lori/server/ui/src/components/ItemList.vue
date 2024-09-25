@@ -28,6 +28,7 @@ import templateApi from "@/api/templateApi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import metadata_utils from "@/utils/metadata_utils";
 import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
+import Dashboard from "@/components/Dashboard.vue";
 
 export default defineComponent({
   computed: {
@@ -36,6 +37,7 @@ export default defineComponent({
     },
   },
   components: {
+    Dashboard,
     VResizeDrawer,
     RightsEditDialog,
     BookmarkOverview,
@@ -191,12 +193,10 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      const hasTemplateParameter = loadTemplateView();
-      if (!hasTemplateParameter) {
-        loadRightView();
-      }
+      loadTemplateView()
       const hasMetadataParameter = loadMetadataView();
-      if (!hasMetadataParameter) {
+      const hasInitSearch = loadInitSearchQuery();
+      if (!hasMetadataParameter && !hasInitSearch) {
         startSearch();
       }
       loadBackendParameters();
@@ -221,7 +221,7 @@ export default defineComponent({
     const rightEditActivated = ref(false);
     const loadTemplateView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const templateId: string | null = urlParams.get("templateId");
+      const templateId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID);
       if (templateId == null || templateId == "") {
         return false;
       }
@@ -240,9 +240,19 @@ export default defineComponent({
       return true;
     };
 
+    const getRightPP: () => string | null = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
+      if (rightId == null || rightId == "") {
+        return null;
+      } else {
+        return rightId;
+      }
+    };
+
     const loadRightView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const rightId: string | null = urlParams.get("rightId");
+      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
       if (rightId == null || rightId == "") {
         return false;
       }
@@ -263,11 +273,21 @@ export default defineComponent({
 
     const loadMetadataView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const metadataId: string | null = urlParams.get("metadataId");
+      const metadataId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_METADATA_ID);
       if (metadataId == null || metadataId == "") {
         return false;
       }
-      executeSearchByMetadataId("metadataId:" + metadataId);
+      searchQueryByTerm("metadataId:" + metadataId, () => {});
+      return true;
+    };
+
+    const loadInitSearchQuery: () => boolean = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const searchQuery: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
+      if (searchQuery == null || searchQuery == "") {
+        return false;
+      }
+      startDashboardSearch(searchQuery)
       return true;
     };
 
@@ -285,6 +305,23 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+    };
+
+    const startDashboardSearch = (searchTerm: string) => {
+      dialogStore.dashboardViewActivated = false;
+      searchQueryByTerm(searchTerm, () => {
+        if (items.value.length > 0){
+          currentItem.value = items.value[0]
+          selectedItems.value = [items.value[0].metadata.metadataId];
+          const rightIdToLoad = getRightPP();
+          if (rightIdToLoad == null){
+            return;
+          } else {
+            dialogStore.rightsEditTabsSelectedRight = rightIdToLoad;
+            dialogStore.rightsEditTabsActivated = true;
+          }
+        }
+      });
     };
 
     const closeTemplateEditDialog = () => {
@@ -347,8 +384,7 @@ export default defineComponent({
         });
     };
 
-    // TODO(CB): Remove this method?
-    const executeSearchByMetadataId = (searchTerm: string) => {
+    const searchQueryByTerm = (searchTerm: string, callback: () => void) => {
       searchStore.isLastSearchForTemplates = false;
       api
         .searchQuery(
@@ -372,6 +408,7 @@ export default defineComponent({
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
+          callback();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -647,6 +684,9 @@ export default defineComponent({
     const closeBookmarkOverview = () => {
       dialogStore.bookmarkOverviewActivated = false;
     };
+    const closeDashboard = () => {
+      dialogStore.dashboardViewActivated = false;
+    };
     const closeGroupDialog = () => {
       dialogStore.groupOverviewActivated = false;
     };
@@ -708,6 +748,7 @@ export default defineComponent({
       addBookmarkSuccessful,
       closeBookmarkOverview,
       closeBookmarkSaveDialog,
+      closeDashboard,
       closeTemplateEditDialog,
       closeGroupDialog,
       closeTemplateOverview,
@@ -718,6 +759,7 @@ export default defineComponent({
       loadTemplateView,
       parsePublicationType,
       searchQuery,
+      startDashboardSearch,
       selectedRowColor,
       setActiveItem,
       startEmptySearch,
@@ -781,6 +823,14 @@ table.special, th.special, td.special {
       <BookmarkOverview
         v-on:executeBookmarkSearch="executeBookmarkSearch"
       ></BookmarkOverview>
+    </v-dialog>
+    <v-dialog
+        v-model="dialogStore.dashboardViewActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        v-on:close="closeDashboard"
+    >
+      <Dashboard></Dashboard>
     </v-dialog>
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>

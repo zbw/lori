@@ -8,9 +8,17 @@ import {
   TemplateNameWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
-import date_utils from "@/utils/date_utils";
 
+const QUERY_PARAMETER_TEMPLATE_ID = "templateId";
+const QUERY_PARAMETER_RIGHT_ID = "rightId";
+const QUERY_PARAMETER_METADATA_ID = "metadataId";
+const QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH = "dashboardHandleSearch";
 export default {
+  QUERY_PARAMETER_RIGHT_ID,
+  QUERY_PARAMETER_METADATA_ID,
+  QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+  QUERY_PARAMETER_TEMPLATE_ID,
+
   setPublicationDateFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterPublicationDate == undefined) {
       searchStore.publicationDateFrom = "";
