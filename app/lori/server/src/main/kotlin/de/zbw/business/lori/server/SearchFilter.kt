@@ -103,22 +103,11 @@ abstract class SearchFilter(
                 null
             }
 
-        fun filtersToString(
-            filters: List<SearchFilter>,
-            searchTerm: String? = null,
-        ): String {
-            val filtersAsString =
-                filters
-                    .joinToString(separator = " & ") { filter: SearchFilter ->
-                        filter.toString()
-                    }.takeIf { it.isNotBlank() }
-
-            return listOfNotNull(
-                fixPointReduce(filters, searchTerm)
-                    ?.takeIf { it.isNotBlank() },
-                filtersAsString,
-            ).joinToString(separator = " & ")
-        }
+        fun filtersToString(filters: List<SearchFilter>): String =
+            filters
+                .joinToString(separator = " & ") { filter: SearchFilter ->
+                    filter.toString()
+                }.takeIf { it.isNotBlank() } ?: ""
 
         private fun fixPointReduce(
             filters: List<SearchFilter>,

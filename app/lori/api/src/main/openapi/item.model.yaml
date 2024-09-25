@@ -39,7 +39,7 @@ ItemInformation:
       type: boolean
     hasZbwUserAgreement:
       type: boolean
-    searchBarEquivalent:
+    filtersAsQuery:
       type: string
     itemArray:
       type: array

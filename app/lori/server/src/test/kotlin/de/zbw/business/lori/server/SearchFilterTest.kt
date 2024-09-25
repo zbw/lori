@@ -344,33 +344,25 @@ class SearchFilterTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 emptyList<SearchFilter?>(),
-                null,
                 "",
-                false,
                 "nothing",
             ),
             arrayOf(
                 emptyList<SearchFilter?>(),
-                "tit:\"internationl law\"",
-                "tit:\"internationl law\"",
-                false,
-                "EmptyList and searchterm",
+                "",
+                "EmptyList",
             ),
             arrayOf(
                 listOf<SearchFilter>(
                     CollectionNameFilter("collection"),
                 ),
-                "",
                 "col:\"collection\"",
-                false,
                 "One search filter, no search term",
             ),
             arrayOf(
                 listOf<SearchFilter?>(null),
-                "tit:\"internationl law\"",
-                "tit:\"internationl law\"",
-                false,
-                "List with nulls and searchterm",
+                "",
+                "List with nulls",
             ),
             arrayOf(
                 listOf(
@@ -403,9 +395,7 @@ class SearchFilterTest : DatabaseTest() {
                     ),
                     TemplateNameFilter(listOf("555nase")),
                 ),
-                "tit:\"internationl law\"",
-                "tit:\"internationl law\"" +
-                    " & acc:\"OPEN,RESTRICTED\"" +
+                "acc:\"OPEN,RESTRICTED\"" +
                     " & col:\"collection\"" +
                     " & hdlcol:\"12345/nase\"" +
                     " & com:\"community\"" +
@@ -421,86 +411,34 @@ class SearchFilterTest : DatabaseTest() {
                     " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
                     " & zga:\"PAST,PRESENT,FUTURE\"" +
                     " & tpl:\"555nase\"",
-                false,
-                "All filters + searchterm",
-            ),
-            arrayOf(
-                listOf<SearchFilter>(
-                    CollectionNameFilter("collection"),
-                ),
-                "col:\"collection\"",
-                "col:\"collection\"",
-                true,
-                "Don't duplicate search bar values - search bar equals filters",
-            ),
-            arrayOf(
-                listOf<SearchFilter>(
-                    CollectionNameFilter("collection"),
-                ),
-                "tit:foobar & col:\"collection\"",
-                "tit:foobar & col:\"collection\"",
-                true,
-                "Don't duplicate search bar values - end of search bar partly equals filters",
-            ),
-            arrayOf(
-                listOf<SearchFilter>(
-                    PublicationDateFilter(toYear = 2009, fromYear = null),
-                ),
-                "jah:-2009 & typ:\"BOOK\"",
-                "typ:\"BOOK\" & jah:-2009",
-                true,
-                "Don't duplicate search bar values - begin of search bar partly equals filters",
-            ),
-            arrayOf(
-                listOf<SearchFilter>(
-                    CollectionNameFilter("collection"),
-                    SeriesFilter(listOf("series")),
-                ),
-                "tit:foobar & col:\"collection\"",
-                "tit:foobar & col:\"collection\" & ser:\"series\"",
-                true,
-                "Don't duplicate search bar values - search bar partly equals filters",
-            ),
-            arrayOf(
-                listOf<SearchFilter>(
-                    PublicationTypeFilter(listOf(PublicationType.BOOK)),
-                ),
-                "sig:\"ZDB-1-EWE\" & typ:\"BOOK\" & ser:\"Edward Elgar E-Book Archive\"",
-                "sig:\"ZDB-1-EWE\" & typ:\"BOOK\" & ser:\"Edward Elgar E-Book Archive\" & typ:\"BOOK\"",
-                false,
-                "Don't cut anything out if in the middle",
+                "All filters",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_TO_STRING)
     fun testToString(
         filters: List<SearchFilter?>,
-        searchTerm: String?,
         expected: String,
-        hasDuplication: Boolean,
         reason: String,
     ) {
-        val searchTermReceived = SearchFilter.filtersToString(filters.filterNotNull(), searchTerm)
+        val searchTermReceived = SearchFilter.filtersToString(filters.filterNotNull())
         assertThat(
             reason,
             searchTermReceived,
             `is`(expected),
         )
 
-        if (!hasDuplication) {
-            val roundTripFilters =
-                LoriServerBackend.parseSearchTermToFilters(
-                    searchTermReceived.replace(" & ", " "),
-                )
-            val searchTermFilters = LoriServerBackend.parseSearchTermToFilters(searchTerm)
-            assertThat(
-                reason,
-                roundTripFilters.toString(),
-                `is`(
-                    (searchTermFilters + filters).filterNotNull().toString(),
-                ),
+        val roundTripFilters =
+            LoriServerBackend.parseSearchTermToFilters(
+                searchTermReceived.replace(" & ", " "),
             )
-        }
+        assertThat(
+            reason,
+            roundTripFilters.toString(),
+            `is`(
+                filters.filterNotNull().toString(),
+            ),
+        )
     }
 
     companion object {

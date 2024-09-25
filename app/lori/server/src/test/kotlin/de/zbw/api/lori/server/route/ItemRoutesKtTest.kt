@@ -624,7 +624,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
                 isPartOfSeriesCount = emptyList(),
-                searchBarEquivalent = "",
+                filtersAsQuery = "",
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -653,7 +653,7 @@ class ItemRoutesKtTest {
                         hasLicenceContract = false,
                         hasZbwUserAgreement = false,
                         templateNamesToOcc = emptyMap(),
-                        searchBarEquivalent = "",
+                        filtersAsQuery = "",
                     )
                 )
             }
@@ -704,7 +704,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
                 isPartOfSeriesCount = emptyList(),
-                searchBarEquivalent = "",
+                filtersAsQuery = "",
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -732,7 +732,7 @@ class ItemRoutesKtTest {
                         hasZbwUserAgreement = false,
                         templateNamesToOcc = emptyMap(),
                         isPartOfSeries = emptyMap(),
-                        searchBarEquivalent = "",
+                        filtersAsQuery = "",
                     )
                 )
                 coEvery { countMetadataEntries() } returns expectedInformation.numberOfResults

@@ -337,6 +337,7 @@ export default defineComponent({
     // Search
     const searchStore = useSearchStore();
     const templateSearchIsActive = ref(false);
+    const filtersAsQuery = ref("");
     const initSearchByRightId = (rightId: string, templateName: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
@@ -496,7 +497,7 @@ export default defineComponent({
     };
 
     const processSearchResult = (response: ItemInformation) => {
-      searchStore.searchTerm = response.searchBarEquivalent != undefined ? response.searchBarEquivalent : searchStore.searchTerm;
+      filtersAsQuery.value = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
       items.value = response.itemArray;
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
@@ -728,6 +729,7 @@ export default defineComponent({
       dialogStore,
       headers,
       headersValueVSelect,
+      filtersAsQuery,
       items,
       newBookmarkId,
       numberOfResults,
@@ -864,12 +866,26 @@ table.special, th.special, td.special {
               clearable
               label="Suche"
               variant="outlined"
-              persistent-hint
               single-line
               @click:append="startSearch"
               @keydown.enter.prevent="startSearch"
             ></v-text-field>
+          </v-card-title>
+          <v-row
+              no-gutters
+              justify="space-around"
+          >
+            <v-col
+                cols="10"
+                offset="0"
+            >
+              <b>Aktive Filter:</b> {{ filtersAsQuery }}
+            </v-col>
+            <v-col
+              cols="1"
+            >
             <v-dialog v-model="searchHelpDialog" max-width="600px">
+
               <template v-slot:activator="{ props: activatorProps }">
                 <v-btn
                   density="compact"
@@ -1063,7 +1079,8 @@ table.special, th.special, td.special {
                 </v-card-text>
               </v-card>
             </v-dialog>
-          </v-card-title>
+            </v-col>
+          </v-row>
           <v-spacer></v-spacer>
           <v-snackbar
             multi-line

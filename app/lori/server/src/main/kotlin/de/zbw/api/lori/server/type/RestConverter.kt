@@ -605,7 +605,7 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                 }.toList()
                 .sortedBy { it.count }
                 .reversed(),
-        searchBarEquivalent = searchBarEquivalent,
+        filtersAsQuery = filtersAsQuery,
     )
 }
 
