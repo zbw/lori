@@ -744,7 +744,7 @@ class LoriServerBackend(
                                 conflictByRightId = template.rightId ?: "No Right Id",
                                 conflictByTemplateName = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),
-                                errorId = null, // TODO(CB): Upsert to DB and save errorID
+                                errorId = null,
                                 message =
                                     "Start/End-Datum Konflikt: Template '${template.templateName}' steht im Widerspruch" +
                                         " mit einer Rechteinformation (Id: ${r.rightId}), welche an die" +
