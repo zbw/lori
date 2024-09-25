@@ -1,12 +1,16 @@
 <script lang="ts">
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
-import { computed, ComputedRef, defineComponent, PropType, ref } from "vue";
+import {computed, ComputedRef, defineComponent, onMounted, PropType, ref, watch} from "vue";
 
 export default defineComponent({
   props: {
     rights: {
       type: Object as PropType<Array<RightRest>>,
+      required: true,
+    },
+    selectedRight: {
+      type: String,
       required: true,
     },
     metadataId: {
@@ -21,7 +25,6 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const renderKey = ref(0);
-    const tab = ref(null);
     const lastDeletedRight = ref("");
     const lastDeletionSuccessful = ref(false);
     const lastUpdatedRight = ref("");
@@ -73,6 +76,30 @@ export default defineComponent({
 
     const currentRights: ComputedRef<Array<RightRest>> = computed(() => {
       return props.rights;
+    });
+
+    const tab = ref(0);
+    watch(() => props.selectedRight, (currentValue: string, oldValue: string) => {
+      const preselectedIdx = props.rights.findIndex(
+          (e) => e.rightId === props.selectedRight,
+      );
+      if (preselectedIdx == -1){
+        tab.value = 0;
+      } else {
+        tab.value = preselectedIdx;
+      }
+    });
+
+    onMounted(() => {
+      const preselectedIdx = props.rights.findIndex(
+         (e) => e.rightId === props.selectedRight,
+      );
+      console.log("Preselected Idx: " + preselectedIdx);
+      if (preselectedIdx == -1){
+        tab.value = 0;
+      } else {
+        tab.value = preselectedIdx;
+      }
     });
 
     return {

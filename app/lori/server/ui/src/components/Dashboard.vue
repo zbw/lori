@@ -67,6 +67,12 @@ export default defineComponent({
           searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
     };
 
+    const createRightHref = (handleId : string, rightId: string) => {
+      const handlePP = createHandleHref(handleId);
+      return handlePP + "&" +
+          searchquerybuilder.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
+    };
+
     const createTemplateHref = (rightId : string) => {
       return window.location.origin + window.location.pathname + "?" +
           searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
@@ -91,6 +97,7 @@ export default defineComponent({
       successMsg,
       successMsgIsActive,
       createHandleHref,
+      createRightHref,
       createTemplateHref,
       getErrorList,
     };
@@ -106,6 +113,7 @@ export default defineComponent({
       <v-card-title class="text-h5"
       >Konflikte Zeitliche Gültigkeit</v-card-title
       >
+      Meldungen: {{ errorItems.length }}
       <v-snackbar
           contained
           multi-line
@@ -161,8 +169,13 @@ export default defineComponent({
           </td>
         </template>
         <template v-slot:item.conflictingWithRightId="{ item }">
-          <td class="cursor-pointer">
-            Right-ID: {{ item.conflictingWithRightId }}
+          <td>
+            <a
+                v-bind:href="
+                  createRightHref(item.handleId, item.conflictingWithRightId)
+                  "
+                target="_blank"
+            > Right-ID: {{ item.conflictingWithRightId }}</a>
           </td>
         </template>
       </v-data-table>

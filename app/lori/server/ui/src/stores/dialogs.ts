@@ -12,6 +12,8 @@ export const useDialogsStore = defineStore("dialog", () => {
   const groupDeleteActivated = ref(false);
   const groupEditActivated = ref(false);
   const editRightActivated = ref(false);
+  const rightsEditTabsActivated = ref(false);
+  const rightsEditTabsSelectedRight = ref("");
   const templateEditActivated = ref(false);
   const templateOverviewActivated = ref(false);
 
@@ -23,6 +25,8 @@ export const useDialogsStore = defineStore("dialog", () => {
     groupDeleteActivated,
     groupEditActivated,
     groupOverviewActivated,
+    rightsEditTabsSelectedRight,
+    rightsEditTabsActivated,
     templateEditActivated,
     templateOverviewActivated,
   };

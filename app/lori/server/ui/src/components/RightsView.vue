@@ -38,7 +38,6 @@ export default defineComponent({
 
   setup(props) {
     const searchStore = useSearchStore();
-    const tabDialogActivated = ref(false);
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
     const headers = [
@@ -69,12 +68,13 @@ export default defineComponent({
     const successMsgIsActive = ref(false);
     const successMsg = ref("");
 
-    const activateTabEdit = () => {
-      tabDialogActivated.value = true;
+    const activateTabEdit = (mouseEvent: MouseEvent, row: any) => {
+      dialogStore.rightsEditTabsSelectedRight = row.item.rightId;
+      dialogStore.rightsEditTabsActivated = true;
     };
 
     const tabDialogClosed = () => {
-      tabDialogActivated.value = false;
+      dialogStore.rightsEditTabsActivated = false;
     };
 
     const dialogStore = useDialogsStore();
@@ -133,7 +133,6 @@ export default defineComponent({
       searchStore,
       successMsg,
       successMsgIsActive,
-      tabDialogActivated,
       // Methods
       activateTabEdit,
       addRight,
@@ -228,7 +227,7 @@ export default defineComponent({
       ></RightsEditDialog>
     </v-dialog>
     <v-dialog
-      v-model="tabDialogActivated"
+      v-model="dialogStore.rightsEditTabsActivated"
       max-height="800px"
       max-width="1600px"
       :retain-focus="false"
@@ -240,6 +239,7 @@ export default defineComponent({
       <RightsEditTabs
         :metadata-id="metadataId"
         :rights="rights"
+        :selectedRight="dialogStore.rightsEditTabsSelectedRight"
         v-on:tabDialogClosed="tabDialogClosed"
         v-on:updateSuccessful="updateRight"
       ></RightsEditTabs>

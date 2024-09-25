@@ -193,10 +193,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      const hasTemplateParameter = loadTemplateView();
-      if (!hasTemplateParameter) {
-        loadRightView();
-      }
+      loadTemplateView()
       const hasMetadataParameter = loadMetadataView();
       const hasInitSearch = loadInitSearchQuery();
       if (!hasMetadataParameter && !hasInitSearch) {
@@ -241,6 +238,16 @@ export default defineComponent({
           });
         });
       return true;
+    };
+
+    const getRightPP: () => string | null = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
+      if (rightId == null || rightId == "") {
+        return null;
+      } else {
+        return rightId;
+      }
     };
 
     const loadRightView: () => boolean = () => {
@@ -306,6 +313,13 @@ export default defineComponent({
         if (items.value.length > 0){
           currentItem.value = items.value[0]
           selectedItems.value = [items.value[0].metadata.metadataId];
+          const rightIdToLoad = getRightPP();
+          if (rightIdToLoad == null){
+            return;
+          } else {
+            dialogStore.rightsEditTabsSelectedRight = rightIdToLoad;
+            dialogStore.rightsEditTabsActivated = true;
+          }
         }
       });
     };
@@ -816,9 +830,7 @@ table.special, th.special, td.special {
         max-width="1000px"
         v-on:close="closeDashboard"
     >
-      <Dashboard
-          v-on:initiateHandleSearch="startDashboardSearch"
-      ></Dashboard>
+      <Dashboard></Dashboard>
     </v-dialog>
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>
