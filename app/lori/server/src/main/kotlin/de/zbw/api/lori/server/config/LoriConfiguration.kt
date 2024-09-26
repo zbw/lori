@@ -28,6 +28,8 @@ data class LoriConfiguration(
     val jwtIssuer: String,
     val jwtRealm: String,
     val duoSenderEntityId: String,
+    val duoSLO: String,
+    val duoSSO: String,
     val sessionSignKey: String,
     val sessionEncryptKey: String,
     val stage: String,
@@ -69,6 +71,8 @@ data class LoriConfiguration(
             val jwtRealm = KonfigDeclaration.string(prefix, "jwt", "realm").required()
             val jwtSecret = KonfigDeclaration.string(prefix, "jwt", "secret").secret().required()
             val duoSenderEntityId = KonfigDeclaration.string(prefix, "duo", "senderentityid").required()
+            val duoSLO = KonfigDeclaration.string(prefix, "duo", "slo").required()
+            val duoSSO = KonfigDeclaration.string(prefix, "duo", "sso").required()
             val sessionSignKey = KonfigDeclaration.string(prefix, "session", "sign").secret().required()
             val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
             val stage = KonfigDeclaration.string(prefix, "stage").required()
@@ -92,6 +96,8 @@ data class LoriConfiguration(
                 sessionEncryptKey = source[sessionEncryptKey],
                 stage = source[stage],
                 handleURL = source[handleURL],
+                duoSLO = source[duoSLO],
+                duoSSO = source[duoSSO],
             )
         }
     }

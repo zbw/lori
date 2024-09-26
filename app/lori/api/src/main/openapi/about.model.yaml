@@ -2,9 +2,15 @@ AboutRest:
   required:
     - stage
     - handleURL
+    - duoSLO
+    - duoSSO
   type: object
   properties:
     stage:
       type: string
     handleURL:
+      type: string
+    duoSLO:
+      type: string
+    duoSSO:
       type: string
