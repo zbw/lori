@@ -50,6 +50,7 @@ dependencies {
     implementation("org.opensaml:opensaml-saml-impl:$openSaml")
     implementation("com.github.h0tk3y.betterParse:better-parse:0.4.4")
     implementation("com.zaxxer:HikariCP:5.1.0")
+    implementation("commons-logging:commons-logging:1.3.4")
 
     runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")

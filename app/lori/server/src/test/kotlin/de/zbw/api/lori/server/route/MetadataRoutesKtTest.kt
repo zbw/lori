@@ -1,8 +1,8 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
-import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.MetadataRest
@@ -22,7 +22,6 @@ import io.ktor.server.testing.testApplication
 import io.ktor.util.InternalAPI
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
@@ -191,20 +190,7 @@ class MetadataRoutesKtTest {
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { itemContainsMetadata(metadataId) } throws SQLException()
             }
-        val servicePool =
-            ServicePoolWithProbes(
-                services =
-                    listOf(
-                        mockk {
-                            coEvery { isReady() } returns true
-                            coEvery { isHealthy() } returns true
-                        },
-                    ),
-                config = CONFIG,
-                backend = backend,
-                tracer = tracer,
-            )
-
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
         testApplication {
             moduleAuthForTests()
             application(
@@ -538,11 +524,13 @@ class MetadataRoutesKtTest {
                 jwtIssuer = "0.0.0.0:8080",
                 jwtRealm = "Lori ui",
                 jwtSecret = "foobar",
-                duoSenderEntityId = "someId",
+                duoUrlMetadata = "someId",
                 sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
                 sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
                 stage = "dev",
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+                duoUrlSLO = "https://duo/slo",
+                duoUrlSSO = "https://duo/sso",
             )
 
         val TEST_METADATA =
@@ -572,19 +560,5 @@ class MetadataRoutesKtTest {
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
-
-        fun getServicePool(backend: LoriServerBackend) =
-            ServicePoolWithProbes(
-                services =
-                    listOf(
-                        mockk {
-                            every { isReady() } returns true
-                            every { isHealthy() } returns true
-                        },
-                    ),
-                config = CONFIG,
-                backend = backend,
-                tracer = tracer,
-            )
     }
 }

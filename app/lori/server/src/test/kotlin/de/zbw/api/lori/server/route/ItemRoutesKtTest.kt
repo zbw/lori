@@ -454,19 +454,7 @@ class ItemRoutesKtTest {
                         .itemArray
                         .map { it.toBusiness() }
             }
-        val servicePool =
-            ServicePoolWithProbes(
-                services =
-                    listOf(
-                        mockk {
-                            every { isReady() } returns true
-                            every { isHealthy() } returns true
-                        },
-                    ),
-                config = CONFIG,
-                backend = backend,
-                tracer = tracer,
-            )
+        val servicePool = getServicePool(backend)
         // when + then
         testApplication {
             moduleAuthForTests()
@@ -531,7 +519,8 @@ class ItemRoutesKtTest {
                 config = CONFIG,
                 backend = mockk(),
                 tracer = tracer,
-                samlUtils = mockk(),
+                samlUtils = mockk(relaxed = true),
+                httpClient = mockk(),
             )
         // when + then
         testApplication {
@@ -857,11 +846,13 @@ class ItemRoutesKtTest {
                 jwtIssuer = "0.0.0.0:8080",
                 jwtRealm = "Lori ui",
                 jwtSecret = "foobar",
-                duoSenderEntityId = "someId",
+                duoUrlMetadata = "someId",
                 sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
                 sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
                 stage = "dev",
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+                duoUrlSLO = "https://duo/slo",
+                duoUrlSSO = "https://duo/sso",
             )
 
         val ITEM_METADATA =
@@ -920,7 +911,8 @@ class ItemRoutesKtTest {
                 config = CONFIG,
                 backend = backend,
                 tracer = tracer,
-                samlUtils = mockk(),
+                samlUtils = mockk(relaxed = true),
+                httpClient = mockk(),
             )
     }
 }

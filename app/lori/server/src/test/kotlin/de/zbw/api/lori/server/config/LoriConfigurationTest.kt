@@ -31,7 +31,9 @@ class LoriConfigurationTest {
         System.setProperty("lori.jwt.issuer", expectedConfig.jwtIssuer)
         System.setProperty("lori.jwt.realm", expectedConfig.jwtRealm)
         System.setProperty("lori.jwt.secret", expectedConfig.jwtSecret)
-        System.setProperty("lori.duo.senderentityid", expectedConfig.duoSenderEntityId)
+        System.setProperty("lori.duo.metadata", expectedConfig.duoUrlMetadata)
+        System.setProperty("lori.duo.slo", expectedConfig.duoUrlSLO)
+        System.setProperty("lori.duo.sso", expectedConfig.duoUrlSSO)
         System.setProperty("lori.session.sign", expectedConfig.sessionSignKey)
         System.setProperty("lori.session.encrypt", expectedConfig.sessionEncryptKey)
         System.setProperty("lori.stage", expectedConfig.stage)
@@ -65,11 +67,13 @@ class LoriConfigurationTest {
                 jwtAudience = "jwtAudience",
                 jwtIssuer = "jwtIssuer",
                 jwtRealm = "jwtRealm",
-                duoSenderEntityId = "someId",
+                duoUrlMetadata = "someId",
                 sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
                 sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
                 stage = "dev",
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+                duoUrlSLO = "https://duo/slo",
+                duoUrlSSO = "https://duo/sso",
             )
     }
 }

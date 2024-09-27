@@ -42,6 +42,8 @@ import io.ktor.server.sessions.Sessions
 import io.ktor.server.sessions.cookie
 import io.ktor.util.hex
 import io.opentelemetry.api.trace.Tracer
+import org.apache.http.impl.client.HttpClients
+import org.opensaml.saml.metadata.resolver.impl.HTTPMetadataResolver
 import org.slf4j.event.Level
 import java.time.Instant
 import java.time.LocalDate
@@ -60,8 +62,17 @@ class ServicePoolWithProbes(
     val config: LoriConfiguration,
     private val backend: LoriServerBackend,
     private val tracer: Tracer,
-    private val samlUtils: SamlUtils = SamlUtils(backend.config.duoSenderEntityId),
+    private val samlUtils: SamlUtils,
+    private val httpClient: HTTPMetadataResolver =
+        HTTPMetadataResolver(
+            HttpClients.createDefault(),
+            config.duoUrlMetadata,
+        ),
 ) : ServiceLifecycle() {
+    init {
+        samlUtils.initMetadataResolver(httpClient)
+    }
+
     private var server: NettyApplicationEngine =
         embeddedServer(
             Netty,

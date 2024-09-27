@@ -274,7 +274,7 @@ export default defineComponent({
       <v-card>
         <v-card-title class="text-h5">Logout</v-card-title>
         <v-card-text>
-          Bitte <a :href="userStore.signOutURL">hier</a> klicken zum Logout
+          Bitte <a :href="userStore.signOutURL" target="_blank">hier</a> klicken zum Logout
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>

@@ -38,8 +38,8 @@ fun Routing.aboutRoutes(
                         AboutRest(
                             stage = backend.config.stage,
                             handleURL = backend.config.handleURL,
-                            duoSLO = backend.config.duoSLO,
-                            duoSSO = backend.config.duoSSO,
+                            duoSLO = backend.config.duoUrlSLO,
+                            duoSSO = backend.config.duoUrlSSO,
                         ),
                     )
                 } catch (e: Exception) {
