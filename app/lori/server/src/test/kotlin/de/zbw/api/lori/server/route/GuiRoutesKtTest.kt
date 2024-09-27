@@ -10,16 +10,31 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
+import io.mockk.every
 import io.mockk.mockk
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.opensaml.saml.saml2.core.Response
 import org.testng.annotations.Test
 
 class GuiRoutesKtTest {
     @Test
     fun testPostCallbackUnauthorized() {
         val backend = mockk<LoriServerBackend>(relaxed = true)
-        val servicePool = RightRoutesKtTest.getServicePool(backend, SamlUtils("foo"))
+        val servicePool =
+            RightRoutesKtTest.getServicePool(
+                backend,
+                mockk<SamlUtils>(relaxed = true) {
+                    every {
+                        unmarshallSAMLObject(any())
+                    } returns
+                        mockk<Response> {
+                            every {
+                                assertions
+                            } returns emptyList()
+                        }
+                },
+            )
         testApplication {
             moduleAuthForTests()
             application(

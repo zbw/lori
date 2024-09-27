@@ -859,7 +859,7 @@ class TemplateRoutesKtTest {
     companion object {
         fun getServicePool(
             backend: LoriServerBackend,
-            samlUtils: SamlUtils = mockk(),
+            samlUtils: SamlUtils = mockk(relaxed = true),
         ) = ServicePoolWithProbes(
             services =
                 listOf(

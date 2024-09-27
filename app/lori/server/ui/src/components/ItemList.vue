@@ -29,6 +29,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import metadata_utils from "@/utils/metadata_utils";
 import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
 import Dashboard from "@/components/Dashboard.vue";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   computed: {
@@ -50,6 +51,15 @@ export default defineComponent({
   },
 
   setup() {
+    /**
+     * Stores:
+     */
+    const searchStore = useSearchStore();
+    const userStore = useUserStore();
+
+    /**
+     * Table:
+     */
     const items: Ref<Array<ItemRest>> = ref([]);
     const currentItem = ref({} as ItemRest);
     const headersValueVSelect = ref([]);
@@ -297,6 +307,8 @@ export default defineComponent({
         .then((response: AboutRest) => {
           searchStore.stage = response.stage;
           searchStore.handleURLResolver = response.handleURL;
+          userStore.signInURL = response.duoSSO;
+          userStore.signOutURL = response.duoSLO;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -335,7 +347,6 @@ export default defineComponent({
     const errorMsg = ref("");
 
     // Search
-    const searchStore = useSearchStore();
     const templateSearchIsActive = ref(false);
     const filtersAsQuery = ref("");
     const initSearchByRightId = (rightId: string, templateName: string) => {

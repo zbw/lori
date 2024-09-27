@@ -37,7 +37,7 @@ import java.time.temporal.ChronoUnit
 fun Routing.guiRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
-    samlUtils: SamlUtils = SamlUtils(backend.config.duoSenderEntityId),
+    samlUtils: SamlUtils = SamlUtils(backend.config.duoUrlMetadata),
 ) {
     route("/ui/callback-sso") {
         post {
@@ -51,7 +51,7 @@ fun Routing.guiRoutes(
                     val text = SamlUtils.decodeSAMLResponse(call.receiveText())
 
                     val response: Response =
-                        samlUtils.unmarshallSAMLObject(Response::class.java, text)
+                        samlUtils.unmarshallSAMLObject(text)
                             ?: throw BadRequestException("Input is invalid. Expected SAML2.0 response in XML format.")
                     val now = Instant.now()
                     if (

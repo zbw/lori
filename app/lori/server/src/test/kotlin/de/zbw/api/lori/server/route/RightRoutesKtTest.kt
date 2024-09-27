@@ -373,11 +373,13 @@ class RightRoutesKtTest {
                 jwtIssuer = "0.0.0.0:8080",
                 jwtRealm = "Lori ui",
                 jwtSecret = "foobar",
-                duoSenderEntityId = "someId",
+                duoUrlMetadata = "someId",
                 sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
                 sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
                 stage = "dev",
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
+                duoUrlSLO = "https://duo/slo",
+                duoUrlSSO = "https://duo/sso",
             )
 
         val TEST_RIGHT =
@@ -456,7 +458,7 @@ class RightRoutesKtTest {
 
         fun getServicePool(
             backend: LoriServerBackend,
-            samlUtils: SamlUtils = mockk(),
+            samlUtils: SamlUtils = mockk(relaxed = true),
         ) = ServicePoolWithProbes(
             services =
                 listOf(
@@ -469,6 +471,7 @@ class RightRoutesKtTest {
             backend = backend,
             tracer = tracer,
             samlUtils = samlUtils,
+            httpClient = mockk(),
         )
     }
 }
