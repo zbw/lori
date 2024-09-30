@@ -63,7 +63,7 @@ class ServicePoolWithProbes(
     private val backend: LoriServerBackend,
     private val tracer: Tracer,
     private val samlUtils: SamlUtils,
-    private val httpClient: HTTPMetadataResolver =
+    httpClient: HTTPMetadataResolver =
         HTTPMetadataResolver(
             HttpClients.createDefault(),
             config.duoUrlMetadata,
