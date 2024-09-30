@@ -206,7 +206,7 @@ export default defineComponent({
     };
 
     const emitSearchStartPublicationDate = (date: string) => {
-      if (date.length == 4){
+      if (date.length == 4 || date.length == 0){
         emit("startSearch");
       }
     };
