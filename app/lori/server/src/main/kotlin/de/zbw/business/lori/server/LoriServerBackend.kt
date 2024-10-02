@@ -10,6 +10,7 @@ import de.zbw.api.lori.server.type.Either
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
+import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -23,6 +24,7 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.RightErrorDB
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
@@ -647,7 +649,41 @@ class LoriServerBackend(
     suspend fun getRightErrorList(
         limit: Int,
         offset: Int,
-    ): List<RightError> = dbConnector.rightErrorDB.getErrorList(limit = limit, offset = offset)
+        searchFilters: List<DashboardSearchFilter>,
+    ): ErrorQueryResult =
+        coroutineScope {
+            val results =
+                async {
+                    dbConnector.rightErrorDB.getErrorList(limit = limit, offset = offset, filters = searchFilters)
+                }
+            val totalNumber =
+                async {
+                    dbConnector.rightErrorDB.getCount(filters = searchFilters)
+                }
+
+            val occurrenceConflictTypes =
+                async {
+                    dbConnector.rightErrorDB
+                        .getOccurrences(
+                            column = RightErrorDB.COLUMN_CONFLICTING_TYPE,
+                            filters = searchFilters,
+                        ).map { ConflictType.valueOf(it) }
+                }
+
+            val occurrenceTemplateNames =
+                async {
+                    dbConnector.rightErrorDB.getOccurrences(
+                        column = RightErrorDB.COLUMN_CONFLICT_BY_TEMPLATE_NAME,
+                        filters = searchFilters,
+                    )
+                }
+            return@coroutineScope ErrorQueryResult(
+                totalNumberOfResults = totalNumber.await(),
+                templateNames = occurrenceTemplateNames.await().toSet(),
+                conflictTypes = occurrenceConflictTypes.await().toSet(),
+                results = results.await(),
+            )
+        }
 
     companion object {
         /**

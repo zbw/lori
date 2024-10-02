@@ -434,7 +434,7 @@ class SearchDB(
                             this.setInt(counter++, limit)
                         }
                         if (offset != null) {
-                            this.setInt(counter, offset)
+                            this.setInt(counter++, offset)
                         }
                     }
             val span = tracer.spanBuilder("searchMetadataWithRightsFilter").startSpan()
@@ -612,7 +612,7 @@ class SearchDB(
                 "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
-        fun buildSearchQuery(
+        internal fun buildSearchQuery(
             searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,

@@ -109,7 +109,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
     // TODO(CB): Test with multiple templates assigned
     companion object {
         const val DATA_FOR_SEARCH_BY_TEMPLATE_ID = "DATA_FOR_SEARCH_BY_TEMPLATE_ID"
-        val EXAMPLE_DATE: LocalDate =
+        private val EXAMPLE_DATE: LocalDate =
             LocalDate.of(
                 2022,
                 3,

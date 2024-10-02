@@ -1,3 +1,29 @@
+RightErrorInformationRest:
+  required:
+    - totalPages
+    - numberOfResults
+    - errors
+    - templateNames
+    - conflictTypes
+  type: object
+  properties:
+    numberOfResults:
+      type: integer
+    totalPages:
+      type: integer
+    errors:
+      type: array
+      items:
+        $ref: 'error.model.yaml#/RightErrorRest'
+    templateNames:
+      type: array
+      items:
+        type: string
+    conflictTypes:
+      type: array
+      items:
+        $ref: 'error.model.yaml#/ConflictTypeRest'
+
 RightErrorRest:
   required:
     - metadataId
