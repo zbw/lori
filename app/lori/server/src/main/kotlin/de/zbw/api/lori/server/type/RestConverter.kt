@@ -466,6 +466,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         endDateFilter = QueryParameterParser.parseEndDateFilter(this.filterEndDate),
         validOnFilter = QueryParameterParser.parseRightValidOnFilter(this.filterValidOn),
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
+        seriesFilter = QueryParameterParser.parseSeriesFilter(this.filterSeries),
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
