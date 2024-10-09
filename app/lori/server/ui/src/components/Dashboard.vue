@@ -1,8 +1,8 @@
 <script lang="ts">
 
 
-import {defineComponent, onMounted, Ref, ref} from "vue";
-import {RightErrorRest, RightRest} from "@/generated-sources/openapi";
+import {defineComponent, onMounted, Ref, ref, watch} from "vue";
+import {RightErrorInformationRest, RightErrorRest, RightRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import searchquerybuilder from "@/utils/searchquerybuilder";
@@ -49,9 +49,14 @@ export default defineComponent({
 
     const getErrorList = () => {
       rightErrorApi
-          .getRightErrorList(0, 100)
-          .then((r: Array<RightErrorRest>) => {
-            errorItems.value = r;
+          .getRightErrorList(
+              (currentPage.value - 1) * pageSize.value,
+              pageSize.value
+          )
+          .then((r: RightErrorInformationRest) => {
+            totalPages.value = r.totalPages;
+            errorItems.value = r.errors;
+            numberOfResults.value = r.numberOfResults;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -61,6 +66,21 @@ export default defineComponent({
           });
     };
     const searchTerm = ref("");
+    const currentPage = ref(1);
+    const pageSize = ref(10);
+    const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
+    const totalPages = ref(0);
+    const numberOfResults = ref(0);
+
+
+    const handlePageChange = () => {
+      getErrorList();
+    };
+
+    const handlePageSizeChange = () => {
+      currentPage.value = 1;
+      getErrorList();
+    };
 
     const createHandleHref = (handleId : string) => {
       return window.location.origin + window.location.pathname + "?" +
@@ -85,17 +105,33 @@ export default defineComponent({
     const successMsgIsActive = ref(false);
     const successMsg = ref("");
 
+    /**
+     * Watches:
+     */
+    watch(currentPage, () => {
+      handlePageChange();
+    });
+
+    watch(pageSize, () => {
+      handlePageSizeChange();
+    });
+
     onMounted(() => getErrorList());
 
     return {
+      currentPage,
       headers,
       errorItems,
       errorMsg,
       errorMsgIsActive,
+      numberOfResults,
+      pageSize,
+      pageSizes,
       renderKey,
       searchTerm,
       successMsg,
       successMsgIsActive,
+      totalPages,
       createHandleHref,
       createRightHref,
       createTemplateHref,
@@ -113,7 +149,7 @@ export default defineComponent({
       <v-card-title class="text-h5"
       >Konflikte Zeitliche Gültigkeit</v-card-title
       >
-      Meldungen: {{ errorItems.length }}
+      Meldungen: {{ numberOfResults }}
       <v-snackbar
           contained
           multi-line
@@ -141,6 +177,7 @@ export default defineComponent({
           :headers="headers"
           :items="errorItems"
           :search="searchTerm"
+          :items-per-page="0"
           item-value="handleId"
           loading-text="Daten werden geladen... Bitte warten."
       >
@@ -178,8 +215,29 @@ export default defineComponent({
             > Right-ID: {{ item.conflictingWithRightId }}</a>
           </td>
         </template>
+        <template #bottom></template>
       </v-data-table>
     </v-container>
+    <v-col cols="14" sm="12">
+      <v-row>
+        <v-col cols="2" sm="2">
+          <v-select
+              v-model="pageSize"
+              :items="pageSizes"
+              label="Einträge pro Seite"
+          ></v-select>
+        </v-col>
+        <v-col cols="10" sm="9">
+          <v-pagination
+              v-model="currentPage"
+              :length="totalPages"
+              next-icon="mdi-menu-right"
+              prev-icon="mdi-menu-left"
+              total-visible="7"
+          ></v-pagination>
+        </v-col>
+      </v-row>
+    </v-col>
   </v-card>
 </template>
 

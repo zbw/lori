@@ -53,9 +53,7 @@ right-errors:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'error.model.yaml#/RightErrorInformationRest'
+              $ref: 'error.model.yaml#/RightErrorInformationRest'
       400:
         description: Bad request
         content:
