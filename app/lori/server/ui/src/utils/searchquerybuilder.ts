@@ -1,7 +1,7 @@
 import {
   AccessStateRest,
   AccessStateWithCountRest,
-  BookmarkRest,
+  BookmarkRest, IsPartOfSeriesCountRest,
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,
@@ -123,8 +123,8 @@ export default {
     bookmark.filterSeries.forEach((v: string, index: number): void => {
       searchStore.seriesReceived[index] = {
         count: 0,
-        zdbId: v,
-      } as ZdbIdWithCountRest;
+        series: v,
+      } as IsPartOfSeriesCountRest;
     });
   },
 

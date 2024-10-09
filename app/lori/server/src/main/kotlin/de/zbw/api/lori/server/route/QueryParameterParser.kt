@@ -1,6 +1,10 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.DashboardConflictTypeFilter
+import de.zbw.business.lori.server.DashboardTemplateNameFilter
+import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
+import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
@@ -14,6 +18,7 @@ import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemporalValidity
@@ -170,4 +175,38 @@ object QueryParameterParser {
             }?.let {
                 TemplateNameFilter(it)
             }
+
+    fun parseDashboardTemplateNameFilter(s: String?): DashboardTemplateNameFilter? =
+        s
+            ?.split(",".toRegex())
+            ?.takeIf {
+                it.isNotEmpty()
+            }?.let {
+                DashboardTemplateNameFilter(it)
+            }
+
+    fun parseDashboardConflictTypeFilter(s: String?): DashboardConflictTypeFilter? {
+        if (s == null) {
+            return null
+        }
+        val receivedConflictTypes =
+            s.split(",".toRegex()).mapNotNull {
+                try {
+                    ConflictType.valueOf(it)
+                } catch (iae: IllegalArgumentException) {
+                    null
+                }
+            }
+        return receivedConflictTypes.takeIf { it.isNotEmpty() }?.let { DashboardConflictTypeFilter(it) }
+    }
+
+    fun parseDashboardStartDateFilter(s: String?): DashboardTimeIntervalStartFilter? =
+        s
+            ?.let { parseDate(it) }
+            ?.let { DashboardTimeIntervalStartFilter(it) }
+
+    fun parseDashboardEndDateFilter(s: String?): DashboardTimeIntervalEndFilter? =
+        s
+            ?.let { parseDate(it) }
+            ?.let { DashboardTimeIntervalEndFilter(it) }
 }

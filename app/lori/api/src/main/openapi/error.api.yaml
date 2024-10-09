@@ -22,15 +22,38 @@ right-errors:
           maximum: 200
           default: 25
         required: false
+      - name: pageSize
+        in: query
+        description: Page size of UI paginator
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+      - name: filterTemplateName
+        in: query
+        schema:
+          type: string
+      - name: filterTimeIntervalStart
+        in: query
+        schema:
+          type: string
+      - name: filterTimeIntervalEnd
+        in: query
+        schema:
+          type: string
+      - name: filterConflictType
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'error.model.yaml#/RightErrorRest'
+              $ref: 'error.model.yaml#/RightErrorInformationRest'
       400:
         description: Bad request
         content:

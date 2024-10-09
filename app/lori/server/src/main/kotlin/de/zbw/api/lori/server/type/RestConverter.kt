@@ -12,6 +12,7 @@ import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
+import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
@@ -37,6 +38,7 @@ import de.zbw.lori.model.OrganisationToIp
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
+import de.zbw.lori.model.RightErrorInformationRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateNameWithCountRest
@@ -464,6 +466,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         endDateFilter = QueryParameterParser.parseEndDateFilter(this.filterEndDate),
         validOnFilter = QueryParameterParser.parseRightValidOnFilter(this.filterValidOn),
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
+        seriesFilter = QueryParameterParser.parseSeriesFilter(this.filterSeries),
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
@@ -547,6 +550,17 @@ fun BookmarkTemplate.toRest(): BookmarkTemplateRest =
         bookmarkId = this.bookmarkId,
         rightId = this.rightId,
     )
+
+fun ErrorQueryResult.toRest(pageSize: Int): RightErrorInformationRest {
+    val totalPages = ceil(this.totalNumberOfResults.toDouble() / pageSize.toDouble()).toInt()
+    return RightErrorInformationRest(
+        numberOfResults = totalNumberOfResults,
+        totalPages = totalPages,
+        errors = this.results.map { it.toRest() },
+        templateNames = this.templateNames.toList(),
+        conflictTypes = this.conflictTypes.map { it.toRest() },
+    )
+}
 
 fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
     val totalPages = ceil(this.numberOfResults.toDouble() / pageSize.toDouble()).toInt()

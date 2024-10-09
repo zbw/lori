@@ -1,5 +1,5 @@
 import {
-    Configuration, RightErrorApi, RightErrorRest, RightRest,
+    Configuration, RightErrorApi, RightErrorInformationRest, RightErrorRest, RightRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -11,8 +11,9 @@ export default {
     getRightErrorList(
         offset: number,
         limit: number,
-    ): Promise<Array<RightErrorRest>> {
+    ): Promise<RightErrorInformationRest> {
         return rightErrorApi.getRightErrorList({
+            pageSize: limit,
             offset: offset,
             limit: limit,
         });
