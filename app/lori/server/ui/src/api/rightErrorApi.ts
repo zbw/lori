@@ -11,11 +11,19 @@ export default {
     getRightErrorList(
         offset: number,
         limit: number,
+        filterTemplateName: string | undefined,
+        filterTimeIntervalStart: string | undefined,
+        filterTimeIntervalEnd: string | undefined,
+        filterConflictType: string | undefined,
     ): Promise<RightErrorInformationRest> {
         return rightErrorApi.getRightErrorList({
             pageSize: limit,
             offset: offset,
             limit: limit,
+            filterTemplateName: filterTemplateName,
+            filterTimeIntervalStart: filterTimeIntervalStart,
+            filterTimeIntervalEnd: filterTimeIntervalEnd,
+            filterConflictType: filterConflictType,
         });
     },
 };
