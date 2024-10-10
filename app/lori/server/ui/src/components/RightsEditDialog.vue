@@ -1304,7 +1304,7 @@ export default defineComponent({
                   v-model="isStartDateMenuOpen"
                 >
                   <template v-slot:activator="{ props }">
-                    <v-text-field
+                   <v-text-field
                       :modelValue="startDateFormatted"
                       :error-messages="errorStartDate"
                       label="Start-Datum"

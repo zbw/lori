@@ -1,11 +1,12 @@
 <script lang="ts">
 
 
-import {defineComponent, onMounted, Ref, ref, watch} from "vue";
-import {RightErrorInformationRest, RightErrorRest, RightRest} from "@/generated-sources/openapi";
+import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
+import {BookmarkRest, RightErrorInformationRest, RightErrorRest, RightRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import searchquerybuilder from "@/utils/searchquerybuilder";
+import date_utils from "@/utils/date_utils";
 
 export default defineComponent({
   components: {},
@@ -51,12 +52,18 @@ export default defineComponent({
       rightErrorApi
           .getRightErrorList(
               (currentPage.value - 1) * pageSize.value,
-              pageSize.value
+              pageSize.value,
+              buildTemplateNameFilter(),
+              startDateFormatted.value,
+              endDateFormatted.value,
+              buildConflictTypeFilter(),
           )
           .then((r: RightErrorInformationRest) => {
             totalPages.value = r.totalPages;
             errorItems.value = r.errors;
             numberOfResults.value = r.numberOfResults;
+            receivedTemplateNames.value = r.templateNames;
+            receivedConflictTypes.value = r.conflictTypes;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -72,7 +79,72 @@ export default defineComponent({
     const totalPages = ref(0);
     const numberOfResults = ref(0);
 
+    /**
+     * Filter:
+     */
+    const receivedTemplateNames: Ref<Array<string>> = ref([]);
+    const selectedTemplateNames: Ref<Array<string>> = ref([]);
+    const receivedConflictTypes: Ref<Array<string>> = ref([]);
+    const selectedConflictTypes: Ref<Array<string>> = ref([]);
 
+    const buildTemplateNameFilter: () => (string | undefined) = () => {
+      if (selectedTemplateNames.value.length == 0){
+        return undefined;
+      } else {
+        return selectedTemplateNames.value.join(",");
+      }
+    };
+
+    const buildConflictTypeFilter: () => (string | undefined) = () => {
+      if (selectedConflictTypes.value.length == 0){
+        return undefined;
+      } else {
+        return selectedConflictTypes.value.join(",");
+      }
+    };
+
+    const prettyPrintConflict: (conflictType: any) => string = (conflictType: string) => {
+      switch (conflictType.title){
+        case "date_overlap":
+          return "Zeitliche Überschneidung";
+        default:
+          return "Unbekannt";
+      }
+    };
+
+    const startDate = ref(undefined as Date | undefined);
+    const isStartDateMenuOpen = ref(false);
+    const startDateFormatted = ref("");
+    const startDateEntered = () => {
+      if (
+          date_utils.isEmptyObject(startDate.value) ||
+          startDate.value == undefined
+      ) {
+        return "";
+      } else {
+        startDateFormatted.value = date_utils.dateToIso8601(startDate.value);
+        getErrorList();
+      }
+    };
+
+    const endDate = ref(undefined as Date | undefined);
+    const isEndDateMenuOpen = ref(false);
+    const endDateFormatted = ref("");
+    const endDateEntered = () => {
+      if (
+          date_utils.isEmptyObject(endDate.value) ||
+          endDate.value == undefined
+      ) {
+        return "";
+      } else {
+        endDateFormatted.value = date_utils.dateToIso8601(endDate.value);
+        getErrorList();
+      }
+    };
+
+    /**
+     * Pageinator:
+     */
     const handlePageChange = () => {
       getErrorList();
     };
@@ -93,7 +165,7 @@ export default defineComponent({
           searchquerybuilder.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };
 
-    const createTemplateHref = (rightId : string) => {
+    const createTemplateHref: (rightId: string) => string = (rightId : string) => {
       return window.location.origin + window.location.pathname + "?" +
           searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
     };
@@ -116,26 +188,55 @@ export default defineComponent({
       handlePageSizeChange();
     });
 
+    watch(selectedTemplateNames, () => {
+      getErrorList();
+    });
+
+    watch(selectedConflictTypes, () => {
+      getErrorList();
+    });
+
+    watch(startDateFormatted, () => {
+      isStartDateMenuOpen.value = false;
+      getErrorList();
+    });
+
+    /**
+     * onMounted:
+     */
     onMounted(() => getErrorList());
 
     return {
       currentPage,
       headers,
+      endDate,
+      endDateFormatted,
       errorItems,
       errorMsg,
       errorMsgIsActive,
+      isEndDateMenuOpen,
+      isStartDateMenuOpen,
       numberOfResults,
       pageSize,
       pageSizes,
+      receivedConflictTypes,
+      receivedTemplateNames,
       renderKey,
       searchTerm,
+      selectedConflictTypes,
+      selectedTemplateNames,
+      startDate,
+      startDateFormatted,
       successMsg,
       successMsgIsActive,
       totalPages,
+      endDateEntered,
       createHandleHref,
       createRightHref,
       createTemplateHref,
       getErrorList,
+      startDateEntered,
+      prettyPrintConflict,
     };
   },
 });
@@ -149,7 +250,6 @@ export default defineComponent({
       <v-card-title class="text-h5"
       >Konflikte Zeitliche Gültigkeit</v-card-title
       >
-      Meldungen: {{ numberOfResults }}
       <v-snackbar
           contained
           multi-line
@@ -172,6 +272,96 @@ export default defineComponent({
       >
         {{ errorMsg }}
       </v-snackbar>
+      <v-row>
+        <v-col>
+          <b>Art</b>
+          <v-select
+              multiple
+              v-model="selectedConflictTypes"
+              :items="receivedConflictTypes"
+          >
+            <template v-slot:selection="{ item }">
+              {{ prettyPrintConflict(item) }}
+            </template>
+            <template v-slot:item="{ item, props }">
+              <v-list-item v-bind="props">
+                <template v-slot:title>
+                  {{ prettyPrintConflict(item) }}
+                </template>
+              </v-list-item>
+            </template>
+
+          </v-select>
+        </v-col>
+        <v-col>
+          <b>Erzeugendes Template</b>
+          <v-select
+              multiple
+              v-model="selectedTemplateNames"
+              :items="receivedTemplateNames"
+          ></v-select>
+        </v-col>
+        <v-col>
+          <b>Erzeugungszeitraum</b>
+          <v-menu
+              :close-on-content-click="false"
+              :location="'bottom'"
+              v-model="isStartDateMenuOpen"
+          >
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                  v-model="startDateFormatted"
+                  label="Von"
+                  variant="outlined"
+                  prepend-icon="mdi-calendar"
+                  readonly
+                  clearable
+                  v-bind="props"
+                  @update:modelValue="getErrorList"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+                v-model="startDate"
+                color="primary"
+                @update:modelValue="startDateEntered"
+            >
+              <template v-slot:header></template>
+            </v-date-picker>
+          </v-menu>
+        </v-col>
+        <v-col class="ma-6">
+          <v-menu
+              :close-on-content-click="false"
+              :location="'bottom'"
+              v-model="isEndDateMenuOpen"
+          >
+            <template v-slot:activator="{ props }">
+              <v-text-field
+                  v-model="endDateFormatted"
+                  label="Bis"
+                  variant="outlined"
+                  prepend-icon="mdi-calendar"
+                  readonly
+                  clearable
+                  v-bind="props"
+                  @update:modelValue="getErrorList"
+              ></v-text-field>
+            </template>
+            <v-date-picker
+                v-model="endDate"
+                color="primary"
+                @update:modelValue="endDateEntered"
+            >
+              <template v-slot:header></template>
+            </v-date-picker>
+          </v-menu>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col>
+          Meldungen: {{ numberOfResults }}
+        </v-col>
+      </v-row>
       <v-data-table
           :key="renderKey"
           :headers="headers"
