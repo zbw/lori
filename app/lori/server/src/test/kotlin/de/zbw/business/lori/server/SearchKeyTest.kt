@@ -54,7 +54,7 @@ class SearchKeyTest : DatabaseTest() {
     }
 
     @DataProvider(name = DATA_FOR_SEARCH_QUERY)
-    fun createDataForMetadataId() =
+    fun createDataForSearchQuery() =
         arrayOf(
             arrayOf(
                 "!${FilterType.ZDB_ID.keyAlias}:'${METADATA_TEST.zdbIdJournal}'",

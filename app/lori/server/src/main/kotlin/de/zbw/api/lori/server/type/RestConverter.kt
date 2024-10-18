@@ -350,7 +350,7 @@ fun DAItem.toBusiness(
         publicationType == null ||
         title == null
     ) {
-        logger.warn("Required field missing for MetadataId: ${this.id}")
+        logger.warn("Required field missing for metadata: ${this.metadata}")
         null
     } else {
         var subDACommunity: DACommunity? = null
@@ -367,7 +367,7 @@ fun DAItem.toBusiness(
 
             else -> {
                 // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
-                logger.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")
+                logger.warn("Invalid numbers of parent communities (should be 1 or 2): Handle ${this.handle}")
                 return null
             }
         }

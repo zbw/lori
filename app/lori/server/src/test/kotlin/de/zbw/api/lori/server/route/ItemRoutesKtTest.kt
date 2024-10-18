@@ -50,13 +50,13 @@ class ItemRoutesKtTest {
     @Test
     fun testItemPostCreated() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns false
-                coEvery { insertItemEntry(givenMetadataId, givenRightId, any()) } returns Either.Right("foo")
+                coEvery { itemContainsEntry(givenHandle, givenRightId) } returns false
+                coEvery { insertItemEntry(givenHandle, givenRightId, any()) } returns Either.Right("foo")
             }
         val servicePool = getServicePool(backend)
 
@@ -79,12 +79,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemPostConflict() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+                coEvery { itemContainsEntry(givenHandle, givenRightId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -106,12 +106,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemBadRequest() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } returns true
+                coEvery { itemContainsEntry(givenHandle, givenRightId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -134,12 +134,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemPostInternal() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenMetadataId, givenRightId) } throws SQLException()
+                coEvery { itemContainsEntry(givenHandle, givenRightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -166,12 +166,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemEntryDeleteOKLastRelation() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+                coEvery { deleteItemEntry(givenHandle, givenRightId) } returns 1
                 coEvery { countItemByRightId(givenRightId) } returns 0
                 coEvery { deleteRight(givenRightId) } returns 1
             }
@@ -182,7 +182,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
         }
@@ -191,12 +191,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemEntryDeleteOKRemainingRelations() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } returns 1
+                coEvery { deleteItemEntry(givenHandle, givenRightId) } returns 1
                 coEvery { countItemByRightId(givenRightId) } returns 1
             }
         val servicePool = getServicePool(backend)
@@ -206,7 +206,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
         }
@@ -215,12 +215,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemEntryDeleteInternal() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val givenRightId = "right"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { deleteItemEntry(givenMetadataId, givenRightId) } throws SQLException()
+                coEvery { deleteItemEntry(givenHandle, givenRightId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -229,7 +229,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenMetadataId/$givenRightId")
+            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -237,12 +237,12 @@ class ItemRoutesKtTest {
     @Test
     fun testItemGetRightsByMetadataOK() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val expected = listOf(TEST_RIGHT)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { getRightEntriesByHandle(givenMetadataId) } returns expected.map { it.toBusiness() }
-                coEvery { metadataContainsHandle(givenMetadataId) } returns true
+                coEvery { getRightEntriesByHandle(givenHandle) } returns expected.map { it.toBusiness() }
+                coEvery { metadataContainsHandle(givenHandle) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -251,7 +251,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
+            val response = client.get("/api/v1/item/metadata/$givenHandle")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ArrayList<RightRest>>() {}.type
             val received: ArrayList<RightRest> = GSON.fromJson(content, groupListType)
@@ -262,10 +262,10 @@ class ItemRoutesKtTest {
     @Test
     fun testItemGetRightsByMetadataNotFound() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsHandle(givenMetadataId) } returns false
+                coEvery { metadataContainsHandle(givenHandle) } returns false
             }
         val servicePool = getServicePool(backend)
 
@@ -274,7 +274,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
+            val response = client.get("/api/v1/item/metadata/$givenHandle")
             assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
         }
     }
@@ -282,10 +282,10 @@ class ItemRoutesKtTest {
     @Test
     fun testItemGetRightsByMetadataInternal() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsHandle(givenMetadataId) } throws SQLException()
+                coEvery { metadataContainsHandle(givenHandle) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -294,7 +294,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenMetadataId")
+            val response = client.get("/api/v1/item/metadata/$givenHandle")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }

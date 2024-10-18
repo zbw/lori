@@ -79,8 +79,8 @@ export default {
   deleteRight(rightId: string): Promise<void> {
     return loriRightApi.deleteRightById({ id: rightId });
   },
-  deleteItemRelation(metadataId: string, rightId: string): Promise<void> {
-    return loriItem.deleteItem({ metadataId: metadataId, rightId: rightId });
+  deleteItemRelation(handle: string, rightId: string): Promise<void> {
+    return loriItem.deleteItem({ handle: handle, rightId: rightId });
   },
   getAboutInformation(): Promise<AboutRest> {
     return loriAboutApi.getAboutInformation();

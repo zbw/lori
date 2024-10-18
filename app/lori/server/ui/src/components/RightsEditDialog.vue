@@ -54,7 +54,7 @@ export default defineComponent({
       type: Boolean,
       required: false,
     },
-    metadataId: {
+    handle: {
       type: String,
       required: false,
     },
@@ -290,7 +290,7 @@ export default defineComponent({
           api
             .addItemEntry(
               {
-                metadataId: props.metadataId,
+                handle: props.handle,
                 rightId: r.rightId,
               } as ItemEntry,
               true,

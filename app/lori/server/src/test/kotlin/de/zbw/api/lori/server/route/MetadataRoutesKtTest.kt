@@ -140,11 +140,11 @@ class MetadataRoutesKtTest {
     @Test
     fun testDeleteRightOK() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } returns false
-                coEvery { deleteMetadataByHandle(metadataId) } returns 1
+                coEvery { itemContainsMetadata(handle) } returns false
+                coEvery { deleteMetadataByHandle(handle) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -153,20 +153,20 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata/$handle")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            coVerify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
-            coVerify(exactly = 1) { backend.deleteMetadataByHandle(metadataId) }
+            coVerify(exactly = 1) { backend.itemContainsMetadata(handle) }
+            coVerify(exactly = 1) { backend.deleteMetadataByHandle(handle) }
         }
     }
 
     @Test
     fun testDeleteRightConflict() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } returns true
+                coEvery { itemContainsMetadata(handle) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -175,7 +175,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata/$handle")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
@@ -183,10 +183,10 @@ class MetadataRoutesKtTest {
     @Test
     fun testDeleteRightInternal() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } throws SQLException()
+                coEvery { itemContainsMetadata(handle) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         testApplication {
@@ -194,7 +194,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata/$handle")
             assertThat(
                 "Should return Internal Server Error",
                 response.status,
