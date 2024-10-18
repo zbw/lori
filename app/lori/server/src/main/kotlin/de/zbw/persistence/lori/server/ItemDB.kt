@@ -1,6 +1,5 @@
 package de.zbw.persistence.lori.server
 
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -18,12 +17,12 @@ class ItemDB(
     val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
-    suspend fun getRightIdsByMetadataId(metadataId: String): List<String> =
+    suspend fun getRightIdsByHandle(handle: String): List<String> =
         connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getRightIdsByMetadataId").startSpan()
+            val span = tracer.spanBuilder("getRightIdsByHandle").startSpan()
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID).apply {
-                    this.setString(1, metadataId)
+                connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID).apply {
+                    this.setString(1, handle)
                 }
             val rs =
                 try {
@@ -42,13 +41,13 @@ class ItemDB(
         }
 
     suspend fun itemContainsEntry(
-        metadataId: String,
+        handle: String,
         rightId: String,
     ): Boolean =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
-                    this.setString(1, metadataId)
+                    this.setString(1, handle)
                     this.setString(2, rightId)
                 }
             val span = tracer.spanBuilder("itemContainsEntry").startSpan()
@@ -85,13 +84,13 @@ class ItemDB(
         }
 
     suspend fun insertItem(
-        metadataId: String,
+        handle: String,
         rightId: String,
     ): String? =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(1, metadataId)
+                    this.setString(1, handle)
                     this.setString(2, rightId)
                 }
 
@@ -110,14 +109,14 @@ class ItemDB(
         }
 
     suspend fun deleteItem(
-        metadataId: String,
+        handle: String,
         rightId: String,
     ): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
                     this.setString(1, rightId)
-                    this.setString(2, metadataId)
+                    this.setString(2, handle)
                 }
             val span = tracer.spanBuilder("deleteItem").startSpan()
             return@useConnection try {
@@ -149,11 +148,11 @@ class ItemDB(
             }
         }
 
-    suspend fun deleteItemByMetadataId(metadataId: String): Int =
+    suspend fun deleteItemByHandle(handle: String): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_METADATA).apply {
-                    this.setString(1, metadataId)
+                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_HANDLE).apply {
+                    this.setString(1, handle)
                 }
             val span = tracer.spanBuilder("deleteItem").startSpan()
             return@useConnection try {
@@ -181,19 +180,20 @@ class ItemDB(
 
     companion object {
         const val CONSTRAINT_ITEM_PKEY = "item_pkey"
+        const val COLUMN_HANDLE_ID = "handle"
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID =
             "SELECT COUNT(*) " +
                 "FROM $TABLE_NAME_ITEM " +
                 "WHERE $COLUMN_RIGHT_ID = ?;"
 
-        const val STATEMENT_GET_RIGHT_IDS_BY_METADATA_ID =
+        const val STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID =
             "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE $COLUMN_METADATA_ID = ?"
+                " WHERE $COLUMN_HANDLE_ID = ?"
 
         const val STATEMENT_INSERT_ITEM =
             "INSERT INTO $TABLE_NAME_ITEM" +
-                "($COLUMN_METADATA_ID, $COLUMN_RIGHT_ID)" +
+                "($COLUMN_HANDLE_ID, $COLUMN_RIGHT_ID)" +
                 " VALUES(?,?)" +
                 " ON CONFLICT ON CONSTRAINT $CONSTRAINT_ITEM_PKEY" +
                 " DO NOTHING;"
@@ -202,12 +202,12 @@ class ItemDB(
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
                 "WHERE i.$COLUMN_RIGHT_ID = ? " +
-                "AND i.$COLUMN_METADATA_ID = ?"
+                "AND i.$COLUMN_HANDLE_ID = ?"
 
-        const val STATEMENT_DELETE_ITEM_BY_METADATA =
+        const val STATEMENT_DELETE_ITEM_BY_HANDLE =
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
-                "WHERE i.$COLUMN_METADATA_ID = ?"
+                "WHERE i.$COLUMN_HANDLE_ID = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_RIGHT =
             "DELETE " +
@@ -215,7 +215,7 @@ class ItemDB(
                 "WHERE i.$COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_ITEM_CONTAINS_ENTRY =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_METADATA_ID=? AND $COLUMN_RIGHT_ID=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_HANDLE_ID=? AND $COLUMN_RIGHT_ID=?)"
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_RIGHT_ID=?)"

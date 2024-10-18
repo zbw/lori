@@ -65,7 +65,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertRight(right)
-                    backend.insertItemEntry(entry.key.metadataId, r)
+                    backend.insertItemEntry(entry.key.handle, r)
                 }
             }
         }
@@ -129,12 +129,12 @@ class ApplyTemplateTest : DatabaseTest() {
 
             val received = backend.applyTemplate(rightId)
             assertThat(
-                received!!.appliedMetadataIds,
-                `is`(listOf(item1ZDB1.metadataId)),
+                received!!.appliedMetadataHandles,
+                `is`(listOf(item1ZDB1.handle)),
             )
 
             // Verify that new right is assigned to metadata id
-            val rightIds = backend.getRightEntriesByMetadataId(item1ZDB1.metadataId).map { it.rightId }
+            val rightIds = backend.getRightEntriesByHandle(item1ZDB1.handle).map { it.rightId }
             assertTrue(rightIds.contains(rightId))
 
             assertThat(
@@ -145,8 +145,8 @@ class ApplyTemplateTest : DatabaseTest() {
             // Repeat Apply Operation without duplicate entries errors
             val received2: TemplateApplicationResult? = backend.applyTemplate(rightId)
             assertThat(
-                received2!!.appliedMetadataIds,
-                `is`(listOf(item1ZDB1.metadataId)),
+                received2!!.appliedMetadataHandles,
+                `is`(listOf(item1ZDB1.handle)),
             )
 
             // Add two new items to database matching bookmark
@@ -162,11 +162,11 @@ class ApplyTemplateTest : DatabaseTest() {
             // Apply Template
             val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
             assertThat(
-                received3!!.appliedMetadataIds,
+                received3!!.appliedMetadataHandles,
                 `is`(
                     listOf(
-                        item2ZDB1.metadataId,
-                        item3ZDB1.metadataId,
+                        item2ZDB1.handle,
+                        item3ZDB1.handle,
                     ),
                 ),
             )
@@ -178,11 +178,11 @@ class ApplyTemplateTest : DatabaseTest() {
 
             val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates()
             assertThat(
-                applyAllReceived.map { it.appliedMetadataIds }.flatten().toSet(),
+                applyAllReceived.map { it.appliedMetadataHandles }.flatten().toSet(),
                 `is`(
                     setOf(
-                        item2ZDB1.metadataId,
-                        item3ZDB1.metadataId,
+                        item2ZDB1.handle,
+                        item3ZDB1.handle,
                     ),
                 ),
             )
@@ -264,17 +264,17 @@ class ApplyTemplateTest : DatabaseTest() {
 
             val receivedUpperWithExc = backend.applyTemplate(rightIdUpper)!!
             assertThat(
-                receivedUpperWithExc.appliedMetadataIds.toSet(),
-                `is`(setOf(item1ZDB2.metadataId)),
+                receivedUpperWithExc.appliedMetadataHandles.toSet(),
+                `is`(setOf(item1ZDB2.handle)),
             )
             assertThat(
-                receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataIds }.toSet(),
-                `is`(setOf(item2ZDB2.metadataId)),
+                receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataHandles }.toSet(),
+                `is`(setOf(item2ZDB2.handle)),
             )
             val receivedException = backend.applyTemplate(rightIdException)!!
             assertThat(
-                receivedException.appliedMetadataIds,
-                `is`(listOf(item2ZDB2.metadataId)),
+                receivedException.appliedMetadataHandles,
+                `is`(listOf(item2ZDB2.handle)),
             )
         }
 
@@ -284,7 +284,7 @@ class ApplyTemplateTest : DatabaseTest() {
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT
         val item1ZDB1 =
             TEST_METADATA.copy(
-                metadataId = "zdb1",
+                handle = "zdb1",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -292,7 +292,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item2ZDB1 =
             TEST_METADATA.copy(
-                metadataId = "zdb2",
+                handle = "zdb2",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -300,7 +300,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item3ZDB1 =
             TEST_METADATA.copy(
-                metadataId = "zdb3",
+                handle = "zdb3",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -308,15 +308,13 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item1ZDB2 =
             TEST_METADATA.copy(
-                metadataId = "foo-zdb2",
+                handle = "foo-zdb2",
                 zdbIdJournal = ZDB_2,
-                handle = "foo",
             )
         val item2ZDB2 =
             TEST_METADATA.copy(
-                metadataId = "bar-zdb2",
+                handle = "bar-zdb2",
                 zdbIdJournal = ZDB_2,
-                handle = "bar",
             )
     }
 }

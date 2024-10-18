@@ -40,12 +40,12 @@ class TemplateRightFilterTest : DatabaseTest() {
 
     private val itemRightWithTemplate =
         TEST_Metadata.copy(
-            metadataId = "withTemplate",
+            handle = "withTemplate",
             collectionName = "subject3",
         )
     private val itemRightWithoutTemplate =
         TEST_Metadata.copy(
-            metadataId = "withoutTemplate",
+            handle = "withoutTemplate",
             collectionName = "subject3",
         )
 
@@ -72,7 +72,7 @@ class TemplateRightFilterTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertTemplate(right)
-                    backend.insertItemEntry(entry.key.metadataId, r)
+                    backend.insertItemEntry(entry.key.handle, r)
                 }
             }
         }

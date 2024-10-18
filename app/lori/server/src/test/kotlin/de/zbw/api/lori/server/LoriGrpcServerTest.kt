@@ -37,7 +37,7 @@ class LoriGrpcServerTest {
                     TemplateApplicationResult(
                         rightId = "1",
                         errors = emptyList(),
-                        appliedMetadataIds = listOf("2"),
+                        appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
                         exceptionTemplateApplicationResult = emptyList(),
                     ),
@@ -49,7 +49,7 @@ class LoriGrpcServerTest {
                         listOf(
                             TemplateApplication
                                 .newBuilder()
-                                .addMetadataIds("2")
+                                .addHandles("2")
                                 .setRightId("1")
                                 .setTemplateName("foobar")
                                 .setNumberAppliedEntries(1)
@@ -95,7 +95,7 @@ class LoriGrpcServerTest {
                     TemplateApplicationResult(
                         rightId = "1",
                         errors = emptyList(),
-                        appliedMetadataIds = listOf("2"),
+                        appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
                         exceptionTemplateApplicationResult = emptyList(),
                     ),
@@ -107,7 +107,7 @@ class LoriGrpcServerTest {
                         listOf(
                             TemplateApplication
                                 .newBuilder()
-                                .addMetadataIds("2")
+                                .addHandles("2")
                                 .setRightId("1")
                                 .setTemplateName("foobar")
                                 .setNumberAppliedEntries(1)

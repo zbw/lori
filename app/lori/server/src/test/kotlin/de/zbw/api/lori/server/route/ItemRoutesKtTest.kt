@@ -241,8 +241,8 @@ class ItemRoutesKtTest {
         val expected = listOf(TEST_RIGHT)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { getRightEntriesByMetadataId(givenMetadataId) } returns expected.map { it.toBusiness() }
-                coEvery { metadataContainsId(givenMetadataId) } returns true
+                coEvery { getRightEntriesByHandle(givenMetadataId) } returns expected.map { it.toBusiness() }
+                coEvery { metadataContainsHandle(givenMetadataId) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -265,7 +265,7 @@ class ItemRoutesKtTest {
         val givenMetadataId = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(givenMetadataId) } returns false
+                coEvery { metadataContainsHandle(givenMetadataId) } returns false
             }
         val servicePool = getServicePool(backend)
 
@@ -285,7 +285,7 @@ class ItemRoutesKtTest {
         val givenMetadataId = "meta"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(givenMetadataId) } throws SQLException()
+                coEvery { metadataContainsHandle(givenMetadataId) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -302,11 +302,11 @@ class ItemRoutesKtTest {
     @Test
     fun testItemDeleteByMetadataOK() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { deleteItemEntriesByMetadataId(givenMetadataId) } returns 1
+                coEvery { deleteItemEntriesByHandle(givenHandle) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -315,7 +315,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/metadata/$givenMetadataId")
+            val response = client.delete("/api/v1/item/metadata/$givenHandle")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
         }
     }
@@ -323,11 +323,11 @@ class ItemRoutesKtTest {
     @Test
     fun testItemDeleteByMetadataInternal() {
         // given
-        val givenMetadataId = "meta"
+        val givenHandle = "meta"
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { deleteItemEntriesByMetadataId(givenMetadataId) } throws SQLException()
+                coEvery { deleteItemEntriesByHandle(givenHandle) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -336,7 +336,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/metadata/$givenMetadataId")
+            val response = client.delete("/api/v1/item/metadata/$givenHandle")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -857,7 +857,6 @@ class ItemRoutesKtTest {
 
         val ITEM_METADATA =
             MetadataRest(
-                metadataId = "foo",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionName = "collectionName",
@@ -887,7 +886,7 @@ class ItemRoutesKtTest {
 
         val TEST_ITEM_ENTRY =
             ItemEntry(
-                metadataId = "meta",
+                handle = "meta",
                 rightId = "right",
             )
 

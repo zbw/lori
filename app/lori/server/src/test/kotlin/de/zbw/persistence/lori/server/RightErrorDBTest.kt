@@ -198,9 +198,8 @@ class RightErrorDBTest : DatabaseTest() {
                 message = "Timing conflict",
                 conflictingWithRightId = "sourceRightId",
                 conflictByRightId = "conflictingRightId",
-                handleId = "somehandle",
+                handle = "somehandle",
                 createdOn = NOW,
-                metadataId = "metadataId",
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByTemplateName = "template name",
             )

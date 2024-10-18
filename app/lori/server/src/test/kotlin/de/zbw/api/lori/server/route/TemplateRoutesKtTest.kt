@@ -516,7 +516,7 @@ class TemplateRoutesKtTest {
                         TemplateApplicationResult(
                             rightId = givenRightId,
                             errors = emptyList(),
-                            appliedMetadataIds = expectedMetadataIds,
+                            appliedMetadataHandles = expectedMetadataIds,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
                         ),
@@ -526,14 +526,14 @@ class TemplateRoutesKtTest {
                         TemplateApplicationResult(
                             rightId = givenRightId,
                             errors = emptyList(),
-                            appliedMetadataIds = expectedMetadataIds,
+                            appliedMetadataHandles = expectedMetadataIds,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
                         ),
                         TemplateApplicationResult(
                             rightId = givenRightId2,
                             errors = emptyList(),
-                            appliedMetadataIds = expectedMetadataIds,
+                            appliedMetadataHandles = expectedMetadataIds,
                             templateName = "baz",
                             exceptionTemplateApplicationResult = emptyList(),
                         ),
@@ -570,7 +570,7 @@ class TemplateRoutesKtTest {
                             listOf(
                                 TemplateApplicationRest(
                                     rightId = givenRightId,
-                                    metadataIds = expectedMetadataIds,
+                                    handles = expectedMetadataIds,
                                     numberOfAppliedEntries = expectedMetadataIds.size,
                                     errors = emptyList(),
                                     exceptionTemplateApplications = emptyList(),
@@ -612,7 +612,7 @@ class TemplateRoutesKtTest {
                             listOf(
                                 TemplateApplicationRest(
                                     rightId = givenRightId,
-                                    metadataIds = expectedMetadataIds,
+                                    handles = expectedMetadataIds,
                                     numberOfAppliedEntries = expectedMetadataIds.size,
                                     errors = emptyList(),
                                     templateName = "foobar",
@@ -620,7 +620,7 @@ class TemplateRoutesKtTest {
                                 ),
                                 TemplateApplicationRest(
                                     rightId = givenRightId2,
-                                    metadataIds = expectedMetadataIds,
+                                    handles = expectedMetadataIds,
                                     numberOfAppliedEntries = expectedMetadataIds.size,
                                     errors = emptyList(),
                                     templateName = "baz",

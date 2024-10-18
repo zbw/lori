@@ -61,9 +61,9 @@ class SearchExpressionTest {
                 "Or, And, parentheses",
             ),
             arrayOf(
-                "com:2764793-6 & (metadataid:4633 | zdb:4566)",
+                "com:2764793-6 & (hdl:4633 | zdb:4566)",
                 "SEAnd(left=SEVariable(searchFilter=com:\"2764793-6\"), " +
-                    "right=SEPar(body=SEOr(left=SEVariable(searchFilter=metadataid:\"4633\")," +
+                    "right=SEPar(body=SEOr(left=SEVariable(searchFilter=hdl:\"4633\")," +
                     " right=SEVariable(searchFilter=zdb:\"4566\"))))",
                 false,
                 "Verify that ) after key:value without \"' works",

@@ -61,11 +61,11 @@ ItemRest:
 
 ItemEntry:
   required:
-    - metadataId
+    - handle
     - rightId
   type: object
   properties:
-    metadataId:
+    handle:
       type: string
     rightId:
       type: string

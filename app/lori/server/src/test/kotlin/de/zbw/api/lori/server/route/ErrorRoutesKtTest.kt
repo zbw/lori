@@ -69,15 +69,14 @@ class ErrorRoutesKtTest {
                 0,
                 ZoneOffset.UTC,
             )!!
-        val TEST_ERROR =
+        private val TEST_ERROR =
             RightError(
                 errorId = 1,
                 message = "Timing conflict",
                 conflictingWithRightId = "sourceRightId",
                 conflictByRightId = "conflictingRightId",
-                handleId = "somehandle",
+                handle = "somehandle",
                 createdOn = NOW,
-                metadataId = "metadataId",
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByTemplateName = "template name",
             )

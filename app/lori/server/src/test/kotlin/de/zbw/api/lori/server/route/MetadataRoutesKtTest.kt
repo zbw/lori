@@ -23,8 +23,6 @@ import io.ktor.util.InternalAPI
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
@@ -38,7 +36,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns false
                 coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
@@ -66,7 +64,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostConflict() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -116,7 +114,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -146,7 +144,7 @@ class MetadataRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { itemContainsMetadata(metadataId) } returns false
-                coEvery { deleteMetadata(metadataId) } returns 1
+                coEvery { deleteMetadataByHandle(metadataId) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -158,7 +156,7 @@ class MetadataRoutesKtTest {
             val response = client.delete("/api/v1/metadata/$metadataId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
-            coVerify(exactly = 1) { backend.deleteMetadata(metadataId) }
+            coVerify(exactly = 1) { backend.deleteMetadataByHandle(metadataId) }
         }
     }
 
@@ -281,7 +279,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutNoContent() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns true
                 coEvery { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
             }
         val servicePool = getServicePool(backend)
@@ -309,7 +307,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns false
                 coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
@@ -361,7 +359,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(any()) } throws SQLException()
+                coEvery { metadataContainsHandle(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -535,7 +533,6 @@ class MetadataRoutesKtTest {
 
         val TEST_METADATA =
             MetadataRest(
-                metadataId = "foo",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionName = "collectionName",
@@ -558,7 +555,5 @@ class MetadataRoutesKtTest {
             )
 
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
-
-        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
     }
 }

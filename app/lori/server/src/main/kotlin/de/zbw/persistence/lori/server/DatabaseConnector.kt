@@ -76,7 +76,6 @@ class DatabaseConnector(
         const val TABLE_NAME_SESSIONS = "sessions"
         const val TABLE_NAME_RIGHT_ERROR = "right_error"
 
-        const val COLUMN_METADATA_ID = "metadata_id"
         const val COLUMN_METADATA_AUTHOR = "author"
         const val COLUMN_METADATA_BAND = "band"
         const val COLUMN_METADATA_COLLECTION_HANDLE = "collection_handle"

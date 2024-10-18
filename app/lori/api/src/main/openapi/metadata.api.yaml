@@ -130,24 +130,24 @@ metadata-list:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 
-metadata-id:
+metadata-handle:
   delete:
     security:
       - cookieAuth: []
     tags:
       - metadata
     summary: Delete metadata
-    operationId: deleteMetadataById
+    operationId: deleteMetadataByHandle
     parameters:
       - name: id
         in: path
-        description: Id of the metadata to delete
+        description: Delete metadata by handle
         required: true
         schema:
           type: string
     responses:
       200:
-        description: Deletion was successfull
+        description: Deletion was successful
         content: { }
       401:
         description: Unauthorized to perform this action
@@ -176,17 +176,17 @@ metadata-id:
   get:
     tags:
       - right
-    operationId: getMetadataById
+    operationId: getMetadataByHandle
     parameters:
-      - name: id
+      - name: handle
         in: path
-        description: Metadata id queried
+        description: Handle of metadata
         required: true
         schema:
           type: string
     responses:
       200:
-        description: Successfull operation
+        description: Successful operation
         content:
           application/json:
             schema:
@@ -200,7 +200,7 @@ metadata-id:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
-        description: Id does not exist
+        description: Handle does not exist
         content:
           application/json:
             schema:

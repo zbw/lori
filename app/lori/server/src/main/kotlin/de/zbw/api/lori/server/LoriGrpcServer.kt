@@ -87,19 +87,18 @@ class LoriGrpcServer(
                             .newBuilder()
                             .setRightId(e.rightId)
                             .setTemplateName(e.templateName)
-                            .setNumberAppliedEntries(e.appliedMetadataIds.size)
-                            .addAllMetadataIds(e.appliedMetadataIds)
+                            .setNumberAppliedEntries(e.appliedMetadataHandles.size)
+                            .addAllHandles(e.appliedMetadataHandles)
                             .addAllErrors(
                                 e.errors.map {
                                     TemplateError
                                         .newBuilder()
                                         .setErrorId(it.errorId ?: -1)
                                         .setMessage(it.message)
-                                        .setRightIdSource(it.conflictingWithRightId ?: "")
-                                        .setMetadataId(it.metadataId)
-                                        .setHandleId(it.handleId)
+                                        .setRightIdSource(it.conflictingWithRightId)
+                                        .setHandle(it.handle)
                                         .setConflictingRightId(it.conflictByRightId)
-                                        .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
+                                        .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
                                         .build()
                                 },
                             ).addAllExceptions(
@@ -108,19 +107,18 @@ class LoriGrpcServer(
                                         .newBuilder()
                                         .setRightId(exc.rightId)
                                         .setTemplateName(exc.templateName)
-                                        .setNumberAppliedEntries(exc.appliedMetadataIds.size)
-                                        .addAllMetadataIds(exc.appliedMetadataIds)
+                                        .setNumberAppliedEntries(exc.appliedMetadataHandles.size)
+                                        .addAllHandles(exc.appliedMetadataHandles)
                                         .addAllErrors(
                                             exc.errors.map {
                                                 TemplateError
                                                     .newBuilder()
                                                     .setErrorId(it.errorId ?: -1)
                                                     .setMessage(it.message)
-                                                    .setRightIdSource(it.conflictingWithRightId ?: "")
-                                                    .setMetadataId(it.metadataId)
-                                                    .setHandleId(it.handleId)
+                                                    .setRightIdSource(it.conflictingWithRightId)
+                                                    .setHandle(it.handle)
                                                     .setConflictingRightId(it.conflictByRightId)
-                                                    .setCreatedOn(it.createdOn?.toInstant()?.toEpochMilli() ?: -1)
+                                                    .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
                                                     .build()
                                             },
                                         ).build()

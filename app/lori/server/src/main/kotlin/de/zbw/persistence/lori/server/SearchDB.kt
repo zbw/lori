@@ -19,7 +19,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADAT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_CREATED_ON
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_DOI
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_HANDLE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ISBN
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ISSN
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
@@ -356,7 +355,7 @@ class SearchDB(
                             metadataSearchFilter = metadataSearchFilter,
                             rightSearchFilter = rightSearchFilter,
                             noRightInformationFilter = noRightInformationFilter,
-                            hasMetadataIdsToIgnore = false,
+                            hasHandlesToIgnore = false,
                         ),
                     ).apply {
                         var counter = 1
@@ -394,7 +393,7 @@ class SearchDB(
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
-        metadataIdsToIgnore: List<String>,
+        handlesToIgnore: List<String>,
     ): List<ItemMetadata> =
         connectionPool.useConnection { connection ->
             val prepStmt =
@@ -405,7 +404,7 @@ class SearchDB(
                             metadataSearchFilters = metadataSearchFilter,
                             rightSearchFilters = rightSearchFilter,
                             noRightInformationFilter = noRightInformationFilter,
-                            hasMetadataIdsToIgnore = metadataIdsToIgnore.isNotEmpty(),
+                            hasHandlesToIgnore = handlesToIgnore.isNotEmpty(),
                             withLimit = limit != null,
                             withOffset = offset != null,
                         ),
@@ -424,10 +423,10 @@ class SearchDB(
                         metadataSearchFilter.forEach { f ->
                             counter = f.setSQLParameter(counter, this)
                         }
-                        if (metadataIdsToIgnore.isNotEmpty()) {
+                        if (handlesToIgnore.isNotEmpty()) {
                             this.setArray(
                                 counter++,
-                                connection.createArrayOf("text", metadataIdsToIgnore.toTypedArray()),
+                                connection.createArrayOf("text", handlesToIgnore.toTypedArray()),
                             )
                         }
                         if (limit != null) {
@@ -460,7 +459,7 @@ class SearchDB(
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
-        metadataIdsToIgnore: List<String> = emptyList(),
+        handlesToIgnore: List<String> = emptyList(),
     ): List<ItemMetadata> =
         searchMetadata(
             searchExpression = searchExpression,
@@ -469,17 +468,17 @@ class SearchDB(
             metadataSearchFilter = metadataSearchFilter,
             rightSearchFilter = rightSearchFilter,
             noRightInformationFilter = noRightInformationFilter,
-            metadataIdsToIgnore = metadataIdsToIgnore,
+            handlesToIgnore = handlesToIgnore,
         )
 
-    suspend fun searchForMetadataIds(
+    suspend fun searchForHandles(
         searchExpression: SearchExpression?,
         limit: Int?,
         offset: Int?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
-        metadataIdsToIgnore: List<String>,
+        handlesToIgnore: List<String>,
     ): List<String> {
         val rs: List<ItemMetadata> =
             searchMetadata(
@@ -489,16 +488,16 @@ class SearchDB(
                 metadataSearchFilter = metadataSearchFilter,
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
-                metadataIdsToIgnore = metadataIdsToIgnore,
+                handlesToIgnore = handlesToIgnore,
             )
-        return rs.map { it.metadataId }
+        return rs.map { it.handle }
     }
 
     companion object {
         const val SUBQUERY_NAME = "sub"
         const val ALIAS_ITEM_RIGHT = "o"
         private const val STATEMENT_SELECT_ALL_FACETS =
-            "SELECT $TABLE_NAME_ITEM_METADATA.metadata_id,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
+            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_DATE," +
                 "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
                 "$COLUMN_METADATA_RIGHTS_K10PLUS,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,$COLUMN_METADATA_ISSN," +
@@ -520,11 +519,11 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
@@ -532,24 +531,24 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id," +
-                " ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.metadata_id," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
+                " ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_NAME =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_ID, ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_TEMPLATE_NAME)" +
-                " $TABLE_NAME_ITEM_METADATA.metadata_id," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE, ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_TEMPLATE_NAME)" +
+                " $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
@@ -557,11 +556,11 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
-            "SELECT $COLUMN_METADATA_ID,$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
+            "SELECT $COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_DATE," +
                 "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
                 "$COLUMN_METADATA_RIGHTS_K10PLUS,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,$COLUMN_METADATA_ISSN," +
@@ -588,8 +587,8 @@ class SearchDB(
                 " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.metadata_id) $TABLE_NAME_ITEM_METADATA.metadata_id," +
-                "$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
+                "$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_DATE," +
                 "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
                 "$COLUMN_METADATA_RIGHTS_K10PLUS,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,$COLUMN_METADATA_ISSN," +
@@ -609,7 +608,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_METADATA_ID},${MetadataDB.TS_LICENCE_URL}," +
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
                 MetadataDB.TS_SUBCOMMUNITY_NAME
 
         internal fun buildSearchQuery(
@@ -617,7 +616,7 @@ class SearchDB(
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
-            hasMetadataIdsToIgnore: Boolean,
+            hasHandlesToIgnore: Boolean,
             withLimit: Boolean = true,
             withOffset: Boolean = true,
         ): String {
@@ -671,13 +670,13 @@ class SearchDB(
                         )
                 }
 
-            return if (hasMetadataIdsToIgnore) {
-                val filterMetadataIds = "WHERE NOT metadata_id = ANY(?)"
+            return if (hasHandlesToIgnore) {
+                val filterHandles = "WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
                     " FROM ($subquery) as $SUBQUERY_NAME" +
-                    " $filterMetadataIds ORDER BY metadata_id ASC$limit$offset"
+                    " $filterHandles ORDER BY $COLUMN_METADATA_HANDLE ASC$limit$offset"
             } else {
-                "$subquery ORDER BY item_metadata.metadata_id ASC$limit$offset"
+                "$subquery ORDER BY item_metadata.$COLUMN_METADATA_HANDLE ASC$limit$offset"
             }
         }
 
@@ -686,7 +685,7 @@ class SearchDB(
             metadataSearchFilter: List<MetadataSearchFilter>,
             rightSearchFilter: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
-            hasMetadataIdsToIgnore: Boolean,
+            hasHandlesToIgnore: Boolean,
         ): String =
             "SELECT COUNT(*) FROM (" +
                 buildSearchQuery(
@@ -694,7 +693,7 @@ class SearchDB(
                     metadataSearchFilter,
                     rightSearchFilter,
                     noRightInformationFilter,
-                    hasMetadataIdsToIgnore,
+                    hasHandlesToIgnore,
                     false,
                     false,
                 ) + ") as countsearch"
@@ -878,7 +877,7 @@ class SearchDB(
                     ?: ""
 
             return " LEFT JOIN $TABLE_NAME_ITEM" +
-                " ON $TABLE_NAME_ITEM.metadata_id = $TABLE_NAME_ITEM_METADATA.metadata_id" +
+                " ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                 " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT" +
                 " ON $TABLE_NAME_ITEM.right_id = ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ID" +
                 extendedRightFilter +

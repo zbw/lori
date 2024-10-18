@@ -51,28 +51,28 @@ class ItemDBTest : DatabaseTest() {
     fun testDeleteItem() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(metadataId = "item_roundtrip_meta")
+            val expectedMetadata = TEST_Metadata.copy(handle = "item_roundtrip_meta")
             val expectedRight = TEST_RIGHT
 
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(listOf(generatedRightId)),
             )
 
-            val deletedItems = dbConnector.itemDB.deleteItem(expectedMetadata.metadataId, generatedRightId)
+            val deletedItems = dbConnector.itemDB.deleteItem(expectedMetadata.handle, generatedRightId)
             assertThat(
                 deletedItems,
                 `is`(1),
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }
@@ -81,36 +81,36 @@ class ItemDBTest : DatabaseTest() {
     fun testDeleteItemBy() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(metadataId = "delete_item_meta")
+            val expectedMetadata = TEST_Metadata.copy(handle = "delete_item_meta")
             val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(listOf(generatedRightId)),
             )
 
-            val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByMetadataId(expectedMetadata.metadataId)
+            val deletedItemsByMetadata = dbConnector.itemDB.deleteItemByHandle(expectedMetadata.handle)
             assertThat(
                 deletedItemsByMetadata,
                 `is`(1),
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
 
             // when
-            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(listOf(generatedRightId)),
             )
 
@@ -121,7 +121,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByMetadata(expectedMetadata.metadataId),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }
@@ -130,21 +130,21 @@ class ItemDBTest : DatabaseTest() {
     fun testItemExists() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(metadataId = "item_exists_metadata")
+            val expectedMetadata = TEST_Metadata.copy(handle = "item_exists_metadata")
             val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
             assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
-            assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, expectedRight.rightId!!))
-            assertFalse(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
+            assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.handle, expectedRight.rightId!!))
+            assertFalse(dbConnector.metadataDB.itemContainsHandle(expectedMetadata.handle))
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.metadataId, generatedRightId)
+            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
 
             // then
             assertTrue(dbConnector.itemDB.itemContainsRightId(generatedRightId))
-            assertTrue(dbConnector.metadataDB.itemContainsMetadata(expectedMetadata.metadataId))
-            assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.metadataId, generatedRightId))
+            assertTrue(dbConnector.metadataDB.itemContainsHandle(expectedMetadata.handle))
+            assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.handle, generatedRightId))
             assertThat(dbConnector.itemDB.countItemByRightId(generatedRightId), `is`(1))
         }
 
@@ -165,7 +165,6 @@ class ItemDBTest : DatabaseTest() {
 
         val TEST_Metadata =
             ItemMetadata(
-                metadataId = "that-test",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionName = "collectionName",

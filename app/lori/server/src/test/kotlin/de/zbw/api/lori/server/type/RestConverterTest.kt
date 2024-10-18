@@ -46,7 +46,6 @@ class RestConverterTest {
             ItemRest(
                 metadata =
                     MetadataRest(
-                        metadataId = TEST_METADATA.metadataId,
                         author = TEST_METADATA.author,
                         band = TEST_METADATA.band,
                         collectionName = TEST_METADATA.collectionName,
@@ -121,7 +120,6 @@ class RestConverterTest {
         // given
         val expected =
             ItemMetadata(
-                metadataId = "5",
                 author = "Colbjørnsen, Terje",
                 band = null,
                 collectionHandle = "11159/849",
@@ -523,7 +521,6 @@ class RestConverterTest {
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA =
             ItemMetadata(
-                metadataId = "that-test",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionHandle = "handleCol",

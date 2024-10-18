@@ -48,10 +48,10 @@ fun Routing.metadataRoutes(
                         val metadata: MetadataRest =
                             call
                                 .receive<MetadataRest>()
-                                .takeIf { it.metadataId != null }
+                                .takeIf { it.handle != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("metadata", metadata.toString())
-                        if (backend.metadataContainsId(metadata.metadataId)) {
+                        if (backend.metadataContainsHandle(metadata.handle)) {
                             span.setStatus(StatusCode.ERROR, "Conflict: Resource with this id already exists.")
                             call.respond(
                                 HttpStatusCode.Conflict,
@@ -80,7 +80,7 @@ fun Routing.metadataRoutes(
                 }
             }
 
-            delete("{id}") {
+            delete("{handle}") {
                 val span =
                     tracer
                         .spanBuilder("lori.LoriService.DELETE/api/v1/metadata")
@@ -88,18 +88,18 @@ fun Routing.metadataRoutes(
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val metadataId = call.parameters["id"]
-                        span.setAttribute("metadataId", metadataId ?: "null")
-                        if (metadataId == null) {
+                        val handle = call.parameters["handle"]
+                        span.setAttribute("handle", handle ?: "null")
+                        if (handle == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(
                                 HttpStatusCode.BadRequest,
                                 ApiError.badRequestError(ApiError.NO_VALID_ID),
                             )
-                        } else if (backend.itemContainsMetadata(metadataId)) {
+                        } else if (backend.itemContainsMetadata(handle)) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "Conflict: Metadata-Id $metadataId is still in use. Can't be deleted.",
+                                "Conflict: Metadata-Id $handle is still in use. Can't be deleted.",
                             )
                             call.respond(
                                 HttpStatusCode.Conflict,
@@ -108,7 +108,7 @@ fun Routing.metadataRoutes(
                                 ),
                             )
                         } else {
-                            backend.deleteMetadata(metadataId)
+                            backend.deleteMetadataByHandle(handle)
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.OK)
                         }
@@ -132,9 +132,9 @@ fun Routing.metadataRoutes(
                         // receive() may return an object where non-null fields are null.
                         @Suppress("SENSELESS_COMPARISON")
                         val metadata: MetadataRest =
-                            call.receive(MetadataRest::class).takeIf { it.metadataId != null }
+                            call.receive(MetadataRest::class).takeIf { it.handle != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
-                        if (backend.metadataContainsId(metadata.metadataId)) {
+                        if (backend.metadataContainsHandle(metadata.handle)) {
                             backend.upsertMetadataElements(listOf(metadata.toBusiness()))
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)
@@ -156,24 +156,24 @@ fun Routing.metadataRoutes(
             }
         }
 
-        get("{id}") {
+        get("{handle}") {
             val span =
                 tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/metadata/{id}")
+                    .spanBuilder("lori.LoriService.GET/api/v1/metadata/{handle}")
                     .setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val metadataId = call.parameters["id"]
-                    span.setAttribute("metadataId", metadataId ?: "null")
-                    if (metadataId == null) {
+                    val handle = call.parameters["handle"]
+                    span.setAttribute("handle", handle ?: "null")
+                    if (handle == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(ApiError.NO_VALID_ID),
                         )
                     } else {
-                        val metadataElements: List<ItemMetadata> = backend.getMetadataElementsByIds(listOf(metadataId))
+                        val metadataElements: List<ItemMetadata> = backend.getMetadataElementsByIds(listOf(handle))
                         metadataElements.takeIf { it.isNotEmpty() }?.let {
                             span.setStatus(StatusCode.OK)
                             call.respond(metadataElements.first().toRest())

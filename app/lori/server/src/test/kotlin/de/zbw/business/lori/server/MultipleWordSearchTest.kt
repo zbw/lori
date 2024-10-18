@@ -39,7 +39,7 @@ class MultipleWordSearchTest : DatabaseTest() {
 
     private val multipleWords =
         TEST_Metadata.copy(
-            metadataId = "multiple word",
+            handle = "multiple word",
             collectionName = "subject1 subject2 subject3",
         )
 

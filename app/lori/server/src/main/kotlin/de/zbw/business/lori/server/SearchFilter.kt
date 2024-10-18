@@ -60,7 +60,6 @@ abstract class SearchFilter(
                     "hdlcol" -> CollectionHandleFilter(searchValue)
                     "hdlcom" -> CommunityHandleFilter(searchValue)
                     "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
-                    "metadataid" -> MetadataIdFilter(searchValue)
                     "lur" -> LicenceUrlFilter(searchValue)
                     "subcom" -> SubcommunityNameFilter(searchValue)
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
@@ -108,62 +107,6 @@ abstract class SearchFilter(
                 .joinToString(separator = " & ") { filter: SearchFilter ->
                     filter.toString()
                 }.takeIf { it.isNotBlank() } ?: ""
-
-        private fun fixPointReduce(
-            filters: List<SearchFilter>,
-            searchTerm: String?,
-        ): String? {
-            if (searchTerm == null) {
-                return null
-            }
-            val reducedSearchTerm =
-                fixPointHelperPrepend(
-                    filters,
-                    fixPointHelperAppend(filters, searchTerm),
-                )
-            return if (reducedSearchTerm == searchTerm) {
-                searchTerm
-            } else {
-                fixPointReduce(
-                    filters,
-                    reducedSearchTerm,
-                )
-            }
-        }
-
-        private fun fixPointHelperAppend(
-            filters: List<SearchFilter>,
-            searchTerm: String,
-        ): String =
-            filters.fold(searchTerm) { acc, f ->
-                val filterS = f.toString()
-                if (acc == filterS) {
-                    ""
-                } else {
-                    if (acc.endsWith(" & $f")) {
-                        acc.substringBeforeLast(" & $f")
-                    } else {
-                        acc
-                    }
-                }
-            }
-
-        private fun fixPointHelperPrepend(
-            filters: List<SearchFilter>,
-            searchTerm: String,
-        ): String =
-            filters.fold(searchTerm) { acc, f ->
-                val filterS = f.toString()
-                if (acc == filterS) {
-                    ""
-                } else {
-                    if (acc.startsWith("$f & ")) {
-                        acc.substringAfter("$f & ")
-                    } else {
-                        acc
-                    }
-                }
-            }
     }
 }
 
@@ -296,15 +239,6 @@ class SubcommunityNameFilter(
         value = subcommunityName,
     ) {
     override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_NAME
-}
-
-class MetadataIdFilter(
-    metadataId: String,
-) : TSVectorMetadataSearchFilter(
-        dbColumnName = MetadataDB.TS_METADATA_ID,
-        value = metadataId,
-    ) {
-    override fun getFilterType(): FilterType = FilterType.METADATA_ID
 }
 
 class LicenceUrlFilter(
@@ -768,7 +702,6 @@ enum class FilterType(
     FORMAL_RULE("reg"),
     HANDLE("hdl"),
     LICENCE_URL("lur"),
-    METADATA_ID("metadataid"),
     NO_RIGHTS("nor"),
     PUBLICATION_DATE("jah"),
     PUBLICATION_TYPE("typ"),

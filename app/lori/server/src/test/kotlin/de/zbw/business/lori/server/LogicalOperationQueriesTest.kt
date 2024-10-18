@@ -41,19 +41,19 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         listOf(
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject1",
-                metadataId = "subject1",
+                handle = "subject1",
                 publicationType = PublicationType.PROCEEDING,
                 publicationDate = LocalDate.of(2022, 1, 1),
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject2 subject3",
-                metadataId = "subject2&3",
+                handle = "subject2&3",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationDate = LocalDate.of(2020, 1, 1),
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject4",
-                metadataId = "subject4",
+                handle = "subject4",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationDate = LocalDate.of(2020, 1, 1),
             ),

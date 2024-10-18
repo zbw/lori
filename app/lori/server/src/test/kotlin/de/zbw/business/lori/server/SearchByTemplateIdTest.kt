@@ -47,9 +47,9 @@ class SearchByTemplateIdTest : DatabaseTest() {
                     )
                 }
             initialItems.forEach { entry: Map.Entry<ItemMetadata, List<Int>> ->
-                val metadataId: String = backend.insertMetadataElement(entry.key)
+                val handle: String = backend.insertMetadataElement(entry.key)
                 entry.value.forEach { templateKey ->
-                    backend.insertItemEntry(metadataId, rightIds[templateKey])
+                    backend.insertItemEntry(handle, rightIds[templateKey])
                 }
             }
         }
@@ -143,13 +143,13 @@ class SearchByTemplateIdTest : DatabaseTest() {
         val initialItems =
             mapOf(
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    metadataId = "1",
+                    handle = "1",
                 ) to listOf(0, 1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    metadataId = "2",
+                    handle = "2",
                 ) to listOf(1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    metadataId = "3",
+                    handle = "3",
                 ) to listOf(2),
             )
     }
