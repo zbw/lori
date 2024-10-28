@@ -106,7 +106,7 @@ fun Routing.itemRoutes(
 
         route("/metadata") {
             authenticate("auth-login") {
-                delete("{handle}") {
+                delete {
                     val span =
                         tracer
                             .spanBuilder("lori.LoriService.DELETE/api/v1/item/metadata/{handle}")
@@ -114,7 +114,7 @@ fun Routing.itemRoutes(
                             .startSpan()
                     withContext(span.asContextElement()) {
                         try {
-                            val handle = call.parameters["handle"]
+                            val handle: String? = call.request.queryParameters["handle"]
                             span.setAttribute("handle", handle ?: "null")
                             if (handle == null) {
                                 span.setStatus(
@@ -136,7 +136,7 @@ fun Routing.itemRoutes(
                     }
                 }
             }
-            get("{handle}") {
+            get {
                 val span =
                     tracer
                         .spanBuilder("lori.LoriService.GET/api/v1/item/handle/{handle}")
@@ -144,7 +144,7 @@ fun Routing.itemRoutes(
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val handle = call.parameters["handle"]
+                        val handle: String? = call.request.queryParameters["handle"]
                         span.setAttribute("handle", handle ?: "null")
                         if (handle == null) {
                             span.setStatus(
@@ -246,16 +246,16 @@ fun Routing.itemRoutes(
         }
 
         authenticate("auth-login") {
-            delete("{handle}/{rightId}") {
+            delete {
                 val span =
                     tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/item/{handle}/{rightId}")
+                        .spanBuilder("lori.LoriService.DELETE/api/v1/item?handle={handle}&right-id={rightId}")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val handle = call.parameters["handle"]
-                        val rightId = call.parameters["rightId"]
+                        val handle: String? = call.request.queryParameters["handle"]
+                        val rightId: String? = call.request.queryParameters["right-id"]
                         span.setAttribute("handle", handle ?: "null")
                         span.setAttribute("rightId", rightId ?: "null")
                         if (handle == null || rightId == null) {

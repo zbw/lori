@@ -42,6 +42,7 @@ metadata:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
+
   put:
     security:
       - cookieAuth: []
@@ -83,6 +84,90 @@ metadata:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
+  delete:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - metadata
+    summary: Delete metadata
+    operationId: deleteMetadataByHandle
+    parameters:
+      - name: id
+        in: query
+        description: Delete metadata by handle
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successful
+        content: { }
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Id does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+  get:
+    tags:
+      - right
+    operationId: getMetadataByHandle
+    parameters:
+      - name: handle
+        in: query
+        description: Handle of metadata
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Successful operation
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: 'metadata.model.yaml#/MetadataRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Handle does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+
+
 metadata-list:
   get:
     tags:
@@ -119,88 +204,6 @@ metadata-list:
                 $ref: 'metadata.model.yaml#/MetadataRest'
       400:
         description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-
-metadata-handle:
-  delete:
-    security:
-      - cookieAuth: []
-    tags:
-      - metadata
-    summary: Delete metadata
-    operationId: deleteMetadataByHandle
-    parameters:
-      - name: id
-        in: path
-        description: Delete metadata by handle
-        required: true
-        schema:
-          type: string
-    responses:
-      200:
-        description: Deletion was successful
-        content: { }
-      401:
-        description: Unauthorized to perform this action
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      404:
-        description: Id does not exist
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      409:
-        description: Deletion not possible due to conflict
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-  get:
-    tags:
-      - right
-    operationId: getMetadataByHandle
-    parameters:
-      - name: handle
-        in: path
-        description: Handle of metadata
-        required: true
-        schema:
-          type: string
-    responses:
-      200:
-        description: Successful operation
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: 'metadata.model.yaml#/MetadataRest'
-      400:
-        description: Bad request
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      404:
-        description: Handle does not exist
         content:
           application/json:
             schema:

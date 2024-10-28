@@ -80,15 +80,15 @@ fun Routing.metadataRoutes(
                 }
             }
 
-            delete("{handle}") {
+            delete {
                 val span =
                     tracer
-                        .spanBuilder("lori.LoriService.DELETE/api/v1/metadata")
+                        .spanBuilder("lori.LoriService.DELETE/api/v1/metadata?handle={handle}")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
-                        val handle = call.parameters["handle"]
+                        val handle: String? = call.request.queryParameters["handle"]
                         span.setAttribute("handle", handle ?: "null")
                         if (handle == null) {
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
@@ -156,15 +156,15 @@ fun Routing.metadataRoutes(
             }
         }
 
-        get("{handle}") {
+        get {
             val span =
                 tracer
-                    .spanBuilder("lori.LoriService.GET/api/v1/metadata/{handle}")
+                    .spanBuilder("lori.LoriService.GET/api/v1/metadata?handle={handle}")
                     .setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val handle = call.parameters["handle"]
+                    val handle: String? = call.request.queryParameters["handle"]
                     span.setAttribute("handle", handle ?: "null")
                     if (handle == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")

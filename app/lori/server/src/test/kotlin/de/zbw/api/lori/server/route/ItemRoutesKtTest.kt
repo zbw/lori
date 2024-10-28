@@ -182,7 +182,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
+            val response = client.delete("/api/v1/item?handle=$givenHandle&right-id=$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) { backend.deleteRight(rightId = givenRightId) }
         }
@@ -206,7 +206,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
+            val response = client.delete("/api/v1/item?handle=$givenHandle&right-id=$givenRightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 0) { backend.deleteRight(rightId = givenRightId) }
         }
@@ -229,7 +229,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/$givenHandle/$givenRightId")
+            val response = client.delete("/api/v1/item?handle=$givenHandle&right-id=$givenRightId")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -251,7 +251,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenHandle")
+            val response = client.get("/api/v1/item/metadata?handle=$givenHandle")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ArrayList<RightRest>>() {}.type
             val received: ArrayList<RightRest> = GSON.fromJson(content, groupListType)
@@ -274,7 +274,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenHandle")
+            val response = client.get("/api/v1/item/metadata?handle=$givenHandle")
             assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
         }
     }
@@ -294,7 +294,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/metadata/$givenHandle")
+            val response = client.get("/api/v1/item/metadata?handle=$givenHandle")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -315,7 +315,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/metadata/$givenHandle")
+            val response = client.delete("/api/v1/item/metadata?handle=$givenHandle")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
         }
     }
@@ -336,7 +336,7 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/item/metadata/$givenHandle")
+            val response = client.delete("/api/v1/item/metadata?handle=$givenHandle")
             assertThat("Should return Internal Error", response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }

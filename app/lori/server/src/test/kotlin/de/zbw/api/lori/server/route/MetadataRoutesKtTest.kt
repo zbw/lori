@@ -153,7 +153,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$handle")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) { backend.itemContainsMetadata(handle) }
             coVerify(exactly = 1) { backend.deleteMetadataByHandle(handle) }
@@ -175,7 +175,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$handle")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
@@ -194,7 +194,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$handle")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat(
                 "Should return Internal Server Error",
                 response.status,
@@ -219,7 +219,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<MetadataRest>() {}.type
             val received: MetadataRest = RightRoutesKtTest.GSON.fromJson(content, groupListType)
@@ -242,7 +242,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             assertThat(
                 "Should return NotFound",
                 response.status,
@@ -266,7 +266,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             assertThat(
                 "Should return InternalServerError",
                 response.status,
