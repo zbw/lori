@@ -78,7 +78,8 @@ class SearchKeyTest : DatabaseTest() {
                 "search for specific handle with complex query",
             ),
             arrayOf(
-                "${FilterType.HANDLE.keyAlias}:'$NO_VALID_HANDLE' | (${FilterType.HANDLE.keyAlias}:'${METADATA_TEST.handle}' & !tit:'stupid title')",
+                "${FilterType.HANDLE.keyAlias}:'$NO_VALID_HANDLE' | (${FilterType.HANDLE.keyAlias}:'${METADATA_TEST.handle}'" +
+                    " & !${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
@@ -92,14 +93,16 @@ class SearchKeyTest : DatabaseTest() {
                 "fail to find a metadata id",
             ),
             arrayOf(
-                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & (!${FilterType.HANDLE.keyAlias}:'nonse' & !${FilterType.TITLE.keyAlias}:'stupid title')",
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & (!${FilterType.HANDLE.keyAlias}:'nonse'" +
+                    " & !${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "search for specific metadata id with even complexer query ensuring parantheses works as expected",
             ),
             arrayOf(
-                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & !(${FilterType.HANDLE.keyAlias}:'nonse' | ${FilterType.TITLE.keyAlias}:'stupid title')",
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
+                    " | ${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
