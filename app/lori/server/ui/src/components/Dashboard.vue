@@ -22,7 +22,7 @@ export default defineComponent({
       {
         title: "Handle",
         align: "start",
-        value: "handleId",
+        value: "handle",
         sortable: true,
       },
       {
@@ -385,21 +385,21 @@ export default defineComponent({
         <td >Widerspruch
         </td>
       </template>
-        <template v-slot:item.handleId="{ item }">
+        <template v-slot:item.handle="{ item }">
           <td>
             <a
                 v-bind:href="
-                  createHandleHref(item.handleId)
+                  createHandleHref(item.handle)
                   "
                 target="_blank"
-            > {{ item.handleId}}</a>
+            > {{ item.handle}}</a>
           </td>
         </template>
         <template v-slot:item.conflictingWithRightId="{ item }">
           <td>
             <a
                 v-bind:href="
-                  createRightHref(item.handleId, item.conflictingWithRightId)
+                  createRightHref(item.handle, item.conflictingWithRightId)
                   "
                 target="_blank"
             > Right-ID: {{ item.conflictingWithRightId }}</a>

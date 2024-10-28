@@ -1,0 +1,1 @@
+ALTER TABLE right_error DROP COLUMN metadata_id;

@@ -34,13 +34,13 @@ class RightErrorFilterTest : DatabaseTest() {
         listOf(
             RIGHT_ERROR.copy(
                 conflictByTemplateName = "foo",
-                metadataId = "ct_1",
+                handle = "ct_1",
                 conflictType = ConflictType.UNSPECIFIED,
             ),
             RIGHT_ERROR.copy(
                 conflictType = ConflictType.UNSPECIFIED,
                 conflictByTemplateName = "foo",
-                metadataId = "ct_2",
+                handle = "ct_2",
             ),
         )
 
@@ -48,21 +48,21 @@ class RightErrorFilterTest : DatabaseTest() {
         listOf(
             RIGHT_ERROR.copy(
                 conflictByTemplateName = CAUSED_BY_TEMPLATE_NAME,
-                metadataId = "tn_1",
+                handle = "tn_1",
             ),
             RIGHT_ERROR.copy(
                 conflictByTemplateName = CAUSED_BY_TEMPLATE_NAME,
-                metadataId = "tn_2",
+                handle = "tn_2",
             ),
         )
 
     private fun getErrorsCreatedOn(): List<RightError> =
         listOf(
             RIGHT_ERROR_PAST.copy(
-                metadataId = "ep_1",
+                handle = "ep_1",
             ),
             RIGHT_ERROR_PAST.copy(
-                metadataId = "ep_2",
+                handle = "ep_2",
             ),
         )
 
@@ -180,22 +180,20 @@ class RightErrorFilterTest : DatabaseTest() {
                 message = "Timing conflict",
                 conflictingWithRightId = "sourceRightId",
                 conflictByRightId = "conflictingRightId",
-                handleId = "somehandle",
+                handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW,
-                metadataId = "metadataId",
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByTemplateName = "template name",
             )
-        val DAYS_PAST = 45L
+        const val DAYS_PAST = 45L
         val RIGHT_ERROR_PAST =
             RightError(
                 errorId = null,
                 message = "Timing conflict",
                 conflictingWithRightId = "sourceRightId",
                 conflictByRightId = "conflictingRightId",
-                handleId = "somehandle",
+                handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW.minusDays(DAYS_PAST),
-                metadataId = "metadataId",
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByTemplateName = "template name",
             )

@@ -16,13 +16,13 @@ RightIdsRest:
 
 TemplateApplicationRest:
   required:
-    - metadataIds
+    - handles
     - numberOfAppliedEntries
     - rightId
     - templateName
   type: object
   properties:
-    metadataIds:
+    handles:
       type: array
       items:
         type: string

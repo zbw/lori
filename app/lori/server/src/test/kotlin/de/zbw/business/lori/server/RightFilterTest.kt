@@ -50,55 +50,55 @@ class RightFilterTest : DatabaseTest() {
 
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            metadataId = "restricted right",
+            handle = "restricted right",
             collectionName = "subject1 subject2",
             publicationType = PublicationType.PROCEEDING,
         )
     private val itemRightRestrictedOpen =
         TEST_Metadata.copy(
-            metadataId = "restricted and open right",
+            handle = "restricted and open right",
             collectionName = "subject3",
             publicationType = PublicationType.PROCEEDING,
         )
     private val tempValFilterPresent =
         TEST_Metadata.copy(
-            metadataId = "validity filter present",
+            handle = "validity filter present",
             collectionName = "validity",
         )
 
     private val tempValFilterPast =
         TEST_Metadata.copy(
-            metadataId = "validity filter post",
+            handle = "validity filter post",
             collectionName = "validity",
         )
 
     private val tempValFilterFuture =
         TEST_Metadata.copy(
-            metadataId = "validity filter future",
+            handle = "validity filter future",
             collectionName = "validity",
         )
 
     private val startEndDateFilter =
         TEST_Metadata.copy(
-            metadataId = "start and end date At",
+            handle = "start and end date At",
             collectionName = "startAndEnd",
         )
 
     private val formalRuleLicenceContract =
         TEST_Metadata.copy(
-            metadataId = "formal rule filter licence contract",
+            handle = "formal rule filter licence contract",
             collectionName = "formalRuleLicence formal",
         )
 
     private val formalRuleUserAgreement =
         TEST_Metadata.copy(
-            metadataId = "formal rule filter user agreement",
+            handle = "formal rule filter user agreement",
             collectionName = "formalRuleUserAgreement formal",
         )
 
     private val formalRuleOCL =
         TEST_Metadata.copy(
-            metadataId = "formal rule filter ocl",
+            handle = "formal rule filter ocl",
             collectionName = "ocl formal",
         )
 
@@ -204,7 +204,7 @@ class RightFilterTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertRight(right)
-                    backend.insertItemEntry(entry.key.metadataId, r)
+                    backend.insertItemEntry(entry.key.handle, r)
                 }
             }
         }

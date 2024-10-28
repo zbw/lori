@@ -53,67 +53,70 @@ class SearchKeyTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @DataProvider(name = DATA_FOR_METADATA_ID_KEY)
-    fun createDataForMetadataId() =
+    @DataProvider(name = DATA_FOR_SEARCH_QUERY)
+    fun createDataForSearchQuery() =
         arrayOf(
             arrayOf(
-                "!zdb:'${METADATA_TEST.zdbIdJournal}'",
+                "!${FilterType.ZDB_ID.keyAlias}:'${METADATA_TEST.zdbIdJournal}'",
                 10,
                 0,
                 setOf(METADATA_TEST_2, METADATA_TEST_3),
                 "find all items that have a different ZDB-ID or no value at all",
             ),
             arrayOf(
-                "metadataid:'${METADATA_TEST.metadataId}'",
+                "${FilterType.HANDLE.keyAlias}:'${METADATA_TEST.handle}'",
                 10,
                 0,
                 setOf(METADATA_TEST),
-                "search for specific metadata id",
+                "search for specific handle",
             ),
             arrayOf(
-                "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}')",
+                "${FilterType.HANDLE.keyAlias}:'$NO_VALID_HANDLE' | (${FilterType.HANDLE.keyAlias}:'${METADATA_TEST.handle}')",
                 10,
                 0,
                 setOf(METADATA_TEST),
-                "search for specific metadata id with complex query",
+                "search for specific handle with complex query",
             ),
             arrayOf(
-                "metadataid:'$NO_VALID_METADATA_ID' | (hdl:'${METADATA_TEST.handle}' & !tit:'stupid title')",
+                "${FilterType.HANDLE.keyAlias}:'$NO_VALID_HANDLE' | (${FilterType.HANDLE.keyAlias}:'${METADATA_TEST.handle}'" +
+                    " & !${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "search for specific metadata id with even complexer query",
             ),
             arrayOf(
-                "metadataid:'$NO_VALID_METADATA_ID'",
+                "${FilterType.HANDLE.keyAlias}:'$NO_VALID_HANDLE'",
                 10,
                 0,
                 emptySet<ItemMetadata>(),
                 "fail to find a metadata id",
             ),
             arrayOf(
-                "sig:'${METADATA_TEST.paketSigel}' & (!hdl:'nonse' & !tit:'stupid title')",
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & (!${FilterType.HANDLE.keyAlias}:'nonse'" +
+                    " & !${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "search for specific metadata id with even complexer query ensuring parantheses works as expected",
             ),
             arrayOf(
-                "sig:'${METADATA_TEST.paketSigel}' & !(hdl:'nonse' | tit:'stupid title')",
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
+                    " | ${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "negation around parantheses",
             ),
             arrayOf(
-                "lur:'${METADATA_TEST.licenceUrl}'",
+                "${FilterType.LICENCE_URL.keyAlias}:'${METADATA_TEST.licenceUrl}'",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "search for licence url",
             ),
             arrayOf(
-                "subcom:'${METADATA_TEST_3.subCommunityName}'",
+                "${FilterType.SUB_COMMUNITY_NAME.keyAlias}:'${METADATA_TEST_3.subCommunityName}'",
                 10,
                 0,
                 setOf(METADATA_TEST_3),
@@ -121,8 +124,8 @@ class SearchKeyTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_METADATA_ID_KEY)
-    fun findMetadataId(
+    @Test(dataProvider = DATA_FOR_SEARCH_QUERY)
+    fun testSearchQuery(
         searchTerm: String,
         limit: Int,
         offset: Int,
@@ -144,28 +147,26 @@ class SearchKeyTest : DatabaseTest() {
     }
 
     companion object {
-        const val DATA_FOR_METADATA_ID_KEY = "DATA_FOR_METADATA_ID_KEY "
-        const val NO_VALID_METADATA_ID = "INVALID"
-        private const val TEST_METADATA_ID = "some metadata id"
+        const val DATA_FOR_SEARCH_QUERY = "DATA_FOR_SEARCH_QUERY"
+        const val NO_VALID_HANDLE = "INVALID"
+        private const val TEST_HANDLE = "some handle"
         val METADATA_TEST =
             TEST_Metadata.copy(
-                metadataId = TEST_METADATA_ID,
+                handle = TEST_HANDLE,
             )
         val METADATA_TEST_2 =
             TEST_Metadata.copy(
-                metadataId = "second",
-                handle = "second/handle",
+                handle = "second",
                 zdbIdJournal = null,
                 licenceUrl = "foobar.baz",
                 paketSigel = "someothersigel2",
             )
         val METADATA_TEST_3 =
             TEST_Metadata.copy(
-                metadataId = "third",
+                handle = "third",
                 zdbIdJournal = "someotherzdbid",
                 licenceUrl = "foobar",
                 paketSigel = "someothersigel",
-                handle = "some/other/handle",
                 subCommunityName = "department 3",
             )
     }

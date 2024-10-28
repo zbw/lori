@@ -280,17 +280,17 @@ fun Routing.templateRoutes(
                                         TemplateApplicationRest(
                                             rightId = e.rightId,
                                             templateName = e.templateName,
-                                            metadataIds = e.appliedMetadataIds,
+                                            handles = e.appliedMetadataHandles,
                                             errors = e.errors.map { it.toRest() },
-                                            numberOfAppliedEntries = e.appliedMetadataIds.size,
+                                            numberOfAppliedEntries = e.appliedMetadataHandles.size,
                                             exceptionTemplateApplications =
                                                 e.exceptionTemplateApplicationResult.map { exc ->
                                                     TemplateApplicationRest(
                                                         rightId = exc.rightId,
-                                                        metadataIds = exc.appliedMetadataIds,
+                                                        handles = exc.appliedMetadataHandles,
                                                         templateName = e.templateName,
                                                         errors = exc.errors.map { it.toRest() },
-                                                        numberOfAppliedEntries = exc.appliedMetadataIds.size,
+                                                        numberOfAppliedEntries = exc.appliedMetadataHandles.size,
                                                     )
                                                 },
                                         )

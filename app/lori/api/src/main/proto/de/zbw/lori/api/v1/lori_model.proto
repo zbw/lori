@@ -26,15 +26,14 @@ message TemplateError {
   int32 error_id = 1;
   string message = 2;
   string right_id_source = 3;
-  string metadata_id = 4;
-  string handle_id = 5;
-  string conflicting_right_id = 6;
-  uint64 created_on = 7;
-  ConflictType conflict_type = 8;
+  string handle = 4;
+  string conflicting_right_id = 5;
+  uint64 created_on = 6;
+  ConflictType conflict_type = 7;
 }
 
 message TemplateApplication {
-  repeated string metadata_ids = 1;
+  repeated string handles = 1;
   string right_id = 2;
   int32 number_applied_entries = 3;
   string template_name = 4;

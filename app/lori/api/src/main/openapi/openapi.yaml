@@ -44,18 +44,14 @@ paths:
     $ref: 'item.api.yaml#/item-list'
   /item/search:
     $ref: 'item.api.yaml#/item-search'
-  /item/metadata/{metadata-id}:
+  /item/metadata:
     $ref: 'item.api.yaml#/item-metadata'
   /item/right/{right-id}:
     $ref: 'item.api.yaml#/item-right'
   /item/count/right/{right-id}:
     $ref: 'item.api.yaml#/item-count-right'
-  /item/{metadata-id}/{right-id}:
-    $ref: 'item.api.yaml#/item-deletion'
   /metadata:
     $ref: 'metadata.api.yaml#/metadata'
-  /metadata/{id}:
-    $ref: 'metadata.api.yaml#/metadata-id'
   /metadata/list:
     $ref: 'metadata.api.yaml#/metadata-list'
   /right:

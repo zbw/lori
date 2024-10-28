@@ -47,7 +47,7 @@ class MetadataDBTest : DatabaseTest() {
         runBlocking {
             // given
             val testHeaderId = "double_entry"
-            val testMetadata = TEST_Metadata.copy(metadataId = testHeaderId)
+            val testMetadata = TEST_Metadata.copy(handle = testHeaderId)
 
             // when
             dbConnector.metadataDB.insertMetadata(testMetadata)
@@ -61,7 +61,7 @@ class MetadataDBTest : DatabaseTest() {
         runBlocking {
             // given
             val testId = "id_test"
-            val testMetadata = TEST_Metadata.copy(metadataId = testId, title = "foo")
+            val testMetadata = TEST_Metadata.copy(handle = testId, title = "foo")
 
             // when
             val responseInsert = dbConnector.metadataDB.insertMetadata(testMetadata)
@@ -98,8 +98,8 @@ class MetadataDBTest : DatabaseTest() {
             // given
             val id1 = "upsert1"
             val id2 = "upsert2"
-            val m1 = TEST_Metadata.copy(metadataId = id1, title = "foo")
-            val m2 = TEST_Metadata.copy(metadataId = id2, title = "bar")
+            val m1 = TEST_Metadata.copy(handle = id1, title = "foo")
+            val m2 = TEST_Metadata.copy(handle = id2, title = "bar")
 
             // when
             val responseUpsert = dbConnector.metadataDB.upsertMetadataBatch(listOf(m1, m2))
@@ -159,16 +159,16 @@ class MetadataDBTest : DatabaseTest() {
     fun testContainsMetadata() =
         runBlocking {
             // given
-            val metadataId = "metadataIdContainCheck"
-            val expectedMetadata = TEST_Metadata.copy(metadataId = metadataId)
+            val handle = "handleContainCheck"
+            val expectedMetadata = TEST_Metadata.copy(handle = handle)
 
             // when
-            val containedBefore = dbConnector.metadataDB.metadataContainsId(metadataId)
+            val containedBefore = dbConnector.metadataDB.metadataContainsHandle(handle)
             assertFalse(containedBefore, "Metadata should not exist yet")
 
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
-            val containedAfter = dbConnector.metadataDB.metadataContainsId(metadataId)
+            val containedAfter = dbConnector.metadataDB.metadataContainsHandle(handle)
             assertTrue(containedAfter, "Metadata should exist now")
         }
 
@@ -178,9 +178,9 @@ class MetadataDBTest : DatabaseTest() {
             // given
             val givenMetadata =
                 listOf(
-                    TEST_Metadata.copy(metadataId = "aaaa"),
-                    TEST_Metadata.copy(metadataId = "aaab"),
-                    TEST_Metadata.copy(metadataId = "aaac"),
+                    TEST_Metadata.copy(handle = "aaaa"),
+                    TEST_Metadata.copy(handle = "aaab"),
+                    TEST_Metadata.copy(handle = "aaac"),
                 )
             // when
             givenMetadata.map {

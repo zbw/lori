@@ -57,23 +57,23 @@ class LoriServerBackend(
         config,
     )
 
-    internal suspend fun insertRightForMetadataIds(
+    internal suspend fun insertRightForHandles(
         right: ItemRight,
-        metadataIds: List<String>,
+        handles: List<String>,
     ): String {
         val pkRight = dbConnector.rightDB.insertRight(right.copy(isTemplate = false, templateName = null))
-        metadataIds.forEach {
+        handles.forEach {
             dbConnector.itemDB.insertItem(it, pkRight)
         }
         return pkRight
     }
 
     suspend fun insertItemEntry(
-        metadataId: String,
+        handle: String,
         rightId: String,
         deleteOnConflict: Boolean = false,
     ): Either<Pair<HttpStatusCode, ErrorRest>, String> =
-        if (checkRightConflicts(metadataId, rightId)) {
+        if (checkRightConflicts(handle, rightId)) {
             if (deleteOnConflict) {
                 dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
             }
@@ -85,7 +85,7 @@ class LoriServerBackend(
             )
         } else {
             dbConnector.itemDB
-                .insertItem(metadataId, rightId)
+                .insertItem(handle, rightId)
                 ?.let { Either.Right(it) }
                 ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
         }
@@ -151,23 +151,23 @@ class LoriServerBackend(
             .takeIf {
                 it.isNotEmpty()
             }?.let { metadataList ->
-                metadataList.sortedBy { it.metadataId }
+                metadataList.sortedBy { it.handle }
             } ?: emptyList()
 
-    suspend fun getMetadataElementsByIds(metadataIds: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(metadataIds)
+    suspend fun getMetadataElementsByIds(handles: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
 
-    suspend fun metadataContainsId(id: String): Boolean = dbConnector.metadataDB.metadataContainsId(id)
+    suspend fun metadataContainsHandle(handle: String): Boolean = dbConnector.metadataDB.metadataContainsHandle(handle)
 
     suspend fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
 
-    suspend fun getItemByMetadataId(metadataId: String): Item? =
+    suspend fun getItemByHandle(handle: String): Item? =
         dbConnector.metadataDB
-            .getMetadata(listOf(metadataId))
+            .getMetadata(listOf(handle))
             .takeIf { it.isNotEmpty() }
             ?.first()
             ?.let { meta ->
                 val rights =
-                    dbConnector.rightDB.getRightIdsByMetadata(metadataId).let {
+                    dbConnector.rightDB.getRightIdsByHandle(handle).let {
                         dbConnector.rightDB.getRightsByIds(it)
                     }
                 Item(
@@ -221,7 +221,7 @@ class LoriServerBackend(
         coroutineScope {
             val metadataToRights =
                 metadataList.map { metadata ->
-                    metadata to async { dbConnector.rightDB.getRightIdsByMetadata(metadata.metadataId) }
+                    metadata to async { dbConnector.rightDB.getRightIdsByHandle(metadata.handle) }
                 }
 
             return@coroutineScope metadataToRights.map { p ->
@@ -232,12 +232,12 @@ class LoriServerBackend(
             }
         }
 
-    suspend fun itemContainsMetadata(metadataId: String): Boolean = dbConnector.metadataDB.itemContainsMetadata(metadataId)
+    suspend fun itemContainsMetadata(handle: String): Boolean = dbConnector.metadataDB.itemContainsHandle(handle)
 
     suspend fun itemContainsEntry(
-        metadataId: String,
+        handle: String,
         rightId: String,
-    ): Boolean = dbConnector.itemDB.itemContainsEntry(metadataId, rightId)
+    ): Boolean = dbConnector.itemDB.itemContainsEntry(handle, rightId)
 
     suspend fun countMetadataEntries(): Int =
         dbConnector.searchDB.countSearchMetadata(
@@ -250,11 +250,11 @@ class LoriServerBackend(
     suspend fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
 
     suspend fun deleteItemEntry(
-        metadataId: String,
+        handle: String,
         rightId: String,
-    ) = dbConnector.itemDB.deleteItem(metadataId, rightId)
+    ) = dbConnector.itemDB.deleteItem(handle, rightId)
 
-    suspend fun deleteItemEntriesByMetadataId(metadataId: String) = dbConnector.itemDB.deleteItemByMetadataId(metadataId)
+    suspend fun deleteItemEntriesByHandle(handle: String) = dbConnector.itemDB.deleteItemByHandle(handle)
 
     suspend fun deleteItemEntriesByRightId(rightId: String) = dbConnector.itemDB.deleteItemByRightId(rightId)
 
@@ -278,15 +278,15 @@ class LoriServerBackend(
         }
     }
 
-    suspend fun deleteMetadata(metadataId: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(metadataId))
+    suspend fun deleteMetadataByHandle(handle: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(handle))
 
     suspend fun deleteRight(rightId: String): Int {
         dbConnector.groupDB.deleteGroupPairsByRightId(rightId)
         return dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
     }
 
-    suspend fun getRightEntriesByMetadataId(metadataId: String): List<ItemRight> =
-        dbConnector.rightDB.getRightIdsByMetadata(metadataId).let {
+    suspend fun getRightEntriesByHandle(handle: String): List<ItemRight> =
+        dbConnector.rightDB.getRightIdsByHandle(handle).let {
             dbConnector.rightDB.getRightsByIds(it)
         }
 
@@ -297,11 +297,11 @@ class LoriServerBackend(
     suspend fun insertSession(session: Session): String = dbConnector.userDB.insertSession(session)
 
     private suspend fun checkRightConflicts(
-        metadataId: String,
+        handle: String,
         newRightId: String,
     ): Boolean {
         // Get all right ids
-        val rightIds = dbConnector.itemDB.getRightIdsByMetadataId(metadataId)
+        val rightIds = dbConnector.itemDB.getRightIdsByHandle(handle)
         // Get data for all rights
         val rights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(rightIds)
         val newRight: ItemRight = dbConnector.rightDB.getRightsByIds(listOf(newRightId)).firstOrNull() ?: return false
@@ -318,7 +318,7 @@ class LoriServerBackend(
         metadataSearchFilter: List<MetadataSearchFilter> = emptyList(),
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
-        metadataIdsToIgnore: List<String> = emptyList(),
+        handlesToIgnore: List<String> = emptyList(),
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -341,7 +341,7 @@ class LoriServerBackend(
                         metadataSearchFilter,
                         rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                         noRightInformationFilter,
-                        metadataIdsToIgnore,
+                        handlesToIgnore,
                     )
                 }
 
@@ -549,7 +549,7 @@ class LoriServerBackend(
                                     is ErrorResult -> throw ParsingException("Parsing error in query: $it")
                                 }
                             }
-                    dbConnector.searchDB.searchForMetadataIds(
+                    dbConnector.searchDB.searchForHandles(
                         searchExpression = searchExpression,
                         limit = null,
                         offset = null,
@@ -570,7 +570,7 @@ class LoriServerBackend(
                                 b.formalRuleFilter,
                             ),
                         noRightInformationFilter = b.noRightInformationFilter,
-                        metadataIdsToIgnore = emptyList(),
+                        handlesToIgnore = emptyList(),
                     )
                 }.toSet()
 
@@ -605,7 +605,7 @@ class LoriServerBackend(
                                     b.formalRuleFilter,
                                 ),
                             noRightInformationFilter = b.noRightInformationFilter,
-                            searchResultsExceptions.toList(),
+                            handlesToIgnore = searchResultsExceptions.toList(),
                         )
                     }.results
                 }.toSet()
@@ -624,17 +624,17 @@ class LoriServerBackend(
             dbConnector.rightErrorDB.insertError(it)
         }
         val searchResultsWithoutConflict = searchResults.subtract(itemsWithConflicts.keys)
-        val appliedMetadataIds =
+        val appliedMetadataHandles =
             searchResultsWithoutConflict.map { result ->
                 dbConnector.itemDB.insertItem(
-                    metadataId = result.metadata.metadataId,
+                    handle = result.metadata.handle,
                     rightId = rightId,
                 )
-                result.metadata.metadataId
+                result.metadata.handle
             }
         return TemplateApplicationResult(
             rightId = rightId,
-            appliedMetadataIds = appliedMetadataIds,
+            appliedMetadataHandles = appliedMetadataHandles,
             errors = itemsWithConflicts.values.flatten(),
             exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
             templateName = right.templateName ?: "Missing Template Name",
@@ -772,8 +772,7 @@ class LoriServerBackend(
                         .takeIf { it }
                         ?.let {
                             RightError(
-                                metadataId = item.metadata.metadataId,
-                                handleId = item.metadata.handle,
+                                handle = item.metadata.handle,
                                 conflictingWithRightId = r.rightId ?: "No Right Id",
                                 conflictType = ConflictType.DATE_OVERLAP,
                                 conflictByRightId = template.rightId ?: "No Right Id",
@@ -782,8 +781,8 @@ class LoriServerBackend(
                                 errorId = null,
                                 message =
                                     "Start/End-Datum Konflikt: Template '${template.templateName}' steht im Widerspruch" +
-                                        " mit einer Rechteinformation (Id: ${r.rightId}), welche an die" +
-                                        " Metadata-ID ${item.metadata.metadataId} angebunden ist.",
+                                        " mit einer Rechteinformation (Id: ${r.rightId}), welche an den" +
+                                        " Handle ${item.metadata.handle} angebunden ist.",
                             )
                         }
                 }

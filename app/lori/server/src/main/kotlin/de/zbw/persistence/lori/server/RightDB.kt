@@ -4,6 +4,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
@@ -300,13 +301,13 @@ class RightDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun getRightIdsByMetadata(metadataId: String): List<String> =
+    suspend fun getRightIdsByHandle(handle: String): List<String> =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
-                    this.setString(1, metadataId)
+                    this.setString(1, handle)
                 }
-            val span = tracer.spanBuilder("getRightIdsByMetadata").startSpan()
+            val span = tracer.spanBuilder("getRightIdsByHandle").startSpan()
             val rs =
                 try {
                     span.makeCurrent()
@@ -534,7 +535,7 @@ class RightDB(
         const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA =
             "SELECT right_id" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE metadata_id = ?"
+                " WHERE $COLUMN_METADATA_HANDLE = ?"
 
         const val STATEMENT_RIGHT_CONTAINS_ID =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_RIGHT WHERE right_id=?)"

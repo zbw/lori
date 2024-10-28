@@ -121,7 +121,7 @@ class FacetTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertRight(right)
-                    backend.insertItemEntry(entry.key.metadataId, r)
+                    backend.insertItemEntry(entry.key.handle, r)
                 }
             }
         }
@@ -333,7 +333,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB1 =
             TEST_Metadata.copy(
-                metadataId = "zdb1",
+                handle = "zdb1",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -341,7 +341,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel1 =
             TEST_Metadata.copy(
-                metadataId = "sigel1",
+                handle = "sigel1",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_1,
                 publicationDate = LocalDate.of(2011, 1, 1),
@@ -350,7 +350,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB2 =
             TEST_Metadata.copy(
-                metadataId = "zdb2",
+                handle = "zdb2",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_2,
                 publicationDate = LocalDate.of(2012, 1, 1),
@@ -358,7 +358,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel2 =
             TEST_Metadata.copy(
-                metadataId = "sigel2",
+                handle = "sigel2",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_2,
                 publicationDate = LocalDate.of(2013, 1, 1),
@@ -367,7 +367,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB3 =
             TEST_Metadata.copy(
-                metadataId = "zdb3",
+                handle = "zdb3",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_3,
                 publicationDate = LocalDate.of(2014, 1, 1),
@@ -375,7 +375,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel3 =
             TEST_Metadata.copy(
-                metadataId = "sigel3",
+                handle = "sigel3",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_3,
                 publicationDate = LocalDate.of(2015, 1, 1),

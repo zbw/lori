@@ -15,8 +15,7 @@ data class RightError(
     val conflictType: ConflictType,
     val createdOn: OffsetDateTime,
     val message: String,
-    val handleId: String,
-    val metadataId: String,
+    val handle: String,
     val errorId: Int?,
     val conflictingWithRightId: String,
 )

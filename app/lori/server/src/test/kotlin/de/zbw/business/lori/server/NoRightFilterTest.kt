@@ -44,13 +44,13 @@ class NoRightFilterTest : DatabaseTest() {
         )
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            metadataId = "restricted right",
+            handle = "restricted right",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
     private val itemNoRight =
         TEST_Metadata.copy(
-            metadataId = "no rights",
+            handle = "no rights",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
@@ -72,7 +72,7 @@ class NoRightFilterTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertRight(right)
-                    backend.insertItemEntry(entry.key.metadataId, r)
+                    backend.insertItemEntry(entry.key.handle, r)
                 }
             }
         }

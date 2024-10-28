@@ -97,14 +97,13 @@ class RightErrorDB(
                 if (rs.next()) {
                     RightError(
                         errorId = rs.getInt(1),
-                        metadataId = rs.getString(2),
-                        handleId = rs.getString(3),
-                        conflictByRightId = rs.getString(4),
-                        conflictingWithRightId = rs.getString(5),
-                        message = rs.getString(6),
-                        createdOn = rs.getTimestamp(7).toOffsetDateTime(),
-                        conflictType = ConflictType.valueOf(rs.getString(8)),
-                        conflictByTemplateName = rs.getString(9),
+                        handle = rs.getString(2),
+                        conflictByRightId = rs.getString(3),
+                        conflictingWithRightId = rs.getString(4),
+                        message = rs.getString(5),
+                        createdOn = rs.getTimestamp(6).toOffsetDateTime(),
+                        conflictType = ConflictType.valueOf(rs.getString(7)),
+                        conflictByTemplateName = rs.getString(8),
                     )
                 } else {
                     null
@@ -174,14 +173,13 @@ class RightErrorDB(
                 connection
                     .prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
                     .apply {
-                        this.setString(1, rightError.metadataId)
-                        this.setString(2, rightError.handleId)
-                        this.setString(3, rightError.conflictByRightId)
-                        this.setString(4, rightError.conflictingWithRightId)
-                        this.setString(5, rightError.message)
-                        this.setTimestamp(6, Timestamp.from(rightError.createdOn.toInstant()))
-                        this.setString(7, rightError.conflictType.toString())
-                        this.setIfNotNull(8, rightError.conflictByTemplateName) { value, idx, prepStmt ->
+                        this.setString(1, rightError.handle)
+                        this.setString(2, rightError.conflictByRightId)
+                        this.setString(3, rightError.conflictingWithRightId)
+                        this.setString(4, rightError.message)
+                        this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()))
+                        this.setString(6, rightError.conflictType.toString())
+                        this.setIfNotNull(7, rightError.conflictByTemplateName) { value, idx, prepStmt ->
                             prepStmt.setString(idx, value)
                         }
                     }
@@ -207,24 +205,23 @@ class RightErrorDB(
         const val COLUMN_CREATED_ON = "created_on"
         private const val COLUMN_ERROR_ID = "error_id"
         private const val COLUMN_HANDLE_ID = "handle_id"
-        private const val COLUMN_METADATA_ID = "metadata_id"
         private const val COLUMN_CONFLICT_BY_RIGHT_ID = "conflict_by_right_id"
         const val COLUMN_CONFLICT_BY_TEMPLATE_NAME = "conflict_by_template_name"
         private const val COLUMN_MESSAGE = "message"
 
         const val STATEMENT_GET_RIGHT_LIST_SELECT =
             "SELECT" +
-                " $COLUMN_ERROR_ID,$COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
+                " $COLUMN_ERROR_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
                 "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
                 "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_TEMPLATE_NAME" +
                 " FROM $TABLE_NAME_RIGHT_ERROR"
 
         const val STATEMENT_INSERT_RIGHT_ERROR =
             "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
-                "($COLUMN_METADATA_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
+                "($COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
                 "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
                 "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_TEMPLATE_NAME)" +
-                " VALUES(?,?,?," +
+                " VALUES(?,?," +
                 "?,?,?," +
                 "?,?)"
 

@@ -65,21 +65,21 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(metadataId = "roundtrip"),
-                    TEST_METADATA.copy(metadataId = "no_rights"),
+                    TEST_METADATA.copy(handle = "roundtrip"),
+                    TEST_METADATA.copy(handle = "no_rights"),
                 )
-            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
+            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
             // when
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
-            val received = backend.getItemByMetadataId(givenMetadataEntries[0].metadataId)!!
+            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
+            val received = backend.getItemByHandle(givenMetadataEntries[0].handle)!!
 
             // then
             assertThat(received, `is`(Item(givenMetadataEntries[0], listOf(TEST_RIGHT.copy(rightId = generatedRightId)))))
 
             // when
-            val receivedNoRights = backend.getItemByMetadataId(givenMetadataEntries[1].metadataId)!!
+            val receivedNoRights = backend.getItemByHandle(givenMetadataEntries[1].handle)!!
             // then
             assertThat(receivedNoRights, `is`(Item(givenMetadataEntries[1], emptyList())))
         }
@@ -90,11 +90,11 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadata =
                 arrayOf(
-                    TEST_METADATA.copy(metadataId = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
-                    TEST_METADATA.copy(metadataId = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
-                    TEST_METADATA.copy(metadataId = "aaa"),
-                    TEST_METADATA.copy(metadataId = "abb"),
-                    TEST_METADATA.copy(metadataId = "acc"),
+                    TEST_METADATA.copy(handle = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
+                    TEST_METADATA.copy(handle = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
+                    TEST_METADATA.copy(handle = "aaa"),
+                    TEST_METADATA.copy(handle = "abb"),
+                    TEST_METADATA.copy(handle = "acc"),
                 )
 
             backend.insertMetadataElements(givenMetadata.toList())
@@ -130,7 +130,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 )
             assertThat(noLimit, `is`(emptyList()))
 
-            assertTrue(backend.metadataContainsId(givenMetadata[0].metadataId))
+            assertTrue(backend.metadataContainsHandle(givenMetadata[0].handle))
 
             // when
             val receivedMetadataElements: List<ItemMetadata> = backend.getMetadataList(3, 0)
@@ -159,7 +159,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
             // when
             backend.upsertMetadataElements(listOf(expectedMetadata))
-            val received = backend.getMetadataElementsByIds(listOf(expectedMetadata.metadataId))
+            val received = backend.getMetadataElementsByIds(listOf(expectedMetadata.handle))
 
             // then
             assertThat(received, `is`(listOf(expectedMetadata)))
@@ -167,7 +167,7 @@ class LoriServerBackendTest : DatabaseTest() {
             val expectedMetadata2 = TEST_METADATA.copy(band = "anotherband2")
             // when
             backend.upsertMetadataElements(listOf(expectedMetadata2))
-            val received2 = backend.getMetadataElementsByIds(listOf(expectedMetadata2.metadataId))
+            val received2 = backend.getMetadataElementsByIds(listOf(expectedMetadata2.handle))
 
             // then
             assertThat(received2, `is`(listOf(expectedMetadata2)))
@@ -302,13 +302,13 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(metadataId = "search_test_1", zdbIdJournal = "zbdTest"),
-                    TEST_METADATA.copy(metadataId = "search_test_2", zdbIdJournal = "zbdTest"),
+                    TEST_METADATA.copy(handle = "search_test_1", zdbIdJournal = "zbdTest"),
+                    TEST_METADATA.copy(handle = "search_test_2", zdbIdJournal = "zbdTest"),
                 )
-            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].metadataId)
+            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForMetadataIds(rightAssignments.first, rightAssignments.second)
+            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
 
             // when
             val (number, items) =
@@ -600,10 +600,10 @@ class LoriServerBackendTest : DatabaseTest() {
             backend.insertRight(givenRight2)
             backend.insertRight(givenRight3)
 
-            backend.insertItemEntry(givenMetadata.metadataId, givenRight1.rightId!!)
+            backend.insertItemEntry(givenMetadata.handle, givenRight1.rightId!!)
 
             // Insert first conflict, no deletion
-            when (backend.insertItemEntry(givenMetadata.metadataId, givenRight2.rightId!!)) {
+            when (backend.insertItemEntry(givenMetadata.handle, givenRight2.rightId!!)) {
                 is Either.Left -> {
                     // Error is expected due to conflict
                 }
@@ -613,7 +613,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 }
             }
 
-            when (backend.insertItemEntry(givenMetadata.metadataId, givenRight3.rightId!!, true)) {
+            when (backend.insertItemEntry(givenMetadata.handle, givenRight3.rightId!!, true)) {
                 is Either.Left -> {
                     // Error is expected due to conflict
                 }
@@ -673,7 +673,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         rights = listOf(TEST_RIGHT),
                     ),
                     Item(
-                        metadata = TEST_METADATA.copy(metadataId = "metadata2"),
+                        metadata = TEST_METADATA.copy(handle = "metadata2"),
                         rights = listOf(TEST_RIGHT, TEST_RIGHT.copy(rightId = "right2")),
                     ),
                 ),
@@ -735,7 +735,6 @@ class LoriServerBackendTest : DatabaseTest() {
         private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA =
             ItemMetadata(
-                metadataId = "that-test",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionHandle = "colHandle",

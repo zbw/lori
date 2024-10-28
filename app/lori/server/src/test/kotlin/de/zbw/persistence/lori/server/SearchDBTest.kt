@@ -18,6 +18,7 @@ import de.zbw.business.lori.server.type.SEOr
 import de.zbw.business.lori.server.type.SEPar
 import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -73,7 +74,7 @@ class SearchDBTest : DatabaseTest() {
     fun searchMetadata() =
         runBlocking {
             // given
-            val testZDB = TEST_Metadata.copy(metadataId = "searchZBD", zdbIdJournal = "zbdId")
+            val testZDB = TEST_Metadata.copy(handle = "searchZBD", zdbIdJournal = "zbdId")
             dbConnector.metadataDB.insertMetadata(testZDB)
 
             // when
@@ -133,7 +134,7 @@ class SearchDBTest : DatabaseTest() {
             assertThat(numberResultAll, `is`(1))
 
             // Add second metadata with same zbdID
-            val testZDB2 = TEST_Metadata.copy(metadataId = "searchZBD2", zdbIdJournal = "zbdId")
+            val testZDB2 = TEST_Metadata.copy(handle = "searchZBD2", zdbIdJournal = "zbdId")
             dbConnector.metadataDB.insertMetadata(testZDB2)
             // when
             val resultZBD2 =
@@ -182,7 +183,7 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL_WITH_TS +
                     " FROM item_metadata" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
@@ -202,7 +203,7 @@ class SearchDBTest : DatabaseTest() {
                     " OR (LOWER(zdb_id_series) = LOWER(?) AND zdb_id_series is not null))" +
                     " AND (LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
                     " AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date filter",
             ),
@@ -235,7 +236,7 @@ class SearchDBTest : DatabaseTest() {
                     " OR (LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
                     " AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),
@@ -257,7 +258,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 emptyList(),
                 null,
-                hasMetadataIdsToIgnore = false,
+                hasHandlesToIgnore = false,
             ),
             `is`(expectedWhereClause),
         )
@@ -279,7 +280,7 @@ class SearchDBTest : DatabaseTest() {
                     " $LEFT_JOIN_RIGHT" +
                     " WHERE (((access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL) AND" +
                     " (((access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
             ),
@@ -293,7 +294,7 @@ class SearchDBTest : DatabaseTest() {
                     " $LEFT_JOIN_RIGHT" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
             ),
@@ -320,8 +321,8 @@ class SearchDBTest : DatabaseTest() {
                     " (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
                     " AND ${ALIAS_ITEM_RIGHT}.right_id IS NULL)" +
                     " as sub" +
-                    " WHERE NOT metadata_id = ANY(?)" +
-                    " ORDER BY metadata_id ASC" +
+                    " WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)" +
+                    " ORDER BY $COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "all the filters",
             ),
@@ -362,7 +363,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM ($SELECT_ALL_WITH_TS" +
                     " FROM item_metadata" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY item_metadata.metadata_id ASC)" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC)" +
                     " as countsearch",
                 "count query filter with one searchkey",
             ),
@@ -384,7 +385,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 noRightInformationFilter,
-                hasMetadataIdsToIgnore = false,
+                hasHandlesToIgnore = false,
             ),
             `is`(expectedWhereClause),
         )
@@ -395,12 +396,12 @@ class SearchDBTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 emptyList<MetadataSearchFilter>(),
-                "$STATEMENT_GET_METADATA_RANGE ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
+                "$STATEMENT_GET_METADATA_RANGE ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
                 "metasearch query without filter",
             ),
             arrayOf(
                 listOf(PublicationDateFilter(2000, 2019)),
-                "$STATEMENT_GET_METADATA_RANGE WHERE publication_date >= ? AND publication_date <= ? ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
+                "$STATEMENT_GET_METADATA_RANGE WHERE publication_date >= ? AND publication_date <= ? ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
                 "metasearch query with one filter",
             ),
             arrayOf(
@@ -414,7 +415,7 @@ class SearchDBTest : DatabaseTest() {
                     ),
                 ),
                 STATEMENT_GET_METADATA_RANGE + " WHERE publication_date >= ? AND publication_date <= ? AND" +
-                    " (publication_type = ? OR publication_type = ?) ORDER BY metadata_id ASC LIMIT ? OFFSET ?;",
+                    " (publication_type = ? OR publication_type = ?) ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
                 "metasearch query with multiple filter",
             ),
         )
@@ -428,12 +429,12 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*) FROM (" +
                     SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
-                    " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                     " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT" +
                     " ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
                     " AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "search bar filter metadata and right",
             ),
@@ -443,11 +444,11 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*) FROM (" +
                     SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
-                    " LEFT JOIN item ON item.metadata_id = item_metadata.metadata_id" +
+                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                     " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT" +
                     " ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "only right filter",
             ),
@@ -467,7 +468,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
-                hasMetadataIdsToIgnore = false,
+                hasHandlesToIgnore = false,
             ),
             `is`(expectedSQLQuery),
         )
@@ -483,7 +484,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query only right filter",
             ),
@@ -495,7 +496,7 @@ class SearchDBTest : DatabaseTest() {
                     " $LEFT_JOIN_RIGHT" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
                     " AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    " ORDER BY item_metadata.metadata_id ASC" +
+                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query with both filters",
             ),
@@ -515,7 +516,7 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
-                hasMetadataIdsToIgnore = false,
+                hasHandlesToIgnore = false,
             ),
             `is`(expectedSQLQuery),
         )
@@ -690,7 +691,7 @@ class SearchDBTest : DatabaseTest() {
         const val DATA_FOR_BUILD_SIGEL_AND_ZDB = "DATA_FOR_BUILD_SIGEL_AND_ZDB"
 
         const val STATEMENT_GET_METADATA_RANGE =
-            "SELECT metadata_id,handle,ppn,title,title_journal," +
+            "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
@@ -703,7 +704,7 @@ class SearchDBTest : DatabaseTest() {
                 " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name," +
                 " sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
         const val SELECT_ALL_PRE_TABLE =
-            "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series," +
+            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
                 "publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                 "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
@@ -712,23 +713,23 @@ class SearchDBTest : DatabaseTest() {
                 "${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence_url,${ALIAS_ITEM_RIGHT}.open_content_licence," +
                 "${ALIAS_ITEM_RIGHT}.restricted_open_content_licence,${ALIAS_ITEM_RIGHT}.zbw_user_agreement,${ALIAS_ITEM_RIGHT}.template_name," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_licence_url,ts_subcom_name"
         const val SELECT_ALL_WITH_TS =
-            "SELECT item_metadata.metadata_id,handle,ppn,title,title_journal,title_series," +
+            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
                 "publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                 "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_licence_url,ts_subcom_name"
         const val SELECT_ALL =
-            "SELECT metadata_id,handle,ppn,title,title_journal,title_series,publication_date,band," +
+            "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series,publication_date,band," +
                 "publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,created_on,last_updated_on," +
                 "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
                 "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES"
         const val SELECT_DISTINCT_ON =
-            "SELECT DISTINCT ON (item_metadata.metadata_id) item_metadata.metadata_id,handle," +
+            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                 "paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                 "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
@@ -737,13 +738,13 @@ class SearchDBTest : DatabaseTest() {
                 "${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence,${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence_url," +
                 "${ALIAS_ITEM_RIGHT}.open_content_licence,${ALIAS_ITEM_RIGHT}.restricted_open_content_licence,${ALIAS_ITEM_RIGHT}.zbw_user_agreement," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_metadata_id,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_licence_url,ts_subcom_name"
         const val GROUP_BY_SEARCH_BAR_FILTER =
             "GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
 
         const val LEFT_JOIN_RIGHT =
             "LEFT JOIN item" +
-                " ON item.metadata_id = item_metadata.metadata_id" +
+                " ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                 " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id"
     }
 }

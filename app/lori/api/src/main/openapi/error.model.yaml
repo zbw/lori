@@ -26,9 +26,8 @@ RightErrorInformationRest:
 
 RightErrorRest:
   required:
-    - metadataId
     - message
-    - handleId
+    - handle
     - conflictByRightId
     - conflictType
     - createdOn
@@ -49,11 +48,9 @@ RightErrorRest:
       format: date-time
     errorId:
       type: integer
-    handleId:
+    handle:
       type: string
     message:
-      type: string
-    metadataId:
       type: string
 
 ConflictTypeRest:

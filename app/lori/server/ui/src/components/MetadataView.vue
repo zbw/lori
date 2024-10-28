@@ -19,7 +19,7 @@ export default defineComponent({
 
   setup(props) {
     const searchStore = useSearchStore();
-    const prettyPrint = (value: string) => {
+    const prettyPrint = (value: string | undefined) => {
       if (value) {
         return value;
       } else {
@@ -64,7 +64,7 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-card v-if="currentMetadata.metadataId" class="mx-auto" tile>
+  <v-card v-if="currentMetadata.handle" class="mx-auto" tile>
     <v-card-title class="subheading font-weight-bold">Metadaten</v-card-title>
     <v-divider></v-divider>
     <v-expansion-panels focusable multiple>
@@ -74,11 +74,6 @@ export default defineComponent({
         </v-expansion-panel-title>
         <v-expansion-panel-text>
           <v-container>
-            <v-row>
-              <v-col>Id</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.metadataId) }}</v-col>
-              <v-col></v-col>
-            </v-row>
             <v-row v-show="currentMetadata.handle">
               <v-col>Item-Handle</v-col>
               <v-col>

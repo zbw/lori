@@ -18,10 +18,6 @@ export default defineComponent({
       type: Object as PropType<Array<RightRest>>,
       required: true,
     },
-    metadataId: {
-      type: String,
-      required: true,
-    },
     handle: {
       type: String,
       required: true,
@@ -96,7 +92,7 @@ export default defineComponent({
       dialogStore.editRightActivated = false;
       successMsgIsActive.value = true;
       successMsg.value = "Rechteinformation erfolgreich für Item " +
-          "'" + props.title + " (" + props.metadataId + ")' hinzugefügt.";
+          "'" + props.title + " (" + props.handle + ")' hinzugefügt.";
     };
 
     const updateRight = (right: RightRest, index: number) => {
@@ -220,7 +216,7 @@ export default defineComponent({
         :index="currentIndex"
         :isNewRight="isNew"
         :isNewTemplate="false"
-        :metadataId="metadataId"
+        :handle="handle"
         :right="currentRight"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
@@ -237,7 +233,7 @@ export default defineComponent({
       v-on:click:outside="tabDialogClosed"
     >
       <RightsEditTabs
-        :metadata-id="metadataId"
+        :handle="handle"
         :rights="rights"
         :selectedRight="dialogStore.rightsEditTabsSelectedRight"
         v-on:tabDialogClosed="tabDialogClosed"

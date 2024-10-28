@@ -9,7 +9,6 @@ data class Item(
 )
 
 data class ItemMetadata(
-    val metadataId: String,
     val author: String?,
     val band: String?,
     val collectionHandle: String?,

@@ -13,7 +13,7 @@ export default defineComponent({
       type: String,
       required: true,
     },
-    metadataId: {
+    handle: {
       type: String,
       required: true,
     },
@@ -126,7 +126,7 @@ export default defineComponent({
 <template>
   <v-card>
     <v-toolbar :key="renderKey" color="cyan" dark flat>
-      <v-toolbar-title> Editiere Rechte für {{ metadataId }} </v-toolbar-title>
+      <v-toolbar-title> Editiere Rechte für {{ handle }} </v-toolbar-title>
       <v-spacer></v-spacer>
       <template v-slot:extension>
         <v-tabs
@@ -153,14 +153,14 @@ export default defineComponent({
         @close="resetLastDeletionSuccessful"
       >
         Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
-        {{ metadataId }}.
+        {{ handle }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditDialog
           :index="index"
           :isNewRight="false"
           :isNewTemplate="false"
-          :metadataId="metadataId"
+          :handle="handle"
           :right="item"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"

@@ -112,7 +112,6 @@ fun GroupRest.toBusiness() =
 
 fun MetadataRest.toBusiness() =
     ItemMetadata(
-        metadataId = metadataId,
         author = author,
         band = band,
         collectionHandle = collectionHandle,
@@ -146,7 +145,6 @@ fun MetadataRest.toBusiness() =
 
 fun ItemMetadata.toRest(): MetadataRest =
     MetadataRest(
-        metadataId = metadataId,
         author = author,
         band = band,
         collectionHandle = collectionHandle,
@@ -352,7 +350,7 @@ fun DAItem.toBusiness(
         publicationType == null ||
         title == null
     ) {
-        logger.warn("Required field missing for MetadataId: ${this.id}")
+        logger.warn("Required field missing for metadata: ${this.metadata}")
         null
     } else {
         var subDACommunity: DACommunity? = null
@@ -369,12 +367,11 @@ fun DAItem.toBusiness(
 
             else -> {
                 // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
-                logger.warn("Invalid numbers of parent communities (should be 1 or 2): MetadataId ${this.id}")
+                logger.warn("Invalid numbers of parent communities (should be 1 or 2): Handle ${this.handle}")
                 return null
             }
         }
         ItemMetadata(
-            metadataId = this.id.toString(),
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
             // Not in DA yet
             band = null,
@@ -635,8 +632,7 @@ fun RightError.toRest(): RightErrorRest =
         conflictByTemplateName = conflictByTemplateName,
         createdOn = createdOn,
         message = message,
-        handleId = handleId,
-        metadataId = metadataId,
+        handle = handle,
         conflictingWithRightId = conflictingWithRightId,
         conflictType = conflictType.toRest(),
         errorId = errorId ?: -1,

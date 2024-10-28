@@ -1,13 +1,56 @@
 item:
+  delete:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - item
+    summary: Delete an item relation
+    operationId: deleteItem
+    parameters:
+      - name: handle
+        in: query
+        description: Handle
+        required: true
+        schema:
+          type: string
+      - name: right-id
+        in: query
+        description: Right id
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion was successful
+        content: { }
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Relation does not exist
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+
   post:
     security:
       - cookieAuth: []
     tags:
       - item
-    summary: Add a new relation between metadata and right
+    summary: Add a new relation between handle and right id
     operationId: addItemRelation
     requestBody:
-      description: MetadataId and RightId
+      description: Handle and RightId
       content:
         application/json:
           schema:
@@ -16,7 +59,7 @@ item:
     parameters:
       - name: deleteRightOnConflict
         in: query
-        description: If a conflict with other rights of the metadata id exists, delete the right information
+        description: If a conflict with other rights of this handle exists, delete the right information
         required: false
         schema:
           type: boolean
@@ -51,68 +94,24 @@ item:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
     x-codegen-request-body-name: body
 
-item-deletion:
-  delete:
-    security:
-      - cookieAuth: []
-    tags:
-      - item
-    summary: Delete an item relation
-    operationId: deleteItem
-    parameters:
-      - name: metadata-id
-        in: path
-        description: Metadata id
-        required: true
-        schema:
-          type: string
-      - name: right-id
-        in: path
-        description: Right id
-        required: true
-        schema:
-          type: string
-    responses:
-      200:
-        description: Deletion was successfull
-        content: { }
-      401:
-        description: Unauthorized to perform this action
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      404:
-        description: Relation does not exist
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-      500:
-        description: Internal error
-        content:
-          application/json:
-            schema:
-              $ref: 'errorhandling.model.yaml#/ErrorRest'
-
 item-metadata:
   delete:
     security:
       - cookieAuth: []
     tags:
       - item
-    summary: Delete all item relations with metadata id
-    operationId: deleteItemByMetadataId
+    summary: Delete all item relations with handle
+    operationId: deleteItemByHandle
     parameters:
-      - name: metadata-id
-        in: path
-        description: Metadata id to delete
+      - name: handle
+        in: query
+        description: Handle to delete
         required: true
         schema:
           type: string
     responses:
       200:
-        description: Deletion was successfull
+        description: Deletion was successful
         content: { }
       400:
         description: Bad request
@@ -129,12 +128,12 @@ item-metadata:
   get:
     tags:
       - item
-    summary: Get all right information related to metadata id
-    operationId: getItemByMetadataId
+    summary: Get all right information related to handle
+    operationId: getItemByHandle
     parameters:
-      - name: metadata-id
-        in: path
-        description: Metadata id
+      - name: handle
+        in: query
+        description: Handle
         required: true
         schema:
           type: string

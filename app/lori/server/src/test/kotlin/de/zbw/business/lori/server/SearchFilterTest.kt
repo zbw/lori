@@ -48,7 +48,7 @@ class SearchFilterTest : DatabaseTest() {
         listOf(
             TEST_Metadata.copy(
                 collectionName = "subject1 subject2 subject3",
-                metadataId = "publicationDate2022",
+                handle = "publicationDate2022",
                 publicationDate = LocalDate.of(2022, 1, 1),
             ),
         )
@@ -57,13 +57,13 @@ class SearchFilterTest : DatabaseTest() {
         listOf(
             TEST_Metadata.copy(
                 collectionName = "subject4",
-                metadataId = "publicationTypeArticle",
+                handle = "publicationTypeArticle",
                 publicationType = PublicationType.PROCEEDING,
                 publicationDate = LocalDate.of(2022, 1, 1),
             ),
             TEST_Metadata.copy(
                 collectionName = "subject4",
-                metadataId = "publicationTypeWorkingPaper",
+                handle = "publicationTypeWorkingPaper",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationDate = LocalDate.of(2020, 1, 1),
             ),
@@ -72,17 +72,17 @@ class SearchFilterTest : DatabaseTest() {
     private val zdbIdFilterItems =
         listOf(
             TEST_Metadata.copy(
-                metadataId = "journalId only",
+                handle = "journalId only",
                 zdbIdJournal = "555nase",
                 zdbIdSeries = null,
             ),
             TEST_Metadata.copy(
-                metadataId = "seriesId only",
+                handle = "seriesId only",
                 zdbIdJournal = null,
                 zdbIdSeries = "444nase",
             ),
             TEST_Metadata.copy(
-                metadataId = "both zdb ids",
+                handle = "both zdb ids",
                 zdbIdJournal = "444nase",
                 zdbIdSeries = "333nase",
             ),

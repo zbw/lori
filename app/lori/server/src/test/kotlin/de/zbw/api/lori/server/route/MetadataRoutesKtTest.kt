@@ -23,8 +23,6 @@ import io.ktor.util.InternalAPI
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.opentelemetry.api.OpenTelemetry
-import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
@@ -38,7 +36,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns false
                 coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
@@ -66,7 +64,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostConflict() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -116,7 +114,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPostInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } throws SQLException()
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -142,11 +140,11 @@ class MetadataRoutesKtTest {
     @Test
     fun testDeleteRightOK() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } returns false
-                coEvery { deleteMetadata(metadataId) } returns 1
+                coEvery { itemContainsMetadata(handle) } returns false
+                coEvery { deleteMetadataByHandle(handle) } returns 1
             }
         val servicePool = getServicePool(backend)
 
@@ -155,20 +153,20 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
-            coVerify(exactly = 1) { backend.itemContainsMetadata(metadataId) }
-            coVerify(exactly = 1) { backend.deleteMetadata(metadataId) }
+            coVerify(exactly = 1) { backend.itemContainsMetadata(handle) }
+            coVerify(exactly = 1) { backend.deleteMetadataByHandle(handle) }
         }
     }
 
     @Test
     fun testDeleteRightConflict() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } returns true
+                coEvery { itemContainsMetadata(handle) } returns true
             }
         val servicePool = getServicePool(backend)
 
@@ -177,7 +175,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat("Should return Conflict", response.status, `is`(HttpStatusCode.Conflict))
         }
     }
@@ -185,10 +183,10 @@ class MetadataRoutesKtTest {
     @Test
     fun testDeleteRightInternal() {
         // given
-        val metadataId = "123"
+        val handle = "123"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsMetadata(metadataId) } throws SQLException()
+                coEvery { itemContainsMetadata(handle) } throws SQLException()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         testApplication {
@@ -196,7 +194,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.delete("/api/v1/metadata/$metadataId")
+            val response = client.delete("/api/v1/metadata?handle=$handle")
             assertThat(
                 "Should return Internal Server Error",
                 response.status,
@@ -221,7 +219,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<MetadataRest>() {}.type
             val received: MetadataRest = RightRoutesKtTest.GSON.fromJson(content, groupListType)
@@ -244,7 +242,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             assertThat(
                 "Should return NotFound",
                 response.status,
@@ -268,7 +266,7 @@ class MetadataRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/metadata/$testId")
+            val response = client.get("/api/v1/metadata?handle=$testId")
             assertThat(
                 "Should return InternalServerError",
                 response.status,
@@ -281,7 +279,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutNoContent() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns true
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns true
                 coEvery { upsertMetadataElements(any()) } returns IntArray(1) { 1 }
             }
         val servicePool = getServicePool(backend)
@@ -309,7 +307,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutCreated() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(TEST_METADATA.metadataId) } returns false
+                coEvery { metadataContainsHandle(TEST_METADATA.handle) } returns false
                 coEvery { insertMetadataElement(any()) } returns "foo"
             }
         val servicePool = getServicePool(backend)
@@ -361,7 +359,7 @@ class MetadataRoutesKtTest {
     fun testMetadataPutInternal() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { metadataContainsId(any()) } throws SQLException()
+                coEvery { metadataContainsHandle(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -535,7 +533,6 @@ class MetadataRoutesKtTest {
 
         val TEST_METADATA =
             MetadataRest(
-                metadataId = "foo",
                 author = "Colbjørnsen, Terje",
                 band = "band",
                 collectionName = "collectionName",
@@ -558,7 +555,5 @@ class MetadataRoutesKtTest {
             )
 
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
-
-        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.DatabaseConnectorTest")
     }
 }

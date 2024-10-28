@@ -68,12 +68,6 @@ export default defineComponent({
 
     const headers = [
       {
-        title: "Metadata-Id",
-        align: "start",
-        sortable: true,
-        value: "metadataId",
-      },
-      {
         title: "Titel",
         sortable: true,
         value: "title",
@@ -180,11 +174,11 @@ export default defineComponent({
      */
     const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
       const item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.metadataId === row.item.metadataId,
+        (e) => e.metadata.handle === row.item.handle,
       );
       if (item !== undefined) {
         currentItem.value = item;
-        selectedItems.value = [row.item.metadataId];
+        selectedItems.value = [row.item.handle];
       }
     };
 
@@ -192,13 +186,13 @@ export default defineComponent({
     const setActiveItem = (mouseEvent: MouseEvent, row: any) => {
       //row.select(true);
       const item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.metadataId === row.item.metadataId,
+        (e) => e.metadata.handle === row.item.handle,
       );
       if (item !== undefined) {
         currentItem.value = item;
       }
       selectedItems.value = selectedItems.value.filter(
-        (e: string) => e == row.item.metadataId,
+        (e: string) => e == row.item.handle,
       );
     };
 
@@ -283,11 +277,11 @@ export default defineComponent({
 
     const loadMetadataView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const metadataId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_METADATA_ID);
-      if (metadataId == null || metadataId == "") {
+      const handle: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_HANDLE);
+      if (handle == null || handle == "") {
         return false;
       }
-      searchQueryByTerm("metadataId:" + metadataId, () => {});
+      searchQueryByTerm("hdl:" + handle, () => {});
       return true;
     };
 
@@ -324,7 +318,7 @@ export default defineComponent({
       searchQueryByTerm(searchTerm, () => {
         if (items.value.length > 0){
           currentItem.value = items.value[0]
-          selectedItems.value = [items.value[0].metadata.metadataId];
+          selectedItems.value = [items.value[0].metadata.handle];
           const rightIdToLoad = getRightPP();
           if (rightIdToLoad == null){
             return;
@@ -723,7 +717,7 @@ export default defineComponent({
     const searchHelpDialog = ref(false);
 
     const selectedRowColor = (row: any) => {
-      if(selectedItems.value[0] !== undefined && selectedItems.value[0] == row.item.metadataId){
+      if(selectedItems.value[0] !== undefined && selectedItems.value[0] == row.item.handle){
         return { class: "bg-blue-lighten-4"}
       }
     };
@@ -980,11 +974,6 @@ table.special, th.special, td.special {
                       <td class=special></td>
                     </tr>
                     <tr class=special>
-                      <td class=special>Metadata Id Lori</td>
-                      <td class=special>metadataid</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
                       <td class=special>Series</td>
                       <td class=special>ser</td>
                       <td class=special></td>
@@ -1059,8 +1048,8 @@ table.special, th.special, td.special {
                       <td class=special>Nicht</td>
                       <td class=special>!</td>
                       <td class=special>
-                        !metadataid:'1234' <br>
-                        !(metadataid:'1234' | tit:'geopolitical') <br>
+                        !hdl:'1234' <br>
+                        !(hdl:'1234' | tit:'geopolitical') <br>
                         col:'department' & !tit:'geopolitical'
                       </td>
                     </tr>
@@ -1137,7 +1126,7 @@ table.special, th.special, td.special {
             :headers="selectedHeaders"
             :items="items.map((value) => value.metadata)"
             :items-per-page="0"
-            item-value="metadataId"
+            item-value="handle"
             :loading="tableContentLoading"
             :key="renderKey"
             :row-props="selectedRowColor"
@@ -1197,7 +1186,6 @@ table.special, th.special, td.special {
       <v-card v-if="currentItem.metadata" class="mx-auto" tile>
         <RightsView
             :handle="currentItem.metadata.handle"
-            :metadataId="currentItem.metadata.metadataId"
             :rights="currentItem.rights"
             :title="currentItem.metadata.title"
         ></RightsView>
