@@ -432,7 +432,10 @@ export default defineComponent({
     /**
      * Refresh bookmarks.
      */
-    const updateBookmarks = (rightId: string, callback: () => void) => {
+    const updateBookmarks = (rightId: string | undefined, callback: () => void) => {
+      if (rightId == undefined){
+        return;
+      }
       templateApi
         .addBookmarksByRightId(
           rightId,
@@ -472,8 +475,33 @@ export default defineComponent({
       if (formState.startDate == undefined) {
         return;
       }
-      tmpRight.value.startDate = formState.startDate;
-      tmpRight.value.endDate = formState.endDate;
+
+      if (formState.endDate != undefined) {
+        tmpRight.value.endDate = new Date();
+        tmpRight.value.endDate.setUTCDate(
+            formState.endDate.getDate()
+        );
+
+        tmpRight.value.endDate.setUTCMonth(
+            formState.endDate.getMonth()
+        );
+
+        tmpRight.value.endDate.setUTCFullYear(
+            formState.endDate.getFullYear()
+        );
+      }
+      tmpRight.value.startDate = new Date();
+      tmpRight.value.startDate.setUTCDate(
+          formState.startDate.getDate()
+      );
+
+      tmpRight.value.startDate.setUTCMonth(
+          formState.startDate.getMonth()
+      );
+
+      tmpRight.value.startDate.setUTCFullYear(
+          formState.startDate.getFullYear()
+      );
       if (props.isNewTemplate) {
         createTemplate();
       } else if (isTemplate.value) {
