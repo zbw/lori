@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.lori.model.BookmarkIdCreated
 import de.zbw.lori.model.BookmarkRawRest
@@ -175,7 +176,13 @@ fun Routing.bookmarkRoutes(
                         }
                         val receivedBookmarks: List<Bookmark> = backend.getBookmarkList(limit, offset)
                         span.setStatus(StatusCode.OK)
-                        call.respond(receivedBookmarks.map { it.toRest() })
+                        call.respond(
+                            receivedBookmarks.map { bookmark: Bookmark ->
+                                bookmark.toRest(
+                                    SearchFilter.bookmarkToString(bookmark),
+                                )
+                            },
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -212,9 +219,13 @@ fun Routing.bookmarkRoutes(
                         call.respond(HttpStatusCode.BadRequest, "No valid id has been provided in the url.")
                     } else {
                         val bookmark: Bookmark? = backend.getBookmarkById(bookmarkId)
-                        bookmark?.let {
+                        bookmark?.let { b ->
                             span.setStatus(StatusCode.OK)
-                            call.respond(bookmark.toRest())
+                            call.respond(
+                                b.toRest(
+                                    SearchFilter.bookmarkToString(b),
+                                ),
+                            )
                         } ?: let {
                             span.setStatus(StatusCode.ERROR)
                             call.respond(

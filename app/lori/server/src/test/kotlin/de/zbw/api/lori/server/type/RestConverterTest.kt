@@ -388,7 +388,7 @@ class RestConverterTest {
     fun testBookmarkConversion() {
         assertThat(
             TEST_BOOKMARK.toString(),
-            `is`(TEST_BOOKMARK.toRest().toBusiness().toString()),
+            `is`(TEST_BOOKMARK.toRest("").toBusiness().toString()),
         )
     }
 
