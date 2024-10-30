@@ -58,7 +58,7 @@ class BookmarkRoutesKtTest {
                 client.post("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest()))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
                 }
             assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
         }
@@ -86,7 +86,7 @@ class BookmarkRoutesKtTest {
                 client.post("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest()))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
                 }
             assertThat("Should return 409", response.status, `is`(HttpStatusCode.Conflict))
         }
@@ -214,7 +214,7 @@ class BookmarkRoutesKtTest {
                 client.put("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest()))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
                 }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
         }
@@ -238,7 +238,7 @@ class BookmarkRoutesKtTest {
                 client.put("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest()))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
                 }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
@@ -248,7 +248,12 @@ class BookmarkRoutesKtTest {
     fun testGetBookmarkByIdOK() {
         // given
         val bookmarkId = 45
-        val expected = TEST_BOOKMARK.toRest()
+        val expected =
+            TEST_BOOKMARK.toRest(
+                "(tit:someTitle) & (jah:2020-2030 & typ:\"BOOK,ARTICLE\" & sig:\"sigel\" & zdb:\"zdbId1,zdbId2\"" +
+                    " & acc:\"OPEN,RESTRICTED\" & zga:\"FUTURE,PAST\" & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\"" +
+                    " & zge:\"2021-12-31\" & zgp:\"2018-04-01\")",
+            )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { getBookmarkById(bookmarkId) } returns TEST_BOOKMARK
@@ -264,7 +269,7 @@ class BookmarkRoutesKtTest {
             val content: String = response.bodyAsText()
             val bookmarkListType: Type = object : TypeToken<BookmarkRest>() {}.type
             val received: BookmarkRest = GSON.fromJson(content, bookmarkListType)
-            assertThat(received, `is`(expected))
+            assertThat(received.copy(), `is`(expected))
         }
     }
 
@@ -437,7 +442,14 @@ class BookmarkRoutesKtTest {
         // given
         val limit = 50
         val offset = 0
-        val expected = listOf(TEST_BOOKMARK.toRest())
+        val expected =
+            listOf(
+                TEST_BOOKMARK.toRest(
+                    "(tit:someTitle) & (jah:2020-2030 & typ:\"BOOK,ARTICLE\" & sig:\"sigel\" & zdb:\"zdbId1,zdbId2\"" +
+                        " & acc:\"OPEN,RESTRICTED\" & zga:\"FUTURE,PAST\" & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\"" +
+                        " & zge:\"2021-12-31\" & zgp:\"2018-04-01\")",
+                ),
+            )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { getBookmarkList(limit, offset) } returns listOf(TEST_BOOKMARK)
@@ -463,7 +475,14 @@ class BookmarkRoutesKtTest {
         val limit = 50
         val offset = 0
         val givenBookmark = TEST_BOOKMARK
-        val expected = listOf(givenBookmark.toRest())
+        val expected =
+            listOf(
+                givenBookmark.toRest(
+                    "(tit:someTitle) & (jah:2020-2030 & typ:\"BOOK,ARTICLE\" & sig:\"sigel\"" +
+                        " & zdb:\"zdbId1,zdbId2\" & acc:\"OPEN,RESTRICTED\" & zga:\"FUTURE,PAST\"" +
+                        " & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\" & zge:\"2021-12-31\" & zgp:\"2018-04-01\")",
+                ),
+            )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { getBookmarkList(limit, offset) } returns listOf(givenBookmark)

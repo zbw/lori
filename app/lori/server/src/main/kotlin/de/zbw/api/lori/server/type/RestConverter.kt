@@ -507,7 +507,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         createdOn = createdOn,
     )
 
-fun Bookmark.toRest(): BookmarkRest =
+fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
     BookmarkRest(
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
@@ -534,6 +534,7 @@ fun Bookmark.toRest(): BookmarkRest =
         lastUpdatedOn = this.lastUpdatedOn,
         filterSeries = this.seriesFilter?.seriesNames,
         filterTemplateName = this.templateNameFilter?.templateNames,
+        filtersAsQuery = filtersAsQuery,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =

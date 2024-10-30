@@ -126,6 +126,8 @@ BookmarkRest:
     lastUpdatedOn:
       type: string
       format: date-time
+    filtersAsQuery:
+      type: string
 
 FilterPublicationDateRest:
   type: object

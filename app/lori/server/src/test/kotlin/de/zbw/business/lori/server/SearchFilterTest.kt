@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
@@ -441,11 +442,67 @@ class SearchFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_BOOKMARK_TO_STRING)
+    fun createDataForBookmarkToString() =
+        arrayOf(
+            arrayOf(
+                Bookmark(
+                    bookmarkName = "test1",
+                    bookmarkId = 1,
+                    searchTerm = "hdl:1234/5 & tit:infrastructure",
+                    publicationTypeFilter =
+                        PublicationTypeFilter(
+                            listOf(PublicationType.PROCEEDING),
+                        ),
+                    validOnFilter = RightValidOnFilter(LocalDate.of(2023, 11, 10)),
+                ),
+                "(hdl:1234/5 & tit:infrastructure) & (typ:\"PROCEEDING\" & zgp:\"2023-11-10\")",
+                "Searchterm in combination with filter",
+            ),
+            arrayOf(
+                Bookmark(
+                    bookmarkName = "test1",
+                    bookmarkId = 1,
+                    searchTerm = "",
+                    publicationTypeFilter =
+                        PublicationTypeFilter(
+                            listOf(PublicationType.PROCEEDING),
+                        ),
+                    validOnFilter = RightValidOnFilter(LocalDate.of(2023, 11, 10)),
+                ),
+                "typ:\"PROCEEDING\" & zgp:\"2023-11-10\"",
+                "No Searchterm",
+            ),
+            arrayOf(
+                Bookmark(
+                    bookmarkName = "test1",
+                    bookmarkId = 1,
+                    searchTerm = "hdl:1234/5 & tit:infrastructure",
+                ),
+                "hdl:1234/5 & tit:infrastructure",
+                "Searchterm only",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_BOOKMARK_TO_STRING)
+    fun testBookmarkToString(
+        bookmark: Bookmark,
+        expected: String,
+        reason: String,
+    ) {
+        assertThat(
+            reason,
+            SearchFilter.bookmarkToString(bookmark),
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_PUBLICATION_DATE"
         const val DATA_FOR_NO_SEARCH_TERM = "DATA_FOR_NO_SEARCH_TERM"
         const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
         const val DATA_FOR_PREPARE_VALUE = "DATA_FOR_PREPARE_VALUE"
         const val DATA_FOR_TO_STRING = "DATA_FOR_TO_STRING"
+        const val DATA_FOR_BOOKMARK_TO_STRING = "DATA_FOR_BOOKMARK_TO_STRING"
     }
 }

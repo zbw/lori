@@ -96,6 +96,13 @@ export default defineComponent({
         });
     };
 
+    const copyToClipboard = (textToCopy: string | undefined) => {
+      if (textToCopy == undefined){
+        return;
+      }
+      navigator.clipboard.writeText(textToCopy);
+    };
+
     const openDeleteDialog = (bookmark: BookmarkRest) => {
       editBookmark.value = Object.assign({}, bookmark);
       editIndex.value = bookmarkItems.value.indexOf(bookmark);
@@ -182,6 +189,7 @@ export default defineComponent({
       close,
       closeDeleteDialog,
       closeTemplateDialog,
+      copyToClipboard,
       deleteBookmarkEntry,
       executeBookmarkSearch,
       openDeleteDialog,
@@ -264,7 +272,32 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small @click="openDeleteDialog(item)"> mdi-delete </v-icon>
+          <v-btn
+              variant="text"
+              icon="mdi-eye"
+          >
+          <v-icon small>mdi-eye
+          </v-icon>
+            <v-overlay
+                activator="parent"
+                location="top center"
+                location-strategy="connected">
+              <v-card class="pa-2">
+                {{item.filtersAsQuery}}
+                <v-btn
+                    @click="copyToClipboard(item.filtersAsQuery)"
+                    icon="mdi-content-copy"
+                >
+                </v-btn>
+              </v-card>
+            </v-overlay>
+          </v-btn>
+          <v-btn
+              variant="text"
+              @click="openDeleteDialog(item)"
+              icon="mdi-delete"
+          >
+          </v-btn>
         </template>
       </v-data-table>
       <v-card-actions>
