@@ -86,6 +86,9 @@ export default defineComponent({
           bookmarkItems.value.splice(editIndex.value, 1);
           renderKey.value += 1;
           closeDeleteDialog();
+          alertSuccessful.value = true;
+          alertSuccessfulMsg.value =
+              "Bookmark '" + editBookmark.value.bookmarkName + "' wurde erfolgreich gelöscht.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -147,7 +150,7 @@ export default defineComponent({
     const childTemplateAdded = (template: RightRest) => {
       alertSuccessful.value = true;
       alertSuccessfulMsg.value =
-        "Successfully created Template " + template.templateName;
+        "Template '" + template.templateName + "' wurde erfolgreich erstellt.";
     };
 
     /**

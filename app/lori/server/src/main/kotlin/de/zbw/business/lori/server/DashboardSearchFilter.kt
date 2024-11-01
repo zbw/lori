@@ -80,13 +80,13 @@ class DashboardTimeIntervalStartFilter(
 class DashboardTimeIntervalEndFilter(
     private val endDate: LocalDate,
 ) : DashboardSearchFilter(RightErrorDB.COLUMN_CREATED_ON) {
-    override fun toWhereClause(): String = "($dbColumnName <= ?)"
+    override fun toWhereClause(): String = "($dbColumnName < ?)"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int {
-        preparedStatement.setDate(counter, Date.valueOf(endDate))
+        preparedStatement.setDate(counter, Date.valueOf(endDate.plusDays(1)))
         return counter + 1
     }
 }

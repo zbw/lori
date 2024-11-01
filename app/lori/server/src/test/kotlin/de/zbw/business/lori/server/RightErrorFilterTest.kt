@@ -135,6 +135,23 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 "Query for errors in a time interval",
             ),
+            arrayOf(
+                listOf(
+                    DashboardTimeIntervalStartFilter(
+                        RightErrorDBTest.NOW.minusDays(DAYS_PAST).toLocalDate(),
+                    ),
+                    DashboardTimeIntervalEndFilter(
+                        RightErrorDBTest.NOW.minusDays(DAYS_PAST).toLocalDate(),
+                    ),
+                ),
+                ErrorQueryResult(
+                    totalNumberOfResults = 2,
+                    templateNames = setOf(RIGHT_ERROR_PAST.conflictByTemplateName!!),
+                    conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
+                    results = getErrorsCreatedOn(),
+                ),
+                "Query for errors on one day",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_QUERY_ERRORS)
