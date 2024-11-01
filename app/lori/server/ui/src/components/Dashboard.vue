@@ -54,8 +54,8 @@ export default defineComponent({
               (currentPage.value - 1) * pageSize.value,
               pageSize.value,
               buildTemplateNameFilter(),
-              startDateFormatted.value,
-              endDateFormatted.value,
+              startDateFormatted.value != "" ? startDateFormatted.value : undefined,
+              endDateFormatted.value != "" ? endDateFormatted.value : undefined,
               buildConflictTypeFilter(),
           )
           .then((r: RightErrorInformationRest) => {
@@ -64,8 +64,10 @@ export default defineComponent({
             numberOfResults.value = r.numberOfResults;
             receivedTemplateNames.value = r.templateNames;
             receivedConflictTypes.value = r.conflictTypes;
+            isResetting.value = false;
           })
           .catch((e) => {
+            isResetting.value = false;
             error.errorHandling(e, (errMsg: string) => {
               errorMsg.value = errMsg;
               errorMsgIsActive.value = true;
@@ -123,7 +125,6 @@ export default defineComponent({
         return "";
       } else {
         startDateFormatted.value = date_utils.dateToIso8601(startDate.value);
-        getErrorList();
       }
     };
 
@@ -138,9 +139,29 @@ export default defineComponent({
         return "";
       } else {
         endDateFormatted.value = date_utils.dateToIso8601(endDate.value);
-        getErrorList();
       }
     };
+
+    /**
+     * Reset Button:
+     */
+    const isResetting = ref(false);
+    const resetFilter = () => {
+      isResetting.value = true;
+      startDateFormatted.value = "";
+      endDateFormatted.value = "";
+      selectedConflictTypes.value = [];
+      selectedTemplateNames.value = [];
+      getErrorList();
+    };
+    const canReset = computed(() => {
+      return (
+          selectedTemplateNames.value.length > 0 ||
+              selectedConflictTypes.value.length > 0 ||
+              startDateFormatted.value != "" ||
+              endDateFormatted.value != ""
+      );
+    });
 
     /**
      * Pageinator:
@@ -189,16 +210,37 @@ export default defineComponent({
     });
 
     watch(selectedTemplateNames, () => {
-      getErrorList();
+      if(isResetting.value){
+        return;
+      } else {
+        getErrorList();
+      }
     });
 
     watch(selectedConflictTypes, () => {
-      getErrorList();
+      if(isResetting.value) {
+        return;
+      } else {
+        getErrorList();
+      }
     });
 
     watch(startDateFormatted, () => {
-      isStartDateMenuOpen.value = false;
-      getErrorList();
+      if(isResetting.value){
+        return;
+      } else {
+        isStartDateMenuOpen.value = false;
+        getErrorList();
+      }
+    });
+
+    watch(endDateFormatted, () => {
+      if(isResetting.value){
+        return;
+      } else {
+        isEndDateMenuOpen.value = false;
+        getErrorList();
+      }
     });
 
     /**
@@ -207,6 +249,7 @@ export default defineComponent({
     onMounted(() => getErrorList());
 
     return {
+      canReset,
       currentPage,
       headers,
       endDate,
@@ -230,13 +273,14 @@ export default defineComponent({
       successMsg,
       successMsgIsActive,
       totalPages,
-      endDateEntered,
       createHandleHref,
       createRightHref,
       createTemplateHref,
+      endDateEntered,
       getErrorList,
-      startDateEntered,
       prettyPrintConflict,
+      resetFilter,
+      startDateEntered,
     };
   },
 });
@@ -290,8 +334,15 @@ export default defineComponent({
                 </template>
               </v-list-item>
             </template>
-
           </v-select>
+          <v-btn
+              size="small"
+              color="warning"
+              :disabled="!canReset"
+              @click="resetFilter"
+          >
+            Filter resetten</v-btn
+          >
         </v-col>
         <v-col>
           <b>Erzeugendes Template</b>
