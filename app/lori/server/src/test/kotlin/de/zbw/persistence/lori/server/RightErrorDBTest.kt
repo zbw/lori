@@ -116,7 +116,7 @@ class RightErrorDBTest : DatabaseTest() {
                 ),
                 RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
                     " WHERE ($COLUMN_CONFLICT_BY_TEMPLATE_NAME = ? OR $COLUMN_CONFLICT_BY_TEMPLATE_NAME = ?)" +
-                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON <= ?)" +
+                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " ORDER BY error_id LIMIT ? OFFSET ?;",
                 "All filters",
             ),
@@ -157,7 +157,7 @@ class RightErrorDBTest : DatabaseTest() {
                 "SELECT $COLUMN_CONFLICT_BY_TEMPLATE_NAME" +
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
                     " WHERE ($COLUMN_CONFLICT_BY_TEMPLATE_NAME = ? OR $COLUMN_CONFLICT_BY_TEMPLATE_NAME = ?)" +
-                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON <= ?)" +
+                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " GROUP BY $COLUMN_CONFLICT_BY_TEMPLATE_NAME;",
                 "All filters",
             ),
