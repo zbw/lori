@@ -478,29 +478,27 @@ export default defineComponent({
 
       if (formState.endDate != undefined) {
         tmpRight.value.endDate = new Date();
-        tmpRight.value.endDate.setUTCDate(
-            formState.endDate.getDate()
+        tmpRight.value.endDate.setUTCFullYear(
+            formState.endDate.getFullYear()
         );
 
         tmpRight.value.endDate.setUTCMonth(
             formState.endDate.getMonth()
         );
-
-        tmpRight.value.endDate.setUTCFullYear(
-            formState.endDate.getFullYear()
+        tmpRight.value.endDate.setUTCDate(
+            formState.endDate.getDate()
         );
       }
       tmpRight.value.startDate = new Date();
-      tmpRight.value.startDate.setUTCDate(
-          formState.startDate.getDate()
-      );
-
-      tmpRight.value.startDate.setUTCMonth(
-          formState.startDate.getMonth()
-      );
 
       tmpRight.value.startDate.setUTCFullYear(
           formState.startDate.getFullYear()
+      );
+      tmpRight.value.startDate.setUTCMonth(
+          formState.startDate.getMonth()
+      );
+      tmpRight.value.startDate.setUTCDate(
+          formState.startDate.getDate()
       );
       if (props.isNewTemplate) {
         createTemplate();
