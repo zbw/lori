@@ -1,12 +1,8 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
-import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
-import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.CONFIG
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
-import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.tracer
-import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -59,7 +55,7 @@ class TemplateRoutesKtTest {
                 coEvery { deleteRight(rightId) } returns 1
                 coEvery { deleteItemEntriesByRightId(rightId) } returns 5
             }
-        val servicePool = getServicePool(backend)
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
@@ -82,7 +78,7 @@ class TemplateRoutesKtTest {
                 coEvery { deleteRight(rightId) } returns 0
                 coEvery { deleteItemEntriesByRightId(rightId) } returns 0
             }
-        val servicePool = getServicePool(backend)
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
@@ -104,7 +100,7 @@ class TemplateRoutesKtTest {
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { deleteRight(rightId) } throws SQLException("foo")
             }
-        val servicePool = getServicePool(backend)
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
 
         testApplication {
             moduleAuthForTests()
@@ -137,6 +133,30 @@ class TemplateRoutesKtTest {
                     setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT))
                 }
             assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
+        }
+    }
+
+    @Test
+    fun testPostTemplateInvalidEndDate() {
+        // given
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { insertTemplate(any()) } returns "1"
+            }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/template") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(endDate = RightRoutesKtTest.TODAY.minusDays(2))))
+                }
+            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 
@@ -213,6 +233,30 @@ class TemplateRoutesKtTest {
                     setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(isTemplate = true, templateName = "name")))
                 }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
+        }
+    }
+
+    @Test
+    fun testPutTemplateInvalidEndDate() {
+        // given
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { upsertRight(any()) } returns 1
+            }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.put("/api/v1/template") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(endDate = RightRoutesKtTest.TODAY.minusDays(2))))
+                }
+            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 
@@ -865,24 +909,5 @@ class TemplateRoutesKtTest {
             val response = client.get("/api/v1/template/exceptions/$givenRightIdTemplate")
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
-    }
-
-    companion object {
-        fun getServicePool(
-            backend: LoriServerBackend,
-            samlUtils: SamlUtils = mockk(relaxed = true),
-        ) = ServicePoolWithProbes(
-            services =
-                listOf(
-                    mockk {
-                        every { isReady() } returns true
-                        every { isHealthy() } returns true
-                    },
-                ),
-            config = CONFIG,
-            backend = backend,
-            tracer = tracer,
-            samlUtils = samlUtils,
-        )
     }
 }

@@ -207,6 +207,29 @@ class RightRoutesKtTest {
     }
 
     @Test
+    fun testPostRightInvalidEndDate() {
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { insertRight(any()) } returns "5"
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/right") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT.copy(endDate = TODAY.minusDays(2))))
+                }
+            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
     fun testPostRightInternalError() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -305,6 +328,30 @@ class RightRoutesKtTest {
     }
 
     @Test
+    fun testPutRightInvalidEndDate() {
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns false
+                coEvery { insertRight(any()) } returns "1"
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.put("/api/v1/right") {
+                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT.copy(endDate = TODAY.minusDays(2))))
+                }
+            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
     fun testPutRightBadRequest() {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -356,7 +403,7 @@ class RightRoutesKtTest {
     }
 
     companion object {
-        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+        val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
         private val CONFIG =
             LoriConfiguration(
