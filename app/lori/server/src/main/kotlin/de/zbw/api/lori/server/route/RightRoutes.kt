@@ -102,6 +102,12 @@ fun Routing.rightRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError("User is not authorized"),
                                 ) // This should never happen
+                        if (right.endDate != null && right.endDate!! <= right.startDate) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                            )
+                        }
                         val pk =
                             backend.insertRight(
                                 right.toBusiness().copy(
@@ -152,6 +158,12 @@ fun Routing.rightRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError("User is not authorized"),
                                 ) // This should never happen
+                        if (right.endDate != null && right.endDate!! <= right.startDate) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                            )
+                        }
                         if (backend.rightContainsId(right.rightId!!)) {
                             backend.upsertRight(
                                 right.toBusiness().copy(

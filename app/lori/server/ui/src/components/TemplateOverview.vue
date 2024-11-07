@@ -212,7 +212,7 @@ export default defineComponent({
       lastModifiedTemplateName.value = templateName;
       successMsgIsActive.value = true;
       successMsg.value =
-        "Template " + lastModifiedTemplateName.value + " erfolgreich editiert.";
+        "Template '" + lastModifiedTemplateName.value + "' erfolgreich editiert.";
       updateTemplateOverview();
       closeTemplateEditDialog();
     };

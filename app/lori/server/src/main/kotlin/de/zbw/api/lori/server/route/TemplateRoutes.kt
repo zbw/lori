@@ -64,6 +64,12 @@ fun Routing.templateRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError("User is not authorized"),
                                 ) // This should never happen
+                        if (right.endDate != null && right.endDate!! <= right.startDate) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                            )
+                        }
                         val pk: String = backend.insertTemplate(right.toBusiness().copy(createdBy = userSession.email))
                         span.setStatus(StatusCode.OK)
                         call.respond(
@@ -121,6 +127,12 @@ fun Routing.templateRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError("User is not authorized"),
                                 ) // This should never happen
+                        if (right.endDate != null && right.endDate!! <= right.startDate) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                            )
+                        }
                         val insertedRows = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
