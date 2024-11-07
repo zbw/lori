@@ -78,12 +78,12 @@ class ErrorRoutesKtTest {
                 handle = "somehandle",
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByTemplateName = "template name",
+                conflictByContext = "template name",
             )
         val TEST_ERROR_RESULT =
             ErrorQueryResult(
                 totalNumberOfResults = 1,
-                templateNames = setOf(TEST_ERROR.conflictByTemplateName!!),
+                contextNames = setOf(TEST_ERROR.conflictByContext!!),
                 conflictTypes = setOf(ConflictType.DATE_OVERLAP),
                 results = listOf(TEST_ERROR),
             )

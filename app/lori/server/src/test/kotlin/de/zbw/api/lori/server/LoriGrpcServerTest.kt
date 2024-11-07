@@ -3,11 +3,15 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
+import de.zbw.lori.api.CheckForRightErrorsRequest
+import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
+import de.zbw.lori.api.RightError
 import de.zbw.lori.api.TemplateApplication
 import io.grpc.StatusRuntimeException
 import io.mockk.coEvery
@@ -20,6 +24,8 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
 import java.nio.channels.UnresolvedAddressException
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Test [LoriGrpcServer].
@@ -225,7 +231,80 @@ class LoriGrpcServerTest {
         }
     }
 
+    @Test
+    fun testCheckForRightErrors() {
+        runBlocking {
+            // given
+            val expectedResult =
+                listOf(
+                    de.zbw.business.lori.server.type.RightError(
+                        errorId = 1,
+                        message = "foobar",
+                        handle = "handle",
+                        createdOn = NOW,
+                        conflictType = ConflictType.GAP,
+                        conflictByContext = "sigel1234",
+                        conflictByRightId = null,
+                        conflictingWithRightId = null,
+                    ),
+                )
+            val expectedResponse =
+                CheckForRightErrorsResponse
+                    .newBuilder()
+                    .addAllErrors(
+                        listOf(
+                            RightError
+                                .newBuilder()
+                                .setErrorContext("sigel1234")
+                                .setConflictType(de.zbw.lori.api.ConflictType.CONFLICT_TYPE_GAP)
+                                .setErrorId(1)
+                                .setHandle("handle")
+                                .setMessage("foobar")
+                                .setCreatedOn(NOW.toInstant().toEpochMilli())
+                                .build(),
+                        ),
+                    ).build()
+
+            val request =
+                CheckForRightErrorsRequest
+                    .newBuilder()
+                    .build()
+            val backendMock =
+                mockk<LoriServerBackend> {
+                    coEvery {
+                        checkForRightErrors()
+                    } returns expectedResult
+                }
+            // when
+            val grpcServer =
+                LoriGrpcServer(
+                    config = mockk(),
+                    backend = backendMock,
+                    daConnector =
+                        mockk {
+                            every { backend } returns backendMock
+                        },
+                    tracer = tracer,
+                )
+            val response = grpcServer.checkForRightErrors(request)
+
+            // then
+            assertThat(response, `is`(expectedResponse))
+        }
+    }
+
     companion object {
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.LoriGrpcServerTest")
+        private val NOW =
+            OffsetDateTime.of(
+                2022,
+                3,
+                2,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )
     }
 }

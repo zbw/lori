@@ -1,0 +1,1 @@
+ALTER TABLE right_error ALTER COLUMN conflict_by_right_id DROP NOT NULL;

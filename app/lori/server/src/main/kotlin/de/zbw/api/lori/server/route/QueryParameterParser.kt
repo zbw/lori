@@ -192,7 +192,7 @@ object QueryParameterParser {
         val receivedConflictTypes =
             s.split(",".toRegex()).mapNotNull {
                 try {
-                    ConflictType.valueOf(it)
+                    ConflictType.valueOf(it.uppercase())
                 } catch (iae: IllegalArgumentException) {
                     null
                 }

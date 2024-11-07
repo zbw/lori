@@ -10,17 +10,18 @@ import java.time.OffsetDateTime
  * @author Christian Bay (c.bay@zbw.eu)
  */
 data class RightError(
-    val conflictByRightId: String,
-    val conflictByTemplateName: String?,
+    val conflictByRightId: String?,
+    val conflictByContext: String?,
     val conflictType: ConflictType,
     val createdOn: OffsetDateTime,
     val message: String,
     val handle: String,
     val errorId: Int?,
-    val conflictingWithRightId: String,
+    val conflictingWithRightId: String?,
 )
 
 enum class ConflictType {
     DATE_OVERLAP,
+    GAP,
     UNSPECIFIED,
 }

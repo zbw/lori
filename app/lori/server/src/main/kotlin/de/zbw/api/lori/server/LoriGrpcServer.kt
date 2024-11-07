@@ -3,15 +3,18 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
+import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
+import de.zbw.lori.api.CheckForRightErrorsRequest
+import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
+import de.zbw.lori.api.RightError
 import de.zbw.lori.api.TemplateApplication
-import de.zbw.lori.api.TemplateError
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.opentelemetry.api.trace.SpanKind
@@ -38,6 +41,41 @@ class LoriGrpcServer(
     private val daConnector: DAConnector = DAConnector(config, backend),
     private val tracer: Tracer,
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
+    override suspend fun checkForRightErrors(request: CheckForRightErrorsRequest): CheckForRightErrorsResponse {
+        val span =
+            tracer
+                .spanBuilder("lori.LoriService/CheckForRightErrors")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                val errors =
+                    daConnector.backend.checkForRightErrors().map {
+                        RightError
+                            .newBuilder()
+                            .setErrorId(it.errorId ?: -1)
+                            .setMessage(it.message)
+                            .setHandle(it.handle)
+                            .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
+                            .setErrorContext(it.conflictByContext)
+                            .setConflictType(it.conflictType.toProto())
+                            .build()
+                    }
+                CheckForRightErrorsResponse
+                    .newBuilder()
+                    .addAllErrors(errors)
+                    .build()
+            } catch (e: Throwable) {
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL
+                        .withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}"),
+                )
+            }
+        }
+    }
+
     override suspend fun fullImport(request: FullImportRequest): FullImportResponse {
         val span =
             tracer
@@ -91,7 +129,7 @@ class LoriGrpcServer(
                             .addAllHandles(e.appliedMetadataHandles)
                             .addAllErrors(
                                 e.errors.map {
-                                    TemplateError
+                                    RightError
                                         .newBuilder()
                                         .setErrorId(it.errorId ?: -1)
                                         .setMessage(it.message)
@@ -99,6 +137,7 @@ class LoriGrpcServer(
                                         .setHandle(it.handle)
                                         .setConflictingRightId(it.conflictByRightId)
                                         .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
+                                        .setErrorContext(it.conflictByContext)
                                         .build()
                                 },
                             ).addAllExceptions(
@@ -111,7 +150,7 @@ class LoriGrpcServer(
                                         .addAllHandles(exc.appliedMetadataHandles)
                                         .addAllErrors(
                                             exc.errors.map {
-                                                TemplateError
+                                                RightError
                                                     .newBuilder()
                                                     .setErrorId(it.errorId ?: -1)
                                                     .setMessage(it.message)
@@ -119,6 +158,7 @@ class LoriGrpcServer(
                                                     .setHandle(it.handle)
                                                     .setConflictingRightId(it.conflictByRightId)
                                                     .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
+                                                    .setErrorContext(it.conflictByContext)
                                                     .build()
                                             },
                                         ).build()

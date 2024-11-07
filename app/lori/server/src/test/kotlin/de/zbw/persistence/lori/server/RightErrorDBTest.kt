@@ -9,7 +9,7 @@ import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIGHT_ERROR
 import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CONFLICTING_TYPE
-import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CONFLICT_BY_TEMPLATE_NAME
+import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CONFLICT_BY_CONTEXT
 import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CREATED_ON
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -62,7 +62,7 @@ class RightErrorDBTest : DatabaseTest() {
             )
 
             // Delete by AGE
-            dbConnector.deleteErrorByAge(NOW.plusDays(1).toInstant())
+            dbConnector.deleteErrorsByAge(NOW.plusDays(1).toInstant())
             assertThat(
                 dbConnector.getErrorList(10, 0).size,
                 `is`(0),
@@ -88,7 +88,7 @@ class RightErrorDBTest : DatabaseTest() {
                 dbConnector.getErrorList(10, 0).size,
                 `is`(2),
             )
-            dbConnector.deleteByCausingRightId(templateError1.conflictByRightId)
+            dbConnector.deleteByCausingRightId(templateError1.conflictByRightId!!)
             assertThat(
                 dbConnector.getErrorList(10, 0).size,
                 `is`(1),
@@ -115,7 +115,7 @@ class RightErrorDBTest : DatabaseTest() {
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
                 RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
-                    " WHERE ($COLUMN_CONFLICT_BY_TEMPLATE_NAME = ? OR $COLUMN_CONFLICT_BY_TEMPLATE_NAME = ?)" +
+                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " ORDER BY error_id LIMIT ? OFFSET ?;",
                 "All filters",
@@ -147,18 +147,18 @@ class RightErrorDBTest : DatabaseTest() {
                 "No filters selected",
             ),
             arrayOf(
-                COLUMN_CONFLICT_BY_TEMPLATE_NAME,
+                COLUMN_CONFLICT_BY_CONTEXT,
                 listOf(
                     DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
                     DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
                     DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
-                "SELECT $COLUMN_CONFLICT_BY_TEMPLATE_NAME" +
+                "SELECT $COLUMN_CONFLICT_BY_CONTEXT" +
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
-                    " WHERE ($COLUMN_CONFLICT_BY_TEMPLATE_NAME = ? OR $COLUMN_CONFLICT_BY_TEMPLATE_NAME = ?)" +
+                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
-                    " GROUP BY $COLUMN_CONFLICT_BY_TEMPLATE_NAME;",
+                    " GROUP BY $COLUMN_CONFLICT_BY_CONTEXT;",
                 "All filters",
             ),
         )
@@ -201,7 +201,7 @@ class RightErrorDBTest : DatabaseTest() {
                 handle = "somehandle",
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByTemplateName = "template name",
+                conflictByContext = "template name",
             )
         val EXAMPLE_DATE: LocalDate =
             LocalDate.of(
