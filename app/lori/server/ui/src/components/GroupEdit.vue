@@ -40,7 +40,7 @@ export default defineComponent({
      */
     type ValidatingFields = {
       title: string;
-      ipAddressesFile: File[] | undefined;
+      ipAddressesFile: File | undefined;
       ipAddressesText: string | undefined;
     };
 
@@ -60,7 +60,7 @@ export default defineComponent({
       groupId: 0 as number | undefined,
       title: "",
       description: "" as string | undefined,
-      ipAddressesFile: undefined as File[] | undefined,
+      ipAddressesFile: undefined as File | undefined,
       ipAddressesText: "" as string | undefined,
     });
 
@@ -188,7 +188,7 @@ export default defineComponent({
           formState.ipAddressesText == "" &&
           formState.ipAddressesFile != undefined
         ) {
-          formState.ipAddressesFile[0]
+          formState.ipAddressesFile
             .text()
             .then((r) => {
               groupTmp.value.allowedAddressesRaw = r;
