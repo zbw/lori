@@ -40,6 +40,26 @@ class ItemDB(
             }.takeWhile { true }.toList()
         }
 
+    suspend fun getAllHandles(): List<String> =
+        connectionPool.useConnection { connection ->
+            val span = tracer.spanBuilder("getAllHandles").startSpan()
+            val prepStmt = connection.prepareStatement(STATEMENT_SELECT_DISTINCT_HANDLE)
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
     suspend fun itemContainsEntry(
         handle: String,
         rightId: String,
@@ -179,8 +199,8 @@ class ItemDB(
         }
 
     companion object {
-        const val CONSTRAINT_ITEM_PKEY = "item_pkey"
-        const val COLUMN_HANDLE_ID = "handle"
+        private const val CONSTRAINT_ITEM_PKEY = "item_pkey"
+        const val COLUMN_HANDLE = "handle"
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID =
             "SELECT COUNT(*) " +
                 "FROM $TABLE_NAME_ITEM " +
@@ -189,11 +209,15 @@ class ItemDB(
         const val STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID =
             "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE $COLUMN_HANDLE_ID = ?"
+                " WHERE $COLUMN_HANDLE = ?"
+
+        const val STATEMENT_SELECT_DISTINCT_HANDLE =
+            "SELECT DISTINCT ($COLUMN_HANDLE)" +
+                "FROM $TABLE_NAME_ITEM;"
 
         const val STATEMENT_INSERT_ITEM =
             "INSERT INTO $TABLE_NAME_ITEM" +
-                "($COLUMN_HANDLE_ID, $COLUMN_RIGHT_ID)" +
+                "($COLUMN_HANDLE, $COLUMN_RIGHT_ID)" +
                 " VALUES(?,?)" +
                 " ON CONFLICT ON CONSTRAINT $CONSTRAINT_ITEM_PKEY" +
                 " DO NOTHING;"
@@ -202,12 +226,12 @@ class ItemDB(
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
                 "WHERE i.$COLUMN_RIGHT_ID = ? " +
-                "AND i.$COLUMN_HANDLE_ID = ?"
+                "AND i.$COLUMN_HANDLE = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_HANDLE =
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
-                "WHERE i.$COLUMN_HANDLE_ID = ?"
+                "WHERE i.$COLUMN_HANDLE = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_RIGHT =
             "DELETE " +
@@ -215,7 +239,7 @@ class ItemDB(
                 "WHERE i.$COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_ITEM_CONTAINS_ENTRY =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_HANDLE_ID=? AND $COLUMN_RIGHT_ID=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_HANDLE=? AND $COLUMN_RIGHT_ID=?)"
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_RIGHT_ID=?)"

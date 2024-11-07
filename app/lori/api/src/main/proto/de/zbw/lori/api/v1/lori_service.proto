@@ -10,4 +10,5 @@ option java_multiple_files = true;
 service LoriService {
   rpc FullImport (FullImportRequest) returns (FullImportResponse);
   rpc ApplyTemplates (ApplyTemplatesRequest) returns (ApplyTemplatesResponse);
+  rpc CheckForRightErrors (CheckForRightErrorsRequest) returns (CheckForRightErrorsResponse);
 }

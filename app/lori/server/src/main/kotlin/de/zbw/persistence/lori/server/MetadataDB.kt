@@ -138,10 +138,10 @@ class MetadataDB(
             return@useConnection runMetadataStatement(prepStmt, span, connection)
         }
 
-    suspend fun upsertMetadataBatch(itemMetadatas: List<ItemMetadata>): IntArray =
+    suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
         connectionPool.useConnection { connection ->
             val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
-            itemMetadatas.map {
+            itemMetadata.map {
                 val p = insertUpsertMetadataSetParameters(it, prep)
                 p.addBatch()
             }
@@ -177,92 +177,6 @@ class MetadataDB(
                 span.end()
             }
         }
-
-    private fun insertUpsertMetadataSetParameters(
-        itemMetadata: ItemMetadata,
-        prep: PreparedStatement,
-    ): PreparedStatement {
-        val now = Instant.now()
-        return prep.apply {
-            this.setString(1, itemMetadata.handle)
-            this.setIfNotNull(2, itemMetadata.ppn) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setString(3, itemMetadata.title)
-            this.setIfNotNull(4, itemMetadata.titleJournal) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(5, itemMetadata.titleSeries) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(6, itemMetadata.publicationDate) { value, idx, prepStmt ->
-                prepStmt.setDate(idx, Date.valueOf(value))
-            }
-            this.setIfNotNull(7, itemMetadata.band) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setString(8, itemMetadata.publicationType.toString())
-            this.setIfNotNull(9, itemMetadata.doi) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(10, itemMetadata.isbn) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(11, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(12, itemMetadata.paketSigel) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(13, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(14, itemMetadata.issn) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setTimestamp(15, Timestamp.from(now))
-            this.setTimestamp(16, Timestamp.from(now))
-            this.setIfNotNull(17, itemMetadata.createdBy) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(18, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(19, itemMetadata.author) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(20, itemMetadata.collectionName) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(21, itemMetadata.communityName) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(22, itemMetadata.storageDate) { value, idx, prepStmt ->
-                prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
-            }
-            this.setIfNotNull(23, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(24, itemMetadata.communityHandle) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(25, itemMetadata.collectionHandle) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(26, itemMetadata.licenceUrl) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(27, itemMetadata.subCommunityName) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(28, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(29, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-        }
-    }
 
     companion object {
         const val TS_COMMUNITY = "ts_community"
@@ -408,5 +322,91 @@ class MetadataDB(
                 isPartOfSeries = rs.getString(28),
                 zdbIdSeries = rs.getString(29),
             )
+
+        private fun insertUpsertMetadataSetParameters(
+            itemMetadata: ItemMetadata,
+            prep: PreparedStatement,
+        ): PreparedStatement {
+            val now = Instant.now()
+            return prep.apply {
+                this.setString(1, itemMetadata.handle)
+                this.setIfNotNull(2, itemMetadata.ppn) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setString(3, itemMetadata.title)
+                this.setIfNotNull(4, itemMetadata.titleJournal) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(5, itemMetadata.titleSeries) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(6, itemMetadata.publicationDate) { value, idx, prepStmt ->
+                    prepStmt.setDate(idx, Date.valueOf(value))
+                }
+                this.setIfNotNull(7, itemMetadata.band) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setString(8, itemMetadata.publicationType.toString())
+                this.setIfNotNull(9, itemMetadata.doi) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(10, itemMetadata.isbn) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(11, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(12, itemMetadata.paketSigel) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(13, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(14, itemMetadata.issn) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setTimestamp(15, Timestamp.from(now))
+                this.setTimestamp(16, Timestamp.from(now))
+                this.setIfNotNull(17, itemMetadata.createdBy) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(18, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(19, itemMetadata.author) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(20, itemMetadata.collectionName) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(21, itemMetadata.communityName) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(22, itemMetadata.storageDate) { value, idx, prepStmt ->
+                    prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
+                }
+                this.setIfNotNull(23, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(24, itemMetadata.communityHandle) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(25, itemMetadata.collectionHandle) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(26, itemMetadata.licenceUrl) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(27, itemMetadata.subCommunityName) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(28, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(29, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+            }
+        }
     }
 }

@@ -22,6 +22,7 @@ import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
+import de.zbw.business.lori.server.utils.DashboardUtil
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.RightErrorDB
@@ -511,10 +512,29 @@ class LoriServerBackend(
 
     suspend fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int = dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
-    suspend fun applyAllTemplates(): List<TemplateApplicationResult> =
-        dbConnector.rightDB
+    suspend fun checkForRightErrors(): List<RightError> {
+        dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.GAP)
+        val handles: List<String> = dbConnector.itemDB.getAllHandles()
+        val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
+        val items =
+            metadata.map { m ->
+                val rightIds = dbConnector.rightDB.getRightIdsByHandle(m.handle)
+                Item(
+                    metadata = m,
+                    rights = dbConnector.rightDB.getRightsByIds(rightIds),
+                )
+            }
+        val errors = items.map { DashboardUtil.checkForGapErrors(it) }.flatten()
+        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
+        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+    }
+
+    suspend fun applyAllTemplates(): List<TemplateApplicationResult> {
+        dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.DATE_OVERLAP)
+        return dbConnector.rightDB
             .getRightIdsForAllTemplates()
             .let { applyTemplates(it) }
+    }
 
     suspend fun applyTemplates(rightIds: List<String>): List<TemplateApplicationResult> =
         rightIds.mapNotNull { rightId ->
@@ -670,16 +690,16 @@ class LoriServerBackend(
                         ).map { ConflictType.valueOf(it) }
                 }
 
-            val occurrenceTemplateNames =
+            val occurrenceContextNames =
                 async {
                     dbConnector.rightErrorDB.getOccurrences(
-                        column = RightErrorDB.COLUMN_CONFLICT_BY_TEMPLATE_NAME,
+                        column = RightErrorDB.COLUMN_CONFLICT_BY_CONTEXT,
                         filters = searchFilters,
                     )
                 }
             return@coroutineScope ErrorQueryResult(
                 totalNumberOfResults = totalNumber.await(),
-                templateNames = occurrenceTemplateNames.await().toSet(),
+                contextNames = occurrenceContextNames.await().toSet(),
                 conflictTypes = occurrenceConflictTypes.await().toSet(),
                 results = results.await(),
             )
@@ -776,7 +796,7 @@ class LoriServerBackend(
                                 conflictingWithRightId = r.rightId ?: "No Right Id",
                                 conflictType = ConflictType.DATE_OVERLAP,
                                 conflictByRightId = template.rightId ?: "No Right Id",
-                                conflictByTemplateName = template.templateName,
+                                conflictByContext = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),
                                 errorId = null,
                                 message =

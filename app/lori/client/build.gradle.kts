@@ -3,6 +3,7 @@ plugins {
     id("zbw.kotlin-microservice-scaffold")
     id("zbw.kotlin-tests")
     id("zbw.tracing")
+    id("zbw.kotlin-coroutines")
 }
 
 repositories {

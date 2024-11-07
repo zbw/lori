@@ -3,6 +3,8 @@ package de.zbw.api.lori.client
 import de.zbw.api.lori.client.config.LoriClientConfiguration
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
+import de.zbw.lori.api.CheckForRightErrorsRequest
+import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
@@ -24,15 +26,16 @@ import java.util.concurrent.TimeUnit
  */
 class LoriClient(
     val configuration: LoriClientConfiguration,
-    val channel: Channel = ManagedChannelBuilder.forTarget("${configuration.address}:${configuration.port}")
-        .defaultLoadBalancingPolicy("round_robin")
-        .usePlaintext()
-        .build(),
+    val channel: Channel =
+        ManagedChannelBuilder
+            .forTarget("${configuration.address}:${configuration.port}")
+            .defaultLoadBalancingPolicy("round_robin")
+            .usePlaintext()
+            .build(),
     val stub: LoriServiceGrpcKt.LoriServiceCoroutineStub = LoriServiceGrpcKt.LoriServiceCoroutineStub(channel),
     private val openTelemetry: OpenTelemetry,
-    private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient")
+    private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient"),
 ) {
-
     suspend fun applyTemplates(request: ApplyTemplatesRequest): ApplyTemplatesResponse =
         runWithTracing("client_applyTemplates") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
             s.applyTemplates(request)
@@ -43,15 +46,20 @@ class LoriClient(
             s.fullImport(request)
         }
 
+    suspend fun checkForErrors(request: CheckForRightErrorsRequest): CheckForRightErrorsResponse =
+        runWithTracing("client_checkForErrors") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
+            s.checkForRightErrors(request)
+        }
+
     private suspend fun <T> runWithTracing(
         spanName: String,
-        op: suspend (LoriServiceGrpcKt.LoriServiceCoroutineStub) -> T
+        op: suspend (LoriServiceGrpcKt.LoriServiceCoroutineStub) -> T,
     ): T {
-
-        val span = tracer
-            .spanBuilder(spanName)
-            .setSpanKind(SpanKind.CLIENT)
-            .startSpan()
+        val span =
+            tracer
+                .spanBuilder(spanName)
+                .setSpanKind(SpanKind.CLIENT)
+                .startSpan()
         return withContext(span.asContextElement()) {
             try {
                 op.invoke(stub.withDeadlineAfter(configuration.deadlineInMilli, TimeUnit.MILLISECONDS))

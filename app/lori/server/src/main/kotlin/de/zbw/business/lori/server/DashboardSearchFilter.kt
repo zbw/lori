@@ -25,7 +25,7 @@ abstract class DashboardSearchFilter(
 
 class DashboardTemplateNameFilter(
     private val templateNames: List<String>,
-) : DashboardSearchFilter(RightErrorDB.COLUMN_CONFLICT_BY_TEMPLATE_NAME) {
+) : DashboardSearchFilter(RightErrorDB.COLUMN_CONFLICT_BY_CONTEXT) {
     override fun toWhereClause(): String =
         templateNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
             "$dbColumnName = ?"

@@ -3,7 +3,7 @@ RightErrorInformationRest:
     - totalPages
     - numberOfResults
     - errors
-    - templateNames
+    - contextNames
     - conflictTypes
   type: object
   properties:
@@ -15,7 +15,7 @@ RightErrorInformationRest:
       type: array
       items:
         $ref: 'error.model.yaml#/RightErrorRest'
-    templateNames:
+    contextNames:
       type: array
       items:
         type: string
@@ -28,16 +28,14 @@ RightErrorRest:
   required:
     - message
     - handle
-    - conflictByRightId
     - conflictType
     - createdOn
     - errorId
-    - conflictingWithRightId
   type: object
   properties:
     conflictByRightId:
       type: string
-    conflictByTemplateName:
+    conflictByContext:
       type: string
     conflictType:
       $ref: 'error.model.yaml#/ConflictTypeRest'
@@ -57,4 +55,5 @@ ConflictTypeRest:
   type: string
   enum:
     - date_overlap
+    - gap
     - unspecified

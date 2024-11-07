@@ -32,8 +32,8 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Erzeugt durch",
-        value: "conflictByTemplateName",
+        title: "Kontext",
+        value: "conflictByContext",
         sortable: true,
       },
       {
@@ -62,7 +62,7 @@ export default defineComponent({
             totalPages.value = r.totalPages;
             errorItems.value = r.errors;
             numberOfResults.value = r.numberOfResults;
-            receivedTemplateNames.value = r.templateNames;
+            receivedContextNames.value = r.contextNames;
             receivedConflictTypes.value = r.conflictTypes;
             isResetting.value = false;
           })
@@ -84,16 +84,16 @@ export default defineComponent({
     /**
      * Filter:
      */
-    const receivedTemplateNames: Ref<Array<string>> = ref([]);
-    const selectedTemplateNames: Ref<Array<string>> = ref([]);
+    const receivedContextNames: Ref<Array<string>> = ref([]);
+    const selectedContextNames: Ref<Array<string>> = ref([]);
     const receivedConflictTypes: Ref<Array<string>> = ref([]);
     const selectedConflictTypes: Ref<Array<string>> = ref([]);
 
     const buildTemplateNameFilter: () => (string | undefined) = () => {
-      if (selectedTemplateNames.value.length == 0){
+      if (selectedContextNames.value.length == 0){
         return undefined;
       } else {
-        return selectedTemplateNames.value.join(",");
+        return selectedContextNames.value.join(",");
       }
     };
 
@@ -109,6 +109,8 @@ export default defineComponent({
       switch (conflictType.title){
         case "date_overlap":
           return "Zeitliche Überschneidung";
+        case "gap":
+          return "Zeitliche Lücke";
         default:
           return "Unbekannt";
       }
@@ -151,12 +153,12 @@ export default defineComponent({
       startDateFormatted.value = "";
       endDateFormatted.value = "";
       selectedConflictTypes.value = [];
-      selectedTemplateNames.value = [];
+      selectedContextNames.value = [];
       getErrorList();
     };
     const canReset = computed(() => {
       return (
-          selectedTemplateNames.value.length > 0 ||
+          selectedContextNames.value.length > 0 ||
               selectedConflictTypes.value.length > 0 ||
               startDateFormatted.value != "" ||
               endDateFormatted.value != ""
@@ -180,15 +182,19 @@ export default defineComponent({
           searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
     };
 
-    const createRightHref = (handleId : string, rightId: string) => {
+    const createRightHref = (handleId : string, rightId: string | undefined) => {
       const handlePP = createHandleHref(handleId);
       return handlePP + "&" +
           searchquerybuilder.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };
 
-    const createTemplateHref: (rightId: string) => string = (rightId : string) => {
-      return window.location.origin + window.location.pathname + "?" +
-          searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
+    const createTemplateHref: (rightId: string | undefined) => string = (rightId : string | undefined) => {
+      if(rightId == undefined){
+        return "";
+      } else {
+        return window.location.origin + window.location.pathname + "?" +
+            searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
+      }
     };
     /**
      * Alerts:
@@ -209,7 +215,7 @@ export default defineComponent({
       handlePageSizeChange();
     });
 
-    watch(selectedTemplateNames, () => {
+    watch(selectedContextNames, () => {
       if(isResetting.value){
         return;
       } else {
@@ -263,11 +269,11 @@ export default defineComponent({
       pageSize,
       pageSizes,
       receivedConflictTypes,
-      receivedTemplateNames,
+      receivedContextNames,
       renderKey,
       searchTerm,
       selectedConflictTypes,
-      selectedTemplateNames,
+      selectedContextNames,
       startDate,
       startDateFormatted,
       successMsg,
@@ -330,6 +336,15 @@ export default defineComponent({
             <template v-slot:item="{ item, props }">
               <v-list-item v-bind="props">
                 <template v-slot:title>
+                  <v-icon
+                      v-if="selectedConflictTypes.includes(item.value)"
+                      color="primary"
+                      class="mr-3">
+                    mdi-checkbox-marked
+                  </v-icon>
+                  <v-icon v-else class="mr-3">
+                    mdi-checkbox-blank-outline
+                  </v-icon>
                   {{ prettyPrintConflict(item) }}
                 </template>
               </v-list-item>
@@ -345,11 +360,11 @@ export default defineComponent({
           >
         </v-col>
         <v-col>
-          <b>Erzeugendes Template</b>
+          <b>Kontext</b>
           <v-select
               multiple
-              v-model="selectedTemplateNames"
-              :items="receivedTemplateNames"
+              v-model="selectedContextNames"
+              :items="receivedContextNames"
           ></v-select>
         </v-col>
         <v-col>
@@ -422,14 +437,17 @@ export default defineComponent({
           item-value="handleId"
           loading-text="Daten werden geladen... Bitte warten."
       >
-      <template v-slot:item.conflictByTemplateName="{ item }">
-        <td >
+      <template v-slot:item.conflictByContext="{ item }">
+        <td v-if="item.conflictType == 'date_overlap'">
           <a
               v-bind:href="
                   createTemplateHref(item.conflictByRightId)
                   "
               target="_blank"
-          > Template '{{item.conflictByTemplateName}}'</a>
+          > Template '{{item.conflictByContext}}'</a>
+        </td>
+        <td v-else>
+          {{ item.conflictByContext }}
         </td>
       </template>
       <template v-slot:item.conflictType="{ item }">
@@ -447,7 +465,7 @@ export default defineComponent({
           </td>
         </template>
         <template v-slot:item.conflictingWithRightId="{ item }">
-          <td>
+          <td v-if="item.conflictingWithRightId != undefined">
             <a
                 v-bind:href="
                   createRightHref(item.handle, item.conflictingWithRightId)

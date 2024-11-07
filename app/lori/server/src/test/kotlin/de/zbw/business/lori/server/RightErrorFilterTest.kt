@@ -33,13 +33,13 @@ class RightErrorFilterTest : DatabaseTest() {
     private fun getErrorsConflictType(): List<RightError> =
         listOf(
             RIGHT_ERROR.copy(
-                conflictByTemplateName = "foo",
+                conflictByContext = "foo",
                 handle = "ct_1",
                 conflictType = ConflictType.UNSPECIFIED,
             ),
             RIGHT_ERROR.copy(
                 conflictType = ConflictType.UNSPECIFIED,
-                conflictByTemplateName = "foo",
+                conflictByContext = "foo",
                 handle = "ct_2",
             ),
         )
@@ -47,11 +47,11 @@ class RightErrorFilterTest : DatabaseTest() {
     private fun getErrorsCausedByTemplateName(): List<RightError> =
         listOf(
             RIGHT_ERROR.copy(
-                conflictByTemplateName = CAUSED_BY_TEMPLATE_NAME,
+                conflictByContext = CAUSED_BY_TEMPLATE_NAME,
                 handle = "tn_1",
             ),
             RIGHT_ERROR.copy(
-                conflictByTemplateName = CAUSED_BY_TEMPLATE_NAME,
+                conflictByContext = CAUSED_BY_TEMPLATE_NAME,
                 handle = "tn_2",
             ),
         )
@@ -96,7 +96,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    templateNames = setOf(CAUSED_BY_TEMPLATE_NAME),
+                    contextNames = setOf(CAUSED_BY_TEMPLATE_NAME),
                     conflictTypes = setOf(ConflictType.DATE_OVERLAP),
                     results = getErrorsCausedByTemplateName(),
                 ),
@@ -112,7 +112,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    templateNames = setOf("foo"),
+                    contextNames = setOf("foo"),
                     conflictTypes = setOf(ConflictType.UNSPECIFIED),
                     results = getErrorsConflictType(),
                 ),
@@ -129,7 +129,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    templateNames = setOf(RIGHT_ERROR_PAST.conflictByTemplateName!!),
+                    contextNames = setOf(RIGHT_ERROR_PAST.conflictByContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),
@@ -146,7 +146,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    templateNames = setOf(RIGHT_ERROR_PAST.conflictByTemplateName!!),
+                    contextNames = setOf(RIGHT_ERROR_PAST.conflictByContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),
@@ -178,8 +178,8 @@ class RightErrorFilterTest : DatabaseTest() {
         )
         assertThat(
             reason,
-            received.templateNames,
-            `is`(expected.templateNames),
+            received.contextNames,
+            `is`(expected.contextNames),
         )
         assertThat(
             reason,
@@ -200,7 +200,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByTemplateName = "template name",
+                conflictByContext = "template name",
             )
         const val DAYS_PAST = 45L
         val RIGHT_ERROR_PAST =
@@ -212,7 +212,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW.minusDays(DAYS_PAST),
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByTemplateName = "template name",
+                conflictByContext = "template name",
             )
     }
 }

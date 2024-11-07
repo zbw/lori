@@ -12,6 +12,13 @@ message FullImportResponse {
   int32 items_imported = 1;
 }
 
+message CheckForRightErrorsRequest{
+}
+
+message CheckForRightErrorsResponse{
+  repeated RightError errors = 1;
+}
+
 message ApplyTemplatesRequest {
   bool all = 1;
   repeated string right_ids = 2;
@@ -20,9 +27,10 @@ message ApplyTemplatesRequest {
 enum ConflictType {
   CONFLICT_TYPE_UNSPECIFIED = 0;
   CONFLICT_TYPE_DATE_OVERLAP = 1;
+  CONFLICT_TYPE_GAP = 2;
 }
 
-message TemplateError {
+message RightError {
   int32 error_id = 1;
   string message = 2;
   string right_id_source = 3;
@@ -30,6 +38,7 @@ message TemplateError {
   string conflicting_right_id = 5;
   uint64 created_on = 6;
   ConflictType conflict_type = 7;
+  string error_context = 8;
 }
 
 message TemplateApplication {
@@ -37,7 +46,7 @@ message TemplateApplication {
   string right_id = 2;
   int32 number_applied_entries = 3;
   string template_name = 4;
-  repeated TemplateError errors = 5;
+  repeated RightError errors = 5;
   repeated TemplateApplication exceptions = 6;
 }
 

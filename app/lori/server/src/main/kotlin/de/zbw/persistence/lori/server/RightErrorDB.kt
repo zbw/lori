@@ -8,6 +8,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransacti
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Tracer
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
@@ -38,13 +39,28 @@ class RightErrorDB(
             }
         }
 
-    suspend fun deleteErrorByAge(isOlderThan: Instant): Int =
+    suspend fun deleteErrorsByAge(isOlderThan: Instant): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_AGE).apply {
                     this.setTimestamp(1, Timestamp.from(isOlderThan))
                 }
             val span = tracer.spanBuilder("deleteRightErrorByAge").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
+    suspend fun deleteErrorsByType(conflictType: ConflictType): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_CONFLICT_TYPE).apply {
+                    this.setString(1, conflictType.toString())
+                }
+            val span = tracer.spanBuilder("deleteByConflictType").startSpan()
             return@useConnection try {
                 span.makeCurrent()
                 runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
@@ -103,7 +119,7 @@ class RightErrorDB(
                         message = rs.getString(5),
                         createdOn = rs.getTimestamp(6).toOffsetDateTime(),
                         conflictType = ConflictType.valueOf(rs.getString(7)),
-                        conflictByTemplateName = rs.getString(8),
+                        conflictByContext = rs.getString(8),
                     )
                 } else {
                     null
@@ -172,16 +188,8 @@ class RightErrorDB(
             val prepStmt =
                 connection
                     .prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
-                    .apply {
-                        this.setString(1, rightError.handle)
-                        this.setString(2, rightError.conflictByRightId)
-                        this.setString(3, rightError.conflictingWithRightId)
-                        this.setString(4, rightError.message)
-                        this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()))
-                        this.setString(6, rightError.conflictType.toString())
-                        this.setIfNotNull(7, rightError.conflictByTemplateName) { value, idx, prepStmt ->
-                            prepStmt.setString(idx, value)
-                        }
+                    .let {
+                        insertRightErrorSetParameter(rightError, it)
                     }
             val span = tracer.spanBuilder("insertRightError").startSpan()
             try {
@@ -199,6 +207,32 @@ class RightErrorDB(
             }
         }
 
+    suspend fun insertErrorsBatch(errors: List<RightError>): List<Int> =
+        connectionPool.useConnection { connection ->
+            val prep = connection.prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
+            errors.map {
+                val p = insertRightErrorSetParameter(it, prep)
+                p.addBatch()
+            }
+            val span = tracer.spanBuilder("insertErrorBatch").startSpan()
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) {
+                    prep.executeBatch()
+                }
+                val rs: ResultSet = prep.generatedKeys
+                return@useConnection generateSequence {
+                    if (rs.next()) {
+                        rs.getInt(1)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            } finally {
+                span.end()
+            }
+        }
+
     companion object {
         private const val COLUMN_CONFLICTING_WITH = "conflicting_right_id"
         const val COLUMN_CONFLICTING_TYPE = "conflict_type"
@@ -206,21 +240,21 @@ class RightErrorDB(
         private const val COLUMN_ERROR_ID = "error_id"
         private const val COLUMN_HANDLE_ID = "handle_id"
         private const val COLUMN_CONFLICT_BY_RIGHT_ID = "conflict_by_right_id"
-        const val COLUMN_CONFLICT_BY_TEMPLATE_NAME = "conflict_by_template_name"
+        const val COLUMN_CONFLICT_BY_CONTEXT = "conflict_by_context"
         private const val COLUMN_MESSAGE = "message"
 
         const val STATEMENT_GET_RIGHT_LIST_SELECT =
             "SELECT" +
                 " $COLUMN_ERROR_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
                 "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_TEMPLATE_NAME" +
+                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_CONTEXT" +
                 " FROM $TABLE_NAME_RIGHT_ERROR"
 
         const val STATEMENT_INSERT_RIGHT_ERROR =
             "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
                 "($COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
                 "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_TEMPLATE_NAME)" +
+                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_CONTEXT)" +
                 " VALUES(?,?," +
                 "?,?,?," +
                 "?,?)"
@@ -234,6 +268,11 @@ class RightErrorDB(
             "DELETE " +
                 "FROM $TABLE_NAME_RIGHT_ERROR " +
                 "WHERE $COLUMN_CREATED_ON < ?"
+
+        const val STATEMENT_DELETE_ERROR_BY_CONFLICT_TYPE =
+            "DELETE " +
+                "FROM $TABLE_NAME_RIGHT_ERROR " +
+                "WHERE $COLUMN_CONFLICTING_TYPE = ?"
 
         const val STATEMENT_DELETE_ERROR_BY_CAUSING_RIGHT_ID =
             "DELETE " +
@@ -285,5 +324,25 @@ class RightErrorDB(
                 whereClause +
                 " GROUP BY $column;"
         }
+
+        private fun insertRightErrorSetParameter(
+            rightError: RightError,
+            prep: PreparedStatement,
+        ): PreparedStatement =
+            prep.apply {
+                this.setString(1, rightError.handle)
+                this.setIfNotNull(2, rightError.conflictByRightId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(3, rightError.conflictingWithRightId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setString(4, rightError.message)
+                this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()))
+                this.setString(6, rightError.conflictType.toString())
+                this.setIfNotNull(7, rightError.conflictByContext) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+            }
     }
 }

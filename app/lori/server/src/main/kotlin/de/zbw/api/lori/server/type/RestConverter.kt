@@ -555,7 +555,7 @@ fun ErrorQueryResult.toRest(pageSize: Int): RightErrorInformationRest {
         numberOfResults = totalNumberOfResults,
         totalPages = totalPages,
         errors = this.results.map { it.toRest() },
-        templateNames = this.templateNames.toList(),
+        contextNames = this.contextNames.toList(),
         conflictTypes = this.conflictTypes.map { it.toRest() },
     )
 }
@@ -625,12 +625,20 @@ fun ConflictType.toRest(): ConflictTypeRest =
     when (this) {
         ConflictType.DATE_OVERLAP -> ConflictTypeRest.date_overlap
         ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
+        ConflictType.GAP -> ConflictTypeRest.gap
+    }
+
+fun ConflictType.toProto(): de.zbw.lori.api.ConflictType =
+    when (this) {
+        ConflictType.DATE_OVERLAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_DATE_OVERLAP
+        ConflictType.UNSPECIFIED -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_UNSPECIFIED
+        ConflictType.GAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_GAP
     }
 
 fun RightError.toRest(): RightErrorRest =
     RightErrorRest(
         conflictByRightId = conflictByRightId,
-        conflictByTemplateName = conflictByTemplateName,
+        conflictByContext = conflictByContext,
         createdOn = createdOn,
         message = message,
         handle = handle,

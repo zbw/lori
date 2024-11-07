@@ -1,0 +1,1 @@
+ALTER TABLE right_error RENAME COLUMN conflict_by_template_name TO conflict_by_context;
