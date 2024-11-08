@@ -460,6 +460,8 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.formTemplateName = "foo";
       }
+      tmpRight.value.groupIds = selectedGroups.value.map((g: GroupRest) => g.groupId);
+      tmpRight.value.groups = selectedGroups.value;
       const isValid = await v$.value.$validate();
       if (!isValid) {
         return;
@@ -709,6 +711,9 @@ export default defineComponent({
         return;
       }
       tmpRight.value = Object.assign({}, props.right);
+      if(tmpRight.value.groups != undefined) {
+        selectedGroups.value = tmpRight.value.groups;
+      }
       formState.formTemplateName =
         props.right.templateName == undefined ? "" : props.right.templateName;
       formState.accessState = accessStateToString(props.right.accessState);
@@ -892,6 +897,7 @@ export default defineComponent({
     const errorMsgIsActive = ref(false);
     const errorMsg = ref("");
     const groupItems: Ref<Array<GroupRest>> = ref([]);
+    const selectedGroups: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
         .getGroupList(0, 100, false)
@@ -943,6 +949,7 @@ export default defineComponent({
       openBookmarkSearch,
       renderBookmarkKey,
       renderTemplateKey,
+      selectedGroups,
       startDateFormatted,
       exceptionTemplateItems,
       exceptionTemplateHeaders,
@@ -1338,6 +1345,7 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       readonly
                       required
+                      clearable
                       v-bind="props"
                       @blur="v$.startDate.$touch()"
                       @change="v$.startDate.$touch()"
@@ -1366,6 +1374,7 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       readonly
                       required
+                      clearable
                       v-bind="props"
                       @blur="v$.endDate.$touch()"
                       @change="v$.endDate.$touch()"
@@ -1378,22 +1387,20 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Gruppen</v-col>
+              <v-col cols="4">Gruppen</v-col>
               <v-col cols="8">
                 <v-select
-                  v-model="tmpRight.groupIds"
+                  v-model="selectedGroups"
                   :items="groupItems"
                   :disabled="!isEditable"
-                  item-title="groupId"
                   chips
                   multiple
                   counter
                   hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
                   variant="outlined"
+                  return-object
+                  item-title="title"
                 >
-                  <template v-slot:item="{ props, item}">
-                    <v-list-item v-bind="props" :subtitle="'Titel: ' + item.raw.title"></v-list-item>
-                  </template>
                 </v-select>
               </v-col>
             </v-row>
