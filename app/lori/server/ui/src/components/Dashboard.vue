@@ -106,9 +106,9 @@ export default defineComponent({
     };
 
     const prettyPrintConflict: (conflictType: any) => string = (conflictType: string) => {
-      switch (conflictType.title){
+      switch (conflictType){
         case "date_overlap":
-          return "Zeitliche Überschneidung";
+          return "Zeitlicher Widerspruch";
         case "gap":
           return "Zeitliche Lücke";
         default:
@@ -331,7 +331,7 @@ export default defineComponent({
               :items="receivedConflictTypes"
           >
             <template v-slot:selection="{ item }">
-              {{ prettyPrintConflict(item) }}
+              {{ prettyPrintConflict(item.title) }}
             </template>
             <template v-slot:item="{ item, props }">
               <v-list-item v-bind="props">
@@ -345,7 +345,7 @@ export default defineComponent({
                   <v-icon v-else class="mr-3">
                     mdi-checkbox-blank-outline
                   </v-icon>
-                  {{ prettyPrintConflict(item) }}
+                  {{ prettyPrintConflict(item.title) }}
                 </template>
               </v-list-item>
             </template>
@@ -451,7 +451,8 @@ export default defineComponent({
         </td>
       </template>
       <template v-slot:item.conflictType="{ item }">
-        <td >Widerspruch
+        <td >
+          {{prettyPrintConflict(item.conflictType)}}
         </td>
       </template>
         <template v-slot:item.handle="{ item }">

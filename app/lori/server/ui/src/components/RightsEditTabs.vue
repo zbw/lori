@@ -94,7 +94,6 @@ export default defineComponent({
       const preselectedIdx = props.rights.findIndex(
          (e) => e.rightId === props.selectedRight,
       );
-      console.log("Preselected Idx: " + preselectedIdx);
       if (preselectedIdx == -1){
         tab.value = 0;
       } else {
