@@ -18,8 +18,14 @@ export default {
   addTemplate(right: RightRest): Promise<RightIdCreated> {
     return templateApi.addTemplate({ body: right });
   },
-  applyTemplates(rightIds: Array<string>): Promise<TemplateApplicationsRest> {
+  applyTemplates(
+      rightIds: Array<string>,
+      all: boolean,
+      skipDraft: boolean,
+  ): Promise<TemplateApplicationsRest> {
     return templateApi.applyRightIds({
+      all: all,
+      skipDraft: skipDraft,
       body: {
         rightIds: rightIds,
       },

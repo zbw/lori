@@ -8,6 +8,11 @@ data class Item(
     val rights: List<ItemRight>,
 )
 
+data class ItemId(
+    val handle: String,
+    val rightId: String,
+)
+
 data class ItemMetadata(
     val author: String?,
     val band: String?,

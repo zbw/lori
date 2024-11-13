@@ -15,13 +15,13 @@ export default defineComponent({
   setup(props, { emit }) {
     const headers = [
       {
-        text: "Name",
+        title: "Name",
         align: "start",
         value: "bookmarkName",
         sortable: true,
       },
       {
-        text: "Id",
+        title: "Id",
         value: "bookmarkId",
         sortable: true,
       },

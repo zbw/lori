@@ -315,6 +315,13 @@ template-applications:
         schema:
           type: boolean
           default: false
+      - name: skipDraft
+        in: query
+        description: Should drafts be skipped
+        required: false
+        schema:
+          type: boolean
+          default: false
     responses:
       200:
         description: Applied templates successfully

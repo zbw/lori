@@ -22,6 +22,7 @@ message CheckForRightErrorsResponse{
 message ApplyTemplatesRequest {
   bool all = 1;
   repeated string right_ids = 2;
+  bool skip_draft = 3;
 }
 
 enum ConflictType {
