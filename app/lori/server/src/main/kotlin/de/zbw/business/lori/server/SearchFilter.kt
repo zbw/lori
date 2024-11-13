@@ -526,8 +526,8 @@ class TemporalValidityFilter(
                     TemporalValidity.FUTURE -> "$COLUMN_RIGHT_START_DATE > ?"
                     TemporalValidity.PAST -> "$COLUMN_RIGHT_END_DATE < ?"
                     TemporalValidity.PRESENT ->
-                        "$COLUMN_RIGHT_START_DATE <= ?" +
-                            " AND $COLUMN_RIGHT_END_DATE >= ?"
+                        "($COLUMN_RIGHT_START_DATE <= ?" +
+                            " AND $COLUMN_RIGHT_END_DATE >= ?) OR ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL)"
                 }
             } + " AND ${WHERE_REQUIRE_RIGHT_ID})"
 
@@ -537,9 +537,11 @@ class TemporalValidityFilter(
     ): Int {
         var localCounter = counter
         temporalValidity.forEach {
-            preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
+            val now = LocalDate.now()
+            preparedStatement.setDate(localCounter++, Date.valueOf(now))
             if (it == TemporalValidity.PRESENT) {
-                preparedStatement.setDate(localCounter++, Date.valueOf(LocalDate.now()))
+                preparedStatement.setDate(localCounter++, Date.valueOf(now))
+                preparedStatement.setDate(localCounter++, Date.valueOf(now))
             }
         }
         return localCounter
@@ -564,15 +566,18 @@ class RightValidOnFilter(
     val date: LocalDate,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-            " $COLUMN_RIGHT_START_DATE is not null AND" +
-            " $COLUMN_RIGHT_END_DATE is not null AND $WHERE_REQUIRE_RIGHT_ID)"
+        "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" + // TODO(CB): Fix Bug
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+            " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+            " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         return localCounter

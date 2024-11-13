@@ -78,6 +78,12 @@ class RightFilterTest : DatabaseTest() {
             collectionName = "validity",
         )
 
+    private val tempValFilterPastNoEnd =
+        TEST_Metadata.copy(
+            handle = "validity filter future no end",
+            collectionName = "validity",
+        )
+
     private val startEndDateFilter =
         TEST_Metadata.copy(
             handle = "start and end date At",
@@ -150,6 +156,15 @@ class RightFilterTest : DatabaseTest() {
                     TEST_RIGHT.copy(
                         startDate = LocalDate.of(2021, 10, 1),
                         endDate = LocalDate.of(2021, 12, 1),
+                        isTemplate = false,
+                        templateName = null,
+                    ),
+                ),
+            tempValFilterPastNoEnd to
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2018, 10, 1),
+                        endDate = null,
                         isTemplate = false,
                         templateName = null,
                     ),
@@ -453,16 +468,16 @@ class RightFilterTest : DatabaseTest() {
                         temporalValidity = listOf(TemporalValidity.PRESENT),
                     ),
                 ),
-                1,
-                setOf(tempValFilterPresent),
+                2,
+                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
                 "Filter for all items that have an active right information",
             ),
             arrayOf(
                 "zga:aktuell",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
-                1,
-                setOf(tempValFilterPresent),
+                2,
+                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
                 "Filter for all items that have an active right information",
             ),
             arrayOf(
@@ -572,7 +587,7 @@ class RightFilterTest : DatabaseTest() {
                         temporalValidity = listOf(TemporalValidity.PRESENT),
                     ),
                 ),
-                setOf(tempValFilterPresent),
+                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
                 "Filter for all items that have an active right information",
             ),
             arrayOf(
@@ -605,14 +620,25 @@ class RightFilterTest : DatabaseTest() {
                         date = LocalDate.of(2021, 10, 1),
                     ),
                 ),
-                setOf(tempValFilterFuture),
+                setOf(tempValFilterFuture, tempValFilterPastNoEnd),
                 "Filter for items having an active right information at a certain point in time",
+            ),
+            arrayOf(
+                "col:validity",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    RightValidOnFilter(
+                        date = LocalDate.of(2018, 10, 1),
+                    ),
+                ),
+                setOf(tempValFilterPastNoEnd),
+                "Filter for items having an active right information at a certain point in time and no end date",
             ),
             arrayOf(
                 "col:validity & zgp:2021-10-01",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
-                setOf(tempValFilterFuture),
+                setOf(tempValFilterFuture, tempValFilterPastNoEnd),
                 "use filter in upper search bar",
             ),
         )
