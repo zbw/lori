@@ -55,6 +55,7 @@ object Main {
                             ApplyTemplatesRequest
                                 .newBuilder()
                                 .setAll(true)
+                                .setSkipDraft(true)
                                 .build(),
                         )
                     span.setAttribute("Templates Applied", response.templateApplicationsList.toString())

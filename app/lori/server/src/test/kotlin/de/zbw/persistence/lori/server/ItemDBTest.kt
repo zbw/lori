@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -57,7 +58,14 @@ class ItemDBTest : DatabaseTest() {
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
+            dbConnector.itemDB.insertItemBatch(
+                listOf(
+                    ItemId(
+                        handle = expectedMetadata.handle,
+                        rightId = generatedRightId,
+                    ),
+                ),
+            )
 
             // then
             assertThat(
@@ -87,7 +95,14 @@ class ItemDBTest : DatabaseTest() {
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
+            dbConnector.itemDB.insertItemBatch(
+                listOf(
+                    ItemId(
+                        handle = expectedMetadata.handle,
+                        rightId = generatedRightId,
+                    ),
+                ),
+            )
 
             // then
             assertThat(
@@ -107,7 +122,12 @@ class ItemDBTest : DatabaseTest() {
             )
 
             // when
-            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
+            dbConnector.itemDB.insertItem(
+                ItemId(
+                    handle = expectedMetadata.handle,
+                    rightId = generatedRightId,
+                ),
+            )
             // then
             assertThat(
                 dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
@@ -139,13 +159,53 @@ class ItemDBTest : DatabaseTest() {
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItem(expectedMetadata.handle, generatedRightId)
+            dbConnector.itemDB.insertItem(
+                ItemId(
+                    handle = expectedMetadata.handle,
+                    rightId = generatedRightId,
+                ),
+            )
 
             // then
             assertTrue(dbConnector.itemDB.itemContainsRightId(generatedRightId))
             assertTrue(dbConnector.metadataDB.itemContainsHandle(expectedMetadata.handle))
             assertTrue(dbConnector.itemDB.itemContainsEntry(expectedMetadata.handle, generatedRightId))
             assertThat(dbConnector.itemDB.countItemByRightId(generatedRightId), `is`(1))
+        }
+
+    @Test
+    fun testItemBatchInsert() =
+        runBlocking {
+            // Given
+            val expectedMetadata1 = TEST_Metadata.copy(handle = "item_1")
+            val expectedMetadata2 = TEST_Metadata.copy(handle = "item_2")
+            val expectedRight1 = TEST_RIGHT.copy(rightId = "right1", templateName = null, isTemplate = false)
+            val expectedRight2 = TEST_RIGHT.copy(rightId = "right2", templateName = null, isTemplate = false)
+            dbConnector.metadataDB.insertMetadata(expectedMetadata1)
+            val generatedRightId1 = dbConnector.rightDB.insertRight(expectedRight1)
+            dbConnector.metadataDB.insertMetadata(expectedMetadata2)
+            val generatedRightId2 = dbConnector.rightDB.insertRight(expectedRight2)
+
+            // When
+            dbConnector.itemDB.insertItem(
+                ItemId(
+                    handle = expectedMetadata1.handle,
+                    rightId = generatedRightId1,
+                ),
+            )
+
+            dbConnector.itemDB.insertItem(
+                ItemId(
+                    handle = expectedMetadata2.handle,
+                    rightId = generatedRightId2,
+                ),
+            )
+
+            // then
+            assertThat(
+                dbConnector.itemDB.getAllHandles().size,
+                `is`(2),
+            )
         }
 
     companion object {

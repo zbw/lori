@@ -566,7 +566,7 @@ class TemplateRoutesKtTest {
         val expectedHandles = listOf("handle1", "handle2")
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { applyTemplates(listOf(givenRightId)) } returns
+                coEvery { applyTemplates(listOf(givenRightId), true) } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -576,7 +576,7 @@ class TemplateRoutesKtTest {
                             exceptionTemplateApplicationResult = emptyList(),
                         ),
                     )
-                coEvery { applyAllTemplates() } returns
+                coEvery { applyAllTemplates(true) } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -602,7 +602,7 @@ class TemplateRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications") {
+                client.post("/api/v1/template/applications?skipDraft=true") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -644,7 +644,7 @@ class TemplateRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications?all=true") {
+                client.post("/api/v1/template/applications?all=true&skipDraft=true") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -694,7 +694,7 @@ class TemplateRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications") {
+                client.post("/api/v1/template/applications?skipDraft=true") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -711,7 +711,7 @@ class TemplateRoutesKtTest {
         // Internal Service Error Path
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { applyTemplates(listOf(givenRightId)) } throws SQLException()
+                coEvery { applyTemplates(listOf(givenRightId), true) } throws SQLException()
             }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
         testApplication {
@@ -720,7 +720,7 @@ class TemplateRoutesKtTest {
                 servicePool2.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications") {
+                client.post("/api/v1/template/applications?skipDraft=true") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(

@@ -43,6 +43,11 @@ export default defineComponent({
         sortable: true,
       },
       {
+        title: "Status",
+        value: "status",
+        sortable: false,
+      },
+      {
         title: "Template anwenden",
         value: "applyTemplate",
         sortable: true,
@@ -108,7 +113,7 @@ export default defineComponent({
         return;
       }
       templateApi
-        .applyTemplates([template.rightId])
+        .applyTemplates([template.rightId], false, false)
         .then((r: TemplateApplicationsRest) => {
           const templateApplicationResult: TemplateApplicationRest =
             r.templateApplication[0];
@@ -353,6 +358,11 @@ export default defineComponent({
             @click="emitGetItemsByRightId(item.rightId, item.templateName)"
             >Alle verknüpften Items anzeigen
           </v-btn>
+        </template>
+        <template v-slot:item.status="{ item }">
+          <v-icon v-if="item.lastAppliedOn == undefined">
+            mdi-alpha-a-box-outline
+          </v-icon>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn

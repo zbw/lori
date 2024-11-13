@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.ItemId
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -103,15 +104,12 @@ class ItemDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun insertItem(
-        handle: String,
-        rightId: String,
-    ): String? =
+    suspend fun insertItem(itemId: ItemId): String? =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(1, handle)
-                    this.setString(2, rightId)
+                    this.setString(1, itemId.handle)
+                    this.setString(2, itemId.rightId)
                 }
 
             val span = tracer.spanBuilder("insertItem").startSpan()
@@ -122,6 +120,28 @@ class ItemDB(
                     val rs: ResultSet = prepStmt.generatedKeys
                     rs.next()
                     rs.getString(1)
+                }
+            } finally {
+                span.end()
+            }
+        }
+
+    suspend fun insertItemBatch(itemIds: List<ItemId>): IntArray =
+        connectionPool.useConnection { connection ->
+            val prep = connection.prepareStatement(STATEMENT_INSERT_ITEM)
+            itemIds.map {
+                val p =
+                    prep.apply {
+                        this.setString(1, it.handle)
+                        this.setString(2, it.rightId)
+                    }
+                p.addBatch()
+            }
+            val span = tracer.spanBuilder("insertItemBatch").startSpan()
+            try {
+                span.makeCurrent()
+                runInTransaction(connection) {
+                    prep.executeBatch()
                 }
             } finally {
                 span.end()

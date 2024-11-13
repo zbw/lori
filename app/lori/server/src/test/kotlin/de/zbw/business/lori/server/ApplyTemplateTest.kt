@@ -18,6 +18,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.Assert.assertNull
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
@@ -127,7 +128,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightId,
             )
 
-            val received = backend.applyTemplate(rightId)
+            val received = backend.applyTemplate(rightId, false)
             assertThat(
                 received!!.appliedMetadataHandles,
                 `is`(listOf(item1ZDB1.handle)),
@@ -143,7 +144,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             // Repeat Apply Operation without duplicate entries errors
-            val received2: TemplateApplicationResult? = backend.applyTemplate(rightId)
+            val received2: TemplateApplicationResult? = backend.applyTemplate(rightId, false)
             assertThat(
                 received2!!.appliedMetadataHandles,
                 `is`(listOf(item1ZDB1.handle)),
@@ -160,7 +161,7 @@ class ApplyTemplateTest : DatabaseTest() {
             backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIdJournal = "foobar")))
 
             // Apply Template
-            val received3: TemplateApplicationResult? = backend.applyTemplate(rightId)
+            val received3: TemplateApplicationResult? = backend.applyTemplate(rightId, false)
             assertThat(
                 received3!!.appliedMetadataHandles,
                 `is`(
@@ -176,7 +177,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 `is`(2),
             )
 
-            val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates()
+            val applyAllReceived: List<TemplateApplicationResult> = backend.applyAllTemplates(false)
             assertThat(
                 applyAllReceived.map { it.appliedMetadataHandles }.flatten().toSet(),
                 `is`(
@@ -195,7 +196,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 bookmarkId = bookmarkId,
                 rightId = rightIdConflict,
             )
-            val receivedConflict = backend.applyTemplate(rightIdConflict)
+            val receivedConflict = backend.applyTemplate(rightIdConflict, false)
             assertThat(
                 receivedConflict!!.errors.size,
                 `is`(2),
@@ -262,7 +263,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightIdException,
             )
 
-            val receivedUpperWithExc = backend.applyTemplate(rightIdUpper)!!
+            val receivedUpperWithExc = backend.applyTemplate(rightIdUpper, false)!!
             assertThat(
                 receivedUpperWithExc.appliedMetadataHandles.toSet(),
                 `is`(setOf(item1ZDB2.handle)),
@@ -271,11 +272,66 @@ class ApplyTemplateTest : DatabaseTest() {
                 receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataHandles }.toSet(),
                 `is`(setOf(item2ZDB2.handle)),
             )
-            val receivedException = backend.applyTemplate(rightIdException)!!
+            val receivedException = backend.applyTemplate(rightIdException, false)!!
             assertThat(
                 receivedException.appliedMetadataHandles,
                 `is`(listOf(item2ZDB2.handle)),
             )
+        }
+
+    @Test
+    fun testDontApplyDrafts() =
+        runBlocking {
+            val bookmarkId =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "bookmarkDraft",
+                        bookmarkId = 0,
+                        zdbIdFilter =
+                            ZDBIdFilter(
+                                zdbIds =
+                                    listOf(
+                                        ZDB_1,
+                                    ),
+                            ),
+                        lastUpdatedOn =
+                            OffsetDateTime.of(
+                                2022,
+                                3,
+                                2,
+                                1,
+                                1,
+                                0,
+                                0,
+                                ZoneOffset.UTC,
+                            ),
+                        lastUpdatedBy = "user2",
+                        createdBy = "user1",
+                        createdOn =
+                            OffsetDateTime.of(
+                                2022,
+                                3,
+                                2,
+                                1,
+                                1,
+                                0,
+                                0,
+                                ZoneOffset.UTC,
+                            ),
+                    ),
+                )
+
+            // Create Template
+            val rightId =
+                backend.insertTemplate(TEST_RIGHT.copy(templateName = "foobar", isTemplate = true))
+
+            // Connect Bookmark and Template
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = rightId,
+            )
+
+            assertNull(backend.applyTemplate(rightId, true))
         }
 
     companion object {

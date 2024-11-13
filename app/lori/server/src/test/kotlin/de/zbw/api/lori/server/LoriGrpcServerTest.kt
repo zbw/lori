@@ -67,11 +67,12 @@ class LoriGrpcServerTest {
                 ApplyTemplatesRequest
                     .newBuilder()
                     .setAll(true)
+                    .setSkipDraft(false)
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
                     coEvery {
-                        applyAllTemplates()
+                        applyAllTemplates(false)
                     } returns expectedResult
                 }
             // when
@@ -125,12 +126,13 @@ class LoriGrpcServerTest {
                 ApplyTemplatesRequest
                     .newBuilder()
                     .setAll(false)
+                    .setSkipDraft(false)
                     .addAllRightIds(listOf("1"))
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
                     coEvery {
-                        applyTemplates(any())
+                        applyTemplates(any(), false)
                     } returns expectedResult
                 }
             // when

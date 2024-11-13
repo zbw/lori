@@ -115,9 +115,9 @@ class LoriGrpcServer(
             try {
                 val backendResponse: List<TemplateApplicationResult> =
                     if (request.all) {
-                        daConnector.backend.applyAllTemplates()
+                        daConnector.backend.applyAllTemplates(request.skipDraft)
                     } else {
-                        daConnector.backend.applyTemplates(request.rightIdsList)
+                        daConnector.backend.applyTemplates(request.rightIdsList, request.skipDraft)
                     }
                 val templateApplications: List<TemplateApplication> =
                     backendResponse.map { e: TemplateApplicationResult ->

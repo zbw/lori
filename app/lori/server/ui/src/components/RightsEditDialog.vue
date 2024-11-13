@@ -668,6 +668,9 @@ export default defineComponent({
     const isTemplateAndException = computed(
       () => isTemplate.value && props.isExceptionTemplate,
     );
+    const isTemplateDraft = computed(
+        () => isTemplate.value && props.right?.lastAppliedOn == undefined,
+    );
     const exceptionsAllowed = computed(
       () =>
         !props.isExceptionTemplate &&
@@ -934,6 +937,7 @@ export default defineComponent({
       exceptionsAllowed,
       isEditable,
       isTemplateAndException,
+      isTemplateDraft,
       isNew,
       isTemplate,
       errorMsgIsActive,
@@ -999,6 +1003,15 @@ export default defineComponent({
             <template v-slot:activator="{ props }">
               <v-icon v-if="isTemplateAndException" v-bind="props">
                 mdi-alpha-a-box-outline
+              </v-icon>
+            </template>
+          </v-tooltip>
+        </v-col>
+        <v-col cols="1">
+          <v-tooltip location="bottom" text="Template Entwurf">
+            <template v-slot:activator="{ props }">
+              <v-icon v-if="isTemplateDraft" v-bind="props">
+                mdi-alpha-e-box-outline
               </v-icon>
             </template>
           </v-tooltip>
