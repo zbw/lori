@@ -680,9 +680,18 @@ export default defineComponent({
 
     const cardTitle = computed(() => {
       const mode = isNew.value ? "erstellen" : "bearbeiten";
-      const exception = props.isExceptionTemplate ? " (Ausnahme)" : "";
       if (isTemplate.value) {
-        return "Template" + exception + " " + mode;
+        let description: string;
+        if (props.isExceptionTemplate && props.right?.lastAppliedOn == undefined){
+          description = "(Ausnahme und Entwurf)"
+        } else if (props.isExceptionTemplate){
+          description = "(Ausnahme)"
+        } else if (props.right?.lastAppliedOn == undefined) {
+          description = "(Entwurf)"
+        } else {
+          description = ""
+        }
+        return "Template " + description + " " + mode;
       } else {
         return "Rechteinformation " + mode;
       }
@@ -998,7 +1007,7 @@ export default defineComponent({
         <v-col>
           {{ cardTitle }}
         </v-col>
-        <v-col cols="1" offset="6">
+        <v-col cols="1" offset="4">
           <v-tooltip location="bottom" text="Ausnahme Template">
             <template v-slot:activator="{ props }">
               <v-icon v-if="isTemplateAndException" v-bind="props">
