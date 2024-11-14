@@ -361,7 +361,7 @@ export default defineComponent({
         </template>
         <template v-slot:item.status="{ item }">
           <v-icon v-if="item.lastAppliedOn == undefined">
-            mdi-alpha-a-box-outline
+            mdi-alpha-e-box-outline
           </v-icon>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
