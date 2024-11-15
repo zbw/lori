@@ -173,7 +173,7 @@ pushLoriImage:
 
 pushLoriImportJob:
   stage: push
-  needs: ["test"]
+  needs: ["build"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -198,7 +198,7 @@ pushLoriImportJob:
 
 pushTemplateApplyJob:
   stage: push
-  needs: ["test"]
+  needs: ["build"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
