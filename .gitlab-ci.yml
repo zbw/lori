@@ -129,6 +129,7 @@ test:
         compare_to: 'refs/heads/main'
         paths:
           - app/**/*
+          - job/**/*
           - buildSrc/**/*
     - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
       changes:
@@ -173,7 +174,7 @@ pushLoriImage:
 
 pushLoriImportJob:
   stage: push
-  needs: ["build"]
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
@@ -198,7 +199,7 @@ pushLoriImportJob:
 
 pushTemplateApplyJob:
   stage: push
-  needs: ["build"]
+  needs: ["test"]
   image: $VAULT_OPENJDK_IMAGE
   variables:
     VAULT_ROLE_ID: ci-zbw-dev
