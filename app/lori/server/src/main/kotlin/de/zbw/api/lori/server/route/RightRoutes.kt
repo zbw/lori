@@ -213,8 +213,6 @@ fun Routing.rightRoutes(
                             span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
                             call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError(ApiError.NO_VALID_ID))
                         } else {
-                            // Delete relations between Metadata and Right to avoid conflicts
-                            backend.deleteItemEntriesByRightId(rightId)
                             val entriesDeleted = backend.deleteRight(rightId)
                             if (entriesDeleted == 1) {
                                 span.setStatus(StatusCode.OK)

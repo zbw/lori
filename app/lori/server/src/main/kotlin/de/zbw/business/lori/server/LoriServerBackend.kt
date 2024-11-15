@@ -292,6 +292,17 @@ class LoriServerBackend(
     suspend fun deleteMetadataByHandle(handle: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(handle))
 
     suspend fun deleteRight(rightId: String): Int {
+        // Delete exceptions first
+        val exceptionIds = dbConnector.rightDB.getExceptionsByRightId(rightId).mapNotNull { it.rightId }
+        exceptionIds.forEach {
+            deleteItemEntriesByRightId(it)
+            deleteBookmarkTemplatePairsByRightId(it)
+            dbConnector.groupDB.deleteGroupPairsByRightId(it)
+        }
+        dbConnector.rightDB.deleteRightsByIds(exceptionIds)
+        // Delete rightId
+        deleteItemEntriesByRightId(rightId)
+        deleteBookmarkTemplatePairsByRightId(rightId)
         dbConnector.groupDB.deleteGroupPairsByRightId(rightId)
         return dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
     }

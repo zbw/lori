@@ -53,7 +53,6 @@ class TemplateRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { deleteRight(rightId) } returns 1
-                coEvery { deleteItemEntriesByRightId(rightId) } returns 5
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
 
@@ -65,7 +64,6 @@ class TemplateRoutesKtTest {
             val response = client.delete("/api/v1/template/$rightId")
             assertThat("Should return OK", response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) { backend.deleteRight(rightId) }
-            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
         }
     }
 
@@ -76,7 +74,6 @@ class TemplateRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { deleteRight(rightId) } returns 0
-                coEvery { deleteItemEntriesByRightId(rightId) } returns 0
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
 
@@ -88,7 +85,6 @@ class TemplateRoutesKtTest {
             val response = client.delete("/api/v1/template/$rightId")
             assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
             coVerify(exactly = 1) { backend.deleteRight(rightId) }
-            coVerify(exactly = 1) { backend.deleteItemEntriesByRightId(rightId) }
         }
     }
 

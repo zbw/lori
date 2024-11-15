@@ -264,6 +264,7 @@ fun Routing.itemRoutes(
                         } else {
                             backend.deleteItemEntry(handle, rightId)
                             if (backend.countItemByRightId(rightId) == 0) {
+                                // TODO(CB): not sure if this is so smart
                                 backend.deleteRight(rightId)
                             }
                             span.setStatus(StatusCode.OK)
