@@ -109,6 +109,7 @@ build:
       changes:
         paths:
           - app/**/*
+          - job/**/*
           - buildSrc/**/*
   tags:
     - dockersocket
