@@ -105,12 +105,13 @@ build:
         paths:
           - app/**/*
           - buildSrc/**/*
+          - job/**/*
     - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
       changes:
         paths:
           - app/**/*
-          - job/**/*
           - buildSrc/**/*
+          - job/**/*
   tags:
     - dockersocket
   script:
@@ -129,13 +130,14 @@ test:
         compare_to: 'refs/heads/main'
         paths:
           - app/**/*
-          - job/**/*
           - buildSrc/**/*
+          - job/**/*
     - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
       changes:
         paths:
           - app/**/*
           - buildSrc/**/*
+          - job/**/*
   dependencies:
     - build
   tags:
