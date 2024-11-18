@@ -534,6 +534,40 @@ class LoriServerBackend(
     suspend fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int = dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
     suspend fun checkForRightErrors(): List<RightError> {
+        val gapErrors = checkForGAPErrors()
+        val noRightErrors = checkForNoRightErrors()
+        return gapErrors + noRightErrors
+    }
+
+    internal suspend fun checkForNoRightErrors(): List<RightError> {
+        dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.NO_RIGHT)
+        val metadataWithoutRights =
+            dbConnector.searchDB.searchMetadataItems(
+                searchExpression = null,
+                limit = null,
+                offset = null,
+                metadataSearchFilter = emptyList(),
+                rightSearchFilter = emptyList(),
+                noRightInformationFilter = NoRightInformationFilter(),
+            )
+        val errors =
+            metadataWithoutRights.map { metadata ->
+                RightError(
+                    handle = metadata.handle,
+                    message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",
+                    errorId = null,
+                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    conflictingWithRightId = null,
+                    conflictByRightId = null,
+                    conflictType = ConflictType.NO_RIGHT,
+                    conflictByContext = metadata.paketSigel ?: metadata.collectionName,
+                )
+            }
+        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
+        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+    }
+
+    internal suspend fun checkForGAPErrors(): List<RightError> {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.GAP)
         val handles: List<String> = dbConnector.itemDB.getAllHandles()
         val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
