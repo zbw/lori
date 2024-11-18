@@ -62,6 +62,7 @@ class FindErrorsTest : DatabaseTest() {
                     ),
                 ),
             item2ZDB2 to emptyList(),
+            item2ZDB2.copy(handle = "no_right2") to emptyList(),
         )
 
     @BeforeClass
@@ -84,12 +85,20 @@ class FindErrorsTest : DatabaseTest() {
             val receivedErrors = backend.checkForRightErrors()
             assertThat(
                 receivedErrors.size,
+                `is`(5),
+            )
+            assertThat(
+                backend.checkForGAPErrors().size,
                 `is`(3),
             )
             assertThat(
-                "Ensure error ids are returned as expected",
+                backend.checkForNoRightErrors().size,
+                `is`(2),
+            )
+            assertThat(
+                "Ensure error ids are non zero and unique",
                 receivedErrors.map { it.errorId }.toSet().size,
-                `is`(3),
+                `is`(5),
             )
             val dbErrors =
                 backend.getRightErrorList(
@@ -99,7 +108,7 @@ class FindErrorsTest : DatabaseTest() {
                 )
             assertThat(
                 dbErrors.results.size,
-                `is`(3),
+                `is`(5),
             )
 
             // Second execution
@@ -112,7 +121,7 @@ class FindErrorsTest : DatabaseTest() {
                         offset = 0,
                         searchFilters = emptyList(),
                     ).results.size,
-                `is`(3),
+                `is`(5),
             )
         }
 }

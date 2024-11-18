@@ -111,6 +111,8 @@ export default defineComponent({
           return "Zeitlicher Widerspruch";
         case "gap":
           return "Zeitliche Lücke";
+        case "no_right":
+          return "Kein Rechteeintrag";
         default:
           return "Unbekannt";
       }
@@ -298,7 +300,7 @@ export default defineComponent({
   <v-card position="relative">
     <v-container>
       <v-card-title class="text-h5"
-      >Konflikte Zeitliche Gültigkeit</v-card-title
+      >Meldungen</v-card-title
       >
       <v-snackbar
           contained
