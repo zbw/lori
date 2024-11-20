@@ -271,12 +271,29 @@ class SubcommunityNameFilter(
 }
 
 class LicenceUrlFilter(
-    licenceUrl: String,
-) : TSVectorMetadataSearchFilter(
-        dbColumnName = MetadataDB.TS_LICENCE_URL,
-        value = licenceUrl,
+    private val licenceUrl: String,
+) : MetadataSearchFilter(
+        DatabaseConnector.COLUMN_METADATA_LICENCE_URL_FILTER,
     ) {
+    override fun toWhereClause(): String = "(LOWER($dbColumnName) = ? AND $dbColumnName is not null)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, licenceUrl)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = licenceUrl
+
     override fun getFilterType(): FilterType = FilterType.LICENCE_URL
+
+    companion object {
+        fun fromString(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(s) }
+    }
 }
 
 class PublicationDateFilter(

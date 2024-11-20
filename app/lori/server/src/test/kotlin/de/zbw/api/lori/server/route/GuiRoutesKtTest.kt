@@ -1,6 +1,6 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.api.lori.server.type.SamlUtils
+import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import io.ktor.client.request.header
 import io.ktor.client.request.post

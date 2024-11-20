@@ -7,8 +7,8 @@ import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
-import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.RightRest

@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.utils.SamlUtils
 import io.ktor.server.plugins.BadRequestException
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat

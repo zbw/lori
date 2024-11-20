@@ -640,6 +640,7 @@ class LoriServerBackend(
                         offset = null,
                         metadataSearchFilter =
                             listOfNotNull(
+                                b.licenceURLFilter,
                                 b.paketSigelFilter,
                                 b.publicationDateFilter,
                                 b.publicationTypeFilter,

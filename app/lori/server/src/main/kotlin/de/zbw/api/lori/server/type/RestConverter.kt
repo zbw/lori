@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -128,6 +129,7 @@ fun MetadataRest.toBusiness() =
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceUrl = licenceUrl,
+        licenceUrlFilter = prepareLicenceUrlFilter(licenceUrl),
         paketSigel = paketSigel,
         ppn = ppn,
         publicationType = publicationType.toBusiness(),
@@ -371,6 +373,7 @@ fun DAItem.toBusiness(
                 return null
             }
         }
+        val licenceUrl = RestConverter.extractMetadata("dc.rights.license", metadata)
         ItemMetadata(
             author = RestConverter.extractMetadata("dc.contributor.author", metadata),
             // Not in DA yet
@@ -394,7 +397,8 @@ fun DAItem.toBusiness(
             isPartOfSeries = RestConverter.extractMetadata("dc.relation.ispartofseries", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
-            licenceUrl = RestConverter.extractMetadata("dc.rights.license", metadata),
+            licenceUrl = licenceUrl,
+            licenceUrlFilter = prepareLicenceUrlFilter(licenceUrl),
             paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
             ppn = RestConverter.extractMetadata("dc.identifier.ppn", metadata),
             publicationType = publicationType,

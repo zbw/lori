@@ -25,6 +25,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADAT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LAST_UPDATED_BY
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LAST_UPDATED_ON
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LICENCE_URL
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PPN
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
@@ -128,6 +129,7 @@ class SearchDB(
                                 templateName = rs.getString(11),
                                 isPartOfSeries = rs.getString(12),
                                 zdbIdSeries = rs.getString(13),
+                                licenceUrlFilter = rs.getString(14),
                             )
                         } else {
                             null
@@ -214,6 +216,18 @@ class SearchDB(
                         )
                     }
 
+                val licenceURLFacet =
+                    async {
+                        searchOccurrences(
+                            givenValues = received.mapNotNull { it.licenceUrlFilter }.toSet(),
+                            occurrenceForColumn = COLUMN_METADATA_LICENCE_URL_FILTER,
+                            searchExpression = searchExpression,
+                            metadataSearchFilter = metadataSearchFilter,
+                            rightSearchFilter = rightSearchFilter,
+                            noRightInformationFilter = noRightInformationFilter,
+                        )
+                    }
+
                 return@useConnection FacetTransientSet(
                     accessState = accessStateFacet.await(),
                     paketSigels = paketSigelFacet.await(),
@@ -231,6 +245,7 @@ class SearchDB(
                             received.any { it.oclRestricted },
                         ).any { it },
                     templateIdToOccurence = templateIdFacet.await(),
+                    licenceUrls = licenceURLFacet.await(),
                 )
             }
         }
@@ -507,7 +522,7 @@ class SearchDB(
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
@@ -519,45 +534,41 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
-                MetadataDB.TS_SUBCOMMUNITY_NAME
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
-                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,${COLUMN_METADATA_LICENCE_URL_FILTER}," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
-                MetadataDB.TS_SUBCOMMUNITY_NAME
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_ACCESS =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 " ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
-                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
-                MetadataDB.TS_SUBCOMMUNITY_NAME
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         const val STATEMENT_SELECT_OCCURRENCE_DISTINCT_TEMPLATE_NAME =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE, ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_TEMPLATE_NAME)" +
                 " $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE," +
-                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "$COLUMN_RIGHT_TEMPLATE_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
-                MetadataDB.TS_SUBCOMMUNITY_NAME
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT $COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
@@ -568,7 +579,8 @@ class SearchDB(
                 "$COLUMN_METADATA_LAST_UPDATED_BY,$COLUMN_METADATA_AUTHOR,$COLUMN_METADATA_COLLECTION_NAME," +
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
-                "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES"
+                "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "${COLUMN_METADATA_LICENCE_URL_FILTER}"
 
         private const val STATEMENT_SELECT_FACET =
             "SELECT" +
@@ -584,7 +596,8 @@ class SearchDB(
                 " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 " ${SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
                 " ${SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES"
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_LICENCE_URL_FILTER"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
@@ -598,6 +611,7 @@ class SearchDB(
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
@@ -608,8 +622,7 @@ class SearchDB(
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
                 "${MetadataDB.TS_TITLE}," +
                 "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_LICENCE_URL}," +
-                MetadataDB.TS_SUBCOMMUNITY_NAME
+                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
 
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,
@@ -773,7 +786,8 @@ class SearchDB(
                 " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 " ${SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
                 " ${SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES;"
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES," +
+                " ${SUBQUERY_NAME}.$COLUMN_METADATA_LICENCE_URL_FILTER;"
         }
 
         private fun buildSearchQueryHelper(

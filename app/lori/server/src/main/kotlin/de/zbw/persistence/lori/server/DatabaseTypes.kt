@@ -23,6 +23,7 @@ data class FacetTransient(
     val zdbIdJournal: String?,
     val zdbIdSeries: String?,
     val zbwUserAgreement: Boolean,
+    val licenceUrlFilter: String?,
 )
 
 data class FacetTransientSet(
@@ -31,6 +32,7 @@ data class FacetTransientSet(
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
     val isPartOfSeries: Map<String, Int>,
+    val licenceUrls: Map<String, Int>,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
     val templateIdToOccurence: Map<String, Int>,
