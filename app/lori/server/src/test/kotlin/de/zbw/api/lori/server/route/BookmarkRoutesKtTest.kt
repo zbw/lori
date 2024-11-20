@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.GSON
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.jsonAsString
+import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Bookmark
@@ -541,6 +542,15 @@ class BookmarkRoutesKtTest {
         }
     }
 
+    @Test
+    fun testBookmarkConversion() {
+        assertThat(
+            "Back and forth conversion failed",
+            TEST_BOOKMARK.toRest("").toBusiness().toString(),
+            `is`(TEST_BOOKMARK.toString()),
+        )
+    }
+
     companion object {
         val TEST_BOOKMARKRAW: BookmarkRawRest =
             BookmarkRawRest(
@@ -564,6 +574,7 @@ class BookmarkRoutesKtTest {
                 validOnFilter = QueryParameterParser.parseRightValidOnFilter("2018-04-01"),
                 startDateFilter = QueryParameterParser.parseStartDateFilter("2020-01-01"),
                 endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
+                licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter("http://creativecommons.org/licenses/by/3.0/au"),
                 formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
                 paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
                 zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),

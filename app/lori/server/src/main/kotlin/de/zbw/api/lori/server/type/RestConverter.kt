@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.type
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
 import de.zbw.business.lori.server.EndDateFilter
+import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.RightValidOnFilter
@@ -34,6 +35,7 @@ import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
+import de.zbw.lori.model.LicenceUrlCountRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.OrganisationToIp
 import de.zbw.lori.model.PaketSigelWithCountRest
@@ -468,6 +470,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         validOnFilter = QueryParameterParser.parseRightValidOnFilter(this.filterValidOn),
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
         seriesFilter = QueryParameterParser.parseSeriesFilter(this.filterSeries),
+        licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter(this.filterLicenceUrl),
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
@@ -505,6 +508,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
         noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
+        licenceURLFilter = this.filterLicenceUrl?.let { LicenceUrlFilter(it) },
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
@@ -539,6 +543,7 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
         filterSeries = this.seriesFilter?.seriesNames,
         filterTemplateName = this.templateNameFilter?.templateNames,
         filtersAsQuery = filtersAsQuery,
+        filterLicenceUrl = this.licenceURLFilter?.licenceUrl,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
@@ -621,6 +626,13 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                 }.toList()
                 .sortedBy { it.count }
                 .reversed(),
+        licenceUrlCount =
+            this.licenceUrl.entries.map {
+                LicenceUrlCountRest(
+                    count = it.value,
+                    licenceUrl = it.key,
+                )
+            },
         filtersAsQuery = filtersAsQuery,
     )
 }

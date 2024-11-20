@@ -417,6 +417,7 @@ class LoriServerBackend(
                 publicationType = facets.publicationType,
                 templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
                 zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
+                licenceUrl = facets.licenceUrls,
                 filtersAsQuery =
                     SearchFilter.filtersToString(
                         filters =

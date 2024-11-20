@@ -420,6 +420,7 @@ class RestConverterTest {
                 zdbIds = mapOf("zdb1" to 1),
                 isPartOfSeries = mapOf("series1" to 1),
                 filtersAsQuery = "foobar",
+                licenceUrl = mapOf("by/3.0/au" to 5),
             )
         val expected =
             ItemInformation(

@@ -271,7 +271,7 @@ class SubcommunityNameFilter(
 }
 
 class LicenceUrlFilter(
-    private val licenceUrl: String,
+    val licenceUrl: String,
 ) : MetadataSearchFilter(
         DatabaseConnector.COLUMN_METADATA_LICENCE_URL_FILTER,
     ) {
