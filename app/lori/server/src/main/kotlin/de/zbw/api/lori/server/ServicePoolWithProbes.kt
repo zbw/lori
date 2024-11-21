@@ -17,8 +17,8 @@ import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
 import de.zbw.api.lori.server.route.templateRoutes
 import de.zbw.api.lori.server.route.usersRoutes
-import de.zbw.api.lori.server.type.SamlUtils
 import de.zbw.api.lori.server.type.UserSession
+import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.UserPermission
 import io.ktor.http.HttpStatusCode

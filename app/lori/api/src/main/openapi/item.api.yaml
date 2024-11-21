@@ -374,6 +374,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterLicenceUrl
+        in: query
+        schema:
+          type: string
 
     responses:
       200:

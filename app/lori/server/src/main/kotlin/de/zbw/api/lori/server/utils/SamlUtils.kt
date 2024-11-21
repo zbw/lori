@@ -1,4 +1,4 @@
-package de.zbw.api.lori.server.type
+package de.zbw.api.lori.server.utils
 
 import net.shibboleth.utilities.java.support.component.ComponentInitializationException
 import net.shibboleth.utilities.java.support.resolver.CriteriaSet

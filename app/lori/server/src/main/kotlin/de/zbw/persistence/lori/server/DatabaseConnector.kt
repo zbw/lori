@@ -92,6 +92,7 @@ class DatabaseConnector(
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
         const val COLUMN_METADATA_LAST_UPDATED_ON = "last_updated_on"
         const val COLUMN_METADATA_LICENCE_URL = "licence_url"
+        const val COLUMN_METADATA_LICENCE_URL_FILTER = "licence_url_filter"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PPN = "ppn"
         const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"

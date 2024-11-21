@@ -1,7 +1,7 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfigurations
-import de.zbw.api.lori.server.type.SamlUtils
+import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.persistence.lori.server.FlywayMigrator
 import io.opentelemetry.api.trace.Tracer

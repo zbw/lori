@@ -16,6 +16,7 @@ data class SearchQueryResult(
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
     val isPartOfSeries: Map<String, Int>,
+    val licenceUrl: Map<String, Int>,
     val paketSigels: Map<String, Int>,
     val publicationType: Map<PublicationType, Int>,
     val filtersAsQuery: String,

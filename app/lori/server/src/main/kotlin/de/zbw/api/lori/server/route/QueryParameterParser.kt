@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
+import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -209,4 +210,6 @@ object QueryParameterParser {
         s
             ?.let { parseDate(it) }
             ?.let { DashboardTimeIntervalEndFilter(it) }
+
+    fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(it) }
 }

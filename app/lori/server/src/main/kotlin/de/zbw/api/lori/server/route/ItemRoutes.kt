@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
+import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
@@ -376,6 +377,8 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseZDBIdFilter(call.request.queryParameters["filterZDBId"])
                     val seriesFilter: SeriesFilter? =
                         QueryParameterParser.parseSeriesFilter(call.request.queryParameters["filterSeries"])
+                    val licenceUrlFilter: LicenceUrlFilter? =
+                        QueryParameterParser.parseLicenceUrlFilter(call.request.queryParameters["filterLicenceUrl"])
                     val accessStateFilter: AccessStateFilter? =
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
                     val temporalValidityFilter: TemporalValidityFilter? =
@@ -452,6 +455,7 @@ fun Routing.itemRoutes(
                     }
                     val metadataFilters =
                         listOfNotNull(
+                            licenceUrlFilter,
                             paketSigelFilter,
                             publicationDateFilter,
                             publicationTypeFilter,

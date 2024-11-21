@@ -43,6 +43,8 @@ BookmarkRawRest:
       type: string
     filterTemplateName:
       type: string
+    filterLicenceUrl:
+      type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -121,6 +123,8 @@ BookmarkRest:
       type: array
       items:
         type: string
+    filterLicenceUrl:
+      type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:

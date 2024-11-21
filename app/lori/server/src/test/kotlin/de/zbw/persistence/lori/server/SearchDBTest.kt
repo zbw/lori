@@ -19,6 +19,7 @@ import de.zbw.business.lori.server.type.SEPar
 import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_HANDLE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
@@ -647,7 +648,27 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null) AND (LOWER(publication_type) = LOWER(?)))" +
                     " AS sub ON A.template_name = sub.template_name  GROUP BY A.template_name",
-                "Template name occurence",
+                "Template name occurrence",
+            ),
+            arrayOf(
+                setOf(
+                    "by/3.0/au",
+                    "other",
+                ),
+                COLUMN_METADATA_LICENCE_URL_FILTER,
+                SEVariable(CollectionNameFilter("foo")),
+                listOf(PublicationDateFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                null,
+                "SELECT A.licence_url_filter, COUNT(sub.licence_url_filter)" +
+                    " FROM(VALUES (?),(?)) as A(licence_url_filter) LEFT JOIN (" +
+                    STATEMENT_SELECT_OCCURRENCE_DISTINCT +
+                    " FROM item_metadata" +
+                    " $LEFT_JOIN_RIGHT" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND (publication_date >= ? AND publication_date <= ? AND publication_date is not null) AND (LOWER(publication_type) = LOWER(?)))" +
+                    " AS sub ON A.licence_url_filter = sub.licence_url_filter  GROUP BY A.licence_url_filter",
+                "Template name occurrence",
             ),
         )
 
@@ -702,45 +723,49 @@ class SearchDBTest : DatabaseTest() {
             "SELECT sub.paket_sigel, sub.publication_type, sub.zdb_id_journal, sub.access_state," +
                 " sub.licence_contract, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url," +
                 " sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.template_name," +
-                " sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
+                " sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES, sub.$COLUMN_METADATA_LICENCE_URL_FILTER"
         const val SELECT_ALL_PRE_TABLE =
             "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
                 "publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                 "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
-                "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "${ALIAS_ITEM_RIGHT}.access_state,${ALIAS_ITEM_RIGHT}.licence_contract,${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence," +
                 "${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence_url,${ALIAS_ITEM_RIGHT}.open_content_licence," +
                 "${ALIAS_ITEM_RIGHT}.restricted_open_content_licence,${ALIAS_ITEM_RIGHT}.zbw_user_agreement,${ALIAS_ITEM_RIGHT}.template_name," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_subcom_name"
         const val SELECT_ALL_WITH_TS =
             "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
                 "publication_date,band,publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn," +
                 "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
-                "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_subcom_name"
         const val SELECT_ALL =
             "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series,publication_date,band," +
                 "publication_type,doi,isbn,rights_k10plus,paket_sigel,zdb_id_journal,issn,created_on,last_updated_on," +
                 "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
-                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES"
+                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER"
         const val SELECT_DISTINCT_ON =
             "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "ppn,title,title_journal,title_series,publication_date,band,publication_type,doi,isbn,rights_k10plus," +
                 "paket_sigel,zdb_id_journal,issn,item_metadata.created_on,item_metadata.last_updated_on," +
                 "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
-                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,${ALIAS_ITEM_RIGHT}.access_state,${ALIAS_ITEM_RIGHT}.licence_contract," +
+                "is_part_of_series,$COLUMN_METADATA_ZDB_ID_SERIES,${COLUMN_METADATA_LICENCE_URL_FILTER},${ALIAS_ITEM_RIGHT}.access_state," +
+                "${ALIAS_ITEM_RIGHT}.licence_contract," +
                 "${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence,${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence_url," +
                 "${ALIAS_ITEM_RIGHT}.open_content_licence,${ALIAS_ITEM_RIGHT}.restricted_open_content_licence,${ALIAS_ITEM_RIGHT}.zbw_user_agreement," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_licence_url,ts_subcom_name"
+                "ts_hdl,ts_subcom_name"
         const val GROUP_BY_SEARCH_BAR_FILTER =
-            "GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type, sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence, sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name, sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES"
+            "GROUP BY sub.access_state, sub.licence_contract, sub.paket_sigel, sub.publication_type," +
+                " sub.non_standard_open_content_licence, sub.non_standard_open_content_licence_url, sub.restricted_open_content_licence," +
+                " sub.open_content_licence, sub.zbw_user_agreement, sub.zdb_id_journal, sub.template_name," +
+                " sub.is_part_of_series, sub.$COLUMN_METADATA_ZDB_ID_SERIES, sub.$COLUMN_METADATA_LICENCE_URL_FILTER"
 
         const val LEFT_JOIN_RIGHT =
             "LEFT JOIN item" +

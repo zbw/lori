@@ -1,6 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.api.lori.server.utils.RestConverterUtil
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
@@ -150,6 +151,12 @@ class BookmarkDBTest : DatabaseTest() {
                 lastUpdatedOn = null,
                 seriesFilter = QueryParameterParser.parseSeriesFilter("some series"),
                 templateNameFilter = QueryParameterParser.parseTemplateNameFilter("some template"),
+                licenceURLFilter =
+                    QueryParameterParser.parseLicenceUrlFilter(
+                        RestConverterUtil.prepareLicenceUrlFilter(
+                            "http://creativecommons.org/licenses/by/3.0/au",
+                        ),
+                    ),
             )
     }
 }

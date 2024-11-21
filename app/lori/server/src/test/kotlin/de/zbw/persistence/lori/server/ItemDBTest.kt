@@ -241,6 +241,7 @@ class ItemDBTest : DatabaseTest() {
                 lastUpdatedBy = "user2",
                 lastUpdatedOn = NOW,
                 licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                licenceUrlFilter = "by-sa/4.0/legalcode.de",
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,

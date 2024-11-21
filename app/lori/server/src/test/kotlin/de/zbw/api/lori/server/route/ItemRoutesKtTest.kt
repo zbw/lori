@@ -613,6 +613,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
                 isPartOfSeriesCount = emptyList(),
+                licenceUrlCount = emptyList(),
                 filtersAsQuery = "",
             )
         val backend =
@@ -642,6 +643,7 @@ class ItemRoutesKtTest {
                         hasLicenceContract = false,
                         hasZbwUserAgreement = false,
                         templateNamesToOcc = emptyMap(),
+                        licenceUrl = emptyMap(),
                         filtersAsQuery = "",
                     )
                 )
@@ -693,6 +695,7 @@ class ItemRoutesKtTest {
                 hasZbwUserAgreement = false,
                 templateNameWithCount = emptyList(),
                 isPartOfSeriesCount = emptyList(),
+                licenceUrlCount = emptyList(),
                 filtersAsQuery = "",
             )
         val backend =
@@ -721,6 +724,7 @@ class ItemRoutesKtTest {
                         hasZbwUserAgreement = false,
                         templateNamesToOcc = emptyMap(),
                         isPartOfSeries = emptyMap(),
+                        licenceUrl = emptyMap(),
                         filtersAsQuery = "",
                     )
                 )

@@ -17,6 +17,7 @@ import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
+import de.zbw.lori.model.LicenceUrlCountRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
@@ -136,6 +137,7 @@ class RestConverterTest {
                 lastUpdatedBy = null,
                 lastUpdatedOn = null,
                 licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                licenceUrlFilter = "by-sa/4.0/legalcode.de",
                 paketSigel = null,
                 ppn = null,
                 publicationType = PublicationType.ARTICLE,
@@ -419,6 +421,7 @@ class RestConverterTest {
                 zdbIds = mapOf("zdb1" to 1),
                 isPartOfSeries = mapOf("series1" to 1),
                 filtersAsQuery = "foobar",
+                licenceUrl = mapOf("by/3.0/au" to 5),
             )
         val expected =
             ItemInformation(
@@ -469,6 +472,13 @@ class RestConverterTest {
                         ),
                     ),
                 filtersAsQuery = "foobar",
+                licenceUrlCount =
+                    listOf(
+                        LicenceUrlCountRest(
+                            count = 5,
+                            licenceUrl = "by/3.0/au",
+                        ),
+                    ),
             )
 
         assertThat(
@@ -557,6 +567,7 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
+                licenceUrlFilter = "by-sa/4.0/legalcode.de",
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationType.BOOK,

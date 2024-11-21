@@ -109,11 +109,18 @@ class SearchKeyTest : DatabaseTest() {
                 "negation around parantheses",
             ),
             arrayOf(
-                "${FilterType.LICENCE_URL.keyAlias}:'${METADATA_TEST.licenceUrl}'",
+                "${FilterType.LICENCE_URL.keyAlias}:'${METADATA_TEST.licenceUrlFilter}'",
                 10,
                 0,
                 setOf(METADATA_TEST),
                 "search for licence url",
+            ),
+            arrayOf(
+                "${FilterType.LICENCE_URL.keyAlias}:'other'",
+                10,
+                0,
+                setOf(METADATA_TEST_2, METADATA_TEST_3),
+                "search for licence url 'other'",
             ),
             arrayOf(
                 "${FilterType.SUB_COMMUNITY_NAME.keyAlias}:'${METADATA_TEST_3.subCommunityName}'",
@@ -159,6 +166,7 @@ class SearchKeyTest : DatabaseTest() {
                 handle = "second",
                 zdbIdJournal = null,
                 licenceUrl = "foobar.baz",
+                licenceUrlFilter = "other",
                 paketSigel = "someothersigel2",
             )
         val METADATA_TEST_3 =
@@ -166,6 +174,7 @@ class SearchKeyTest : DatabaseTest() {
                 handle = "third",
                 zdbIdJournal = "someotherzdbid",
                 licenceUrl = "foobar",
+                licenceUrlFilter = "other",
                 paketSigel = "someothersigel",
                 subCommunityName = "department 3",
             )

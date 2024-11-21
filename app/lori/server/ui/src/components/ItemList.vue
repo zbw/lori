@@ -4,7 +4,7 @@ import {
   AccessStateWithCountRest,
   BookmarkRest, IsPartOfSeriesCountRest,
   ItemInformation,
-  ItemRest,
+  ItemRest, LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
   RightRest,
@@ -346,7 +346,7 @@ export default defineComponent({
     const initSearchByRightId = (rightId: string, templateName: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
-      currentRightId.value = rightId;
+      currentRightId.value = templateName;
       closeTemplateOverview();
       successMsg.value =
         "Alle gespeicherten Suchen für Template " +
@@ -377,6 +377,7 @@ export default defineComponent({
           undefined,
             rightId,
           undefined,
+            undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -411,6 +412,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -439,6 +441,7 @@ export default defineComponent({
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       searchquerybuilder.setTemplateNameFilter(searchStore, bookmark);
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
+      searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -488,6 +491,7 @@ export default defineComponent({
           searchquerybuilder.buildNoRightInformation(searchStore),
           searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
+          searchquerybuilder.buildLicenceUrlFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -576,6 +580,16 @@ export default defineComponent({
           },
       );
       searchStore.seriesIdx = reduceIdx(searchStore.seriesIdx);
+
+      searchStore.licenceUrlIdx = searchStore.licenceUrlSelectedLastSearch.map(
+          (elem: string) => {
+            return {
+              count: 0,
+              series: elem,
+            } as LicenceUrlCountRest;
+          },
+      );
+      searchStore.licenceUrlIdx = reduceIdx(searchStore.licenceUrlIdx);
     };
 
     const reduceIdx = (idxMap: Array<boolean>): Array<boolean> => {
@@ -662,6 +676,19 @@ export default defineComponent({
         searchStore.templateNameReceived.map((e) => e.templateName),
         searchStore.templateNameSelectedLastSearch,
         searchStore.templateNameIdx,
+      );
+      // Reset Licence Url
+      searchStore.licenceUrlReceived =
+          response.licenceUrlCount != undefined
+              ? response.licenceUrlCount
+              : Array(0);
+      searchStore.licenceUrlIdx = Array(
+          searchStore.licenceUrlReceived.length,
+      ).fill(false);
+      resetDynamicFilter(
+          searchStore.licenceUrlReceived.map((e) => e.licenceUrl),
+          searchStore.licenceUrlSelectedLastSearch,
+          searchStore.licenceUrlIdx,
       );
     };
 
@@ -918,146 +945,154 @@ table.special, th.special, td.special {
                     weglassen wenn nur ein Wort gesucht wird.
                   </p>
                   <table class="special">
-                    <tr class=special>
-                      <th class=special>Suche</th>
-                      <th class=special>Suchschlüssel</th>
-                      <th class=special>Format</th>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Titel</td>
-                      <td class=special>tit</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle des Items</td>
-                      <td class=special>hdl</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Community</td>
-                      <td class=special>com</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Community</td>
-                      <td class=special>hdlcom</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Subommunity</td>
-                      <td class=special>hdlsubcom</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Collection</td>
-                      <td class=special>col</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Collection</td>
-                      <td class=special>hdlcol</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>ZDB-Id</td>
-                      <td class=special>zdb</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Paket-Sigel</td>
-                      <td class=special>sig</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Lizenz URL</td>
-                      <td class=special>lur</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Series</td>
-                      <td class=special>ser</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Template Namen</td>
-                      <td class=special>tpl</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Publikationsjahr</td>
-                      <td class=special>jah</td>
-                      <td class=special>Begin-Ende</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Publikationstyp</td>
-                      <td class=special>typ</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Access</td>
-                      <td class=special>acc</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit am</td>
-                      <td class=special>zgp</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Beginn</td>
-                      <td class=special>zgb</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Ende</td>
-                      <td class=special>zge</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Abschnitte</td>
-                      <td class=special>zga</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Formale Regelungen</td>
-                      <td class=special>reg</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Keine Rechteeinträge</td>
-                      <td class=special>nor</td>
-                      <td class=special>nor:on</td>
-                    </tr>
+                    <thead>
+                      <tr class=special>
+                        <th class=special>Suche</th>
+                        <th class=special>Suchschlüssel</th>
+                        <th class=special>Format</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class=special>
+                        <td class=special>Titel</td>
+                        <td class=special>tit</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle des Items</td>
+                        <td class=special>hdl</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Community</td>
+                        <td class=special>com</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Community</td>
+                        <td class=special>hdlcom</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Subommunity</td>
+                        <td class=special>hdlsubcom</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Collection</td>
+                        <td class=special>col</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Collection</td>
+                        <td class=special>hdlcol</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>ZDB-Id</td>
+                        <td class=special>zdb</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Paket-Sigel</td>
+                        <td class=special>sig</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Lizenz URL</td>
+                        <td class=special>lur</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Series</td>
+                        <td class=special>ser</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Template Namen</td>
+                        <td class=special>tpl</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Publikationsjahr</td>
+                        <td class=special>jah</td>
+                        <td class=special>Begin-Ende</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Publikationstyp</td>
+                        <td class=special>typ</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Access</td>
+                        <td class=special>acc</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit am</td>
+                        <td class=special>zgp</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Beginn</td>
+                        <td class=special>zgb</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Ende</td>
+                        <td class=special>zge</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Abschnitte</td>
+                        <td class=special>zga</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Formale Regelungen</td>
+                        <td class=special>reg</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Keine Rechteeinträge</td>
+                        <td class=special>nor</td>
+                        <td class=special>nor:on</td>
+                      </tr>
+                    </tbody>
                   </table>
 
                   <p class="text-left text-body-1 mt-4 font-weight-bold">
                     Bool'sche Operatoren
                   </p>
                   <table class="special">
-                    <tr class=special>
-                      <th class=special> </th>
-                      <th class=special> </th>
-                      <th class=special>Beispiele</th>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Und</td>
-                      <td class=special>&</td>
-                      <td class=special>col:'Economics & series'</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Nicht</td>
-                      <td class=special>!</td>
-                      <td class=special>
-                        !hdl:'1234' <br>
-                        !(hdl:'1234' | tit:'geopolitical') <br>
-                        col:'department' & !tit:'geopolitical'
-                      </td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Oder</td>
-                      <td class=special>|</td>
-                      <td class=special>col:'Economics' | ser:'some series'</td>
-                    </tr>
+                    <thead>
+                      <tr class=special>
+                        <th class=special> </th>
+                        <th class=special> </th>
+                        <th class=special>Beispiele</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class=special>
+                        <td class=special>Und</td>
+                        <td class=special>&</td>
+                        <td class=special>col:'Economics & series'</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Nicht</td>
+                        <td class=special>!</td>
+                        <td class=special>
+                          !hdl:'1234' <br>
+                          !(hdl:'1234' | tit:'geopolitical') <br>
+                          col:'department' & !tit:'geopolitical'
+                        </td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Oder</td>
+                        <td class=special>|</td>
+                        <td class=special>col:'Economics' | ser:'some series'</td>
+                      </tr>
+                    </tbody>
                   </table>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
@@ -1154,7 +1189,7 @@ table.special, th.special, td.special {
               <td>{{ parsePublicationType(item.publicationType) }}</td>
             </template>
             <template v-slot:item.publicationDate="{ item }">
-              <td>{{ item.publicationDate.toLocaleDateString("de") }}</td>
+              <td v-if="item.publicationDate != undefined">{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
             <template #bottom></template>
           </v-data-table>

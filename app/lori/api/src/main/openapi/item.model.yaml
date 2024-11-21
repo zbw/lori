@@ -33,6 +33,10 @@ ItemInformation:
       type: array
       items:
         $ref: 'item.model.yaml#/IsPartOfSeriesCountRest'
+    licenceUrlCount:
+      type: array
+      items:
+        $ref: 'item.model.yaml#/LicenceUrlCountRest'
     hasLicenceContract:
       type: boolean
     hasOpenContentLicence:
@@ -124,6 +128,18 @@ IsPartOfSeriesCountRest:
       type: integer
     series:
       type: string
+
+LicenceUrlCountRest:
+  required:
+    - count
+    - licenceUrl
+  type: object
+  properties:
+    count:
+      type: integer
+    licenceUrl:
+      type: string
+
 
 
 PublicationTypeWithCountRest:

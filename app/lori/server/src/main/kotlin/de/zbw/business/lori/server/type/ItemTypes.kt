@@ -30,6 +30,7 @@ data class ItemMetadata(
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
     val licenceUrl: String?,
+    val licenceUrlFilter: String?,
     val paketSigel: String?,
     val ppn: String?,
     val publicationType: PublicationType,
