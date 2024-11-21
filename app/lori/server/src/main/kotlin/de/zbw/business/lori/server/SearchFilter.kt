@@ -584,11 +584,11 @@ class RightValidOnFilter(
     val date: LocalDate,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" + // TODO(CB): Fix Bug
+        "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
             " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
             " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
             " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID)"
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))"
 
     override fun setSQLParameter(
         counter: Int,
