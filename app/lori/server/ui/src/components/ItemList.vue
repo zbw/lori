@@ -945,146 +945,154 @@ table.special, th.special, td.special {
                     weglassen wenn nur ein Wort gesucht wird.
                   </p>
                   <table class="special">
-                    <tr class=special>
-                      <th class=special>Suche</th>
-                      <th class=special>Suchschlüssel</th>
-                      <th class=special>Format</th>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Titel</td>
-                      <td class=special>tit</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle des Items</td>
-                      <td class=special>hdl</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Community</td>
-                      <td class=special>com</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Community</td>
-                      <td class=special>hdlcom</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Subommunity</td>
-                      <td class=special>hdlsubcom</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Collection</td>
-                      <td class=special>col</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Handle Collection</td>
-                      <td class=special>hdlcol</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>ZDB-Id</td>
-                      <td class=special>zdb</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Paket-Sigel</td>
-                      <td class=special>sig</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Lizenz URL</td>
-                      <td class=special>lur</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Series</td>
-                      <td class=special>ser</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Template Namen</td>
-                      <td class=special>tpl</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Publikationsjahr</td>
-                      <td class=special>jah</td>
-                      <td class=special>Begin-Ende</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Publikationstyp</td>
-                      <td class=special>typ</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Access</td>
-                      <td class=special>acc</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit am</td>
-                      <td class=special>zgp</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Beginn</td>
-                      <td class=special>zgb</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Ende</td>
-                      <td class=special>zge</td>
-                      <td class=special>YYYY-MM-DD</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Zeitliche Gültigkeit Abschnitte</td>
-                      <td class=special>zga</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Formale Regelungen</td>
-                      <td class=special>reg</td>
-                      <td class=special></td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Keine Rechteeinträge</td>
-                      <td class=special>nor</td>
-                      <td class=special>nor:on</td>
-                    </tr>
+                    <thead>
+                      <tr class=special>
+                        <th class=special>Suche</th>
+                        <th class=special>Suchschlüssel</th>
+                        <th class=special>Format</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class=special>
+                        <td class=special>Titel</td>
+                        <td class=special>tit</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle des Items</td>
+                        <td class=special>hdl</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Community</td>
+                        <td class=special>com</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Community</td>
+                        <td class=special>hdlcom</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Subommunity</td>
+                        <td class=special>hdlsubcom</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Collection</td>
+                        <td class=special>col</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Handle Collection</td>
+                        <td class=special>hdlcol</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>ZDB-Id</td>
+                        <td class=special>zdb</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Paket-Sigel</td>
+                        <td class=special>sig</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Lizenz URL</td>
+                        <td class=special>lur</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Series</td>
+                        <td class=special>ser</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Template Namen</td>
+                        <td class=special>tpl</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Publikationsjahr</td>
+                        <td class=special>jah</td>
+                        <td class=special>Begin-Ende</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Publikationstyp</td>
+                        <td class=special>typ</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Access</td>
+                        <td class=special>acc</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit am</td>
+                        <td class=special>zgp</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Beginn</td>
+                        <td class=special>zgb</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Ende</td>
+                        <td class=special>zge</td>
+                        <td class=special>YYYY-MM-DD</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Zeitliche Gültigkeit Abschnitte</td>
+                        <td class=special>zga</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Formale Regelungen</td>
+                        <td class=special>reg</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Keine Rechteeinträge</td>
+                        <td class=special>nor</td>
+                        <td class=special>nor:on</td>
+                      </tr>
+                    </tbody>
                   </table>
 
                   <p class="text-left text-body-1 mt-4 font-weight-bold">
                     Bool'sche Operatoren
                   </p>
                   <table class="special">
-                    <tr class=special>
-                      <th class=special> </th>
-                      <th class=special> </th>
-                      <th class=special>Beispiele</th>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Und</td>
-                      <td class=special>&</td>
-                      <td class=special>col:'Economics & series'</td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Nicht</td>
-                      <td class=special>!</td>
-                      <td class=special>
-                        !hdl:'1234' <br>
-                        !(hdl:'1234' | tit:'geopolitical') <br>
-                        col:'department' & !tit:'geopolitical'
-                      </td>
-                    </tr>
-                    <tr class=special>
-                      <td class=special>Oder</td>
-                      <td class=special>|</td>
-                      <td class=special>col:'Economics' | ser:'some series'</td>
-                    </tr>
+                    <thead>
+                      <tr class=special>
+                        <th class=special> </th>
+                        <th class=special> </th>
+                        <th class=special>Beispiele</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr class=special>
+                        <td class=special>Und</td>
+                        <td class=special>&</td>
+                        <td class=special>col:'Economics & series'</td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Nicht</td>
+                        <td class=special>!</td>
+                        <td class=special>
+                          !hdl:'1234' <br>
+                          !(hdl:'1234' | tit:'geopolitical') <br>
+                          col:'department' & !tit:'geopolitical'
+                        </td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>Oder</td>
+                        <td class=special>|</td>
+                        <td class=special>col:'Economics' | ser:'some series'</td>
+                      </tr>
+                    </tbody>
                   </table>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
