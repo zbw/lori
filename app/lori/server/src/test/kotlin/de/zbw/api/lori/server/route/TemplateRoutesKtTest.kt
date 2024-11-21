@@ -457,7 +457,8 @@ class TemplateRoutesKtTest {
                         TEST_BOOKMARK.toRest(
                             "(tit:someTitle) & (jah:2020-2030 & typ:\"BOOK,ARTICLE\" & sig:\"sigel\"" +
                                 " & zdb:\"zdbId1,zdbId2\" & acc:\"OPEN,RESTRICTED\" & zga:\"FUTURE,PAST\"" +
-                                " & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\" & zge:\"2021-12-31\" & zgp:\"2018-04-01\")",
+                                " & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\" & zge:\"2021-12-31\" & zgp:\"2018-04-01\"" +
+                                " & lur:\"http://creativecommons.org/licenses/by/3.0/au\")",
                         ),
                     ),
                 ),
