@@ -44,7 +44,7 @@ build:
       - build/libs/*.jar
     expire_in: 1 week
 
-.test:
+test:
   stage: test
   needs: ["build"]
   rules:
