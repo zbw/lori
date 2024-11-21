@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.api.lori.server.utils.RestConverterUtil
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardTemplateNameFilter
@@ -212,8 +211,5 @@ object QueryParameterParser {
             ?.let { parseDate(it) }
             ?.let { DashboardTimeIntervalEndFilter(it) }
 
-    fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? =
-        s
-            ?.let { RestConverterUtil.prepareLicenceUrlFilter(it) }
-            ?.let { LicenceUrlFilter(it) }
+    fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(it) }
 }

@@ -86,8 +86,8 @@ export default defineComponent({
         searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
         searchStore.seriesIdx.filter((element) => element).length > 0 ||
         searchStore.templateNameIdx.filter((element) => element).length > 0 ||
-        searchStore.publicationTypeIdx.filter((element) => element).length >
-          0 ||
+        searchStore.publicationTypeIdx.filter((element) => element).length > 0 ||
+        searchStore.licenceUrlIdx.filter((element) => element).length > 0 ||
         searchStore.noRightInformation ||
         searchStore.searchTerm ||
         searchStore.isLastSearchForTemplates
@@ -130,6 +130,7 @@ export default defineComponent({
       );
       searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
       searchStore.seriesIdx = searchStore.seriesIdx.map(() => false);
+      searchStore.licenceUrlIdx = searchStore.licenceUrlIdx.map(() => false);
       searchStore.noRightInformation = false;
       emit("startEmptySearch");
     };
@@ -152,6 +153,14 @@ export default defineComponent({
 
     const ppPaketSigel = (paketSigel: string, count: number) => {
       return paketSigel + " (" + count + ")";
+    };
+
+    const ppLicenceUrl = (licenceUrl: string, count: number) => {
+      if (licenceUrl == 'other'){
+        return "Andere (" + count + ")";
+      } else {
+        return licenceUrl + " (" + count + ")";
+      }
     };
 
     const ppZDBId = (zdbId: string, count: number) => {
@@ -229,6 +238,7 @@ export default defineComponent({
       emitSearchStartPublicationDate,
       parseAccessState,
       parsePublicationType,
+      ppLicenceUrl,
       ppPaketSigel,
       ppZDBId,
       resetFilter,
@@ -408,6 +418,34 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.zdbIdIdx[i]"
+                      @update:modelValue="emitSearchStart"
+                  ></v-checkbox>
+                  <v-divider
+                      :thickness="1"
+                      class="border-opacity-100"
+                      color="grey-lighten-1"
+                  ></v-divider>
+                </v-list-item>
+              </v-list>
+            </v-list-group>
+            <v-list-group sub-group>
+              <template v-slot:activator="{ props }">
+                <v-list-item v-bind="props" title="CC-Lizenz"></v-list-item>
+              </template>
+              <h6></h6>
+              <v-list>
+                <v-list-item
+                    v-for="(item, i) in searchStore.licenceUrlReceived"
+                    :key="i"
+                    :value="item"
+                    color="primary"
+                    rounded="shaped"
+                >
+                  <v-checkbox
+                      :label="ppLicenceUrl(item.licenceUrl, item.count)"
+                      hide-details
+                      class="pl-9 ml-4"
+                      v-model="searchStore.licenceUrlIdx[i]"
                       @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider

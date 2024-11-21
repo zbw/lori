@@ -4,7 +4,7 @@ import {
   AccessStateWithCountRest,
   BookmarkRest, IsPartOfSeriesCountRest,
   ItemInformation,
-  ItemRest,
+  ItemRest, LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeWithCountRest,
   RightRest,
@@ -377,6 +377,7 @@ export default defineComponent({
           undefined,
             rightId,
           undefined,
+            undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -411,6 +412,7 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -439,6 +441,7 @@ export default defineComponent({
       searchquerybuilder.setNoRightInformationFilter(searchStore, bookmark);
       searchquerybuilder.setTemplateNameFilter(searchStore, bookmark);
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
+      searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -488,6 +491,7 @@ export default defineComponent({
           searchquerybuilder.buildNoRightInformation(searchStore),
           searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
+          searchquerybuilder.buildLicenceUrlFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -576,6 +580,16 @@ export default defineComponent({
           },
       );
       searchStore.seriesIdx = reduceIdx(searchStore.seriesIdx);
+
+      searchStore.licenceUrlIdx = searchStore.licenceUrlSelectedLastSearch.map(
+          (elem: string) => {
+            return {
+              count: 0,
+              series: elem,
+            } as LicenceUrlCountRest;
+          },
+      );
+      searchStore.licenceUrlIdx = reduceIdx(searchStore.licenceUrlIdx);
     };
 
     const reduceIdx = (idxMap: Array<boolean>): Array<boolean> => {
@@ -662,6 +676,19 @@ export default defineComponent({
         searchStore.templateNameReceived.map((e) => e.templateName),
         searchStore.templateNameSelectedLastSearch,
         searchStore.templateNameIdx,
+      );
+      // Reset Licence Url
+      searchStore.licenceUrlReceived =
+          response.licenceUrlCount != undefined
+              ? response.licenceUrlCount
+              : Array(0);
+      searchStore.licenceUrlIdx = Array(
+          searchStore.licenceUrlReceived.length,
+      ).fill(false);
+      resetDynamicFilter(
+          searchStore.licenceUrlReceived.map((e) => e.licenceUrl),
+          searchStore.licenceUrlSelectedLastSearch,
+          searchStore.licenceUrlIdx,
       );
     };
 

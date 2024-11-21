@@ -17,6 +17,7 @@ import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
+import de.zbw.lori.model.LicenceUrlCountRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
@@ -471,6 +472,13 @@ class RestConverterTest {
                         ),
                     ),
                 filtersAsQuery = "foobar",
+                licenceUrlCount =
+                    listOf(
+                        LicenceUrlCountRest(
+                            count = 5,
+                            licenceUrl = "by/3.0/au",
+                        ),
+                    ),
             )
 
         assertThat(

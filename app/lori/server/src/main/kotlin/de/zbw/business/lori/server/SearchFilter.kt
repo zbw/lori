@@ -126,6 +126,7 @@ abstract class SearchFilter(
                         bookmark.noRightInformationFilter,
                         bookmark.seriesFilter,
                         bookmark.templateNameFilter,
+                        bookmark.licenceURLFilter,
                     ),
                 )
             return if (bookmark.searchTerm.isNullOrBlank()) {
@@ -292,7 +293,7 @@ class LicenceUrlFilter(
     override fun getFilterType(): FilterType = FilterType.LICENCE_URL
 
     companion object {
-        fun fromString(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(s) }
+        fun fromString(s: String?): LicenceUrlFilter? = s?.let { QueryParameterParser.parseLicenceUrlFilter(it) }
     }
 }
 

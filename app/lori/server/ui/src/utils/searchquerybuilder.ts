@@ -1,7 +1,7 @@
 import {
   AccessStateRest,
   AccessStateWithCountRest,
-  BookmarkRest, IsPartOfSeriesCountRest,
+  BookmarkRest, IsPartOfSeriesCountRest, LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,
@@ -145,6 +145,38 @@ export default {
       return seriesIds.join(",");
     }
   },
+
+  setLicenceUrlFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterLicenceUrl == undefined || bookmark.filterLicenceUrl.length == 0) {
+      searchStore.licenceUrlIdx = [];
+      return;
+    }
+    searchStore.licenceUrlIdx = Array(1).fill(true);
+    searchStore.licenceUrlReceived = Array(1);
+    searchStore.licenceUrlReceived[0] = {
+        count: 0,
+        licenceUrl: bookmark.filterLicenceUrl,
+    } as LicenceUrlCountRest;
+  },
+
+  buildLicenceUrlFilter(searchStore: any): string | undefined {
+    const licenceUrls: Array<string> = [];
+    searchStore.licenceUrlIdx.forEach(
+        (i: boolean | undefined, index: number): void => {
+          if (i) {
+            licenceUrls.push(searchStore.licenceUrlReceived[index].licenceUrl);
+          }
+        },
+    );
+    // Remind selected ids, for resetting the filter afterward correctly.
+    searchStore.licenceUrlSelectedLastSearch = licenceUrls;
+    if (licenceUrls.length == 0) {
+      return undefined;
+    } else {
+      return licenceUrls.join(",");
+    }
+  },
+
 
   setTemplateNameFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (
