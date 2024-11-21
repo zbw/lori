@@ -346,7 +346,7 @@ export default defineComponent({
     const initSearchByRightId = (rightId: string, templateName: string) => {
       templateSearchIsActive.value = true;
       currentPage.value = 1;
-      currentRightId.value = rightId;
+      currentRightId.value = templateName;
       closeTemplateOverview();
       successMsg.value =
         "Alle gespeicherten Suchen für Template " +
@@ -1181,7 +1181,7 @@ table.special, th.special, td.special {
               <td>{{ parsePublicationType(item.publicationType) }}</td>
             </template>
             <template v-slot:item.publicationDate="{ item }">
-              <td>{{ item.publicationDate.toLocaleDateString("de") }}</td>
+              <td v-if="item.publicationDate != undefined">{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
             <template #bottom></template>
           </v-data-table>
