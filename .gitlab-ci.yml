@@ -5,97 +5,20 @@ workflow:
     - if: $CI_COMMIT_BRANCH == null || $CI_OPEN_MERGE_REQUESTS == null || $CI_PIPELINE_SOURCE != "push"
 
 variables:
-  VAULT_OPENJDK_IMAGE: "swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-openjdk:1.0.2"
+  ALPINE: "alpine"
 
 default:
-  image: eclipse-temurin:17.0.11_9-jdk
+  image: eclipse-temurin:17.0.13_11-jdk
 
 stages:
   - build
   - test
   - push
+  - deploy
 
 before_script:
   - export GRADLE_USER_HOME=`pwd`/.gradle
 
-buildDockerfileImages:
-  stage: build
-  rules:
-    - if: $CI_COMMIT_BEFORE_SHA == "0000000000000000000000000000000000000000" && $CI_PIPELINE_SOURCE == "push" # first statement evaluates as true for first pipeline run on a new branch, and for merge requests
-      changes:
-        compare_to: 'refs/heads/main'
-        paths:
-          - docker/**/Dockerfile
-    - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
-      changes:
-        paths:
-          - docker/**/Dockerfile
-  image: docker:25.0.5-git
-  tags:
-    - dockersocket
-  script:
-    - echo $CI_COMMIT_SHA
-    - echo $CI_COMMIT_BEFORE_SHA
-    - echo $CI_PIPELINE_SOURCE
-    - echo $CI_COMMIT_BRANCH
-    - echo $CI_DEFAULT_BRANCH
-    - echo $CI_OPEN_MERGE_REQUESTS
-    - echo $CI_MERGE_REQUEST_DIFF_BASE_SHA
-    - >
-      if [[ $CI_OPEN_MERGE_REQUESTS ]]
-        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only ${CI_MERGE_REQUEST_DIFF_BASE_SHA} | grep Dockerfile)  # case merge request pipeline
-        elif [[ $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH ]]
-        then export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile)  # case merge pipeline
-        else export CHANGED_DOCKERFILES=$(git diff-tree --no-commit-id --name-only -r ${CI_COMMIT_SHA} | grep Dockerfile)  # case push pipeline
-      fi
-    - echo $CHANGED_DOCKERFILES
-    - >
-      for dockerfile in $CHANGED_DOCKERFILES; do
-        echo $dockerfile
-        export IMAGE_VERSION_TAG=$(sed -n 's/LABEL IMAGE_VERSION_TAG.*= *//p' $dockerfile | awk '{print $1}')
-        export IMAGE_NAME=$(sed -n 's/LABEL IMAGE_NAME.*= *//p' $dockerfile | awk '{print $1}')
-        export OTC_STAGE=$(sed -n 's/LABEL OTC_STAGE.*= *//p' $dockerfile | awk '{print $1}')
-        docker build -t $IMAGE_NAME $(dirname $dockerfile)
-        echo docker tag $IMAGE_NAME swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
-        docker tag $IMAGE_NAME swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
-        echo "docker image ls"
-        docker image ls
-      done
-
-pushDockerfileImages:
-  stage: push
-  needs: ["buildDockerfileImages"]
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - docker/**/Dockerfile
-  image: swr.eu-nl.otc.t-systems.com/zbw-tools-nl/vault-docker:1.0.4
-  variables:
-    VAULT_ROLE_ID: ci-zbw-dev
-  id_tokens:
-    VAULT_ID_TOKEN:
-      aud: https://vault-nl.zbw.eu
-  tags:
-    - dockersocket
-  script:
-    - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
-    - mkdir -p ~/.docker
-    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - export CHANGED_DOCKERFILES=$(git diff --no-commit-id --name-only HEAD^1 | grep Dockerfile) # gives changed Dockerfiles, not successfully built Dockerfiles
-    - echo $CHANGED_DOCKERFILES
-    - >
-      for dockerfile in $CHANGED_DOCKERFILES; do
-        echo $dockerfile
-        export IMAGE_VERSION_TAG=$(sed -n 's/LABEL IMAGE_VERSION_TAG.*= *//p' $dockerfile | awk '{print $1}')
-        export IMAGE_NAME=$(sed -n 's/LABEL IMAGE_NAME.*= *//p' $dockerfile | awk '{print $1}')
-        export OTC_STAGE=$(sed -n 's/LABEL OTC_STAGE.*= *//p' $dockerfile | awk '{print $1}')
-        echo "docker image ls"
-        docker image ls
-        echo docker push swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
-        docker push swr.eu-nl.otc.t-systems.com/$OTC_STAGE/$IMAGE_NAME:$IMAGE_VERSION_TAG
-      done
-      
 build:
   stage: build
   rules:
@@ -121,7 +44,7 @@ build:
       - build/libs/*.jar
     expire_in: 1 week
 
-test:
+.test:
   stage: test
   needs: ["build"]
   rules:
@@ -131,13 +54,11 @@ test:
         paths:
           - app/**/*
           - buildSrc/**/*
-          - job/**/*
     - if: $CI_COMMIT_BEFORE_SHA != "0000000000000000000000000000000000000000" || $CI_PIPELINE_SOURCE != "push"
       changes:
         paths:
           - app/**/*
           - buildSrc/**/*
-          - job/**/*
   dependencies:
     - build
   tags:
@@ -149,80 +70,250 @@ test:
     reports:
       junit: app/*/**/TEST-*.xml
 
-pushLoriImage:
+pushLoriAppImage:
   stage: push
   needs: ["test"]
-  image: $VAULT_OPENJDK_IMAGE
-  variables:
-    VAULT_ROLE_ID: ci-zbw-dev
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - app/lori/**/*
   dependencies:
     - test
-  id_tokens:
-    VAULT_ID_TOKEN:
-      aud: https://vault-nl.zbw.eu
   tags:
     - dockersocket
   script:
-    - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
-    - mkdir -p ~/.docker
-    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - ./gradlew :app:lori:server:jib
-    - rm -rf ~/.docker/config.json
+    - ./gradlew :app:lori:server:jibBuildTar
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_IMAGEPUSHER"
+    - base64 -d "$SSH_PRIVATE_KEY_IMAGEPUSHER" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - scp app/lori/server/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
+    - scp app/lori/server/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
 
-pushLoriImportJob:
+pushLoriImportJobImage:
   stage: push
-  needs: ["test"]
-  image: $VAULT_OPENJDK_IMAGE
-  variables:
-    VAULT_ROLE_ID: ci-zbw-dev
+  needs: ["build"]
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - job/lori_import/**/*
   dependencies:
-    - test
-  id_tokens:
-    VAULT_ID_TOKEN:
-      aud: https://vault-nl.zbw.eu
+    - build
   tags:
     - dockersocket
   script:
-    - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
-    - mkdir -p ~/.docker
-    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - ./gradlew :job:lori_import:jib
-    - rm -rf ~/.docker/config.json
+    - ./gradlew :job:lori_import:jibBuildTar
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_IMAGEPUSHER"
+    - base64 -d "$SSH_PRIVATE_KEY_IMAGEPUSHER" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - scp job/lori_import/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar
+    - scp job/lori_import/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar
 
-pushTemplateApplyJob:
+pushTemplateApplyJobImage:
   stage: push
-  needs: ["test"]
-  image: $VAULT_OPENJDK_IMAGE
-  variables:
-    VAULT_ROLE_ID: ci-zbw-dev
+  needs: ["build"]
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - job/template_apply/**/*
   dependencies:
-    - test
-  id_tokens:
-    VAULT_ID_TOKEN:
-      aud: https://vault-nl.zbw.eu
+    - build
   tags:
     - dockersocket
   script:
-    - export VAULT_ADDR=https://vault-nl.zbw.eu
-    - export VAULT_TOKEN="$(vault write -field=token auth/jwt-cloud2/login role=$VAULT_ROLE_ID jwt=$VAULT_ID_TOKEN)"
-    - mkdir -p ~/.docker
-    - vault kv get -field=config secret/otc-credentials/docker  | base64 -d >> ~/.docker/config.json
-    - ./gradlew :job:template_apply:jib
-    - rm -rf ~/.docker/config.json
+    - ./gradlew :job:template_apply:jibBuildTar
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_IMAGEPUSHER"
+    - base64 -d "$SSH_PRIVATE_KEY_IMAGEPUSHER" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - scp job/template_apply/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar
+    - scp job/template_apply/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar
+
+deployToQs:
+  stage: deploy
+  needs: ["pushLoriAppImage"]
+  environment: qs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - app/lori/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_QS"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_QS" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_QS" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*$/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml up -d
+      docker container prune --filter "until=100h" -f
+      docker ps
+      EOT
+
+deployToProd:
+  stage: deploy
+  when: manual
+  needs: ["pushLoriAppImage"]
+  environment: production
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - app/lori/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_PROD"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_PROD" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_PROD" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*$/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml up -d
+      docker container prune --filter "until=300h" -f
+      docker ps
+      EOT
+
+deployImportJobToQs:
+  stage: deploy
+  needs: ["pushLoriImportJobImage"]
+  environment: qs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/lori_import/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_QS"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_QS" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_QS" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*$/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      EOT
+
+deployImportJobToProd:
+  stage: deploy
+  when: manual
+  needs: ["pushLoriImportJobImage"]
+  environment: production
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/lori_import/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_PROD"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_PROD" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_PROD" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*$/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      EOT
+
+deployTemplateApplyJobToQs:
+  stage: deploy
+  needs: ["pushTemplateApplyJobImage"]
+  environment: qs
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/template_apply/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_QS"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_QS" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_QS" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*$/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      EOT
+
+deployTemplateApplyJobToProd:
+  stage: deploy
+  when: manual
+  needs: ["pushTemplateApplyJobImage"]
+  environment: production
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/template_apply/**/*
+  image:
+    name: $ALPINE
+  tags:
+    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_PROD"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_PROD" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_PROD" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*$/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      EOT
 
 after_script:
   - echo "End CI"
