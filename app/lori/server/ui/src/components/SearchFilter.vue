@@ -156,7 +156,7 @@ export default defineComponent({
     };
 
     const ppLicenceUrl = (licenceUrl: string, count: number) => {
-      if (licenceUrl == 'other'){
+      if (licenceUrl == 'andere'){
         return "Andere (" + count + ")";
       } else {
         return licenceUrl + " (" + count + ")";

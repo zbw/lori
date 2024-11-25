@@ -20,9 +20,9 @@ class RestConverterUtilTest {
                 "by/3.0/au",
             ),
             arrayOf(
-                "other",
+                "Andere",
                 "http://dx.doi.org/10.17811/ebl.6.2.2017.54-58",
-                "other",
+                "andere",
             ),
             arrayOf(
                 "Empty string",
