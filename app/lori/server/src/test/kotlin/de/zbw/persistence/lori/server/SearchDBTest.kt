@@ -653,7 +653,7 @@ class SearchDBTest : DatabaseTest() {
             arrayOf(
                 setOf(
                     "by/3.0/au",
-                    "other",
+                    "andere",
                 ),
                 COLUMN_METADATA_LICENCE_URL_FILTER,
                 SEVariable(CollectionNameFilter("foo")),

@@ -19,7 +19,7 @@ object RestConverterUtil {
                 .substringAfter("https://creativecommons.org/licenses/")
                 .lowercase()
         } else {
-            "other"
+            "andere"
         }
     }
 }

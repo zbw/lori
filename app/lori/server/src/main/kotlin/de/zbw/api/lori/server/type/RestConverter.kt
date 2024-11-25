@@ -627,12 +627,14 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                 .sortedBy { it.count }
                 .reversed(),
         licenceUrlCount =
-            this.licenceUrl.entries.map {
-                LicenceUrlCountRest(
-                    count = it.value,
-                    licenceUrl = it.key,
-                )
-            },
+            this.licenceUrl.entries
+                .map {
+                    LicenceUrlCountRest(
+                        count = it.value,
+                        licenceUrl = it.key,
+                    )
+                }.toList()
+                .sortedBy { it.licenceUrl.lowercase() },
         filtersAsQuery = filtersAsQuery,
     )
 }
