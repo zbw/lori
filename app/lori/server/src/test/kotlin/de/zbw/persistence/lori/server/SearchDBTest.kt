@@ -578,7 +578,6 @@ class SearchDBTest : DatabaseTest() {
                 metadataSearchFilter,
                 rightSearchFilter,
                 null,
-                true,
             ),
             `is`(expectedSQLQuery),
         )

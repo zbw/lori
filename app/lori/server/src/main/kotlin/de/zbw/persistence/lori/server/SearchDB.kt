@@ -51,7 +51,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_Z
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.addDefaultEntriesToMap
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
@@ -59,7 +58,6 @@ import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import java.lang.Integer.max
 
 /**
  * Execute SQL queries strongly related to search.
@@ -78,240 +76,154 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
     ): FacetTransientSet =
         coroutineScope {
-            connectionPool.useConnection { connection ->
-                val prepStmt =
-                    connection
-                        .prepareStatement(
-                            buildSearchQueryForFacets(
-                                searchExpression,
-                                metadataSearchFilter,
-                                rightSearchFilter,
-                                noRightInformationFilter,
-                                true,
-                            ),
-                        ).apply {
-                            var counter = 1
-                            rightSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
-                            }
-                            val searchPairs =
-                                searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                            searchPairs.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
-                            }
-                            metadataSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
-                            }
-                        }
-                val span = tracer.spanBuilder("searchMetadataWithRightsFilterForZDBAndSigel").startSpan()
-                val rs =
-                    try {
-                        span.makeCurrent()
-                        runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                    } finally {
-                        span.end()
-                    }
-
-                val received: List<FacetTransient> =
-                    generateSequence {
-                        if (rs.next()) {
-                            FacetTransient(
-                                paketSigel = rs.getString(1),
-                                publicationType = PublicationType.valueOf(rs.getString(2)),
-                                zdbIdJournal = rs.getString(3),
-                                accessState = rs.getString(4)?.let { AccessState.valueOf(it) },
-                                licenceContract = rs.getString(5),
-                                nonStandardsOCL = rs.getBoolean(6),
-                                nonStandardsOCLUrl = rs.getString(7),
-                                oclRestricted = rs.getBoolean(8),
-                                ocl = rs.getString(9),
-                                zbwUserAgreement = rs.getBoolean(10),
-                                templateName = rs.getString(11),
-                                isPartOfSeries = rs.getString(12),
-                                zdbIdSeries = rs.getString(13),
-                                licenceUrlFilter = rs.getString(14),
-                            )
-                        } else {
-                            null
-                        }
-                    }.takeWhile { true }.toList()
-                val accessStateFacet: Deferred<Map<AccessState, Int>> =
-                    async {
-                        getAccessStateOccurrences(
-                            givenAccessState = received.mapNotNull { it.accessState }.toSet(),
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val paketSigelFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.paketSigel }.toSet(),
-                            occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val publicationTypeFacet =
-                    async {
-                        getPublicationTypeOccurrences(
-                            givenPublicationType = received.map { it.publicationType }.toSet(),
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val zdbIDsJournalFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.zdbIdJournal }.toSet(),
-                            occurrenceForColumn = COLUMN_METADATA_ZDB_ID_JOURNAL,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-                val zdbIDsSeriesFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.zdbIdSeries }.toSet(),
-                            occurrenceForColumn = COLUMN_METADATA_ZDB_ID_SERIES,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val isPartOfSeriesFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.isPartOfSeries }.toSet(),
-                            occurrenceForColumn = COLUMN_METADATA_IS_PART_OF_SERIES,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val templateIdFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.templateName }.toSet(),
-                            occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_NAME,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                val licenceURLFacet =
-                    async {
-                        searchOccurrences(
-                            givenValues = received.mapNotNull { it.licenceUrlFilter }.toSet(),
-                            occurrenceForColumn = COLUMN_METADATA_LICENCE_URL_FILTER,
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                    }
-
-                return@useConnection FacetTransientSet(
-                    accessState = accessStateFacet.await(),
-                    paketSigels = paketSigelFacet.await(),
-                    publicationType = publicationTypeFacet.await(),
-                    zdbIdsJournal = zdbIDsJournalFacet.await(),
-                    zdbIdsSeries = zdbIDsSeriesFacet.await(),
-                    isPartOfSeries = isPartOfSeriesFacet.await(),
-                    hasLicenceContract = received.any { it.licenceContract?.isNotBlank() ?: false },
-                    hasZbwUserAgreement = received.any { it.zbwUserAgreement },
-                    hasOpenContentLicence =
-                        listOf(
-                            received.any { it.ocl?.isNotBlank() ?: false },
-                            received.any { it.nonStandardsOCL },
-                            received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
-                            received.any { it.oclRestricted },
-                        ).any { it },
-                    templateIdToOccurence = templateIdFacet.await(),
-                    licenceUrls = licenceURLFacet.await(),
+            val facetBaseQuery =
+                buildSearchQueryForFacets(
+                    searchExpression,
+                    metadataSearchFilter,
+                    rightSearchFilter,
+                    noRightInformationFilter,
                 )
-            }
+
+            val paketSigelFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val accessStateFacet: Deferred<Map<AccessState, Int>> =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_RIGHT_ACCESS_STATE,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    ).toList().associate { Pair(AccessState.valueOf(it.first), it.second) }
+                }
+
+            val publicationTypeFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_PUBLICATION_TYPE,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
+                }
+
+            val zdbIDsJournalFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_ZDB_ID_JOURNAL,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+            val zdbIDsSeriesFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_ZDB_ID_SERIES,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val isPartOfSeriesFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_IS_PART_OF_SERIES,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val templateIdFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_RIGHT_TEMPLATE_NAME,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            val licenceURLFacet =
+                async {
+                    searchOccurrences(
+                        baseQuery = facetBaseQuery,
+                        occurrenceForColumn = COLUMN_METADATA_LICENCE_URL_FILTER,
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
+                }
+
+            return@coroutineScope FacetTransientSet(
+                accessState = accessStateFacet.await(),
+                paketSigels = paketSigelFacet.await(),
+                publicationType = publicationTypeFacet.await(),
+                zdbIdsJournal = zdbIDsJournalFacet.await(),
+                zdbIdsSeries = zdbIDsSeriesFacet.await(),
+                isPartOfSeries = isPartOfSeriesFacet.await(),
+                hasLicenceContract = false, // received.any { it.licenceContract?.isNotBlank() ?: false },
+                hasZbwUserAgreement = false, // received.any { it.zbwUserAgreement },
+                hasOpenContentLicence = false,
+                // listOf(
+                //    received.any { it.ocl?.isNotBlank() ?: false },
+                //    received.any { it.nonStandardsOCL },
+                //    received.any { it.nonStandardsOCLUrl?.isNotBlank() ?: false },
+                //    received.any { it.oclRestricted },
+                // ).any { it },
+                templateIdToOccurence = templateIdFacet.await(),
+                licenceUrls = licenceURLFacet.await(),
+            )
         }
 
-    private suspend fun getAccessStateOccurrences(
-        searchExpression: SearchExpression?,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        rightSearchFilter: List<RightSearchFilter>,
-        noRightInformationFilter: NoRightInformationFilter?,
-        givenAccessState: Set<AccessState>,
-    ): Map<AccessState, Int> =
-        searchOccurrences(
-            givenValues = givenAccessState.map { it.toString() }.toSet(),
-            occurrenceForColumn = COLUMN_RIGHT_ACCESS_STATE,
-            searchExpression = searchExpression,
-            metadataSearchFilter = metadataSearchFilter,
-            rightSearchFilter = rightSearchFilter,
-            noRightInformationFilter = noRightInformationFilter,
-        ).toList().associate { Pair(AccessState.valueOf(it.first), it.second) }
-
-    private suspend fun getPublicationTypeOccurrences(
-        searchExpression: SearchExpression?,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        rightSearchFilter: List<RightSearchFilter>,
-        noRightInformationFilter: NoRightInformationFilter?,
-        givenPublicationType: Set<PublicationType>,
-    ): Map<PublicationType, Int> =
-        searchOccurrences(
-            givenValues = givenPublicationType.map { it.toString() }.toSet(),
-            occurrenceForColumn = COLUMN_METADATA_PUBLICATION_TYPE,
-            searchExpression = searchExpression,
-            metadataSearchFilter = metadataSearchFilter,
-            rightSearchFilter = rightSearchFilter,
-            noRightInformationFilter = noRightInformationFilter,
-        ).toList().associate { Pair(PublicationType.valueOf(it.first), it.second) }.toMutableMap()
-
     private suspend fun searchOccurrences(
-        searchExpression: SearchExpression?,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        rightSearchFilter: List<RightSearchFilter>,
-        noRightInformationFilter: NoRightInformationFilter?,
-        givenValues: Set<String>,
+        baseQuery: String,
         occurrenceForColumn: String,
+        searchExpression: SearchExpression?,
+        metadataSearchFilters: List<MetadataSearchFilter>,
+        rightSearchFilters: List<RightSearchFilter>,
+        noRightInformationFilter: NoRightInformationFilter?,
     ): Map<String, Int> =
         coroutineScope {
-            if (givenValues.isEmpty()) {
-                return@coroutineScope emptyMap<String, Int>()
-            }
             return@coroutineScope connectionPool.useConnection { connection ->
                 val prepStmt =
                     connection
                         .prepareStatement(
                             buildSearchQueryOccurrence(
-                                createValuesForSql(givenValues.size),
-                                occurrenceForColumn,
-                                searchExpression,
-                                metadataSearchFilter,
-                                rightSearchFilter,
-                                noRightInformationFilter,
+                                columnName = occurrenceForColumn,
+                                baseQuery = baseQuery,
+                                searchExpression = searchExpression,
+                                metadataSearchFilters = metadataSearchFilters,
+                                rightSearchFilters = rightSearchFilters,
+                                noRightInformationFilter = noRightInformationFilter,
                             ),
                         ).apply {
                             var counter = 1
-                            givenValues.forEach { v ->
-                                this.setString(counter++, v)
-                            }
-                            rightSearchFilter.forEach { f ->
+                            rightSearchFilters.forEach { f ->
                                 counter = f.setSQLParameter(counter, this)
                             }
                             val searchPairs =
@@ -320,7 +232,16 @@ class SearchDB(
                             searchPairs.forEach { f ->
                                 counter = f.setSQLParameter(counter, this)
                             }
-                            metadataSearchFilter.forEach { f ->
+                            metadataSearchFilters.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            rightSearchFilters.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            searchPairs.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            metadataSearchFilters.forEach { f ->
                                 counter = f.setSQLParameter(counter, this)
                             }
                         }
@@ -344,11 +265,11 @@ class SearchDB(
                             null
                         }
                     }.takeWhile { true }.toList()
-                val occurrenceMap = received.toMap().toMutableMap()
+                return@useConnection received.toMap().toMutableMap()
                 // Make sure that every given value still exist in the resulting map. That should
                 // never be necessary but in case of any expected value has no counts, the frontend
                 // will still display it.
-                return@useConnection addDefaultEntriesToMap(occurrenceMap, givenValues, 0) { a, b -> max(a, b) }
+                // return@useConnection addDefaultEntriesToMap(occurrenceMap, givenValues, 0) { a, b -> max(a, b) }
             }
         }
 
@@ -712,13 +633,18 @@ class SearchDB(
                 ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(
-            values: String,
             columnName: String,
+            baseQuery: String,
             searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String {
+            val innerDistinct =
+                "SELECT DISTINCT($SUBQUERY_NAME.$columnName)" +
+                    " $baseQuery" +
+                    " WHERE $SUBQUERY_NAME.$columnName IS NOT NULL" +
+                    " GROUP BY $SUBQUERY_NAME.$columnName"
             val subquery =
                 buildSearchQuerySelect(
                     hasRightSearchFilter = rightSearchFilters.isNotEmpty(),
@@ -734,8 +660,8 @@ class SearchDB(
                     )
 
             return "SELECT A.$columnName, COUNT(${SUBQUERY_NAME}.$columnName)" +
-                " FROM($values) as A($columnName)" +
-                " LEFT JOIN ($subquery) AS ${SUBQUERY_NAME}" +
+                " FROM($innerDistinct) as A($columnName)" +
+                " LEFT JOIN ($subquery) AS $SUBQUERY_NAME" +
                 " ON A.$columnName = ${SUBQUERY_NAME}.$columnName " +
                 " GROUP BY A.$columnName"
         }
@@ -747,47 +673,18 @@ class SearchDB(
             metadataSearchFilters: List<MetadataSearchFilter>,
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
-            collectFacets: Boolean,
         ): String {
             val subquery =
-                if (rightSearchFilters.isEmpty() && !collectFacets) {
-                    buildSearchQuerySelect(hasRightSearchFilter = false) +
-                        " FROM $TABLE_NAME_ITEM_METADATA" +
-                        buildSearchQueryHelper(
-                            null,
-                            metadataSearchFilters,
-                        )
-                } else {
-                    buildSearchQuerySelect(
-                        hasRightSearchFilter = rightSearchFilters.isNotEmpty(),
-                        forceRightTableJoin = collectFacets,
-                    ) +
-                        " FROM $TABLE_NAME_ITEM_METADATA" +
-                        buildSearchQueryHelper(
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilters,
-                            rightSearchFilter = rightSearchFilters,
-                            noRightInformationFilter = noRightInformationFilter,
-                        )
-                }
+                STATEMENT_SELECT_ALL_FACETS +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
+                    buildSearchQueryHelper(
+                        searchExpression = searchExpression,
+                        metadataSearchFilter = metadataSearchFilters,
+                        rightSearchFilter = rightSearchFilters,
+                        noRightInformationFilter = noRightInformationFilter,
+                    )
 
-            return STATEMENT_SELECT_FACET +
-                " FROM ($subquery) as $SUBQUERY_NAME" +
-                " GROUP BY" +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ACCESS_STATE," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PAKET_SIGEL," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_PUBLICATION_TYPE," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
-                " ${SUBQUERY_NAME}.$COLUMN_RIGHT_TEMPLATE_NAME," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_ZDB_ID_SERIES," +
-                " ${SUBQUERY_NAME}.$COLUMN_METADATA_LICENCE_URL_FILTER;"
+            return "FROM ($subquery) as $SUBQUERY_NAME"
         }
 
         private fun buildSearchQueryHelper(
