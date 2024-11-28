@@ -327,20 +327,12 @@ class SearchDB(
         operation: (rs: ResultSet) -> Pair<K, V>,
     ): Map<K, V> =
         coroutineScope {
-            val innerDistinct =
-                "SELECT DISTINCT($SUBQUERY_NAME.$COLUMN_METADATA_HANDLE)" +
-                    " $baseQuery" +
-                    " GROUP BY $SUBQUERY_NAME.$COLUMN_METADATA_HANDLE"
-
-            val completeQuery =
-                "SELECT $ALIAS_ITEM_RIGHT.$occurrenceForRightColumn, COUNT($ALIAS_ITEM_RIGHT.$occurrenceForRightColumn)" +
-                    " FROM ($innerDistinct) as A($COLUMN_METADATA_HANDLE)" +
-                    " LEFT JOIN $TABLE_NAME_ITEM ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = A.$COLUMN_METADATA_HANDLE" +
-                    " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT ON" +
-                    " $TABLE_NAME_ITEM.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
-                    " WHERE $ALIAS_ITEM_RIGHT.$occurrenceForRightColumn IS NOT NULL" +
-                    " GROUP BY $ALIAS_ITEM_RIGHT.$occurrenceForRightColumn"
             return@coroutineScope connectionPool.useConnection { connection ->
+                val completeQuery =
+                    buildSearchQueryOccurrenceRight(
+                        baseQuery,
+                        occurrenceForRightColumn,
+                    )
                 val prepStmt =
                     connection.prepareStatement(completeQuery).apply {
                         var counter = 1
@@ -825,6 +817,24 @@ class SearchDB(
                 " LEFT JOIN ($subquery) AS $SUBQUERY_NAME" +
                 " ON A.$columnName = ${SUBQUERY_NAME}.$columnName " +
                 " GROUP BY A.$columnName"
+        }
+
+        fun buildSearchQueryOccurrenceRight(
+            baseQuery: String,
+            rightColumn: String,
+        ): String {
+            val innerDistinct =
+                "SELECT DISTINCT($SUBQUERY_NAME.$COLUMN_METADATA_HANDLE)" +
+                    " $baseQuery" +
+                    " GROUP BY $SUBQUERY_NAME.$COLUMN_METADATA_HANDLE"
+
+            return "SELECT $ALIAS_ITEM_RIGHT.$rightColumn, COUNT($ALIAS_ITEM_RIGHT.$rightColumn)" +
+                " FROM ($innerDistinct) as A($COLUMN_METADATA_HANDLE)" +
+                " LEFT JOIN $TABLE_NAME_ITEM ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = A.$COLUMN_METADATA_HANDLE" +
+                " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT ON" +
+                " $TABLE_NAME_ITEM.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
+                " WHERE $ALIAS_ITEM_RIGHT.$rightColumn IS NOT NULL" +
+                " GROUP BY $ALIAS_ITEM_RIGHT.$rightColumn"
         }
 
         internal fun createValuesForSql(given: Int): String = "VALUES " + (1..given).joinToString(separator = ",") { "(?)" }
