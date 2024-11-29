@@ -152,8 +152,6 @@ deployToQs:
         - app/lori/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -165,9 +163,9 @@ deployToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
-      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml up -d
       docker container prune --filter "until=100h" -f
       docker ps
@@ -184,8 +182,6 @@ deployToProd:
         - app/lori/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -197,11 +193,10 @@ deployToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
-      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml up -d
-      docker container prune --filter "until=300h" -f
       docker ps
       EOT
 
@@ -215,8 +210,6 @@ deployImportJobToQs:
         - job/lori_import/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -228,8 +221,11 @@ deployImportJobToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-loriimport up -d
+      docker ps
       EOT
 
 deployImportJobToProd:
@@ -243,8 +239,6 @@ deployImportJobToProd:
         - job/lori_import/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -256,8 +250,11 @@ deployImportJobToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-loriimport up -d
+      docker ps
       EOT
 
 deployTemplateApplyJobToQs:
@@ -270,8 +267,6 @@ deployTemplateApplyJobToQs:
         - job/template_apply/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -283,8 +278,11 @@ deployTemplateApplyJobToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-template-apply up -d
+      docker ps
       EOT
 
 deployTemplateApplyJobToProd:
@@ -298,8 +296,6 @@ deployTemplateApplyJobToProd:
         - job/template_apply/**/*
   image:
     name: $ALPINE
-  tags:
-    - dockersocket # 2do this is not necessary. define another gitlab runner for this, w/o dockersocket, unprivileged
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
@@ -311,8 +307,11 @@ deployTemplateApplyJobToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-template-apply up -d
+      docker ps
       EOT
 
 after_script:
