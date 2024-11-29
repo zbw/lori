@@ -163,7 +163,7 @@ deployToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
       docker compose -f /srv/lori/docker-compose.yaml down
       docker compose -f /srv/lori/docker-compose.yaml up -d
@@ -193,11 +193,10 @@ deployToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar &&
+      docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
       docker compose -f /srv/lori/docker-compose.yaml down
       docker compose -f /srv/lori/docker-compose.yaml up -d
-      docker container prune --filter "until=300h" -f
       docker ps
       EOT
 
@@ -222,8 +221,11 @@ deployImportJobToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-loriimport up -d
+      docker ps
       EOT
 
 deployImportJobToProd:
@@ -248,8 +250,11 @@ deployImportJobToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      docker load --input /var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-lori_import:[0-9a-zA-Z_.-]*/job-lori_import:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-loriimport up -d
+      docker ps
       EOT
 
 deployTemplateApplyJobToQs:
@@ -273,8 +278,11 @@ deployTemplateApplyJobToQs:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-template-apply up -d
+      docker ps
       EOT
 
 deployTemplateApplyJobToProd:
@@ -299,8 +307,11 @@ deployTemplateApplyJobToProd:
     - chmod 644 ~/.ssh/known_hosts
     - |
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
-      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar &&
-      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml
+      docker load --input /var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-template_apply:[0-9a-zA-Z_.-]*/job-template_apply:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-template-apply up -d
+      docker ps
       EOT
 
 after_script:
