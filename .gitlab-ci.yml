@@ -165,7 +165,7 @@ deployToQs:
       ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
       docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
-      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile "*" down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml up -d
       docker container prune --filter "until=100h" -f
       docker ps
@@ -195,7 +195,7 @@ deployToProd:
       ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
       docker load --input /var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar && \
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
-      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile "*" down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml up -d
       docker ps
       EOT
