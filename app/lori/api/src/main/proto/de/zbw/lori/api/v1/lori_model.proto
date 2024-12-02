@@ -23,6 +23,7 @@ message ApplyTemplatesRequest {
   bool all = 1;
   repeated string right_ids = 2;
   bool skip_draft = 3;
+  bool dry_run = 4;
 }
 
 enum ConflictType {

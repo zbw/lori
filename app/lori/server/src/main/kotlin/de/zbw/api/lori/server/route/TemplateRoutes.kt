@@ -285,13 +285,14 @@ fun Routing.templateRoutes(
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
                         val skipDraft: Boolean = call.request.queryParameters["skipDraft"]?.toBoolean() ?: false
+                        val dryRun: Boolean = call.request.queryParameters["dryRun"]?.toBoolean() ?: true
                         span.setAttribute("rightIds", rightIds.toString())
                         span.setAttribute("Query Parameter 'all'", all.toString())
                         val appliedMap: List<TemplateApplicationResult> =
                             if (all) {
-                                backend.applyAllTemplates(skipDraft)
+                                backend.applyAllTemplates(skipDraft, dryRun)
                             } else {
-                                backend.applyTemplates(rightIds, skipDraft)
+                                backend.applyTemplates(rightIds, skipDraft, dryRun)
                             }
                         val result =
                             TemplateApplicationsRest(

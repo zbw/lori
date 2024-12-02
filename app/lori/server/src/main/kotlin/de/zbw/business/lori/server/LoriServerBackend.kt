@@ -585,24 +585,39 @@ class LoriServerBackend(
         return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
     }
 
-    suspend fun applyAllTemplates(skipTemplateDrafts: Boolean): List<TemplateApplicationResult> {
+    suspend fun applyAllTemplates(
+        skipTemplateDrafts: Boolean,
+        dryRun: Boolean,
+    ): List<TemplateApplicationResult> {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.DATE_OVERLAP)
         return dbConnector.rightDB
             .getRightIdsForAllTemplates()
-            .let { applyTemplates(it, skipTemplateDrafts) }
+            .let {
+                applyTemplates(
+                    it,
+                    skipTemplateDrafts,
+                    dryRun,
+                )
+            }
     }
 
     suspend fun applyTemplates(
         rightIds: List<String>,
         skipTemplateDrafts: Boolean,
+        dryRun: Boolean,
     ): List<TemplateApplicationResult> =
         rightIds.mapNotNull { rightId ->
-            applyTemplate(rightId, skipTemplateDrafts)
+            applyTemplate(
+                rightId,
+                skipTemplateDrafts,
+                dryRun,
+            )
         }
 
     internal suspend fun applyTemplate(
         rightId: String,
         skipTemplateDrafts: Boolean,
+        dryRun: Boolean,
     ): TemplateApplicationResult? {
         // Get Right object
         val right: ItemRight =
@@ -615,7 +630,7 @@ class LoriServerBackend(
         val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
         val exceptionTemplateApplicationResult: List<TemplateApplicationResult> =
             exceptionTemplates.mapNotNull { excTemp ->
-                excTemp.rightId?.let { applyTemplate(it, false) }
+                excTemp.rightId?.let { applyTemplate(it, false, dryRun) }
             }
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
@@ -639,23 +654,8 @@ class LoriServerBackend(
                         searchExpression = searchExpression,
                         limit = null,
                         offset = null,
-                        metadataSearchFilter =
-                            listOfNotNull(
-                                b.licenceURLFilter,
-                                b.paketSigelFilter,
-                                b.publicationDateFilter,
-                                b.publicationTypeFilter,
-                                b.zdbIdFilter,
-                            ),
-                        rightSearchFilter =
-                            listOfNotNull(
-                                b.accessStateFilter,
-                                b.temporalValidityFilter,
-                                b.validOnFilter,
-                                b.startDateFilter,
-                                b.endDateFilter,
-                                b.formalRuleFilter,
-                            ),
+                        metadataSearchFilter = b.getAllMetadataFilter(),
+                        rightSearchFilter = b.getAllRightFilter(),
                         noRightInformationFilter = b.noRightInformationFilter,
                         handlesToIgnore = emptyList(),
                     )
@@ -675,59 +675,53 @@ class LoriServerBackend(
                             searchTerm = b.searchTerm,
                             limit = null,
                             offset = null,
-                            metadataSearchFilter =
-                                listOfNotNull(
-                                    b.licenceURLFilter,
-                                    b.paketSigelFilter,
-                                    b.publicationDateFilter,
-                                    b.publicationTypeFilter,
-                                    b.seriesFilter,
-                                    b.zdbIdFilter,
-                                ),
-                            rightSearchFilter =
-                                listOfNotNull(
-                                    b.accessStateFilter,
-                                    b.endDateFilter,
-                                    b.formalRuleFilter,
-                                    b.noRightInformationFilter,
-                                    b.startDateFilter,
-                                    b.templateNameFilter,
-                                    b.temporalValidityFilter,
-                                    b.validOnFilter,
-                                ),
+                            metadataSearchFilter = b.getAllMetadataFilter(),
+                            rightSearchFilter = b.getAllRightFilter(),
                             noRightInformationFilter = b.noRightInformationFilter,
                             handlesToIgnore = searchResultsExceptions.toList(),
                         )
                     }.results
                 }.toSet()
 
-        // Delete all template connections
-        dbConnector.itemDB.deleteItemByRightId(rightId)
+        if (!dryRun) {
+            // Delete all template connections
+            dbConnector.itemDB.deleteItemByRightId(rightId)
 
-        // Update last_applied_on field
-        dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
+            // Update last_applied_on field
+            dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
+        }
 
         // Connect Template to all results
         val itemsWithConflicts: Map<Item, List<RightError>> =
             findItemsWithConflicts(searchResults, right)
-        dbConnector.rightErrorDB.deleteByCausingRightId(right.rightId!!)
-        dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
-        val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-        dbConnector.itemDB.insertItemBatch(
-            searchResultsWithoutConflict.map {
-                ItemId(
-                    handle = it.metadata.handle,
-                    rightId = rightId,
-                )
-            },
-        )
-        return TemplateApplicationResult(
-            rightId = rightId,
-            appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-            errors = itemsWithConflicts.values.flatten(),
-            exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
-            templateName = right.templateName ?: "Missing Template Name",
-        )
+        if (!dryRun) {
+            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
+            dbConnector.rightErrorDB.deleteByCausingRightId(right.rightId!!)
+            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
+            dbConnector.itemDB.insertItemBatch(
+                searchResultsWithoutConflict.map {
+                    ItemId(
+                        handle = it.metadata.handle,
+                        rightId = rightId,
+                    )
+                },
+            )
+            return TemplateApplicationResult(
+                rightId = rightId,
+                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
+                errors = itemsWithConflicts.values.flatten(),
+                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
+                templateName = right.templateName ?: "Missing Template Name",
+            )
+        } else {
+            return TemplateApplicationResult(
+                rightId = rightId,
+                appliedMetadataHandles = emptyList(),
+                errors = itemsWithConflicts.values.flatten(),
+                exceptionTemplateApplicationResult = emptyList(),
+                templateName = right.templateName ?: "Missing Template Name",
+            )
+        }
     }
 
     suspend fun getExceptionsByRightId(rightId: String): List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
