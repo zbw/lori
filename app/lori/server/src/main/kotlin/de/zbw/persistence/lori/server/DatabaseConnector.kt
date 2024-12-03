@@ -75,6 +75,7 @@ class DatabaseConnector(
         const val TABLE_NAME_ITEM_RIGHT = "item_right"
         const val TABLE_NAME_SESSIONS = "sessions"
         const val TABLE_NAME_RIGHT_ERROR = "right_error"
+        const val TABLE_NAME_TEST_APPLICATION = "test_application"
 
         const val COLUMN_METADATA_AUTHOR = "author"
         const val COLUMN_METADATA_BAND = "band"

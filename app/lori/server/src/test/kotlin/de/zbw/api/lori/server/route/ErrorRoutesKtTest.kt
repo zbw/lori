@@ -39,6 +39,7 @@ class ErrorRoutesKtTest {
                         limit,
                         offset,
                         any(),
+                        any(),
                     )
                 } returns TEST_ERROR_RESULT
             }
@@ -79,6 +80,8 @@ class ErrorRoutesKtTest {
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByContext = "template name",
+                testId = null,
+                createdBy = "user1",
             )
         val TEST_ERROR_RESULT =
             ErrorQueryResult(

@@ -571,7 +571,14 @@ class TemplateRoutesKtTest {
         val expectedHandles = listOf("handle1", "handle2")
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { applyTemplates(listOf(givenRightId), skipTemplateDrafts = true, dryRun = false) } returns
+                coEvery {
+                    applyTemplates(
+                        listOf(givenRightId),
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = any(),
+                    )
+                } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -579,9 +586,17 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                     )
-                coEvery { applyAllTemplates(skipTemplateDrafts = true, dryRun = false) } returns
+                coEvery {
+                    applyAllTemplates(
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = any(),
+                    )
+                } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -589,6 +604,8 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                         TemplateApplicationResult(
                             rightId = givenRightId2,
@@ -596,6 +613,8 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "baz",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                     )
             }
@@ -635,6 +654,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     exceptionTemplateApplications = emptyList(),
                                     templateName = "foobar",
+                                    numberOfErrors = 0,
                                 ),
                             ),
                     ),
@@ -677,6 +697,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     templateName = "foobar",
                                     exceptionTemplateApplications = emptyList(),
+                                    numberOfErrors = 0,
                                 ),
                                 TemplateApplicationRest(
                                     rightId = givenRightId2,
@@ -685,6 +706,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     templateName = "baz",
                                     exceptionTemplateApplications = emptyList(),
+                                    numberOfErrors = 0,
                                 ),
                             ),
                     ),
@@ -721,6 +743,7 @@ class TemplateRoutesKtTest {
                         listOf(givenRightId),
                         skipTemplateDrafts = true,
                         dryRun = false,
+                        createdBy = any(),
                     )
                 } throws SQLException()
             }

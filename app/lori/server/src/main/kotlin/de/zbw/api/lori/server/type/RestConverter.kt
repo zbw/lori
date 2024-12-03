@@ -23,6 +23,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.AccessStateWithCountRest
@@ -44,6 +45,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorInformationRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
@@ -665,6 +667,29 @@ fun RightError.toRest(): RightErrorRest =
         conflictingWithRightId = conflictingWithRightId,
         conflictType = conflictType.toRest(),
         errorId = errorId ?: -1,
+    )
+
+fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
+    TemplateApplicationRest(
+        rightId = rightId,
+        templateName = templateName,
+        handles = appliedMetadataHandles,
+        errors = errors.map { it.toRest() },
+        numberOfErrors = numberOfErrors,
+        numberOfAppliedEntries = appliedMetadataHandles.size,
+        testId = testId,
+        exceptionTemplateApplications =
+            exceptionTemplateApplicationResult.map { exc ->
+                TemplateApplicationRest(
+                    rightId = exc.rightId,
+                    handles = exc.appliedMetadataHandles,
+                    templateName = templateName,
+                    errors = exc.errors.map { it.toRest() },
+                    numberOfAppliedEntries = exc.appliedMetadataHandles.size,
+                    testId = exc.testId,
+                    numberOfErrors = exc.numberOfErrors,
+                )
+            },
     )
 
 /**

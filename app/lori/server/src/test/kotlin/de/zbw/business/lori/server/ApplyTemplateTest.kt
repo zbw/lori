@@ -129,7 +129,13 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightId,
             )
 
-            val received = backend.applyTemplate(rightId, skipTemplateDrafts = false, dryRun = false)
+            val received =
+                backend.applyTemplate(
+                    rightId,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )
             assertThat(
                 received!!.appliedMetadataHandles,
                 `is`(listOf(item1ZDB1.handle)),
@@ -150,6 +156,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = false,
+                    createdBy = "user1",
                 )
             assertThat(
                 received2!!.appliedMetadataHandles,
@@ -172,6 +179,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = false,
+                    createdBy = "user1",
                 )
             assertThat(
                 received3!!.appliedMetadataHandles,
@@ -192,6 +200,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 backend.applyAllTemplates(
                     skipTemplateDrafts = false,
                     dryRun = false,
+                    createdBy = "user1",
                 )
             assertThat(
                 applyAllReceived.map { it.appliedMetadataHandles }.flatten().toSet(),
@@ -212,7 +221,13 @@ class ApplyTemplateTest : DatabaseTest() {
                 bookmarkId = bookmarkId,
                 rightId = rightIdConflict,
             )
-            val receivedConflict = backend.applyTemplate(rightIdConflict, skipTemplateDrafts = false, dryRun = false)
+            val receivedConflict =
+                backend.applyTemplate(
+                    rightIdConflict,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )
             assertThat(
                 receivedConflict!!.errors.size,
                 `is`(2),
@@ -279,7 +294,13 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightIdException,
             )
 
-            val receivedUpperWithExc = backend.applyTemplate(rightIdUpper, skipTemplateDrafts = false, dryRun = false)!!
+            val receivedUpperWithExc =
+                backend.applyTemplate(
+                    rightIdUpper,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )!!
             assertThat(
                 receivedUpperWithExc.appliedMetadataHandles.toSet(),
                 `is`(setOf(item1ZDB2.handle)),
@@ -289,7 +310,12 @@ class ApplyTemplateTest : DatabaseTest() {
                 `is`(setOf(item2ZDB2.handle)),
             )
             val receivedException =
-                backend.applyTemplate(rightIdException, skipTemplateDrafts = false, dryRun = false)!!
+                backend.applyTemplate(
+                    rightIdException,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )!!
             assertThat(
                 receivedException.appliedMetadataHandles,
                 `is`(listOf(item2ZDB2.handle)),
@@ -348,7 +374,14 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightId,
             )
 
-            assertNull(backend.applyTemplate(rightId, skipTemplateDrafts = true, dryRun = false))
+            assertNull(
+                backend.applyTemplate(
+                    rightId,
+                    skipTemplateDrafts = true,
+                    dryRun = false,
+                    createdBy = "user1",
+                ),
+            )
         }
 
     @Test
@@ -403,7 +436,13 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightId,
             )
 
-            val received = backend.applyTemplate(rightId, skipTemplateDrafts = false, dryRun = true)
+            val received =
+                backend.applyTemplate(
+                    rightId,
+                    skipTemplateDrafts = false,
+                    dryRun = true,
+                    createdBy = "user1",
+                )
             assertThat(
                 received!!.appliedMetadataHandles,
                 `is`(emptyList()),

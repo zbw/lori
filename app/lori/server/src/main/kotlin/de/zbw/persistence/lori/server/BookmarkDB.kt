@@ -183,8 +183,8 @@ class BookmarkDB(
                 "?,?,?)"
 
         const val STATEMENT_DELETE_BOOKMARK_BY_ID =
-            "DELETE " +
-                "FROM $TABLE_NAME_BOOKMARK" +
+            "DELETE" +
+                " FROM $TABLE_NAME_BOOKMARK" +
                 " WHERE $COLUMN_BOOKMARK_ID = ?"
 
         const val STATEMENT_UPDATE_BOOKMARK =

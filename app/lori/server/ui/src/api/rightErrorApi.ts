@@ -15,6 +15,7 @@ export default {
         filterTimeIntervalStart: string | undefined,
         filterTimeIntervalEnd: string | undefined,
         filterConflictType: string | undefined,
+        testId: string | undefined,
     ): Promise<RightErrorInformationRest> {
         return rightErrorApi.getRightErrorList({
             pageSize: limit,
@@ -24,6 +25,14 @@ export default {
             filterTimeIntervalStart: filterTimeIntervalStart,
             filterTimeIntervalEnd: filterTimeIntervalEnd,
             filterConflictType: filterConflictType,
+            testId: testId,
         });
     },
+    deleteRightErrorsByTestId(
+        testId: string,
+    ): Promise<void> {
+        return rightErrorApi.deleteErrorsByTestId({
+            testId: testId
+        })
+    }
 };

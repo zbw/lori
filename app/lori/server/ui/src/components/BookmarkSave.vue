@@ -163,7 +163,7 @@ export default defineComponent({
           multi-line
           location="top"
           timer="true"
-          timeout="10000"
+          timeout="5000"
           v-model="saveAlertError"
           color="error"
       >

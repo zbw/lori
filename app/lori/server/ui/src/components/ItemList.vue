@@ -841,7 +841,8 @@ table.special, th.special, td.special {
     <v-dialog
       v-model="dialogStore.templateOverviewActivated"
       :retain-focus="false"
-      max-width="1000px"
+      max-width="1500px"
+      max-height="800px"
       v-on:close="closeTemplateOverview"
     >
       <TemplateOverview
@@ -1121,7 +1122,7 @@ table.special, th.special, td.special {
             multi-line
             location="top"
             timer="true"
-            timeout="10000"
+            timeout="5000"
             v-model="errorMsgIsActive"
             color="error"
           >
@@ -1131,7 +1132,7 @@ table.special, th.special, td.special {
               multi-line
               location="top"
               timer="true"
-              timeout="10000"
+              timeout="5000"
               v-model="successMsgIsActive"
               color="success"
           >

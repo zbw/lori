@@ -39,6 +39,21 @@ class RightErrorDB(
             }
         }
 
+    suspend fun deleteErrorByTestId(testId: String): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_TEST_ID).apply {
+                    this.setString(1, testId)
+                }
+            val span = tracer.spanBuilder("deleteRightErrorByTestId").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
     suspend fun deleteErrorsByAge(isOlderThan: Instant): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
@@ -88,13 +103,17 @@ class RightErrorDB(
         limit: Int,
         offset: Int,
         filters: List<DashboardSearchFilter> = emptyList(),
+        testId: String? = null,
     ): List<RightError> =
         connectionPool.useConnection { connection ->
             val prepStmt =
-                connection.prepareStatement(buildFilterQuery(filters)).apply {
+                connection.prepareStatement(buildFilterQuery(filters, testId)).apply {
                     var counter = 1
                     filters.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
+                    }
+                    if (testId != null) {
+                        this.setString(counter++, testId)
                     }
                     this.setInt(counter++, limit)
                     this.setInt(counter++, offset)
@@ -120,6 +139,8 @@ class RightErrorDB(
                         createdOn = rs.getTimestamp(6).toOffsetDateTime(),
                         conflictType = ConflictType.valueOf(rs.getString(7)),
                         conflictByContext = rs.getString(8),
+                        testId = rs.getString(9),
+                        createdBy = rs.getString(10),
                     )
                 } else {
                     null
@@ -130,13 +151,18 @@ class RightErrorDB(
     suspend fun getOccurrences(
         column: String,
         filters: List<DashboardSearchFilter> = emptyList(),
+        testId: String?,
     ): List<String> =
         connectionPool.useConnection { connection ->
             val prepStmt =
-                connection.prepareStatement(buildOccurrenceQuery(column, filters)).apply {
+                // Input parameters values are not evaluated in buildOccurrenceQuery. Only counts number of ?
+                connection.prepareStatement(buildOccurrenceQuery(column, filters, testId)).apply {
                     var counter = 1
                     filters.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
+                    }
+                    if (testId != null) {
+                        this.setString(counter++, testId)
                     }
                 }
 
@@ -158,13 +184,19 @@ class RightErrorDB(
             }.takeWhile { true }.toList()
         }
 
-    suspend fun getCount(filters: List<DashboardSearchFilter> = emptyList()): Int =
+    suspend fun getCount(
+        filters: List<DashboardSearchFilter> = emptyList(),
+        testId: String?,
+    ): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
-                connection.prepareStatement(buildCountFilterQuery(filters)).apply {
+                connection.prepareStatement(buildCountFilterQuery(filters, testId)).apply {
                     var counter = 1
                     filters.forEach { f ->
                         counter = f.setSQLParameter(counter, this)
+                    }
+                    if (testId != null) {
+                        this.setString(counter++, testId)
                     }
                 }
 
@@ -237,32 +269,39 @@ class RightErrorDB(
         private const val COLUMN_CONFLICTING_WITH = "conflicting_right_id"
         const val COLUMN_CONFLICTING_TYPE = "conflict_type"
         const val COLUMN_CREATED_ON = "created_on"
-        private const val COLUMN_ERROR_ID = "error_id"
+        const val COLUMN_CREATED_BY = "created_by"
+        const val COLUMN_ERROR_ID = "error_id"
         private const val COLUMN_HANDLE_ID = "handle_id"
         private const val COLUMN_CONFLICT_BY_RIGHT_ID = "conflict_by_right_id"
         const val COLUMN_CONFLICT_BY_CONTEXT = "conflict_by_context"
+        const val COLUMN_TEST_ID = "test_id"
         private const val COLUMN_MESSAGE = "message"
 
         const val STATEMENT_GET_RIGHT_LIST_SELECT =
             "SELECT" +
                 " $COLUMN_ERROR_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
                 "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_CONTEXT" +
+                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_CONTEXT,$COLUMN_TEST_ID,$COLUMN_CREATED_BY" +
                 " FROM $TABLE_NAME_RIGHT_ERROR"
 
         const val STATEMENT_INSERT_RIGHT_ERROR =
             "INSERT INTO $TABLE_NAME_RIGHT_ERROR" +
-                "($COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
-                "$COLUMN_CONFLICTING_WITH,$COLUMN_MESSAGE,$COLUMN_CREATED_ON," +
-                "$COLUMN_CONFLICTING_TYPE,$COLUMN_CONFLICT_BY_CONTEXT)" +
-                " VALUES(?,?," +
+                "($COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID,$COLUMN_CONFLICTING_WITH," +
+                "$COLUMN_MESSAGE,$COLUMN_CREATED_ON,$COLUMN_CONFLICTING_TYPE," +
+                "$COLUMN_CONFLICT_BY_CONTEXT,$COLUMN_TEST_ID,$COLUMN_CREATED_BY)" +
+                " VALUES(?,?,?," +
                 "?,?,?," +
-                "?,?)"
+                "?,?,?)"
 
         const val STATEMENT_DELETE_ERROR_BY_ID =
             "DELETE " +
                 "FROM $TABLE_NAME_RIGHT_ERROR " +
                 "WHERE $COLUMN_ERROR_ID = ?"
+
+        const val STATEMENT_DELETE_ERROR_BY_TEST_ID =
+            "DELETE " +
+                "FROM $TABLE_NAME_RIGHT_ERROR " +
+                "WHERE $COLUMN_TEST_ID = ?"
 
         const val STATEMENT_DELETE_ERROR_BY_AGE =
             "DELETE " +
@@ -279,29 +318,35 @@ class RightErrorDB(
                 "FROM $TABLE_NAME_RIGHT_ERROR " +
                 "WHERE $COLUMN_CONFLICT_BY_RIGHT_ID = ?"
 
-        internal fun buildFilterQuery(filters: List<DashboardSearchFilter>): String {
-            val whereClause: String =
-                filters
-                    .takeIf { it.isNotEmpty() }
-                    ?.joinToString(prefix = " WHERE ", separator = " AND ") { f ->
-                        f.toWhereClause()
-                    }
-                    ?: ""
-
+        internal fun buildFilterQuery(
+            filters: List<DashboardSearchFilter>,
+            testId: String?,
+        ): String {
+            val whereClause = buildWhereClause(filters, testId)
             return STATEMENT_GET_RIGHT_LIST_SELECT +
                 whereClause +
                 " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;"
         }
 
-        internal fun buildCountFilterQuery(filters: List<DashboardSearchFilter>): String {
-            val whereClause: String =
+        private fun buildWhereClause(
+            filters: List<DashboardSearchFilter>,
+            testId: String?,
+        ): String {
+            val filterClause: String? =
                 filters
                     .takeIf { it.isNotEmpty() }
-                    ?.joinToString(prefix = " WHERE ", separator = " AND ") { f ->
+                    ?.joinToString(separator = " AND ") { f ->
                         f.toWhereClause()
                     }
-                    ?: ""
+            val testIdClause = testId?.let { "$COLUMN_TEST_ID = ?" } ?: "$COLUMN_TEST_ID IS NULL"
+            return listOfNotNull(filterClause, testIdClause).joinToString(prefix = " WHERE ", separator = " AND ")
+        }
 
+        internal fun buildCountFilterQuery(
+            filters: List<DashboardSearchFilter>,
+            testId: String?,
+        ): String {
+            val whereClause = buildWhereClause(filters, testId)
             return "SELECT COUNT(*)" +
                 " FROM $TABLE_NAME_RIGHT_ERROR" +
                 whereClause
@@ -310,15 +355,9 @@ class RightErrorDB(
         internal fun buildOccurrenceQuery(
             column: String,
             filters: List<DashboardSearchFilter>,
+            testId: String?,
         ): String {
-            val whereClause: String =
-                filters
-                    .takeIf { it.isNotEmpty() }
-                    ?.joinToString(prefix = " WHERE ", separator = " AND ") { f ->
-                        f.toWhereClause()
-                    }
-                    ?: ""
-
+            val whereClause = buildWhereClause(filters, testId)
             return "SELECT $column" +
                 " FROM $TABLE_NAME_RIGHT_ERROR" +
                 whereClause +
@@ -341,6 +380,12 @@ class RightErrorDB(
                 this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()))
                 this.setString(6, rightError.conflictType.toString())
                 this.setIfNotNull(7, rightError.conflictByContext) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(8, rightError.testId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(9, rightError.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
             }

@@ -11,7 +11,10 @@ import java.time.ZoneOffset
 object DashboardUtil {
     private val LOG = LogManager.getLogger(DashboardUtil::class.java)
 
-    fun checkForGapErrors(item: Item): List<RightError> {
+    fun checkForGapErrors(
+        item: Item,
+        createdBy: String,
+    ): List<RightError> {
         if (item.rights.isEmpty()) {
             return emptyList()
         }
@@ -31,6 +34,8 @@ object DashboardUtil {
                     conflictByRightId = null,
                     conflictType = ConflictType.GAP,
                     conflictByContext = item.metadata.paketSigel ?: item.metadata.collectionName,
+                    testId = null,
+                    createdBy = createdBy,
                 )
             }
         // Check for gaps between rights
@@ -59,6 +64,8 @@ object DashboardUtil {
                             conflictByRightId = null,
                             conflictType = ConflictType.GAP,
                             conflictByContext = item.metadata.paketSigel ?: item.metadata.collectionName,
+                            testId = null,
+                            createdBy = createdBy,
                         )
                 ).also { gapRightErrors = it }
             }

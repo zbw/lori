@@ -10,7 +10,12 @@ import date_utils from "@/utils/date_utils";
 
 export default defineComponent({
   components: {},
-  props: {},
+  props: {
+    testId: {
+      type: String,
+      required: false,
+    },
+  },
   emits: [],
   setup(props, {emit}) {
     /**
@@ -57,6 +62,7 @@ export default defineComponent({
               startDateFormatted.value != "" ? startDateFormatted.value : undefined,
               endDateFormatted.value != "" ? endDateFormatted.value : undefined,
               buildConflictTypeFilter(),
+              props.testId,
           )
           .then((r: RightErrorInformationRest) => {
             totalPages.value = r.totalPages;
@@ -307,7 +313,7 @@ export default defineComponent({
           multi-line
           location="top"
           timer="true"
-          timeout="10000"
+          timeout="5000"
           v-model="successMsgIsActive"
           color="success"
       >
@@ -318,7 +324,7 @@ export default defineComponent({
           multi-line
           location="top"
           timer="true"
-          timeout="10000"
+          timeout="5000"
           v-model="errorMsgIsActive"
           color="error"
       >

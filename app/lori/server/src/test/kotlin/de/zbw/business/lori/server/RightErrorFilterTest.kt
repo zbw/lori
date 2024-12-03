@@ -165,6 +165,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 limit = 100,
                 offset = 0,
                 searchFilters = searchFilters,
+                testId = null,
             )
         assertThat(
             reason,
@@ -201,6 +202,8 @@ class RightErrorFilterTest : DatabaseTest() {
                 createdOn = RightErrorDBTest.NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByContext = "template name",
+                testId = null,
+                createdBy = "user1",
             )
         const val DAYS_PAST = 45L
         val RIGHT_ERROR_PAST =
@@ -213,6 +216,8 @@ class RightErrorFilterTest : DatabaseTest() {
                 createdOn = RightErrorDBTest.NOW.minusDays(DAYS_PAST),
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByContext = "template name",
+                testId = null,
+                createdBy = "user1",
             )
     }
 }
