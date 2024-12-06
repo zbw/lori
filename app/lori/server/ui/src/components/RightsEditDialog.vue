@@ -134,6 +134,16 @@ export default defineComponent({
       }
     });
 
+    const formWasChanged = computed(() => {
+          return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(props.right) ||
+            ((tmpRight.value.groups != undefined) && (selectedGroups.value != tmpRight.value.groups)) ||
+            formState.accessState != accessStateToString(props.right.accessState) ||
+            formState.basisStorage != basisStorageToString(props.right.basisStorage) ||
+            formState.basisAccessState != basisAccessStateToString(props.right.basisAccessState)  ||
+            formState.startDate != props.right.startDate ||
+            formState.endDate != props.right.endDate
+    })
+
     watch(startDateFormatted, () => {
       isStartDateMenuOpen.value = false;
     });
@@ -1006,6 +1016,7 @@ export default defineComponent({
       errorTemplateName,
       errorStartDate,
       exceptionsAllowed,
+      formWasChanged,
       isEditable,
       isExistingTemplate,
       isTemplateAndException,
@@ -1741,7 +1752,23 @@ export default defineComponent({
       <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
-      <v-btn v-if="isExistingTemplate" color="blue darken-1" @click="dryRunTemplate">Testen</v-btn>
+      <v-tooltip location="bottom">
+        <template v-slot:activator="{ props }">
+          <div v-bind="props" class="d-inline-block">
+            <v-btn
+                v-if="isTemplate"
+                color="blue darken-1"
+                v-bind="props"
+                @click="dryRunTemplate"
+                :disabled="isNewTemplate || formWasChanged"
+            >Testen</v-btn>
+          </div>
+        </template>
+        <span v-if="formWasChanged">
+            Nur auswählbar für gespeicherte Templates.
+        </span>
+      </v-tooltip>
+
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>
