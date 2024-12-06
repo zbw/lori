@@ -152,7 +152,11 @@ class TemplateRoutesKtTest {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(endDate = RightRoutesKtTest.TODAY.minusDays(2))))
                 }
-            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
+            assertThat(
+                "Should return ${HttpStatusCode.BadRequest.value}",
+                response.status,
+                `is`(HttpStatusCode.BadRequest),
+            )
         }
     }
 
@@ -252,7 +256,11 @@ class TemplateRoutesKtTest {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(ItemRoutesKtTest.jsonAsString(TEST_RIGHT.copy(endDate = RightRoutesKtTest.TODAY.minusDays(2))))
                 }
-            assertThat("Should return ${HttpStatusCode.BadRequest.value}", response.status, `is`(HttpStatusCode.BadRequest))
+            assertThat(
+                "Should return ${HttpStatusCode.BadRequest.value}",
+                response.status,
+                `is`(HttpStatusCode.BadRequest),
+            )
         }
     }
 
@@ -455,10 +463,10 @@ class TemplateRoutesKtTest {
                 `is`(
                     listOf(
                         TEST_BOOKMARK.toRest(
-                            "(tit:someTitle) & (jah:2020-2030 & typ:\"BOOK,ARTICLE\" & sig:\"sigel\"" +
-                                " & zdb:\"zdbId1,zdbId2\" & acc:\"OPEN,RESTRICTED\" & zga:\"FUTURE,PAST\"" +
-                                " & reg:\"ZBW_USER_AGREEMENT\" & zgb:\"2020-01-01\" & zge:\"2021-12-31\" & zgp:\"2018-04-01\"" +
-                                " & lur:\"http://creativecommons.org/licenses/by/3.0/au\")",
+                            "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
+                                " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
+                                " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
+                                " & zga:\"FUTURE,PAST\" & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                         ),
                     ),
                 ),
@@ -563,7 +571,14 @@ class TemplateRoutesKtTest {
         val expectedHandles = listOf("handle1", "handle2")
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { applyTemplates(listOf(givenRightId), true) } returns
+                coEvery {
+                    applyTemplates(
+                        listOf(givenRightId),
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = any(),
+                    )
+                } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -571,9 +586,17 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                     )
-                coEvery { applyAllTemplates(true) } returns
+                coEvery {
+                    applyAllTemplates(
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = any(),
+                    )
+                } returns
                     listOf(
                         TemplateApplicationResult(
                             rightId = givenRightId,
@@ -581,6 +604,8 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                         TemplateApplicationResult(
                             rightId = givenRightId2,
@@ -588,6 +613,8 @@ class TemplateRoutesKtTest {
                             appliedMetadataHandles = expectedHandles,
                             templateName = "baz",
                             exceptionTemplateApplicationResult = emptyList(),
+                            testId = null,
+                            numberOfErrors = 0,
                         ),
                     )
             }
@@ -599,7 +626,7 @@ class TemplateRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications?skipDraft=true") {
+                client.post("/api/v1/template/applications?skipDraft=true&dryRun=false") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -627,6 +654,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     exceptionTemplateApplications = emptyList(),
                                     templateName = "foobar",
+                                    numberOfErrors = 0,
                                 ),
                             ),
                     ),
@@ -641,7 +669,7 @@ class TemplateRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications?all=true&skipDraft=true") {
+                client.post("/api/v1/template/applications?all=true&skipDraft=true&dryRun=false") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(
@@ -669,6 +697,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     templateName = "foobar",
                                     exceptionTemplateApplications = emptyList(),
+                                    numberOfErrors = 0,
                                 ),
                                 TemplateApplicationRest(
                                     rightId = givenRightId2,
@@ -677,6 +706,7 @@ class TemplateRoutesKtTest {
                                     errors = emptyList(),
                                     templateName = "baz",
                                     exceptionTemplateApplications = emptyList(),
+                                    numberOfErrors = 0,
                                 ),
                             ),
                     ),
@@ -708,7 +738,14 @@ class TemplateRoutesKtTest {
         // Internal Service Error Path
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { applyTemplates(listOf(givenRightId), true) } throws SQLException()
+                coEvery {
+                    applyTemplates(
+                        listOf(givenRightId),
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = any(),
+                    )
+                } throws SQLException()
             }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)
         testApplication {
@@ -717,7 +754,7 @@ class TemplateRoutesKtTest {
                 servicePool2.testApplication(),
             )
             val response =
-                client.post("/api/v1/template/applications?skipDraft=true") {
+                client.post("/api/v1/template/applications?skipDraft=true&dryRun=false") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(

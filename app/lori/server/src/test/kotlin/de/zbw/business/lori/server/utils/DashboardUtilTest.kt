@@ -56,6 +56,8 @@ class DashboardUtilTest {
                         handle = "hdl:example.handle.net",
                         errorId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                 ),
                 "No errors, one Right information with open end",
@@ -75,6 +77,8 @@ class DashboardUtilTest {
                         handle = "hdl:example.handle.net",
                         errorId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                     RightError(
                         conflictByRightId = null,
@@ -85,6 +89,8 @@ class DashboardUtilTest {
                         handle = "hdl:example.handle.net",
                         errorId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                 ),
                 "Both, gap and no open end",
@@ -104,6 +110,8 @@ class DashboardUtilTest {
                         handle = "hdl:example.handle.net",
                         errorId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                     RightError(
                         conflictByRightId = null,
@@ -114,6 +122,8 @@ class DashboardUtilTest {
                         handle = "hdl:example.handle.net",
                         errorId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                 ),
                 "Both, gap and no open end but with reverse order (to check if sort works internally as expected)",
@@ -128,7 +138,7 @@ class DashboardUtilTest {
     ) {
         assertThat(
             reason,
-            DashboardUtil.checkForGapErrors(item),
+            DashboardUtil.checkForGapErrors(item, "user1"),
             `is`(expected),
         )
     }

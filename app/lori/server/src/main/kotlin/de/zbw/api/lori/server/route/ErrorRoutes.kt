@@ -10,8 +10,10 @@ import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.lori.model.ErrorRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
+import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.route
 import io.opentelemetry.api.trace.SpanKind
@@ -67,6 +69,7 @@ fun Routing.errorRoutes(
                             QueryParameterParser.parseDashboardStartDateFilter(call.request.queryParameters["filterTimeIntervalStart"])
                         val dashboardTimeIntervalEndFilter: DashboardTimeIntervalEndFilter? =
                             QueryParameterParser.parseDashboardEndDateFilter(call.request.queryParameters["filterTimeIntervalEnd"])
+                        val testId: String? = call.request.queryParameters["testId"]
                         val receivedErrors: ErrorQueryResult =
                             backend.getRightErrorList(
                                 limit,
@@ -77,6 +80,7 @@ fun Routing.errorRoutes(
                                     dashboardTimeIntervalStartFilter,
                                     dashboardTimeIntervalEndFilter,
                                 ),
+                                testId,
                             )
                         span.setStatus(StatusCode.OK)
                         call.respond(receivedErrors.toRest(pageSize))
@@ -93,6 +97,53 @@ fun Routing.errorRoutes(
                         )
                     } finally {
                         span.end()
+                    }
+                }
+            }
+            authenticate("auth-login") {
+                delete("{testId}") {
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/rights/{testId}")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
+                    withContext(span.asContextElement()) {
+                        try {
+                            val testId = call.parameters["testId"]
+                            span.setAttribute("testId", testId ?: "null")
+                            if (testId == null) {
+                                span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
+                                return@withContext call.respond(
+                                    HttpStatusCode.BadRequest,
+                                    ApiError.badRequestError(
+                                        detail = "Keine valide Test-ID wurde übergeben",
+                                    ),
+                                )
+                            } else {
+                                val entriesDeleted = backend.deleteErrorsByTestId(testId)
+                                if (entriesDeleted == 1) {
+                                    span.setStatus(StatusCode.OK)
+                                    call.respond(HttpStatusCode.OK)
+                                } else {
+                                    call.respond(
+                                        HttpStatusCode.NotFound,
+                                        ApiError.notFoundError(
+                                            detail = "Errors mit Test-ID '$testId' existieren nicht.",
+                                        ),
+                                    )
+                                }
+                            }
+                        } catch (e: Exception) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                                ),
+                            )
+                        } finally {
+                            span.end()
+                        }
                     }
                 }
             }

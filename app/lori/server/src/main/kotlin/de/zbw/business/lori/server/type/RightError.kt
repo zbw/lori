@@ -13,11 +13,13 @@ data class RightError(
     val conflictByRightId: String?,
     val conflictByContext: String?,
     val conflictType: ConflictType,
+    val createdBy: String?,
     val createdOn: OffsetDateTime,
     val message: String,
     val handle: String,
     val errorId: Int?,
     val conflictingWithRightId: String?,
+    val testId: String?,
 )
 
 enum class ConflictType {

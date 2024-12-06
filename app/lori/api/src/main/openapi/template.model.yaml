@@ -20,6 +20,7 @@ TemplateApplicationRest:
     - numberOfAppliedEntries
     - rightId
     - templateName
+    - numberOfErrors
   type: object
   properties:
     handles:
@@ -29,6 +30,8 @@ TemplateApplicationRest:
     numberOfAppliedEntries:
       type: integer
     rightId:
+      type: string
+    testId:
       type: string
     templateName:
       type: string
@@ -40,6 +43,8 @@ TemplateApplicationRest:
       type: array
       items:
         $ref: 'error.model.yaml#/RightErrorRest'
+    numberOfErrors:
+      type: integer
 
 TemplateApplicationsRest:
   required:

@@ -46,6 +46,8 @@ class LoriGrpcServerTest {
                         appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
                         exceptionTemplateApplicationResult = emptyList(),
+                        testId = "123",
+                        numberOfErrors = 0,
                     ),
                 )
             val expectedResponse =
@@ -68,11 +70,12 @@ class LoriGrpcServerTest {
                     .newBuilder()
                     .setAll(true)
                     .setSkipDraft(false)
+                    .setDryRun(false)
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
                     coEvery {
-                        applyAllTemplates(false)
+                        applyAllTemplates(skipTemplateDrafts = false, dryRun = false, createdBy = any())
                     } returns expectedResult
                 }
             // when
@@ -105,6 +108,8 @@ class LoriGrpcServerTest {
                         appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
                         exceptionTemplateApplicationResult = emptyList(),
+                        testId = "123",
+                        numberOfErrors = 0,
                     ),
                 )
             val expectedResponse =
@@ -127,12 +132,18 @@ class LoriGrpcServerTest {
                     .newBuilder()
                     .setAll(false)
                     .setSkipDraft(false)
+                    .setDryRun(false)
                     .addAllRightIds(listOf("1"))
                     .build()
             val backendMock =
                 mockk<LoriServerBackend> {
                     coEvery {
-                        applyTemplates(any(), false)
+                        applyTemplates(
+                            any(),
+                            skipTemplateDrafts = false,
+                            dryRun = false,
+                            createdBy = any(),
+                        )
                     } returns expectedResult
                 }
             // when
@@ -248,6 +259,8 @@ class LoriGrpcServerTest {
                         conflictByContext = "sigel1234",
                         conflictByRightId = null,
                         conflictingWithRightId = null,
+                        testId = null,
+                        createdBy = "user1",
                     ),
                 )
             val expectedResponse =
@@ -274,7 +287,7 @@ class LoriGrpcServerTest {
             val backendMock =
                 mockk<LoriServerBackend> {
                     coEvery {
-                        checkForRightErrors()
+                        checkForRightErrors(any())
                     } returns expectedResult
                 }
             // when

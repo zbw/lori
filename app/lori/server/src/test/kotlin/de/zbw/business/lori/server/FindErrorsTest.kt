@@ -82,17 +82,17 @@ class FindErrorsTest : DatabaseTest() {
     @Test
     fun testFindGapErrors() =
         runBlocking {
-            val receivedErrors = backend.checkForRightErrors()
+            val receivedErrors = backend.checkForRightErrors("user1")
             assertThat(
                 receivedErrors.size,
                 `is`(5),
             )
             assertThat(
-                backend.checkForGAPErrors().size,
+                backend.checkForGAPErrors("user1").size,
                 `is`(3),
             )
             assertThat(
-                backend.checkForNoRightErrors().size,
+                backend.checkForNoRightErrors("user1").size,
                 `is`(2),
             )
             assertThat(
@@ -105,6 +105,7 @@ class FindErrorsTest : DatabaseTest() {
                     limit = 10,
                     offset = 0,
                     searchFilters = emptyList(),
+                    testId = null,
                 )
             assertThat(
                 dbErrors.results.size,
@@ -112,7 +113,7 @@ class FindErrorsTest : DatabaseTest() {
             )
 
             // Second execution
-            backend.checkForRightErrors()
+            backend.checkForRightErrors("user1")
             assertThat(
                 "Old entries are deleted beforehand",
                 backend
@@ -120,6 +121,7 @@ class FindErrorsTest : DatabaseTest() {
                         limit = 10,
                         offset = 0,
                         searchFilters = emptyList(),
+                        testId = null,
                     ).results.size,
                 `is`(5),
             )

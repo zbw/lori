@@ -30,6 +30,8 @@ paths:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
   /bookmarktemplates/batch:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates-batch'
+  /errors/rights/{test-id}:
+    $ref: 'error.api.yaml#/right-test-id'
   /errors/rights/list:
     $ref: 'error.api.yaml#/right-errors'
   /group:

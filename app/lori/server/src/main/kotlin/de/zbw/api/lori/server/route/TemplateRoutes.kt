@@ -15,7 +15,6 @@ import de.zbw.lori.model.ExceptionsForTemplateRest
 import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightIdsRest
 import de.zbw.lori.model.RightRest
-import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateApplicationsRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
@@ -280,41 +279,30 @@ fun Routing.templateRoutes(
                         .startSpan()
                 withContext(span.asContextElement()) {
                     try {
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
+                                ) // This should never happen
                         val rightIds: List<String> =
                             call.receive(RightIdsRest::class).takeIf { it.rightIds != null }?.rightIds
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         val all: Boolean = call.request.queryParameters["all"]?.toBoolean() ?: false
                         val skipDraft: Boolean = call.request.queryParameters["skipDraft"]?.toBoolean() ?: false
+                        val dryRun: Boolean = call.request.queryParameters["dryRun"]?.toBoolean() ?: true
                         span.setAttribute("rightIds", rightIds.toString())
                         span.setAttribute("Query Parameter 'all'", all.toString())
                         val appliedMap: List<TemplateApplicationResult> =
                             if (all) {
-                                backend.applyAllTemplates(skipDraft)
+                                backend.applyAllTemplates(skipDraft, dryRun, userSession.email)
                             } else {
-                                backend.applyTemplates(rightIds, skipDraft)
+                                backend.applyTemplates(rightIds, skipDraft, dryRun, userSession.email)
                             }
                         val result =
                             TemplateApplicationsRest(
                                 templateApplication =
-                                    appliedMap.map { e: TemplateApplicationResult ->
-                                        TemplateApplicationRest(
-                                            rightId = e.rightId,
-                                            templateName = e.templateName,
-                                            handles = e.appliedMetadataHandles,
-                                            errors = e.errors.map { it.toRest() },
-                                            numberOfAppliedEntries = e.appliedMetadataHandles.size,
-                                            exceptionTemplateApplications =
-                                                e.exceptionTemplateApplicationResult.map { exc ->
-                                                    TemplateApplicationRest(
-                                                        rightId = exc.rightId,
-                                                        handles = exc.appliedMetadataHandles,
-                                                        templateName = e.templateName,
-                                                        errors = exc.errors.map { it.toRest() },
-                                                        numberOfAppliedEntries = exc.appliedMetadataHandles.size,
-                                                    )
-                                                },
-                                        )
-                                    },
+                                    appliedMap.map { it.toRest() },
                             )
                         call.respond(result)
                     } catch (e: BadRequestException) {

@@ -50,7 +50,7 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val errors =
-                    daConnector.backend.checkForRightErrors().map {
+                    daConnector.backend.checkForRightErrors(grpcUser).map {
                         RightError
                             .newBuilder()
                             .setErrorId(it.errorId ?: -1)
@@ -115,9 +115,18 @@ class LoriGrpcServer(
             try {
                 val backendResponse: List<TemplateApplicationResult> =
                     if (request.all) {
-                        daConnector.backend.applyAllTemplates(request.skipDraft)
+                        daConnector.backend.applyAllTemplates(
+                            request.skipDraft,
+                            request.dryRun,
+                            grpcUser,
+                        )
                     } else {
-                        daConnector.backend.applyTemplates(request.rightIdsList, request.skipDraft)
+                        daConnector.backend.applyTemplates(
+                            request.rightIdsList,
+                            request.skipDraft,
+                            request.dryRun,
+                            grpcUser,
+                        )
                     }
                 val templateApplications: List<TemplateApplication> =
                     backendResponse.map { e: TemplateApplicationResult ->
@@ -211,5 +220,6 @@ class LoriGrpcServer(
 
     companion object {
         private val LOG = LogManager.getLogger(LoriGrpcServer::class.java)
+        private val grpcUser = "GRPC_INTERFACE"
     }
 }

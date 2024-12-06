@@ -22,10 +22,12 @@ export default {
       rightIds: Array<string>,
       all: boolean,
       skipDraft: boolean,
+      dryRun: boolean,
   ): Promise<TemplateApplicationsRest> {
     return templateApi.applyRightIds({
       all: all,
       skipDraft: skipDraft,
+      dryRun: dryRun,
       body: {
         rightIds: rightIds,
       },

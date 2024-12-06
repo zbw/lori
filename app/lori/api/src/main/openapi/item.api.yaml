@@ -229,7 +229,7 @@ item-right:
           type: string
     responses:
       200:
-        description: Deletion was successfull
+        description: Deletion was successful
         content: { }
       400:
         description: Bad request

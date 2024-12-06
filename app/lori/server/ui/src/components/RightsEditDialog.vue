@@ -9,7 +9,7 @@ import {
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
-  RightRestBasisStorageEnum,
+  RightRestBasisStorageEnum, TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -31,6 +31,8 @@ import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
+import Dashboard from "@/components/Dashboard.vue";
+import rightErrorApi from "@/api/rightErrorApi";
 
 export default defineComponent({
   props: {
@@ -80,6 +82,7 @@ export default defineComponent({
 
   // Components
   components: {
+    Dashboard,
     TemplateBookmark,
     RightsDeleteDialog,
   },
@@ -130,6 +133,16 @@ export default defineComponent({
         return date_utils.dateToIso8601(formState.endDate);
       }
     });
+
+    const formWasChanged = computed(() => {
+          return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(props.right) ||
+            ((tmpRight.value.groups != undefined) && (selectedGroups.value != tmpRight.value.groups)) ||
+            formState.accessState != accessStateToString(props.right.accessState) ||
+            formState.basisStorage != basisStorageToString(props.right.basisStorage) ||
+            formState.basisAccessState != basisAccessStateToString(props.right.basisAccessState)  ||
+            formState.startDate != props.right.startDate ||
+            formState.endDate != props.right.endDate
+    })
 
     watch(startDateFormatted, () => {
       isStartDateMenuOpen.value = false;
@@ -245,6 +258,7 @@ export default defineComponent({
       close();
     };
 
+
     const cancelConfirm = () => {
       updateConfirmDialog.value = false;
     };
@@ -345,6 +359,9 @@ export default defineComponent({
         });
     };
 
+    /**
+     * Templates
+     */
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
       tmpRight.value.isTemplate = true;
@@ -407,6 +424,7 @@ export default defineComponent({
           });
         });
     };
+
 
     /**
      * Add exceptions.
@@ -664,6 +682,11 @@ export default defineComponent({
       () =>
         props.isNewTemplate ||
         (props.right != undefined && props.right.isTemplate),
+    );
+    const isExistingTemplate = computed(
+        () =>
+            !props.isNewTemplate &&
+            (props.right != undefined && props.right.isTemplate),
     );
     const isTemplateAndException = computed(
       () => isTemplate.value && props.isExceptionTemplate,
@@ -923,6 +946,54 @@ export default defineComponent({
           });
         });
     };
+
+    // DryRun + Dashboard
+    const dashboardViewActivated = ref(false);
+    const testId: Ref<string | undefined> = ref(undefined);
+
+    const dryRunTemplate = () => {
+      if (tmpRight.value.rightId == undefined){
+        console.log("Template does not exist yet.");
+        return;
+      }
+      templateApi
+          .applyTemplates(
+              [tmpRight.value.rightId],
+              false,
+              false,
+              true,
+          )
+          .then((r: TemplateApplicationsRest) => {
+            if (r.templateApplication.length == 0){
+              return;
+            } else {
+              if (r.templateApplication[0].numberOfErrors == 0){
+                successMsg.value = "Simulation für Anwendung von Template '" +
+                    r.templateApplication[0].templateName + "' erfolgreich";
+                successMsgIsActive.value = true;
+              } else {
+                testId.value = r.templateApplication[0].testId;
+                dashboardViewActivated.value = true;
+              }
+            }
+
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+    const closeDashboard = () => {
+      dashboardViewActivated.value = false;
+    };
+    watch(dashboardViewActivated, (currentValue) => {
+      if(!currentValue && testId.value != undefined){
+        rightErrorApi.deleteRightErrorsByTestId(testId.value)
+      }
+    });
+
     return {
       formState,
       v$,
@@ -935,6 +1006,7 @@ export default defineComponent({
       bookmarkHeaders,
       cardTitle,
       computedRightId,
+      dashboardViewActivated,
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -944,7 +1016,9 @@ export default defineComponent({
       errorTemplateName,
       errorStartDate,
       exceptionsAllowed,
+      formWasChanged,
       isEditable,
+      isExistingTemplate,
       isTemplateAndException,
       isTemplateDraft,
       isNew,
@@ -969,6 +1043,7 @@ export default defineComponent({
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
+      testId,
       tmpRight,
       updateInProgress,
       // methods
@@ -976,12 +1051,14 @@ export default defineComponent({
       cancel,
       cancelConfirm,
       closeCreateExceptionDialog,
+      closeDashboard,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
       deleteExceptionEntry,
       deleteSuccessful,
+      dryRunTemplate,
       openCreateExceptionDialog,
       selectBookmark,
       setSelectedBookmarks,
@@ -1001,7 +1078,17 @@ export default defineComponent({
 </style>
 
 <template>
-  <v-card class="my-scroll" max-height="700px" position="relative">
+  <v-card class="my-scroll" position="relative">
+    <v-dialog
+        v-model="dashboardViewActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        v-on:close="closeDashboard"
+    >
+      <Dashboard
+          :test-id="testId"
+      ></Dashboard>
+    </v-dialog>
     <v-card-title>
       <v-row>
         <v-col>
@@ -1033,7 +1120,7 @@ export default defineComponent({
           multi-line
           location="top"
           timer="true"
-          timeout="10000"
+          timeout="5000"
           v-model="errorMsgIsActive"
           color="error"
       >
@@ -1044,7 +1131,7 @@ export default defineComponent({
           multi-line
           location="top"
           timer="true"
-          timeout="10000"
+          timeout="5000"
           v-model="successMsgIsActive"
           color="success"
       >
@@ -1057,7 +1144,7 @@ export default defineComponent({
           href="https://zbwintern/wiki/x/8wPUG"
           target="_blank"
       ></v-btn>
-      <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
+      <v-btn v-if="!isTemplate" :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
@@ -1107,7 +1194,7 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
-
+    <v-card-text style="height:1100px;">
     <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
       <template v-if="isTemplate">
         <v-expansion-panel value="0">
@@ -1659,16 +1746,33 @@ export default defineComponent({
         </v-expansion-panel-text>
       </v-expansion-panel>
     </v-expansion-panels>
+    </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
       <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
+      <v-tooltip location="bottom">
+        <template v-slot:activator="{ props }">
+          <div v-bind="props" class="d-inline-block">
+            <v-btn
+                v-if="isTemplate"
+                color="blue darken-1"
+                v-bind="props"
+                @click="dryRunTemplate"
+                :disabled="isNewTemplate || formWasChanged"
+            >Testen</v-btn>
+          </div>
+        </template>
+        <span v-if="formWasChanged">
+            Nur auswählbar für gespeicherte Templates.
+        </span>
+      </v-tooltip>
+
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h5"> Achtung</v-card-title>
+        <v-card-title class="text-h5">Achtung</v-card-title>
         <v-card-text>
           {{ metadataCount - 1 }} andere Items verweisen ebenfalls auf diese
           Rechteinformation. Mit der Bestätigung wird die Rechteinformation an

@@ -700,6 +700,8 @@ class LoriServerBackendTest : DatabaseTest() {
             LoriServerBackend.findItemsWithConflicts(
                 searchResults,
                 rightConflictToCheck,
+                null,
+                "user1",
             )
         assertThat(
             reason,

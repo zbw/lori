@@ -322,6 +322,13 @@ template-applications:
         schema:
           type: boolean
           default: false
+      - name: dryRun
+        in: query
+        description: Dry run
+        required: true
+        schema:
+          type: boolean
+          default: true
     responses:
       200:
         description: Applied templates successfully

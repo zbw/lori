@@ -112,22 +112,8 @@ abstract class SearchFilter(
         fun bookmarkToString(bookmark: Bookmark): String {
             val filters =
                 filtersToString(
-                    listOfNotNull(
-                        bookmark.publicationDateFilter,
-                        bookmark.publicationTypeFilter,
-                        bookmark.paketSigelFilter,
-                        bookmark.zdbIdFilter,
-                        bookmark.accessStateFilter,
-                        bookmark.temporalValidityFilter,
-                        bookmark.formalRuleFilter,
-                        bookmark.startDateFilter,
-                        bookmark.endDateFilter,
-                        bookmark.validOnFilter,
-                        bookmark.noRightInformationFilter,
-                        bookmark.seriesFilter,
-                        bookmark.templateNameFilter,
-                        bookmark.licenceURLFilter,
-                    ),
+                    bookmark.getAllMetadataFilter() + bookmark.getAllRightFilter() +
+                        listOfNotNull(bookmark.noRightInformationFilter),
                 )
             return if (bookmark.searchTerm.isNullOrBlank()) {
                 filters

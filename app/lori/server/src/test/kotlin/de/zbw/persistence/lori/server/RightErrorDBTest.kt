@@ -11,6 +11,8 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIG
 import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CONFLICTING_TYPE
 import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CONFLICT_BY_CONTEXT
 import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_CREATED_ON
+import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_ERROR_ID
+import de.zbw.persistence.lori.server.RightErrorDB.Companion.COLUMN_TEST_ID
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
@@ -18,6 +20,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.Assert.assertNull
 import org.testng.annotations.AfterTest
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -99,13 +102,51 @@ class RightErrorDBTest : DatabaseTest() {
             )
         }
 
+    @Test
+    fun testErrorsWithTestId() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+
+            val testID = "555Nase"
+            // Insert Error with Test-ID
+            val errorId = dbConnector.insertError(TEST_RIGHT_ERROR.copy(testId = testID))
+            val receivedError: RightError? = dbConnector.getErrorList(limit = 10, offset = 0, testId = testID).firstOrNull()
+            assertThat(
+                receivedError?.toString() ?: "",
+                `is`(TEST_RIGHT_ERROR.copy(errorId = errorId, createdOn = NOW, testId = testID).toString()),
+            )
+            assertThat(
+                dbConnector.getCount(testId = testID),
+                `is`(1),
+            )
+
+            assertNull(
+                dbConnector.getErrorList(limit = 10, offset = 0).firstOrNull(),
+                "No errors without a testID",
+            )
+
+            assertThat(
+                dbConnector.getCount(testId = null),
+                `is`(0),
+            )
+
+            // Delete error
+            val errorsDeleted = dbConnector.deleteErrorByTestId(testID)
+            assertThat(
+                errorsDeleted,
+                `is`(1),
+            )
+        }
+
     @DataProvider(name = DATA_FOR_BUILD_FILTER_QUERY)
     fun createDataForBuildFilterQuery() =
         arrayOf(
             arrayOf(
                 emptyList<DashboardSearchFilter>(),
-                "${RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT} ORDER BY error_id LIMIT ? OFFSET ?;",
-                "No filters selected",
+                "${RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT} WHERE $COLUMN_TEST_ID IS NULL ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;",
+                null,
+                "No filters selected and no testid",
             ),
             arrayOf(
                 listOf(
@@ -117,8 +158,25 @@ class RightErrorDBTest : DatabaseTest() {
                 RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
                     " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
-                    " ORDER BY error_id LIMIT ? OFFSET ?;",
-                "All filters",
+                    " AND $COLUMN_TEST_ID IS NULL" +
+                    " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;",
+                null,
+                "All filters no testId",
+            ),
+            arrayOf(
+                listOf(
+                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
+                    DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
+                    DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
+                ),
+                RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
+                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
+                    " AND $COLUMN_TEST_ID = ?" +
+                    " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;",
+                "555nase",
+                "All filters with TestId",
             ),
         )
 
@@ -126,11 +184,12 @@ class RightErrorDBTest : DatabaseTest() {
     fun testBuildFilterQuery(
         filters: List<DashboardSearchFilter>,
         expectedQuery: String,
+        testId: String?,
         reason: String,
     ) {
         assertThat(
             reason,
-            RightErrorDB.buildFilterQuery(filters),
+            RightErrorDB.buildFilterQuery(filters, testId),
             `is`(expectedQuery),
         )
     }
@@ -143,7 +202,9 @@ class RightErrorDBTest : DatabaseTest() {
                 emptyList<DashboardSearchFilter>(),
                 "SELECT $COLUMN_CONFLICTING_TYPE" +
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
+                    " WHERE $COLUMN_TEST_ID IS NULL" +
                     " GROUP BY $COLUMN_CONFLICTING_TYPE;",
+                null,
                 "No filters selected",
             ),
             arrayOf(
@@ -158,8 +219,27 @@ class RightErrorDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
                     " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
+                    " AND $COLUMN_TEST_ID IS NULL" +
                     " GROUP BY $COLUMN_CONFLICT_BY_CONTEXT;",
-                "All filters",
+                null,
+                "All filters + no testId",
+            ),
+            arrayOf(
+                COLUMN_CONFLICT_BY_CONTEXT,
+                listOf(
+                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
+                    DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
+                    DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
+                ),
+                "SELECT $COLUMN_CONFLICT_BY_CONTEXT" +
+                    " FROM $TABLE_NAME_RIGHT_ERROR" +
+                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
+                    " AND $COLUMN_TEST_ID = ?" +
+                    " GROUP BY $COLUMN_CONFLICT_BY_CONTEXT;",
+                "555nase",
+                "All filters with test id",
             ),
         )
 
@@ -168,11 +248,12 @@ class RightErrorDBTest : DatabaseTest() {
         column: String,
         filters: List<DashboardSearchFilter>,
         expectedQuery: String,
+        testId: String?,
         reason: String,
     ) {
         assertThat(
             reason,
-            RightErrorDB.buildOccurrenceQuery(column, filters),
+            RightErrorDB.buildOccurrenceQuery(column, filters, testId),
             `is`(expectedQuery),
         )
     }
@@ -202,6 +283,8 @@ class RightErrorDBTest : DatabaseTest() {
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
                 conflictByContext = "template name",
+                testId = null,
+                createdBy = "user",
             )
         val EXAMPLE_DATE: LocalDate =
             LocalDate.of(

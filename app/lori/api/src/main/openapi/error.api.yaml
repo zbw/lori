@@ -47,6 +47,10 @@ right-errors:
         in: query
         schema:
           type: string
+      - name: testId
+        in: query
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation
@@ -56,6 +60,43 @@ right-errors:
               $ref: 'error.model.yaml#/RightErrorInformationRest'
       400:
         description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+right-test-id:
+  delete:
+    security:
+      - cookieAuth: []
+    tags:
+      - rightError
+    summary: Delete errors created by a given test
+    operationId: deleteErrorsByTestId
+    parameters:
+      - name: test-id
+        in: path
+        description: Test ID
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of the errors was successful
+        content:
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Id does not exist
         content:
           application/json:
             schema:
