@@ -310,8 +310,10 @@ export default defineComponent({
       <v-dialog
         v-model="templateDialogActivated"
         :retain-focus="false"
-        max-width="1000px"
+        max-width="1500px"
+        max-height="850px"
         v-on:close="closeTemplateDialog"
+        scrollable
       >
         <RightsEditDialog
           :index="-1"
