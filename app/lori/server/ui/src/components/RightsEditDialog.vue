@@ -98,6 +98,7 @@ export default defineComponent({
       startDate: Date | undefined;
       endDate: Date | undefined;
       formTemplateName: string;
+      selectedGroups: Array<GroupRest>;
     };
 
     const formState = reactive({
@@ -107,6 +108,7 @@ export default defineComponent({
       startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
       formTemplateName: "",
+      selectedGroups: [] as Array<GroupRest>,
     });
 
     const isStartDateMenuOpen = ref(false);
@@ -136,7 +138,7 @@ export default defineComponent({
 
     const formWasChanged = computed(() => {
           return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(props.right) ||
-            ((tmpRight.value.groups != undefined) && (selectedGroups.value != tmpRight.value.groups)) ||
+            ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
             formState.accessState != accessStateToString(props.right.accessState) ||
             formState.basisStorage != basisStorageToString(props.right.basisStorage) ||
             formState.basisAccessState != basisAccessStateToString(props.right.basisAccessState)  ||
@@ -159,11 +161,16 @@ export default defineComponent({
         return siblings.startDate < value;
       }
     };
+
+    const groupCheck = (value: Array<GroupRest>, siblings: FormState) => {
+      return !(siblings.accessState == 'Restricted' && value.length == 0);
+    };
     const rules = {
       accessState: { required },
       startDate: { required },
       endDate: { endDateCheck },
       formTemplateName: { required },
+      selectedGroups: { groupCheck },
     };
 
     const v$ = useVuelidate(rules, formState);
@@ -202,6 +209,15 @@ export default defineComponent({
         v$.value.formTemplateName.$dirty
       ) {
         errors.push("Es wird ein Template-Name benötigt.");
+      }
+      return errors;
+    });
+    const errorIPGroup = computed(() =>{
+      const errors: Array<string> = [];
+      if (v$.value.selectedGroups.$invalid) {
+        errors.push("Bei Auswahl des Access-Status 'Restricted' ist die Angabe einer" +
+            " IP-Gruppe, auf die der Zugriff beschränkt werden soll, zwingend erforderlich." +
+            " Bitte eine IP-Gruppe auswählen.");
       }
       return errors;
     });
@@ -478,8 +494,8 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.formTemplateName = "foo";
       }
-      tmpRight.value.groupIds = selectedGroups.value.map((g: GroupRest) => g.groupId);
-      tmpRight.value.groups = selectedGroups.value;
+      tmpRight.value.groupIds = formState.selectedGroups.map((g: GroupRest) => g.groupId);
+      tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
       if (!isValid) {
         return;
@@ -747,7 +763,7 @@ export default defineComponent({
       }
       tmpRight.value = Object.assign({}, props.right);
       if(tmpRight.value.groups != undefined) {
-        selectedGroups.value = tmpRight.value.groups;
+        formState.selectedGroups = tmpRight.value.groups;
       }
       formState.formTemplateName =
         props.right.templateName == undefined ? "" : props.right.templateName;
@@ -932,7 +948,6 @@ export default defineComponent({
     const errorMsgIsActive = ref(false);
     const errorMsg = ref("");
     const groupItems: Ref<Array<GroupRest>> = ref([]);
-    const selectedGroups: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
         .getGroupList(0, 100, false)
@@ -1023,6 +1038,7 @@ export default defineComponent({
       isTemplateDraft,
       isNew,
       isTemplate,
+      errorIPGroup,
       errorMsgIsActive,
       errorMsg,
       groupItems,
@@ -1036,7 +1052,6 @@ export default defineComponent({
       openBookmarkSearch,
       renderBookmarkKey,
       renderTemplateKey,
-      selectedGroups,
       startDateFormatted,
       exceptionTemplateItems,
       exceptionTemplateHeaders,
@@ -1334,7 +1349,7 @@ export default defineComponent({
                       </div>
                     </template>
                     <span>
-                      Die gespeicherte Suche kann nicht verändert werden, weil das Template bereits angewendet wurde.
+                      Änderungen müssen erst abgespeichert werden.
                     </span>
                   </v-tooltip>
                   <v-dialog
@@ -1496,12 +1511,15 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">Gruppen</v-col>
+              <v-col cols="4">IP-Gruppe</v-col>
               <v-col cols="8">
                 <v-select
-                  v-model="selectedGroups"
+                  v-model="formState.selectedGroups"
                   :items="groupItems"
-                  :disabled="!isEditable"
+                  :disabled="!isEditable || formState.accessState != 'Restricted'"
+                  :error-messages="errorIPGroup"
+                  @blur="v$.selectedGroups.$touch()"
+                  @change="v$.selectedGroups.$touch()"
                   chips
                   multiple
                   counter
