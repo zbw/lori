@@ -1786,7 +1786,6 @@ export default defineComponent({
             Nur auswählbar für gespeicherte Templates.
         </span>
       </v-tooltip>
-
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>

@@ -252,12 +252,27 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.my-scroll {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+</style>
 
 <template>
-  <v-card>
-    <v-container>
-      <v-card-title>{{ dialogTitle }}</v-card-title>
+  <v-card class="my-scroll" position="relative">
+      <v-card-title>{{ dialogTitle }}
+      </v-card-title>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+            density="compact"
+            icon="mdi-help"
+            href="https://zbwintern/wiki/display/stba/03_IP-Gruppen"
+            target="_blank"
+        ></v-btn>
+      </v-card-actions>
+      <v-card-text style="height:1100px;">
       <v-snackbar
           v-model="saveAlertError"
           closable
@@ -355,18 +370,18 @@ export default defineComponent({
             ></v-textarea>
           </v-col>
         </v-row>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn @click="save" color="blue darken-1">Speichern</v-btn>
-          <v-btn @click="close" color="blue darken-1">Zurück</v-btn>
-          <v-btn v-if="!isNew" @click="initiateDeleteDialog">
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
-          <v-btn v-if="isNew" disabled>
-            <v-icon>mdi-delete</v-icon>
-          </v-btn>
-        </v-card-actions>
       </v-card>
-    </v-container>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="save" color="blue darken-1">Speichern</v-btn>
+        <v-btn @click="close" color="blue darken-1">Zurück</v-btn>
+        <v-btn v-if="!isNew" @click="initiateDeleteDialog">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+        <v-btn v-if="isNew" disabled>
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </v-card-actions>
   </v-card>
 </template>
