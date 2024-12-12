@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -11,6 +12,7 @@ import de.zbw.lori.model.GroupRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -57,7 +59,16 @@ fun Routing.groupRoutes(
                                 .takeIf { it.groupId != null && it.allowedAddressesRaw != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
-                        val pk = backend.insertGroup(group.toBusiness())
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
+                                ) // This should never happen
+                        val pk =
+                            backend.insertGroup(
+                                group.copy(createdBy = userSession.email, lastUpdatedBy = userSession.email).toBusiness(),
+                            )
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created, GroupIdCreated(pk))
                     } catch (e: BadRequestException) {
@@ -126,7 +137,16 @@ fun Routing.groupRoutes(
                                 .takeIf { it.groupId != null && it.allowedAddressesRaw != null && it.title != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("group", group.toString())
-                        val insertedRows = backend.updateGroup(group.toBusiness())
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError("User is not authorized"),
+                                ) //
+                        val insertedRows =
+                            backend.updateGroup(
+                                group.copy(lastUpdatedBy = userSession.email).toBusiness(),
+                            )
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)

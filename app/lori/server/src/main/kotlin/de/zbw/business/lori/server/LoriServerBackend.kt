@@ -207,6 +207,10 @@ class LoriServerBackend(
                     entries = emptyList(),
                     description = null,
                     title = "",
+                    createdOn = null,
+                    createdBy = null,
+                    lastUpdatedBy = null,
+                    lastUpdatedOn = null,
                 )
             }
 

@@ -20,6 +20,16 @@ GroupRest:
       type: string
     title:
       type: string
+    createdBy:
+      type: string
+    createdOn:
+      type: string
+      format: date-time
+    lastUpdatedBy:
+      type: string
+    lastUpdatedOn:
+      type: string
+      format: date-time
 
 OrganisationToIp:
   required:

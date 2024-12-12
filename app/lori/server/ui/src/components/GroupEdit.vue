@@ -230,6 +230,7 @@ export default defineComponent({
     };
 
     return {
+      computedGroup,
       dialogStore,
       dialogTitle,
       errorName,
@@ -318,6 +319,46 @@ export default defineComponent({
                 hint="ID der Berechtigungsgruppe"
                 variant="outlined"
                 label="ID der Berechtigungsgruppe"
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="4"> Erstellt am</v-col>
+          <v-col cols="8">
+            <v-text-field
+                v-model="computedGroup.createdOn"
+                variant="outlined"
+                readonly
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="4"> Erstellt von</v-col>
+          <v-col cols="8">
+            <v-text-field
+                v-model="computedGroup.createdBy"
+                variant="outlined"
+                readonly
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="4">Zuletzt editiert am</v-col>
+          <v-col cols="8">
+            <v-text-field
+                v-model="computedGroup.lastUpdatedOn"
+                variant="outlined"
+                readonly
+            ></v-text-field>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="4">Zuletzt editiert von</v-col>
+          <v-col cols="8">
+            <v-text-field
+                v-model="computedGroup.lastUpdatedBy"
+                variant="outlined"
+                readonly
             ></v-text-field>
           </v-col>
         </v-row>
