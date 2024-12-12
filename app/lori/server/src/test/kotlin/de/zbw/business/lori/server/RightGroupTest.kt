@@ -8,13 +8,19 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
+import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert.fail
+import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
+import java.time.Instant
 
 /**
  * Test function related to Group-Right entries.
@@ -32,9 +38,16 @@ class RightGroupTest : DatabaseTest() {
             mockk(),
         )
 
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
+    }
+
     @Test
     fun rightGroupRoundtrip() =
         runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
             // Given group
             val group1 =
                 Group(
@@ -48,11 +61,21 @@ class RightGroupTest : DatabaseTest() {
                             ),
                         ),
                     title = "some title",
+                    createdOn = NOW.minusMonths(1L),
+                    lastUpdatedOn = NOW,
+                    createdBy = "user1",
+                    lastUpdatedBy = "user2",
                 )
 
             // Insert group
             val receivedGroupId1 = backend.insertGroup(group1)
-            val expectedGroup1 = group1.copy(groupId = receivedGroupId1)
+            val expectedGroup1 =
+                group1.copy(
+                    groupId = receivedGroupId1,
+                    lastUpdatedOn = NOW,
+                    createdOn = NOW,
+                    lastUpdatedBy = "user1",
+                )
 
             // Insert Right using the group
             val initialRight: ItemRight =
@@ -92,10 +115,20 @@ class RightGroupTest : DatabaseTest() {
                             ),
                         ),
                     title = "some title2",
+                    createdOn = NOW.minusMonths(1L),
+                    lastUpdatedOn = NOW,
+                    createdBy = "user1",
+                    lastUpdatedBy = "user2",
                 )
 
             val receivedGroupId2 = backend.insertGroup(group2)
-            val expectedGroup2 = group2.copy(groupId = receivedGroupId2)
+            val expectedGroup2 =
+                group2.copy(
+                    groupId = receivedGroupId2,
+                    createdOn = NOW,
+                    lastUpdatedOn = NOW,
+                    lastUpdatedBy = "user1",
+                )
             val rightUpdated =
                 TEST_RIGHT.copy(
                     rightId = rightId1,

@@ -187,10 +187,12 @@ export default defineComponent({
       item-value="groupName"
     ></v-data-table>
     <v-dialog
-      max-width="1000px"
       v-model="dialogStore.groupEditActivated"
       :retain-focus="false"
       v-on:close="closeGroupEditDialog"
+      max-width="1500px"
+      max-height="850px"
+      scrollable
     >
       <GroupEdit
         :isNew="isNew"

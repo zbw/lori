@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.lori.model.GroupRest
+import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -418,6 +419,10 @@ class GroupRoutesKtTest {
                 entries = emptyList(),
                 description = null,
                 title = "foo",
+                createdOn = NOW.minusMonths(1L),
+                lastUpdatedOn = NOW,
+                createdBy = "user1",
+                lastUpdatedBy = "user2",
             )
         val expected = listOf(givenGroup.toRest())
         val backend =
@@ -491,6 +496,10 @@ class GroupRoutesKtTest {
                         ),
                     ),
                 title = "some title",
+                createdOn = NOW.minusMonths(1L),
+                lastUpdatedOn = NOW,
+                createdBy = "user1",
+                lastUpdatedBy = "user2",
             )
     }
 }

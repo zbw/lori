@@ -6,12 +6,15 @@ import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Tracer
 import org.postgresql.util.PGobject
 import java.lang.reflect.Type
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.Timestamp
+import java.time.Instant
 
 /**
  * Execute SQL queries strongly related to groups.
@@ -30,6 +33,7 @@ class GroupDB(
                 connection
                     .prepareStatement(STATEMENT_INSERT_GROUP, Statement.RETURN_GENERATED_KEYS)
                     .apply {
+                        val now = Instant.now()
                         this.setIfNotNull(1, group.description) { value, idx, prepStmt ->
                             prepStmt.setString(idx, value)
                         }
@@ -38,6 +42,14 @@ class GroupDB(
                         jsonObj.value = gson.toJson(group.entries)
                         this.setObject(2, jsonObj)
                         this.setString(3, group.title)
+                        this.setIfNotNull(4, group.createdBy) { value, idx, prepStmt ->
+                            prepStmt.setString(idx, value)
+                        }
+                        this.setTimestamp(5, Timestamp.from(now))
+                        this.setIfNotNull(6, group.createdBy) { value, idx, prepStmt ->
+                            prepStmt.setString(idx, value)
+                        }
+                        this.setTimestamp(7, Timestamp.from(now))
                     }
             val span = tracer.spanBuilder("insertGroup").startSpan()
             try {
@@ -295,6 +307,7 @@ class GroupDB(
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_UPDATE_GROUP).apply {
+                    val now = Instant.now()
                     this.setIfNotNull(1, group.description) { value, idx, prepStmt ->
                         prepStmt.setString(idx, value)
                     }
@@ -303,7 +316,11 @@ class GroupDB(
                     jsonObj.value = gson.toJson(group.entries)
                     this.setObject(2, jsonObj)
                     this.setString(3, group.title)
-                    this.setInt(4, group.groupId)
+                    this.setIfNotNull(4, group.lastUpdatedBy) { value, idx, prepStmt ->
+                        prepStmt.setString(idx, value)
+                    }
+                    this.setTimestamp(5, Timestamp.from(now))
+                    this.setInt(6, group.groupId)
                 }
             val span = tracer.spanBuilder("updateGroup").startSpan()
             try {
@@ -317,64 +334,91 @@ class GroupDB(
     companion object {
         private const val TABLE_NAME_GROUP_RIGHT_MAP = "group_right_map"
         private const val TABLE_NAME_RIGHT_GROUP = "right_group"
+        const val COLUMN_CREATED_BY = "created_by"
+        const val COLUMN_CREATED_ON = "created_on"
+        const val COLUMN_DESCRIPTION = "description"
+        const val COLUMN_GROUP_ID = "group_id"
+        const val COLUMN_IP_ADDRESSES = "ip_addresses"
+        const val COLUMN_LAST_UPDATED_BY = "last_updated_by"
+        const val COLUMN_LAST_UPDATED_ON = "last_updated_on"
+        const val COLUMN_RIGHT_ID = "right_id"
+        const val COLUMN_TITLE = "title"
         const val STATEMENT_INSERT_GROUP =
             "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
-                " (description, ip_addresses, title)" +
-                " VALUES(?,?,?)"
+                " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON)" +
+                " VALUES(" +
+                "?,?,?," +
+                "?,?,?," +
+                "?)"
 
         const val STATEMENT_GET_GROUP_BY_ID =
-            "SELECT group_id, description, ip_addresses, title" +
+            "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                COLUMN_LAST_UPDATED_ON +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " WHERE group_id = ?"
+                " WHERE $COLUMN_GROUP_ID = ?"
 
         const val STATEMENT_GET_GROUP_LIST =
-            "SELECT group_id, description, ip_addresses, title" +
+            "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                COLUMN_LAST_UPDATED_ON +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " ORDER BY group_id LIMIT ? OFFSET ?;"
+                " ORDER BY $COLUMN_GROUP_ID LIMIT ? OFFSET ?;"
 
         const val STATEMENT_GET_GROUP_LIST_ID_ONLY =
-            "SELECT group_id" +
+            "SELECT $COLUMN_GROUP_ID" +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " ORDER BY group_id LIMIT ? OFFSET ?;"
+                " ORDER BY $COLUMN_GROUP_ID LIMIT ? OFFSET ?;"
 
         const val STATEMENT_INSERT_GROUP_RIGHT_PAIR =
             "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " (group_id, right_id)" +
+                " ($COLUMN_GROUP_ID, $COLUMN_RIGHT_ID)" +
                 " VALUES(?,?)"
 
         const val STATEMENT_DELETE_GROUP_RIGHT_PAIR =
             "DELETE" +
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " WHERE group_id = ? AND" +
-                " right_id = ?"
+                " WHERE $COLUMN_GROUP_ID = ? AND" +
+                " $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID =
             "DELETE" +
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " WHERE right_id = ?"
+                " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_DELETE_GROUP_BY_ID =
             "DELETE " +
                 "FROM $TABLE_NAME_RIGHT_GROUP" +
-                " WHERE group_id = ?"
+                " WHERE $COLUMN_GROUP_ID = ?"
 
         const val STATEMENT_GET_RIGHTS_BY_GROUP_ID =
-            "SELECT right_id" +
+            "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " WHERE group_id = ?"
+                " WHERE $COLUMN_GROUP_ID = ?"
 
         const val STATEMENT_GET_GROUPS_BY_RIGHT_ID =
-            "SELECT group_id" +
+            "SELECT $COLUMN_GROUP_ID" +
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " WHERE right_id = ?"
+                " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_GET_GROUPS_BY_IDS =
-            "SELECT group_id, description, ip_addresses, title" +
+            "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                COLUMN_LAST_UPDATED_ON +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
-                " WHERE group_id = ANY(?)"
+                " WHERE $COLUMN_GROUP_ID = ANY(?)"
 
         const val STATEMENT_UPDATE_GROUP =
-            "UPDATE $TABLE_NAME_RIGHT_GROUP SET description=?, ip_addresses=?, title=? WHERE group_id=?;"
+            "UPDATE $TABLE_NAME_RIGHT_GROUP" +
+                " SET" +
+                " $COLUMN_DESCRIPTION=?," +
+                "$COLUMN_IP_ADDRESSES=?," +
+                "$COLUMN_TITLE=?," +
+                "$COLUMN_LAST_UPDATED_BY=?," +
+                "$COLUMN_LAST_UPDATED_ON=?" +
+                " WHERE $COLUMN_GROUP_ID=?;"
 
         private fun extractGroupRS(
             rs: ResultSet,
@@ -388,6 +432,11 @@ class GroupDB(
                     .getObject(3, PGobject::class.java)
                     .value
             val title = rs.getString(4)
+            val createdBy = rs.getString(5)
+            val createdOn = rs.getTimestamp(6)?.toOffsetDateTime()
+            val lastUpdatedBy = rs.getString(7)
+            val lastUpdatedOn = rs.getTimestamp(8)?.toOffsetDateTime()
+
             return Group(
                 groupId = groupId,
                 description = description,
@@ -396,6 +445,10 @@ class GroupDB(
                         ?.let { gson.fromJson(it, groupListType) }
                         ?: emptyList(),
                 title = title,
+                createdBy = createdBy,
+                createdOn = createdOn,
+                lastUpdatedBy = lastUpdatedBy,
+                lastUpdatedOn = lastUpdatedOn,
             )
         }
     }

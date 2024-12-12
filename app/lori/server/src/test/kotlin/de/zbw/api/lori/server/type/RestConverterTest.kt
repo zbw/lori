@@ -24,6 +24,7 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
+import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert
@@ -212,6 +213,10 @@ class RestConverterTest {
                         ),
                     ),
                 title = "some title",
+                createdOn = NOW.minusMonths(1L),
+                lastUpdatedOn = NOW,
+                createdBy = "user1",
+                lastUpdatedBy = "user2",
             )
         assertThat(
             (givenGroup.toRest()).toBusiness(),

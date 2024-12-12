@@ -94,6 +94,10 @@ fun Group.toRest() =
                     organisation = it.organisationName,
                 )
             },
+        createdBy = createdBy,
+        createdOn = createdOn,
+        lastUpdatedBy = lastUpdatedBy,
+        lastUpdatedOn = lastUpdatedOn,
     )
 
 /**
@@ -113,6 +117,10 @@ fun GroupRest.toBusiness() =
                 )
             } ?: emptyList(),
         title = title,
+        createdBy = createdBy,
+        createdOn = createdOn,
+        lastUpdatedBy = lastUpdatedBy,
+        lastUpdatedOn = lastUpdatedOn,
     )
 
 fun MetadataRest.toBusiness() =

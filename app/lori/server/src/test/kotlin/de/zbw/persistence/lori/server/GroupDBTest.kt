@@ -2,11 +2,18 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
+import io.mockk.every
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import kotlin.test.assertNull
 
 /**
@@ -22,14 +29,27 @@ class GroupDBTest : DatabaseTest() {
             tracer = OpenTelemetry.noop().getTracer("foo"),
         ).groupDB
 
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
+    }
+
     @Test
-    fun testGroupRoundtrip() =
+    fun testGroupRoundTrip() =
         runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
             // Create
 
             // when + then
             val receivedGroupId = dbConnector.insertGroup(TEST_GROUP)
-            val expectedGroup = TEST_GROUP.copy(groupId = receivedGroupId)
+            val expectedGroup =
+                TEST_GROUP.copy(
+                    groupId = receivedGroupId,
+                    lastUpdatedOn = NOW,
+                    createdOn = NOW,
+                    lastUpdatedBy = "user1",
+                )
 
             // Get
             // when + then
@@ -42,9 +62,12 @@ class GroupDBTest : DatabaseTest() {
 
             // Update
             // given
+
+            every { Instant.now() } returns NOW.plusDays(1L).toInstant()
             val updated =
                 expectedGroup.copy(
                     description = "baz",
+                    lastUpdatedBy = "user2",
                 )
             assertThat(
                 dbConnector.updateGroup(updated),
@@ -55,7 +78,7 @@ class GroupDBTest : DatabaseTest() {
             assertThat(
                 dbConnector.getGroupById(expectedGroup.groupId),
                 `is`(
-                    updated,
+                    updated.copy(lastUpdatedOn = NOW.plusDays(1L)),
                 ),
             )
 
@@ -71,13 +94,22 @@ class GroupDBTest : DatabaseTest() {
             assertNull(
                 dbConnector.getGroupById(expectedGroup.groupId),
             )
+            unmockkAll()
         }
 
     @Test
     fun testGetGroupList() =
         runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
             val receivedGroupId1 = dbConnector.insertGroup(TEST_GROUP)
-            val expectedGroup1 = TEST_GROUP.copy(groupId = receivedGroupId1)
+            val expectedGroup1 =
+                TEST_GROUP.copy(
+                    groupId = receivedGroupId1,
+                    lastUpdatedBy = TEST_GROUP.createdBy,
+                    createdOn = NOW,
+                    lastUpdatedOn = NOW,
+                )
             assertThat(
                 dbConnector.getGroupList(50, 0),
                 `is`(
@@ -103,7 +135,13 @@ class GroupDBTest : DatabaseTest() {
                 dbConnector.insertGroup(
                     secondGroup,
                 )
-            val expectedGroup2 = secondGroup.copy(groupId = receivedGroupId2)
+            val expectedGroup2 =
+                secondGroup.copy(
+                    groupId = receivedGroupId2,
+                    lastUpdatedBy = TEST_GROUP.createdBy,
+                    createdOn = NOW,
+                    lastUpdatedOn = NOW,
+                )
 
             assertThat(
                 dbConnector.getGroupList(50, 0),
@@ -114,9 +152,21 @@ class GroupDBTest : DatabaseTest() {
                     ),
                 ),
             )
+            unmockkAll()
         }
 
     companion object {
+        val NOW =
+            OffsetDateTime.of(
+                2022,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )
         val TEST_GROUP =
             Group(
                 groupId = 1,
@@ -129,6 +179,10 @@ class GroupDBTest : DatabaseTest() {
                         ),
                     ),
                 title = "test group",
+                createdOn = NOW.minusMonths(1L),
+                lastUpdatedOn = NOW,
+                createdBy = "user1",
+                lastUpdatedBy = "user2",
             )
     }
 }
