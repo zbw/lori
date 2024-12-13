@@ -740,13 +740,14 @@ class LoriServerBackend(
             val testId = UUID.randomUUID().toString()
             val itemsWithConflicts: Map<Item, List<RightError>> =
                 findItemsWithConflicts(searchResults, right, testId, createdBy)
+            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
             dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
             return TemplateApplicationResult(
                 rightId = rightId,
-                appliedMetadataHandles = emptyList(),
                 // TODO(CB): Don't send back thousands of errors for now
                 errors = emptyList(),
-                exceptionTemplateApplicationResult = emptyList(),
+                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
+                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
                 templateName = right.templateName ?: "Missing Template Name",
                 testId = testId,
                 numberOfErrors = itemsWithConflicts.values.flatten().size,
