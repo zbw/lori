@@ -9,7 +9,7 @@ import {
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
-  RightRestBasisStorageEnum, TemplateApplicationsRest,
+  RightRestBasisStorageEnum, type TemplateApplicationRest, TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -26,6 +26,7 @@ import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
+import info from "@/utils/info";
 import templateApi from "@/api/templateApi";
 import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
@@ -35,6 +36,11 @@ import Dashboard from "@/components/Dashboard.vue";
 import rightErrorApi from "@/api/rightErrorApi";
 
 export default defineComponent({
+  computed: {
+    info() {
+      return info
+    }
+  },
   props: {
     right: {
       type: Object as PropType<RightRest>,
@@ -963,7 +969,9 @@ export default defineComponent({
     };
 
     // DryRun + Dashboard
+    const currentTemplateApplicationResult = ref({} as TemplateApplicationRest)
     const dashboardViewActivated = ref(false);
+    const dialogSimulationResults = ref(false);
     const testId: Ref<string | undefined> = ref(undefined);
 
     const dryRunTemplate = () => {
@@ -981,17 +989,10 @@ export default defineComponent({
           .then((r: TemplateApplicationsRest) => {
             if (r.templateApplication.length == 0){
               return;
-            } else {
-              if (r.templateApplication[0].numberOfErrors == 0){
-                successMsg.value = "Simulation für Anwendung von Template '" +
-                    r.templateApplication[0].templateName + "' erfolgreich";
-                successMsgIsActive.value = true;
-              } else {
-                testId.value = r.templateApplication[0].testId;
-                dashboardViewActivated.value = true;
-              }
             }
-
+            testId.value = r.templateApplication[0].testId;
+            currentTemplateApplicationResult.value = r.templateApplication[0];
+            dialogSimulationResults.value = true;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -1000,11 +1001,18 @@ export default defineComponent({
             });
           });
     };
+    const openDashboard = () => {
+      dashboardViewActivated.value = true;
+    };
     const closeDashboard = () => {
       dashboardViewActivated.value = false;
     };
+    const closeDialogSimulationResult = () => {
+      dialogSimulationResults.value = false;
+    };
     watch(dashboardViewActivated, (currentValue) => {
       if(!currentValue && testId.value != undefined){
+        dialogSimulationResults.value = false;
         rightErrorApi.deleteRightErrorsByTestId(testId.value)
       }
     });
@@ -1021,10 +1029,12 @@ export default defineComponent({
       bookmarkHeaders,
       cardTitle,
       computedRightId,
+      currentTemplateApplicationResult,
       dashboardViewActivated,
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
+      dialogSimulationResults,
       endDateFormatted,
       errorAccessState,
       errorEndDate,
@@ -1067,6 +1077,7 @@ export default defineComponent({
       cancelConfirm,
       closeCreateExceptionDialog,
       closeDashboard,
+      closeDialogSimulationResult,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
@@ -1075,6 +1086,7 @@ export default defineComponent({
       deleteSuccessful,
       dryRunTemplate,
       openCreateExceptionDialog,
+      openDashboard,
       selectBookmark,
       setSelectedBookmarks,
       save,
@@ -1094,6 +1106,41 @@ export default defineComponent({
 
 <template>
   <v-card class="my-scroll" position="relative">
+    <v-dialog
+    max-width="500px"
+    :retain-focus="false"
+    v-model="dialogSimulationResults"
+    >
+      <v-card>
+        <div class="d-flex align-center justify-space-between">
+          <v-card-title>Ergebnisse Simulation
+            <v-spacer></v-spacer>
+          </v-card-title>
+          <v-btn @click="closeDialogSimulationResult" icon="mdi-close"></v-btn>
+        </div>
+        <v-card-text>
+          <v-row>
+            <v-col>
+              {{info.constructApplicationInfoText(currentTemplateApplicationResult)}}
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>Anzahl Fehler: {{currentTemplateApplicationResult.numberOfErrors}}</v-col>
+          </v-row>
+          <v-row v-if="currentTemplateApplicationResult.numberOfErrors != 0">
+            <v-col>
+            Fehler in Dashboard ansehen:
+            <v-btn
+                @click="openDashboard"
+                color="blue darken-1"
+            >
+              Hier klicken
+            </v-btn>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-dialog
         v-model="dashboardViewActivated"
         :retain-focus="false"
@@ -1150,7 +1197,7 @@ export default defineComponent({
           v-model="successMsgIsActive"
           color="success"
       >
-        {{ successMsg }}
+        <span v-html="successMsg"></span>
       </v-snackbar>
       <v-spacer></v-spacer>
       <v-btn

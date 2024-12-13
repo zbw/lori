@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent, onMounted, Ref, ref } from "vue";
 import error from "@/utils/error";
+import info from "@/utils/info";
 import templateApi from "@/api/templateApi";
 import {
   RightErrorRest,
@@ -122,7 +123,7 @@ export default defineComponent({
         .then((r: TemplateApplicationsRest) => {
           const templateApplicationResult: TemplateApplicationRest =
             r.templateApplication[0];
-          const infoMsg = constructApplicationInfoText(
+          const infoMsg = info.constructApplicationInfoText(
             templateApplicationResult,
           );
           successMsgIsActive.value = true;
@@ -158,31 +159,6 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
-    };
-
-    const constructApplicationInfoText: (
-      templateApplication: TemplateApplicationRest,
-    ) => string = (templateApplication: TemplateApplicationRest) => {
-      const parent: string =
-        "Template '" +
-        templateApplication.templateName +
-        "' wurde für " +
-        templateApplication.numberOfAppliedEntries +
-        " Einträge angewandt.";
-      let exceptions: string = "";
-      if (templateApplication.exceptionTemplateApplications !== undefined) {
-        exceptions = templateApplication.exceptionTemplateApplications
-          .map(
-            (tA: TemplateApplicationRest) =>
-              "Template (Ausnahme) '" +
-              tA.templateName +
-              "' wurde für " +
-              tA.numberOfAppliedEntries +
-              " Einträge angewandt.",
-          )
-          .join("\n");
-      }
-      return parent + "\n" + exceptions;
     };
 
     const closeApplyErrorMsg = () => {
