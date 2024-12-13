@@ -45,12 +45,10 @@ export default {
   getGroupList(
     offset: number,
     limit: number,
-    idOnly: boolean,
   ): Promise<Array<GroupRest>> {
     return loriGroupApi.getGroupList({
       offset: offset,
       limit: limit,
-      idOnly: idOnly,
     });
   },
   updateGroup(g: GroupRest): Promise<void> {

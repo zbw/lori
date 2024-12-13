@@ -4,6 +4,7 @@ import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.RestConverterTest
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
+import de.zbw.business.lori.server.type.GroupVersion
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
@@ -21,6 +22,7 @@ import org.testng.Assert.fail
 import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
 import java.time.Instant
+import kotlin.math.exp
 
 /**
  * Test function related to Group-Right entries.
@@ -44,7 +46,7 @@ class RightGroupTest : DatabaseTest() {
     }
 
     @Test
-    fun rightGroupRoundtrip() =
+    fun rightGroupRoundTrip() =
         runBlocking {
             mockkStatic(Instant::class)
             every { Instant.now() } returns NOW.toInstant()
@@ -54,17 +56,19 @@ class RightGroupTest : DatabaseTest() {
                     groupId = 55,
                     description = null,
                     entries =
-                        listOf(
-                            GroupEntry(
-                                organisationName = "orga1",
-                                ipAddresses = "192.168.1.*",
-                            ),
+                    listOf(
+                        GroupEntry(
+                            organisationName = "orga1",
+                            ipAddresses = "192.168.1.*",
                         ),
+                    ),
                     title = "some title",
                     createdOn = NOW.minusMonths(1L),
                     lastUpdatedOn = NOW,
                     createdBy = "user1",
                     lastUpdatedBy = "user2",
+                    version = 0,
+                    oldVersions = emptyList(),
                 )
 
             // Insert group
@@ -81,16 +85,16 @@ class RightGroupTest : DatabaseTest() {
             val initialRight: ItemRight =
                 TEST_RIGHT.copy(
                     groups =
-                        listOf(
-                            expectedGroup1,
-                        ),
+                    listOf(
+                        expectedGroup1,
+                    ),
                 )
 
             val rightId1 = backend.insertRight(initialRight)
 
             // Verify insertions
             assertThat(
-                backend.getGroupById(receivedGroupId1),
+                backend.getGroupById(receivedGroupId1, null),
                 `is`(expectedGroup1),
             )
 
@@ -98,6 +102,36 @@ class RightGroupTest : DatabaseTest() {
                 backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
                 `is`(
                     listOf(expectedGroup1),
+                ),
+            )
+            // Update group
+            backend.updateGroup(expectedGroup1.copy(description = "foo bar 555"), "user3")
+            val expectedGroup1Version2 =
+                expectedGroup1.copy(
+                    description = "foo bar 555",
+                    version = 1,
+                    lastUpdatedBy = "user3",
+                    createdBy = "user3",
+                )
+            assertThat(
+                backend.getGroupById(receivedGroupId1, 1),
+                `is`(expectedGroup1Version2.copy(
+                    oldVersions = listOf(
+                    GroupVersion(
+                        groupId = expectedGroup1.groupId,
+                        createdBy = expectedGroup1.createdBy!!,
+                        createdOn = expectedGroup1.createdOn!!,
+                        description = expectedGroup1.description,
+                        version = 0,
+                    )
+                    )
+                )),
+            )
+
+            assertThat(
+                backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
+                `is`(
+                    listOf(expectedGroup1Version2),
                 ),
             )
 
@@ -108,17 +142,19 @@ class RightGroupTest : DatabaseTest() {
                     groupId = groupName2,
                     description = null,
                     entries =
-                        listOf(
-                            GroupEntry(
-                                organisationName = "orga2",
-                                ipAddresses = "192.168.1.*",
-                            ),
+                    listOf(
+                        GroupEntry(
+                            organisationName = "orga2",
+                            ipAddresses = "192.168.1.*",
                         ),
+                    ),
                     title = "some title2",
                     createdOn = NOW.minusMonths(1L),
                     lastUpdatedOn = NOW,
                     createdBy = "user1",
                     lastUpdatedBy = "user2",
+                    version = 0,
+                    oldVersions = emptyList(),
                 )
 
             val receivedGroupId2 = backend.insertGroup(group2)
@@ -133,10 +169,10 @@ class RightGroupTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     rightId = rightId1,
                     groupIds =
-                        listOf(
-                            receivedGroupId2,
-                            receivedGroupId1,
-                        ),
+                    listOf(
+                        receivedGroupId2,
+                        receivedGroupId1,
+                    ),
                 )
             backend.upsertRight(rightUpdated)
 
@@ -146,7 +182,7 @@ class RightGroupTest : DatabaseTest() {
                     .getGroupsByRightId(rightId1)
                     .toSet(),
                 `is`(
-                    setOf(expectedGroup1, expectedGroup2),
+                    setOf(expectedGroup1Version2, expectedGroup2),
                 ),
             )
 
@@ -173,11 +209,11 @@ class RightGroupTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     rightId = rightId1,
                     groups =
-                        listOf(
-                            expectedGroup2.copy(
-                                description = "some nonesense",
-                            ),
+                    listOf(
+                        expectedGroup2.copy(
+                            description = "some nonesense",
                         ),
+                    ),
                     groupIds = listOf(receivedGroupId2),
                 )
             backend.upsertRight(rightUpdated3)

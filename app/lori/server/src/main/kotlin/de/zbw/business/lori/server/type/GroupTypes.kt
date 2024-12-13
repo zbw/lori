@@ -12,6 +12,7 @@ import java.time.OffsetDateTime
  */
 data class Group(
     val groupId: Int,
+    val version: Int,
     val description: String?,
     val entries: List<GroupEntry>,
     val title: String,
@@ -19,9 +20,18 @@ data class Group(
     val createdOn: OffsetDateTime?,
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
+    val oldVersions: List<GroupVersion>?,
 )
 
 data class GroupEntry(
     val organisationName: String,
     val ipAddresses: String,
+)
+
+data class GroupVersion(
+    val groupId: Int,
+    val createdBy: String,
+    val createdOn: OffsetDateTime,
+    val description: String?,
+    val version: Int,
 )

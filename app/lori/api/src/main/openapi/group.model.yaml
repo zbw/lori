@@ -3,6 +3,7 @@ GroupRest:
     - hasCSVHeader
     - groupId
     - title
+    - version
   type: object
   properties:
     groupId:
@@ -30,6 +31,29 @@ GroupRest:
     lastUpdatedOn:
       type: string
       format: date-time
+    version:
+      type: integer
+    oldVersions:
+      type: array
+      items:
+        $ref: 'group.model.yaml#/OldGroupVersionRest'
+
+OldGroupVersionRest:
+  required:
+    - createdBy
+    - createdOn
+    - version
+  type: object
+  properties:
+    createdOn:
+      type: string
+      format: date-time
+    createdBy:
+      type: string
+    description:
+      type: string
+    version:
+      type: integer
 
 OrganisationToIp:
   required:

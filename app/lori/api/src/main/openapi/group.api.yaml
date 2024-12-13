@@ -61,8 +61,11 @@ group:
       required: true
     responses:
       204:
-        description: Successfully updated
+        description: Update of group successful
         content:
+          application/json:
+            schema:
+              $ref: 'group.model.yaml#/GroupIdCreated'
       400:
         description: Bad request
         content:
@@ -71,6 +74,11 @@ group:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       401:
         description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+      409:
+        description: Update failed due to conflict
         content:
           application/json:
             schema:
@@ -137,6 +145,12 @@ group-id:
         required: true
         schema:
           type: integer
+      - name: version
+        in: path
+        description: Specifies version of group. If parameter is missing returns latest version.
+        required: false
+        schema:
+          type: integer
     responses:
       200:
         description: Successful operation
@@ -187,11 +201,6 @@ group-list:
           maximum: 100
           default: 25
         required: false
-      - name: idOnly
-        in: query
-        description: "Return only the Group-Ids."
-        schema:
-          type: boolean
     responses:
       200:
         description: Successful operation

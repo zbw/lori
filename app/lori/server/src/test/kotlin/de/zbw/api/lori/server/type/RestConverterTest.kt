@@ -217,6 +217,8 @@ class RestConverterTest {
                 lastUpdatedOn = NOW,
                 createdBy = "user1",
                 lastUpdatedBy = "user2",
+                version = 0,
+                oldVersions = emptyList(),
             )
         assertThat(
             (givenGroup.toRest()).toBusiness(),
