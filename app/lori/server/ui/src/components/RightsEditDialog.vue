@@ -1441,7 +1441,9 @@ export default defineComponent({
                   <v-dialog
                     v-model="dialogCreateException"
                     :retain-focus="false"
-                    max-width="1000px"
+                    max-width="1500px"
+                    max-height="850px"
+                    scrollable
                   >
                     <RightsEditDialog
                       :index="index"
