@@ -17,10 +17,10 @@ import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
+import de.zbw.business.lori.server.type.GroupVersion
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
-import de.zbw.business.lori.server.type.GroupVersion
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -101,7 +101,7 @@ fun Group.toRest() =
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         version = version,
-        oldVersions = oldVersions?.map {it.toRest()},
+        oldVersions = oldVersions?.map { it.toRest() },
     )
 
 fun GroupVersion.toRest() =
@@ -134,7 +134,8 @@ fun GroupRest.toBusiness() =
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         version = version,
-        oldVersions = emptyList(), // History can't be changed through APIs ;)
+        // History can't be changed through APIs ;)
+        oldVersions = emptyList(),
     )
 
 fun MetadataRest.toBusiness() =

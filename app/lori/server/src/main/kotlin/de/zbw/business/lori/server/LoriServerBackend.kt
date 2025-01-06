@@ -122,7 +122,7 @@ class LoriServerBackend(
     suspend fun updateGroup(
         group: Group,
         updateBy: String,
-        ): Int = dbConnector.groupDB.updateGroup(group, updateBy)
+    ): Int = dbConnector.groupDB.updateGroup(group, updateBy)
 
     suspend fun upsertRight(right: ItemRight): Int {
         val rightId = right.rightId!!
@@ -191,13 +191,15 @@ class LoriServerBackend(
                 )
             }
 
-    suspend fun getGroupById(groupId: Int, version: Int?): Group?{
-        return if(version != null) {
+    suspend fun getGroupById(
+        groupId: Int,
+        version: Int?,
+    ): Group? =
+        if (version != null) {
             dbConnector.groupDB.getGroupByIdAndVersion(groupId, version)
         } else {
             dbConnector.groupDB.getGroupById(groupId)
         }
-    }
 
     suspend fun getGroupList(
         limit: Int,

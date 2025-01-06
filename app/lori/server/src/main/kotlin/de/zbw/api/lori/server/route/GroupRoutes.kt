@@ -67,16 +67,17 @@ fun Routing.groupRoutes(
                                 ) // This should never happen
                         val pk =
                             backend.insertGroup(
-                                group.copy(
-                                    createdBy = userSession.email,
-                                    lastUpdatedBy = userSession.email,
-                                    version = 0,
-                                ).toBusiness(),
+                                group
+                                    .copy(
+                                        createdBy = userSession.email,
+                                        lastUpdatedBy = userSession.email,
+                                        version = 0,
+                                    ).toBusiness(),
                             )
                         span.setStatus(StatusCode.OK)
                         call.respond(
                             HttpStatusCode.Created,
-                            GroupIdCreated(pk)
+                            GroupIdCreated(pk),
                         )
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
@@ -155,10 +156,10 @@ fun Routing.groupRoutes(
                                 group.copy().toBusiness(),
                                 userSession.email,
                             )
-                            span.setStatus(StatusCode.OK)
-                            call.respond(
-                                HttpStatusCode.NoContent,
-                            )
+                        span.setStatus(StatusCode.OK)
+                        call.respond(
+                            HttpStatusCode.NoContent,
+                        )
                     } catch (iae: IllegalArgumentException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
                         call.respond(
@@ -168,23 +169,23 @@ fun Routing.groupRoutes(
                             ),
                         )
                     } catch (pe: PSQLException) {
-                            if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
-                                span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                                call.respond(
-                                    HttpStatusCode.Conflict,
-                                    ApiError.conflictError(
-                                        detail = "Beim Updaten kam es zu einer Race Condition. Bitte erneut probieren.",
-                                    ),
-                                )
-                            } else {
-                                span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
-                                call.respond(
-                                    HttpStatusCode.InternalServerError,
-                                    ApiError.internalServerError(
-                                        detail = "Ein interner Datenbankfehler ist aufgetreten.",
-                                    ),
-                                )
-                            }
+                        if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                ApiError.conflictError(
+                                    detail = "Beim Updaten kam es zu einer Race Condition. Bitte erneut probieren.",
+                                ),
+                            )
+                        } else {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                                ),
+                            )
+                        }
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(

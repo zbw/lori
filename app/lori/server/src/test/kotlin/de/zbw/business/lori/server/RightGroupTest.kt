@@ -22,7 +22,6 @@ import org.testng.Assert.fail
 import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
 import java.time.Instant
-import kotlin.math.exp
 
 /**
  * Test function related to Group-Right entries.
@@ -56,12 +55,12 @@ class RightGroupTest : DatabaseTest() {
                     groupId = 55,
                     description = null,
                     entries =
-                    listOf(
-                        GroupEntry(
-                            organisationName = "orga1",
-                            ipAddresses = "192.168.1.*",
+                        listOf(
+                            GroupEntry(
+                                organisationName = "orga1",
+                                ipAddresses = "192.168.1.*",
+                            ),
                         ),
-                    ),
                     title = "some title",
                     createdOn = NOW.minusMonths(1L),
                     lastUpdatedOn = NOW,
@@ -85,9 +84,9 @@ class RightGroupTest : DatabaseTest() {
             val initialRight: ItemRight =
                 TEST_RIGHT.copy(
                     groups =
-                    listOf(
-                        expectedGroup1,
-                    ),
+                        listOf(
+                            expectedGroup1,
+                        ),
                 )
 
             val rightId1 = backend.insertRight(initialRight)
@@ -115,17 +114,20 @@ class RightGroupTest : DatabaseTest() {
                 )
             assertThat(
                 backend.getGroupById(receivedGroupId1, 1),
-                `is`(expectedGroup1Version2.copy(
-                    oldVersions = listOf(
-                    GroupVersion(
-                        groupId = expectedGroup1.groupId,
-                        createdBy = expectedGroup1.createdBy!!,
-                        createdOn = expectedGroup1.createdOn!!,
-                        description = expectedGroup1.description,
-                        version = 0,
-                    )
-                    )
-                )),
+                `is`(
+                    expectedGroup1Version2.copy(
+                        oldVersions =
+                            listOf(
+                                GroupVersion(
+                                    groupId = expectedGroup1.groupId,
+                                    createdBy = expectedGroup1.createdBy!!,
+                                    createdOn = expectedGroup1.createdOn!!,
+                                    description = expectedGroup1.description,
+                                    version = 0,
+                                ),
+                            ),
+                    ),
+                ),
             )
 
             assertThat(
@@ -142,12 +144,12 @@ class RightGroupTest : DatabaseTest() {
                     groupId = groupName2,
                     description = null,
                     entries =
-                    listOf(
-                        GroupEntry(
-                            organisationName = "orga2",
-                            ipAddresses = "192.168.1.*",
+                        listOf(
+                            GroupEntry(
+                                organisationName = "orga2",
+                                ipAddresses = "192.168.1.*",
+                            ),
                         ),
-                    ),
                     title = "some title2",
                     createdOn = NOW.minusMonths(1L),
                     lastUpdatedOn = NOW,
@@ -169,10 +171,10 @@ class RightGroupTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     rightId = rightId1,
                     groupIds =
-                    listOf(
-                        receivedGroupId2,
-                        receivedGroupId1,
-                    ),
+                        listOf(
+                            receivedGroupId2,
+                            receivedGroupId1,
+                        ),
                 )
             backend.upsertRight(rightUpdated)
 
@@ -209,11 +211,11 @@ class RightGroupTest : DatabaseTest() {
                 TEST_RIGHT.copy(
                     rightId = rightId1,
                     groups =
-                    listOf(
-                        expectedGroup2.copy(
-                            description = "some nonesense",
+                        listOf(
+                            expectedGroup2.copy(
+                                description = "some nonesense",
+                            ),
                         ),
-                    ),
                     groupIds = listOf(receivedGroupId2),
                 )
             backend.upsertRight(rightUpdated3)

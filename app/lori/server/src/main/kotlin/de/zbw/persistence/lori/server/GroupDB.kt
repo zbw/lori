@@ -28,13 +28,17 @@ class GroupDB(
     private val tracer: Tracer,
     private val gson: Gson,
 ) {
-    suspend fun insertGroup(group: Group, useGivenId: Boolean = false): Int =
+    suspend fun insertGroup(
+        group: Group,
+        useGivenId: Boolean = false,
+    ): Int =
         connectionPool.useConnection { connection ->
-            val stmt = if (useGivenId) {
-                STATEMENT_INSERT_GROUP_WITH_ID
-            } else {
-                STATEMENT_INSERT_GROUP
-            }
+            val stmt =
+                if (useGivenId) {
+                    STATEMENT_INSERT_GROUP_WITH_ID
+                } else {
+                    STATEMENT_INSERT_GROUP
+                }
             val prepStmt: PreparedStatement =
                 connection
                     .prepareStatement(stmt, Statement.RETURN_GENERATED_KEYS)
@@ -93,16 +97,20 @@ class GroupDB(
                     span.end()
                 }
 
-            val allGroupVersions: List<Group> = generateSequence {
-                if (rs.next()) {
-                    extractGroupRS(rs, gson)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-            allGroupVersions.groupBy { it.groupId }.mapValues { e: Map.Entry<Int, List<Group>> ->
-                e.value.sortedByDescending { g -> g.version }.firstOrNull()
-            }.values.filterNotNull()
+            val allGroupVersions: List<Group> =
+                generateSequence {
+                    if (rs.next()) {
+                        extractGroupRS(rs, gson)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            allGroupVersions
+                .groupBy { it.groupId }
+                .mapValues { e: Map.Entry<Int, List<Group>> ->
+                    e.value.sortedByDescending { g -> g.version }.firstOrNull()
+                }.values
+                .filterNotNull()
         }
 
     suspend fun getGroupById(groupId: Int): Group? =
@@ -121,17 +129,19 @@ class GroupDB(
                     span.end()
                 }
 
-            val receivedGroup = if (rs.next()) {
-                extractGroupRS(rs, gson)
-            } else {
-                return@useConnection null
-            }
+            val receivedGroup =
+                if (rs.next()) {
+                    extractGroupRS(rs, gson)
+                } else {
+                    return@useConnection null
+                }
             return@useConnection receivedGroup.copy(
-                oldVersions = getAllGroupVersionsById(receivedGroup.groupId)
-                    .takeIf{it.size > 1}
-                    ?.let{it.sortedByDescending { g -> g.version }}
-                    ?.drop(1)
-                    ?:emptyList()
+                oldVersions =
+                    getAllGroupVersionsById(receivedGroup.groupId)
+                        .takeIf { it.size > 1 }
+                        ?.let { it.sortedByDescending { g -> g.version } }
+                        ?.drop(1)
+                        ?: emptyList(),
             )
         }
 
@@ -157,7 +167,7 @@ class GroupDB(
                         createdBy = rs.getString(2),
                         createdOn = rs.getTimestamp(3)?.toOffsetDateTime(),
                         description = rs.getString(4),
-                        version = rs.getInt(5)
+                        version = rs.getInt(5),
                     )
                 } else {
                     null
@@ -165,7 +175,10 @@ class GroupDB(
             }.takeWhile { true }.toList()
         }
 
-    suspend fun getGroupByIdAndVersion(groupId: Int, version: Int): Group? =
+    suspend fun getGroupByIdAndVersion(
+        groupId: Int,
+        version: Int,
+    ): Group? =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_GROUP_BY_ID_AND_VERSION).apply {
@@ -182,17 +195,19 @@ class GroupDB(
                     span.end()
                 }
 
-            val receivedGroup = if (rs.next()) {
-                extractGroupRS(rs, gson)
-            } else {
-                return@useConnection null
-            }
+            val receivedGroup =
+                if (rs.next()) {
+                    extractGroupRS(rs, gson)
+                } else {
+                    return@useConnection null
+                }
             return@useConnection receivedGroup.copy(
-                oldVersions = getAllGroupVersionsById(receivedGroup.groupId)
-                    .takeIf{it.size > 1}
-                    ?.let{it.sortedByDescending { g -> g.version }}
-                    ?.drop(1)
-                    ?:emptyList()
+                oldVersions =
+                    getAllGroupVersionsById(receivedGroup.groupId)
+                        .takeIf { it.size > 1 }
+                        ?.let { it.sortedByDescending { g -> g.version } }
+                        ?.drop(1)
+                        ?: emptyList(),
             )
         }
 
@@ -331,20 +346,22 @@ class GroupDB(
                 } finally {
                     span.end()
                 }
-            val groups = generateSequence {
-                if (rs.next()) {
-                    extractGroupRS(rs, gson)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-            return@useConnection groups.map{
+            val groups =
+                generateSequence {
+                    if (rs.next()) {
+                        extractGroupRS(rs, gson)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            return@useConnection groups.map {
                 it.copy(
-                    oldVersions = getAllGroupVersionsById(it.groupId)
-                        .takeIf{it.size > 1}
-                        ?.let{it.sortedByDescending { g -> g.version }}
-                        ?.drop(1)
-                        ?:emptyList()
+                    oldVersions =
+                        getAllGroupVersionsById(it.groupId)
+                            .takeIf { it.size > 1 }
+                            ?.let { it.sortedByDescending { g -> g.version } }
+                            ?.drop(1)
+                            ?: emptyList(),
                 )
             }
         }
@@ -364,7 +381,10 @@ class GroupDB(
             }
         }
 
-    suspend fun updateGroup(group: Group, updateBy: String): Int =
+    suspend fun updateGroup(
+        group: Group,
+        updateBy: String,
+    ): Int =
         connectionPool.useConnection { connection ->
             // 1. Get existing group
             val existingGroup: Group = getGroupById(group.groupId) ?: return@useConnection 0
@@ -381,10 +401,10 @@ class GroupDB(
                         version = existingGroup.version + 1,
                         lastUpdatedBy = updateBy,
                         createdBy = updateBy,
-                    ), true
+                    ),
+                    true,
                 )
             }
-
         }
 
     companion object {
@@ -402,96 +422,96 @@ class GroupDB(
         const val COLUMN_VERSION = "version"
         const val STATEMENT_INSERT_GROUP =
             "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
-                    " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION)" +
-                    " VALUES(" +
-                    "?,?,?," +
-                    "?,?,?," +
-                    "?,?)"
+                " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION)" +
+                " VALUES(" +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?)"
 
         const val STATEMENT_INSERT_GROUP_WITH_ID =
             "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
-                    " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION,$COLUMN_GROUP_ID)" +
-                    " VALUES(" +
-                    "?,?,?," +
-                    "?,?,?," +
-                    "?,?,?)"
+                " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION,$COLUMN_GROUP_ID)" +
+                " VALUES(" +
+                "?,?,?," +
+                "?,?,?," +
+                "?,?,?)"
 
         const val STATEMENT_GET_GROUP_BY_ID_AND_VERSION =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " WHERE $COLUMN_GROUP_ID = ? AND $COLUMN_VERSION = ?;"
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE $COLUMN_GROUP_ID = ? AND $COLUMN_VERSION = ?;"
 
         const val STATEMENT_GET_GROUPS_BY_ID =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_CREATED_BY,$COLUMN_CREATED_ON," +
-                    "$COLUMN_DESCRIPTION,$COLUMN_VERSION" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " WHERE $COLUMN_GROUP_ID = ?;"
+                "$COLUMN_DESCRIPTION,$COLUMN_VERSION" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE $COLUMN_GROUP_ID = ?;"
 
         const val STATEMENT_GET_GROUP_BY_ID_WITH_LATEST_VERSION =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " WHERE $COLUMN_GROUP_ID = ?" +
-                    " ORDER BY $COLUMN_VERSION DESC" +
-                    " LIMIT 1;"
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE $COLUMN_GROUP_ID = ?" +
+                " ORDER BY $COLUMN_VERSION DESC" +
+                " LIMIT 1;"
 
         const val STATEMENT_GET_GROUP_LIST =
             "SELECT t1.$COLUMN_GROUP_ID,t1.$COLUMN_DESCRIPTION,t1.$COLUMN_IP_ADDRESSES,t1.$COLUMN_TITLE," +
-                    "t1.$COLUMN_CREATED_BY,t1.$COLUMN_CREATED_ON,t1.$COLUMN_LAST_UPDATED_BY," +
-                    "t1.$COLUMN_LAST_UPDATED_ON,t1.$COLUMN_VERSION" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP t1" +
-                    " JOIN (" +
-                    " SELECT $COLUMN_GROUP_ID, MAX(${COLUMN_VERSION}) AS max_version" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " GROUP BY $COLUMN_GROUP_ID" +
-                    ") as t2" +
-                    " ON t1.${COLUMN_GROUP_ID}=t2.${COLUMN_GROUP_ID} AND t1.${COLUMN_VERSION}=t2.max_version" +
-                    " LIMIT ? OFFSET ?;"
+                "t1.$COLUMN_CREATED_BY,t1.$COLUMN_CREATED_ON,t1.$COLUMN_LAST_UPDATED_BY," +
+                "t1.$COLUMN_LAST_UPDATED_ON,t1.$COLUMN_VERSION" +
+                " FROM $TABLE_NAME_RIGHT_GROUP t1" +
+                " JOIN (" +
+                " SELECT $COLUMN_GROUP_ID, MAX(${COLUMN_VERSION}) AS max_version" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " GROUP BY $COLUMN_GROUP_ID" +
+                ") as t2" +
+                " ON t1.${COLUMN_GROUP_ID}=t2.${COLUMN_GROUP_ID} AND t1.${COLUMN_VERSION}=t2.max_version" +
+                " LIMIT ? OFFSET ?;"
 
         const val STATEMENT_INSERT_GROUP_RIGHT_PAIR =
             "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +
-                    " ($COLUMN_GROUP_ID, $COLUMN_RIGHT_ID)" +
-                    " VALUES(?,?);"
+                " ($COLUMN_GROUP_ID, $COLUMN_RIGHT_ID)" +
+                " VALUES(?,?);"
 
         const val STATEMENT_DELETE_GROUP_RIGHT_PAIR =
             "DELETE" +
-                    " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                    " WHERE $COLUMN_GROUP_ID = ? AND" +
-                    " $COLUMN_RIGHT_ID = ?;"
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE $COLUMN_GROUP_ID = ? AND" +
+                " $COLUMN_RIGHT_ID = ?;"
 
         const val STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID =
             "DELETE" +
-                    " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                    " WHERE $COLUMN_RIGHT_ID = ?;"
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE $COLUMN_RIGHT_ID = ?;"
 
         const val STATEMENT_DELETE_GROUP_BY_ID =
             "DELETE " +
-                    "FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " WHERE $COLUMN_GROUP_ID = ?;"
+                "FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE $COLUMN_GROUP_ID = ?;"
 
         const val STATEMENT_GET_RIGHTS_BY_GROUP_ID =
             "SELECT $COLUMN_RIGHT_ID" +
-                    " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                    " WHERE $COLUMN_GROUP_ID = ?;"
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE $COLUMN_GROUP_ID = ?;"
 
         const val STATEMENT_GET_GROUPS_BY_RIGHT_ID =
             "SELECT $COLUMN_GROUP_ID" +
-                    " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
-                    " WHERE $COLUMN_RIGHT_ID = ?;"
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE $COLUMN_RIGHT_ID = ?;"
 
         const val STATEMENT_GET_GROUPS_BY_IDS =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
-                    " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " WHERE $COLUMN_GROUP_ID = ANY(?);"
+                "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
+                "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
+                " FROM $TABLE_NAME_RIGHT_GROUP" +
+                " WHERE $COLUMN_GROUP_ID = ANY(?);"
 
         private fun extractGroupRS(
             rs: ResultSet,
@@ -515,16 +535,17 @@ class GroupDB(
                 groupId = groupId,
                 description = description,
                 entries =
-                ipAddressJson
-                    ?.let { gson.fromJson(it, groupListType) }
-                    ?: emptyList(),
+                    ipAddressJson
+                        ?.let { gson.fromJson(it, groupListType) }
+                        ?: emptyList(),
                 title = title,
                 createdBy = createdBy,
                 createdOn = createdOn,
                 lastUpdatedBy = lastUpdatedBy,
                 lastUpdatedOn = lastUpdatedOn,
                 version = version,
-                oldVersions = emptyList(), // These information needs to received through another challenges
+                // This information need to be queried separately
+                oldVersions = emptyList(),
             )
         }
     }

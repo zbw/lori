@@ -86,16 +86,17 @@ class GroupDBTest : DatabaseTest() {
                         version = 1,
                         lastUpdatedBy = "user2",
                         createdBy = "user2",
-                        oldVersions = listOf(
-                            GroupVersion(
-                                groupId = expectedGroup.groupId,
-                                createdBy = expectedGroup.createdBy!!,
-                                createdOn = expectedGroup.createdOn!!,
-                                description = expectedGroup.description,
-                                version = 0,
-                            )
-                        ),
-                        ),
+                        oldVersions =
+                            listOf(
+                                GroupVersion(
+                                    groupId = expectedGroup.groupId,
+                                    createdBy = expectedGroup.createdBy!!,
+                                    createdOn = expectedGroup.createdOn!!,
+                                    description = expectedGroup.description,
+                                    version = 0,
+                                ),
+                            ),
+                    ),
                 ),
             )
 
