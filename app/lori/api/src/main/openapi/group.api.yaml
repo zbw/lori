@@ -63,9 +63,6 @@ group:
       204:
         description: Update of group successful
         content:
-          application/json:
-            schema:
-              $ref: 'group.model.yaml#/GroupIdCreated'
       400:
         description: Bad request
         content:

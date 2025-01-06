@@ -155,21 +155,10 @@ fun Routing.groupRoutes(
                                 group.copy().toBusiness(),
                                 userSession.email,
                             )
-                        if (pk != 0) {
                             span.setStatus(StatusCode.OK)
                             call.respond(
                                 HttpStatusCode.NoContent,
-                            GroupIdCreated(pk)
                             )
-                        } else {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für die Gruppe '${group.title} (${group.groupId})' existiert kein Eintrag.",
-                                ),
-                            )
-                        }
                     } catch (iae: IllegalArgumentException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
                         call.respond(

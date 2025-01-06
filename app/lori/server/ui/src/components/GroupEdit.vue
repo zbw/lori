@@ -16,6 +16,7 @@ import {useVuelidate} from "@vuelidate/core";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 import error from "@/utils/error";
 import {GroupIdCreated, OldGroupVersionRest} from "@/generated-sources/openapi";
+import {unparse} from "papaparse";
 
 export default defineComponent({
   components: {GroupDeleteDialog},
@@ -155,6 +156,33 @@ export default defineComponent({
           .then((receivedGroup: GroupRest) => {
             oldVersion.value = receivedGroup;
             showDialogOldVersion.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              saveAlertErrorMessage.value = errMsg;
+              saveAlertError.value = true;
+            });
+          });
+    };
+
+    const downloadVersion = (version: number) => {
+      api
+          .getGroupById(groupTmp.value.groupId, version)
+          .then((receivedGroup: GroupRest) => {
+            oldVersion.value = receivedGroup;
+
+            let text = receivedGroup.allowedAddresses == undefined ? '' : unparse(receivedGroup.allowedAddresses);
+            let filename = 'version.csv';
+            let element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+
+
+            element.style.display = 'none';
+            document.body.appendChild(element);
+
+            element.click();
+            document.body.removeChild(element);
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -306,6 +334,7 @@ export default defineComponent({
       close,
       createGroup,
       deleteGroupSuccessful,
+      downloadVersion,
       initiateDeleteDialog,
       save,
       showVersion,
@@ -504,6 +533,15 @@ export default defineComponent({
                       icon="mdi-eye"
                   >
                     <v-icon small @click="showVersion(item.version)">mdi-eye
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <template v-slot:item.downloadVersion="{ item }">
+                  <v-btn
+                      variant="text"
+                      icon="mdi-download-outline"
+                  >
+                    <v-icon small @click="downloadVersion(item.version)">mdi-download-outline
                     </v-icon>
                   </v-btn>
                 </template>

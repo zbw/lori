@@ -52,7 +52,7 @@ export default {
       limit: limit,
     });
   },
-  updateGroup(g: GroupRest): Promise<GroupIdCreated> {
+  updateGroup(g: GroupRest): Promise<void> {
     return loriGroupApi.updateGroup({
       body: g,
     });

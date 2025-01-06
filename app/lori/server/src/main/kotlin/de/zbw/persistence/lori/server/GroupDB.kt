@@ -70,7 +70,7 @@ class GroupDB(
                     rs.next()
                     rs.getInt(1)
                 } else {
-                    0
+                    throw IllegalStateException("No row has been inserted.")
                 }
             } finally {
                 span.end()

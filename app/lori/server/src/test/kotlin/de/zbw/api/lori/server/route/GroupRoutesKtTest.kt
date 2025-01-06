@@ -336,7 +336,7 @@ class GroupRoutesKtTest {
     }
 
     @Test
-    fun testPutGroupNotFound() {
+    fun testPutNoChanges() {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -355,7 +355,7 @@ class GroupRoutesKtTest {
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(jsonAsString(TEST_GROUP.toRest()))
                 }
-            assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
+            assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
         }
     }
 
