@@ -362,7 +362,11 @@ export default defineComponent({
       <v-card>
         <v-card-title>IP Gruppen für Version {{oldVersion.version}}</v-card-title>
         <v-card-text>
-          {{ oldVersion.allowedAddresses}}
+          <v-textarea
+              label="IP-Adressen"
+              v-model="oldVersion.allowedAddressesRaw"
+              variant="outlined"
+          ></v-textarea>
         </v-card-text>
       </v-card>
     </v-dialog>
