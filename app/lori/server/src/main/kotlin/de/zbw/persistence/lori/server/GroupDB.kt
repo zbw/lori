@@ -155,7 +155,7 @@ class GroupDB(
                     GroupVersion(
                         groupId = rs.getInt(1),
                         createdBy = rs.getString(2),
-                        createdOn = rs.getTimestamp(3).toOffsetDateTime(),
+                        createdOn = rs.getTimestamp(3)?.toOffsetDateTime(),
                         description = rs.getString(4),
                         version = rs.getInt(5)
                     )
@@ -331,14 +331,22 @@ class GroupDB(
                 } finally {
                     span.end()
                 }
-
-            return@useConnection generateSequence {
+            val groups = generateSequence {
                 if (rs.next()) {
                     extractGroupRS(rs, gson)
                 } else {
                     null
                 }
             }.takeWhile { true }.toList()
+            return@useConnection groups.map{
+                it.copy(
+                    oldVersions = getAllGroupVersionsById(it.groupId)
+                        .takeIf{it.size > 1}
+                        ?.let{it.sortedByDescending { g -> g.version }}
+                        ?.drop(1)
+                        ?:emptyList()
+                )
+            }
         }
 
     suspend fun deleteGroupById(groupId: Int): Int =
@@ -435,11 +443,17 @@ class GroupDB(
                     " LIMIT 1;"
 
         const val STATEMENT_GET_GROUP_LIST =
-            "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
-                    "$COLUMN_CREATED_BY,$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY," +
-                    "$COLUMN_LAST_UPDATED_ON,$COLUMN_VERSION" +
+            "SELECT t1.$COLUMN_GROUP_ID,t1.$COLUMN_DESCRIPTION,t1.$COLUMN_IP_ADDRESSES,t1.$COLUMN_TITLE," +
+                    "t1.$COLUMN_CREATED_BY,t1.$COLUMN_CREATED_ON,t1.$COLUMN_LAST_UPDATED_BY," +
+                    "t1.$COLUMN_LAST_UPDATED_ON,t1.$COLUMN_VERSION" +
+                    " FROM $TABLE_NAME_RIGHT_GROUP t1" +
+                    " JOIN (" +
+                    " SELECT $COLUMN_GROUP_ID, MAX(${COLUMN_VERSION}) AS max_version" +
                     " FROM $TABLE_NAME_RIGHT_GROUP" +
-                    " ORDER BY $COLUMN_GROUP_ID LIMIT ? OFFSET ?;"
+                    " GROUP BY $COLUMN_GROUP_ID" +
+                    ") as t2" +
+                    " ON t1.${COLUMN_GROUP_ID}=t2.${COLUMN_GROUP_ID} AND t1.${COLUMN_VERSION}=t2.max_version" +
+                    " LIMIT ? OFFSET ?;"
 
         const val STATEMENT_INSERT_GROUP_RIGHT_PAIR =
             "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +

@@ -146,7 +146,7 @@ group-id:
         schema:
           type: integer
       - name: version
-        in: path
+        in: query
         description: Specifies version of group. If parameter is missing returns latest version.
         required: false
         schema:

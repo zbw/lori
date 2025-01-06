@@ -37,9 +37,10 @@ export default {
       id: groupId,
     });
   },
-  getGroupById(groupId: number): Promise<GroupRest> {
+  getGroupById(groupId: number, version: number | undefined): Promise<GroupRest> {
     return loriGroupApi.getGroupById({
       id: groupId,
+      version: version,
     });
   },
   getGroupList(
@@ -51,7 +52,7 @@ export default {
       limit: limit,
     });
   },
-  updateGroup(g: GroupRest): Promise<void> {
+  updateGroup(g: GroupRest): Promise<GroupIdCreated> {
     return loriGroupApi.updateGroup({
       body: g,
     });

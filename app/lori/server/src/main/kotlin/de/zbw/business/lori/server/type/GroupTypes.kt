@@ -30,8 +30,8 @@ data class GroupEntry(
 
 data class GroupVersion(
     val groupId: Int,
-    val createdBy: String,
-    val createdOn: OffsetDateTime,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
     val description: String?,
     val version: Int,
 )

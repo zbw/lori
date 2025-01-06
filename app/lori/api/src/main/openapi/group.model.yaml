@@ -40,8 +40,6 @@ GroupRest:
 
 OldGroupVersionRest:
   required:
-    - createdBy
-    - createdOn
     - version
   type: object
   properties:

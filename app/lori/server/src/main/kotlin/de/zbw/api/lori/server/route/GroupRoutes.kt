@@ -282,7 +282,7 @@ fun Routing.groupRoutes(
             withContext(span.asContextElement()) {
                 try {
                     val groupId = call.parameters["id"]?.toIntOrNull()
-                    val version = call.parameters["version"]?.toIntOrNull()
+                    val version = call.request.queryParameters["version"]?.toIntOrNull()
                     span.setAttribute("groupId", groupId?.toString() ?: "null")
                     span.setAttribute("version", groupId?.toString() ?: "null")
                     if (groupId == null) {
