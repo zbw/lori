@@ -37,20 +37,19 @@ export default {
       id: groupId,
     });
   },
-  getGroupById(groupId: number): Promise<GroupRest> {
+  getGroupById(groupId: number, version: number | undefined): Promise<GroupRest> {
     return loriGroupApi.getGroupById({
       id: groupId,
+      version: version,
     });
   },
   getGroupList(
     offset: number,
     limit: number,
-    idOnly: boolean,
   ): Promise<Array<GroupRest>> {
     return loriGroupApi.getGroupList({
       offset: offset,
       limit: limit,
-      idOnly: idOnly,
     });
   },
   updateGroup(g: GroupRest): Promise<void> {

@@ -119,7 +119,10 @@ class LoriServerBackend(
         return generatedRightId
     }
 
-    suspend fun updateGroup(group: Group): Int = dbConnector.groupDB.updateGroup(group)
+    suspend fun updateGroup(
+        group: Group,
+        updateBy: String,
+    ): Int = dbConnector.groupDB.updateGroup(group, updateBy)
 
     suspend fun upsertRight(right: ItemRight): Int {
         val rightId = right.rightId!!
@@ -188,31 +191,20 @@ class LoriServerBackend(
                 )
             }
 
-    suspend fun getGroupById(groupId: Int): Group? = dbConnector.groupDB.getGroupById(groupId)
+    suspend fun getGroupById(
+        groupId: Int,
+        version: Int?,
+    ): Group? =
+        if (version != null) {
+            dbConnector.groupDB.getGroupByIdAndVersion(groupId, version)
+        } else {
+            dbConnector.groupDB.getGroupById(groupId)
+        }
 
     suspend fun getGroupList(
         limit: Int,
         offset: Int,
     ): List<Group> = dbConnector.groupDB.getGroupList(limit, offset)
-
-    suspend fun getGroupListIdsOnly(
-        limit: Int,
-        offset: Int,
-    ): List<Group> =
-        dbConnector.groupDB
-            .getGroupListIdsOnly(limit, offset)
-            .map {
-                Group(
-                    groupId = it,
-                    entries = emptyList(),
-                    description = null,
-                    title = "",
-                    createdOn = null,
-                    createdBy = null,
-                    lastUpdatedBy = null,
-                    lastUpdatedOn = null,
-                )
-            }
 
     suspend fun getRightById(rightId: String): ItemRight? = getRightsByIds(listOf(rightId)).firstOrNull()
 
@@ -850,7 +842,7 @@ class LoriServerBackend(
                     } else {
                         true
                     }
-                } ?: false
+                } == true
 
         fun hashString(
             type: String,

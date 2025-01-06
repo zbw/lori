@@ -956,7 +956,7 @@ export default defineComponent({
     const groupItems: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
-        .getGroupList(0, 100, false)
+        .getGroupList(0, 100)
         .then((r: Array<GroupRest>) => {
           groupItems.value = r;
         })

@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
+import de.zbw.business.lori.server.type.GroupVersion
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
@@ -42,19 +43,20 @@ class GroupDBTest : DatabaseTest() {
             // Create
 
             // when + then
-            val receivedGroupId = dbConnector.insertGroup(TEST_GROUP)
+            val receivedGroupId = dbConnector.insertGroup(TEST_GROUP.copy(version = 0))
             val expectedGroup =
                 TEST_GROUP.copy(
                     groupId = receivedGroupId,
                     lastUpdatedOn = NOW,
                     createdOn = NOW,
                     lastUpdatedBy = "user1",
+                    version = 0,
                 )
 
             // Get
             // when + then
             assertThat(
-                dbConnector.getGroupById(receivedGroupId),
+                dbConnector.getGroupByIdAndVersion(receivedGroupId, 0),
                 `is`(
                     expectedGroup,
                 ),
@@ -70,15 +72,31 @@ class GroupDBTest : DatabaseTest() {
                     lastUpdatedBy = "user2",
                 )
             assertThat(
-                dbConnector.updateGroup(updated),
-                `is`(1),
+                dbConnector.updateGroup(updated, "user2"),
+                `is`(updated.groupId),
             )
 
             // when + then
             assertThat(
                 dbConnector.getGroupById(expectedGroup.groupId),
                 `is`(
-                    updated.copy(lastUpdatedOn = NOW.plusDays(1L)),
+                    updated.copy(
+                        lastUpdatedOn = NOW.plusDays(1L),
+                        createdOn = NOW.plusDays(1L),
+                        version = 1,
+                        lastUpdatedBy = "user2",
+                        createdBy = "user2",
+                        oldVersions =
+                            listOf(
+                                GroupVersion(
+                                    groupId = expectedGroup.groupId,
+                                    createdBy = expectedGroup.createdBy!!,
+                                    createdOn = expectedGroup.createdOn!!,
+                                    description = expectedGroup.description,
+                                    version = 0,
+                                ),
+                            ),
+                    ),
                 ),
             )
 
@@ -86,7 +104,7 @@ class GroupDBTest : DatabaseTest() {
             assertThat(
                 dbConnector.deleteGroupById(expectedGroup.groupId),
                 `is`(
-                    1,
+                    2,
                 ),
             )
 
@@ -121,7 +139,7 @@ class GroupDBTest : DatabaseTest() {
 
             val secondGroup =
                 TEST_GROUP.copy(
-                    title = "another titler",
+                    title = "another title",
                     description = "big description",
                     entries =
                         listOf(
@@ -141,6 +159,7 @@ class GroupDBTest : DatabaseTest() {
                     lastUpdatedBy = TEST_GROUP.createdBy,
                     createdOn = NOW,
                     lastUpdatedOn = NOW,
+                    version = 0,
                 )
 
             assertThat(
@@ -183,6 +202,8 @@ class GroupDBTest : DatabaseTest() {
                 lastUpdatedOn = NOW,
                 createdBy = "user1",
                 lastUpdatedBy = "user2",
+                version = 0,
+                oldVersions = emptyList(),
             )
     }
 }
