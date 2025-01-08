@@ -1,7 +1,6 @@
 package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.RightFilterTest.Companion.TEST_RIGHT
-import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
@@ -27,13 +26,13 @@ import java.time.Instant
 import java.time.LocalDate
 
 /**
- * Testing [NoRightFilter] which returns only items that DON'T have any
- * Right Information attached.
+ * Testing [ManualRightFilter] which returns only items that have at least one right
+ * information created by hand.
  *
- * Created on 03-02-2023.
+ * Created on 08-01-2025.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class NoRightFilterTest : DatabaseTest() {
+class ManualRightFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
@@ -42,12 +41,20 @@ class NoRightFilterTest : DatabaseTest() {
             ),
             mockk(),
         )
-    private val itemRightRestricted =
+    private val itemRightManual =
         TEST_Metadata.copy(
-            handle = "restricted right",
+            handle = "item with manual right",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
+
+    private val itemWithTemplate =
+        TEST_Metadata.copy(
+            handle = "item only with template",
+            collectionName = "subject1",
+            publicationType = PublicationType.PROCEEDING,
+        )
+
     private val itemNoRight =
         TEST_Metadata.copy(
             handle = "no rights",
@@ -57,7 +64,8 @@ class NoRightFilterTest : DatabaseTest() {
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
-            itemRightRestricted to listOf(TEST_RIGHT.copy(accessState = AccessState.RESTRICTED)),
+            itemRightManual to listOf(TEST_RIGHT.copy(isTemplate = false, templateName = null)),
+            itemWithTemplate to listOf(TEST_RIGHT.copy(isTemplate = true)),
             itemNoRight to emptyList(),
         )
 
@@ -82,83 +90,37 @@ class NoRightFilterTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @DataProvider(name = DATA_FOR_SEARCH_WITH_NO_RIGHT_FILTER)
-    fun createDataForSearchWithNoRightFilter() =
+    @DataProvider(name = DATA_FOR_TEST_MANUAL_RIGHT_FILTER)
+    fun createDataForManualRightFilter() =
         arrayOf(
             arrayOf(
-                "col:subject1 & nor:on",
+                "man:on",
+                emptyList<RightSearchFilter>(),
+                setOf(itemRightManual),
+                "Test keyword search",
+            ),
+            arrayOf(
+                null,
                 listOf(
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.PROCEEDING,
-                        ),
-                    ),
+                    ManualRightFilter(),
                 ),
+                setOf(itemRightManual),
+                "Test filter search",
+            ),
+            arrayOf(
                 null,
-                setOf(itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1 & nor:on",
-                emptyList<MetadataSearchFilter>(),
-                null,
-                setOf(itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                emptyList<MetadataSearchFilter>(),
-                null,
-                setOf(itemRightRestricted, itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1 & !nor:on",
-                listOf(
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.PROCEEDING,
-                        ),
-                    ),
-                ),
-                null,
-                setOf(itemRightRestricted),
-            ),
-            arrayOf(
-                "col:subject1",
-                emptyList<MetadataSearchFilter>(),
-                NoRightInformationFilter(),
-                setOf(itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                listOf(
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.PROCEEDING,
-                        ),
-                    ),
-                ),
-                null,
-                setOf(itemRightRestricted, itemNoRight),
-            ),
-            arrayOf(
-                "col:subject1",
-                listOf(
-                    PublicationTypeFilter(
-                        listOf(
-                            PublicationType.PROCEEDING,
-                        ),
-                    ),
-                ),
-                NoRightInformationFilter(),
-                setOf(itemNoRight),
+                emptyList<RightSearchFilter>(),
+                setOf(itemRightManual, itemNoRight, itemWithTemplate),
+                "Empty search",
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_SEARCH_WITH_NO_RIGHT_FILTER)
-    fun testSearchWithNoRightFilter(
-        givenSearchTerm: String,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        noRightInformationFilter: NoRightInformationFilter?,
+    @Test(dataProvider = DATA_FOR_TEST_MANUAL_RIGHT_FILTER)
+    fun testManualRightFilter(
+        givenSearchTerm: String?,
+        rightSearchFilter: List<RightSearchFilter>,
         expectedResult: Set<ItemMetadata>,
+        reason: String,
     ) {
         val searchResult: SearchQueryResult =
             runBlocking {
@@ -166,22 +128,24 @@ class NoRightFilterTest : DatabaseTest() {
                     givenSearchTerm,
                     10,
                     0,
-                    metadataSearchFilter,
                     emptyList(),
-                    noRightInformationFilter,
+                    rightSearchFilter,
+                    null,
                 )
             }
         assertThat(
+            reason,
             searchResult.results.map { it.metadata }.toSet(),
             `is`(expectedResult),
         )
         assertThat(
+            reason,
             searchResult.results.map { it.metadata }.size,
             `is`(expectedResult.size),
         )
     }
 
     companion object {
-        const val DATA_FOR_SEARCH_WITH_NO_RIGHT_FILTER = "DATA_FOR_SEARCH_WITH_RIGHT_NO_RIGHT_FILTER"
+        const val DATA_FOR_TEST_MANUAL_RIGHT_FILTER = "DATA_FOR_TEST_MANUAL_RIGHT_FILTER"
     }
 }

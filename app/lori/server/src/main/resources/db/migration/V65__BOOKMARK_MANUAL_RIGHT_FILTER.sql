@@ -1,0 +1,1 @@
+ALTER TABLE bookmark ADD COLUMN filter_manual_right boolean;

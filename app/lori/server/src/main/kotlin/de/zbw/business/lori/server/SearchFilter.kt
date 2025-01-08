@@ -11,6 +11,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADAT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
 import java.sql.PreparedStatement
@@ -88,6 +89,13 @@ abstract class SearchFilter(
                         )
                     "nor" ->
                         QueryParameterParser.parseNoRightInformationFilter(
+                            when (searchValue.lowercase()) {
+                                "on" -> "true"
+                                else -> null
+                            },
+                        )
+                    "man" ->
+                        QueryParameterParser.parseManualRightFilter(
                             when (searchValue.lowercase()) {
                                 "on" -> "true"
                                 else -> null
@@ -728,6 +736,25 @@ class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGH
     }
 }
 
+class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_IS_TEMPLATE) {
+    override fun toWhereClause(): String = "${ALIAS_ITEM_RIGHT}.$dbColumnName = false AND $WHERE_REQUIRE_RIGHT_ID"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int = counter
+
+    override fun toSQLString(): String = "true"
+
+    override fun toString(): String = "${getFilterType().keyAlias}:on"
+
+    override fun getFilterType(): FilterType = FilterType.MANUAL_RIGHTS
+
+    companion object {
+        fun fromString(s: String?): ManualRightFilter? = QueryParameterParser.parseManualRightFilter(s)
+    }
+}
+
 enum class FilterType(
     val keyAlias: String,
 ) {
@@ -740,6 +767,7 @@ enum class FilterType(
     FORMAL_RULE("reg"),
     HANDLE("hdl"),
     LICENCE_URL("lur"),
+    MANUAL_RIGHTS("man"),
     NO_RIGHTS("nor"),
     PUBLICATION_DATE("jah"),
     PUBLICATION_TYPE("typ"),

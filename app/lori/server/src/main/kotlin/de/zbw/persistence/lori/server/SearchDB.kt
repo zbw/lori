@@ -299,7 +299,7 @@ class SearchDB(
                         .await()
                         .getOrDefault(true, 0)
                         .takeIf { it > 0 }
-                        ?.let { true } ?: false,
+                        ?.let { true } == true,
                 hasOpenContentLicence =
                     listOf(
                         oclFacet.await().isNotEmpty(),
@@ -307,13 +307,13 @@ class SearchDB(
                             .await()
                             .getOrDefault(true, 0)
                             .takeIf { it > 0 }
-                            ?.let { true } ?: false,
+                            ?.let { true } == true,
                         nonStandardOCLLicenceFacet.await().isNotEmpty(),
                         oclRestrictedFacet
                             .await()
                             .getOrDefault(true, 0)
                             .takeIf { it > 0 }
-                            ?.let { true } ?: false,
+                            ?.let { true } == true,
                     ).any { it },
             )
         }
@@ -837,8 +837,6 @@ class SearchDB(
                 " GROUP BY $ALIAS_ITEM_RIGHT.$rightColumn"
         }
 
-        internal fun createValuesForSql(given: Int): String = "VALUES " + (1..given).joinToString(separator = ",") { "(?)" }
-
         fun buildSearchQueryForFacets(
             searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
@@ -900,7 +898,7 @@ class SearchDB(
             val searchExprUsesRights =
                 searchExpression?.let {
                     SearchExpressionResolution.hasRightQueries(searchExpression)
-                } ?: false
+                } == true
             val whereClauseList =
                 if (searchExprUsesRights) {
                     listOf(

@@ -4,6 +4,7 @@ import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
+import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
@@ -47,6 +48,7 @@ data class Bookmark(
     val seriesFilter: SeriesFilter? = null,
     val templateNameFilter: TemplateNameFilter? = null,
     val licenceURLFilter: LicenceUrlFilter? = null,
+    val manualRightFilter: ManualRightFilter? = null,
 ) {
     fun getAllMetadataFilter(): List<MetadataSearchFilter> =
         listOfNotNull(
@@ -67,5 +69,6 @@ data class Bookmark(
             temporalValidityFilter,
             startDateFilter,
             validOnFilter,
+            manualRightFilter,
         )
 }

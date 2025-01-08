@@ -103,6 +103,7 @@ export default {
     filterRightId: string | undefined,
     filterSeries: string | undefined,
     filterLicenceUrl: string | undefined,
+    filterManualRight: string | undefined,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -122,7 +123,8 @@ export default {
       filterNoRightInformation: filterNoRightInformation,
       filterRightId: filterRightId,
       filterSeries: filterSeries,
-      filterLicenceUrl,
+      filterLicenceUrl: filterLicenceUrl,
+      filterManualRight: filterManualRight,
     });
   },
 };

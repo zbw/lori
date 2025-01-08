@@ -366,6 +366,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterManualRight
+        in: query
+        schema:
+          type: string
       - name: filterRightId
         in: query
         schema:
