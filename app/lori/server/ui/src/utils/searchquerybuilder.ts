@@ -492,6 +492,22 @@ export default {
     }
   },
 
+  setManualRightFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterManualRight == undefined) {
+      searchStore.manualRight = false;
+      return;
+    }
+    searchStore.manualRight = bookmark.filterManualRight;
+  },
+
+  buildManualRight(searchStore: any): string | undefined {
+    if (searchStore.manualRight) {
+      return "true";
+    } else {
+      return undefined;
+    }
+  },
+
   accessStateToType(a: string): AccessStateRest {
     switch (a) {
       case "open":

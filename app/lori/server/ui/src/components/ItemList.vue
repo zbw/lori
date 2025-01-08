@@ -442,6 +442,7 @@ export default defineComponent({
       searchquerybuilder.setTemplateNameFilter(searchStore, bookmark);
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
+      searchquerybuilder.setManualRightFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -492,6 +493,7 @@ export default defineComponent({
           searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
+          searchquerybuilder.buildManualRight(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -581,11 +583,11 @@ export default defineComponent({
       );
       searchStore.seriesIdx = reduceIdx(searchStore.seriesIdx);
 
-      searchStore.licenceUrlIdx = searchStore.licenceUrlSelectedLastSearch.map(
+      searchStore.licenceUrlReceived = searchStore.licenceUrlSelectedLastSearch.map(
           (elem: string) => {
             return {
               count: 0,
-              series: elem,
+              licenceUrl: elem,
             } as LicenceUrlCountRest;
           },
       );

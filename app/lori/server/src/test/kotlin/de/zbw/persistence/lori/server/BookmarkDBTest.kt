@@ -145,6 +145,7 @@ class BookmarkDBTest : DatabaseTest() {
                 paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
                 zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
+                manualRightFilter = QueryParameterParser.parseManualRightFilter("false"),
                 createdBy = null,
                 createdOn = null,
                 lastUpdatedBy = null,

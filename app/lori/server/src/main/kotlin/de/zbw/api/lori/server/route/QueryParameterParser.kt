@@ -8,6 +8,7 @@ import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
+import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -163,6 +164,15 @@ object QueryParameterParser {
         s?.let { input ->
             if (input.lowercase().toBoolean()) {
                 NoRightInformationFilter()
+            } else {
+                null
+            }
+        }
+
+    fun parseManualRightFilter(s: String?): ManualRightFilter? =
+        s?.let { input ->
+            if (input.lowercase().toBoolean()) {
+                ManualRightFilter()
             } else {
                 null
             }

@@ -511,7 +511,7 @@ class RightDB(
         }
 
     companion object {
-        private const val COLUMN_IS_TEMPLATE = "is_template"
+        const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_FROM = "exception_from"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =

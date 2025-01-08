@@ -22,6 +22,7 @@ export const useSearchStore = defineStore("search", () => {
 
   const hasLicenceContract = ref(false);
   const hasOpenContentLicence = ref(false);
+  const manualRight = ref(false);
   const noRightInformation = ref(false);
   const hasZbwUserAgreement = ref(false);
 
@@ -87,6 +88,7 @@ export const useSearchStore = defineStore("search", () => {
     hasLicenceContract,
     hasOpenContentLicence,
     hasZbwUserAgreement,
+    manualRight,
     noRightInformation,
     isLastSearchForTemplates,
     licenceUrlIdx,

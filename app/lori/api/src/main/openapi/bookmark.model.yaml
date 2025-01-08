@@ -39,6 +39,8 @@ BookmarkRawRest:
       type: string
     filterSeries:
       type: string
+    filterManualRight:
+      type: string
     filterNoRightInformation:
       type: string
     filterTemplateName:
@@ -117,6 +119,8 @@ BookmarkRest:
       type: array
       items:
         type: string
+    filterManualRight:
+      type: boolean
     filterNoRightInformation:
       type: boolean
     filterTemplateName:

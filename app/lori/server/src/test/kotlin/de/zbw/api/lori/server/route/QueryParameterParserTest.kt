@@ -234,6 +234,16 @@ class QueryParameterParserTest {
         assertNotNull(QueryParameterParser.parseNoRightInformationFilter("TRUE"))
     }
 
+    @Test
+    fun testParseManualRightFilter() {
+        assertNull(QueryParameterParser.parseManualRightFilter("fooo"))
+        assertNull(QueryParameterParser.parseManualRightFilter("false"))
+        assertNull(QueryParameterParser.parseManualRightFilter(""))
+        assertNotNull(QueryParameterParser.parseManualRightFilter("tRue"))
+        assertNotNull(QueryParameterParser.parseManualRightFilter("true"))
+        assertNotNull(QueryParameterParser.parseManualRightFilter("TRUE"))
+    }
+
     companion object {
         const val DATA_FOR_PARSE_ACCESS_STATE = "DATA_FOR_PARSE_ACCESS_STATE"
         const val DATA_FOR_PARSE_PUBLICATION_DATE = "DATA_FOR_PARSE_PUBLICATION_DATE"

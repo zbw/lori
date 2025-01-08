@@ -140,8 +140,6 @@ LicenceUrlCountRest:
     licenceUrl:
       type: string
 
-
-
 PublicationTypeWithCountRest:
   required:
     - count

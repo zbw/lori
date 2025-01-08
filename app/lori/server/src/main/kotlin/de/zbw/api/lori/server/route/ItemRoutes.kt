@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationDateFilter
@@ -404,6 +405,11 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterNoRightInformation"],
                         )
 
+                    val manualRightFilter: ManualRightFilter? =
+                        QueryParameterParser.parseManualRightFilter(
+                            call.request.queryParameters["filterManualRight"],
+                        )
+
                     val rightIdsFilter: TemplateNameFilter? =
                         QueryParameterParser.parseTemplateNameFilter(
                             call.request.queryParameters["filterRightId"],
@@ -471,6 +477,7 @@ fun Routing.itemRoutes(
                             temporalValidityFilter,
                             validOnFilter,
                             rightIdsFilter,
+                            manualRightFilter,
                         )
 
                     val queryResult: SearchQueryResult =
