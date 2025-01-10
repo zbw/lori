@@ -737,7 +737,7 @@ export default defineComponent({
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
-      successMsg.value = "Bookmark " +
+      successMsg.value = "Gespeicherte Suche " +
           "'" + bookmarkName + " (" + bookmarkId + ")'" +
           " erfolgreich hinzugefügt."
       successMsgIsActive.value = true;
