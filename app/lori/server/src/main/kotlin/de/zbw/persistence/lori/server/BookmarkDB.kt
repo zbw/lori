@@ -1,6 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
@@ -110,7 +111,7 @@ class BookmarkDB(
                     bookmark,
                     connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
                 ).apply {
-                    this.setInt(23, bookmarkId)
+                    this.setInt(24, bookmarkId)
                 }
             val span = tracer.spanBuilder("updateBookmarkById").startSpan()
             try {
@@ -154,6 +155,7 @@ class BookmarkDB(
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
         const val COLUMN_FILTER_LICENCE_URL = "filter_licence_url"
         const val COLUMN_FILTER_MANUAL_RIGHT = "filter_manual_right"
+        const val COLUMN_FILTER_ACCESS_STATE_ON = "filter_access_state_on"
 
         const val STATEMENT_GET_BOOKMARKS =
             "SELECT " +
@@ -163,7 +165,8 @@ class BookmarkDB(
                 "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL,$COLUMN_FILTER_MANUAL_RIGHT" +
+                "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
 
@@ -174,7 +177,8 @@ class BookmarkDB(
                 "filter_end_date,filter_formal_rule,filter_valid_on," +
                 "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on,created_by," +
-                "last_updated_by,filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL,$COLUMN_FILTER_MANUAL_RIGHT" +
+                "last_updated_by,filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
                 ")" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
@@ -182,7 +186,8 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?,?,?)"
+                "?,?,?," +
+                "?,?)"
 
         const val STATEMENT_DELETE_BOOKMARK_BY_ID =
             "DELETE" +
@@ -198,7 +203,7 @@ class BookmarkDB(
                 "filter_publication_type,created_on,last_updated_on," +
                 "created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_BOOKMARK_ID)" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_BOOKMARK_ID)" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -206,7 +211,7 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)" +
+                "?,?,?)" +
                 " ON CONFLICT ($COLUMN_BOOKMARK_ID)" +
                 " DO UPDATE SET" +
                 " bookmark_name = EXCLUDED.bookmark_name," +
@@ -228,7 +233,8 @@ class BookmarkDB(
                 " filter_series = EXCLUDED.filter_series," +
                 " filter_template_name = EXCLUDED.filter_template_name," +
                 " $COLUMN_FILTER_LICENCE_URL = EXCLUDED.$COLUMN_FILTER_LICENCE_URL," +
-                " $COLUMN_FILTER_MANUAL_RIGHT = EXCLUDED.$COLUMN_FILTER_MANUAL_RIGHT;"
+                " $COLUMN_FILTER_MANUAL_RIGHT = EXCLUDED.$COLUMN_FILTER_MANUAL_RIGHT," +
+                " $COLUMN_FILTER_ACCESS_STATE_ON = EXCLUDED.$COLUMN_FILTER_ACCESS_STATE_ON;"
 
         const val STATEMENT_GET_BOOKMARK_LIST =
             "SELECT" +
@@ -238,7 +244,8 @@ class BookmarkDB(
                 "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL,$COLUMN_FILTER_MANUAL_RIGHT" +
+                "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
 
@@ -279,6 +286,7 @@ class BookmarkDB(
                 templateNameFilter = TemplateNameFilter.fromString(rs.getString(21)),
                 licenceURLFilter = LicenceUrlFilter.fromString(rs.getString(22)),
                 manualRightFilter = ManualRightFilter.fromString(rs.getBoolean(23).toString()),
+                accessStateOnFilter = AccessStateOnDateFilter.fromString(rs.getString(24)),
             )
 
         private fun insertUpdateSetParameters(
@@ -346,6 +354,9 @@ class BookmarkDB(
                 }
                 this.setIfNotNull(22, bookmark.manualRightFilter) { _, idx, prepStmt ->
                     prepStmt.setBoolean(idx, true)
+                }
+                this.setIfNotNull(23, bookmark.accessStateOnFilter) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value.toSQLString())
                 }
             }
         }

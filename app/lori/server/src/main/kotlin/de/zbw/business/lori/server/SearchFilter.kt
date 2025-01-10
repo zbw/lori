@@ -491,6 +491,8 @@ class SeriesFilter(
 abstract class RightSearchFilter(
     dbColumnName: String,
 ) : SearchFilter(dbColumnName) {
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
     companion object {
         const val WHERE_REQUIRE_RIGHT_ID = "${ALIAS_ITEM_RIGHT}.${DatabaseConnector.COLUMN_RIGHT_ID} IS NOT NULL"
     }
@@ -525,6 +527,39 @@ class AccessStateFilter(
 
     companion object {
         fun fromString(s: String?): AccessStateFilter? = QueryParameterParser.parseAccessStateFilter(s)
+    }
+}
+
+class AccessStateOnDateFilter(
+    val date: LocalDate,
+    val accessState: AccessState,
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
+    override fun toWhereClause(): String =
+        "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+            " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+            " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
+            " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setString(localCounter++, accessState.toString())
+        return localCounter
+    }
+
+    override fun toSQLString(): String = "$accessState+$date"
+
+    override fun getFilterType(): FilterType = FilterType.ACCESS_ON_DATE
+
+    companion object {
+        fun fromString(s: String?) = QueryParameterParser.parseAccessStateOnDate(s)
     }
 }
 
@@ -597,8 +632,6 @@ class RightValidOnFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
-
     override fun getFilterType(): FilterType = FilterType.RIGHT_VALID_ON
 
     companion object {
@@ -620,8 +653,6 @@ class StartDateFilter(
     }
 
     override fun toSQLString(): String = date.toString()
-
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.START_DATE
 
@@ -678,8 +709,6 @@ class TemplateNameFilter(
 
     override fun toSQLString(): String = templateNames.joinToString(separator = ",")
 
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
-
     companion object {
         fun fromString(s: String?): TemplateNameFilter? = QueryParameterParser.parseTemplateNameFilter(s)
     }
@@ -707,8 +736,6 @@ class FormalRuleFilter(
     ): Int = counter
 
     override fun toSQLString(): String = formalRules.joinToString(separator = ",")
-
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.FORMAL_RULE
 
@@ -759,6 +786,7 @@ enum class FilterType(
     val keyAlias: String,
 ) {
     ACCESS("acc"),
+    ACCESS_ON_DATE("acd"),
     COLLECTION_HANDLE("hdlcol"),
     COLLECTION_NAME("col"),
     COMMUNITY_HANDLE("hdlcom"),

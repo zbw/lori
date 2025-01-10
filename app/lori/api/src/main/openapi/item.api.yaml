@@ -382,6 +382,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterAccessStateOn
+        in: query
+        schema:
+          type: string
 
     responses:
       200:

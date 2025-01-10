@@ -47,6 +47,8 @@ BookmarkRawRest:
       type: string
     filterLicenceUrl:
       type: string
+    filterAccessOnDate:
+      type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -129,6 +131,8 @@ BookmarkRest:
         type: string
     filterLicenceUrl:
       type: string
+    filterAccessOnDate:
+      $ref: 'bookmark.model.yaml#/FilterAccessStateOnRest'
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -144,3 +148,14 @@ FilterPublicationDateRest:
       type: integer
     toYear:
       type: integer
+
+FilterAccessStateOnRest:
+  type: object
+  required:
+    - accessState
+    - date
+  properties:
+    accessState:
+      type: string
+    date:
+      type: date
