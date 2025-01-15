@@ -416,6 +416,11 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterRightId"],
                         )
 
+                    val accessStateOnDateFilter =
+                        QueryParameterParser.parseAccessStateOnDate(
+                            call.request.queryParameters["filterAccessStateOn"],
+                        )
+
                     span.setAttribute("searchTerm", searchTerm ?: "")
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
@@ -479,6 +484,7 @@ fun Routing.itemRoutes(
                             validOnFilter,
                             rightIdsFilter,
                             manualRightFilter,
+                            accessStateOnDateFilter,
                         )
 
                     val queryResult: SearchQueryResult =
