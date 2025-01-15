@@ -357,7 +357,45 @@ export default defineComponent({
       executeSearchByRightId(templateName);
     };
 
-    const executeSearchByRightId = (rightId: string) => {
+    const getAccessStatesForDate = () => {
+      api
+          .searchQuery(
+              "",
+              0,
+              1,
+              0,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+          ).then((response: ItemInformation) => {
+        if (response.accessStateWithCount != undefined) {
+          searchStore.accessStateOnDateReceived = response.accessStateWithCount;
+        }
+      })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+
+          const executeSearchByRightId = (rightId: string) => {
       api
         .searchQuery(
           "",
@@ -449,6 +487,7 @@ export default defineComponent({
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
       searchquerybuilder.setManualRightFilter(searchStore, bookmark);
+      searchquerybuilder.setAccessStateOnDateFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -504,6 +543,7 @@ export default defineComponent({
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
         )
         .then((response: ItemInformation) => {
+          getAccessStatesForDate();
           processSearchResult(response);
         })
         .catch((e) => {
@@ -797,6 +837,7 @@ export default defineComponent({
       closeGroupDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
+      getAccessStatesForDate,
       initSearchByRightId,
       handlePageChange,
       handlePageSizeChange,
@@ -826,6 +867,7 @@ table.special, th.special, td.special {
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
             v-on:startSearch="startSearch"
+            v-on:getAccessStatesOnDate="getAccessStatesForDate"
         ></SearchFilter>
   </VResizeDrawer>
   <v-main class="d-flex align-center justify-center">

@@ -476,6 +476,19 @@ export default {
     }
   },
 
+  setAccessStateOnDateFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterAccessOnDate == undefined) {
+      searchStore.accessStateOnDateState.dateValueFormatted = "";
+      searchStore.accessStateOnDateState.accessState = "";
+      return;
+    }
+
+    searchStore.accessStateOnDateState.dateValueFormatted = bookmark.filterAccessOnDate.date;
+    searchStore.accessStateOnDateState.accessState = bookmark.filterAccessOnDate.accessState;
+    searchStore.accessStateOnDateIdx = [bookmark.filterAccessOnDate.accessState.toLowerCase()];
+  },
+
+
   buildAccessOnDateFilter(searchStore: any): string | undefined {
     if (
         searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
@@ -533,7 +546,6 @@ export default {
   },
 
   publicationTypeToType(t: string): PublicationTypeRest {
-    console.log(t);
     switch (t) {
       case "article":
         return PublicationTypeRest.Article;

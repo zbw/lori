@@ -10,7 +10,7 @@ import {ItemInformation} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 
 export default defineComponent({
-  emits: ["startEmptySearch", "startSearch"],
+  emits: ["startEmptySearch", "startSearch", "getAccessStatesOnDate"],
   setup(props, { emit }) {
     const searchStore = useSearchStore();
     const temporalEvent = -1;
@@ -146,7 +146,7 @@ export default defineComponent({
     };
 
     const parseAccessState = (accessState: string, count: number) => {
-      switch (accessState) {
+      switch (accessState.toLowerCase()) {
         case "closed":
           return "Closed " + "(" + count + ")";
         case "open":
@@ -189,40 +189,8 @@ export default defineComponent({
      * Search for AccessStateOnDate
      */
     const errorFetchBackendData = ref("");
-    const getAccessStatesForDate = () => {
-      api
-          .searchQuery(
-              "",
-              0,
-              1,
-              0,
-              true,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-          ).then((response: ItemInformation) => {
-            if (response.accessStateWithCount != undefined) {
-              searchStore.accessStateOnDateReceived = response.accessStateWithCount;
-            }
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorFetchBackendData.value = errMsg;
-            });
-          });
+    const emitGetAccessStateOnDateSearch = () => {
+      emit("getAccessStatesOnDate");
     }
 
     /**
@@ -255,7 +223,7 @@ export default defineComponent({
 
     watch(accessStateDate, () => {
       isAccessStateOnDateMenuOpen.value = false;
-      getAccessStatesForDate();
+      emitGetAccessStateOnDateSearch();
       emitSearchStartAccessStateOn();
     });
 
@@ -315,10 +283,10 @@ export default defineComponent({
       v$,
       accessStateDateEntered,
       activateBookmarkSaveDialog,
+      emitGetAccessStateOnDateSearch,
       emitSearchStart,
       emitSearchStartAccessStateOn,
       emitSearchStartPublicationDate,
-      getAccessStatesForDate,
       parseAccessState,
       parsePublicationType,
       ppLicenceUrl,
@@ -598,7 +566,8 @@ export default defineComponent({
                       readonly
                       required
                       clearable
-                      @update:modelValue="getAccessStatesForDate"
+                      @update:modelValue="emitGetAccessStateOnDateSearch"
+                      @click:clear="emitSearchStart"
                       :error-messages="errorFetchBackendData"
                   ></v-text-field>
                 </template>
