@@ -78,7 +78,7 @@ fun Routing.itemRoutes(
                             )
                         } else {
                             val deleteOnConflict: Boolean =
-                                call.request.queryParameters["deleteRightOnConflict"]?.toBoolean() ?: false
+                                call.request.queryParameters["deleteRightOnConflict"]?.toBoolean() == true
                             when (val ret = backend.insertItemEntry(item.handle, item.rightId, deleteOnConflict)) {
                                 is Either.Left -> {
                                     call.respond(ret.value.first, ret.value.second)
@@ -367,6 +367,7 @@ fun Routing.itemRoutes(
                     val searchTerm: String? = call.request.queryParameters["searchTerm"]
                     val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                     val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                    val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
                     val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
                     val publicationDateFilter: PublicationDateFilter? =
                         QueryParameterParser.parsePublicationDateFilter(call.request.queryParameters["filterPublicationDate"])
@@ -489,6 +490,7 @@ fun Routing.itemRoutes(
                             rightFilters,
                             noRightInformationFilter,
                             emptyList(),
+                            facetsOnly,
                         )
                     span.setStatus(StatusCode.OK)
                     call.respond(

@@ -338,6 +338,7 @@ class LoriServerBackend(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter? = null,
         handlesToIgnore: List<String> = emptyList(),
+        facetsOnly: Boolean = false,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -353,15 +354,19 @@ class LoriServerBackend(
             // Acquire search results
             val receivedMetadata: Deferred<List<ItemMetadata>> =
                 async {
-                    dbConnector.searchDB.searchMetadataItems(
-                        searchExpression,
-                        limit,
-                        offset,
-                        metadataSearchFilter,
-                        rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
-                        noRightInformationFilter,
-                        handlesToIgnore,
-                    )
+                    if (!facetsOnly) {
+                        dbConnector.searchDB.searchMetadataItems(
+                            searchExpression,
+                            limit,
+                            offset,
+                            metadataSearchFilter,
+                            rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                            noRightInformationFilter,
+                            handlesToIgnore,
+                        )
+                    } else {
+                        return@async emptyList()
+                    }
                 }
 
             // Collect all publication types, zdbIds and paketSigels
