@@ -33,6 +33,7 @@ export default {
     filterTemplateName: string | undefined,
     filterLicenceUrl: string | undefined,
     filterManualRight: string | undefined,
+    filterAccessonDate: string | undefined,
   ): Promise<BookmarkIdCreated> {
     return bookmarkRawApi.addBookmarkRaw({
       body: {
@@ -55,6 +56,7 @@ export default {
         filterTemplateName: filterTemplateName,
         filterLicenceUrl: filterLicenceUrl,
         filterManualRight: filterManualRight,
+        filterAccessOnDate: filterAccessonDate,
       },
     });
   },

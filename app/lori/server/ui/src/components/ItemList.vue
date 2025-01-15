@@ -364,6 +364,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           pageSize.value,
+            false,
           undefined,
           undefined,
           undefined,
@@ -377,6 +378,8 @@ export default defineComponent({
           undefined,
             rightId,
           undefined,
+            undefined,
+            undefined,
             undefined,
         )
         .then((response: ItemInformation) => {
@@ -399,6 +402,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           currentPage.value,
+            false,
           undefined,
           undefined,
           undefined,
@@ -412,6 +416,8 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            undefined,
+            undefined,
             undefined,
         )
         .then((response: ItemInformation) => {
@@ -479,6 +485,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
+            false,
           searchquerybuilder.buildPublicationDateFilter(searchStore),
           searchquerybuilder.buildPublicationTypeFilter(searchStore),
           searchquerybuilder.buildAccessStateFilter(searchStore),
@@ -493,7 +500,8 @@ export default defineComponent({
           searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
-          searchquerybuilder.buildManualRight(searchStore),
+          searchquerybuilder.buildManualRightFilter(searchStore),
+          searchquerybuilder.buildAccessOnDateFilter(searchStore),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
