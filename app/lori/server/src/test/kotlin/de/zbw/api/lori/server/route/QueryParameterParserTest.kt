@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -242,6 +243,34 @@ class QueryParameterParserTest {
         assertNotNull(QueryParameterParser.parseManualRightFilter("tRue"))
         assertNotNull(QueryParameterParser.parseManualRightFilter("true"))
         assertNotNull(QueryParameterParser.parseManualRightFilter("TRUE"))
+    }
+
+    @Test
+    fun testParseAccessStateOnDate() {
+        // given
+        val expectedFilter =
+            AccessStateOnDateFilter(
+                date = LocalDate.of(2000, 10, 1),
+                accessState = AccessState.OPEN,
+            )
+
+        // when + then
+        val receivedFilter: AccessStateOnDateFilter? = QueryParameterParser.parseAccessStateOnDate("OPEN+2000-10-01")
+        assertThat(
+            receivedFilter!!.date,
+            `is`(expectedFilter.date),
+        )
+
+        assertThat(
+            receivedFilter.accessState,
+            `is`(expectedFilter.accessState),
+        )
+
+        // when + then
+        assertNull(
+            QueryParameterParser.parseAccessStateOnDate("OPEN2000-10-01"),
+            "Missing +",
+        )
     }
 
     companion object {

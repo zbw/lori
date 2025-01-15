@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardTemplateNameFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
@@ -64,7 +65,7 @@ object QueryParameterParser {
             s.split(",".toRegex()).mapNotNull {
                 try {
                     PublicationType.valueOf(it)
-                } catch (iae: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }
@@ -103,7 +104,7 @@ object QueryParameterParser {
             s.split(",".toRegex()).mapNotNull {
                 try {
                     AccessState.valueOf(it)
-                } catch (iae: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }
@@ -118,7 +119,7 @@ object QueryParameterParser {
             s.split(",".toRegex()).mapNotNull {
                 try {
                     TemporalValidity.valueOf(it)
-                } catch (iae: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }
@@ -140,10 +141,29 @@ object QueryParameterParser {
             ?.let { parseDate(it) }
             ?.let { RightValidOnFilter(it) }
 
+    fun parseAccessStateOnDate(s: String?): AccessStateOnDateFilter? {
+        // Format: OPEN+2024-09-17
+        if (s == null) {
+            return null
+        }
+        val tokens: List<String> = s.split("\\+".toRegex())
+        if (tokens.size != 2) {
+            return null
+        }
+        val parsedDate = parseDate(tokens[1])
+        if (parsedDate == null) {
+            return null
+        }
+        return AccessStateOnDateFilter(
+            accessState = AccessState.valueOf(tokens[0]),
+            date = parsedDate,
+        )
+    }
+
     private fun parseDate(s: String): LocalDate? =
         try {
             LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
-        } catch (dte: DateTimeException) {
+        } catch (_: DateTimeException) {
             null
         }
 
@@ -153,7 +173,7 @@ object QueryParameterParser {
                 input.split(",".toRegex()).mapNotNull {
                     try {
                         FormalRule.valueOf(it.uppercase())
-                    } catch (iae: IllegalArgumentException) {
+                    } catch (_: IllegalArgumentException) {
                         null
                     }
                 }
@@ -204,7 +224,7 @@ object QueryParameterParser {
             s.split(",".toRegex()).mapNotNull {
                 try {
                     ConflictType.valueOf(it.uppercase())
-                } catch (iae: IllegalArgumentException) {
+                } catch (_: IllegalArgumentException) {
                     null
                 }
             }

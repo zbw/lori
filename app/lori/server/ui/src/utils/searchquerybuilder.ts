@@ -246,7 +246,7 @@ export default {
       },
     );
 
-    // Remind selected ids, for resetting the filter afterwards correctly.
+    // Remind selected ids, for resetting the filter correctly afterward.
     searchStore.accessStateSelectedLastSearch = accessStates.map((value) =>
       value.toLowerCase(),
     );
@@ -476,6 +476,32 @@ export default {
     }
   },
 
+  setAccessStateOnDateFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterAccessOnDate == undefined) {
+      searchStore.accessStateOnDateState.dateValueFormatted = "";
+      searchStore.accessStateOnDateState.accessState = "";
+      return;
+    }
+
+    searchStore.accessStateOnDateState.dateValueFormatted = bookmark.filterAccessOnDate.date;
+    searchStore.accessStateOnDateState.accessState = bookmark.filterAccessOnDate.accessState;
+    searchStore.accessStateOnDateIdx = [bookmark.filterAccessOnDate.accessState.toLowerCase()];
+  },
+
+
+  buildAccessOnDateFilter(searchStore: any): string | undefined {
+    if (
+        searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
+        searchStore.accessStateOnDateState.dateValueFormatted != "" &&
+        searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined).length == 1
+    ) {
+      let filteredAccessState = searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined)
+      return filteredAccessState[0].toUpperCase() + "+" + searchStore.accessStateOnDateState.dateValueFormatted;
+    } else {
+      return undefined;
+    }
+  },
+
   setNoRightInformationFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterNoRightInformation == undefined) {
       searchStore.noRightInformation = false;
@@ -500,7 +526,7 @@ export default {
     searchStore.manualRight = bookmark.filterManualRight;
   },
 
-  buildManualRight(searchStore: any): string | undefined {
+  buildManualRightFilter(searchStore: any): string | undefined {
     if (searchStore.manualRight) {
       return "true";
     } else {
@@ -520,7 +546,6 @@ export default {
   },
 
   publicationTypeToType(t: string): PublicationTypeRest {
-    console.log(t);
     switch (t) {
       case "article":
         return PublicationTypeRest.Article;

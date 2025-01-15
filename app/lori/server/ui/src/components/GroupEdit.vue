@@ -122,8 +122,14 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Erstelldatum",
+        title: "Erstellt am",
         key: "createdOn",
+        align: "start",
+        sortable: true,
+      },
+      {
+        title: "Erstellt von",
+        key: "createdBy",
         align: "start",
         sortable: true,
       },

@@ -2,8 +2,10 @@ package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
+import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
+import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.RightValidOnFilter
@@ -32,6 +34,7 @@ import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
+import de.zbw.lori.model.FilterAccessStateOnRest
 import de.zbw.lori.model.FilterPublicationDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
@@ -497,6 +500,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         seriesFilter = QueryParameterParser.parseSeriesFilter(this.filterSeries),
         manualRightFilter = QueryParameterParser.parseManualRightFilter(this.filterManualRight),
         licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter(this.filterLicenceUrl),
+        accessStateOnFilter = QueryParameterParser.parseAccessStateOnDate(this.filterAccessOnDate),
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
@@ -534,6 +538,14 @@ fun BookmarkRest.toBusiness(): Bookmark =
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
         noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
+        manualRightFilter = this.filterManualRight?.takeIf { it }?.let { ManualRightFilter() },
+        accessStateOnFilter =
+            this.filterAccessOnDate?.let {
+                AccessStateOnDateFilter(
+                    date = it.date,
+                    accessState = AccessState.valueOf(it.accessState),
+                )
+            },
         licenceURLFilter = this.filterLicenceUrl?.let { LicenceUrlFilter(it) },
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -571,6 +583,13 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
         filterTemplateName = this.templateNameFilter?.templateNames,
         filtersAsQuery = filtersAsQuery,
         filterLicenceUrl = this.licenceURLFilter?.licenceUrl,
+        filterAccessOnDate =
+            this.accessStateOnFilter?.let {
+                FilterAccessStateOnRest(
+                    date = it.date,
+                    accessState = it.accessState.toString(),
+                )
+            },
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =

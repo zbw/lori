@@ -357,13 +357,52 @@ export default defineComponent({
       executeSearchByRightId(templateName);
     };
 
-    const executeSearchByRightId = (rightId: string) => {
+    const getAccessStatesForDate = () => {
+      api
+          .searchQuery(
+              "",
+              0,
+              1,
+              0,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+          ).then((response: ItemInformation) => {
+        if (response.accessStateWithCount != undefined) {
+          searchStore.accessStateOnDateReceived = response.accessStateWithCount;
+        }
+      })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+
+          const executeSearchByRightId = (rightId: string) => {
       api
         .searchQuery(
           "",
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           pageSize.value,
+            false,
           undefined,
           undefined,
           undefined,
@@ -377,6 +416,8 @@ export default defineComponent({
           undefined,
             rightId,
           undefined,
+            undefined,
+            undefined,
             undefined,
         )
         .then((response: ItemInformation) => {
@@ -399,6 +440,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value, // offset
           pageSize.value, // limit
           currentPage.value,
+            false,
           undefined,
           undefined,
           undefined,
@@ -412,6 +454,8 @@ export default defineComponent({
           undefined,
           undefined,
           undefined,
+            undefined,
+            undefined,
             undefined,
         )
         .then((response: ItemInformation) => {
@@ -443,6 +487,7 @@ export default defineComponent({
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
       searchquerybuilder.setManualRightFilter(searchStore, bookmark);
+      searchquerybuilder.setAccessStateOnDateFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -479,6 +524,7 @@ export default defineComponent({
           (currentPage.value - 1) * pageSize.value,
           pageSize.value,
           pageSize.value,
+            false,
           searchquerybuilder.buildPublicationDateFilter(searchStore),
           searchquerybuilder.buildPublicationTypeFilter(searchStore),
           searchquerybuilder.buildAccessStateFilter(searchStore),
@@ -493,9 +539,11 @@ export default defineComponent({
           searchquerybuilder.buildTemplateNameFilter(searchStore),
           searchquerybuilder.buildSeriesFilter(searchStore),
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
-          searchquerybuilder.buildManualRight(searchStore),
+          searchquerybuilder.buildManualRightFilter(searchStore),
+          searchquerybuilder.buildAccessOnDateFilter(searchStore),
         )
         .then((response: ItemInformation) => {
+          getAccessStatesForDate();
           processSearchResult(response);
         })
         .catch((e) => {
@@ -737,7 +785,7 @@ export default defineComponent({
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
-      successMsg.value = "Bookmark " +
+      successMsg.value = "Gespeicherte Suche " +
           "'" + bookmarkName + " (" + bookmarkId + ")'" +
           " erfolgreich hinzugefügt."
       successMsgIsActive.value = true;
@@ -789,6 +837,7 @@ export default defineComponent({
       closeGroupDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
+      getAccessStatesForDate,
       initSearchByRightId,
       handlePageChange,
       handlePageSizeChange,
@@ -818,6 +867,7 @@ table.special, th.special, td.special {
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
             v-on:startSearch="startSearch"
+            v-on:getAccessStatesOnDate="getAccessStatesForDate"
         ></SearchFilter>
   </VResizeDrawer>
   <v-main class="d-flex align-center justify-center">

@@ -16,6 +16,7 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
   const accessStateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
   const accessStateSelectedLastSearch: Ref<Array<string>> = ref([]);
+
   const accessStateClosed = ref(false);
   const accessStateOpen = ref(false);
   const accessStateRestricted = ref(false);
@@ -69,11 +70,21 @@ export const useSearchStore = defineStore("search", () => {
   const licenceUrlReceived: Ref<Array<LicenceUrlCountRest>> = ref([]);
   const licenceUrlSelectedLastSearch: Ref<Array<string>> = ref([]);
 
+  const accessStateOnDateState = reactive({
+    dateValueFormatted: "",
+    accessState: "",
+  });
+  const accessStateOnDateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
+  const accessStateOnDateIdx: Ref<Array<string>> = ref([]);
+
   // Deployment Stage
   const stage = ref("");
   const handleURLResolver = ref("");
 
   return {
+    accessStateOnDateIdx,
+    accessStateOnDateReceived,
+    accessStateOnDateState,
     lastSearchTerm,
     accessStateIdx,
     accessStateSelectedLastSearch,

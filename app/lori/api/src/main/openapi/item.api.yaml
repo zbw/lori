@@ -322,6 +322,12 @@ item-search:
           minimum: 1
           maximum: 100
           default: 25
+      - name: facetsOnly
+        in: query
+        description: Return only facets
+        required: false
+        schema:
+          type: boolean
       - name: filterPublicationDate
         in: query
         schema:
@@ -382,6 +388,11 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterAccessStateOn
+        in: query
+        schema:
+          type: string
+
 
     responses:
       200:

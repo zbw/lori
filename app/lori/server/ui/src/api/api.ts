@@ -89,6 +89,7 @@ export default {
     offset: number,
     limit: number,
     pageSize: number,
+    facetsOnly: boolean | undefined,
     filterPublicationDate: string | undefined,
     filterPublicationType: string | undefined,
     filterAccessState: string | undefined,
@@ -104,6 +105,7 @@ export default {
     filterSeries: string | undefined,
     filterLicenceUrl: string | undefined,
     filterManualRight: string | undefined,
+    filterAccessStateOn: string | undefined,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       searchTerm: searchTerm,
@@ -125,6 +127,8 @@ export default {
       filterSeries: filterSeries,
       filterLicenceUrl: filterLicenceUrl,
       filterManualRight: filterManualRight,
+      facetsOnly: facetsOnly,
+      filterAccessStateOn: filterAccessStateOn,
     });
   },
 };

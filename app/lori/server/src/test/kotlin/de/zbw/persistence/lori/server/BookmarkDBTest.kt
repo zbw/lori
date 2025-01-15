@@ -146,6 +146,7 @@ class BookmarkDBTest : DatabaseTest() {
                 zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
                 manualRightFilter = QueryParameterParser.parseManualRightFilter("false"),
+                accessStateOnFilter = QueryParameterParser.parseAccessStateOnDate("OPEN+2024-09-17"),
                 createdBy = null,
                 createdOn = null,
                 lastUpdatedBy = null,
