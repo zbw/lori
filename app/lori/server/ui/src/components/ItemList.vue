@@ -1111,6 +1111,11 @@ table.special, th.special, td.special {
                         <td class=special>nor</td>
                         <td class=special>nor:on</td>
                       </tr>
+                      <tr class=special>
+                        <td class=special>Access-Status am</td>
+                        <td class=special>acd</td>
+                        <td class=special>STATUS+YYYY-MM-DD</td>
+                      </tr>
                     </tbody>
                   </table>
 

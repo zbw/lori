@@ -344,6 +344,11 @@ class SearchFilterTest : DatabaseTest() {
     fun createDataForToString() =
         arrayOf(
             arrayOf(
+                listOf(QueryParameterParser.parseAccessStateOnDate("OPEN+2025-01-02")),
+                "acd:\"OPEN+2025-01-02\"",
+                "ACD",
+            ),
+            arrayOf(
                 emptyList<SearchFilter?>(),
                 "",
                 "nothing",
@@ -395,6 +400,8 @@ class SearchFilterTest : DatabaseTest() {
                         ),
                     ),
                     TemplateNameFilter(listOf("555nase")),
+                    QueryParameterParser.parseAccessStateOnDate("RESTRICTED+2025-01-21"),
+                    QueryParameterParser.parseManualRightFilter("true"),
                 ),
                 "acc:\"OPEN,RESTRICTED\"" +
                     " & col:\"collection\"" +
@@ -411,7 +418,9 @@ class SearchFilterTest : DatabaseTest() {
                     " & typ:\"PROCEEDING,BOOK_PART\"" +
                     " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
                     " & zga:\"PAST,PRESENT,FUTURE\"" +
-                    " & tpl:\"555nase\"",
+                    " & tpl:\"555nase\"" +
+                    " & acd:\"RESTRICTED+2025-01-21\"" +
+                    " & man:on",
                 "All filters",
             ),
         )

@@ -106,6 +106,10 @@ abstract class SearchFilter(
                         QueryParameterParser.parseTemplateNameFilter(
                             searchValue,
                         )
+                    "acd" ->
+                        QueryParameterParser.parseAccessStateOnDate(
+                            searchValue,
+                        )
                     else -> null
                 }
             } catch (iae: IllegalArgumentException) {
