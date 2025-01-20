@@ -537,15 +537,23 @@ class AccessStateFilter(
 
 class AccessStateOnDateFilter(
     val date: LocalDate,
-    val accessState: AccessState,
+    val accessState: AccessState?,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
-        "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-            " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
-            " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
-            " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+        if (accessState != null) {
+            "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
+                " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+        } else {
+            "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))"
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -555,11 +563,18 @@ class AccessStateOnDateFilter(
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
-        preparedStatement.setString(localCounter++, accessState.toString())
+        if (accessState != null) {
+            preparedStatement.setString(localCounter++, accessState.toString())
+        }
         return localCounter
     }
 
-    override fun toSQLString(): String = "$accessState+$date"
+    override fun toSQLString(): String =
+        if (accessState != null) {
+            "$accessState+$date"
+        } else {
+            "$date"
+        }
 
     override fun getFilterType(): FilterType = FilterType.ACCESS_ON_DATE
 

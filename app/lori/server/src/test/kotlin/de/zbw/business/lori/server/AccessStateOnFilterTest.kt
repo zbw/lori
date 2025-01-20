@@ -133,5 +133,30 @@ class AccessStateOnFilterTest : DatabaseTest() {
             searchResult2.results.map { it.metadata }.toSet(),
             `is`(emptySet()),
         )
+
+        // Use filter as ValidOn
+        val rightSearchFilterNoAccessState =
+            listOf(
+                AccessStateOnDateFilter(
+                    date = LocalDate.of(2025, 1, 4),
+                    accessState = null,
+                ),
+            )
+        val searchResult3: SearchQueryResult =
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    emptyList(),
+                    rightSearchFilterNoAccessState,
+                    null,
+                )
+            }
+
+        assertThat(
+            searchResult3.results.map { it.metadata }.toSet(),
+            `is`(setOf(itemWithRight)),
+        )
     }
 }
