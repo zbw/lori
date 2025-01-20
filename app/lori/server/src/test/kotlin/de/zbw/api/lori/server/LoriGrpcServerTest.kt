@@ -214,7 +214,9 @@ class LoriGrpcServerTest {
             val response =
                 LoriGrpcServer(
                     mockk(),
-                    mockk(),
+                    mockk<LoriServerBackend> {
+                        coEvery { updateMetadataAsDeleted(any()) } returns 5
+                    },
                     importer,
                     tracer,
                 ).fullImport(request)

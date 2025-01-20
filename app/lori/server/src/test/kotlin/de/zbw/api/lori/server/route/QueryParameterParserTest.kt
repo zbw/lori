@@ -269,7 +269,24 @@ class QueryParameterParserTest {
         // when + then
         assertNull(
             QueryParameterParser.parseAccessStateOnDate("OPEN2000-10-01"),
-            "Missing +",
+            "Invalid string",
+        )
+
+        val expectedFilterNoAccessState =
+            AccessStateOnDateFilter(
+                date = LocalDate.of(2000, 10, 1),
+                accessState = null,
+            )
+
+        // when + then
+        val receivedFilterNoAccessState: AccessStateOnDateFilter? = QueryParameterParser.parseAccessStateOnDate("2000-10-01")
+        assertThat(
+            receivedFilterNoAccessState!!.date,
+            `is`(expectedFilterNoAccessState.date),
+        )
+
+        assertNull(
+            receivedFilterNoAccessState.accessState,
         )
     }
 

@@ -142,22 +142,32 @@ object QueryParameterParser {
             ?.let { RightValidOnFilter(it) }
 
     fun parseAccessStateOnDate(s: String?): AccessStateOnDateFilter? {
-        // Format: OPEN+2024-09-17
+        // Format: OPEN+2024-09-17 or 2024-09-17
         if (s == null) {
             return null
         }
         val tokens: List<String> = s.split("\\+".toRegex())
-        if (tokens.size != 2) {
-            return null
+        return if (tokens.size == 2) {
+            val parsedDate = parseDate(tokens[1])
+            if (parsedDate == null) {
+                return null
+            }
+            AccessStateOnDateFilter(
+                accessState = AccessState.valueOf(tokens[0]),
+                date = parsedDate,
+            )
+        } else if (tokens.size == 1) {
+            val parsedDate = parseDate(tokens[0])
+            if (parsedDate == null) {
+                return null
+            }
+            AccessStateOnDateFilter(
+                accessState = null,
+                date = parsedDate,
+            )
+        } else {
+            null
         }
-        val parsedDate = parseDate(tokens[1])
-        if (parsedDate == null) {
-            return null
-        }
-        return AccessStateOnDateFilter(
-            accessState = AccessState.valueOf(tokens[0]),
-            date = parsedDate,
-        )
     }
 
     private fun parseDate(s: String): LocalDate? =

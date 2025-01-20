@@ -365,22 +365,22 @@ export default defineComponent({
               1,
               0,
               true,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
+              searchquerybuilder.buildPublicationDateFilter(searchStore),
+              searchquerybuilder.buildPublicationTypeFilter(searchStore),
+              searchquerybuilder.buildAccessStateFilter(searchStore),
+              searchquerybuilder.buildTempValFilter(searchStore),
+              searchquerybuilder.buildStartDateAtFilter(searchStore),
+              searchquerybuilder.buildEndDateAtFilter(searchStore),
+              searchquerybuilder.buildFormalRuleFilter(searchStore),
+              searchquerybuilder.buildValidOnFilter(searchStore),
+              searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+              searchquerybuilder.buildZDBIdFilter(searchStore),
+              searchquerybuilder.buildNoRightInformation(searchStore),
+              searchquerybuilder.buildTemplateNameFilter(searchStore),
+              searchquerybuilder.buildSeriesFilter(searchStore),
+              searchquerybuilder.buildLicenceUrlFilter(searchStore),
+              searchquerybuilder.buildManualRightFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
           ).then((response: ItemInformation) => {
         if (response.accessStateWithCount != undefined) {
           searchStore.accessStateOnDateReceived = response.accessStateWithCount;
@@ -1111,6 +1111,11 @@ table.special, th.special, td.special {
                         <td class=special>nor</td>
                         <td class=special>nor:on</td>
                       </tr>
+                      <tr class=special>
+                        <td class=special>Access-Status am</td>
+                        <td class=special>acd</td>
+                        <td class=special>STATUS+YYYY-MM-DD</td>
+                      </tr>
                     </tbody>
                   </table>
 
@@ -1225,6 +1230,10 @@ table.special, th.special, td.special {
             @click:row="addActiveItem"
             @dblclick:row="setActiveItem"
           >
+            <template v-slot:item.title="{ item }">
+             <td v-if="item.deleted">❌{{item.title}} </td>
+              <td v-else>{{item.title}} </td>
+            </template>
             <template v-slot:item.handle="{ item }">
               <td>
                 <a

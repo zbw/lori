@@ -745,6 +745,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 communityName = "communityName",
                 createdBy = "user1",
                 createdOn = NOW,
+                deleted = false,
                 doi = "doi:example.org",
                 handle = "hdl:example.handle.net",
                 isbn = "1234567890123",

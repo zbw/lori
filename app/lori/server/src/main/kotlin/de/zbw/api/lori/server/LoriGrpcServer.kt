@@ -28,6 +28,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
+import java.time.Instant
 
 /**
  * Lori GRPC-server.
@@ -84,10 +85,14 @@ class LoriGrpcServer(
                 .startSpan()
         return withContext(span.asContextElement()) {
             try {
+                val startTime = Instant.now()
                 val token = daConnector.login()
                 val communityIds = daConnector.getAllCommunityIds(token)
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
                 val imports = runImports(communityIds, token)
+                val deleted = backend.updateMetadataAsDeleted(startTime)
+                LOG.info("Number of deleted Items found: " + deleted)
+
                 FullImportResponse
                     .newBuilder()
                     .setItemsImported(imports)

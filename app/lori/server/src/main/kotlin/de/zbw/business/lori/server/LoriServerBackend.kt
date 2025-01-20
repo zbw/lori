@@ -35,6 +35,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -156,6 +157,11 @@ class LoriServerBackend(
         dbConnector.metadataDB.upsertMetadataBatch(metadataElems.map { it })
 
     suspend fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
+
+    suspend fun updateMetadataAsDeleted(instant: Instant): Int {
+        val deletedHandles = dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(instant)
+        return dbConnector.metadataDB.updateMetadataDeleteStatus(deletedHandles, true)
+    }
 
     suspend fun getMetadataList(
         limit: Int,
@@ -286,7 +292,7 @@ class LoriServerBackend(
         }
     }
 
-    suspend fun deleteMetadataByHandle(handle: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(handle))
+    internal suspend fun deleteMetadataByHandle(handle: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(handle))
 
     suspend fun deleteRight(rightId: String): Int {
         // Delete exceptions first

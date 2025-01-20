@@ -158,4 +158,5 @@ FilterAccessStateOnRest:
     accessState:
       type: string
     date:
-      type: date
+      type: string
+      format: date

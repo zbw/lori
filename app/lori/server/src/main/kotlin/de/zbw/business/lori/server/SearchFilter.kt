@@ -7,10 +7,11 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
@@ -103,6 +104,10 @@ abstract class SearchFilter(
                         )
                     "tpl" ->
                         QueryParameterParser.parseTemplateNameFilter(
+                            searchValue,
+                        )
+                    "acd" ->
+                        QueryParameterParser.parseAccessStateOnDate(
                             searchValue,
                         )
                     else -> null
@@ -268,7 +273,7 @@ class SubcommunityNameFilter(
 class LicenceUrlFilter(
     val licenceUrl: String,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_LICENCE_URL_FILTER,
+        MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER,
     ) {
     override fun toWhereClause(): String = "(LOWER($dbColumnName) = ? AND $dbColumnName is not null)"
 
@@ -295,7 +300,7 @@ class PublicationDateFilter(
     val fromYear: Int?,
     val toYear: Int?,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
+        MetadataDB.COLUMN_METADATA_PUBLICATION_DATE,
     ) {
     override fun toWhereClause(): String =
         if (fromYear == null && toYear == null) {
@@ -358,7 +363,7 @@ class PublicationDateFilter(
 class PublicationTypeFilter(
     val publicationTypes: List<PublicationType>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
+        MetadataDB.COLUMN_METADATA_PUBLICATION_TYPE,
     ) {
     override fun toWhereClause(): String =
         publicationTypes.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -390,7 +395,7 @@ class PublicationTypeFilter(
 class PaketSigelFilter(
     val paketSigels: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
+        MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
     ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -422,7 +427,7 @@ class PaketSigelFilter(
 class ZDBIdFilter(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
+        MetadataDB.COLUMN_METADATA_ZDB_ID_JOURNAL,
     ) {
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -456,7 +461,7 @@ class ZDBIdFilter(
 class SeriesFilter(
     val seriesNames: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES,
+        COLUMN_METADATA_IS_PART_OF_SERIES,
     ) {
     override fun toWhereClause(): String =
         seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -532,15 +537,23 @@ class AccessStateFilter(
 
 class AccessStateOnDateFilter(
     val date: LocalDate,
-    val accessState: AccessState,
+    val accessState: AccessState?,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
-        "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-            " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
-            " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
-            " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+        if (accessState != null) {
+            "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
+                " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+        } else {
+            "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))"
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -550,11 +563,18 @@ class AccessStateOnDateFilter(
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
-        preparedStatement.setString(localCounter++, accessState.toString())
+        if (accessState != null) {
+            preparedStatement.setString(localCounter++, accessState.toString())
+        }
         return localCounter
     }
 
-    override fun toSQLString(): String = "$accessState+$date"
+    override fun toSQLString(): String =
+        if (accessState != null) {
+            "$accessState+$date"
+        } else {
+            "$date"
+        }
 
     override fun getFilterType(): FilterType = FilterType.ACCESS_ON_DATE
 

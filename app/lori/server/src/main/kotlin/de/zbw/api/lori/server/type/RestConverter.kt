@@ -151,6 +151,7 @@ fun MetadataRest.toBusiness() =
         communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
+        deleted = deleted,
         doi = doi,
         handle = handle,
         isbn = isbn,
@@ -185,6 +186,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         communityName = communityName,
         createdBy = createdBy,
         createdOn = createdOn,
+        deleted = deleted,
         doi = doi,
         handle = handle,
         isbn = isbn,
@@ -420,6 +422,7 @@ fun DAItem.toBusiness(
             communityName = parentDACommunity?.name,
             createdBy = null,
             createdOn = null,
+            deleted = this.withdrawn?.toBoolean() == true,
             doi = RestConverter.extractMetadata("dc.identifier.pi", metadata),
             handle = RestConverter.parseHandle(handle),
             isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
@@ -805,7 +808,7 @@ object RestConverter {
                     )
                 }
         } catch (e: Exception) {
-            throw IllegalArgumentException()
+            throw IllegalArgumentException(e)
         }
 
     fun parseHandle(given: String): String = given.replace("^[\\D]*".toRegex(), "")

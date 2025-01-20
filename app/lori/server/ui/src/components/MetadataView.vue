@@ -145,6 +145,11 @@ export default defineComponent({
               }}</v-col>
               <v-col></v-col>
             </v-row>
+            <v-row v-show="currentMetadata.deleted">
+              <v-col>Item-Status</v-col>
+              <v-col>❌gelöscht, zuletzt importiert am {{ currentMetadata.lastUpdatedOn.toLocaleString("de") }}</v-col>
+              <v-col></v-col>
+            </v-row>
             <v-col></v-col>
           </v-container>
         </v-expansion-panel-text>
