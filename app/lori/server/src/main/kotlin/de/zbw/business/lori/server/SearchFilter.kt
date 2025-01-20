@@ -7,10 +7,11 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
@@ -268,7 +269,7 @@ class SubcommunityNameFilter(
 class LicenceUrlFilter(
     val licenceUrl: String,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_LICENCE_URL_FILTER,
+        MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER,
     ) {
     override fun toWhereClause(): String = "(LOWER($dbColumnName) = ? AND $dbColumnName is not null)"
 
@@ -295,7 +296,7 @@ class PublicationDateFilter(
     val fromYear: Int?,
     val toYear: Int?,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PUBLICATION_DATE,
+        MetadataDB.COLUMN_METADATA_PUBLICATION_DATE,
     ) {
     override fun toWhereClause(): String =
         if (fromYear == null && toYear == null) {
@@ -358,7 +359,7 @@ class PublicationDateFilter(
 class PublicationTypeFilter(
     val publicationTypes: List<PublicationType>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PUBLICATION_TYPE,
+        MetadataDB.COLUMN_METADATA_PUBLICATION_TYPE,
     ) {
     override fun toWhereClause(): String =
         publicationTypes.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -390,7 +391,7 @@ class PublicationTypeFilter(
 class PaketSigelFilter(
     val paketSigels: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_PAKET_SIGEL,
+        MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
     ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -422,7 +423,7 @@ class PaketSigelFilter(
 class ZDBIdFilter(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_ZDB_ID_JOURNAL,
+        MetadataDB.COLUMN_METADATA_ZDB_ID_JOURNAL,
     ) {
     override fun toWhereClause(): String =
         zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
@@ -456,7 +457,7 @@ class ZDBIdFilter(
 class SeriesFilter(
     val seriesNames: List<String>,
 ) : MetadataSearchFilter(
-        DatabaseConnector.COLUMN_METADATA_IS_PART_OF_SERIES,
+        COLUMN_METADATA_IS_PART_OF_SERIES,
     ) {
     override fun toWhereClause(): String =
         seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {

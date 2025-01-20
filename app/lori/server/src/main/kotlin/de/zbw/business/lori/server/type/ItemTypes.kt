@@ -22,6 +22,7 @@ data class ItemMetadata(
     val communityName: String?,
     val createdBy: String?,
     val createdOn: OffsetDateTime?,
+    val deleted: Boolean,
     val doi: String?,
     val handle: String,
     val isbn: String?,

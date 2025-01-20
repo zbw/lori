@@ -865,6 +865,7 @@ class ItemRoutesKtTest {
                 band = "band",
                 collectionName = "collectionName",
                 communityName = "communityName",
+                deleted = false,
                 doi = "doi:example.org",
                 handle = "hdl:example.handle.net",
                 isbn = "1234567890123",

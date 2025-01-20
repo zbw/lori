@@ -2,16 +2,6 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_HANDLE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PAKET_SIGEL
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_DATE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_PUBLICATION_TYPE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_SUBCOMMUNITY_NAME
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_JOURNAL
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -37,7 +27,7 @@ class MetadataDB(
     val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
-    suspend fun deleteMetadata(handles: List<String>): Int =
+    internal suspend fun deleteMetadata(handles: List<String>): Int =
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
@@ -179,6 +169,47 @@ class MetadataDB(
             }
         }
 
+    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<String> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON).apply {
+                    this.setTimestamp(1, Timestamp.from(instant))
+                }
+            val span = tracer.spanBuilder("getMetadataHandlesOlderThanLastUpdatedOn").startSpan()
+            try {
+                span.makeCurrent()
+                val rs = runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                generateSequence {
+                    if (rs.next()) {
+                        rs.getString(1)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            } finally {
+                span.end()
+            }
+        }
+
+    suspend fun updateMetadataDeleteStatus(
+        handles: List<String>,
+        status: Boolean,
+    ): Int =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_UPDATE_DELETE_STATUS).apply {
+                    this.setBoolean(1, status)
+                    this.setArray(2, connection.createArrayOf("text", handles.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("updateMetatadataDeleteStatus").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
     companion object {
         const val TS_COMMUNITY = "ts_community"
         const val TS_COMMUNITY_HANDLE = "ts_com_hdl"
@@ -188,6 +219,38 @@ class MetadataDB(
         const val TS_SUBCOMMUNITY_HANDLE = "ts_subcom_hdl"
         const val TS_SUBCOMMUNITY_NAME = "ts_subcom_name"
         const val TS_TITLE = "ts_title"
+
+        const val COLUMN_METADATA_AUTHOR = "author"
+        const val COLUMN_METADATA_BAND = "band"
+        const val COLUMN_METADATA_COLLECTION_HANDLE = "collection_handle"
+        const val COLUMN_METADATA_COMMUNITY_HANDLE = "community_handle"
+        const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
+        const val COLUMN_METADATA_COLLECTION_NAME = "collection_name"
+        const val COLUMN_METADATA_CREATED_BY = "created_by"
+        const val COLUMN_METADATA_CREATED_ON = "created_on"
+        const val COLUMN_METADATA_DELETED = "deleted"
+        const val COLUMN_METADATA_DOI = "doi"
+        const val COLUMN_METADATA_ISBN = "isbn"
+        const val COLUMN_METADATA_ISSN = "issn"
+        const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
+        const val COLUMN_METADATA_HANDLE = "handle"
+        const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
+        const val COLUMN_METADATA_LAST_UPDATED_ON = "last_updated_on"
+        const val COLUMN_METADATA_LICENCE_URL = "licence_url"
+        const val COLUMN_METADATA_LICENCE_URL_FILTER = "licence_url_filter"
+        const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
+        const val COLUMN_METADATA_PPN = "ppn"
+        const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
+        const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
+        const val COLUMN_METADATA_RIGHTS_K10PLUS = "rights_k10plus"
+        const val COLUMN_METADATA_STORAGE_DATE = "storage_date"
+        const val COLUMN_METADATA_SUBCOMMUNITY_HANDLE = "sub_community_handle"
+        const val COLUMN_METADATA_SUBCOMMUNITY_NAME = "sub_community_name"
+        const val COLUMN_METADATA_TITLE = "title"
+        const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
+        const val COLUMN_METADATA_TITLE_SERIES = "title_series"
+        const val COLUMN_METADATA_ZDB_ID_JOURNAL = "zdb_id_journal"
+        const val COLUMN_METADATA_ZDB_ID_SERIES = "zdb_id_series"
 
         const val STATEMENT_METADATA_CONTAINS_HANDLE =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE handle=?)"
@@ -205,8 +268,19 @@ class MetadataDB(
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER" +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_DELETED" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
+
+        const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
+            "SELECT $COLUMN_METADATA_HANDLE" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
+                " WHERE $COLUMN_METADATA_LAST_UPDATED_ON < ?;"
+
+        const val STATEMENT_UPDATE_DELETE_STATUS =
+            "UPDATE $TABLE_NAME_ITEM_METADATA" +
+                " SET $COLUMN_METADATA_DELETED=?" +
+                " WHERE $COLUMN_METADATA_HANDLE=ANY(?)"
 
         const val STATEMENT_SELECT_ALL_METADATA =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
@@ -217,7 +291,8 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle," +
                 "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER,$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
+                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
+                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME"
 
         const val STATEMENT_GET_METADATA =
@@ -232,7 +307,8 @@ class MetadataDB(
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER) " +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_DELETED) " +
                 "VALUES(" +
                 "?,?,?,?," +
                 "?,?,?,?,?," +
@@ -240,7 +316,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?) " +
+                "?,?) " +
                 "ON CONFLICT (handle) " +
                 "DO UPDATE SET " +
                 "ppn = EXCLUDED.ppn," +
@@ -269,7 +345,8 @@ class MetadataDB(
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
                 "$COLUMN_METADATA_ZDB_ID_SERIES = EXCLUDED.$COLUMN_METADATA_ZDB_ID_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER = EXCLUDED.$COLUMN_METADATA_LICENCE_URL_FILTER"
+                "$COLUMN_METADATA_LICENCE_URL_FILTER = EXCLUDED.$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_DELETED = EXCLUDED.$COLUMN_METADATA_DELETED;"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_METADATA_HANDLE=?)"
@@ -282,7 +359,9 @@ class MetadataDB(
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER) " +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_DELETED" +
+                ") " +
                 "VALUES(" +
                 "?,?,?,?," +
                 "?,?,?,?,?," +
@@ -290,7 +369,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?)"
+                "?,?)"
 
         fun extractMetadataRS(rs: ResultSet) =
             ItemMetadata(
@@ -324,6 +403,7 @@ class MetadataDB(
                 isPartOfSeries = rs.getString(28),
                 zdbIdSeries = rs.getString(29),
                 licenceUrlFilter = rs.getString(30),
+                deleted = rs.getBoolean(31),
             )
 
         private fun insertUpsertMetadataSetParameters(
@@ -412,6 +492,7 @@ class MetadataDB(
                 this.setIfNotNull(30, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
+                this.setBoolean(31, itemMetadata.deleted)
             }
         }
     }

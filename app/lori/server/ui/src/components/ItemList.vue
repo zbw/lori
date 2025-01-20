@@ -1225,6 +1225,10 @@ table.special, th.special, td.special {
             @click:row="addActiveItem"
             @dblclick:row="setActiveItem"
           >
+            <template v-slot:item.title="{ item }">
+             <td v-if="item.deleted">❌{{item.title}} </td>
+              <td v-else>{{item.title}} </td>
+            </template>
             <template v-slot:item.handle="{ item }">
               <td>
                 <a

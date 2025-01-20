@@ -8,6 +8,7 @@ import {
   TemplateNameWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
+import date_utils from "@/utils/date_utils";
 
 const QUERY_PARAMETER_TEMPLATE_ID = "templateId";
 const QUERY_PARAMETER_RIGHT_ID = "rightId";
@@ -462,10 +463,10 @@ export default {
 
   setValidOnFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterValidOn == undefined) {
-      searchStore.temporalValidOn = undefined;
+      searchStore.temporalValidOnFormatted = "";
       return;
     }
-    searchStore.temporalValidOn = bookmark.filterValidOn;
+    searchStore.temporalValidOnFormatted = date_utils.dateToIso8601(bookmark.filterValidOn);
   },
 
   buildValidOnFilter(searchStore: any): string | undefined {
@@ -483,7 +484,7 @@ export default {
       return;
     }
 
-    searchStore.accessStateOnDateState.dateValueFormatted = bookmark.filterAccessOnDate.date;
+    searchStore.accessStateOnDateState.dateValueFormatted = date_utils.dateToIso8601(bookmark.filterAccessOnDate.date);
     searchStore.accessStateOnDateState.accessState = bookmark.filterAccessOnDate.accessState;
     searchStore.accessStateOnDateIdx = [bookmark.filterAccessOnDate.accessState.toLowerCase()];
   },
