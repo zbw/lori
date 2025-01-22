@@ -55,6 +55,7 @@ ConflictTypeRest:
   type: string
   enum:
     - date_overlap
+    - deletion
     - gap
     - no_right
     - unspecified

@@ -31,6 +31,7 @@ enum ConflictType {
   CONFLICT_TYPE_DATE_OVERLAP = 1;
   CONFLICT_TYPE_GAP = 2;
   CONFLICT_TYPE_NO_RIGHT = 3;
+  CONFLICT_TYPE_DELETION = 4;
 }
 
 message RightError {
