@@ -117,6 +117,8 @@ export default defineComponent({
           return "Zeitlicher Widerspruch";
         case "gap":
           return "Zeitliche Lücke";
+        case "deletion":
+          return "Löschung";
         case "no_right":
           return "Kein Rechteeintrag";
         default:

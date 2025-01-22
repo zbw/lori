@@ -246,8 +246,6 @@ class LoriServerBackend(
             }
         }
 
-    suspend fun itemContainsMetadata(handle: String): Boolean = dbConnector.metadataDB.itemContainsHandle(handle)
-
     suspend fun itemContainsEntry(
         handle: String,
         rightId: String,
@@ -291,8 +289,6 @@ class LoriServerBackend(
             }
         }
     }
-
-    internal suspend fun deleteMetadataByHandle(handle: String): Int = dbConnector.metadataDB.deleteMetadata(listOf(handle))
 
     suspend fun deleteRight(rightId: String): Int {
         // Delete exceptions first
@@ -545,10 +541,33 @@ class LoriServerBackend(
     suspend fun checkForRightErrors(createdBy: String): List<RightError> {
         val gapErrors = checkForGAPErrors(createdBy)
         val noRightErrors = checkForNoRightErrors(createdBy)
-        return gapErrors + noRightErrors
+        val deletionErrors = checkForDeletionErrors(createdBy)
+        return gapErrors + noRightErrors + deletionErrors
     }
 
     suspend fun deleteErrorsByTestId(testId: String): Int = dbConnector.rightErrorDB.deleteErrorByTestId(testId)
+
+    internal suspend fun checkForDeletionErrors(createdBy: String): List<RightError> {
+        dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.DELETION)
+        val deletedMetadata = dbConnector.metadataDB.getDeletedMetadata()
+        val errors =
+            deletedMetadata.map { metadata ->
+                RightError(
+                    handle = metadata.handle,
+                    message = "Handle ist gelöscht worden",
+                    errorId = null,
+                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
+                    conflictByRightId = null,
+                    conflictType = ConflictType.DELETION,
+                    conflictByContext = metadata.paketSigel ?: metadata.collectionName,
+                    testId = null,
+                    createdBy = createdBy,
+                )
+            }
+        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
+        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+    }
 
     internal suspend fun checkForNoRightErrors(createdBy: String): List<RightError> {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.NO_RIGHT)

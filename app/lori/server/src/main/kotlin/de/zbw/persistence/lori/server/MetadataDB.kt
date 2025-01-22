@@ -129,6 +129,15 @@ class MetadataDB(
             return@useConnection runMetadataStatement(prepStmt, span, connection)
         }
 
+    suspend fun getDeletedMetadata(): List<ItemMetadata> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_DELETED_METADATA)
+
+            val span = tracer.spanBuilder("getDeletedMetadata").startSpan()
+            return@useConnection runMetadataStatement(prepStmt, span, connection)
+        }
+
     suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
         connectionPool.useConnection { connection ->
             val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
@@ -297,7 +306,11 @@ class MetadataDB(
 
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
-                " WHERE handle = ANY(?)"
+                " WHERE $COLUMN_METADATA_HANDLE = ANY(?)"
+
+        const val STATEMENT_GET_DELETED_METADATA =
+            STATEMENT_SELECT_ALL_METADATA_FROM +
+                " WHERE $COLUMN_METADATA_DELETED = true"
 
         const val STATEMENT_UPSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +

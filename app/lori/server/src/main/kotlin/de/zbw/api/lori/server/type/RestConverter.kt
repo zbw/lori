@@ -693,6 +693,7 @@ fun ConflictType.toRest(): ConflictTypeRest =
         ConflictType.DATE_OVERLAP -> ConflictTypeRest.date_overlap
         ConflictType.UNSPECIFIED -> ConflictTypeRest.unspecified
         ConflictType.GAP -> ConflictTypeRest.gap
+        ConflictType.DELETION -> ConflictTypeRest.deletion
         ConflictType.NO_RIGHT -> ConflictTypeRest.no_right
     }
 
@@ -700,6 +701,7 @@ fun ConflictType.toProto(): de.zbw.lori.api.ConflictType =
     when (this) {
         ConflictType.DATE_OVERLAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_DATE_OVERLAP
         ConflictType.UNSPECIFIED -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_UNSPECIFIED
+        ConflictType.DELETION -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_DELETION
         ConflictType.GAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_GAP
         ConflictType.NO_RIGHT -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_NO_RIGHT
     }
