@@ -255,7 +255,7 @@ class QueryParameterParserTest {
             )
 
         // when + then
-        val receivedFilter: AccessStateOnDateFilter? = QueryParameterParser.parseAccessStateOnDate("OPEN+2000-10-01")
+        val receivedFilter: AccessStateOnDateFilter? = QueryParameterParser.parseAccessStateOnDate("open+2000-10-01")
         assertThat(
             receivedFilter!!.date,
             `is`(expectedFilter.date),

@@ -153,7 +153,7 @@ object QueryParameterParser {
                 return null
             }
             AccessStateOnDateFilter(
-                accessState = AccessState.valueOf(tokens[0]),
+                accessState = AccessState.valueOf(tokens[0].uppercase()),
                 date = parsedDate,
             )
         } else if (tokens.size == 1) {

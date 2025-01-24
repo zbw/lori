@@ -217,7 +217,7 @@ export default defineComponent({
         :isNewRight="isNew"
         :isNewTemplate="false"
         :handle="handle"
-        :right="currentRight"
+        :rightId="currentRight.rightId"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
       ></RightsEditDialog>
