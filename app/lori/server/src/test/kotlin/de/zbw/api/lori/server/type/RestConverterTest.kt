@@ -1,18 +1,22 @@
 package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.AccessStateWithCountRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
@@ -22,6 +26,7 @@ import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PaketSigelWithCountRest
 import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
@@ -534,6 +539,41 @@ class RestConverterTest {
         )
     }
 
+    @Test
+    fun testTemplateApplicationConversion() {
+        // given
+        val example: TemplateApplicationResult =
+            TEST_TEMPLATE_APPLICATION_RESULT.copy(
+                exceptionTemplateApplicationResult =
+                    listOf(
+                        TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc"),
+                    ),
+            )
+        val expected =
+            TemplateApplicationRest(
+                handles = TEST_TEMPLATE_APPLICATION_RESULT.appliedMetadataHandles,
+                rightId = TEST_TEMPLATE_APPLICATION_RESULT.rightId,
+                templateName = TEST_TEMPLATE_APPLICATION_RESULT.templateName,
+                errors = TEST_TEMPLATE_APPLICATION_RESULT.errors.map { it.toRest() },
+                numberOfErrors = TEST_TEMPLATE_APPLICATION_RESULT.numberOfErrors,
+                numberOfAppliedEntries = TEST_TEMPLATE_APPLICATION_RESULT.appliedMetadataHandles.size,
+                testId = TEST_TEMPLATE_APPLICATION_RESULT.testId,
+                exceptionTemplateApplications =
+                    listOf(
+                        TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc").toRest(),
+                    ),
+            )
+
+        // when
+        val received = example.toRest()
+
+        // then
+        assertThat(
+            received,
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_PARSE_TO_GROUP = "DATA_FOR_PARSE_TO_GROUP"
         const val DATA_FOR_PARSE_HANDLE = "DATA_FOR_PARSE_HANDLE"
@@ -862,6 +902,31 @@ class RestConverterTest {
                         0,
                         ZoneOffset.UTC,
                     ),
+            )
+
+        val TEST_TEMPLATE_APPLICATION_RESULT =
+            TemplateApplicationResult(
+                rightId = "5",
+                templateName = "parent",
+                testId = "foobar",
+                appliedMetadataHandles = listOf("one", "two"),
+                errors =
+                    listOf(
+                        RightError(
+                            errorId = 1,
+                            message = "Timing conflict",
+                            conflictingWithRightId = "sourceRightId",
+                            conflictByRightId = "conflictingRightId",
+                            handle = "somehandle",
+                            createdOn = ErrorRoutesKtTest.Companion.NOW,
+                            conflictType = ConflictType.DATE_OVERLAP,
+                            conflictByContext = "template name",
+                            testId = null,
+                            createdBy = "user1",
+                        ),
+                    ),
+                numberOfErrors = 1,
+                exceptionTemplateApplicationResult = emptyList(),
             )
     }
 }

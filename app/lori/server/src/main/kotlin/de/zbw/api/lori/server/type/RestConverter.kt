@@ -732,11 +732,12 @@ fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
                 TemplateApplicationRest(
                     rightId = exc.rightId,
                     handles = exc.appliedMetadataHandles,
-                    templateName = templateName,
+                    templateName = exc.templateName,
                     errors = exc.errors.map { it.toRest() },
                     numberOfAppliedEntries = exc.appliedMetadataHandles.size,
                     testId = exc.testId,
                     numberOfErrors = exc.numberOfErrors,
+                    exceptionTemplateApplications = emptyList(),
                 )
             },
     )
