@@ -681,10 +681,6 @@ export default defineComponent({
     // Computed properties
     onMounted(() => {
       reinitializeRight();
-      if (!isNew.value && isTemplate.value) {
-        loadBookmarks();
-        loadExceptions();
-      }
     });
     const computedRightId = computed(() => {
       // The check for undefined is required here!
@@ -819,6 +815,10 @@ export default defineComponent({
       if (!isNew.value) {
         getRightsData(() =>{
           setGivenValues();
+          if (isTemplate.value) {
+            loadBookmarks();
+            loadExceptions();
+          }
         });
       } else {
         resetAllValues();
