@@ -90,8 +90,8 @@ class RestConverterTest {
                             createdBy = TEST_RIGHT.createdBy,
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
-                            groupIds = null,
-                            groups = null,
+                            groupIds = TEST_RIGHT.groupIds,
+                            groups = TEST_RIGHT.groups?.map { it.toRest() },
                             isTemplate = TEST_RIGHT.isTemplate,
                             lastAppliedOn = TEST_RIGHT.lastAppliedOn,
                             lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
@@ -614,8 +614,48 @@ class RestConverterTest {
                     ),
                 endDate = TODAY,
                 exceptionFrom = null,
-                groups = null,
-                groupIds = null,
+                groups =
+                    listOf(
+                        Group(
+                            groupId = 1,
+                            version = 10,
+                            description = "foobar",
+                            entries =
+                                listOf(
+                                    GroupEntry(
+                                        organisationName = "blablub",
+                                        ipAddresses = "127.0.0.1",
+                                    ),
+                                ),
+                            title = "some tilte",
+                            createdBy = "user1",
+                            lastUpdatedBy = "user 2",
+                            createdOn =
+                                OffsetDateTime.of(
+                                    2022,
+                                    3,
+                                    4,
+                                    1,
+                                    1,
+                                    0,
+                                    0,
+                                    ZoneOffset.UTC,
+                                ),
+                            lastUpdatedOn =
+                                OffsetDateTime.of(
+                                    2022,
+                                    3,
+                                    4,
+                                    1,
+                                    1,
+                                    0,
+                                    0,
+                                    ZoneOffset.UTC,
+                                ),
+                            oldVersions = emptyList(),
+                        ),
+                    ),
+                groupIds = listOf(1),
                 isTemplate = true,
                 lastAppliedOn =
                     OffsetDateTime.of(

@@ -111,10 +111,10 @@ class LoriServerBackend(
 
     suspend fun insertRight(right: ItemRight): String {
         val generatedRightId = dbConnector.rightDB.insertRight(right)
-        right.groups?.forEach { group ->
+        right.groupIds?.forEach { id ->
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
-                groupId = group.groupId,
+                groupId = id,
             )
         }
         return generatedRightId
@@ -491,7 +491,7 @@ class LoriServerBackend(
     /**
      * Insert template.
      */
-    suspend fun insertTemplate(right: ItemRight): String = dbConnector.rightDB.insertRight(right)
+    suspend fun insertTemplate(right: ItemRight): String = insertRight(right)
 
     suspend fun getTemplateList(
         limit: Int,
