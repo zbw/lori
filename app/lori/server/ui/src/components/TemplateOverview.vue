@@ -379,7 +379,7 @@ export default defineComponent({
             currentTemplate.exceptionFrom !== undefined &&
             currentTemplate.exceptionFrom != ''
           "
-          :right="currentTemplate"
+          :rightId="currentTemplate.rightId"
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
           v-on:editRightClosed="closeTemplateEditDialog"

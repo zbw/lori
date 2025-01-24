@@ -34,6 +34,7 @@ import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
 import Dashboard from "@/components/Dashboard.vue";
 import rightErrorApi from "@/api/rightErrorApi";
+import rightApi from "@/api/rightApi";
 
 export default defineComponent({
   computed: {
@@ -42,9 +43,9 @@ export default defineComponent({
     }
   },
   props: {
-    right: {
-      type: Object as PropType<RightRest>,
-      required: false, // Is not required because this component is used for creating new rights as well
+    rightId: {
+      type: String,
+      required: false,
     },
     index: {
       type: Number,
@@ -143,13 +144,13 @@ export default defineComponent({
     });
 
     const formWasChanged = computed(() => {
-          return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(props.right) ||
+          return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(lastSavedRight.value) ||
             ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
-            formState.accessState != accessStateToString(props.right.accessState) ||
-            formState.basisStorage != basisStorageToString(props.right.basisStorage) ||
-            formState.basisAccessState != basisAccessStateToString(props.right.basisAccessState)  ||
-            formState.startDate != props.right.startDate ||
-            formState.endDate != props.right.endDate
+            formState.accessState != accessStateToString(lastSavedRight.value.accessState) ||
+            formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
+            formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
+            formState.startDate != lastSavedRight.value.startDate ||
+            formState.endDate != lastSavedRight.value.endDate
     })
 
     watch(startDateFormatted, () => {
@@ -258,6 +259,7 @@ export default defineComponent({
     const successMsg = ref("");
     const metadataCount = ref(0);
     const tmpRight = ref({} as RightRest);
+    const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
       emit("editRightClosed");
@@ -276,7 +278,7 @@ export default defineComponent({
     };
 
     const cancel = () => {
-      tmpRight.value = Object.assign({}, props.right);
+      tmpRight.value = Object.assign({}, lastSavedRight.value);
       close();
     };
 
@@ -292,9 +294,7 @@ export default defineComponent({
       if (isTemplate.value) {
         emit("deleteTemplateSuccessful", formState.formTemplateName);
       } else {
-        if (props.right != undefined) {
-          emit("deleteSuccessful", index, props.right.rightId);
-        }
+        emit("deleteSuccessful", index, lastSavedRight.value.rightId);
       }
     };
 
@@ -371,6 +371,7 @@ export default defineComponent({
             tmpRight.value.rightId +
             " erfolgreich geupdated";
           successMsgIsActive.value = true;
+          reinitializeRight();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -434,6 +435,7 @@ export default defineComponent({
                     " erfolgreich geupdated";
                   successMsgIsActive.value = true;
                   emit("updateTemplateSuccessful", formState.formTemplateName);
+                  reinitializeRight();
                 });
               },
             );
@@ -496,6 +498,7 @@ export default defineComponent({
     };
 
     const save: () => Promise<void> = async () => {
+      console.log("Start saving routine");
       // Vuelidate expects this field to be filled. When editing rights it is not required.
       if (!isTemplate.value) {
         formState.formTemplateName = "foo";
@@ -683,55 +686,54 @@ export default defineComponent({
         loadExceptions();
       }
     });
-    const computedRight = computed(() => props.right);
-    const computedReinitCounter = computed(() => props.reinitCounter);
     const computedRightId = computed(() => {
       // The check for undefined is required here!
-      if (props.right == undefined || props.right.rightId == undefined) {
-        return "";
-      } else {
-        return props.right.rightId;
-      }
+        if (props.rightId == undefined) {
+          return "";
+        } else {
+          return props.rightId;
+        }
     });
+    const computedReinitCounter = computed(() => props.reinitCounter);
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
       () =>
         isNew.value ||
-        (props.right != undefined && props.right.lastAppliedOn == undefined),
+        (lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined),
     );
     const isTemplate = computed(
       () =>
         props.isNewTemplate ||
-        (props.right != undefined && props.right.isTemplate),
+        (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
     );
     const isExistingTemplate = computed(
         () =>
             !props.isNewTemplate &&
-            (props.right != undefined && props.right.isTemplate),
+            (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
     );
     const isTemplateAndException = computed(
       () => isTemplate.value && props.isExceptionTemplate,
     );
     const isTemplateDraft = computed(
-        () => isTemplate.value && props.right?.lastAppliedOn == undefined,
+        () => isTemplate.value && lastSavedRight.value?.lastAppliedOn == undefined,
     );
     const exceptionsAllowed = computed(
       () =>
         !props.isExceptionTemplate &&
         (props.isNewTemplate ||
-          (props.right != undefined && props.right.exceptionFrom == undefined)),
+          (lastSavedRight.value != undefined && lastSavedRight.value.exceptionFrom == undefined)),
     );
 
     const cardTitle = computed(() => {
       const mode = isNew.value ? "erstellen" : "bearbeiten";
       if (isTemplate.value) {
         let description: string;
-        if (props.isExceptionTemplate && props.right?.lastAppliedOn == undefined){
+        if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
           description = "(Ausnahme und Entwurf)"
         } else if (props.isExceptionTemplate){
           description = "(Ausnahme)"
-        } else if (props.right?.lastAppliedOn == undefined) {
+        } else if (lastSavedRight.value?.lastAppliedOn == undefined) {
           description = "(Entwurf)"
         } else {
           description = ""
@@ -742,7 +744,7 @@ export default defineComponent({
       }
     });
 
-    watch(computedRight, () => {
+    watch(computedRightId, () => {
       reinitializeRight();
     });
     watch(computedReinitCounter, () => {
@@ -751,8 +753,10 @@ export default defineComponent({
         resetAllValues();
         addInitialBookmark();
       } else {
-        setGivenValues();
-        loadBookmarks();
+        getRightsData(() =>{
+          setGivenValues();
+          loadBookmarks();
+        });
       }
     });
 
@@ -763,24 +767,20 @@ export default defineComponent({
     };
 
     const setGivenValues = () => {
-      if (props.right == undefined) {
-        // This should never happen :'(
-        return;
-      }
-      tmpRight.value = Object.assign({}, props.right);
+      tmpRight.value = Object.assign({}, lastSavedRight.value);
       if(tmpRight.value.groups != undefined) {
         formState.selectedGroups = tmpRight.value.groups;
       }
       formState.formTemplateName =
-        props.right.templateName == undefined ? "" : props.right.templateName;
-      formState.accessState = accessStateToString(props.right.accessState);
-      formState.basisStorage = basisStorageToString(props.right.basisStorage);
+        tmpRight.value.templateName == undefined ? "" : tmpRight.value.templateName;
+      formState.accessState = accessStateToString(tmpRight.value.accessState);
+      formState.basisStorage = basisStorageToString(tmpRight.value.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
-        props.right.basisAccessState,
+        tmpRight.value.basisAccessState,
       );
-      formState.startDate = props.right.startDate;
-      if (props.right.endDate !== undefined) {
-        formState.endDate = props.right.endDate;
+      formState.startDate = tmpRight.value.startDate;
+      if (tmpRight.value.endDate !== undefined) {
+        formState.endDate = tmpRight.value.endDate;
       } else {
         formState.endDate = undefined;
       }
@@ -795,11 +795,31 @@ export default defineComponent({
       bookmarkItems.value = [];
     };
 
+    const getRightsData = (callback: () => void) => {
+      if (props.rightId == undefined){
+        return;
+      }
+      rightApi
+          .getRightById(props.rightId)
+          .then((r: RightRest) => {
+            lastSavedRight.value = r;
+            callback();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+
     const reinitializeRight = () => {
       updateInProgress.value = false;
       getGroupList();
       if (!isNew.value) {
-        setGivenValues();
+        getRightsData(() =>{
+          setGivenValues();
+        });
       } else {
         resetAllValues();
         addInitialBookmark();
@@ -1055,6 +1075,7 @@ export default defineComponent({
       historyStore,
       isStartDateMenuOpen,
       isEndDateMenuOpen,
+      lastSavedRight,
       menuStartDate,
       menuEndDate,
       metadataCount,
@@ -1353,12 +1374,12 @@ export default defineComponent({
                     <template v-slot:item.actions="{ item }">
                       <v-tooltip
                           location="bottom"
-                          :disabled="right?.lastAppliedOn == undefined"
+                          :disabled="lastSavedRight?.lastAppliedOn == undefined"
                       >
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-btn
-                                :disabled="!isEditable || !(right?.lastAppliedOn == undefined)"
+                                :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
                                 @click="deleteBookmarkEntry(item)"
                                 >
                             <v-icon

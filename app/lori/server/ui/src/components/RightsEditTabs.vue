@@ -160,7 +160,7 @@ export default defineComponent({
           :isNewRight="false"
           :isNewTemplate="false"
           :handle="handle"
-          :right="item"
+          :rightId="item.rightId"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"

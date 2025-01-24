@@ -939,7 +939,7 @@ table.special, th.special, td.special {
         :index="-1"
         :isNewRight="false"
         :isNewTemplate="false"
-        :right="queryParameterRight"
+        :rightId="queryParameterRight.rightId"
         v-on:editRightClosed="closeTemplateEditDialog"
       ></RightsEditDialog>
     </v-dialog>
