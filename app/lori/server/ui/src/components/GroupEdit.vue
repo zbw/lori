@@ -420,7 +420,7 @@ export default defineComponent({
               label="Name der Berechtigungsgruppe"
               v-model="formState.title"
               :error-messages="errorName"
-              disabled
+              readonly
           ></v-text-field>
         </v-col>
       </v-row>
@@ -428,7 +428,7 @@ export default defineComponent({
         <v-col>
           <v-text-field
               v-model="formState.groupId"
-              disabled
+              readonly
               hint="ID der Berechtigungsgruppe"
               variant="outlined"
               label="ID der Berechtigungsgruppe"
