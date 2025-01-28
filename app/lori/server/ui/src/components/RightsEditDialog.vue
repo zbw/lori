@@ -1227,19 +1227,19 @@ export default defineComponent({
           href="https://zbwintern/wiki/x/8wPUG"
           target="_blank"
       ></v-btn>
-      <v-btn v-if="!isTemplate" :disabled="updateInProgress" color="blue darken-1" @click="save"
+      <v-btn v-if="!isTemplate" :readonly="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
       <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
 
       <v-tooltip
         location="bottom"
-        :disabled="!(isNew || isTemplateAndException)"
+        :readonly="!(isNew || isTemplateAndException)"
       >
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :disabled="isNew || isTemplateAndException"
+              :readonly="isNew || isTemplateAndException"
               @click="initiateDeleteDialog"
             >
               <v-icon>mdi-delete</v-icon>
@@ -1292,7 +1292,7 @@ export default defineComponent({
                   <v-text-field
                     v-model="formState.formTemplateName"
                     :error-messages="errorTemplateName"
-                    :disabled="!isEditable"
+                    :readonly="!isEditable"
                     hint="Name des Templates"
                     variant="outlined"
                   ></v-text-field>
@@ -1301,12 +1301,12 @@ export default defineComponent({
               <v-row>
                 <v-col cols="4"> Beschreibung</v-col>
                 <v-col cols="8">
-                  <v-text-field
+                  <v-textarea
                     v-model="tmpRight.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
-                    :disabled="!isEditable"
-                  ></v-text-field>
+                    :readonly="!isEditable"
+                  ></v-textarea>
                 </v-col>
               </v-row>
               <v-row>
@@ -1493,7 +1493,7 @@ export default defineComponent({
                 <v-text-field
                   v-if="isNew"
                   ref="rightId"
-                  disabled
+                  readonly
                   hint="Rechte Id"
                   label="Wird automatisch generiert"
                   variant="outlined"
@@ -1502,7 +1502,7 @@ export default defineComponent({
                   v-if="!isNew"
                   ref="rightId"
                   v-model="tmpRight.rightId"
-                  disabled
+                  readonly
                   hint="Rechte Id"
                   variant="outlined"
                 ></v-text-field>
@@ -1513,7 +1513,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.accessState"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
                   variant="outlined"
@@ -1586,7 +1586,7 @@ export default defineComponent({
                 <v-select
                   v-model="formState.selectedGroups"
                   :items="groupItems"
-                  :disabled="!isEditable || formState.accessState != 'Restricted'"
+                  :readonly="!isEditable || formState.accessState != 'Restricted'"
                   :error-messages="errorIPGroup"
                   @blur="v$.selectedGroups.$touch()"
                   @change="v$.selectedGroups.$touch()"
@@ -1606,7 +1606,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   counter
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
@@ -1626,7 +1626,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.licenceContract"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   variant="outlined"
                 ></v-text-field>
@@ -1637,7 +1637,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   color="indigo"
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
                   label="Ja"
@@ -1650,7 +1650,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.zbwUserAgreement"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   color="indigo"
                   hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
                   label="Ja"
@@ -1664,7 +1664,7 @@ export default defineComponent({
                 <v-text-field
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
                   v-model="tmpRight.openContentLicence"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   variant="outlined"
                 ></v-text-field>
               </v-col>
@@ -1676,7 +1676,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-text-field
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
                   variant="outlined"
                 ></v-text-field>
@@ -1689,7 +1689,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.nonStandardOpenContentLicence"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   color="indigo"
                   hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
                   label="Ja"
@@ -1702,7 +1702,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   color="indigo"
                   hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
                   label="Ja"
@@ -1715,7 +1715,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesFormalRules"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   counter
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
@@ -1737,7 +1737,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisStorage"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   :items="basisStorage"
                   variant="outlined"
                 ></v-select>
@@ -1748,7 +1748,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.basisAccessState"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   :items="basisAccessState"
                   variant="outlined"
                 ></v-select>
@@ -1759,7 +1759,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesProcessDocumentation"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
@@ -1822,7 +1822,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-textarea
                   v-model="tmpRight.notesManagementRelated"
-                  :disabled="!isEditable"
+                  :readonly="!isEditable"
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
@@ -1848,7 +1848,7 @@ export default defineComponent({
                 color="blue darken-1"
                 v-bind="props"
                 @click="dryRunTemplate"
-                :disabled="isNewTemplate || formWasChanged"
+                :readonly="isNewTemplate || formWasChanged"
             >Testen</v-btn>
           </div>
         </template>
