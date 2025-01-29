@@ -67,8 +67,8 @@ export default defineComponent({
     // Reset the search filter
     const canReset = computed(() => {
       return (
-        searchStore.publicationDateFrom != "" ||
-        searchStore.publicationDateTo != "" ||
+        searchStore.publicationYearFrom != "" ||
+        searchStore.publicationYearTo != "" ||
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.accessStateClosed ||
@@ -101,8 +101,8 @@ export default defineComponent({
     });
 
     const resetFilter: () => void = () => {
-      searchStore.publicationDateFrom = "";
-      searchStore.publicationDateTo = "";
+      searchStore.publicationYearFrom = "";
+      searchStore.publicationYearTo = "";
 
       searchStore.accessStateOpen = false;
       searchStore.accessStateRestricted = false;
@@ -251,7 +251,7 @@ export default defineComponent({
       emit("startSearch");
     };
 
-    const emitSearchStartPublicationDate = (date: string) => {
+    const emitSearchStartPublicationYear = (date: string) => {
       if (date.length == 4 || date.length == 0){
         emit("startSearch");
       }
@@ -286,7 +286,7 @@ export default defineComponent({
       emitGetAccessStateOnDateSearch,
       emitSearchStart,
       emitSearchStartAccessStateOn,
-      emitSearchStartPublicationDate,
+      emitSearchStartPublicationYear,
       parseAccessState,
       parsePublicationType,
       ppLicenceUrl,
@@ -351,15 +351,15 @@ export default defineComponent({
                   <v-col cols="6">
                     <v-text-field
                       label="Von"
-                      v-model="searchStore.publicationDateFrom"
-                      @update:modelValue="emitSearchStartPublicationDate(searchStore.publicationDateFrom)"
+                      v-model="searchStore.publicationYearFrom"
+                      @update:modelValue="emitSearchStartPublicationYear(searchStore.publicationYearFrom)"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
                       label="Bis"
-                      v-model="searchStore.publicationDateTo"
-                      @update:modelValue="emitSearchStartPublicationDate(searchStore.publicationDateTo)"
+                      v-model="searchStore.publicationYearTo"
+                      @update:modelValue="emitSearchStartPublicationYear(searchStore.publicationYearTo)"
                     ></v-text-field>
                   </v-col>
                 </v-row>

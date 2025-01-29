@@ -31,8 +31,8 @@ export const useSearchStore = defineStore("search", () => {
   const formalRuleOpenContentLicence = ref(false);
   const formalRuleUserAgreement = ref(false);
 
-  const publicationDateFrom = ref("");
-  const publicationDateTo = ref("");
+  const publicationYearFrom = ref("");
+  const publicationYearTo = ref("");
 
   const paketSigelIdIdx: Ref<Array<boolean>> = ref([]);
   const paketSigelIdReceived: Ref<Array<PaketSigelWithCountRest>> = ref([]);
@@ -111,8 +111,8 @@ export const useSearchStore = defineStore("search", () => {
     publicationTypeIdx,
     publicationTypeReceived,
     publicationTypeSelectedLastSearch,
-    publicationDateFrom,
-    publicationDateTo,
+    publicationYearFrom,
+    publicationYearTo,
     searchTerm,
     seriesIdx,
     seriesReceived,

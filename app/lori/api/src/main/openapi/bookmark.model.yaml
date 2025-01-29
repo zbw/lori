@@ -17,7 +17,7 @@ BookmarkRawRest:
       type: string
     searchTerm:
       type: string
-    filterPublicationDate:
+    filterPublicationYear:
       type: string
     filterPublicationType:
       type: string
@@ -82,8 +82,8 @@ BookmarkRest:
       type: string
     searchTerm:
       type: string
-    filterPublicationDate:
-      $ref: 'bookmark.model.yaml#/FilterPublicationDateRest'
+    filterPublicationYear:
+      $ref: 'bookmark.model.yaml#/FilterPublicationYearRest'
     filterPublicationType:
       type: array
       items:
@@ -141,7 +141,7 @@ BookmarkRest:
     filtersAsQuery:
       type: string
 
-FilterPublicationDateRest:
+FilterPublicationYearRest:
   type: object
   properties:
     fromYear:

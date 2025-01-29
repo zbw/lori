@@ -90,8 +90,8 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadata =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "zzz", publicationDate = LocalDate.of(1978, 1, 1)),
-                    TEST_METADATA.copy(handle = "zzz2", publicationDate = LocalDate.of(1978, 1, 1)),
+                    TEST_METADATA.copy(handle = "zzz", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "zzz2", publicationYear = 1978),
                     TEST_METADATA.copy(handle = "aaa"),
                     TEST_METADATA.copy(handle = "abb"),
                     TEST_METADATA.copy(handle = "acc"),
@@ -625,12 +625,12 @@ class LoriServerBackendTest : DatabaseTest() {
 
             val existingRights =
                 backend
-                    .getRightsByIds(listOf(givenRight1.rightId!!, givenRight2.rightId!!, givenRight3.rightId!!))
+                    .getRightsByIds(listOf(givenRight1.rightId, givenRight2.rightId, givenRight3.rightId))
                     .map { it.rightId }
                     .toSet()
             assertThat(
                 existingRights,
-                `is`(setOf(givenRight1.rightId!!, givenRight2.rightId!!)),
+                `is`(setOf(givenRight1.rightId, givenRight2.rightId)),
             )
         }
 
@@ -758,7 +758,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,
-                publicationDate = LocalDate.of(2022, 9, 26),
+                publicationYear = 2022,
                 rightsK10plus = "some rights",
                 storageDate = NOW.minusDays(3),
                 subCommunityHandle = "11159/1114",

@@ -21,7 +21,6 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
-import java.time.LocalDate
 
 @InternalAPI
 class MetadataRoutesKtTest {
@@ -260,7 +259,7 @@ class MetadataRoutesKtTest {
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationTypeRest.book,
-                publicationDate = LocalDate.of(2022, 9, 26),
+                publicationYear = 2022,
                 rightsK10plus = "some rights",
                 storageDate = NOW.minusDays(3),
                 title = "Important title",

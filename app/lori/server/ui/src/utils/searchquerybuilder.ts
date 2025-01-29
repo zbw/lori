@@ -20,25 +20,25 @@ export default {
   QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
   QUERY_PARAMETER_TEMPLATE_ID,
 
-  setPublicationDateFilter(searchStore: any, bookmark: BookmarkRest): void {
-    if (bookmark.filterPublicationDate == undefined) {
-      searchStore.publicationDateFrom = "";
-      searchStore.publicationDateTo = "";
+  setPublicationYearFilter(searchStore: any, bookmark: BookmarkRest): void {
+    if (bookmark.filterPublicationYear == undefined) {
+      searchStore.publicationYearFrom = "";
+      searchStore.publicationYearTo = "";
       return;
     }
-    if (bookmark.filterPublicationDate.fromYear !== undefined) {
-      searchStore.publicationDateFrom = bookmark.filterPublicationDate.fromYear;
+    if (bookmark.filterPublicationYear.fromYear !== undefined) {
+      searchStore.publicationYearFrom = bookmark.filterPublicationYear.fromYear;
     }
-    if (bookmark.filterPublicationDate.toYear !== undefined) {
-      searchStore.publicationDateTo = bookmark.filterPublicationDate.toYear;
+    if (bookmark.filterPublicationYear.toYear !== undefined) {
+      searchStore.publicationYearTo = bookmark.filterPublicationYear.toYear;
     }
   },
 
-  buildPublicationDateFilter(searchStore: any): string | undefined {
-    return searchStore.publicationDateFrom == "" &&
-      searchStore.publicationDateTo == ""
+  buildPublicationYearFilter(searchStore: any): string | undefined {
+    return searchStore.publicationYearFrom == "" &&
+      searchStore.publicationYearTo == ""
       ? undefined
-      : searchStore.publicationDateFrom + "-" + searchStore.publicationDateTo;
+      : searchStore.publicationYearFrom + "-" + searchStore.publicationYearTo;
   },
 
   setPaketSigelFilter(searchStore: any, bookmark: BookmarkRest): void {

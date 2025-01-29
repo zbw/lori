@@ -476,7 +476,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 handle = "item1_zdb1",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
-                publicationDate = LocalDate.of(2010, 1, 1),
+                publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
         val item2ZDB1 =
@@ -484,7 +484,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 handle = "item2_zdb2",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
-                publicationDate = LocalDate.of(2010, 1, 1),
+                publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
         val item3ZDB1 =
@@ -492,7 +492,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 handle = "item3_zdb3",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
-                publicationDate = LocalDate.of(2010, 1, 1),
+                publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
         val item1ZDB2 =

@@ -35,7 +35,7 @@ data class ItemMetadata(
     val paketSigel: String?,
     val ppn: String?,
     val publicationType: PublicationType,
-    val publicationDate: LocalDate?,
+    val publicationYear: Int?,
     val rightsK10plus: String?,
     val subCommunityHandle: String?,
     val subCommunityName: String?,

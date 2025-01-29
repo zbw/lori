@@ -66,7 +66,7 @@ export default defineComponent({
             bookmarkName,
             description.value,
             searchStore.lastSearchTerm,
-            searchquerybuilder.buildPublicationDateFilter(searchStore),
+            searchquerybuilder.buildPublicationYearFilter(searchStore),
             searchquerybuilder.buildPublicationTypeFilter(searchStore),
             searchquerybuilder.buildAccessStateFilter(searchStore),
             searchquerybuilder.buildTempValFilter(searchStore),

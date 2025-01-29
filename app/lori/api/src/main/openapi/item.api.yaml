@@ -328,7 +328,7 @@ item-search:
         required: false
         schema:
           type: boolean
-      - name: filterPublicationDate
+      - name: filterPublicationYear
         in: query
         schema:
           type: string
