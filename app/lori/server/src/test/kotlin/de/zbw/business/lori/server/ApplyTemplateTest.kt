@@ -56,6 +56,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 ),
             item1ZDB2 to emptyList(),
             item2ZDB2 to emptyList(),
+            item1ZDB3 to emptyList(),
         )
 
     @BeforeClass
@@ -392,12 +393,12 @@ class ApplyTemplateTest : DatabaseTest() {
                 backend.insertBookmark(
                     Bookmark(
                         bookmarkName = "applyBookmarkForDryRun",
-                        bookmarkId = 0,
+                        bookmarkId = 99,
                         zdbIdFilter =
                             ZDBIdFilter(
                                 zdbIds =
                                     listOf(
-                                        ZDB_1,
+                                        ZDB_3,
                                     ),
                             ),
                         lastUpdatedOn =
@@ -428,7 +429,15 @@ class ApplyTemplateTest : DatabaseTest() {
                 )
 
             // Create Template
-            val rightId = backend.insertTemplate(TEST_RIGHT.copy(templateName = "testDryRun", isTemplate = true))
+            val rightId =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "testDryRun",
+                        isTemplate = true,
+                        endDate = TEST_RIGHT.startDate.plusYears(1L),
+                        startDate = TEST_RIGHT.startDate.plusYears(1L),
+                    ),
+                )
 
             // Connect Bookmark and Template
             backend.insertBookmarkTemplatePair(
@@ -445,11 +454,11 @@ class ApplyTemplateTest : DatabaseTest() {
                 )
             assertThat(
                 received!!.appliedMetadataHandles,
-                `is`(listOf(item1ZDB1.handle)),
+                `is`(listOf(item1ZDB3.handle)),
             )
 
             // Verify that no right is assigned to metadata id
-            val rightIds = backend.getRightEntriesByHandle(item1ZDB1.handle).map { it.rightId }
+            val rightIds = backend.getRightEntriesByHandle(item1ZDB3.handle).map { it.rightId }
             assertFalse(rightIds.contains(rightId))
 
             assertNull(
@@ -460,10 +469,11 @@ class ApplyTemplateTest : DatabaseTest() {
     companion object {
         const val ZDB_1 = "zdb1"
         const val ZDB_2 = "zdb2"
+        const val ZDB_3 = "zdb3"
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT
         val item1ZDB1 =
             TEST_METADATA.copy(
-                handle = "zdb1",
+                handle = "item1_zdb1",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -471,7 +481,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item2ZDB1 =
             TEST_METADATA.copy(
-                handle = "zdb2",
+                handle = "item2_zdb2",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -479,7 +489,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item3ZDB1 =
             TEST_METADATA.copy(
-                handle = "zdb3",
+                handle = "item3_zdb3",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
                 publicationDate = LocalDate.of(2010, 1, 1),
@@ -494,6 +504,11 @@ class ApplyTemplateTest : DatabaseTest() {
             TEST_METADATA.copy(
                 handle = "bar-zdb2",
                 zdbIdJournal = ZDB_2,
+            )
+        val item1ZDB3 =
+            TEST_METADATA.copy(
+                handle = "item1_zdb3",
+                zdbIdJournal = ZDB_3,
             )
     }
 }
