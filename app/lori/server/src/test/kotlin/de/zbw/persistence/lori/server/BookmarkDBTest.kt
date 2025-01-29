@@ -98,7 +98,7 @@ class BookmarkDBTest : DatabaseTest() {
     @Test
     fun testGetBookmarkList() =
         runBlocking {
-            val bookmark1 = TEST_BOOKMARK.copy(description = "foo")
+            val bookmark1 = TEST_BOOKMARK.copy(description = "foo", bookmarkName = "testList")
             val createTime = NOW.toInstant()
             mockkCurrentTime(createTime)
             val receivedId1 = dbConnector.insertBookmark(bookmark1)
