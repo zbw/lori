@@ -391,7 +391,7 @@ class ApplyTemplateTest : DatabaseTest() {
             val bookmarkId =
                 backend.insertBookmark(
                     Bookmark(
-                        bookmarkName = "applyBookmark",
+                        bookmarkName = "applyBookmarkForDryRun",
                         bookmarkId = 0,
                         zdbIdFilter =
                             ZDBIdFilter(
@@ -445,7 +445,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 )
             assertThat(
                 received!!.appliedMetadataHandles,
-                `is`(emptyList()),
+                `is`(listOf(item1ZDB1.handle)),
             )
 
             // Verify that no right is assigned to metadata id
