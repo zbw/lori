@@ -10,8 +10,8 @@ import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
-import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
@@ -369,8 +369,8 @@ fun Routing.itemRoutes(
                     val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
                     val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
-                    val publicationDateFilter: PublicationDateFilter? =
-                        QueryParameterParser.parsePublicationDateFilter(call.request.queryParameters["filterPublicationDate"])
+                    val publicationYearFilter: PublicationYearFilter? =
+                        QueryParameterParser.parsePublicationYearFilter(call.request.queryParameters["filterPublicationYear"])
                     val publicationTypeFilter: PublicationTypeFilter? =
                         QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
                     val paketSigelFilter: PaketSigelFilter? =
@@ -469,7 +469,7 @@ fun Routing.itemRoutes(
                         listOfNotNull(
                             licenceUrlFilter,
                             paketSigelFilter,
-                            publicationDateFilter,
+                            publicationYearFilter,
                             publicationTypeFilter,
                             zdbIdFilter,
                             seriesFilter,

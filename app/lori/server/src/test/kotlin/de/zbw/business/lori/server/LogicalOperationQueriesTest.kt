@@ -19,7 +19,6 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.Instant
-import java.time.LocalDate
 
 /**
  * Test if logical operations in queries work as expected.
@@ -43,19 +42,19 @@ class LogicalOperationQueriesTest : DatabaseTest() {
                 collectionName = "subject1",
                 handle = "subject1",
                 publicationType = PublicationType.PROCEEDING,
-                publicationDate = LocalDate.of(2022, 1, 1),
+                publicationYear = 2022,
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject2 subject3",
                 handle = "subject2&3",
                 publicationType = PublicationType.WORKING_PAPER,
-                publicationDate = LocalDate.of(2020, 1, 1),
+                publicationYear = 2020,
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject4",
                 handle = "subject4",
                 publicationType = PublicationType.WORKING_PAPER,
-                publicationDate = LocalDate.of(2020, 1, 1),
+                publicationYear = 2020,
             ),
         )
 

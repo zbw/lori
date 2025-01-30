@@ -68,7 +68,7 @@ abstract class SearchFilter(
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
                     "typ" ->
                         QueryParameterParser.parsePublicationTypeFilter(searchValue)
-                    "jah" -> QueryParameterParser.parsePublicationDateFilter(searchValue)
+                    "jah" -> QueryParameterParser.parsePublicationYearFilter(searchValue)
                     "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
                     "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
                     "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
@@ -296,11 +296,11 @@ class LicenceUrlFilter(
     }
 }
 
-class PublicationDateFilter(
+class PublicationYearFilter(
     val fromYear: Int?,
     val toYear: Int?,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_PUBLICATION_DATE,
+        MetadataDB.COLUMN_METADATA_PUBLICATION_YEAR,
     ) {
     override fun toWhereClause(): String =
         if (fromYear == null && toYear == null) {
@@ -319,44 +319,32 @@ class PublicationDateFilter(
     ): Int =
         if (fromYear == null && toYear == null) {
             counter
-        } else if (fromYear == null) {
-            val toDate = LocalDate.of(toYear!!, 12, 31)
-            preparedStatement.setDate(counter, Date.valueOf(toDate))
+        } else if (fromYear == null && toYear != null) {
+            preparedStatement.setInt(counter, toYear)
             counter + 1
-        } else if (toYear == null) {
-            val fromDate = LocalDate.of(fromYear, 1, 1)
-            preparedStatement.setDate(counter, Date.valueOf(fromDate))
+        } else if (toYear == null && fromYear != null) {
+            preparedStatement.setInt(counter, fromYear)
             counter + 1
         } else {
-            val fromDate = LocalDate.of(fromYear, 1, 1)
-            val toDate = LocalDate.of(toYear, 12, 31)
-            preparedStatement.setDate(counter, Date.valueOf(fromDate))
-            preparedStatement.setDate(counter + 1, Date.valueOf(toDate))
+            preparedStatement.setInt(counter, fromYear!!)
+            preparedStatement.setInt(counter + 1, toYear!!)
             counter + 2
         }
 
     override fun toString(): String {
         val fromYearString =
-            if (fromYear == null) {
-                ""
-            } else {
-                fromYear.toString()
-            }
+            fromYear?.toString() ?: ""
         val toYearString =
-            if (toYear == null) {
-                ""
-            } else {
-                toYear.toString()
-            }
+            toYear?.toString() ?: ""
         return "${getFilterType().keyAlias}:$fromYearString-$toYearString"
     }
 
     override fun toSQLString(): String = "$fromYear-$toYear"
 
-    override fun getFilterType(): FilterType = FilterType.PUBLICATION_DATE
+    override fun getFilterType(): FilterType = FilterType.PUBLICATION_YEAR
 
     companion object {
-        fun fromString(s: String?): PublicationDateFilter? = QueryParameterParser.parsePublicationDateFilter(s)
+        fun fromString(s: String?): PublicationYearFilter? = QueryParameterParser.parsePublicationYearFilter(s)
     }
 }
 
@@ -817,7 +805,7 @@ enum class FilterType(
     LICENCE_URL("lur"),
     MANUAL_RIGHTS("man"),
     NO_RIGHTS("nor"),
-    PUBLICATION_DATE("jah"),
+    PUBLICATION_YEAR("jah"),
     PUBLICATION_TYPE("typ"),
     PAKET_SIGEL("sig"),
     TEMPLATE_NAME("tpl"),

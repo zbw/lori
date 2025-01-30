@@ -10,7 +10,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTi
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Connection
-import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.Statement
@@ -249,7 +248,7 @@ class MetadataDB(
         const val COLUMN_METADATA_LICENCE_URL_FILTER = "licence_url_filter"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PPN = "ppn"
-        const val COLUMN_METADATA_PUBLICATION_DATE = "publication_date"
+        const val COLUMN_METADATA_PUBLICATION_YEAR = "publication_year"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
         const val COLUMN_METADATA_RIGHTS_K10PLUS = "rights_k10plus"
         const val COLUMN_METADATA_STORAGE_DATE = "storage_date"
@@ -271,7 +270,7 @@ class MetadataDB(
 
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
@@ -293,7 +292,7 @@ class MetadataDB(
 
         const val STATEMENT_SELECT_ALL_METADATA =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
@@ -315,7 +314,7 @@ class MetadataDB(
         const val STATEMENT_UPSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
@@ -336,7 +335,7 @@ class MetadataDB(
                 "title = EXCLUDED.title," +
                 "title_journal = EXCLUDED.title_journal," +
                 "title_series = EXCLUDED.title_series," +
-                "$COLUMN_METADATA_PUBLICATION_DATE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_DATE," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR = EXCLUDED.$COLUMN_METADATA_PUBLICATION_YEAR," +
                 "band = EXCLUDED.band," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "doi = EXCLUDED.doi," +
@@ -367,7 +366,7 @@ class MetadataDB(
         const val STATEMENT_INSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_DATE,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
@@ -391,7 +390,7 @@ class MetadataDB(
                 title = rs.getString(3),
                 titleJournal = rs.getString(4),
                 titleSeries = rs.getString(5),
-                publicationDate = rs.getDate(6)?.toLocalDate(),
+                publicationYear = rs.getInt(6),
                 band = rs.getString(7),
                 publicationType = PublicationType.valueOf(rs.getString(8)),
                 doi = rs.getString(9),
@@ -436,8 +435,8 @@ class MetadataDB(
                 this.setIfNotNull(5, itemMetadata.titleSeries) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(6, itemMetadata.publicationDate) { value, idx, prepStmt ->
-                    prepStmt.setDate(idx, Date.valueOf(value))
+                this.setIfNotNull(6, itemMetadata.publicationYear) { value, idx, prepStmt ->
+                    prepStmt.setInt(idx, value)
                 }
                 this.setIfNotNull(7, itemMetadata.band) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

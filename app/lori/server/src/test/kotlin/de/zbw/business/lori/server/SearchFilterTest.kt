@@ -45,12 +45,12 @@ class SearchFilterTest : DatabaseTest() {
             mockk(),
         )
 
-    private val publicationDateFilter =
+    private val publicationYearFilter =
         listOf(
             TEST_Metadata.copy(
                 collectionName = "subject1 subject2 subject3",
-                handle = "publicationDate2022",
-                publicationDate = LocalDate.of(2022, 1, 1),
+                handle = "publicationYear2022",
+                publicationYear = 2022,
             ),
         )
 
@@ -60,13 +60,13 @@ class SearchFilterTest : DatabaseTest() {
                 collectionName = "subject4",
                 handle = "publicationTypeArticle",
                 publicationType = PublicationType.PROCEEDING,
-                publicationDate = LocalDate.of(2022, 1, 1),
+                publicationYear = 2022,
             ),
             TEST_Metadata.copy(
                 collectionName = "subject4",
                 handle = "publicationTypeWorkingPaper",
                 publicationType = PublicationType.WORKING_PAPER,
-                publicationDate = LocalDate.of(2020, 1, 1),
+                publicationYear = 2020,
             ),
         )
 
@@ -91,7 +91,7 @@ class SearchFilterTest : DatabaseTest() {
 
     private fun getInitialMetadata() =
         listOf(
-            publicationDateFilter,
+            publicationYearFilter,
             publicationTypeFilter,
             zdbIdFilterItems,
         ).flatten()
@@ -111,19 +111,19 @@ class SearchFilterTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @DataProvider(name = DATA_FOR_PUBLICATION_DATE)
-    fun createDataForPublicationDate() =
+    @DataProvider(name = DATA_FOR_PUBLICATION_YEAR)
+    fun createDataForPublicationYear() =
         arrayOf(
             arrayOf(
                 "col:subject1 | col:subject4",
-                listOf(PublicationDateFilter(2021, 2023)),
-                listOf(publicationDateFilter[0], publicationTypeFilter[0]).toSet(),
+                listOf(PublicationYearFilter(2021, 2023)),
+                listOf(publicationYearFilter[0], publicationTypeFilter[0]).toSet(),
                 2,
                 "search with filter in range",
             ),
             arrayOf(
                 "col:'subject4'",
-                listOf(PublicationDateFilter(2020, 2021)),
+                listOf(PublicationYearFilter(2020, 2021)),
                 setOf(publicationTypeFilter[1]),
                 1,
                 "search with filter out of range",
@@ -158,7 +158,7 @@ class SearchFilterTest : DatabaseTest() {
                             PublicationType.WORKING_PAPER,
                         ),
                     ),
-                    PublicationDateFilter(fromYear = 2022, toYear = 2022),
+                    PublicationYearFilter(fromYear = 2022, toYear = 2022),
                 ),
                 setOf(publicationTypeFilter[0]),
                 1,
@@ -166,8 +166,8 @@ class SearchFilterTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_PUBLICATION_DATE)
-    fun testFilterByPublicationDate(
+    @Test(dataProvider = DATA_FOR_PUBLICATION_YEAR)
+    fun testFilterByPublicationYear(
         searchTerm: String,
         searchFilter: List<MetadataSearchFilter>,
         expectedResult: Set<ItemMetadata>,
@@ -209,7 +209,7 @@ class SearchFilterTest : DatabaseTest() {
                             PublicationType.WORKING_PAPER,
                         ),
                     ),
-                    PublicationDateFilter(fromYear = 2022, toYear = 2022),
+                    PublicationYearFilter(fromYear = 2022, toYear = 2022),
                 ),
                 setOf(publicationTypeFilter[0]),
                 "Filter for publication type and publication date",
@@ -381,7 +381,7 @@ class SearchFilterTest : DatabaseTest() {
                     QueryParameterParser.parseStartDateFilter("2022-06-01"),
                     TitleFilter("some title"),
                     TitleFilter("another"),
-                    PublicationDateFilter(2000, 2020),
+                    PublicationYearFilter(2000, 2020),
                     NoRightInformationFilter(),
                     SeriesFilter(listOf("series1", "series2")),
                     PublicationTypeFilter(listOf(PublicationType.PROCEEDING, PublicationType.BOOK_PART)),
@@ -507,7 +507,7 @@ class SearchFilterTest : DatabaseTest() {
     }
 
     companion object {
-        const val DATA_FOR_PUBLICATION_DATE = "DATA_FOR_PUBLICATION_DATE"
+        const val DATA_FOR_PUBLICATION_YEAR = "DATA_FOR_PUBLICATION_YEAR"
         const val DATA_FOR_NO_SEARCH_TERM = "DATA_FOR_NO_SEARCH_TERM"
         const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
         const val DATA_FOR_PREPARE_VALUE = "DATA_FOR_PREPARE_VALUE"

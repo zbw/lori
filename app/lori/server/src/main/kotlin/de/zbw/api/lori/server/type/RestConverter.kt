@@ -7,7 +7,7 @@ import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.AccessState
@@ -35,7 +35,7 @@ import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
 import de.zbw.lori.model.FilterAccessStateOnRest
-import de.zbw.lori.model.FilterPublicationDateRest
+import de.zbw.lori.model.FilterPublicationYearRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
@@ -164,7 +164,7 @@ fun MetadataRest.toBusiness() =
         paketSigel = paketSigel,
         ppn = ppn,
         publicationType = publicationType.toBusiness(),
-        publicationDate = publicationDate,
+        publicationYear = publicationYear,
         rightsK10plus = rightsK10plus,
         subCommunityHandle = subCommunityHandle,
         subCommunityName = subCommunityName,
@@ -198,7 +198,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         paketSigel = paketSigel,
         ppn = ppn,
         publicationType = publicationType.toRest(),
-        publicationDate = publicationDate,
+        publicationYear = publicationYear,
         rightsK10plus = rightsK10plus,
         storageDate = storageDate,
         subCommunityHandle = subCommunityHandle,
@@ -376,7 +376,7 @@ fun DAItem.toBusiness(
             logger.error("Unknown PublicationType found for ${this.id}")
             throw iae
         }
-    val publicationDate = RestConverter.extractMetadata("dc.date.issued", metadata)
+    val publicationYear: String? = RestConverter.extractMetadata("dc.date.issued", metadata)
     val title = RestConverter.extractMetadata("dc.title", metadata)
 
     return if (
@@ -435,7 +435,7 @@ fun DAItem.toBusiness(
             paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
             ppn = RestConverter.extractMetadata("dc.identifier.ppn", metadata),
             publicationType = publicationType,
-            publicationDate = publicationDate?.let { RestConverter.parseToDate(it) },
+            publicationYear = publicationYear?.let { RestConverter.parseToDate(it) }?.year,
             rightsK10plus = RestConverter.extractMetadata("dc.rights", metadata),
             subCommunityHandle =
                 subDACommunity?.handle?.let {
@@ -489,7 +489,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchTerm = this.searchTerm,
-        publicationDateFilter = QueryParameterParser.parsePublicationDateFilter(this.filterPublicationDate),
+        publicationYearFilter = QueryParameterParser.parsePublicationYearFilter(this.filterPublicationYear),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
@@ -516,10 +516,10 @@ fun BookmarkRest.toBusiness(): Bookmark =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchTerm = this.searchTerm,
-        publicationDateFilter =
-            PublicationDateFilter(
-                fromYear = this.filterPublicationDate?.fromYear,
-                toYear = this.filterPublicationDate?.toYear,
+        publicationYearFilter =
+            PublicationYearFilter(
+                fromYear = this.filterPublicationYear?.fromYear,
+                toYear = this.filterPublicationYear?.toYear,
             ),
         publicationTypeFilter =
             QueryParameterParser.parsePublicationTypeFilter(
@@ -562,10 +562,10 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
         bookmarkId = this.bookmarkId,
         description = this.description,
         searchTerm = this.searchTerm,
-        filterPublicationDate =
-            FilterPublicationDateRest(
-                fromYear = this.publicationDateFilter?.fromYear,
-                toYear = this.publicationDateFilter?.toYear,
+        filterPublicationYear =
+            FilterPublicationYearRest(
+                fromYear = this.publicationYearFilter?.fromYear,
+                toYear = this.publicationYearFilter?.toYear,
             ),
         filterPublicationType = this.publicationTypeFilter?.publicationTypes?.map { it.toString() },
         filterAccessState = this.accessStateFilter?.accessStates?.map { it.toString() },

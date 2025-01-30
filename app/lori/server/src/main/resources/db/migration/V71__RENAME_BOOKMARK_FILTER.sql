@@ -1,0 +1,1 @@
+ALTER TABLE bookmark RENAME filter_publication_date TO filter_publication_year;

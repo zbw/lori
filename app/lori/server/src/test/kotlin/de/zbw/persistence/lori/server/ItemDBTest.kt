@@ -154,7 +154,7 @@ class ItemDBTest : DatabaseTest() {
             val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
             assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
-            assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.handle, expectedRight.rightId!!))
+            assertFalse(dbConnector.itemDB.itemContainsEntry(expectedMetadata.handle, expectedRight.rightId))
             assertFalse(dbConnector.metadataDB.itemContainsHandle(expectedMetadata.handle))
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
@@ -246,7 +246,7 @@ class ItemDBTest : DatabaseTest() {
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,
-                publicationDate = LocalDate.of(2022, 9, 26),
+                publicationYear = 2022,
                 rightsK10plus = "some rights",
                 subCommunityHandle = "11509/1111",
                 subCommunityName = "Department of University of Foo",

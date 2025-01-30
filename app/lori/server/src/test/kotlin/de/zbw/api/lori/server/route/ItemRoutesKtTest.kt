@@ -38,7 +38,6 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
-import java.time.LocalDate
 
 /**
  * Test [ItemRoutes].
@@ -591,7 +590,7 @@ class ItemRoutesKtTest {
         val offset = 2
         val limit = 5
         val pageSize = 25
-        val filterPublicationDate = "2000-2022"
+        val filterPublicationYear = "2000-2022"
         val filterPublicationType = "ARTICLE,THESIS"
         val expectedInformation =
             ItemInformation(
@@ -659,7 +658,7 @@ class ItemRoutesKtTest {
             val response =
                 client.get(
                     "/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset" +
-                        "&pageSize=$pageSize&filterPublicationDate=$filterPublicationDate&" +
+                        "&pageSize=$pageSize&filterPublicationYear=$filterPublicationYear&" +
                         "filterPublicationType=$filterPublicationType",
                 )
             val content: String = response.bodyAsText()
@@ -873,7 +872,7 @@ class ItemRoutesKtTest {
                 paketSigel = "sigel",
                 ppn = "ppn",
                 publicationType = PublicationTypeRest.book,
-                publicationDate = LocalDate.of(2022, 9, 26),
+                publicationYear = 2022,
                 rightsK10plus = "some rights",
                 storageDate = NOW.minusDays(3),
                 title = "Important title",

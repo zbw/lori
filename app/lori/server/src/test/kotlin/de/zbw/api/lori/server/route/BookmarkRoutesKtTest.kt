@@ -570,7 +570,7 @@ class BookmarkRoutesKtTest {
                 bookmarkName = "test",
                 description = "some description",
                 searchTerm = "tit:someTitle",
-                publicationDateFilter = QueryParameterParser.parsePublicationDateFilter("2020-2030"),
+                publicationYearFilter = QueryParameterParser.parsePublicationYearFilter("2020-2030"),
                 publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
                 accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
                 temporalValidityFilter = QueryParameterParser.parseTemporalValidity("FUTURE,PAST"),

@@ -96,7 +96,7 @@ export default defineComponent({
       {
         title: "Publikationsjahr",
         sortable: true,
-        value: "publicationDate",
+        value: "publicationYear",
       },
       {
         title: "Band",
@@ -365,7 +365,7 @@ export default defineComponent({
               1,
               0,
               true,
-              searchquerybuilder.buildPublicationDateFilter(searchStore),
+              searchquerybuilder.buildPublicationYearFilter(searchStore),
               searchquerybuilder.buildPublicationTypeFilter(searchStore),
               searchquerybuilder.buildAccessStateFilter(searchStore),
               searchquerybuilder.buildTempValFilter(searchStore),
@@ -472,7 +472,7 @@ export default defineComponent({
     };
 
     const executeBookmarkSearch = (bookmark: BookmarkRest) => {
-      searchquerybuilder.setPublicationDateFilter(searchStore, bookmark);
+      searchquerybuilder.setPublicationYearFilter(searchStore, bookmark);
       searchquerybuilder.setPaketSigelFilter(searchStore, bookmark);
       searchquerybuilder.setPublicationTypeFilter(searchStore, bookmark);
       searchquerybuilder.setZDBFilter(searchStore, bookmark);
@@ -525,7 +525,7 @@ export default defineComponent({
           pageSize.value,
           pageSize.value,
             false,
-          searchquerybuilder.buildPublicationDateFilter(searchStore),
+          searchquerybuilder.buildPublicationYearFilter(searchStore),
           searchquerybuilder.buildPublicationTypeFilter(searchStore),
           searchquerybuilder.buildAccessStateFilter(searchStore),
           searchquerybuilder.buildTempValFilter(searchStore),
@@ -1249,9 +1249,6 @@ table.special, th.special, td.special {
             </template>
             <template v-slot:item.publicationType="{ item }">
               <td>{{ parsePublicationType(item.publicationType) }}</td>
-            </template>
-            <template v-slot:item.publicationDate="{ item }">
-              <td v-if="item.publicationDate != undefined">{{ item.publicationDate.toLocaleDateString("de") }}</td>
             </template>
             <template #bottom></template>
           </v-data-table>

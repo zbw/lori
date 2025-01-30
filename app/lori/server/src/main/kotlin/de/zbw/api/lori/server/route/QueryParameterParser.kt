@@ -12,8 +12,8 @@ import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
-import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
@@ -36,7 +36,7 @@ import java.time.format.DateTimeFormatter
  * @author Christian Bay (c.bay@zbw.eu)
  */
 object QueryParameterParser {
-    fun parsePublicationDateFilter(s: String?): PublicationDateFilter? {
+    fun parsePublicationYearFilter(s: String?): PublicationYearFilter? {
         if (s == null) {
             return null
         }
@@ -44,7 +44,7 @@ object QueryParameterParser {
         val noFromYear = s.matches("-\\d+".toRegex())
         val both = s.matches("\\d+-\\d+".toRegex())
         return if (noFromYear || noToYear || both) {
-            PublicationDateFilter(
+            PublicationYearFilter(
                 noFromYear
                     .takeIf { !it }
                     ?.let { s.substringBefore("-").toInt() },

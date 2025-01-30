@@ -336,7 +336,7 @@ class FacetTest : DatabaseTest() {
                 handle = "zdb1",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_1,
-                publicationDate = LocalDate.of(2010, 1, 1),
+                publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
         val itemSigel1 =
@@ -344,7 +344,7 @@ class FacetTest : DatabaseTest() {
                 handle = "sigel1",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_1,
-                publicationDate = LocalDate.of(2011, 1, 1),
+                publicationYear = 2011,
                 publicationType = PublicationType.BOOK_PART,
             )
 
@@ -353,7 +353,7 @@ class FacetTest : DatabaseTest() {
                 handle = "zdb2",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_2,
-                publicationDate = LocalDate.of(2012, 1, 1),
+                publicationYear = 2012,
                 publicationType = PublicationType.CONFERENCE_PAPER,
             )
         val itemSigel2 =
@@ -361,7 +361,7 @@ class FacetTest : DatabaseTest() {
                 handle = "sigel2",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_2,
-                publicationDate = LocalDate.of(2013, 1, 1),
+                publicationYear = 2013,
                 publicationType = PublicationType.PERIODICAL_PART,
             )
 
@@ -370,7 +370,7 @@ class FacetTest : DatabaseTest() {
                 handle = "zdb3",
                 collectionName = "common zdb",
                 zdbIdJournal = ZDB_3,
-                publicationDate = LocalDate.of(2014, 1, 1),
+                publicationYear = 2014,
                 publicationType = PublicationType.PROCEEDING,
             )
         val itemSigel3 =
@@ -378,7 +378,7 @@ class FacetTest : DatabaseTest() {
                 handle = "sigel3",
                 collectionName = "common sigel",
                 paketSigel = SIGEL_3,
-                publicationDate = LocalDate.of(2015, 1, 1),
+                publicationYear = 2015,
                 publicationType = PublicationType.THESIS,
             )
 

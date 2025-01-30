@@ -9,8 +9,8 @@ import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
-import de.zbw.business.lori.server.PublicationDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
+import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
@@ -35,7 +35,7 @@ data class Bookmark(
     val lastUpdatedBy: String? = null,
     val lastUpdatedOn: OffsetDateTime? = null,
     val searchTerm: String? = null,
-    val publicationDateFilter: PublicationDateFilter? = null,
+    val publicationYearFilter: PublicationYearFilter? = null,
     val publicationTypeFilter: PublicationTypeFilter? = null,
     val paketSigelFilter: PaketSigelFilter? = null,
     val zdbIdFilter: ZDBIdFilter? = null,
@@ -56,7 +56,7 @@ data class Bookmark(
         listOfNotNull(
             licenceURLFilter,
             paketSigelFilter,
-            publicationDateFilter,
+            publicationYearFilter,
             publicationTypeFilter,
             seriesFilter,
             zdbIdFilter,

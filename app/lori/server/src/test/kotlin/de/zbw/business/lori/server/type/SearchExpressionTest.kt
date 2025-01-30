@@ -6,7 +6,7 @@ import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.ParseResult
 import com.github.h0tk3y.betterParse.parser.Parsed
 import de.zbw.business.lori.server.AccessStateFilter
-import de.zbw.business.lori.server.PublicationDateFilter
+import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.TitleFilter
 import de.zbw.business.lori.server.utils.SearchExpressionResolution.hasRightQueries
 import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearchExpression
@@ -160,7 +160,7 @@ class SearchExpressionTest {
                         AccessStateFilter(listOf(AccessState.OPEN)),
                     ),
                     SEVariable(
-                        PublicationDateFilter(2000, 2010),
+                        PublicationYearFilter(2000, 2010),
                     ),
                 ),
                 true,
@@ -169,10 +169,10 @@ class SearchExpressionTest {
             arrayOf(
                 SEAnd(
                     SEVariable(
-                        PublicationDateFilter(2000, 2010),
+                        PublicationYearFilter(2000, 2010),
                     ),
                     SEVariable(
-                        PublicationDateFilter(2000, 2010),
+                        PublicationYearFilter(2000, 2010),
                     ),
                 ),
                 false,
@@ -184,7 +184,7 @@ class SearchExpressionTest {
                         AccessStateFilter(listOf(AccessState.OPEN)),
                     ),
                     SEVariable(
-                        PublicationDateFilter(2000, 2010),
+                        PublicationYearFilter(2000, 2010),
                     ),
                 ),
                 true,
