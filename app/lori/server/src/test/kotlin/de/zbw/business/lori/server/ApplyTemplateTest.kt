@@ -331,6 +331,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "bookmarkDraft",
                         bookmarkId = 0,
+                        searchTerm = "col:'common zdb'",
                         zdbIdFilter =
                             ZDBIdFilter(
                                 zdbIds =

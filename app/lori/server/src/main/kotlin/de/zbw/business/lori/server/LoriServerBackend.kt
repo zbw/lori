@@ -4,6 +4,7 @@ import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.type.Either
@@ -454,7 +455,16 @@ class LoriServerBackend(
             rightIdExceptions = rightIdExceptions,
         )
 
-    suspend fun insertBookmark(bookmark: Bookmark): Int = dbConnector.bookmarkDB.insertBookmark(bookmark)
+    suspend fun insertBookmark(bookmark: Bookmark): Int {
+        val bookmarkNamesSameFilters = dbConnector.bookmarkDB.getBookmarkNamesByQuerystring(bookmark.computeQueryString())
+        if (bookmarkNamesSameFilters.isEmpty()) {
+            return dbConnector.bookmarkDB.insertBookmark(bookmark)
+        } else {
+            throw ResourceConflictException(
+                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkNamesSameFilters[0]}'",
+            )
+        }
+    }
 
     suspend fun deleteBookmark(bookmarkId: Int): Int {
         val receivedTemplateIds: List<String> = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)
@@ -467,7 +477,7 @@ class LoriServerBackend(
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedTemplateIds)
                 throw ResourceStillInUseException(
-                    "Bookmark '${bookmark.bookmarkName} ($bookmarkId)' wird noch von folgenden Templates verwendet: " +
+                    "Gespeicherte Suche '${bookmark.bookmarkName} ($bookmarkId)' wird noch von folgenden Templates verwendet: " +
                         templatesBlocking.joinToString(separator = ",") { right: ItemRight ->
                             "'" + right.templateName + " (" + right.rightId + ")'"
                         },
@@ -479,7 +489,18 @@ class LoriServerBackend(
     suspend fun updateBookmark(
         bookmarkId: Int,
         bookmark: Bookmark,
-    ): Int = dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
+    ): Int {
+        val bookmarkNamesSameFilters = dbConnector.bookmarkDB.getBookmarkNamesByQuerystring(bookmark.computeQueryString())
+        return if (bookmarkNamesSameFilters.isEmpty() ||
+            (bookmarkNamesSameFilters.size == 1 && bookmarkNamesSameFilters[0] == bookmark.bookmarkName)
+        ) {
+            dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
+        } else {
+            throw ResourceConflictException(
+                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkNamesSameFilters[0]}'",
+            )
+        }
+    }
 
     suspend fun getBookmarkById(bookmarkId: Int): Bookmark? = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
 

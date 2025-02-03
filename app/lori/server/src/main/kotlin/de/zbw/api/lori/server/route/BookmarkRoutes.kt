@@ -1,11 +1,11 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.lori.model.BookmarkIdCreated
 import de.zbw.lori.model.BookmarkRawRest
@@ -86,6 +86,12 @@ fun Routing.bookmarkRoutes(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(ApiError.INVALID_JSON),
                         )
+                    } catch (e: ResourceConflictException) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(e.message),
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -133,6 +139,12 @@ fun Routing.bookmarkRoutes(
                                 detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
                             ),
                         )
+                    } catch (e: ResourceConflictException) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(e.message),
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -179,7 +191,7 @@ fun Routing.bookmarkRoutes(
                         call.respond(
                             receivedBookmarks.map { bookmark: Bookmark ->
                                 bookmark.toRest(
-                                    SearchFilter.bookmarkToString(bookmark),
+                                    bookmark.computeQueryString(),
                                 )
                             },
                         )
@@ -223,7 +235,7 @@ fun Routing.bookmarkRoutes(
                             span.setStatus(StatusCode.OK)
                             call.respond(
                                 b.toRest(
-                                    SearchFilter.bookmarkToString(b),
+                                    b.computeQueryString(),
                                 ),
                             )
                         } ?: let {
@@ -292,6 +304,12 @@ fun Routing.bookmarkRoutes(
                                 ),
                             )
                         }
+                    } catch (e: ResourceConflictException) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(e.message),
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -351,6 +369,12 @@ fun Routing.bookmarkRoutes(
                             ApiError.badRequestError(
                                 detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
                             ),
+                        )
+                    } catch (e: ResourceConflictException) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(
+                            HttpStatusCode.Conflict,
+                            ApiError.conflictError(e.message),
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")

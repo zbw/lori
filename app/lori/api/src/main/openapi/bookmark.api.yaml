@@ -33,7 +33,7 @@ bookmark:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
-        description: Conflict resource exists already
+        description: Conflict resource exists already or another bookmark already has the exact same filter
         content:
           application/json:
             schema:
@@ -77,6 +77,12 @@ bookmark:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Another bookmark already has the exact same filter
         content:
           application/json:
             schema:
@@ -201,7 +207,7 @@ bookmarkraw:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       409:
-        description: Conflict resource exists already
+        description: Conflict resource exists already or another bookmark already has the exact same filter
         content:
           application/json:
             schema:
@@ -245,6 +251,12 @@ bookmarkraw:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       404:
         description: Not found
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Another bookmark already has the exact same filter
         content:
           application/json:
             schema:

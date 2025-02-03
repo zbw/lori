@@ -2,7 +2,6 @@ package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
-import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.TemporalValidity
@@ -121,21 +120,6 @@ abstract class SearchFilter(
                 .joinToString(separator = " & ") { filter: SearchFilter ->
                     filter.toString()
                 }.takeIf { it.isNotBlank() } ?: ""
-
-        fun bookmarkToString(bookmark: Bookmark): String {
-            val filters =
-                filtersToString(
-                    bookmark.getAllMetadataFilter() + bookmark.getAllRightFilter() +
-                        listOfNotNull(bookmark.noRightInformationFilter),
-                )
-            return if (bookmark.searchTerm.isNullOrBlank()) {
-                filters
-            } else if (filters.isBlank()) {
-                bookmark.searchTerm
-            } else {
-                "(${bookmark.searchTerm}) & ($filters)"
-            }
-        }
     }
 }
 
