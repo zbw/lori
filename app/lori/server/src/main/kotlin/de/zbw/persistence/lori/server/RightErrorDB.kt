@@ -25,7 +25,7 @@ class RightErrorDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteErrorById(errorId: Int): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteErrorById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_ID).apply {
                     this.setInt(1, errorId)
@@ -40,7 +40,7 @@ class RightErrorDB(
         }
 
     suspend fun deleteErrorByTestId(testId: String): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteErrorByTestId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_TEST_ID).apply {
                     this.setString(1, testId)

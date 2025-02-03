@@ -22,7 +22,7 @@ class UserDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteSessionById(sessionID: String): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteSessionById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_SESSION_BY_ID).apply {
                     this.setString(1, sessionID)
@@ -37,7 +37,7 @@ class UserDB(
         }
 
     suspend fun insertSession(session: Session): String =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("insertSession") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_INSERT_SESSION, Statement.RETURN_GENERATED_KEYS).apply {
                     this.setString(1, UUID.randomUUID().toString())
@@ -71,7 +71,7 @@ class UserDB(
         }
 
     suspend fun getSessionById(sessionId: String): Session? =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getSessionById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_SESSION_BY_ID).apply {
                     this.setString(1, sessionId)
