@@ -32,7 +32,7 @@ class GroupDB(
         group: Group,
         useGivenId: Boolean = false,
     ): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("insertGroup") { connection ->
             val stmt =
                 if (useGivenId) {
                     STATEMENT_INSERT_GROUP_WITH_ID
@@ -81,9 +81,8 @@ class GroupDB(
             }
         }
 
-    // TODO: Get old versions as well
     suspend fun getLatestVersionGroupsByIds(groupIds: List<Int>): List<Group> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getLatestVersionGroupsByIds") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_GROUPS_BY_IDS).apply {
                     this.setArray(1, connection.createArrayOf("integer", groupIds.toTypedArray()))
@@ -108,13 +107,13 @@ class GroupDB(
             allGroupVersions
                 .groupBy { it.groupId }
                 .mapValues { e: Map.Entry<Int, List<Group>> ->
-                    e.value.sortedByDescending { g -> g.version }.firstOrNull()
+                    e.value.maxByOrNull { g -> g.version }
                 }.values
                 .filterNotNull()
         }
 
     suspend fun getGroupById(groupId: Int): Group? =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getGroupById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_GROUP_BY_ID_WITH_LATEST_VERSION).apply {
                     this.setInt(1, groupId)
@@ -146,7 +145,7 @@ class GroupDB(
         }
 
     suspend fun getAllGroupVersionsById(groupId: Int): List<GroupVersion> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getAllGroupVersionsById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_GROUPS_BY_ID).apply {
                     this.setInt(1, groupId)
@@ -179,7 +178,7 @@ class GroupDB(
         groupId: Int,
         version: Int,
     ): Group? =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getGroupByIdAndVersion") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_GROUP_BY_ID_AND_VERSION).apply {
                     this.setInt(1, groupId)
@@ -215,7 +214,7 @@ class GroupDB(
         groupId: Int,
         rightId: String,
     ): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteGroupPair") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR).apply {
                     this.setInt(1, groupId)
@@ -231,7 +230,7 @@ class GroupDB(
         }
 
     suspend fun deleteGroupPairsByRightId(rightId: String): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteGroupPairsByRightId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID).apply {
                     this.setString(1, rightId)
@@ -249,7 +248,7 @@ class GroupDB(
      * Get the ids of all rights that use a given group-id.
      */
     suspend fun getRightsByGroupId(groupId: Int): List<String> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getRightsByGroupId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_RIGHTS_BY_GROUP_ID).apply {
                     this.setInt(1, groupId)
@@ -272,32 +271,33 @@ class GroupDB(
             }.takeWhile { true }.toList()
         }
 
-    suspend fun getGroupsByRightId(rightId: String): List<Group> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_GROUPS_BY_RIGHT_ID).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("getGroupsByRightId").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
+    suspend fun getGroupsByRightId(rightId: String): List<Group> {
+        val groupIds =
+            connectionPool.useConnection("getGroupsByRightId") { connection ->
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_GROUPS_BY_RIGHT_ID).apply {
+                        this.setString(1, rightId)
+                    }
+                val span = tracer.spanBuilder("getGroupsByRightId").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
 
-            val groupIds: List<Int> =
-                generateSequence {
+                return@useConnection generateSequence {
                     if (rs.next()) {
                         rs.getInt(1)
                     } else {
                         null
                     }
                 }.takeWhile { true }.toList()
+            }
 
-            return@useConnection getLatestVersionGroupsByIds(groupIds)
-        }
+        return getLatestVersionGroupsByIds(groupIds)
+    }
 
     suspend fun insertGroupRightPair(
         rightId: String,

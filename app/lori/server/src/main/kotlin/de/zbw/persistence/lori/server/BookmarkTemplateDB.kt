@@ -21,7 +21,7 @@ class BookmarkTemplateDB(
      * Queries on Template-Bookmark Pairs Table.
      */
     suspend fun deletePairsByRightId(rightId: String): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deletePairsByRightId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP).apply {
                     this.setString(1, rightId)
@@ -39,7 +39,7 @@ class BookmarkTemplateDB(
      * Get all bookmark ids that are a connected to a given RightId.
      */
     suspend fun getBookmarkIdsByRightId(rightId: String): List<Int> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getBookmarkIdsByRightId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID).apply {
                     this.setString(1, rightId)
@@ -63,7 +63,7 @@ class BookmarkTemplateDB(
         }
 
     suspend fun getBookmarkIdsByRightIds(rightIds: List<String>): Set<Int> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getBookmarkIdsByRightIds") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS).apply {
                     this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
@@ -90,7 +90,7 @@ class BookmarkTemplateDB(
      * Get all bookmark ids that are a connected to a given template-id.
      */
     suspend fun getRightIdsByBookmarkId(bookmarkId: Int): List<String> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getRightIdsByBookmarkId") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID).apply {
                     this.setInt(1, bookmarkId)
@@ -114,7 +114,7 @@ class BookmarkTemplateDB(
         }
 
     suspend fun insertTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("insertTemplateBookmarkPair") { connection ->
             val prepStmt =
                 connection
                     .prepareStatement(STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
@@ -139,7 +139,7 @@ class BookmarkTemplateDB(
         }
 
     suspend fun deleteTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteTemplateBookmarkPair") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR).apply {
                     this.setString(1, bookmarkTemplate.rightId)
@@ -155,7 +155,7 @@ class BookmarkTemplateDB(
         }
 
     suspend fun upsertTemplateBookmarkBatch(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("upsertTemplateBookmarkBatch") { connection ->
             val span = tracer.spanBuilder("upsertBookmarkTemplateBatch").startSpan()
             val prep = connection.prepareStatement(STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
             bookmarkTemplates.map { bookmarkTemplate ->

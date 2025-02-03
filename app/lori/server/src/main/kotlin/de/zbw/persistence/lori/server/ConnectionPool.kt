@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.invoke
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import org.apache.logging.log4j.LogManager
 import java.sql.Connection
 
 class ConnectionPool(
@@ -19,16 +20,23 @@ class ConnectionPool(
         createConnection(config),
     )
 
-    suspend fun <T> useConnection(block: suspend (Connection) -> T): T =
+    suspend fun <T> useConnection(
+        methodName: String = "unkown",
+        block: suspend (Connection) -> T,
+    ): T =
         jdbcSemaphore.withPermit {
             jdbcDispatcher.invoke {
+                LOG.debug("Init: $methodName; Available ${jdbcSemaphore.availablePermits}")
                 val connection: Connection = ds.connection
-                connection.use { block(it) }
+                connection.use { block(it) }.also {
+                    LOG.debug("End: $methodName: Available: ${jdbcSemaphore.availablePermits}")
+                }
             }
         }
 
     companion object {
         private const val JDBC_PARALLELISM = 5
+        private val LOG = LogManager.getLogger(ConnectionPool::class.java)
 
         @OptIn(ExperimentalCoroutinesApi::class)
         private val jdbcDispatcher = Dispatchers.IO.limitedParallelism(JDBC_PARALLELISM)

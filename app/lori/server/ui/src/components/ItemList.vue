@@ -1177,7 +1177,7 @@ table.special, th.special, td.special {
           <v-spacer></v-spacer>
           <v-snackbar
             multi-line
-            location="top"
+            location="bottom"
             timer="true"
             timeout="5000"
             v-model="errorMsgIsActive"

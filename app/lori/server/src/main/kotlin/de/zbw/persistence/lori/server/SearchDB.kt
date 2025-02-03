@@ -368,7 +368,7 @@ class SearchDB(
         operation: (rs: ResultSet) -> Pair<K, V>,
     ): Map<K, V> =
         coroutineScope {
-            return@coroutineScope connectionPool.useConnection { connection ->
+            return@coroutineScope connectionPool.useConnection("searchOccurencesRightFacets") { connection ->
                 val completeQuery =
                     buildSearchQueryOccurrenceRight(
                         baseQuery,
@@ -421,7 +421,7 @@ class SearchDB(
         operation: (rs: ResultSet) -> Pair<K, V>,
     ): Map<K, V> =
         coroutineScope {
-            return@coroutineScope connectionPool.useConnection { connection ->
+            return@coroutineScope connectionPool.useConnection("searchOccurrences") { connection ->
                 val prepStmt =
                     connection
                         .prepareStatement(
@@ -491,45 +491,46 @@ class SearchDB(
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter?,
     ): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection
-                    .prepareStatement(
-                        buildCountSearchQuery(
-                            searchExpression = searchExpression,
-                            metadataSearchFilter = metadataSearchFilter,
-                            rightSearchFilter = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                            hasHandlesToIgnore = false,
-                        ),
-                    ).apply {
-                        var counter = 1
-                        val searchPairs =
-                            searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
-                        rightSearchFilter.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
+        connectionPool
+            .useConnection("countSearchMetadata") { connection ->
+                val prepStmt =
+                    connection
+                        .prepareStatement(
+                            buildCountSearchQuery(
+                                searchExpression = searchExpression,
+                                metadataSearchFilter = metadataSearchFilter,
+                                rightSearchFilter = rightSearchFilter,
+                                noRightInformationFilter = noRightInformationFilter,
+                                hasHandlesToIgnore = false,
+                            ),
+                        ).apply {
+                            var counter = 1
+                            val searchPairs =
+                                searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
+                            rightSearchFilter.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            searchPairs.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            metadataSearchFilter.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
                         }
-                        searchPairs.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
-                        metadataSearchFilter.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
+                val span = tracer.spanBuilder("countMetadataSearch").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                    } finally {
+                        span.end()
                     }
-            val span = tracer.spanBuilder("countMetadataSearch").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                } finally {
-                    span.end()
+                if (rs.next()) {
+                    return@useConnection rs.getInt(1)
+                } else {
+                    throw IllegalStateException("No count found.")
                 }
-            if (rs.next()) {
-                return@useConnection rs.getInt(1)
-            } else {
-                throw IllegalStateException("No count found.")
             }
-        }
 
     private suspend fun searchMetadata(
         searchExpression: SearchExpression?,
@@ -540,62 +541,63 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
     ): List<ItemMetadata> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection
-                    .prepareStatement(
-                        buildSearchQuery(
-                            searchExpression = searchExpression,
-                            metadataSearchFilters = metadataSearchFilter,
-                            rightSearchFilters = rightSearchFilter,
-                            noRightInformationFilter = noRightInformationFilter,
-                            hasHandlesToIgnore = handlesToIgnore.isNotEmpty(),
-                            withLimit = limit != null,
-                            withOffset = offset != null,
-                        ),
-                    ).apply {
-                        var counter = 1
-                        val searchPairs =
-                            searchExpression
-                                ?.let { SearchExpressionResolution.getSearchPairs(it) }
-                                ?: emptyList()
-                        rightSearchFilter.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
+        connectionPool
+            .useConnection("searchMetadata") { connection ->
+                val prepStmt =
+                    connection
+                        .prepareStatement(
+                            buildSearchQuery(
+                                searchExpression = searchExpression,
+                                metadataSearchFilters = metadataSearchFilter,
+                                rightSearchFilters = rightSearchFilter,
+                                noRightInformationFilter = noRightInformationFilter,
+                                hasHandlesToIgnore = handlesToIgnore.isNotEmpty(),
+                                withLimit = limit != null,
+                                withOffset = offset != null,
+                            ),
+                        ).apply {
+                            var counter = 1
+                            val searchPairs =
+                                searchExpression
+                                    ?.let { SearchExpressionResolution.getSearchPairs(it) }
+                                    ?: emptyList()
+                            rightSearchFilter.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            searchPairs.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            metadataSearchFilter.forEach { f ->
+                                counter = f.setSQLParameter(counter, this)
+                            }
+                            if (handlesToIgnore.isNotEmpty()) {
+                                this.setArray(
+                                    counter++,
+                                    connection.createArrayOf("text", handlesToIgnore.toTypedArray()),
+                                )
+                            }
+                            if (limit != null) {
+                                this.setInt(counter++, limit)
+                            }
+                            if (offset != null) {
+                                this.setInt(counter++, offset)
+                            }
                         }
-                        searchPairs.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
+                val span = tracer.spanBuilder("searchMetadataWithRightsFilter").startSpan()
+                return@useConnection try {
+                    span.makeCurrent()
+                    val rs = runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
+                    generateSequence {
+                        if (rs.next()) {
+                            extractMetadataRS(rs)
+                        } else {
+                            null
                         }
-                        metadataSearchFilter.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
-                        if (handlesToIgnore.isNotEmpty()) {
-                            this.setArray(
-                                counter++,
-                                connection.createArrayOf("text", handlesToIgnore.toTypedArray()),
-                            )
-                        }
-                        if (limit != null) {
-                            this.setInt(counter++, limit)
-                        }
-                        if (offset != null) {
-                            this.setInt(counter++, offset)
-                        }
-                    }
-            val span = tracer.spanBuilder("searchMetadataWithRightsFilter").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                val rs = runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                generateSequence {
-                    if (rs.next()) {
-                        extractMetadataRS(rs)
-                    } else {
-                        null
-                    }
-                }.takeWhile { true }.toList()
-            } finally {
-                span.end()
+                    }.takeWhile { true }.toList()
+                } finally {
+                    span.end()
+                }
             }
-        }
 
     suspend fun searchMetadataItems(
         searchExpression: SearchExpression?,

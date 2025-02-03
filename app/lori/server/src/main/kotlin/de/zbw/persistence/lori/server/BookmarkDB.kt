@@ -40,7 +40,7 @@ class BookmarkDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteBookmarkById(bookmarkId: Int): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("deleteBookmarkById") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
                     this.setInt(1, bookmarkId)
@@ -55,7 +55,7 @@ class BookmarkDB(
         }
 
     suspend fun insertBookmark(bookmarkRest: Bookmark): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("insertBookmark") { connection ->
             val prepStmt =
                 insertUpdateSetParameters(
                     bookmarkRest,
@@ -78,7 +78,7 @@ class BookmarkDB(
         }
 
     suspend fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getBookmarksByIds") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
                     this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
@@ -105,7 +105,7 @@ class BookmarkDB(
         bookmarkId: Int,
         bookmark: Bookmark,
     ): Int =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("updateBookmarkById") { connection ->
             val prepStmt =
                 insertUpdateSetParameters(
                     bookmark,
@@ -126,7 +126,7 @@ class BookmarkDB(
         limit: Int,
         offset: Int,
     ): List<Bookmark> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getBookmarkList") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
                     this.setInt(1, limit)
@@ -152,7 +152,7 @@ class BookmarkDB(
         }
 
     suspend fun getBookmarkNamesByQuerystring(query: String): List<String> =
-        connectionPool.useConnection { connection ->
+        connectionPool.useConnection("getBookmarkNamesByQuerystring") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_BOOKMARK_BY_QUERYSTRING).apply {
                     this.setString(1, query)
