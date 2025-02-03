@@ -46,7 +46,9 @@ class BookmarkDBTest : DatabaseTest() {
             val createTime = NOW.toInstant()
             mockkCurrentTime(createTime)
             // when
-            val generatedId = dbConnector.insertBookmark(TEST_BOOKMARK.copy(createdBy = "user1", lastUpdatedBy = "user1"))
+            val bookmark = TEST_BOOKMARK.copy(createdBy = "user1", lastUpdatedBy = "user1")
+            bookmark.initializeQueryString()
+            val generatedId = dbConnector.insertBookmark(bookmark)
             val receivedBookmarks = dbConnector.getBookmarksByIds(listOf(generatedId))
             // then
             assertThat(
@@ -59,6 +61,7 @@ class BookmarkDBTest : DatabaseTest() {
                             createdOn = NOW,
                             lastUpdatedBy = "user1",
                             lastUpdatedOn = NOW,
+                            queryString = bookmark.computeQueryString(),
                         ).toString(),
                 ),
             )
@@ -82,6 +85,7 @@ class BookmarkDBTest : DatabaseTest() {
                         createdOn = NOW,
                         lastUpdatedBy = "user2",
                         lastUpdatedOn = NOW.plusDays(1),
+                        queryString = expectedBMUpdated.computeQueryString(),
                     ).toString(),
                 `is`(
                     dbConnector.getBookmarksByIds(listOf(generatedId)).first().toString(),
@@ -107,7 +111,7 @@ class BookmarkDBTest : DatabaseTest() {
                 dbConnector.getBookmarkList(50, 0).toString(),
                 `is`(
                     listOf(
-                        expected1.copy(lastUpdatedOn = NOW, createdOn = NOW),
+                        expected1.copy(lastUpdatedOn = NOW, createdOn = NOW).also { it.initializeQueryString() },
                     ).toString(),
                 ),
             )
@@ -120,8 +124,8 @@ class BookmarkDBTest : DatabaseTest() {
                 dbConnector.getBookmarkList(50, 0).toString(),
                 `is`(
                     listOf(
-                        expected1.copy(lastUpdatedOn = NOW, createdOn = NOW),
-                        expected2.copy(lastUpdatedOn = NOW, createdOn = NOW),
+                        expected1.copy(lastUpdatedOn = NOW, createdOn = NOW).also { it.initializeQueryString() },
+                        expected2.copy(lastUpdatedOn = NOW, createdOn = NOW).also { it.initializeQueryString() },
                     ).toString(),
                 ),
             )

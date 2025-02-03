@@ -111,7 +111,7 @@ class BookmarkDB(
                     bookmark,
                     connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
                 ).apply {
-                    this.setInt(24, bookmarkId)
+                    this.setInt(25, bookmarkId)
                 }
             val span = tracer.spanBuilder("updateBookmarkById").startSpan()
             try {
@@ -151,34 +151,60 @@ class BookmarkDB(
             }.takeWhile { true }.toList()
         }
 
+    suspend fun getBookmarkNamesByQuerystring(query: String): List<String> =
+        connectionPool.useConnection { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_BOOKMARK_BY_QUERYSTRING).apply {
+                    this.setString(1, query)
+                }
+
+            val span = tracer.spanBuilder("getBookmarkIdsByQuerystring").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
     companion object {
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
+        private const val COLUMN_BOOKMARK_NAME = "bookmark_name"
         const val COLUMN_FILTER_LICENCE_URL = "filter_licence_url"
         const val COLUMN_FILTER_MANUAL_RIGHT = "filter_manual_right"
         const val COLUMN_FILTER_ACCESS_STATE_ON = "filter_access_state_on"
+        const val COLUMN_QUERYSTRING = "querystring"
 
         const val STATEMENT_GET_BOOKMARKS =
             "SELECT " +
-                "bookmark_id,bookmark_name,description,search_term," +
+                "$COLUMN_BOOKMARK_ID,$COLUMN_BOOKMARK_NAME,description,search_term," +
                 "filter_publication_year,filter_access_state,filter_temporal_validity," +
                 "filter_start_date,filter_end_date,filter_formal_rule," +
                 "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
 
         const val STATEMENT_INSERT_BOOKMARK =
             "INSERT INTO $TABLE_NAME_BOOKMARK" +
-                "(bookmark_name,search_term,description,filter_publication_year," +
+                "($COLUMN_BOOKMARK_NAME,search_term,description,filter_publication_year," +
                 "filter_access_state,filter_temporal_validity,filter_start_date," +
                 "filter_end_date,filter_formal_rule,filter_valid_on," +
                 "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on,created_by," +
                 "last_updated_by,filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
                 ")" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
@@ -187,7 +213,7 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)"
+                "?,?,?)"
 
         const val STATEMENT_DELETE_BOOKMARK_BY_ID =
             "DELETE" +
@@ -196,14 +222,15 @@ class BookmarkDB(
 
         const val STATEMENT_UPDATE_BOOKMARK =
             "INSERT INTO $TABLE_NAME_BOOKMARK" +
-                "(bookmark_name,search_term,description,filter_publication_year," +
+                "($COLUMN_BOOKMARK_NAME,search_term,description,filter_publication_year," +
                 "filter_access_state,filter_temporal_validity,filter_start_date," +
                 "filter_end_date,filter_formal_rule,filter_valid_on," +
                 "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on," +
                 "created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_BOOKMARK_ID)" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON," +
+                "$COLUMN_QUERYSTRING,$COLUMN_BOOKMARK_ID)" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -211,10 +238,11 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?,?)" +
+                "?,?,?," +
+                "?)" +
                 " ON CONFLICT ($COLUMN_BOOKMARK_ID)" +
                 " DO UPDATE SET" +
-                " bookmark_name = EXCLUDED.bookmark_name," +
+                " $COLUMN_BOOKMARK_NAME = EXCLUDED.$COLUMN_BOOKMARK_NAME," +
                 " search_term = EXCLUDED.search_term," +
                 " description = EXCLUDED.description," +
                 " filter_publication_year = EXCLUDED.filter_publication_year," +
@@ -234,20 +262,26 @@ class BookmarkDB(
                 " filter_template_name = EXCLUDED.filter_template_name," +
                 " $COLUMN_FILTER_LICENCE_URL = EXCLUDED.$COLUMN_FILTER_LICENCE_URL," +
                 " $COLUMN_FILTER_MANUAL_RIGHT = EXCLUDED.$COLUMN_FILTER_MANUAL_RIGHT," +
+                " $COLUMN_QUERYSTRING = EXCLUDED.$COLUMN_QUERYSTRING," +
                 " $COLUMN_FILTER_ACCESS_STATE_ON = EXCLUDED.$COLUMN_FILTER_ACCESS_STATE_ON;"
 
         const val STATEMENT_GET_BOOKMARK_LIST =
             "SELECT" +
-                " bookmark_id,bookmark_name,description,search_term," +
+                " $COLUMN_BOOKMARK_ID,$COLUMN_BOOKMARK_NAME,description,search_term," +
                 "filter_publication_year,filter_access_state,filter_temporal_validity," +
                 "filter_start_date,filter_end_date,filter_formal_rule," +
                 "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
+
+        const val STATEMENT_GET_BOOKMARK_BY_QUERYSTRING =
+            "SELECT $COLUMN_BOOKMARK_NAME" +
+                " FROM $TABLE_NAME_BOOKMARK" +
+                " WHERE $COLUMN_QUERYSTRING = ?;"
 
         private fun extractBookmark(rs: ResultSet): Bookmark =
             Bookmark(
@@ -287,6 +321,7 @@ class BookmarkDB(
                 licenceURLFilter = LicenceUrlFilter.fromString(rs.getString(22)),
                 manualRightFilter = ManualRightFilter.fromString(rs.getBoolean(23).toString()),
                 accessStateOnFilter = AccessStateOnDateFilter.fromString(rs.getString(24)),
+                queryString = rs.getString(25),
             )
 
         private fun insertUpdateSetParameters(
@@ -358,6 +393,7 @@ class BookmarkDB(
                 this.setIfNotNull(23, bookmark.accessStateOnFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toSQLString())
                 }
+                this.setString(24, bookmark.computeQueryString())
             }
         }
     }

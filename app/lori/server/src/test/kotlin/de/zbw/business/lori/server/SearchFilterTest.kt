@@ -451,8 +451,8 @@ class SearchFilterTest : DatabaseTest() {
         )
     }
 
-    @DataProvider(name = DATA_FOR_BOOKMARK_TO_STRING)
-    fun createDataForBookmarkToString() =
+    @DataProvider(name = DATA_FOR_BOOKMARK_TO_QUERY_STRING)
+    fun createDataForBookmarkToQueryString() =
         arrayOf(
             arrayOf(
                 Bookmark(
@@ -493,15 +493,15 @@ class SearchFilterTest : DatabaseTest() {
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_BOOKMARK_TO_STRING)
-    fun testBookmarkToString(
+    @Test(dataProvider = DATA_FOR_BOOKMARK_TO_QUERY_STRING)
+    fun testBookmarkToQueryString(
         bookmark: Bookmark,
         expected: String,
         reason: String,
     ) {
         assertThat(
             reason,
-            SearchFilter.bookmarkToString(bookmark),
+            bookmark.computeQueryString(),
             `is`(expected),
         )
     }
@@ -512,6 +512,6 @@ class SearchFilterTest : DatabaseTest() {
         const val DATA_FOR_ZDB_ID = "DATA_FOR_ZDB_ID"
         const val DATA_FOR_PREPARE_VALUE = "DATA_FOR_PREPARE_VALUE"
         const val DATA_FOR_TO_STRING = "DATA_FOR_TO_STRING"
-        const val DATA_FOR_BOOKMARK_TO_STRING = "DATA_FOR_BOOKMARK_TO_STRING"
+        const val DATA_FOR_BOOKMARK_TO_QUERY_STRING = "DATA_FOR_BOOKMARK_TO_QUERY_STRING"
     }
 }

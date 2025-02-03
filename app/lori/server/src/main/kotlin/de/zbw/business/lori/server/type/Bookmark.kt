@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.RightValidOnFilter
+import de.zbw.business.lori.server.SearchFilter.Companion.filtersToString
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
@@ -51,6 +52,7 @@ data class Bookmark(
     val licenceURLFilter: LicenceUrlFilter? = null,
     val manualRightFilter: ManualRightFilter? = null,
     val accessStateOnFilter: AccessStateOnDateFilter? = null,
+    private var queryString: String? = null,
 ) {
     fun getAllMetadataFilter(): List<MetadataSearchFilter> =
         listOfNotNull(
@@ -74,4 +76,29 @@ data class Bookmark(
             manualRightFilter,
             accessStateOnFilter,
         )
+
+    fun initializeQueryString() {
+        queryString = computeQueryString()
+    }
+
+    fun getQueryString() = queryString
+
+    fun computeQueryString(): String {
+        return if (queryString == null) {
+            val filters =
+                filtersToString(
+                    getAllMetadataFilter() + getAllRightFilter() +
+                        listOfNotNull(noRightInformationFilter),
+                )
+            return if (searchTerm.isNullOrBlank()) {
+                filters
+            } else if (filters.isBlank()) {
+                searchTerm
+            } else {
+                "($searchTerm) & ($filters)"
+            }
+        } else {
+            queryString!!
+        }
+    }
 }

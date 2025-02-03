@@ -4,7 +4,6 @@ import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ItemRight
@@ -207,7 +206,7 @@ fun Routing.templateRoutes(
                         call.respond(
                             bookmarks.map { bookmark ->
                                 bookmark.toRest(
-                                    SearchFilter.bookmarkToString(bookmark),
+                                    bookmark.computeQueryString(),
                                 )
                             },
                         )
