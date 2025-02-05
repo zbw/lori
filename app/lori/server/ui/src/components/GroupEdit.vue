@@ -406,32 +406,44 @@ export default defineComponent({
         ></GroupDeleteDialog>
       </v-dialog>
       <v-row>
-        <v-col>
+        <v-col cols="4">Name</v-col>
+        <v-col cols="8">
           <v-text-field
               v-if="isNew"
               variant="outlined"
-              label="Name der Berechtigungsgruppe"
+              hint="Name der Berechtigungsgruppe"
               v-model="formState.title"
               :error-messages="errorName"
           ></v-text-field>
           <v-text-field
               v-if="!isNew"
+              bg-color="grey-lighten-1"
+              readonly
               variant="outlined"
-              label="Name der Berechtigungsgruppe"
+              hint="Name der Berechtigungsgruppe"
               v-model="formState.title"
               :error-messages="errorName"
-              readonly
           ></v-text-field>
         </v-col>
       </v-row>
       <v-row>
-        <v-col>
+        <v-col cols="4"> ID</v-col>
+        <v-col cols="8">
           <v-text-field
+              v-if="isNew"
+              readonly
+              bg-color="grey-lighten-1"
+              variant="outlined"
+              label="Wird automatisch generiert"
+              hint="ID der Berechtigungsgruppe"
+          ></v-text-field>
+          <v-text-field
+              v-else
               v-model="formState.groupId"
               readonly
-              hint="ID der Berechtigungsgruppe"
+              bg-color="grey-lighten-1"
               variant="outlined"
-              label="ID der Berechtigungsgruppe"
+              hint="ID der Berechtigungsgruppe"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -442,6 +454,7 @@ export default defineComponent({
               v-model="computedGroup.createdOn"
               variant="outlined"
               readonly
+              bg-color="grey-lighten-1"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -452,6 +465,7 @@ export default defineComponent({
               v-model="computedGroup.createdBy"
               variant="outlined"
               readonly
+              bg-color="grey-lighten-1"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -462,6 +476,7 @@ export default defineComponent({
               v-model="computedGroup.lastUpdatedOn"
               variant="outlined"
               readonly
+              bg-color="grey-lighten-1"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -472,6 +487,7 @@ export default defineComponent({
               v-model="computedGroup.lastUpdatedBy"
               variant="outlined"
               readonly
+              bg-color="grey-lighten-1"
           ></v-text-field>
         </v-col>
       </v-row>

@@ -1290,22 +1290,39 @@ export default defineComponent({
                 <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
+                    v-if="!isEditable"
                     v-model="formState.formTemplateName"
                     :error-messages="errorTemplateName"
-                    :readonly="!isEditable"
+                    readonly
+                    bg-color="grey-lighten-1"
                     hint="Name des Templates"
                     variant="outlined"
+                  ></v-text-field>
+                  <v-text-field
+                      v-else
+                      v-model="formState.formTemplateName"
+                      :error-messages="errorTemplateName"
+                      hint="Name des Templates"
+                      variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Beschreibung</v-col>
+                <v-col cols="4">Beschreibung</v-col>
                 <v-col cols="8">
                   <v-textarea
+                    v-if="!isEditable"
+                    bg-color="grey-lighten-1"
+                    readonly
                     v-model="tmpRight.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
-                    :readonly="!isEditable"
+                  ></v-textarea>
+                  <v-textarea
+                    v-else
+                    v-model="tmpRight.templateDescription"
+                    hint="Beschreibung des Templates"
+                    variant="outlined"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -1316,6 +1333,7 @@ export default defineComponent({
                     v-model="tmpRight.createdOn"
                     variant="outlined"
                     readonly
+                    bg-color="grey-lighten-1"
                     hint="Erstellungsdatum des Templates"
                   ></v-text-field>
                 </v-col>
@@ -1327,6 +1345,7 @@ export default defineComponent({
                     v-model="tmpRight.createdBy"
                     variant="outlined"
                     readonly
+                    bg-color="grey-lighten-1"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1337,6 +1356,7 @@ export default defineComponent({
                     v-model="tmpRight.lastUpdatedOn"
                     variant="outlined"
                     readonly
+                    bg-color="grey-lighten-1"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1347,6 +1367,7 @@ export default defineComponent({
                     v-model="tmpRight.lastUpdatedBy"
                     variant="outlined"
                     readonly
+                    bg-color="grey-lighten-1"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1357,6 +1378,7 @@ export default defineComponent({
                     v-model="tmpRight.lastAppliedOn"
                     variant="outlined"
                     readonly
+                    bg-color="grey-lighten-1"
                     hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
                   ></v-text-field>
                 </v-col>
@@ -1411,7 +1433,6 @@ export default defineComponent({
                         v-if="!isEditable"
                         :disabled="!isEditable"
                         v-bind="props"
-                        color="grey-darken-1"
                         >Gespeicherte Suche verknüpfen
                       </v-btn>
                       </div>
@@ -1496,6 +1517,7 @@ export default defineComponent({
                   readonly
                   hint="Rechte Id"
                   label="Wird automatisch generiert"
+                  bg-color="grey-lighten-1"
                   variant="outlined"
                 ></v-text-field>
                 <v-text-field
@@ -1503,6 +1525,7 @@ export default defineComponent({
                   ref="rightId"
                   v-model="tmpRight.rightId"
                   readonly
+                  bg-color="grey-lighten-1"
                   hint="Rechte Id"
                   variant="outlined"
                 ></v-text-field>
@@ -1512,13 +1535,24 @@ export default defineComponent({
               <v-col cols="4"> Aktueller Access-Status</v-col>
               <v-col cols="8">
                 <v-select
+                  v-if="!isEditable"
                   v-model="formState.accessState"
-                  :readonly="!isEditable"
+                  readonly
+                  bg-color="grey-lighten-1"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
                   variant="outlined"
                   @blur="v$.accessState.$touch()"
                   @change="v$.accessState.$touch()"
+                ></v-select>
+                <v-select
+                 v-else
+                 v-model="formState.accessState"
+                 :error-messages="errorAccessState"
+                 :items="accessStatusSelect"
+                 variant="outlined"
+                 @blur="v$.accessState.$touch()"
+                 @change="v$.accessState.$touch()"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1584,9 +1618,27 @@ export default defineComponent({
               <v-col cols="4">IP-Gruppe</v-col>
               <v-col cols="8">
                 <v-select
+                  v-if="!isEditable || formState.accessState != 'Restricted'"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="formState.selectedGroups"
                   :items="groupItems"
-                  :readonly="!isEditable || formState.accessState != 'Restricted'"
+                  :error-messages="errorIPGroup"
+                  @blur="v$.selectedGroups.$touch()"
+                  @change="v$.selectedGroups.$touch()"
+                  chips
+                  multiple
+                  counter
+                  hint="Einschränkung des Zugriffs auf Berechtigungsgruppen (nur verfügbar für Restricted)"
+                  variant="outlined"
+                  return-object
+                  item-title="title"
+                >
+                </v-select>
+                <v-select
+                  v-else
+                  v-model="formState.selectedGroups"
+                  :items="groupItems"
                   :error-messages="errorIPGroup"
                   @blur="v$.selectedGroups.$touch()"
                   @change="v$.selectedGroups.$touch()"
@@ -1605,12 +1657,22 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
+                  v-if="!isEditable"
                   v-model="tmpRight.notesGeneral"
-                  :readonly="!isEditable"
+                  readonly
+                  bg-color="grey-lighten-1"
                   counter
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   variant="outlined"
+                ></v-textarea>
+                <v-textarea
+                    v-else
+                    v-model="tmpRight.notesGeneral"
+                    counter
+                    hint="Allgemeine Bemerkungen"
+                    maxlength="256"
+                    variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1625,10 +1687,18 @@ export default defineComponent({
               <v-col cols="4"> Lizenzvertrag</v-col>
               <v-col cols="8">
                 <v-text-field
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.licenceContract"
-                  :readonly="!isEditable"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   variant="outlined"
+                ></v-text-field>
+                <v-text-field
+                    v-else
+                    v-model="tmpRight.licenceContract"
+                    hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
+                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1662,10 +1732,18 @@ export default defineComponent({
               <v-col cols="4"> Open-Content-Licence</v-col>
               <v-col cols="8">
                 <v-text-field
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
                   v-model="tmpRight.openContentLicence"
-                  :readonly="!isEditable"
                   variant="outlined"
+                ></v-text-field>
+                <v-text-field
+                    v-else
+                    hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
+                    v-model="tmpRight.openContentLicence"
+                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1675,10 +1753,18 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-text-field
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                  :readonly="!isEditable"
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
                   variant="outlined"
+                ></v-text-field>
+                <v-text-field
+                    v-else
+                    v-model="tmpRight.nonStandardOpenContentLicenceURL"
+                    hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
+                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1714,12 +1800,22 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.notesFormalRules"
-                  :readonly="!isEditable"
                   counter
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
                   variant="outlined"
+                ></v-textarea>
+                <v-textarea
+                    v-else
+                    v-model="tmpRight.notesFormalRules"
+                    counter
+                    hint="Bemerkungen für formale Regelungen"
+                    maxlength="256"
+                    variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1736,10 +1832,18 @@ export default defineComponent({
               <v-col cols="4"> Basis der Speicherung</v-col>
               <v-col cols="8">
                 <v-select
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="formState.basisStorage"
-                  :readonly="!isEditable"
                   :items="basisStorage"
                   variant="outlined"
+                ></v-select>
+                <v-select
+                    v-else
+                    v-model="formState.basisStorage"
+                    :items="basisStorage"
+                    variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1747,10 +1851,18 @@ export default defineComponent({
               <v-col cols="4"> Basis des Access-Status</v-col>
               <v-col cols="8">
                 <v-select
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="formState.basisAccessState"
-                  :readonly="!isEditable"
                   :items="basisAccessState"
                   variant="outlined"
+                ></v-select>
+                <v-select
+                    v-else
+                    v-model="formState.basisAccessState"
+                    :items="basisAccessState"
+                    variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1758,8 +1870,18 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.notesProcessDocumentation"
-                  :readonly="!isEditable"
+                  counter
+                  hint="Bemerkungen für prozessdokumentierende Elemente"
+                  maxlength="256"
+                  variant="outlined"
+                ></v-textarea>
+                <v-textarea
+                  v-else
+                  v-model="tmpRight.notesProcessDocumentation"
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
@@ -1780,9 +1902,17 @@ export default defineComponent({
               <v-col cols="4"> Erstellt am</v-col>
               <v-col cols="8">
                 <v-text-field
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.createdOn"
                   variant="outlined"
-                  readonly
+                  hint="Erstellungsdatum des Templates"
+                ></v-text-field>
+                <v-text-field
+                  v-else
+                  v-model="tmpRight.createdOn"
+                  variant="outlined"
                   hint="Erstellungsdatum des Templates"
                 ></v-text-field>
               </v-col>
@@ -1794,6 +1924,7 @@ export default defineComponent({
                   v-model="tmpRight.createdBy"
                   variant="outlined"
                   readonly
+                  bg-color="grey-lighten-1"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1804,6 +1935,7 @@ export default defineComponent({
                   v-model="tmpRight.lastUpdatedOn"
                   variant="outlined"
                   readonly
+                  bg-color="grey-lighten-1"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1814,6 +1946,7 @@ export default defineComponent({
                   v-model="tmpRight.lastUpdatedBy"
                   variant="outlined"
                   readonly
+                  bg-color="grey-lighten-1"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1821,8 +1954,18 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
+                  v-if="!isEditable"
+                  bg-color="grey-lighten-1"
+                  readonly
                   v-model="tmpRight.notesManagementRelated"
-                  :readonly="!isEditable"
+                  counter
+                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
+                  maxlength="256"
+                  variant="outlined"
+                ></v-textarea>
+                <v-textarea
+                  v-else
+                  v-model="tmpRight.notesManagementRelated"
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
