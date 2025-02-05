@@ -1423,7 +1423,7 @@ export default defineComponent({
                       v-if="isEditable"
                       color="blue darken-1"
                       @click="selectBookmark"
-                      :disabled="!isEditable"
+                      :disabled="!isEditable || bookmarkItems.length > 0"
                   >Gespeicherte Suche verknüpfen
                   </v-btn>
                   <v-tooltip location="bottom">
