@@ -238,7 +238,7 @@ fun RightRest.toBusiness(): ItemRight =
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateDescription = templateDescription,
-        templateName = templateName,
+        templateName = templateName?.trim(),
         zbwUserAgreement = zbwUserAgreement,
     )
 
