@@ -7,8 +7,10 @@ import error from "@/utils/error";
 import { useCookies } from "vue3-cookies";
 import { UserSessionRest } from "@/generated-sources/openapi";
 import { useUserStore } from "@/stores/user";
+import GroupOverview from "@/components/GroupOverview.vue";
 
 export default defineComponent({
+  components: {GroupOverview},
   setup() {
     const historyStore = useHistoryStore();
     const cookies = useCookies();
@@ -105,6 +107,10 @@ export default defineComponent({
       logoutDialog.value = false;
     };
 
+    const closeGroupDialog = () => {
+      dialogStore.groupOverviewActivated = false;
+    };
+
     onMounted(() => login(true));
     return {
       dialogStore,
@@ -122,6 +128,7 @@ export default defineComponent({
       activateDashboardDialog,
       activateGroupDialog,
       activateTemplateDialog,
+      closeGroupDialog,
       deactivateLoginDialog,
       deactivateLogoutDialog,
       login,
@@ -133,6 +140,17 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
+  <v-dialog
+      v-model="dialogStore.groupOverviewActivated"
+      :retain-focus="false"
+      max-width="1000px"
+      v-on:close="closeGroupDialog"
+      persistent
+  >
+    <GroupOverview
+        v-on:groupOverviewClosed="closeGroupDialog">
+    </GroupOverview>
+  </v-dialog>
   <v-app-bar app color="primary" dark>
     <div class="d-flex align-center">
       <v-img

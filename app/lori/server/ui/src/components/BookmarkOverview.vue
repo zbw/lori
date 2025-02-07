@@ -9,7 +9,10 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 export default defineComponent({
   components: { RightsEditDialog },
   props: {},
-  emits: ["executeBookmarkSearch"],
+  emits: [
+      "executeBookmarkSearch",
+      "bookmarkOverviewClosed",
+  ],
   setup(props, { emit }) {
     /**
      * Error messages.
@@ -88,7 +91,7 @@ export default defineComponent({
           closeDeleteDialog();
           alertSuccessful.value = true;
           alertSuccessfulMsg.value =
-              "Bookmark '" + editBookmark.value.bookmarkName + "' wurde erfolgreich gelöscht.";
+              "Gespeicherte Suche '" + editBookmark.value.bookmarkName + "' wurde erfolgreich gelöscht.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -129,6 +132,7 @@ export default defineComponent({
       editIndex.value = -1;
       alertSuccessful.value = false;
       templateDialogActivated.value = false;
+      emit("bookmarkOverviewClosed");
     };
 
     /**
@@ -204,6 +208,13 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card position="relative">
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-container>
       <v-snackbar
           contained
@@ -303,10 +314,6 @@ export default defineComponent({
           </v-btn>
         </template>
       </v-data-table>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" @click="close">Zurück</v-btn>
-      </v-card-actions>
       <v-dialog
         v-model="templateDialogActivated"
         :retain-focus="false"

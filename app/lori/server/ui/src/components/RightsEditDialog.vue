@@ -1127,12 +1127,20 @@ export default defineComponent({
 
 <template>
   <v-card class="my-scroll" position="relative">
+   <v-toolbar>
+    <v-spacer></v-spacer>
+    <v-btn
+        icon="mdi-close"
+        @click="cancel"
+    ></v-btn>
+    </v-toolbar>
     <v-dialog
     max-width="500px"
     :retain-focus="false"
     v-model="dialogSimulationResults"
     >
       <v-card>
+
         <div class="d-flex align-center justify-space-between">
           <v-card-title>Ergebnisse Simulation
             <v-spacer></v-spacer>
@@ -1230,7 +1238,6 @@ export default defineComponent({
       <v-btn v-if="!isTemplate" :readonly="updateInProgress" color="blue darken-1" @click="save"
         >Speichern
       </v-btn>
-      <v-btn color="blue darken-1" @click="cancel">Zurück</v-btn>
 
       <v-tooltip
         location="bottom"
@@ -1729,7 +1736,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Open-Content-Licence</v-col>
+              <v-col cols="4"> Uneingeschränkte Open-Content-Lizenz</v-col>
               <v-col cols="8">
                 <v-text-field
                   v-if="!isEditable"

@@ -2,7 +2,7 @@
 
 
 import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
-import {BookmarkRest, RightErrorInformationRest, RightErrorRest, RightRest} from "@/generated-sources/openapi";
+import {RightErrorInformationRest, RightErrorRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import searchquerybuilder from "@/utils/searchquerybuilder";
@@ -16,7 +16,9 @@ export default defineComponent({
       required: false,
     },
   },
-  emits: [],
+  emits: [
+      "dashboardClosed"
+  ],
   setup(props, {emit}) {
     /**
      * Table:
@@ -215,6 +217,13 @@ export default defineComponent({
     const successMsg = ref("");
 
     /**
+     * Closing
+     */
+    const close = () => {
+      emit("dashboardClosed");
+    };
+
+    /**
      * Watches:
      */
     watch(currentPage, () => {
@@ -289,6 +298,7 @@ export default defineComponent({
       successMsg,
       successMsgIsActive,
       totalPages,
+      close,
       createHandleHref,
       createRightHref,
       createTemplateHref,
@@ -306,6 +316,13 @@ export default defineComponent({
 
 <template>
   <v-card position="relative">
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-container>
       <v-card-title class="text-h5"
       >Meldungen</v-card-title

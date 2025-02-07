@@ -116,6 +116,13 @@ export default defineComponent({
 
 <template>
   <v-card position="relative">
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-container>
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>
@@ -152,7 +159,6 @@ export default defineComponent({
       </v-row>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
           :disabled="updateInProgress"
           color="blue darken-1"

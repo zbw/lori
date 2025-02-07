@@ -770,9 +770,6 @@ export default defineComponent({
     const closeDashboard = () => {
       dialogStore.dashboardViewActivated = false;
     };
-    const closeGroupDialog = () => {
-      dialogStore.groupOverviewActivated = false;
-    };
 
     const closeTemplateOverview = () => {
       dialogStore.templateOverviewActivated = false;
@@ -780,6 +777,9 @@ export default defineComponent({
 
     const closeBookmarkSaveDialog = () => {
       dialogStore.bookmarkSaveActivated = false;
+    };
+
+    const handleClickOutside = () => {
     };
 
     const newBookmarkId = ref(-1);
@@ -834,8 +834,8 @@ export default defineComponent({
       closeBookmarkSaveDialog,
       closeDashboard,
       closeTemplateEditDialog,
-      closeGroupDialog,
       closeTemplateOverview,
+      handleClickOutside,
       executeBookmarkSearch,
       getAccessStatesForDate,
       initSearchByRightId,
@@ -861,6 +861,9 @@ export default defineComponent({
 table.special, th.special, td.special {
   border:1px solid black;
 }
+* {
+  transform: scale(0.98, 0.98)
+}
 </style>
 <template>
   <VResizeDrawer permanent width="300px">
@@ -873,18 +876,11 @@ table.special, th.special, td.special {
   <v-main class="d-flex align-center justify-center">
   <v-card position="relative">
     <v-dialog
-      v-model="dialogStore.groupOverviewActivated"
-      :retain-focus="false"
-      max-width="1000px"
-      v-on:close="closeGroupDialog"
-    >
-      <GroupOverview></GroupOverview>
-    </v-dialog>
-    <v-dialog
       v-model="dialogStore.bookmarkSaveActivated"
       :retain-focus="false"
       max-width="1000px"
       v-on:close="closeBookmarkSaveDialog"
+      persistent
     >
       <BookmarkSave
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
@@ -896,9 +892,11 @@ table.special, th.special, td.special {
       max-width="1500px"
       max-height="800px"
       v-on:close="closeTemplateOverview"
+      persistent
     >
       <TemplateOverview
         v-on:getItemsByRightId="initSearchByRightId"
+        v-on:templateOverviewClosed="closeTemplateOverview"
       ></TemplateOverview>
     </v-dialog>
     <v-dialog
@@ -906,18 +904,23 @@ table.special, th.special, td.special {
       :retain-focus="false"
       max-width="1000px"
       v-on:close="closeBookmarkOverview"
+      persistent
     >
       <BookmarkOverview
         v-on:executeBookmarkSearch="executeBookmarkSearch"
+        v-on:bookmarkOverviewClosed="closeBookmarkOverview"
       ></BookmarkOverview>
     </v-dialog>
     <v-dialog
         v-model="dialogStore.dashboardViewActivated"
         :retain-focus="false"
-        max-width="1000px"
+        max-width="1500px"
         v-on:close="closeDashboard"
+        persistent
     >
-      <Dashboard></Dashboard>
+      <Dashboard
+          v-on:dashboardClosed="closeDashboard"
+      ></Dashboard>
     </v-dialog>
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>
@@ -934,6 +937,8 @@ table.special, th.special, td.special {
       :retain-focus="false"
       max-width="1000px"
       v-on:close="closeTemplateEditDialog"
+      v-click-outside="handleClickOutside"
+      persistent
     >
       <RightsEditDialog
         :index="-1"
@@ -1069,7 +1074,7 @@ table.special, th.special, td.special {
                       <tr class=special>
                         <td class=special>Publikationsjahr</td>
                         <td class=special>jah</td>
-                        <td class=special>Begin-Ende</td>
+                        <td class=special>Beginn-Ende</td>
                       </tr>
                       <tr class=special>
                         <td class=special>Publikationstyp</td>
@@ -1224,7 +1229,6 @@ table.special, th.special, td.special {
             :key="renderKey"
             :row-props="selectedRowColor"
             loading-text="Daten werden geladen... Bitte warten."
-            show-select
             select-strategy="single"
             height="550px"
             @click:row="addActiveItem"

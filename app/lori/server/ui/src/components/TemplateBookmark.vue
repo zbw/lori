@@ -89,7 +89,7 @@ export default defineComponent({
 <template>
   <v-card position="relative">
     <v-container>
-      <v-card-title>Auswahl Bookmarks</v-card-title>
+      <v-card-title>Auswahl Gespeicherte Suche</v-card-title>
       <v-snackbar
           contained
           multi-line
