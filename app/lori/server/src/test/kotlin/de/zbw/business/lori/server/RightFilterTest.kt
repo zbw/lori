@@ -9,7 +9,6 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -457,161 +456,9 @@ class RightFilterTest : DatabaseTest() {
         )
     }
 
-    @DataProvider(name = DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER)
-    fun createDataForNoSearchTemValFilter() =
-        arrayOf(
-            arrayOf(
-                null,
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.PRESENT),
-                    ),
-                ),
-                2,
-                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
-                "Filter for all items that have an active right information",
-            ),
-            arrayOf(
-                "zga:aktuell",
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                2,
-                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
-                "Filter for all items that have an active right information",
-            ),
-            arrayOf(
-                null,
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.PAST),
-                    ),
-                ),
-                2,
-                setOf(tempValFilterPast, startEndDateFilter),
-                "Filter for all items that have an active right in the past",
-            ),
-            arrayOf(
-                "zga:vergangenheit",
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                2,
-                setOf(tempValFilterPast, startEndDateFilter),
-                "Filter for all items that have an active right information in upper search bar",
-            ),
-            arrayOf(
-                null,
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.FUTURE),
-                    ),
-                ),
-                6,
-                setOf(
-                    tempValFilterFuture,
-                    itemRightRestricted,
-                    itemRightRestrictedOpen,
-                    formalRuleLicenceContract,
-                    formalRuleOCL,
-                    formalRuleUserAgreement,
-                ),
-                "Filter for all items that have an active right in the future",
-            ),
-            arrayOf(
-                "zga:zukunft",
-                emptyList<MetadataSearchFilter>(),
-                emptyList<RightSearchFilter>(),
-                6,
-                setOf(
-                    tempValFilterFuture,
-                    itemRightRestricted,
-                    itemRightRestrictedOpen,
-                    formalRuleLicenceContract,
-                    formalRuleOCL,
-                    formalRuleUserAgreement,
-                ),
-                "Filter for all items that have an active right in the future",
-            ),
-        )
-
-    @Test(dataProvider = DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER)
-    fun testNoSearchTemporalValidityFilter(
-        searchTerm: String?,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        rightsSearchFilter: List<RightSearchFilter>,
-        numberOfResults: Int,
-        expectedResult: Set<ItemMetadata>,
-        description: String,
-    ) {
-        // when
-        val searchResult: SearchQueryResult =
-            runBlocking {
-                backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
-                )
-            }
-
-        // then
-        assertThat(
-            description,
-            searchResult.results.size,
-            `is`(numberOfResults),
-        )
-        assertThat(
-            description,
-            searchResult.results.map { it.metadata }.toSet(),
-            `is`(expectedResult),
-        )
-
-        assertThat(
-            "Expected number of results does not match",
-            searchResult.numberOfResults,
-            `is`(expectedResult.size),
-        )
-    }
-
     @DataProvider(name = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
     fun createDataForSearchTemValFilter() =
         arrayOf(
-            arrayOf(
-                "col:validity",
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.PRESENT),
-                    ),
-                ),
-                setOf(tempValFilterPresent, tempValFilterPastNoEnd),
-                "Filter for all items that have an active right information",
-            ),
-            arrayOf(
-                "col:validity",
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.PAST),
-                    ),
-                ),
-                setOf(tempValFilterPast),
-                "Filter for all items that have an active right in the past",
-            ),
-            arrayOf(
-                "col:validity",
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    TemporalValidityFilter(
-                        temporalValidity = listOf(TemporalValidity.FUTURE),
-                    ),
-                ),
-                setOf(tempValFilterFuture),
-                "Filter for all items that have an active right in the future",
-            ),
             arrayOf(
                 "col:validity",
                 emptyList<MetadataSearchFilter>(),
@@ -862,7 +709,6 @@ class RightFilterTest : DatabaseTest() {
         const val DATA_FOR_SEARCH_WITH_RIGHT_FILTER = "DATA_FOR_SEARCH_WITH_RIGHT_FILTER"
         const val DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER = "DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER"
         const val DATA_FOR_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_SEARCH_TEMP_VAL_FILTER"
-        const val DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_NO_SEARCH_TEMP_VAL_FILTER"
         const val DATA_FOR_SEARCH_FORMAL_RULE_FILTER = "DATA_FOR_SEARCH_FORMAL_RULE_FILTER"
 
         val TEST_RIGHT =

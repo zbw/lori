@@ -23,8 +23,6 @@ BookmarkRawRest:
       type: string
     filterAccessState:
       type: string
-    filterTemporalValidity:
-      type: string
     filterStartDate:
       type: string
     filterEndDate:
@@ -89,10 +87,6 @@ BookmarkRest:
       items:
         type: string
     filterAccessState:
-      type: array
-      items:
-        type: string
-    filterTemporalValidity:
       type: array
       items:
         type: string

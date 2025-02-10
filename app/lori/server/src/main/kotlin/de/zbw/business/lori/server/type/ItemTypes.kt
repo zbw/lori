@@ -55,12 +55,6 @@ enum class AccessState(
     CLOSED(3),
 }
 
-enum class TemporalValidity {
-    FUTURE,
-    PAST,
-    PRESENT,
-}
-
 enum class PublicationType(
     val priority: Int,
 ) {

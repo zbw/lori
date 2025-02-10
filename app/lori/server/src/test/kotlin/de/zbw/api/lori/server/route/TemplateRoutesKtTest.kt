@@ -466,7 +466,7 @@ class TemplateRoutesKtTest {
                             "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
                                 " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
                                 " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
-                                " & zga:\"FUTURE,PAST\" & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
+                                " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                         ),
                     ),
                 ),

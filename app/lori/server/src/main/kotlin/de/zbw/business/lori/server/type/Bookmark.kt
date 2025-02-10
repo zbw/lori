@@ -17,7 +17,6 @@ import de.zbw.business.lori.server.SearchFilter.Companion.filtersToString
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
-import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import java.time.OffsetDateTime
 
@@ -41,7 +40,6 @@ data class Bookmark(
     val paketSigelFilter: PaketSigelFilter? = null,
     val zdbIdFilter: ZDBIdFilter? = null,
     val accessStateFilter: AccessStateFilter? = null,
-    val temporalValidityFilter: TemporalValidityFilter? = null,
     val formalRuleFilter: FormalRuleFilter? = null,
     val startDateFilter: StartDateFilter? = null,
     val endDateFilter: EndDateFilter? = null,
@@ -70,7 +68,6 @@ data class Bookmark(
             endDateFilter,
             formalRuleFilter,
             templateNameFilter,
-            temporalValidityFilter,
             startDateFilter,
             validOnFilter,
             manualRightFilter,

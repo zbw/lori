@@ -5,9 +5,6 @@ import { useVuelidate } from "@vuelidate/core";
 import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
 import metadata_utils from "@/utils/metadata_utils";
-import api from "@/api/api";
-import {ItemInformation} from "@/generated-sources/openapi";
-import error from "@/utils/error";
 
 export default defineComponent({
   emits: ["startEmptySearch", "startSearch", "getAccessStatesOnDate"],
@@ -80,9 +77,6 @@ export default defineComponent({
         searchStore.formalRuleLicenceContract ||
         searchStore.formalRuleOpenContentLicence ||
         searchStore.formalRuleUserAgreement ||
-        searchStore.temporalValidityFilterFuture ||
-        searchStore.temporalValidityFilterPresent ||
-        searchStore.temporalValidityFilterPast ||
         searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
         searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
@@ -115,10 +109,6 @@ export default defineComponent({
       searchStore.formalRuleLicenceContract = false;
       searchStore.formalRuleOpenContentLicence = false;
       searchStore.formalRuleUserAgreement = false;
-
-      searchStore.temporalValidityFilterFuture = false;
-      searchStore.temporalValidityFilterPresent = false;
-      searchStore.temporalValidityFilterPast = false;
 
       searchStore.temporalValidOnFormatted = "";
       searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
@@ -701,45 +691,6 @@ export default defineComponent({
                   ></v-checkbox>
                 </v-item>
               </v-item-group>
-            </v-list-group>
-            <v-list-group sub-group>
-              <template v-slot:activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  title="Zeitliche Gültigkeit"
-                ></v-list-item>
-              </template>
-              <v-checkbox
-                label="Vergangenheit"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.temporalValidityFilterPast"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
-              <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
-              ></v-divider>
-              <v-checkbox
-                label="Aktuell"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.temporalValidityFilterPresent"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
-              <v-divider
-                  :thickness="1"
-                  class="border-opacity-100"
-                  color="grey-lighten-1"
-              ></v-divider>
-              <v-checkbox
-                label="Zukunft"
-                hide-details
-                class="pl-9 ml-4"
-                v-model="searchStore.temporalValidityFilterFuture"
-                @update:modelValue="emitSearchStart"
-              ></v-checkbox>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">

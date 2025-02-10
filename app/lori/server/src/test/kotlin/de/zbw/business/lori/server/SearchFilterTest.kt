@@ -7,7 +7,6 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
-import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -392,13 +391,6 @@ class SearchFilterTest : DatabaseTest() {
                             FormalRule.OPEN_CONTENT_LICENCE,
                         ),
                     ),
-                    TemporalValidityFilter(
-                        listOf(
-                            TemporalValidity.PAST,
-                            TemporalValidity.PRESENT,
-                            TemporalValidity.FUTURE,
-                        ),
-                    ),
                     TemplateNameFilter(listOf("555nase")),
                     QueryParameterParser.parseAccessStateOnDate("RESTRICTED+2025-01-21"),
                     QueryParameterParser.parseManualRightFilter("true"),
@@ -417,7 +409,6 @@ class SearchFilterTest : DatabaseTest() {
                     " & ser:\"series1,series2\"" +
                     " & typ:\"PROCEEDING,BOOK_PART\"" +
                     " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
-                    " & zga:\"PAST,PRESENT,FUTURE\"" +
                     " & tpl:\"555nase\"" +
                     " & acd:\"RESTRICTED+2025-01-21\"" +
                     " & man:on",

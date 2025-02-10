@@ -18,13 +18,11 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
-import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.business.lori.server.type.TemporalValidity
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -109,21 +107,6 @@ object QueryParameterParser {
                 }
             }
         return accessStates.takeIf { it.isNotEmpty() }?.let { AccessStateFilter(it) }
-    }
-
-    fun parseTemporalValidity(s: String?): TemporalValidityFilter? {
-        if (s == null) {
-            return null
-        }
-        val temporalValidity: List<TemporalValidity> =
-            s.split(",".toRegex()).mapNotNull {
-                try {
-                    TemporalValidity.valueOf(it)
-                } catch (_: IllegalArgumentException) {
-                    null
-                }
-            }
-        return temporalValidity.takeIf { it.isNotEmpty() }?.let { TemporalValidityFilter(it) }
     }
 
     fun parseStartDateFilter(s: String?): StartDateFilter? =
