@@ -494,7 +494,6 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
-        temporalValidityFilter = QueryParameterParser.parseTemporalValidity(this.filterTemporalValidity),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule),
         startDateFilter = QueryParameterParser.parseStartDateFilter(this.filterStartDate),
         endDateFilter = QueryParameterParser.parseEndDateFilter(this.filterEndDate),
@@ -530,12 +529,6 @@ fun BookmarkRest.toBusiness(): Bookmark =
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId?.joinToString(separator = ",")),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
-        temporalValidityFilter =
-            QueryParameterParser.parseTemporalValidity(
-                this.filterTemporalValidity?.joinToString(
-                    separator = ",",
-                ),
-            ),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
@@ -569,7 +562,6 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
             ),
         filterPublicationType = this.publicationTypeFilter?.publicationTypes?.map { it.toString() },
         filterAccessState = this.accessStateFilter?.accessStates?.map { it.toString() },
-        filterTemporalValidity = this.temporalValidityFilter?.temporalValidity?.map { it.toString() },
         filterStartDate = this.startDateFilter?.date,
         filterEndDate = this.endDateFilter?.date,
         filterFormalRule = this.formalRuleFilter?.formalRules?.map { it.toString() },

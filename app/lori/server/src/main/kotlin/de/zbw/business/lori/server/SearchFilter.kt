@@ -4,7 +4,6 @@ import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
-import de.zbw.business.lori.server.type.TemporalValidity
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
@@ -71,14 +70,6 @@ abstract class SearchFilter(
                     "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
                     "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
                     "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
-                    "zga" ->
-                        QueryParameterParser.parseTemporalValidity(
-                            searchValue
-                                .uppercase()
-                                .replace("VERGANGENHEIT", TemporalValidity.PAST.toString())
-                                .replace("ZUKUNFT", TemporalValidity.FUTURE.toString())
-                                .replace("AKTUELL", TemporalValidity.PRESENT.toString()),
-                        )
                     "reg" ->
                         QueryParameterParser.parseFormalRuleFilter(
                             searchValue
@@ -555,48 +546,6 @@ class AccessStateOnDateFilter(
     }
 }
 
-class TemporalValidityFilter(
-    val temporalValidity: List<TemporalValidity>,
-) : RightSearchFilter("") {
-    override fun toWhereClause(): String =
-        "(" +
-            temporalValidity.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                when (it) {
-                    TemporalValidity.FUTURE -> "$COLUMN_RIGHT_START_DATE > ?"
-                    TemporalValidity.PAST -> "$COLUMN_RIGHT_END_DATE < ?"
-                    TemporalValidity.PRESENT ->
-                        "($COLUMN_RIGHT_START_DATE <= ?" +
-                            " AND $COLUMN_RIGHT_END_DATE >= ?) OR ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL)"
-                }
-            } + " AND ${WHERE_REQUIRE_RIGHT_ID})"
-
-    override fun setSQLParameter(
-        counter: Int,
-        preparedStatement: PreparedStatement,
-    ): Int {
-        var localCounter = counter
-        temporalValidity.forEach {
-            val now = LocalDate.now()
-            preparedStatement.setDate(localCounter++, Date.valueOf(now))
-            if (it == TemporalValidity.PRESENT) {
-                preparedStatement.setDate(localCounter++, Date.valueOf(now))
-                preparedStatement.setDate(localCounter++, Date.valueOf(now))
-            }
-        }
-        return localCounter
-    }
-
-    override fun getFilterType(): FilterType = FilterType.TEMPORAL_VALIDITY
-
-    override fun toSQLString(): String = temporalValidity.joinToString(separator = ",")
-
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
-
-    companion object {
-        fun fromString(s: String?): TemporalValidityFilter? = QueryParameterParser.parseTemporalValidity(s)
-    }
-}
-
 /**
  * Filters for items which have a valid right information
  * on a given day.
@@ -798,7 +747,6 @@ enum class FilterType(
     START_DATE("zgb"),
     SUB_COMMUNITY_NAME("subcom"),
     SUB_COMMUNITY_HANDLE("hdlsubcom"),
-    TEMPORAL_VALIDITY("zga"),
     TITLE("tit"),
     ZDB_ID("zdb"),
 }

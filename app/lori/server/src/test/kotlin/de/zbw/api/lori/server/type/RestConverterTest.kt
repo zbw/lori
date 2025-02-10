@@ -868,7 +868,6 @@ class RestConverterTest {
                 publicationYearFilter = QueryParameterParser.parsePublicationYearFilter("2020-2030"),
                 publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter("BOOK,ARTICLE"),
                 accessStateFilter = QueryParameterParser.parseAccessStateFilter("OPEN,RESTRICTED"),
-                temporalValidityFilter = QueryParameterParser.parseTemporalValidity("FUTURE,PAST"),
                 validOnFilter = QueryParameterParser.parseRightValidOnFilter("2018-04-01"),
                 startDateFilter = QueryParameterParser.parseStartDateFilter("2020-01-01"),
                 endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),

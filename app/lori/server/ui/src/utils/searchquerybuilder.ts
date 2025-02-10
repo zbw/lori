@@ -297,45 +297,6 @@ export default {
     }
   },
 
-  setTempValFilter(searchStore: any, bookmark: BookmarkRest): void {
-    if (
-      bookmark.filterTemporalValidity == undefined ||
-      bookmark.filterTemporalValidity.length == 0
-    ) {
-      searchStore.temporalValidityFilterFuture = false;
-      searchStore.temporalValidityFilterPresent = false;
-      searchStore.temporalValidityFilterPast = false;
-      return;
-    }
-    bookmark.filterTemporalValidity.forEach((v: string): void => {
-      if (v == "FUTURE") {
-        searchStore.temporalValidityFilterFuture = v;
-      } else if (v == "PAST") {
-        searchStore.temporalValidityFilterPast = v;
-      } else {
-        searchStore.temporalValidityFilterPresent = v;
-      }
-    });
-  },
-
-  buildTempValFilter(searchStore: any): string | undefined {
-    const tempVal: Array<string> = [];
-    if (searchStore.temporalValidityFilterFuture) {
-      tempVal.push("FUTURE");
-    }
-    if (searchStore.temporalValidityFilterPast) {
-      tempVal.push("PAST");
-    }
-    if (searchStore.temporalValidityFilterPresent) {
-      tempVal.push("PRESENT");
-    }
-    if (tempVal.length == 0) {
-      return undefined;
-    } else {
-      return tempVal.join(",");
-    }
-  },
-
   setStartDateAtFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterStartDate == undefined) {
       searchStore.temporalEventState.startDateOrEndDateValue = undefined;

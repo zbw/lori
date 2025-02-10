@@ -368,7 +368,6 @@ export default defineComponent({
               searchquerybuilder.buildPublicationYearFilter(searchStore),
               searchquerybuilder.buildPublicationTypeFilter(searchStore),
               searchquerybuilder.buildAccessStateFilter(searchStore),
-              searchquerybuilder.buildTempValFilter(searchStore),
               searchquerybuilder.buildStartDateAtFilter(searchStore),
               searchquerybuilder.buildEndDateAtFilter(searchStore),
               searchquerybuilder.buildFormalRuleFilter(searchStore),
@@ -403,7 +402,6 @@ export default defineComponent({
           pageSize.value, // limit
           pageSize.value,
             false,
-          undefined,
           undefined,
           undefined,
           undefined,
@@ -456,7 +454,6 @@ export default defineComponent({
           undefined,
             undefined,
             undefined,
-            undefined,
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -478,7 +475,6 @@ export default defineComponent({
       searchquerybuilder.setZDBFilter(searchStore, bookmark);
       searchquerybuilder.setAccessStateFilter(searchStore, bookmark);
       searchquerybuilder.setFormalRuleFilter(searchStore, bookmark);
-      searchquerybuilder.setTempValFilter(searchStore, bookmark);
       searchquerybuilder.setStartDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setEndDateAtFilter(searchStore, bookmark);
       searchquerybuilder.setValidOnFilter(searchStore, bookmark);
@@ -528,7 +524,6 @@ export default defineComponent({
           searchquerybuilder.buildPublicationYearFilter(searchStore),
           searchquerybuilder.buildPublicationTypeFilter(searchStore),
           searchquerybuilder.buildAccessStateFilter(searchStore),
-          searchquerybuilder.buildTempValFilter(searchStore),
           searchquerybuilder.buildStartDateAtFilter(searchStore),
           searchquerybuilder.buildEndDateAtFilter(searchStore),
           searchquerybuilder.buildFormalRuleFilter(searchStore),
@@ -1100,11 +1095,6 @@ table.special, th.special, td.special {
                         <td class=special>Zeitliche Gültigkeit Ende</td>
                         <td class=special>zge</td>
                         <td class=special>YYYY-MM-DD</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Zeitliche Gültigkeit Abschnitte</td>
-                        <td class=special>zga</td>
-                        <td class=special></td>
                       </tr>
                       <tr class=special>
                         <td class=special>Formale Regelungen</td>

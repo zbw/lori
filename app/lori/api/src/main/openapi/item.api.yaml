@@ -340,10 +340,6 @@ item-search:
         in: query
         schema:
           type: string
-      - name: filterTemporalValidity
-        in: query
-        schema:
-          type: string
       - name: filterStartDate
         in: query
         schema:

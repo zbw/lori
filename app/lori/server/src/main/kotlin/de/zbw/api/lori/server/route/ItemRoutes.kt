@@ -16,7 +16,6 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
-import de.zbw.business.lori.server.TemporalValidityFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -383,8 +382,6 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parseLicenceUrlFilter(call.request.queryParameters["filterLicenceUrl"])
                     val accessStateFilter: AccessStateFilter? =
                         QueryParameterParser.parseAccessStateFilter(call.request.queryParameters["filterAccessState"])
-                    val temporalValidityFilter: TemporalValidityFilter? =
-                        QueryParameterParser.parseTemporalValidity(call.request.queryParameters["filterTemporalValidity"])
                     val formalRuleFilter: FormalRuleFilter? =
                         QueryParameterParser.parseFormalRuleFilter(
                             call.request.queryParameters["filterFormalRule"],
@@ -480,7 +477,6 @@ fun Routing.itemRoutes(
                             endDateFilter,
                             formalRuleFilter,
                             startDateFilter,
-                            temporalValidityFilter,
                             validOnFilter,
                             rightIdsFilter,
                             manualRightFilter,
