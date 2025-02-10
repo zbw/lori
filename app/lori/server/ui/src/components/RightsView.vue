@@ -224,13 +224,14 @@ export default defineComponent({
     </v-dialog>
     <v-dialog
       v-model="dialogStore.rightsEditTabsActivated"
-      max-height="800px"
+      max-height="1000px"
       max-width="1600px"
       :retain-focus="false"
       v-on:close="tabDialogClosed"
       v-on:deleteSuccessful="deleteSuccessful"
       v-on:updateSuccessful="updateRight"
       persistent
+      scrollable
     >
       <RightsEditTabs
         :handle="handle"
