@@ -1118,15 +1118,19 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
+<style >
+.v-expansion-panel-text__wrapper {
+  max-height: calc(700px - 64px - (4 * 48px));
+  overflow: scroll;
+}
+
 .my-scroll {
-  height: calc(100vh - 200px);
-  overflow-y: auto;
+  overflow-y: scroll;
 }
 </style>
 
 <template>
-  <v-card class="my-scroll" position="relative">
+  <v-card position="relative" class="my-scroll">
    <v-toolbar>
     <v-spacer></v-spacer>
     <v-btn
@@ -1285,9 +1289,8 @@ export default defineComponent({
       </v-dialog>
     </v-card-actions>
     <v-card-text style="height:1100px;">
-    <v-expansion-panels v-model="openPanelsDefault" focusable multiple>
-      <template v-if="isTemplate">
-        <v-expansion-panel value="0">
+    <v-expansion-panels bg-color="indigo-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
+      <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>
             Template Informationen
           </v-expansion-panel-title>
@@ -1508,8 +1511,7 @@ export default defineComponent({
             </v-container>
           </v-expansion-panel-text>
         </v-expansion-panel>
-      </template>
-      <v-expansion-panel>
+      <v-expansion-panel value="1">
         <v-expansion-panel-title
           >Steuerungsrelevante Elemente
         </v-expansion-panel-title>
@@ -1829,7 +1831,7 @@ export default defineComponent({
           </v-container>
         </v-expansion-panel-text>
       </v-expansion-panel>
-      <v-expansion-panel>
+      <v-expansion-panel value="2">
         <v-expansion-panel-title
           >Prozessdokumentierende Elemente
         </v-expansion-panel-title>
@@ -1899,7 +1901,7 @@ export default defineComponent({
           </v-container>
         </v-expansion-panel-text>
       </v-expansion-panel>
-      <v-expansion-panel>
+      <v-expansion-panel value="3">
         <v-expansion-panel-title>
           Metadaten über den Rechteinformationseintrag
         </v-expansion-panel-title>
