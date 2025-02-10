@@ -15,7 +15,10 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 export default defineComponent({
   components: { RightsEditDialog },
   props: {},
-  emits: ["getItemsByRightId"],
+  emits: [
+      "getItemsByRightId",
+      "templateOverviewClosed",
+  ],
   setup(props, { emit }) {
     /**
      * Stores.
@@ -220,6 +223,13 @@ export default defineComponent({
       }
     };
 
+    /**
+     * Closing.
+     */
+    const close = () => {
+      emit("templateOverviewClosed");
+    };
+
     onMounted(() => getTemplateList());
 
     return {
@@ -244,6 +254,7 @@ export default defineComponent({
       childTemplateAdded,
       childTemplateDeleted,
       childTemplateUpdated,
+      close,
       closeApplyErrorMsg,
       closeTemplateEditDialog,
       createNewTemplate,
@@ -263,6 +274,13 @@ export default defineComponent({
 </style>
 <template>
   <v-card position="relative">
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-container>
       <v-snackbar
           contained
@@ -369,6 +387,7 @@ export default defineComponent({
         max-height="850px"
         v-on:close="closeTemplateEditDialog"
         scrollable
+        persistent
       >
         <RightsEditDialog
           :index="-1"

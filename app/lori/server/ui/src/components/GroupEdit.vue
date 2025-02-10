@@ -34,6 +34,7 @@ export default defineComponent({
     "addGroupSuccessful",
     "deleteGroupSuccessful",
     "updateGroupSuccessful",
+    "groupEditClosed",
   ],
   setup(props, {emit}) {
     /**
@@ -106,9 +107,9 @@ export default defineComponent({
     const dialogStore = useDialogsStore();
     const close = () => {
       v$.value.$reset();
-      dialogStore.groupEditActivated = false;
       saveAlertError.value = false;
       saveAlertErrorMessage.value = "";
+      emit("groupEditClosed");
     };
 
     /**
@@ -359,6 +360,13 @@ export default defineComponent({
 
 <template>
   <v-card class="my-scroll" position="relative">
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-dialog
         v-model="showDialogOldVersion"
         max-width="1000px"
@@ -580,7 +588,6 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn @click="save" color="blue darken-1">Speichern</v-btn>
-      <v-btn @click="close" color="blue darken-1">Zurück</v-btn>
       <v-btn v-if="!isNew" @click="initiateDeleteDialog">
         <v-icon>mdi-delete</v-icon>
       </v-btn>

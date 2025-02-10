@@ -210,7 +210,7 @@ export default defineComponent({
       max-height="800px"
       max-width="1600px"
       v-on:close="editRightClosed"
-      v-on:click:outside="editRightClosed"
+      persistent
     >
       <RightsEditDialog
         :index="currentIndex"
@@ -230,7 +230,7 @@ export default defineComponent({
       v-on:close="tabDialogClosed"
       v-on:deleteSuccessful="deleteSuccessful"
       v-on:updateSuccessful="updateRight"
-      v-on:click:outside="tabDialogClosed"
+      persistent
     >
       <RightsEditTabs
         :handle="handle"

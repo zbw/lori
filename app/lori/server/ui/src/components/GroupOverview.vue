@@ -8,7 +8,10 @@ import error from "@/utils/error";
 
 export default defineComponent({
   components: { GroupEdit },
-  setup() {
+  emits: [
+      "groupOverviewClosed"
+  ],
+  setup(props, {emit}) {
     const renderKey = ref(0);
     const headers = [
       {
@@ -51,7 +54,7 @@ export default defineComponent({
     };
 
     const closeGroupEditDialog = () => {
-      dialogStore.groupOverviewActivated = false;
+      dialogStore.groupEditActivated = false;
     };
 
     const isNew = ref(false);
@@ -77,7 +80,7 @@ export default defineComponent({
     const lastModifiedGroup = ref({} as GroupRest);
     const addGroupEntry = (groupId: number) => {
       api
-        .getGroupById(groupId)
+        .getGroupById(groupId, undefined)
         .then((group) => {
           groupItems.value.unshift(group);
           renderKey.value += 1;
@@ -95,7 +98,7 @@ export default defineComponent({
     };
     const updateGroupEntry = (groupId: number) => {
       api
-        .getGroupById(groupId)
+        .getGroupById(groupId, undefined)
         .then((group) => {
           groupItems.value[index.value] = group;
           renderKey.value += 1;
@@ -123,6 +126,13 @@ export default defineComponent({
       successMsgIsActive.value = true;
     };
 
+    /**
+     * Closing
+     */
+    const close = () => {
+      emit("groupOverviewClosed");
+    };
+
     return {
       currentGroup,
       dialogStore,
@@ -137,6 +147,7 @@ export default defineComponent({
       successMsg,
       activateGroupEditDialog,
       addGroupEntry,
+      close,
       closeGroupEditDialog,
       createNewGroup,
       deleteGroupEntry,
@@ -150,6 +161,13 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="close"
+      ></v-btn>
+    </v-toolbar>
     <v-snackbar
         contained
         multi-line
@@ -193,6 +211,7 @@ export default defineComponent({
       max-width="1500px"
       max-height="850px"
       scrollable
+      persistent
     >
       <GroupEdit
         :isNew="isNew"
@@ -200,6 +219,7 @@ export default defineComponent({
         v-on:addGroupSuccessful="addGroupEntry"
         v-on:deleteGroupSuccessful="deleteGroupEntry"
         v-on:updateGroupSuccessful="updateGroupEntry"
+        v-on:groupEditClosed="closeGroupEditDialog"
       ></GroupEdit>
     </v-dialog>
   </v-card>
