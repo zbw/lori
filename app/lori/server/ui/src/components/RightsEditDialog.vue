@@ -301,7 +301,6 @@ export default defineComponent({
     const deleteDialogClosed = () => {
       if (isTemplate.value) {
         dialogDeleteTemplate.value = false;
-        close();
       } else {
         dialogDeleteRight.value = false;
       }
@@ -1245,19 +1244,19 @@ export default defineComponent({
 
       <v-tooltip
         location="bottom"
-        :readonly="!(isNew || isTemplateAndException)"
       >
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :readonly="isNew || isTemplateAndException"
+              :disabled="isNew || isTemplateAndException"
               @click="initiateDeleteDialog"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
           </div>
         </template>
-        <span>Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-if="isNew || isTemplateAndException">Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-else>Löschen</span>
       </v-tooltip>
 
       <v-dialog
