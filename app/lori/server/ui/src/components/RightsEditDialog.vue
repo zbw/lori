@@ -150,7 +150,8 @@ export default defineComponent({
             formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
             formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
             formState.startDate != lastSavedRight.value.startDate ||
-            formState.endDate != lastSavedRight.value.endDate
+            formState.endDate != lastSavedRight.value.endDate ||
+            formState.formTemplateName != lastSavedRight.value.templateName
     })
 
     watch(startDateFormatted, () => {
@@ -270,6 +271,7 @@ export default defineComponent({
       errorMsg.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
+      unsavedChangesDialog.value = false;
       successMsgIsActive.value = false;
       successMsg.value = "";
       formState.formTemplateName = "";
@@ -282,6 +284,17 @@ export default defineComponent({
       close();
     };
 
+    const unsavedChangesDialog = ref(false);
+    const checkForChangesAndClose = () => {
+      if(formWasChanged.value){
+        unsavedChangesDialog.value = true;
+      } else {
+        cancel();
+      }
+    };
+    const closeUnsavedChangesDialog = () => {
+      unsavedChangesDialog.value = false;
+    };
 
     const cancelConfirm = () => {
       updateConfirmDialog.value = false;
@@ -1034,7 +1047,7 @@ export default defineComponent({
       if (!isEditable.value) {
         return {
           "readonly": true,
-          "bg-color": "grey-lighten-1",
+          "bg-color": "grey-lighten-2",
         };
       } else {
         return {
@@ -1099,6 +1112,7 @@ export default defineComponent({
       exceptionTemplateItems,
       exceptionTemplateHeaders,
       readOnlyProps,
+      unsavedChangesDialog,
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
@@ -1109,9 +1123,11 @@ export default defineComponent({
       addNewException,
       cancel,
       cancelConfirm,
+      checkForChangesAndClose,
       closeCreateExceptionDialog,
       closeDashboard,
       closeDialogSimulationResult,
+      closeUnsavedChangesDialog,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
@@ -1148,7 +1164,7 @@ export default defineComponent({
     <v-spacer></v-spacer>
     <v-btn
         icon="mdi-close"
-        @click="cancel"
+        @click="checkForChangesAndClose"
     ></v-btn>
     </v-toolbar>
     <v-dialog
@@ -1196,6 +1212,28 @@ export default defineComponent({
       <Dashboard
           :test-id="testId"
       ></Dashboard>
+    </v-dialog>
+    <v-dialog v-model="unsavedChangesDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5">Hinweis</v-card-title>
+        <v-card-text>
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="cancel">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
     <v-card-title>
       <v-row>
@@ -1313,20 +1351,11 @@ export default defineComponent({
                 <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
-                    v-if="!isEditable"
                     v-model="formState.formTemplateName"
                     :error-messages="errorTemplateName"
-                    readonly
-                    bg-color="grey-lighten-1"
+                    v-bind="{...$attrs, ...readOnlyProps}"
                     hint="Name des Templates"
                     variant="outlined"
-                  ></v-text-field>
-                  <v-text-field
-                      v-else
-                      v-model="formState.formTemplateName"
-                      :error-messages="errorTemplateName"
-                      hint="Name des Templates"
-                      variant="outlined"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1334,18 +1363,10 @@ export default defineComponent({
                 <v-col cols="4">Beschreibung</v-col>
                 <v-col cols="8">
                   <v-textarea
-                    v-if="!isEditable"
-                    bg-color="grey-lighten-1"
-                    readonly
                     v-model="tmpRight.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
-                  ></v-textarea>
-                  <v-textarea
-                    v-else
-                    v-model="tmpRight.templateDescription"
-                    hint="Beschreibung des Templates"
-                    variant="outlined"
+                    v-bind="{...$attrs, ...readOnlyProps}"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -1356,7 +1377,7 @@ export default defineComponent({
                     v-model="tmpRight.createdOn"
                     variant="outlined"
                     readonly
-                    bg-color="grey-lighten-1"
+                    bg-color="grey-lighten-2"
                     hint="Erstellungsdatum des Templates"
                   ></v-text-field>
                 </v-col>
@@ -1368,7 +1389,7 @@ export default defineComponent({
                     v-model="tmpRight.createdBy"
                     variant="outlined"
                     readonly
-                    bg-color="grey-lighten-1"
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1379,7 +1400,7 @@ export default defineComponent({
                     v-model="tmpRight.lastUpdatedOn"
                     variant="outlined"
                     readonly
-                    bg-color="grey-lighten-1"
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1390,7 +1411,7 @@ export default defineComponent({
                     v-model="tmpRight.lastUpdatedBy"
                     variant="outlined"
                     readonly
-                    bg-color="grey-lighten-1"
+                    bg-color="grey-lighten-2"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1401,7 +1422,7 @@ export default defineComponent({
                     v-model="tmpRight.lastAppliedOn"
                     variant="outlined"
                     readonly
-                    bg-color="grey-lighten-1"
+                    bg-color="grey-lighten-2"
                     hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
                   ></v-text-field>
                 </v-col>
@@ -1539,7 +1560,7 @@ export default defineComponent({
                   readonly
                   hint="Rechte Id"
                   label="Wird automatisch generiert"
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                   variant="outlined"
                 ></v-text-field>
                 <v-text-field
@@ -1547,7 +1568,7 @@ export default defineComponent({
                   ref="rightId"
                   v-model="tmpRight.rightId"
                   readonly
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                   hint="Rechte Id"
                   variant="outlined"
                 ></v-text-field>
@@ -1557,24 +1578,13 @@ export default defineComponent({
               <v-col cols="4"> Aktueller Access-Status</v-col>
               <v-col cols="8">
                 <v-select
-                  v-if="!isEditable"
                   v-model="formState.accessState"
-                  readonly
-                  bg-color="grey-lighten-1"
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
                   variant="outlined"
                   @blur="v$.accessState.$touch()"
                   @change="v$.accessState.$touch()"
-                ></v-select>
-                <v-select
-                 v-else
-                 v-model="formState.accessState"
-                 :error-messages="errorAccessState"
-                 :items="accessStatusSelect"
-                 variant="outlined"
-                 @blur="v$.accessState.$touch()"
-                 @change="v$.accessState.$touch()"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1641,7 +1651,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-if="!isEditable || formState.accessState != 'Restricted'"
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                   readonly
                   v-model="formState.selectedGroups"
                   :items="groupItems"
@@ -1679,22 +1689,12 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-if="!isEditable"
                   v-model="tmpRight.notesGeneral"
-                  readonly
-                  bg-color="grey-lighten-1"
                   counter
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   variant="outlined"
-                ></v-textarea>
-                <v-textarea
-                    v-else
-                    v-model="tmpRight.notesGeneral"
-                    counter
-                    hint="Allgemeine Bemerkungen"
-                    maxlength="256"
-                    variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1709,18 +1709,10 @@ export default defineComponent({
               <v-col cols="4"> Lizenzvertrag</v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.licenceContract"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                    v-else
-                    v-model="tmpRight.licenceContract"
-                    hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
-                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1754,18 +1746,10 @@ export default defineComponent({
               <v-col cols="4"> Uneingeschränkte Open-Content-Lizenz</v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
                   v-model="tmpRight.openContentLicence"
                   variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                    v-else
-                    hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
-                    v-model="tmpRight.openContentLicence"
-                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1775,18 +1759,10 @@ export default defineComponent({
               </v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.nonStandardOpenContentLicenceURL"
                   hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
                   variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                    v-else
-                    v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                    hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
-                    variant="outlined"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1822,22 +1798,12 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesFormalRules"
                   counter
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
                   variant="outlined"
-                ></v-textarea>
-                <v-textarea
-                    v-else
-                    v-model="tmpRight.notesFormalRules"
-                    counter
-                    hint="Bemerkungen für formale Regelungen"
-                    maxlength="256"
-                    variant="outlined"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1854,18 +1820,10 @@ export default defineComponent({
               <v-col cols="4"> Basis der Speicherung</v-col>
               <v-col cols="8">
                 <v-select
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="formState.basisStorage"
                   :items="basisStorage"
                   variant="outlined"
-                ></v-select>
-                <v-select
-                    v-else
-                    v-model="formState.basisStorage"
-                    :items="basisStorage"
-                    variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1873,18 +1831,10 @@ export default defineComponent({
               <v-col cols="4"> Basis des Access-Status</v-col>
               <v-col cols="8">
                 <v-select
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="formState.basisAccessState"
                   :items="basisAccessState"
                   variant="outlined"
-                ></v-select>
-                <v-select
-                    v-else
-                    v-model="formState.basisAccessState"
-                    :items="basisAccessState"
-                    variant="outlined"
                 ></v-select>
               </v-col>
             </v-row>
@@ -1892,17 +1842,7 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
-                  v-model="tmpRight.notesProcessDocumentation"
-                  counter
-                  hint="Bemerkungen für prozessdokumentierende Elemente"
-                  maxlength="256"
-                  variant="outlined"
-                ></v-textarea>
-                <v-textarea
-                  v-else
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesProcessDocumentation"
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
@@ -1924,15 +1864,7 @@ export default defineComponent({
               <v-col cols="4"> Erstellt am</v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
-                  v-model="tmpRight.createdOn"
-                  variant="outlined"
-                  hint="Erstellungsdatum des Templates"
-                ></v-text-field>
-                <v-text-field
-                  v-else
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.createdOn"
                   variant="outlined"
                   hint="Erstellungsdatum des Templates"
@@ -1946,7 +1878,7 @@ export default defineComponent({
                   v-model="tmpRight.createdBy"
                   variant="outlined"
                   readonly
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1957,7 +1889,7 @@ export default defineComponent({
                   v-model="tmpRight.lastUpdatedOn"
                   variant="outlined"
                   readonly
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1968,7 +1900,7 @@ export default defineComponent({
                   v-model="tmpRight.lastUpdatedBy"
                   variant="outlined"
                   readonly
-                  bg-color="grey-lighten-1"
+                  bg-color="grey-lighten-2"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -1976,17 +1908,7 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-if="!isEditable"
-                  bg-color="grey-lighten-1"
-                  readonly
-                  v-model="tmpRight.notesManagementRelated"
-                  counter
-                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
-                  maxlength="256"
-                  variant="outlined"
-                ></v-textarea>
-                <v-textarea
-                  v-else
+                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesManagementRelated"
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
