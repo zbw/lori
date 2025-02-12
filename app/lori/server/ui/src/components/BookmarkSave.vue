@@ -69,7 +69,6 @@ export default defineComponent({
             searchquerybuilder.buildPublicationYearFilter(searchStore),
             searchquerybuilder.buildPublicationTypeFilter(searchStore),
             searchquerybuilder.buildAccessStateFilter(searchStore),
-            searchquerybuilder.buildTempValFilter(searchStore),
             searchquerybuilder.buildStartDateAtFilter(searchStore),
             searchquerybuilder.buildEndDateAtFilter(searchStore),
             searchquerybuilder.buildFormalRuleFilter(searchStore),
