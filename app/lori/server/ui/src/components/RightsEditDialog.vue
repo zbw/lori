@@ -150,7 +150,8 @@ export default defineComponent({
             formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
             formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
             formState.startDate != lastSavedRight.value.startDate ||
-            formState.endDate != lastSavedRight.value.endDate
+            formState.endDate != lastSavedRight.value.endDate ||
+            formState.formTemplateName != lastSavedRight.value.templateName
     })
 
     watch(startDateFormatted, () => {
@@ -270,6 +271,7 @@ export default defineComponent({
       errorMsg.value = "";
       updateConfirmDialog.value = false;
       updateInProgress.value = false;
+      unsavedChangesDialog.value = false;
       successMsgIsActive.value = false;
       successMsg.value = "";
       formState.formTemplateName = "";
@@ -282,6 +284,19 @@ export default defineComponent({
       close();
     };
 
+    const unsavedChangesDialog = ref(false);
+    const checkForChangesAndClose = () => {
+      if(formWasChanged.value){
+        console.log("form has changes");
+        unsavedChangesDialog.value = true;
+      } else {
+        console.log("form has no changes");
+        cancel();
+      }
+    };
+    const closeUnsavedChangesDialog = () => {
+      unsavedChangesDialog.value = false;
+    };
 
     const cancelConfirm = () => {
       updateConfirmDialog.value = false;
@@ -1099,6 +1114,7 @@ export default defineComponent({
       exceptionTemplateItems,
       exceptionTemplateHeaders,
       readOnlyProps,
+      unsavedChangesDialog,
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
@@ -1109,9 +1125,11 @@ export default defineComponent({
       addNewException,
       cancel,
       cancelConfirm,
+      checkForChangesAndClose,
       closeCreateExceptionDialog,
       closeDashboard,
       closeDialogSimulationResult,
+      closeUnsavedChangesDialog,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
@@ -1148,7 +1166,7 @@ export default defineComponent({
     <v-spacer></v-spacer>
     <v-btn
         icon="mdi-close"
-        @click="cancel"
+        @click="checkForChangesAndClose"
     ></v-btn>
     </v-toolbar>
     <v-dialog
@@ -1196,6 +1214,28 @@ export default defineComponent({
       <Dashboard
           :test-id="testId"
       ></Dashboard>
+    </v-dialog>
+    <v-dialog v-model="unsavedChangesDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5">Hinweis</v-card-title>
+        <v-card-text>
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="cancel">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
     </v-dialog>
     <v-card-title>
       <v-row>
