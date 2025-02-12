@@ -301,7 +301,6 @@ export default defineComponent({
     const deleteDialogClosed = () => {
       if (isTemplate.value) {
         dialogDeleteTemplate.value = false;
-        close();
       } else {
         dialogDeleteRight.value = false;
       }
@@ -1030,6 +1029,19 @@ export default defineComponent({
     const closeDialogSimulationResult = () => {
       dialogSimulationResults.value = false;
     };
+
+    const readOnlyProps = computed(() => {
+      if (!isEditable.value) {
+        return {
+          "readonly": true,
+          "bg-color": "grey-lighten-1",
+        };
+      } else {
+        return {
+          "clearable" : true
+        };
+      }
+    });
     watch(dashboardViewActivated, (currentValue) => {
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
@@ -1086,6 +1098,7 @@ export default defineComponent({
       startDateFormatted,
       exceptionTemplateItems,
       exceptionTemplateHeaders,
+      readOnlyProps,
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
@@ -1245,19 +1258,19 @@ export default defineComponent({
 
       <v-tooltip
         location="bottom"
-        :readonly="!(isNew || isTemplateAndException)"
       >
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :readonly="isNew || isTemplateAndException"
+              :disabled="isNew || isTemplateAndException"
               @click="initiateDeleteDialog"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
           </div>
         </template>
-        <span>Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-if="isNew || isTemplateAndException">Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-else>Löschen</span>
       </v-tooltip>
 
       <v-dialog
@@ -1572,6 +1585,7 @@ export default defineComponent({
                   :close-on-content-click="false"
                   :location="'bottom'"
                   v-model="isStartDateMenuOpen"
+                  :disabled="!isEditable"
                 >
                   <template v-slot:activator="{ props }">
                    <v-text-field
@@ -1580,10 +1594,9 @@ export default defineComponent({
                       label="Start-Datum"
                       variant="outlined"
                       prepend-icon="mdi-calendar"
-                      readonly
                       required
-                      clearable
-                      v-bind="props"
+                      readonly
+                      v-bind="{...$attrs, ...props, ...readOnlyProps}"
                       @blur="v$.startDate.$touch()"
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
