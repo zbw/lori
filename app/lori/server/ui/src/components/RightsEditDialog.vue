@@ -287,10 +287,8 @@ export default defineComponent({
     const unsavedChangesDialog = ref(false);
     const checkForChangesAndClose = () => {
       if(formWasChanged.value){
-        console.log("form has changes");
         unsavedChangesDialog.value = true;
       } else {
-        console.log("form has no changes");
         cancel();
       }
     };

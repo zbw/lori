@@ -321,7 +321,29 @@ export default defineComponent({
       close();
     };
 
+    // Changes
+    const formWasChanged = computed(() => {
+      return formState.title != groupTmp.value.title ||
+          formState.description != groupTmp.value.description ||
+          formState.ipAddressesText != groupTmp.value.allowedAddressesRaw ||
+          formState.ipAddressesFile != undefined
+    });
+
+    const unsavedChangesDialog = ref(false);
+    const checkForChangesAndClose = () => {
+      if(formWasChanged.value){
+        unsavedChangesDialog.value = true;
+      } else {
+        close();
+      }
+    };
+
+    const closeUnsavedChangesDialog = () => {
+      unsavedChangesDialog.value = false;
+    };
+
     return {
+      unsavedChangesDialog,
       computedGroup,
       dialogStore,
       dialogTitle,
@@ -329,6 +351,7 @@ export default defineComponent({
       errorIpAddresses,
       fileContent,
       formState,
+      formWasChanged,
       groupTmp,
       hasNoCSVHeader,
       headersVersion,
@@ -338,7 +361,9 @@ export default defineComponent({
       saveAlertErrorMessage,
       showDialogOldVersion,
       v$,
+      checkForChangesAndClose,
       close,
+      closeUnsavedChangesDialog,
       createGroup,
       deleteGroupSuccessful,
       downloadVersion,
@@ -364,7 +389,7 @@ export default defineComponent({
       <v-spacer></v-spacer>
       <v-btn
           icon="mdi-close"
-          @click="close"
+          @click="checkForChangesAndClose"
       ></v-btn>
     </v-toolbar>
     <v-dialog
@@ -382,6 +407,28 @@ export default defineComponent({
               variant="outlined"
           ></v-textarea>
         </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="unsavedChangesDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5">Hinweis</v-card-title>
+        <v-card-text>
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="close">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
       </v-card>
     </v-dialog>
     <v-card-title>{{ dialogTitle }}
@@ -425,7 +472,7 @@ export default defineComponent({
           ></v-text-field>
           <v-text-field
               v-if="!isNew"
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
               readonly
               variant="outlined"
               hint="Name der Berechtigungsgruppe"
@@ -440,7 +487,7 @@ export default defineComponent({
           <v-text-field
               v-if="isNew"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
               variant="outlined"
               label="Wird automatisch generiert"
               hint="ID der Berechtigungsgruppe"
@@ -449,7 +496,7 @@ export default defineComponent({
               v-else
               v-model="formState.groupId"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
               variant="outlined"
               hint="ID der Berechtigungsgruppe"
           ></v-text-field>
@@ -462,7 +509,7 @@ export default defineComponent({
               v-model="computedGroup.createdOn"
               variant="outlined"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -473,7 +520,7 @@ export default defineComponent({
               v-model="computedGroup.createdBy"
               variant="outlined"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -484,7 +531,7 @@ export default defineComponent({
               v-model="computedGroup.lastUpdatedOn"
               variant="outlined"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -495,7 +542,7 @@ export default defineComponent({
               v-model="computedGroup.lastUpdatedBy"
               variant="outlined"
               readonly
-              bg-color="grey-lighten-1"
+              bg-color="grey-lighten-2"
           ></v-text-field>
         </v-col>
       </v-row>
