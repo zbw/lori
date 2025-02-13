@@ -151,7 +151,7 @@ export default defineComponent({
             formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
             formState.startDate != lastSavedRight.value.startDate ||
             formState.endDate != lastSavedRight.value.endDate ||
-            formState.formTemplateName != lastSavedRight.value.templateName
+              (isTemplate.value && formState.formTemplateName != lastSavedRight.value.templateName)
     })
 
     watch(startDateFormatted, () => {
