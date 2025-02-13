@@ -468,6 +468,7 @@ export default defineComponent({
               variant="outlined"
               hint="Name der Berechtigungsgruppe"
               v-model="formState.title"
+              bg-color="white"
               :error-messages="errorName"
           ></v-text-field>
           <v-text-field
@@ -569,6 +570,7 @@ export default defineComponent({
               label="IP-Adressen"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
+              bg-color="white"
               variant="outlined"
           ></v-textarea>
           <v-checkbox
@@ -580,6 +582,7 @@ export default defineComponent({
         <v-col cols="5">
           <v-file-input
               chips
+              bg-color="white"
               accept=".csv"
               label="CSV-Datei"
               v-model="formState.ipAddressesFile"
@@ -595,10 +598,11 @@ export default defineComponent({
               label="Beschreibung"
               v-model="formState.description"
               variant="outlined"
+              bg-color="white"
           ></v-textarea>
         </v-col>
       </v-row>
-      <v-expansion-panels focusable multiple>
+      <v-expansion-panels bg-color="light-blue-lighten-5" focusable multiple>
         <v-expansion-panel>
           <v-expansion-panel-title>Historie</v-expansion-panel-title>
           <v-expansion-panel-text>
