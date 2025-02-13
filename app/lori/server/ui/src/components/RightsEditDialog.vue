@@ -1051,6 +1051,7 @@ export default defineComponent({
         };
       } else {
         return {
+          "bg-color": "white",
           "clearable" : true
         };
       }
@@ -1340,7 +1341,7 @@ export default defineComponent({
       </v-dialog>
     </v-card-actions>
     <v-card-text style="height:1100px;">
-    <v-expansion-panels bg-color="indigo-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
+    <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
       <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>
             Template Informationen
@@ -1635,6 +1636,7 @@ export default defineComponent({
                       readonly
                       required
                       clearable
+                      bg-color="white"
                       v-bind="props"
                       @blur="v$.endDate.$touch()"
                       @change="v$.endDate.$touch()"
@@ -1674,6 +1676,7 @@ export default defineComponent({
                   :error-messages="errorIPGroup"
                   @blur="v$.selectedGroups.$touch()"
                   @change="v$.selectedGroups.$touch()"
+                  bg-color="white"
                   chips
                   multiple
                   counter
