@@ -73,6 +73,7 @@ export default defineComponent({
     const isNew = ref(true);
     const reinitCounter = ref(0);
     const currentTemplate = ref({} as RightRest);
+    const templateDraft = ref({} as RightRest);
     const getTemplateList = () => {
       templateApi
         .getTemplateList(0, 100)
@@ -106,6 +107,21 @@ export default defineComponent({
       isNew.value = false;
       reinitCounter.value = reinitCounter.value + 1;
       currentTemplate.value = templateRight;
+      activateTemplateEditDialog();
+    };
+
+    const copyTemplate = (templateRight: RightRest) => {
+      isNew.value = true;
+      templateDraft.value = Object.assign({}, templateRight);
+      templateDraft.value.rightId = undefined;
+      templateDraft.value.exceptionFrom = undefined;
+      templateDraft.value.createdBy = undefined;
+      templateDraft.value.createdOn = undefined;
+      templateDraft.value.lastAppliedOn = undefined;
+      templateDraft.value.lastUpdatedOn = undefined;
+      templateDraft.value.lastUpdatedBy = undefined;
+      templateDraft.value.templateName = "KOPIE - " + templateDraft.value.templateName;
+      reinitCounter.value = reinitCounter.value + 1;
       activateTemplateEditDialog();
     };
 
@@ -247,6 +263,7 @@ export default defineComponent({
       templateEditDialogActivated,
       errorMsgIsActive,
       errorMsg,
+      templateDraft,
       templateItems,
       applyTemplate,
       childTemplateAdded,
@@ -255,6 +272,7 @@ export default defineComponent({
       close,
       closeApplyErrorMsg,
       closeTemplateEditDialog,
+      copyTemplate,
       createNewTemplate,
       editTemplate,
       emitGetItemsByRightId,
@@ -357,9 +375,13 @@ export default defineComponent({
           </v-btn>
         </template>
         <template v-slot:item.status="{ item }">
-          <v-icon v-if="item.lastAppliedOn == undefined">
-            mdi-alpha-e-box-outline
-          </v-icon>
+          <v-tooltip location="bottom" text="Entwurf">
+            <template v-slot:activator="{ props }">
+              <v-icon v-bind="props" v-if="item.lastAppliedOn == undefined">
+                mdi-alpha-e-box-outline
+              </v-icon>
+            </template>
+          </v-tooltip>
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn
@@ -375,7 +397,20 @@ export default defineComponent({
           </v-icon>
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-icon small @click="editTemplate(item)">mdi-pencil</v-icon>
+          <v-tooltip location="bottom" text="Kopieren">
+            <template v-slot:activator="{ props }">
+              <v-icon small v-bind="props" @click="copyTemplate(item)">
+                mdi-content-copy
+              </v-icon>
+            </template>
+          </v-tooltip>
+          <v-tooltip location="bottom" text="Editieren">
+            <template v-slot:activator="{ props }">
+              <v-icon small v-bind="props" @click="editTemplate(item)">
+                mdi-pencil
+              </v-icon>
+            </template>
+          </v-tooltip>
         </template>
       </v-data-table>
       <v-dialog
@@ -397,6 +432,7 @@ export default defineComponent({
             currentTemplate.exceptionFrom != ''
           "
           :rightId="currentTemplate.rightId"
+          :initialRight="templateDraft"
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
           v-on:editRightClosed="closeTemplateEditDialog"
