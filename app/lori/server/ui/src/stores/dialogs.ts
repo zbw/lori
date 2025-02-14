@@ -14,7 +14,6 @@ export const useDialogsStore = defineStore("dialog", () => {
   const editRightActivated = ref(false);
   const rightsEditTabsActivated = ref(false);
   const rightsEditTabsSelectedRight = ref("");
-  const templateEditActivated = ref(false);
   const templateOverviewActivated = ref(false);
 
   return {
@@ -27,7 +26,6 @@ export const useDialogsStore = defineStore("dialog", () => {
     groupOverviewActivated,
     rightsEditTabsSelectedRight,
     rightsEditTabsActivated,
-    templateEditActivated,
     templateOverviewActivated,
   };
 });

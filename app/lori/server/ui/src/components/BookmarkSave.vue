@@ -54,6 +54,28 @@ export default defineComponent({
       formState.name = "";
       description.value = "";
     };
+
+    /**
+     * Changes:
+     */
+    const formWasChanged = computed(() => {
+      return formState.name != "" ||
+          description.value != ""
+    });
+    const unsavedChangesDialog = ref(false);
+    const checkForChangesAndClose = () => {
+      if(formWasChanged.value){
+        unsavedChangesDialog.value = true;
+      } else {
+        close();
+      }
+    };
+
+    const closeUnsavedChangesDialog = () => {
+      unsavedChangesDialog.value = false;
+    };
+
+
     const save = () => {
       v$.value.$validate().then((isValid) => {
         if (!isValid) {
@@ -102,8 +124,11 @@ export default defineComponent({
       formState,
       saveAlertError,
       saveAlertErrorMessage,
+      unsavedChangesDialog,
       updateInProgress,
       v$,
+      checkForChangesAndClose,
+      closeUnsavedChangesDialog,
       close,
       save,
     };
@@ -119,9 +144,31 @@ export default defineComponent({
       <v-spacer></v-spacer>
       <v-btn
           icon="mdi-close"
-          @click="close"
+          @click="checkForChangesAndClose"
       ></v-btn>
     </v-toolbar>
+    <v-dialog v-model="unsavedChangesDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="close">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <v-container>
       <v-card-title>Suche Speichern</v-card-title>
       <v-row>

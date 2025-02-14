@@ -21,10 +21,6 @@ export default defineComponent({
   ],
   setup(props, { emit }) {
     /**
-     * Stores.
-     */
-    const dialogStore = useDialogsStore();
-    /**
      *  Data-Table related.
      */
     const renderKey = ref(0);
@@ -91,9 +87,10 @@ export default defineComponent({
         });
     };
 
+    const templateEditDialogActivated = ref(false);
     const activateTemplateEditDialog = () => {
       successMsgIsActive.value = false;
-      dialogStore.templateEditActivated = true;
+      templateEditDialogActivated.value = true;
     };
     const createNewTemplate = () => {
       isNew.value = true;
@@ -102,7 +99,7 @@ export default defineComponent({
     };
 
     const closeTemplateEditDialog = () => {
-      dialogStore.templateEditActivated = false;
+      templateEditDialogActivated.value = false;
     };
 
     const editTemplate = (templateRight: RightRest) => {
@@ -190,6 +187,7 @@ export default defineComponent({
     };
 
     const childTemplateDeleted = (templateName: string) => {
+      templateEditDialogActivated.value = false;
       lastModifiedTemplateName.value = templateName;
       successMsgIsActive.value = true;
       successMsg.value =
@@ -234,7 +232,6 @@ export default defineComponent({
 
     return {
       currentTemplate,
-      dialogStore,
       headers,
       lastModifiedTemplateName,
       isNew,
@@ -247,6 +244,7 @@ export default defineComponent({
       templateApplyErrorMsg,
       templateApplyErrorNumber,
       templateApplyItemsApplied,
+      templateEditDialogActivated,
       errorMsgIsActive,
       errorMsg,
       templateItems,
@@ -381,7 +379,7 @@ export default defineComponent({
         </template>
       </v-data-table>
       <v-dialog
-        v-model="dialogStore.templateEditActivated"
+        v-model="templateEditDialogActivated"
         :retain-focus="false"
         max-width="1500px"
         max-height="850px"

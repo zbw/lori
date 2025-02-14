@@ -411,8 +411,8 @@ export default defineComponent({
     </v-dialog>
     <v-dialog v-model="unsavedChangesDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h5">Hinweis</v-card-title>
-        <v-card-text>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
           Änderungen wurden noch nicht gespeichert!
         </v-card-text>
         <v-card-actions>
