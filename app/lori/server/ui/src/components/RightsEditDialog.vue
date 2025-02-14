@@ -104,7 +104,7 @@ export default defineComponent({
       accessState: string;
       startDate: Date | undefined;
       endDate: Date | undefined;
-      formTemplateName: string;
+      templateDescription: string;
       selectedGroups: Array<GroupRest>;
     };
 
@@ -114,7 +114,8 @@ export default defineComponent({
       basisAccessState: "",
       startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
-      formTemplateName: "",
+      templateName: "",
+      templateDescription: "",
       selectedGroups: [] as Array<GroupRest>,
     });
 
@@ -143,16 +144,45 @@ export default defineComponent({
       }
     });
 
+    const newRightHasChanges = computed (() => {
+      return isNew.value &&
+      (formState.accessState != "" ||
+      formState.basisStorage != "" ||
+      formState.basisAccessState != ""  ||
+      !(formState.startDate == undefined || Object.keys(formState.startDate).length === 0) ||
+      !(formState.endDate == undefined || Object.keys(formState.endDate).length === 0) ||
+      (isTemplate.value && (
+              formState.templateName != "" ||
+              formState.templateDescription != "" ||
+              bookmarkItems.value.length != 0 ||
+              exceptionTemplateItems.value.length != 0
+          )
+      ))
+    });
+    const existingRightHasChanges = computed (() => {
+      return (JSON.stringify(tmpRight.value) != JSON.stringify(lastSavedRight.value) ||
+          ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
+          formState.accessState != accessStateToString(lastSavedRight.value.accessState) ||
+          formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
+          formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
+          formState.startDate != lastSavedRight.value.startDate ||
+          formState.endDate != lastSavedRight.value.endDate ||
+          (isTemplate.value && (
+                  formState.templateName != lastSavedRight.value.templateName ||
+                  formState.templateDescription != (lastSavedRight.value.templateDescription == undefined ? "" : lastSavedRight.value.templateDescription) ||
+                  JSON.stringify(bookmarkItems.value) != JSON.stringify(lastSavedBookmarkItems.value) ||
+                  JSON.stringify(exceptionTemplateItems.value) != JSON.stringify(lastSavedExceptionTemplateItems.value)
+                )
+          )
+      )
+    });
     const formWasChanged = computed(() => {
-          return isNew.value || JSON.stringify(tmpRight.value) != JSON.stringify(lastSavedRight.value) ||
-            ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
-            formState.accessState != accessStateToString(lastSavedRight.value.accessState) ||
-            formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
-            formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
-            formState.startDate != lastSavedRight.value.startDate ||
-            formState.endDate != lastSavedRight.value.endDate ||
-            formState.formTemplateName != lastSavedRight.value.templateName
-    })
+      if (isNew.value){
+        return newRightHasChanges.value
+      } else {
+        return existingRightHasChanges.value;
+      }
+    });
 
     watch(startDateFormatted, () => {
       isStartDateMenuOpen.value = false;
@@ -177,7 +207,7 @@ export default defineComponent({
       accessState: { required },
       startDate: { required },
       endDate: { endDateCheck },
-      formTemplateName: { required },
+      templateName: { required },
       selectedGroups: { groupCheck },
     };
 
@@ -213,8 +243,8 @@ export default defineComponent({
     const errorTemplateName = computed(() => {
       const errors: Array<string> = [];
       if (
-        v$.value.formTemplateName.$invalid &&
-        v$.value.formTemplateName.$dirty
+        v$.value.templateName.$invalid &&
+        v$.value.templateName.$dirty
       ) {
         errors.push("Es wird ein Template-Name benötigt.");
       }
@@ -274,7 +304,8 @@ export default defineComponent({
       unsavedChangesDialog.value = false;
       successMsgIsActive.value = false;
       successMsg.value = "";
-      formState.formTemplateName = "";
+      formState.templateName = "";
+      formState.templateDescription = "";
       v$.value.$reset();
       emitClosedDialog();
     };
@@ -305,7 +336,7 @@ export default defineComponent({
      */
     const deleteSuccessful = (index: number) => {
       if (isTemplate.value) {
-        emit("deleteTemplateSuccessful", formState.formTemplateName);
+        emit("deleteTemplateSuccessful", formState.templateName);
       } else {
         emit("deleteSuccessful", index, lastSavedRight.value.rightId);
       }
@@ -400,7 +431,8 @@ export default defineComponent({
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
       tmpRight.value.isTemplate = true;
-      tmpRight.value.templateName = formState.formTemplateName;
+      tmpRight.value.templateName = formState.templateName;
+      tmpRight.value.templateDescription = formState.templateDescription;
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
@@ -424,7 +456,8 @@ export default defineComponent({
     };
 
     const updateTemplate = () => {
-      tmpRight.value.templateName = formState.formTemplateName;
+      tmpRight.value.templateName = formState.templateName;
+      tmpRight.value.templateDescription = formState.templateDescription;
       templateApi
         .updateTemplate(tmpRight.value)
         .then(() => {
@@ -446,7 +479,7 @@ export default defineComponent({
                     tmpRight.value.templateName +
                     " erfolgreich geupdated";
                   successMsgIsActive.value = true;
-                  emit("updateTemplateSuccessful", formState.formTemplateName);
+                  emit("updateTemplateSuccessful", formState.templateName);
                   reinitializeRight();
                 });
               },
@@ -510,10 +543,9 @@ export default defineComponent({
     };
 
     const save: () => Promise<void> = async () => {
-      console.log("Start saving routine");
       // Vuelidate expects this field to be filled. When editing rights it is not required.
       if (!isTemplate.value) {
-        formState.formTemplateName = "foo";
+        formState.templateName = "foo";
       }
       tmpRight.value.groupIds = formState.selectedGroups.map((g: GroupRest) => g.groupId);
       tmpRight.value.groups = formState.selectedGroups;
@@ -779,8 +811,10 @@ export default defineComponent({
       if(tmpRight.value.groups != undefined) {
         formState.selectedGroups = tmpRight.value.groups;
       }
-      formState.formTemplateName =
+      formState.templateName =
         tmpRight.value.templateName == undefined ? "" : tmpRight.value.templateName;
+      formState.templateDescription =
+          tmpRight.value.templateDescription == undefined ? "" : tmpRight.value.templateDescription;
       formState.accessState = accessStateToString(tmpRight.value.accessState);
       formState.basisStorage = basisStorageToString(tmpRight.value.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
@@ -798,7 +832,8 @@ export default defineComponent({
       tmpRight.value = Object.assign({} as RightRest);
       formState.endDate = undefined;
       formState.startDate = undefined;
-      formState.formTemplateName = "";
+      formState.templateName = "";
+      formState.templateDescription = "";
       formState.accessState = "";
       bookmarkItems.value = [];
     };
@@ -853,6 +888,7 @@ export default defineComponent({
     };
 
     const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
+    const lastSavedBookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const bookmarkHeaders = [
       {
         title: "Id",
@@ -887,6 +923,7 @@ export default defineComponent({
     };
 
     const exceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
+    const lastSavedExceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
     const exceptionTemplateHeaders = [
       {
         title: "Id",
@@ -938,6 +975,7 @@ export default defineComponent({
           .getBookmarksByRightId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
             bookmarkItems.value = bookmarks;
+            lastSavedBookmarkItems.value = Array.from(bookmarks);
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -958,6 +996,7 @@ export default defineComponent({
           .getExceptionsById(computedRightId.value)
           .then((exceptions: Array<RightRest>) => {
             exceptionTemplateItems.value = exceptions;
+            lastSavedExceptionTemplateItems.value = Array.from(exceptions);
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -1008,7 +1047,6 @@ export default defineComponent({
 
     const dryRunTemplate = () => {
       if (tmpRight.value.rightId == undefined){
-        console.log("Template does not exist yet.");
         return;
       }
       templateApi
@@ -1216,8 +1254,8 @@ export default defineComponent({
     </v-dialog>
     <v-dialog v-model="unsavedChangesDialog" max-width="500px">
       <v-card>
-        <v-card-title class="text-h5">Hinweis</v-card-title>
-        <v-card-text>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
           Änderungen wurden noch nicht gespeichert!
         </v-card-text>
         <v-card-actions>
@@ -1352,7 +1390,7 @@ export default defineComponent({
                 <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
-                    v-model="formState.formTemplateName"
+                    v-model="formState.templateName"
                     :error-messages="errorTemplateName"
                     v-bind="{...$attrs, ...readOnlyProps}"
                     hint="Name des Templates"
@@ -1364,7 +1402,7 @@ export default defineComponent({
                 <v-col cols="4">Beschreibung</v-col>
                 <v-col cols="8">
                   <v-textarea
-                    v-model="tmpRight.templateDescription"
+                    v-model="formState.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
                     v-bind="{...$attrs, ...readOnlyProps}"
