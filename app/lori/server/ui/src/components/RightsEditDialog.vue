@@ -75,6 +75,10 @@ export default defineComponent({
       type: Object as PropType<BookmarkRest>,
       required: false,
     },
+    initialRight: {
+      type: Object as PropType<RightRest>,
+      required: false,
+    },
   },
   // Emits
   emits: [
@@ -870,6 +874,10 @@ export default defineComponent({
       } else {
         resetAllValues();
         addInitialBookmark();
+        if(props.initialRight != undefined){
+          lastSavedRight.value = Object.assign({}, props.initialRight);
+          setGivenValues();
+        }
       }
     };
 

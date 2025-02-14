@@ -327,30 +327,39 @@ class RightDB(
     suspend fun getTemplateList(
         limit: Int,
         offset: Int,
-    ): List<ItemRight> =
-        connectionPool.useConnection("getTemplateList") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
-                    this.setInt(1, limit)
-                    this.setInt(2, offset)
-                }
+    ): List<ItemRight> {
+        val rights =
+            connectionPool.useConnection("getTemplateList") { connection ->
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
+                        this.setInt(1, limit)
+                        this.setInt(2, offset)
+                    }
 
-            val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    extractRightFromRS(rs)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
+                val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
+                return@useConnection generateSequence {
+                    if (rs.next()) {
+                        extractRightFromRS(rs)
+                    } else {
+                        null
+                    }
+                }.takeWhile { true }.toList()
+            }
+        return rights.map { r ->
+            val groups = groupDB.getGroupsByRightId(r.rightId!!)
+            r.copy(
+                groups = groups,
+                groupIds = groups.map { it.groupId },
+            )
         }
+    }
 
     /**
      * Get all RightIds for all templates.
