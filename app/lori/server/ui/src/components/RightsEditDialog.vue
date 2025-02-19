@@ -280,7 +280,7 @@ export default defineComponent({
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
       "Urheberrechtschranke",
-      "Open-Content-Lizenz",
+      "Uneingeschränkte Open-Content-Lizenz",
       "ZBW-Policy (Eingeschränkte OCL)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
@@ -646,7 +646,7 @@ export default defineComponent({
           case RightRestBasisStorageEnum.Useragreement:
             return "Nutzungsvereinbarung";
           case RightRestBasisStorageEnum.Opencontentlicence:
-            return "Open-Content-Lizenz";
+            return "Uneingeschränkte Open-Content-Lizenz";
           case RightRestBasisStorageEnum.Zbwpolicyunanswered:
             return "ZBW-Policy (unbeantwortete Rechteanforderung)";
           case RightRestBasisStorageEnum.Zbwpolicyrestricted:
@@ -670,7 +670,7 @@ export default defineComponent({
             return RightRestBasisStorageEnum.Useragreement;
           case "Urheberrechtschranke":
             return RightRestBasisStorageEnum.Authorrightexception;
-          case "Open-Content-Lizenz":
+          case "Uneingeschränkte Open-Content-Lizenz":
             return RightRestBasisStorageEnum.Opencontentlicence;
           case "ZBW-Policy (Eingeschränkte OCL)":
             return RightRestBasisStorageEnum.Zbwpolicyrestricted;
