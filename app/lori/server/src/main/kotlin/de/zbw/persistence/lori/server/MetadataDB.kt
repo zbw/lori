@@ -396,7 +396,7 @@ class MetadataDB(
                 doi = rs.getString(9),
                 isbn = rs.getString(10),
                 rightsK10plus = rs.getString(11),
-                paketSigel = rs.getString(12),
+                paketSigel = (rs.getArray(12)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIdJournal = rs.getString(13),
                 issn = rs.getString(14),
                 createdOn = rs.getTimestamp(15)?.toOffsetDateTime(),
@@ -451,8 +451,9 @@ class MetadataDB(
                 this.setIfNotNull(11, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
+
                 this.setIfNotNull(12, itemMetadata.paketSigel) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(13, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

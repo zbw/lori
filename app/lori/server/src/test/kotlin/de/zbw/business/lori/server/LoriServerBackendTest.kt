@@ -715,6 +715,30 @@ class LoriServerBackendTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testSumUpMapEntries() {
+        // Given
+        val given =
+            mapOf(
+                listOf("foo", "bar", "baz") to 5,
+                listOf("foo", "bar") to 3,
+                listOf("foo") to 5,
+            )
+
+        val expected =
+            mapOf(
+                "foo" to 13,
+                "bar" to 8,
+                "baz" to 5,
+            )
+
+        // when + then
+        assertThat(
+            LoriServerBackend.sumUpIndividualMapEntries(given),
+            `is`(expected),
+        )
+    }
+
     companion object {
         const val DATA_FOR_CHECK_RIGHT_CONFLICTS = "DATA_FOR_CHECK_RIGHT_CONFLICTS"
         const val DATA_FOR_FIND_RIGHT_CONFLICTS = "DATA_FOR_FIND_RIGHT_CONFLICTS"
@@ -755,7 +779,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 lastUpdatedOn = NOW,
                 licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
                 licenceUrlFilter = "by-sa/4.0/legalcode.de",
-                paketSigel = "sigel",
+                paketSigel = listOf("sigel"),
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,
                 publicationYear = 2022,

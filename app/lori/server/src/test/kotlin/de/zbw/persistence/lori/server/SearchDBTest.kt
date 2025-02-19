@@ -112,9 +112,9 @@ class SearchDBTest : DatabaseTest() {
                         SEVariable(CommunityNameFilter(testZDB.communityName!!)),
                         SEAnd(
                             SEVariable(
-                                PaketSigelFilter(listOf(testZDB.paketSigel!!)),
+                                PaketSigelFilter(testZDB.paketSigel!!),
                             ),
-                            SEVariable(ZDBIdFilter(listOf(testZDB.zdbIdJournal!!))),
+                            SEVariable(ZDBIdFilter(listOf(testZDB.zdbIdJournal))),
                         ),
                     ),
                 )
@@ -205,7 +205,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM item_metadata" +
                     " WHERE ((LOWER(zdb_id_journal) = LOWER(?) AND zdb_id_journal is not null)" +
                     " OR (LOWER(zdb_id_series) = LOWER(?) AND zdb_id_series is not null))" +
-                    " AND (LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
+                    " AND (paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null)" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
@@ -237,7 +237,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE (((LOWER(zdb_id_journal) = LOWER(?) AND zdb_id_journal is not null)" +
                     " OR (LOWER(zdb_id_series) = LOWER(?) AND zdb_id_series is not null))" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
-                    " OR (LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
+                    " OR (paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +

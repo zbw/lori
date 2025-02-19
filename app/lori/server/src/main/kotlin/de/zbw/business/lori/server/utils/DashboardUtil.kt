@@ -33,7 +33,7 @@ object DashboardUtil {
                     conflictingWithRightId = null,
                     conflictByRightId = null,
                     conflictType = ConflictType.GAP,
-                    conflictByContext = item.metadata.paketSigel ?: item.metadata.collectionName,
+                    conflictByContext = item.metadata.paketSigel?.joinToString(separator = ",") ?: item.metadata.collectionName,
                     testId = null,
                     createdBy = createdBy,
                 )
@@ -63,7 +63,7 @@ object DashboardUtil {
                             conflictingWithRightId = null,
                             conflictByRightId = null,
                             conflictType = ConflictType.GAP,
-                            conflictByContext = item.metadata.paketSigel ?: item.metadata.collectionName,
+                            conflictByContext = item.metadata.paketSigel?.joinToString(separator = ",") ?: item.metadata.collectionName,
                             testId = null,
                             createdBy = createdBy,
                         )

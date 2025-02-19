@@ -179,9 +179,7 @@ class FacetTest : DatabaseTest() {
                 "col:'common'",
                 listOf(
                     PaketSigelFilter(
-                        listOf(
-                            itemSigel1.paketSigel!!,
-                        ),
+                        itemSigel1.paketSigel!!,
                     ),
                 ),
                 emptyList<RightSearchFilter>(),
@@ -233,13 +231,11 @@ class FacetTest : DatabaseTest() {
                 "col:'common'",
                 listOf(
                     PaketSigelFilter(
-                        listOf(
-                            itemSigel1.paketSigel!!,
-                        ),
+                        itemSigel1.paketSigel,
                     ),
                     ZDBIdFilter(
                         listOf(
-                            itemZDB1.zdbIdJournal!!,
+                            itemZDB1.zdbIdJournal,
                         ),
                     ),
                 ),
@@ -262,7 +258,7 @@ class FacetTest : DatabaseTest() {
         expectedResult: Set<ItemMetadata>,
         expectedNumberOfResults: Int,
         expectedPublicationType: Map<PublicationType, Int>,
-        expectedPaketSigelIds: Map<String, Int>,
+        expectedPaketSigelIds: Map<List<String>, Int>,
         expectedZDBIds: Map<String, Int>,
         expectedAccessState: Map<AccessState, Int>,
         description: String,
@@ -294,7 +290,7 @@ class FacetTest : DatabaseTest() {
         assertThat(
             searchResult.paketSigels,
             `is`(
-                expectedPaketSigelIds,
+                LoriServerBackend.sumUpIndividualMapEntries(expectedPaketSigelIds),
             ),
         )
         assertThat(
@@ -343,7 +339,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "sigel1",
                 collectionName = "common sigel",
-                paketSigel = SIGEL_1,
+                paketSigel = listOf(SIGEL_1, "foobar"),
                 publicationYear = 2011,
                 publicationType = PublicationType.BOOK_PART,
             )
@@ -360,7 +356,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "sigel2",
                 collectionName = "common sigel",
-                paketSigel = SIGEL_2,
+                paketSigel = listOf(SIGEL_2),
                 publicationYear = 2013,
                 publicationType = PublicationType.PERIODICAL_PART,
             )
@@ -377,7 +373,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "sigel3",
                 collectionName = "common sigel",
-                paketSigel = SIGEL_3,
+                paketSigel = listOf(SIGEL_3),
                 publicationYear = 2015,
                 publicationType = PublicationType.THESIS,
             )

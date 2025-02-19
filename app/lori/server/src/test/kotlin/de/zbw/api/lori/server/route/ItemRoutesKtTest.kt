@@ -869,7 +869,7 @@ class ItemRoutesKtTest {
                 handle = "hdl:example.handle.net",
                 isbn = "1234567890123",
                 issn = "123456",
-                paketSigel = "sigel",
+                paketSigel = listOf("sigel"),
                 ppn = "ppn",
                 publicationType = PublicationTypeRest.book,
                 publicationYear = 2022,

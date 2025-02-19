@@ -88,7 +88,7 @@ class SearchDB(
                     noRightInformationFilter,
                 )
 
-            val paketSigelFacet =
+            val paketSigelFacet: Deferred<Map<List<String>, Int>> =
                 async {
                     searchOccurrences(
                         baseQuery = facetBaseQuery,
@@ -99,7 +99,7 @@ class SearchDB(
                         noRightInformationFilter = noRightInformationFilter,
                     ) { rs ->
                         Pair(
-                            rs.getString(1),
+                            (rs.getArray(1)?.array as? Array<out Any?>)?.filterIsInstance<String>() ?: emptyList(),
                             rs.getInt(2),
                         )
                     }
@@ -357,58 +357,6 @@ class SearchDB(
                             ?.let { true } == true,
                     ).any { it },
             )
-        }
-
-    private suspend fun <K, V> searchOccurrencesRightFacets(
-        baseQuery: String,
-        occurrenceForRightColumn: String,
-        searchExpression: SearchExpression?,
-        metadataSearchFilters: List<MetadataSearchFilter>,
-        rightSearchFilters: List<RightSearchFilter>,
-        operation: (rs: ResultSet) -> Pair<K, V>,
-    ): Map<K, V> =
-        coroutineScope {
-            return@coroutineScope connectionPool.useConnection("searchOccurencesRightFacets") { connection ->
-                val completeQuery =
-                    buildSearchQueryOccurrenceRight(
-                        baseQuery,
-                        occurrenceForRightColumn,
-                    )
-                val prepStmt =
-                    connection.prepareStatement(completeQuery).apply {
-                        var counter = 1
-                        rightSearchFilters.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
-                        val searchPairs =
-                            searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) }
-                                ?: emptyList()
-                        searchPairs.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
-                        metadataSearchFilters.forEach { f ->
-                            counter = f.setSQLParameter(counter, this)
-                        }
-                    }
-                val span = tracer.spanBuilder("searchForOccurrenceRight").startSpan()
-                val rs =
-                    try {
-                        span.makeCurrent()
-                        runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                    } finally {
-                        span.end()
-                    }
-
-                val received: List<Pair<K, V>> =
-                    generateSequence {
-                        if (rs.next()) {
-                            operation(rs)
-                        } else {
-                            null
-                        }
-                    }.takeWhile { true }.toList()
-                return@useConnection received.toMap()
-            }
         }
 
     private suspend fun <K, V> searchOccurrences(

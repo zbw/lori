@@ -1228,6 +1228,11 @@ table.special, th.special, td.special {
              <td v-if="item.deleted">❌{{item.title}} </td>
               <td v-else>{{item.title}} </td>
             </template>
+            <template v-slot:item.paketSigel="{ item }">
+              <td>
+                {{ item.paketSigel?.join() }}
+              </td>
+            </template>
             <template v-slot:item.handle="{ item }">
               <td>
                 <a

@@ -361,8 +361,8 @@ class PaketSigelFilter(
         MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
     ) {
     override fun toWhereClause(): String =
-        paketSigels.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null"
+        paketSigels.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
+            "$dbColumnName @> ARRAY[?]::text[]"
         }
 
     override fun setSQLParameter(
