@@ -313,7 +313,7 @@ internal fun RightRest.BasisStorage.toBusiness(): BasisStorage =
     when (this) {
         RightRest.BasisStorage.authorrightexception -> BasisStorage.AUTHOR_RIGHT_EXCEPTION
         RightRest.BasisStorage.licencecontract -> BasisStorage.LICENCE_CONTRACT
-        RightRest.BasisStorage.opencontentlicence -> BasisStorage.LICENCE_CONTRACT
+        RightRest.BasisStorage.opencontentlicence -> BasisStorage.OPEN_CONTENT_LICENCE
         RightRest.BasisStorage.useragreement -> BasisStorage.USER_AGREEMENT
         RightRest.BasisStorage.zbwpolicyrestricted -> BasisStorage.ZBW_POLICY_RESTRICTED
         RightRest.BasisStorage.zbwpolicyunanswered -> BasisStorage.ZBW_POLICY_UNANSWERED

@@ -786,6 +786,12 @@ export default defineComponent({
       successMsgIsActive.value = true;
     };
 
+    const addRightSuccessful = (title: string, handle: string) => {
+      successMsg.value = "Rechteinformation erfolgreich für Item " +
+          "'" + title + " (" + handle + ")' hinzugefügt.";
+      successMsgIsActive.value = true;
+    };
+
     const searchHelpDialog = ref(false);
 
     const selectedRowColor = (row: any) => {
@@ -838,6 +844,7 @@ export default defineComponent({
       handlePageSizeChange,
       loadTemplateView,
       parsePublicationType,
+      addRightSuccessful,
       searchQuery,
       startDashboardSearch,
       selectedRowColor,
@@ -1281,6 +1288,7 @@ table.special, th.special, td.special {
             :handle="currentItem.metadata.handle"
             :rights="currentItem.rights"
             :title="currentItem.metadata.title"
+            v-on:addRightSuccessful="addRightSuccessful"
         ></RightsView>
         <MetadataView
             :metadata="Object.assign({}, currentItem.metadata)"
