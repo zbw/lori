@@ -101,6 +101,7 @@ export default defineComponent({
 
     const closeTemplateEditDialog = () => {
       templateEditDialogActivated.value = false;
+      templateDraft.value = Object.assign({} as RightRest);
     };
 
     const editTemplate = (templateRight: RightRest) => {

@@ -315,7 +315,7 @@ export default defineComponent({
     };
 
     const cancel = () => {
-      tmpRight.value = Object.assign({}, lastSavedRight.value);
+      resetAllValues();
       close();
     };
 
@@ -834,6 +834,7 @@ export default defineComponent({
 
     const resetAllValues = () => {
       tmpRight.value = Object.assign({} as RightRest);
+      lastSavedRight.value = Object.assign({} as RightRest);
       formState.endDate = undefined;
       formState.startDate = undefined;
       formState.templateName = "";
