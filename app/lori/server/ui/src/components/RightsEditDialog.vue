@@ -606,7 +606,7 @@ export default defineComponent({
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
-        return "Kein Wert";
+        return "";
       } else {
         switch (access) {
           case AccessStateRest.Open:
@@ -620,7 +620,7 @@ export default defineComponent({
     };
 
     const stringToAccessState = (value: string | undefined) => {
-      if (value == undefined || value == "Kein Wert") {
+      if (value == undefined || value == "") {
         return;
       } else {
         switch (value) {
@@ -638,7 +638,7 @@ export default defineComponent({
       basisStorage: RightRestBasisStorageEnum | undefined,
     ) => {
       if (basisStorage == undefined) {
-        return "Kein Wert";
+        return "";
       } else {
         switch (basisStorage) {
           case RightRestBasisStorageEnum.Authorrightexception:
@@ -654,7 +654,7 @@ export default defineComponent({
           case RightRestBasisStorageEnum.Licencecontract:
             return "Lizenzvertrag";
           default:
-            return "Kein Wert";
+            return "";
         }
       }
     };
@@ -686,7 +686,7 @@ export default defineComponent({
       basisAccessState: RightRestBasisAccessStateEnum | undefined,
     ) => {
       if (basisAccessState == undefined) {
-        return "Kein Wert";
+        return "";
       } else {
         switch (basisAccessState) {
           case RightRestBasisAccessStateEnum.Authorrightexception:
@@ -700,7 +700,7 @@ export default defineComponent({
           case RightRestBasisAccessStateEnum.Licencecontractoa:
             return "OA-Rechte aus Lizenzvertrag";
           default:
-            return "Kein Wert";
+            return "";
         }
       }
     };
