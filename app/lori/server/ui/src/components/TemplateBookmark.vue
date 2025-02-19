@@ -1,7 +1,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import bookmarkApi from "@/api/bookmarkApi";
-import { BookmarkRest } from "@/generated-sources/openapi";
+import {BookmarkRest, ItemRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 
 export default defineComponent({
@@ -29,7 +29,7 @@ export default defineComponent({
 
     const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const searchTerm = ref("");
-    const selectedBookmarks = ref([]);
+    const selectedBookmarks: Ref<Array<BookmarkRest>> = ref([]);
     const getBookmarkList = () => {
       bookmarkApi
         .getBookmarkList(0, 100) // TODO: simplification for now
@@ -42,6 +42,21 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+    };
+
+    const selectedRowColor = (row: any) => {
+      if(selectedBookmarks.value[0] !== undefined && selectedBookmarks.value[0].bookmarkId == row.item.bookmarkId){
+        return { class: "bg-blue-lighten-4"}
+      }
+    };
+
+    const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
+      const bookmark: BookmarkRest | undefined = bookmarkItems.value.find(
+          (e) => e.bookmarkId === row.item.bookmarkId,
+      );
+      if (bookmark !== undefined) {
+        selectedBookmarks.value = [row.item];
+      }
     };
 
     /**
@@ -77,15 +92,18 @@ export default defineComponent({
       errorMsg,
       searchTerm,
       selectedBookmarks,
+      addActiveItem,
       close,
       save,
       getBookmarkList,
+      selectedRowColor,
     };
   },
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>
 <template>
   <v-card position="relative">
     <v-container>
@@ -113,9 +131,11 @@ export default defineComponent({
         :headers="headers"
         :items="bookmarkItems"
         :search="searchTerm"
+        :row-props="selectedRowColor"
         item-value="bookmarkId"
-        show-select
+        select-strategy="single"
         return-object
+        @click:row="addActiveItem"
       >
       </v-data-table>
       <v-card-actions>
