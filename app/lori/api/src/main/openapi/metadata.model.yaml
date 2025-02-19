@@ -57,7 +57,9 @@ MetadataRest:
     licenceUrl:
       type: string
     paketSigel:
-      type: string
+      type: array
+      items:
+        type: string
     ppn:
       type: string
     publicationType:

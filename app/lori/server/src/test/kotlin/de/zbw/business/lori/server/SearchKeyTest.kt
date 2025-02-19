@@ -93,7 +93,9 @@ class SearchKeyTest : DatabaseTest() {
                 "fail to find a metadata id",
             ),
             arrayOf(
-                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & (!${FilterType.HANDLE.keyAlias}:'nonse'" +
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel!!.joinToString(
+                    separator = ",",
+                )}' & (!${FilterType.HANDLE.keyAlias}:'nonse'" +
                     " & !${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
@@ -101,7 +103,8 @@ class SearchKeyTest : DatabaseTest() {
                 "search for specific metadata id with even complexer query ensuring parantheses works as expected",
             ),
             arrayOf(
-                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel}' & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel!!.joinToString(separator = ",")}'" +
+                    " & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
                     " | ${FilterType.TITLE.keyAlias}:'stupid title')",
                 10,
                 0,
@@ -167,7 +170,7 @@ class SearchKeyTest : DatabaseTest() {
                 zdbIdJournal = null,
                 licenceUrl = "foobar.baz",
                 licenceUrlFilter = "other",
-                paketSigel = "someothersigel2",
+                paketSigel = listOf("someothersigel2"),
             )
         val METADATA_TEST_3 =
             TEST_Metadata.copy(
@@ -175,7 +178,7 @@ class SearchKeyTest : DatabaseTest() {
                 zdbIdJournal = "someotherzdbid",
                 licenceUrl = "foobar",
                 licenceUrlFilter = "other",
-                paketSigel = "someothersigel",
+                paketSigel = listOf("someothersigel"),
                 subCommunityName = "department 3",
             )
     }

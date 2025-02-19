@@ -191,7 +191,7 @@ export default defineComponent({
             </v-row>
             <v-row v-show="currentMetadata.paketSigel">
               <v-col>Paket Sigel</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.paketSigel) }}</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.paketSigel?.join()) }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.titleJournal">
               <v-col>Titel Zeitschrift</v-col>

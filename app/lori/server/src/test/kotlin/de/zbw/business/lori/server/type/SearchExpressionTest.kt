@@ -124,14 +124,14 @@ class SearchExpressionTest {
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "(LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
+                "(paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
                     " AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negation, parenthesis, or, and",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "(LOWER(paket_sigel) = LOWER(?) AND paket_sigel is not null)" +
+                "(paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
                     " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negate term before paranthesis",

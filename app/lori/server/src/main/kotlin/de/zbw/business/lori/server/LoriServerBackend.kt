@@ -418,7 +418,7 @@ class LoriServerBackend(
                 hasLicenceContract = facets.hasLicenceContract,
                 hasOpenContentLicence = facets.hasOpenContentLicence,
                 hasZbwUserAgreement = facets.hasZbwUserAgreement,
-                paketSigels = facets.paketSigels,
+                paketSigels = sumUpIndividualMapEntries(facets.paketSigels),
                 publicationType = facets.publicationType,
                 templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
                 zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
@@ -581,7 +581,8 @@ class LoriServerBackend(
                     conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
                     conflictByRightId = null,
                     conflictType = ConflictType.DELETION,
-                    conflictByContext = metadata.paketSigel ?: metadata.collectionName,
+                    // TODO(CB): Clarify with Jana how to present multiple values
+                    conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                     testId = null,
                     createdBy = createdBy,
                 )
@@ -611,7 +612,7 @@ class LoriServerBackend(
                     conflictingWithRightId = null,
                     conflictByRightId = null,
                     conflictType = ConflictType.NO_RIGHT,
-                    conflictByContext = metadata.paketSigel ?: metadata.collectionName,
+                    conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                     testId = null,
                     createdBy = createdBy,
                 )
@@ -979,5 +980,17 @@ class LoriServerBackend(
             } else {
                 r1.startDate <= r2.endDate && r1.startDate >= r2.startDate
             }
+
+        fun sumUpIndividualMapEntries(given: Map<List<String>, Int>): Map<String, Int> {
+            val parts = given.entries.partition { it.key.size == 1 }
+            val uniqueKeys: Map<String, Int> = parts.first.associate { it.key.first() to it.value }
+            return parts.second
+                .fold(uniqueKeys.toMutableMap()) { acc: MutableMap<String, Int>, current: Map.Entry<List<String>, Int> ->
+                    current.key.forEach {
+                        acc.merge(it, current.value) { oldValue, newValue -> oldValue + newValue }
+                    }
+                    acc
+                }.toMap()
+        }
     }
 }
