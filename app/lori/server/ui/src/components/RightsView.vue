@@ -32,7 +32,11 @@ export default defineComponent({
     RightsEditTabs,
   },
 
-  setup(props) {
+  emits: [
+    "addRightSuccessful",
+  ],
+
+  setup(props, { emit }) {
     const searchStore = useSearchStore();
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
@@ -61,8 +65,6 @@ export default defineComponent({
     const isNew = ref(false);
     const renderKey = ref(0);
     const updateSuccessful = ref(false);
-    const successMsgIsActive = ref(false);
-    const successMsg = ref("");
 
     const activateTabEdit = (mouseEvent: MouseEvent, row: any) => {
       dialogStore.rightsEditTabsSelectedRight = row.item.rightId;
@@ -78,7 +80,6 @@ export default defineComponent({
       dialogStore.editRightActivated = true;
       currentRight.value = {} as RightRest;
       updateSuccessful.value = false;
-      successMsgIsActive.value = false;
       currentIndex.value = -1;
       isNew.value = true;
     };
@@ -90,9 +91,7 @@ export default defineComponent({
       currentRights.value.unshift(right);
       renderKey.value += 1;
       dialogStore.editRightActivated = false;
-      successMsgIsActive.value = true;
-      successMsg.value = "Rechteinformation erfolgreich für Item " +
-          "'" + props.title + " (" + props.handle + ")' hinzugefügt.";
+      emit("addRightSuccessful", props.title, props.handle);
     };
 
     const updateRight = (right: RightRest, index: number) => {
@@ -127,8 +126,6 @@ export default defineComponent({
       renderKey,
       headers,
       searchStore,
-      successMsg,
-      successMsgIsActive,
       // Methods
       activateTabEdit,
       addRight,
@@ -146,17 +143,6 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-sheet v-if="rights" class="mx-auto" tile>
-    <v-snackbar
-        contained
-        multi-line
-        location="top"
-        timer="true"
-        timeout="5000"
-        v-model="successMsgIsActive"
-        color="success"
-    >
-      {{ successMsg }}
-    </v-snackbar>
     <v-divider></v-divider>
     <v-data-table
       :key="renderKey"
