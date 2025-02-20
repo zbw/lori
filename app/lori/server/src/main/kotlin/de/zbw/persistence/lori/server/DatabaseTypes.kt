@@ -31,7 +31,7 @@ data class FacetTransientSet(
     val hasLicenceContract: Boolean,
     val hasOpenContentLicence: Boolean,
     val hasZbwUserAgreement: Boolean,
-    val isPartOfSeries: Map<String, Int>,
+    val isPartOfSeries: Map<List<String>, Int>,
     val licenceUrls: Map<String, Int>,
     val paketSigels: Map<List<String>, Int>,
     val publicationType: Map<PublicationType, Int>,

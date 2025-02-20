@@ -48,7 +48,9 @@ MetadataRest:
     issn:
       type: string
     isPartOfSeries:
-      type: string
+      type: array
+      items:
+        type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:

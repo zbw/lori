@@ -429,7 +429,7 @@ class LoriServerBackend(
                             (metadataSearchFilter + rightSearchFilter + listOf(noRightInformationFilter))
                                 .filterNotNull(),
                     ),
-                isPartOfSeries = facets.isPartOfSeries,
+                isPartOfSeries = sumUpIndividualMapEntries(facets.isPartOfSeries),
             )
         }
 

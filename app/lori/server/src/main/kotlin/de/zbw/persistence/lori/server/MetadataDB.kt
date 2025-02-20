@@ -412,7 +412,7 @@ class MetadataDB(
                 collectionHandle = rs.getString(25),
                 licenceUrl = rs.getString(26),
                 subCommunityName = rs.getString(27),
-                isPartOfSeries = rs.getString(28),
+                isPartOfSeries = (rs.getArray(28)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIdSeries = rs.getString(29),
                 licenceUrlFilter = rs.getString(30),
                 deleted = rs.getBoolean(31),
@@ -497,7 +497,7 @@ class MetadataDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(28, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(29, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

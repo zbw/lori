@@ -427,8 +427,8 @@ class SeriesFilter(
         COLUMN_METADATA_IS_PART_OF_SERIES,
     ) {
     override fun toWhereClause(): String =
-        seriesNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "LOWER($dbColumnName) = LOWER(?) and $dbColumnName is not null"
+        seriesNames.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
+            "$dbColumnName @> ARRAY[?]::text[]"
         }
 
     override fun setSQLParameter(

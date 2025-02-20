@@ -141,7 +141,7 @@ class RestConverterTest {
                 handle = "11159/848",
                 isbn = null,
                 issn = null,
-                isPartOfSeries = "seriespart",
+                isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = null,
                 lastUpdatedOn = null,
                 licenceUrl = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.de",
@@ -603,7 +603,7 @@ class RestConverterTest {
                 handle = "hdl:example.handle.net",
                 isbn = "1234567890123",
                 issn = "123456",
-                isPartOfSeries = "seriespart",
+                isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = "user2",
                 lastUpdatedOn =
                     OffsetDateTime.of(

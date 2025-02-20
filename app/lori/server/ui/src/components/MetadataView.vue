@@ -213,6 +213,10 @@ export default defineComponent({
               <v-col>OC-/CC-Lizenz-URL</v-col>
               <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
             </v-row>
+            <v-row v-show="currentMetadata.isPartOfSeries">
+              <v-col>Serien</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.isPartOfSeries?.join()) }}</v-col>
+            </v-row>
           </v-container>
         </v-expansion-panel-text>
       </v-expansion-panel>
