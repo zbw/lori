@@ -135,8 +135,16 @@ export default defineComponent({
         value: "titleSeries",
       },
       {
-        title: "ZDB-ID",
-        value: "zdbId",
+        title: "ZDB-ID (Journal)",
+        value: "zdbIdJournal",
+      },
+      {
+        title: "ZDB-ID (Serie)",
+        value: "zdbIdSeries",
+      },
+      {
+        title: "Serie",
+        value: "isPartOfSeries",
       },
     ];
 
@@ -1238,6 +1246,11 @@ table.special, th.special, td.special {
             <template v-slot:item.paketSigel="{ item }">
               <td>
                 {{ item.paketSigel?.join() }}
+              </td>
+            </template>
+            <template v-slot:item.isPartOfSeries="{ item }">
+              <td>
+                {{ item.isPartOfSeries?.join() }}
               </td>
             </template>
             <template v-slot:item.handle="{ item }">

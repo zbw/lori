@@ -183,7 +183,7 @@ class SearchDB(
                         noRightInformationFilter = noRightInformationFilter,
                     ) { rs ->
                         Pair(
-                            rs.getString(1),
+                            (rs.getArray(1)?.array as? Array<out Any?>)?.filterIsInstance<String>() ?: emptyList(),
                             rs.getInt(2),
                         )
                     }

@@ -478,12 +478,7 @@ fun DAItem.toBusiness(
                     it[0]
                 },
             isPartOfSeries =
-                RestConverter.extractMetadata("dc.relation.ispartofseries", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple series: $this")
-                    }
-                    it[0]
-                },
+                RestConverter.extractMetadata("dc.relation.ispartofseries", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
             licenceUrl = licenceUrl,
