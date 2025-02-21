@@ -352,6 +352,7 @@ export default defineComponent({
     const templateSearchIsActive = ref(false);
     const filtersAsQuery = ref("");
     const initSearchByRightId = (rightId: string, templateName: string) => {
+      searchStore.searchTerm = "";
       templateSearchIsActive.value = true;
       currentPage.value = 1;
       currentRightId.value = templateName;
