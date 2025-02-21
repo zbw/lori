@@ -12,7 +12,7 @@ repositories {
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().all {
-    compilerOptions{
+    compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
         freeCompilerArgs.add("-opt-in=kotlin.RequiresOptIn")
     }
@@ -34,7 +34,7 @@ protobuf {
         }
         id("grpckt") {
             val grpcKotlinVersion by System.getProperties()
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk8@jar"
         }
     }
     generateProtoTasks {
@@ -57,13 +57,13 @@ dependencies {
     implementation("io.grpc:grpc-stub:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     api("io.grpc:grpc-kotlin-stub:$grpcKotlinStubVersion")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
 }
 
-val bufLint = task<Exec>("bufLint") {
-    commandLine("${project.rootDir}/scripts/buf", "lint")
-}
+val bufLint =
+    task<Exec>("bufLint") {
+        commandLine("${project.rootDir}/scripts/buf", "lint")
+    }
 
 tasks.check {
     dependsOn(bufLint)

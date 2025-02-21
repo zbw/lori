@@ -19,6 +19,7 @@ repositories {
 dependencies {
     val apacheCommonsCSV by System.getProperties()
     val flywayVersion by System.getProperties()
+    val hikaricp by System.getProperties()
     val ktorVersion by System.getProperties()
     val openTelemetry by System.getProperties()
     val postgresJDBCVersion by System.getProperties()
@@ -38,9 +39,8 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-sessions:$ktorVersion")
-    implementation("com.mchange:c3p0:0.9.5.5")
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
-    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry-alpha")
+    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry")
     implementation("io.zonky.test:embedded-postgres:$zonkyVersion")
     implementation("org.postgresql:postgresql:$postgresJDBCVersion")
     implementation("org.flywaydb:flyway-core:$flywayVersion")
@@ -49,9 +49,10 @@ dependencies {
     implementation("org.opensaml:opensaml-saml-api:$openSaml")
     implementation("org.opensaml:opensaml-saml-impl:$openSaml")
     implementation("com.github.h0tk3y.betterParse:better-parse:0.4.4")
-    implementation("com.zaxxer:HikariCP:5.1.0")
-    implementation("commons-logging:commons-logging:1.3.4")
+    implementation("com.zaxxer:HikariCP:$hikaricp")
+    implementation("commons-logging:commons-logging:1.3.5")
 
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:$flywayVersion")
     runtimeOnly(project(path = ":app:lori:server:ui", configuration = "npmResources"))
     testImplementation("io.ktor:ktor-client-mock-jvm:$ktorVersion")
 }
