@@ -9,7 +9,6 @@ dependencies {
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-netty:$grpcVersion")
     implementation("io.grpc:grpc-services:$grpcVersion")
-    implementation("javax.annotation:javax.annotation-api:1.3.2")
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.github.gfelbing:konfig-core:0.4.0")

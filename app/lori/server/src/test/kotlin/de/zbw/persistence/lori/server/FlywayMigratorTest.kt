@@ -3,7 +3,7 @@ package de.zbw.persistence.lori.server
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import org.flywaydb.core.api.ErrorCode
+import org.flywaydb.core.api.CoreErrorCode
 import org.flywaydb.core.api.ErrorDetails
 import org.flywaydb.core.api.FlywayException
 import org.flywaydb.core.api.exception.FlywayValidateException
@@ -27,7 +27,7 @@ class FlywayMigratorTest {
                         every { migrate() } throws
                             FlywayValidateException(
                                 ErrorDetails(
-                                    ErrorCode.VALIDATE_ERROR,
+                                    CoreErrorCode.VALIDATE_ERROR,
                                     "error",
                                 ),
                                 "foo",
