@@ -1090,6 +1090,14 @@ export default defineComponent({
       dialogSimulationResults.value = false;
     };
 
+    const labelModelToString = (mValue: boolean) => {
+      if (mValue){
+        return "Ja";
+      } else {
+        return "Nein";
+      }
+    };
+
     const readOnlyProps = computed(() => {
       if (!isEditable.value) {
         return {
@@ -1103,6 +1111,7 @@ export default defineComponent({
         };
       }
     });
+
     watch(dashboardViewActivated, (currentValue) => {
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
@@ -1183,6 +1192,7 @@ export default defineComponent({
       deleteExceptionEntry,
       deleteSuccessful,
       dryRunTemplate,
+      labelModelToString,
       openCreateExceptionDialog,
       openDashboard,
       selectBookmark,
@@ -1771,7 +1781,7 @@ export default defineComponent({
                   :readonly="!isEditable"
                   color="indigo"
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
-                  label="Ja"
+                  :label="labelModelToString(tmpRight.authorRightException)"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -1784,7 +1794,7 @@ export default defineComponent({
                   :readonly="!isEditable"
                   color="indigo"
                   hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
-                  label="Ja"
+                  :label="labelModelToString(tmpRight.zbwUserAgreement)"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -1823,7 +1833,7 @@ export default defineComponent({
                   :readonly="!isEditable"
                   color="indigo"
                   hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
-                  label="Ja"
+                  :label="labelModelToString(tmpRight.nonStandardOpenContentLicence)"
                   persistent-hint
                 ></v-switch>
               </v-col>
@@ -1836,7 +1846,7 @@ export default defineComponent({
                   :readonly="!isEditable"
                   color="indigo"
                   hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
-                  label="Ja"
+                  :label="labelModelToString(tmpRight.restrictedOpenContentLicence)"
                   persistent-hint
                 ></v-switch>
               </v-col>
