@@ -192,6 +192,7 @@ fun Routing.bookmarkRoutes(
                             receivedBookmarks.map { bookmark: Bookmark ->
                                 bookmark.toRest(
                                     bookmark.computeQueryString(),
+                                    backend.getTemplateNamesByBookmark(bookmark),
                                 )
                             },
                         )
@@ -236,6 +237,7 @@ fun Routing.bookmarkRoutes(
                             call.respond(
                                 b.toRest(
                                     b.computeQueryString(),
+                                    backend.getTemplateNamesByBookmark(bookmark),
                                 ),
                             )
                         } ?: let {

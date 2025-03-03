@@ -19,6 +19,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.RightIdTemplateName
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -465,6 +466,20 @@ class LoriServerBackend(
             )
         }
     }
+
+    suspend fun getTemplateNamesByBookmark(bookmark: Bookmark): List<RightIdTemplateName> =
+        bookmark.rightIdFilter
+            ?.rightIds
+            ?.let { rightIds: List<String> ->
+                getRightsByIds(rightIds)
+            }?. filter { r -> r.rightId != null && r.templateName != null }
+            ?.map { r: ItemRight ->
+                RightIdTemplateName(
+                    rightId = r.rightId!!,
+                    templateName = r.templateName!!,
+                )
+            }
+            ?: emptyList()
 
     suspend fun deleteBookmark(bookmarkId: Int): Int {
         val receivedTemplateIds: List<String> = dbConnector.bookmarkTemplateDB.getRightIdsByBookmarkId(bookmarkId)

@@ -61,6 +61,7 @@ abstract class SearchFilter(
                     "hdlcol" -> CollectionHandleFilter(searchValue)
                     "hdlcom" -> CommunityHandleFilter(searchValue)
                     "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
+                    "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
                     "lur" -> LicenceUrlFilter(searchValue)
                     "subcom" -> SubcommunityNameFilter(searchValue)
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
@@ -626,6 +627,35 @@ class EndDateFilter(
     }
 }
 
+class RightIdFilter(
+    val rightIds: List<String>,
+) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
+    override fun toWhereClause(): String =
+        "(" +
+            rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+                "(${ALIAS_ITEM_RIGHT}.$dbColumnName = ? AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null)"
+            } + " AND $WHERE_REQUIRE_RIGHT_ID)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        rightIds.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+
+    override fun getFilterType(): FilterType = FilterType.RIGHT_ID
+
+    override fun toSQLString(): String = rightIds.joinToString(separator = ",")
+
+    companion object {
+        fun fromString(s: String?): RightIdFilter? = QueryParameterParser.parseRightIdFilter(s)
+    }
+}
+
 class TemplateNameFilter(
     val templateNames: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_TEMPLATE_NAME) {
@@ -742,6 +772,7 @@ enum class FilterType(
     PUBLICATION_TYPE("typ"),
     PAKET_SIGEL("sig"),
     TEMPLATE_NAME("tpl"),
+    RIGHT_ID("rightid"),
     RIGHT_VALID_ON("zgp"),
     SERIES("ser"),
     START_DATE("zgb"),

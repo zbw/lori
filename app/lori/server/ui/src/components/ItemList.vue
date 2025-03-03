@@ -727,7 +727,7 @@ export default defineComponent({
         searchStore.templateNameReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateNameReceived.map((e) => e.templateName),
+        searchStore.templateNameReceived.map((e) => e.rightId),
         searchStore.templateNameSelectedLastSearch,
         searchStore.templateNameIdx,
       );

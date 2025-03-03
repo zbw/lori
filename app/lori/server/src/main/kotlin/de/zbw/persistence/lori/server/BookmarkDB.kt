@@ -10,10 +10,10 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
@@ -314,7 +314,7 @@ class BookmarkDB(
                 createdBy = rs.getString(17),
                 lastUpdatedBy = rs.getString(18),
                 seriesFilter = SeriesFilter.fromString(rs.getString(19)),
-                templateNameFilter = TemplateNameFilter.fromString(rs.getString(20)),
+                rightIdFilter = RightIdFilter.fromString(rs.getString(20)),
                 licenceURLFilter = LicenceUrlFilter.fromString(rs.getString(21)),
                 manualRightFilter = ManualRightFilter.fromString(rs.getBoolean(22).toString()),
                 accessStateOnFilter = AccessStateOnDateFilter.fromString(rs.getString(23)),
@@ -375,7 +375,7 @@ class BookmarkDB(
                 this.setIfNotNull(18, bookmark.seriesFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toSQLString())
                 }
-                this.setIfNotNull(19, bookmark.templateNameFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(19, bookmark.rightIdFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setIfNotNull(20, bookmark.licenceURLFilter) { value, idx, prepStmt ->

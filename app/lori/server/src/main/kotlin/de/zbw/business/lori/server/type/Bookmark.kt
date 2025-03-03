@@ -11,12 +11,12 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SearchFilter.Companion.filtersToString
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.ZDBIdFilter
 import java.time.OffsetDateTime
 
@@ -46,7 +46,7 @@ data class Bookmark(
     val validOnFilter: RightValidOnFilter? = null,
     val noRightInformationFilter: NoRightInformationFilter? = null,
     val seriesFilter: SeriesFilter? = null,
-    val templateNameFilter: TemplateNameFilter? = null,
+    val rightIdFilter: RightIdFilter? = null,
     val licenceURLFilter: LicenceUrlFilter? = null,
     val manualRightFilter: ManualRightFilter? = null,
     val accessStateOnFilter: AccessStateOnDateFilter? = null,
@@ -67,7 +67,7 @@ data class Bookmark(
             accessStateFilter,
             endDateFilter,
             formalRuleFilter,
-            templateNameFilter,
+            rightIdFilter,
             startDateFilter,
             validOnFilter,
             manualRightFilter,
@@ -99,3 +99,8 @@ data class Bookmark(
         }
     }
 }
+
+data class RightIdTemplateName(
+    val rightId: String,
+    val templateName: String,
+)
