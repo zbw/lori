@@ -14,6 +14,7 @@ import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
@@ -198,6 +199,15 @@ object QueryParameterParser {
                 it.isNotEmpty()
             }?.let {
                 TemplateNameFilter(it)
+            }
+
+    fun parseRightIdFilter(s: String?): RightIdFilter? =
+        s
+            ?.split(",".toRegex())
+            ?.takeIf {
+                it.isNotEmpty()
+            }?.let {
+                RightIdFilter(it)
             }
 
     fun parseDashboardTemplateNameFilter(s: String?): DashboardTemplateNameFilter? =

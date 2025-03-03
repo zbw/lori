@@ -155,7 +155,7 @@ class BookmarkDBTest : DatabaseTest() {
                 lastUpdatedBy = null,
                 lastUpdatedOn = null,
                 seriesFilter = QueryParameterParser.parseSeriesFilter("some series"),
-                templateNameFilter = QueryParameterParser.parseTemplateNameFilter("some template"),
+                rightIdFilter = QueryParameterParser.parseRightIdFilter("some_right_id"),
                 licenceURLFilter =
                     QueryParameterParser.parseLicenceUrlFilter(
                         RestConverterUtil.prepareLicenceUrlFilter(

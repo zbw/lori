@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.type
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
@@ -15,6 +16,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.RightIdTemplateName
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.model.AccessStateWithCountRest
@@ -403,8 +405,24 @@ class RestConverterTest {
     @Test
     fun testBookmarkConversion() {
         assertThat(
-            TEST_BOOKMARK.toString(),
-            `is`(TEST_BOOKMARK.toRest("").toBusiness().toString()),
+            TEST_BOOKMARK.copy(rightIdFilter = RightIdFilter(rightIds = listOf("1", "2"))).toString(),
+            `is`(
+                TEST_BOOKMARK
+                    .toRest(
+                        "",
+                        listOf(
+                            RightIdTemplateName(
+                                rightId = "1",
+                                templateName = "foo",
+                            ),
+                            RightIdTemplateName(
+                                rightId = "2",
+                                templateName = "bar",
+                            ),
+                        ),
+                    ).toBusiness()
+                    .toString(),
+            ),
         )
     }
 
@@ -431,7 +449,7 @@ class RestConverterTest {
                 hasZbwUserAgreement = false,
                 paketSigels = mapOf("sigel1" to 1),
                 publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
-                templateNamesToOcc = mapOf("rightId" to ("name" to 2)),
+                templateNamesToOcc = mapOf("1" to ("name" to 2)),
                 zdbIds = mapOf("zdb1" to 1),
                 isPartOfSeries = mapOf("series1" to 1),
                 filtersAsQuery = "foobar",
@@ -476,6 +494,7 @@ class RestConverterTest {
                         TemplateNameWithCountRest(
                             count = 2,
                             templateName = "name",
+                            rightId = "1",
                         ),
                     ),
                 isPartOfSeriesCount =

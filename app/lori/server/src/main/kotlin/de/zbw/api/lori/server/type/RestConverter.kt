@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PublicationYearFilter
+import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.type.AccessState
@@ -26,6 +27,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.RightIdTemplateName
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.type.UserPermission
@@ -37,6 +39,7 @@ import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
 import de.zbw.lori.model.FilterAccessStateOnRest
 import de.zbw.lori.model.FilterPublicationYearRest
+import de.zbw.lori.model.FilterRightIdRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
@@ -596,6 +599,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         manualRightFilter = QueryParameterParser.parseManualRightFilter(this.filterManualRight),
         licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter(this.filterLicenceUrl),
         accessStateOnFilter = QueryParameterParser.parseAccessStateOnDate(this.filterAccessOnDate),
+        rightIdFilter = QueryParameterParser.parseRightIdFilter(this.filterRightId),
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
@@ -640,9 +644,17 @@ fun BookmarkRest.toBusiness(): Bookmark =
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
         createdOn = createdOn,
+        rightIdFilter =
+            this.filterRightId
+                ?.takeIf { it.isNotEmpty() }
+                ?.map { it.rightId }
+                ?.let { RightIdFilter(it) },
     )
 
-fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
+fun Bookmark.toRest(
+    filtersAsQuery: String,
+    filterRightIds: List<RightIdTemplateName>,
+): BookmarkRest =
     BookmarkRest(
         bookmarkName = this.bookmarkName,
         bookmarkId = this.bookmarkId,
@@ -668,7 +680,7 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
         lastUpdatedBy = this.lastUpdatedBy,
         lastUpdatedOn = this.lastUpdatedOn,
         filterSeries = this.seriesFilter?.seriesNames,
-        filterTemplateName = this.templateNameFilter?.templateNames,
+        filterRightId = filterRightIds.map { it.toRest() },
         filtersAsQuery = filtersAsQuery,
         filterLicenceUrl = this.licenceURLFilter?.licenceUrl,
         filterAccessOnDate =
@@ -678,6 +690,12 @@ fun Bookmark.toRest(filtersAsQuery: String): BookmarkRest =
                     accessState = it.accessState.toString(),
                 )
             },
+    )
+
+fun RightIdTemplateName.toRest(): FilterRightIdRest =
+    FilterRightIdRest(
+        templateName = this.templateName,
+        rightId = this.rightId,
     )
 
 fun BookmarkTemplateRest.toBusiness(): BookmarkTemplate =
@@ -748,6 +766,7 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                     TemplateNameWithCountRest(
                         templateName = it.value.first,
                         count = it.value.second,
+                        rightId = it.key,
                     )
                 }.sortedBy { it.templateName.lowercase() },
         isPartOfSeriesCount =

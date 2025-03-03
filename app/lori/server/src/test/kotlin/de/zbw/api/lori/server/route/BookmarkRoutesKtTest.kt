@@ -59,7 +59,7 @@ class BookmarkRoutesKtTest {
                 client.post("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("", emptyList())))
                 }
             assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
         }
@@ -87,7 +87,7 @@ class BookmarkRoutesKtTest {
                 client.post("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("", emptyList())))
                 }
             assertThat("Should return 409", response.status, `is`(HttpStatusCode.Conflict))
         }
@@ -215,7 +215,7 @@ class BookmarkRoutesKtTest {
                 client.put("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("", emptyList())))
                 }
             assertThat("Should return 204", response.status, `is`(HttpStatusCode.NoContent))
         }
@@ -239,7 +239,7 @@ class BookmarkRoutesKtTest {
                 client.put("/api/v1/bookmark") {
                     header(HttpHeaders.Accept, ContentType.Application.Json)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-                    setBody(jsonAsString(TEST_BOOKMARK.toRest("")))
+                    setBody(jsonAsString(TEST_BOOKMARK.toRest("", emptyList())))
                 }
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
         }
@@ -255,6 +255,7 @@ class BookmarkRoutesKtTest {
                     " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
                     " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                     " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
+                emptyList(),
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -451,6 +452,7 @@ class BookmarkRoutesKtTest {
                         " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
                         " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                         " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
+                    emptyList(),
                 ),
             )
         val backend =
@@ -485,6 +487,7 @@ class BookmarkRoutesKtTest {
                         " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
                         " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                         " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
+                    emptyList(),
                 ),
             )
         val backend =
@@ -549,7 +552,12 @@ class BookmarkRoutesKtTest {
     fun testBookmarkConversion() {
         assertThat(
             "Back and forth conversion failed",
-            TEST_BOOKMARK.toRest("").toBusiness().toString(),
+            TEST_BOOKMARK
+                .toRest(
+                    "",
+                    emptyList(),
+                ).toBusiness()
+                .toString(),
             `is`(TEST_BOOKMARK.toString()),
         )
     }

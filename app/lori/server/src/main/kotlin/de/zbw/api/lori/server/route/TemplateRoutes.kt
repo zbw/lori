@@ -207,6 +207,7 @@ fun Routing.templateRoutes(
                             bookmarks.map { bookmark ->
                                 bookmark.toRest(
                                     bookmark.computeQueryString(),
+                                    backend.getTemplateNamesByBookmark(bookmark),
                                 )
                             },
                         )

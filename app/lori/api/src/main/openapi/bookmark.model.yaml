@@ -41,7 +41,7 @@ BookmarkRawRest:
       type: string
     filterNoRightInformation:
       type: string
-    filterTemplateName:
+    filterRightId:
       type: string
     filterLicenceUrl:
       type: string
@@ -119,10 +119,10 @@ BookmarkRest:
       type: boolean
     filterNoRightInformation:
       type: boolean
-    filterTemplateName:
+    filterRightId:
       type: array
       items:
-        type: string
+        $ref: 'bookmark.model.yaml#/FilterRightIdRest'
     filterLicenceUrl:
       type: string
     filterAccessOnDate:
@@ -154,3 +154,14 @@ FilterAccessStateOnRest:
     date:
       type: string
       format: date
+
+FilterRightIdRest:
+  type: object
+  required:
+    - rightId
+    - templateName
+  properties:
+    rightId:
+      type: string
+    templateName:
+      type: string

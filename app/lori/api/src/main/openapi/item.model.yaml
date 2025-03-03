@@ -155,9 +155,12 @@ TemplateNameWithCountRest:
   required:
     - count
     - templateName
+    - rightId
   type: object
   properties:
     count:
       type: integer
     templateName:
+      type: string
+    rightId:
       type: string

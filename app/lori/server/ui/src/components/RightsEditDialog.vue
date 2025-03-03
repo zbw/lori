@@ -1401,7 +1401,6 @@ export default defineComponent({
                   <v-text-field
                     v-model="formState.templateName"
                     :error-messages="errorTemplateName"
-                    v-bind="{...$attrs, ...readOnlyProps}"
                     hint="Name des Templates"
                     variant="outlined"
                   ></v-text-field>
@@ -1414,7 +1413,6 @@ export default defineComponent({
                     v-model="formState.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
-                    v-bind="{...$attrs, ...readOnlyProps}"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -1741,7 +1739,6 @@ export default defineComponent({
                 <v-textarea
                   v-model="tmpRight.notesGeneral"
                   counter
-                  v-bind="{...$attrs, ...readOnlyProps}"
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   variant="outlined"
@@ -1848,7 +1845,6 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesFormalRules"
                   counter
                   hint="Bemerkungen für formale Regelungen"
@@ -1892,7 +1888,6 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesProcessDocumentation"
                   counter
                   hint="Bemerkungen für prozessdokumentierende Elemente"
@@ -1958,7 +1953,6 @@ export default defineComponent({
               <v-col cols="4"> Bemerkungen</v-col>
               <v-col cols="8">
                 <v-textarea
-                  v-bind="{...$attrs, ...readOnlyProps}"
                   v-model="tmpRight.notesManagementRelated"
                   counter
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
