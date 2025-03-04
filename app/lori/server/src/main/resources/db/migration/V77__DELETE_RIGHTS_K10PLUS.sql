@@ -1,0 +1,1 @@
+ALTER TABLE item_metadata DROP COLUMN rights_k10plus;

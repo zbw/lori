@@ -123,10 +123,6 @@ export default defineComponent({
         value: "ppn",
       },
       {
-        title: "Rechte-K10Plus",
-        value: "rightsK10plus",
-      },
-      {
         title: "Titel Journal",
         value: "titleJournal",
       },
@@ -885,7 +881,6 @@ table.special, th.special, td.special {
         ></SearchFilter>
   </VResizeDrawer>
   <v-main class="d-flex align-center justify-center">
-  <v-card position="relative">
     <v-dialog
       v-model="dialogStore.bookmarkSaveActivated"
       :retain-focus="false"
@@ -1293,8 +1288,6 @@ table.special, th.special, td.special {
             </v-row>
           </v-col>
         </v-card>
-
-  </v-card>
   </v-main>
   <VResizeDrawer location="right" width="400px" permanent>
       <v-card v-if="currentItem.metadata" class="mx-auto" tile>

@@ -68,8 +68,6 @@ MetadataRest:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
     publicationYear:
       type: integer
-    rightsK10plus:
-      type: string
     subCommunityHandle:
       type: string
     subCommunityName:

@@ -783,7 +783,6 @@ class LoriServerBackendTest : DatabaseTest() {
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,
                 publicationYear = 2022,
-                rightsK10plus = "some rights",
                 storageDate = NOW.minusDays(3),
                 subCommunityHandle = "11159/1114",
                 subCommunityName = "Department",

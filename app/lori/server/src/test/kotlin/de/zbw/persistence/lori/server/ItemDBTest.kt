@@ -247,7 +247,6 @@ class ItemDBTest : DatabaseTest() {
                 ppn = "ppn",
                 publicationType = PublicationType.ARTICLE,
                 publicationYear = 2022,
-                rightsK10plus = "some rights",
                 subCommunityHandle = "11509/1111",
                 subCommunityName = "Department of University of Foo",
                 storageDate = NOW.minusDays(3),

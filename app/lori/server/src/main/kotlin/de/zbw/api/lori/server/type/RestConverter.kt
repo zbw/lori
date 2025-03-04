@@ -169,7 +169,6 @@ fun MetadataRest.toBusiness() =
         ppn = ppn,
         publicationType = publicationType.toBusiness(),
         publicationYear = publicationYear,
-        rightsK10plus = rightsK10plus,
         subCommunityHandle = subCommunityHandle,
         subCommunityName = subCommunityName,
         storageDate = storageDate,
@@ -203,7 +202,6 @@ fun ItemMetadata.toRest(): MetadataRest =
         ppn = ppn,
         publicationType = publicationType.toRest(),
         publicationYear = publicationYear,
-        rightsK10plus = rightsK10plus,
         storageDate = storageDate,
         subCommunityHandle = subCommunityHandle,
         subCommunityName = subCommunityName,
@@ -496,13 +494,6 @@ fun DAItem.toBusiness(
                 },
             publicationType = publicationType,
             publicationYear = publicationYear?.let { RestConverter.parseToDate(it) }?.year,
-            rightsK10plus =
-                RestConverter.extractMetadata("dc.rights", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple rightsK10Plus : $this")
-                    }
-                    it[0]
-                },
             subCommunityHandle =
                 subDACommunity?.handle?.let {
                     RestConverter.parseHandle(it)

@@ -181,10 +181,6 @@ export default defineComponent({
               <v-col>PPN</v-col>
               <v-col>{{ prettyPrint(currentMetadata.ppn) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.rightsK10plus">
-              <v-col>Zugriffsrecht K10Plus</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.rightsK10plus) }}</v-col>
-            </v-row>
             <v-row v-show="currentMetadata.issn">
               <v-col>Issn</v-col>
               <v-col>{{ prettyPrint(currentMetadata.issn) }}</v-col>
