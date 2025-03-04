@@ -906,7 +906,7 @@ export default defineComponent({
         value: "description",
         sortable: true,
       },
-      { title: "Actions", value: "actions", sortable: false },
+      { title: "Aktionen", value: "actions", sortable: false },
     ];
 
     // Template Exceptions
@@ -940,7 +940,7 @@ export default defineComponent({
         align: "start",
         value: "templateDescription",
       },
-      { title: "Actions", value: "actions", sortable: false },
+      { title: "Aktionen", value: "actions", sortable: false },
     ];
 
     const addNewException = (excTemplate: RightRest) => {

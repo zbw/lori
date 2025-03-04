@@ -24,6 +24,12 @@ export default defineComponent({
         align: "start",
         value: "groupId",
       },
+      {
+        title: "Aktionen",
+        key: "actions",
+        align: "start",
+        sortable: false,
+      },
     ];
     const groupItems: Ref<Array<GroupRest>> = ref([]);
     const groupLoadError = ref(false);
@@ -65,10 +71,10 @@ export default defineComponent({
       currentGroup.value = {} as GroupRest;
       activateGroupEditDialog();
     };
-    const editGroup = (mouseEvent: MouseEvent, row: any) => {
+    const editGroup = (group: GroupRest) => {
       isNew.value = false;
-      currentGroup.value = row.item;
-      index.value = row.index;
+      currentGroup.value = group;
+      index.value = groupItems.value.indexOf(group);
       activateGroupEditDialog();
     };
 
@@ -160,7 +166,7 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-card>
+  <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
       <v-btn
@@ -168,6 +174,7 @@ export default defineComponent({
           @click="close"
       ></v-btn>
     </v-toolbar>
+    <v-container>
     <v-snackbar
         contained
         multi-line
@@ -200,10 +207,19 @@ export default defineComponent({
       :headers="headers"
       :items="items"
       :key="renderKey"
-      @click:row="editGroup"
       loading-text="Daten werden geladen... Bitte warten."
       item-value="groupName"
-    ></v-data-table>
+    >
+      <template v-slot:item.actions="{ item }">
+        <v-btn
+            variant="text"
+            @click="editGroup(item)"
+            icon="mdi-pencil"
+        >
+        </v-btn>
+      </template>
+
+    </v-data-table>
     <v-dialog
       v-model="dialogStore.groupEditActivated"
       :retain-focus="false"
@@ -222,5 +238,6 @@ export default defineComponent({
         v-on:groupEditClosed="closeGroupEditDialog"
       ></GroupEdit>
     </v-dialog>
+    </v-container>
   </v-card>
 </template>
