@@ -56,8 +56,10 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card v-if="currentMetadata.handle" class="mx-auto" tile>
-    <v-card-title class="subheading font-weight-bold">Metadaten</v-card-title>
-    <v-divider></v-divider>
+    <v-toolbar flat>
+      <v-toolbar-title
+      >Metadaten</v-toolbar-title>
+    </v-toolbar>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
         <v-expansion-panel-title>

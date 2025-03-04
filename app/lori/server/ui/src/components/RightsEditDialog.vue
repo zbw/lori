@@ -24,7 +24,6 @@ import {
 
 import { useVuelidate } from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
-import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
 import info from "@/utils/info";
 import templateApi from "@/api/templateApi";
@@ -99,8 +98,6 @@ export default defineComponent({
   },
 
   setup(props, { emit }) {
-    // Stores
-    const historyStore = useHistoryStore();
     /**
      * Vuelidate.
      */
@@ -380,10 +377,6 @@ export default defineComponent({
             )
             .then(() => {
               tmpRight.value.rightId = r.rightId;
-              historyStore.addEntry({
-                type: ChangeType.CREATED,
-                rightId: r.rightId,
-              });
               emit("addSuccessful", tmpRight.value);
               close();
             })
@@ -408,10 +401,6 @@ export default defineComponent({
       api
         .updateRight(tmpRight.value)
         .then(() => {
-          historyStore.addEntry({
-            type: ChangeType.UPDATED,
-            rightId: tmpRight.value.rightId,
-          });
           emit("updateSuccessful", tmpRight.value, props.index);
           successMsg.value =
             "Rechteinformation " +
@@ -1090,8 +1079,8 @@ export default defineComponent({
       dialogSimulationResults.value = false;
     };
 
-    const labelModelToString = (mValue: boolean) => {
-      if (mValue){
+    const labelModelToString = (mValue: boolean | undefined) => {
+      if (mValue == true){
         return "Ja";
       } else {
         return "Nein";
@@ -1154,7 +1143,6 @@ export default defineComponent({
       errorMsgIsActive,
       errorMsg,
       groupItems,
-      historyStore,
       isStartDateMenuOpen,
       isEndDateMenuOpen,
       lastSavedRight,
