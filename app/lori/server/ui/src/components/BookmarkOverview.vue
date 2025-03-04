@@ -56,7 +56,7 @@ export default defineComponent({
         sortable: false,
       },
       {
-        title: "Actions",
+        title: "Aktionen",
         key: "actions",
         align: "start",
         sortable: false,

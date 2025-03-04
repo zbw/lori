@@ -1,7 +1,6 @@
 <script lang="ts">
 import api from "@/api/api";
 import { defineComponent, ref } from "vue";
-import { ChangeType, useHistoryStore } from "@/stores/history";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
 
@@ -28,7 +27,6 @@ export default defineComponent({
     const deleteInProgress = ref(false);
     const deleteErrorMessage = ref("");
     const deleteError = ref(false);
-    const historyStore = useHistoryStore();
 
     const close = () => {
       emit("deleteDialogClosed");
@@ -47,10 +45,6 @@ export default defineComponent({
         api
           .deleteRight(props.rightId)
           .then(() => {
-            historyStore.addEntry({
-              type: ChangeType.DELETED,
-              rightId: props.rightId,
-            });
             emit("deleteSuccessful", props.index);
             close();
           })
@@ -108,7 +102,6 @@ export default defineComponent({
       deleteAlertError,
       deleteErrorMessage,
       deleteInProgress,
-      historyStore,
       // methods
       deleteEntity,
       deleteRight,

@@ -36,7 +36,6 @@ data class ItemMetadata(
     val ppn: String?,
     val publicationType: PublicationType,
     val publicationYear: Int?,
-    val rightsK10plus: String?,
     val subCommunityHandle: String?,
     val subCommunityName: String?,
     val storageDate: OffsetDateTime?,

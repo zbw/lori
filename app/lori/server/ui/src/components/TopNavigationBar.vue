@@ -1,6 +1,5 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref } from "vue";
-import { useHistoryStore } from "@/stores/history";
 import { useDialogsStore } from "@/stores/dialogs";
 import usersApi from "@/api/usersApi";
 import error from "@/utils/error";
@@ -12,7 +11,6 @@ import GroupOverview from "@/components/GroupOverview.vue";
 export default defineComponent({
   components: {GroupOverview},
   setup() {
-    const historyStore = useHistoryStore();
     const cookies = useCookies();
     const menuTopics = [{ title: "IP-Gruppen" }, { title: "Einstellungen" }];
     const dialogStore = useDialogsStore();
@@ -114,7 +112,6 @@ export default defineComponent({
     onMounted(() => login(true));
     return {
       dialogStore,
-      historyStore,
       loginError,
       loginErrorMsg,
       loginErrorMsgTitle,
@@ -193,29 +190,6 @@ export default defineComponent({
     </v-menu>
 
     <v-spacer></v-spacer>
-    <v-menu :location="'bottom'">
-      <template v-slot:activator="{ props }">
-        <v-chip class="ma-2" color="green" text-color="white" v-bind="props">
-          <v-avatar class="green darken-4" left>
-            {{ historyStore.numberEntries }}
-          </v-avatar>
-          Änderungen
-        </v-chip>
-      </template>
-      <v-list>
-        <v-list-item v-for="(item, index) in historyStore.history" :key="index">
-          <v-list-item-action>
-            <v-btn color="primary" depressed fab small>
-              {{ index }}
-            </v-btn>
-          </v-list-item-action>
-          <v-list-item-title
-            >{{ item.type.toString() }}: Right-Id
-            {{ item.rightId }}
-          </v-list-item-title>
-        </v-list-item>
-      </v-list>
-    </v-menu>
     <v-menu :location="'bottom'">
       <template v-slot:activator="{ props }">
         <v-btn class="mx-2" fab large color="purple" v-bind="props">

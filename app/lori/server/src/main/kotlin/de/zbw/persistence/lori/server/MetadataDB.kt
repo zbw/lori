@@ -250,7 +250,6 @@ class MetadataDB(
         const val COLUMN_METADATA_PPN = "ppn"
         const val COLUMN_METADATA_PUBLICATION_YEAR = "publication_year"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
-        const val COLUMN_METADATA_RIGHTS_K10PLUS = "rights_k10plus"
         const val COLUMN_METADATA_STORAGE_DATE = "storage_date"
         const val COLUMN_METADATA_SUBCOMMUNITY_HANDLE = "sub_community_handle"
         const val COLUMN_METADATA_SUBCOMMUNITY_NAME = "sub_community_name"
@@ -271,7 +270,7 @@ class MetadataDB(
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
@@ -293,7 +292,7 @@ class MetadataDB(
         const val STATEMENT_SELECT_ALL_METADATA =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
@@ -315,7 +314,7 @@ class MetadataDB(
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
@@ -328,7 +327,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?) " +
+                "?) " +
                 "ON CONFLICT (handle) " +
                 "DO UPDATE SET " +
                 "ppn = EXCLUDED.ppn," +
@@ -340,7 +339,6 @@ class MetadataDB(
                 "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "doi = EXCLUDED.doi," +
                 "isbn = EXCLUDED.isbn," +
-                "rights_k10plus = EXCLUDED.rights_k10plus," +
                 "$COLUMN_METADATA_PAKET_SIGEL = EXCLUDED.$COLUMN_METADATA_PAKET_SIGEL," +
                 "$COLUMN_METADATA_ZDB_ID_JOURNAL = EXCLUDED.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
                 "issn = EXCLUDED.issn," +
@@ -367,7 +365,7 @@ class MetadataDB(
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,rights_k10plus,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
@@ -381,7 +379,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?)"
+                "?)"
 
         fun extractMetadataRS(rs: ResultSet) =
             ItemMetadata(
@@ -395,27 +393,26 @@ class MetadataDB(
                 publicationType = PublicationType.valueOf(rs.getString(8)),
                 doi = rs.getString(9),
                 isbn = rs.getString(10),
-                rightsK10plus = rs.getString(11),
-                paketSigel = (rs.getArray(12)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
-                zdbIdJournal = rs.getString(13),
-                issn = rs.getString(14),
-                createdOn = rs.getTimestamp(15)?.toOffsetDateTime(),
-                lastUpdatedOn = rs.getTimestamp(16)?.toOffsetDateTime(),
-                createdBy = rs.getString(17),
-                lastUpdatedBy = rs.getString(18),
-                author = rs.getString(19),
-                collectionName = rs.getString(20),
-                communityName = rs.getString(21),
-                storageDate = rs.getTimestamp(22)?.toOffsetDateTime(),
-                subCommunityHandle = rs.getString(23),
-                communityHandle = rs.getString(24),
-                collectionHandle = rs.getString(25),
-                licenceUrl = rs.getString(26),
-                subCommunityName = rs.getString(27),
-                isPartOfSeries = (rs.getArray(28)?.array as? kotlin.Array<out Any?>)?.filterIsInstance<String>(),
-                zdbIdSeries = rs.getString(29),
-                licenceUrlFilter = rs.getString(30),
-                deleted = rs.getBoolean(31),
+                paketSigel = (rs.getArray(11)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                zdbIdJournal = rs.getString(12),
+                issn = rs.getString(13),
+                createdOn = rs.getTimestamp(14)?.toOffsetDateTime(),
+                lastUpdatedOn = rs.getTimestamp(15)?.toOffsetDateTime(),
+                createdBy = rs.getString(16),
+                lastUpdatedBy = rs.getString(17),
+                author = rs.getString(18),
+                collectionName = rs.getString(19),
+                communityName = rs.getString(20),
+                storageDate = rs.getTimestamp(21)?.toOffsetDateTime(),
+                subCommunityHandle = rs.getString(22),
+                communityHandle = rs.getString(23),
+                collectionHandle = rs.getString(24),
+                licenceUrl = rs.getString(25),
+                subCommunityName = rs.getString(26),
+                isPartOfSeries = (rs.getArray(27)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                zdbIdSeries = rs.getString(28),
+                licenceUrlFilter = rs.getString(29),
+                deleted = rs.getBoolean(30),
             )
 
         private fun insertUpsertMetadataSetParameters(
@@ -448,64 +445,61 @@ class MetadataDB(
                 this.setIfNotNull(10, itemMetadata.isbn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(11, itemMetadata.rightsK10plus) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
 
-                this.setIfNotNull(12, itemMetadata.paketSigel) { value, idx, prepStmt ->
+                this.setIfNotNull(11, itemMetadata.paketSigel) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(13, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
+                this.setIfNotNull(12, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(14, itemMetadata.issn) { value, idx, prepStmt ->
+                this.setIfNotNull(13, itemMetadata.issn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
+                this.setTimestamp(14, Timestamp.from(now))
                 this.setTimestamp(15, Timestamp.from(now))
-                this.setTimestamp(16, Timestamp.from(now))
-                this.setIfNotNull(17, itemMetadata.createdBy) { value, idx, prepStmt ->
+                this.setIfNotNull(16, itemMetadata.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(18, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
+                this.setIfNotNull(17, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(19, itemMetadata.author) { value, idx, prepStmt ->
+                this.setIfNotNull(18, itemMetadata.author) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(20, itemMetadata.collectionName) { value, idx, prepStmt ->
+                this.setIfNotNull(19, itemMetadata.collectionName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(21, itemMetadata.communityName) { value, idx, prepStmt ->
+                this.setIfNotNull(20, itemMetadata.communityName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(22, itemMetadata.storageDate) { value, idx, prepStmt ->
+                this.setIfNotNull(21, itemMetadata.storageDate) { value, idx, prepStmt ->
                     prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
                 }
-                this.setIfNotNull(23, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(22, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(24, itemMetadata.communityHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(23, itemMetadata.communityHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(25, itemMetadata.collectionHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(24, itemMetadata.collectionHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(26, itemMetadata.licenceUrl) { value, idx, prepStmt ->
+                this.setIfNotNull(25, itemMetadata.licenceUrl) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(27, itemMetadata.subCommunityName) { value, idx, prepStmt ->
+                this.setIfNotNull(26, itemMetadata.subCommunityName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(28, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
+                this.setIfNotNull(27, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(29, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
+                this.setIfNotNull(28, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(30, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(29, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setBoolean(31, itemMetadata.deleted)
+                this.setBoolean(30, itemMetadata.deleted)
             }
         }
     }

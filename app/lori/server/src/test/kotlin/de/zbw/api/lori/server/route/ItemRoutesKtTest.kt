@@ -873,7 +873,6 @@ class ItemRoutesKtTest {
                 ppn = "ppn",
                 publicationType = PublicationTypeRest.book,
                 publicationYear = 2022,
-                rightsK10plus = "some rights",
                 storageDate = NOW.minusDays(3),
                 title = "Important title",
                 titleJournal = null,

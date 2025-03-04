@@ -76,7 +76,6 @@ class RestConverterTest {
                         ppn = TEST_METADATA.ppn,
                         publicationType = TEST_METADATA.publicationType.toRest(),
                         publicationYear = TEST_METADATA.publicationYear,
-                        rightsK10plus = TEST_METADATA.rightsK10plus,
                         subCommunityHandle = TEST_METADATA.subCommunityHandle,
                         subCommunityName = TEST_METADATA.subCommunityName,
                         storageDate = TEST_METADATA.storageDate,
@@ -152,7 +151,6 @@ class RestConverterTest {
                 ppn = null,
                 publicationType = PublicationType.ARTICLE,
                 publicationYear = 2022,
-                rightsK10plus = null,
                 storageDate =
                     OffsetDateTime.of(
                         2022,
@@ -641,7 +639,6 @@ class RestConverterTest {
                 ppn = "ppn",
                 publicationType = PublicationType.BOOK,
                 publicationYear = 2022,
-                rightsK10plus = "some rights",
                 storageDate = OffsetDateTime.now(),
                 subCommunityHandle = "11159/1114",
                 subCommunityName = "Department",
