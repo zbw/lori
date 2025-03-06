@@ -1481,6 +1481,7 @@ export default defineComponent({
                     item-value="bookmarkId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
                       <v-tooltip
                           location="bottom"
@@ -1552,6 +1553,7 @@ export default defineComponent({
                     item-value="rightId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
                       <v-icon
                         small
