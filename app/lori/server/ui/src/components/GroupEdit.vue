@@ -324,8 +324,8 @@ export default defineComponent({
     // Changes
     const formWasChanged = computed(() => {
       return formState.title != (groupTmp.value.title == undefined ? "" : groupTmp.value.title) ||
-          formState.description != (groupTmp.value.description == undefined ? "" : groupTmp.value.title) ||
-          formState.ipAddressesText != (groupTmp.value.allowedAddressesRaw == undefined ? "" : groupTmp.value.title) ||
+          formState.description != (groupTmp.value.description == undefined ? "" : groupTmp.value.description) ||
+          formState.ipAddressesText != (groupTmp.value.allowedAddressesRaw == undefined ? "" : groupTmp.value.allowedAddressesRaw) ||
           formState.ipAddressesFile != undefined
     });
 
