@@ -107,6 +107,8 @@ export default defineComponent({
       endDate: Date | undefined;
       templateDescription: string;
       selectedGroups: Array<GroupRest>;
+      exceptionTemplates: Array<RightRest>;
+      selectedBookmarks: Array<BookmarkRest>;
     };
 
     const formState = reactive({
@@ -118,6 +120,8 @@ export default defineComponent({
       templateName: "",
       templateDescription: "",
       selectedGroups: [] as Array<GroupRest>,
+      exceptionTemplates: [] as Array<RightRest>,
+      selectedBookmarks: [] as Array<BookmarkRest>,
     });
 
     const isStartDateMenuOpen = ref(false);
@@ -155,8 +159,8 @@ export default defineComponent({
       (isTemplate.value && (
               formState.templateName != "" ||
               formState.templateDescription != "" ||
-              bookmarkItems.value.length != 0 ||
-              exceptionTemplateItems.value.length != 0
+              formState.selectedBookmarks.length != 0 ||
+              formState.exceptionTemplates.length != 0
           )
       ))
     });
@@ -171,8 +175,8 @@ export default defineComponent({
           (isTemplate.value && (
                   formState.templateName != lastSavedRight.value.templateName ||
                   formState.templateDescription != (lastSavedRight.value.templateDescription == undefined ? "" : lastSavedRight.value.templateDescription) ||
-                  JSON.stringify(bookmarkItems.value) != JSON.stringify(lastSavedBookmarkItems.value) ||
-                  JSON.stringify(exceptionTemplateItems.value) != JSON.stringify(lastSavedExceptionTemplateItems.value)
+                  JSON.stringify(formState.selectedBookmarks) != JSON.stringify(lastSavedBookmarkItems.value) ||
+                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value)
                 )
           )
       )
@@ -204,12 +208,18 @@ export default defineComponent({
     const groupCheck = (value: Array<GroupRest>, siblings: FormState) => {
       return !(siblings.accessState == 'Restricted' && value.length == 0);
     };
+
+    const bookmarksCheck = (value: Array<RightRest>, siblings: FormState) => {
+      return value.length != 0;
+    };
+
     const rules = {
       accessState: { required },
       startDate: { required },
       endDate: { endDateCheck },
       templateName: { required },
       selectedGroups: { groupCheck },
+      selectedBookmarks: { bookmarksCheck },
     };
 
     const v$ = useVuelidate(rules, formState);
@@ -429,7 +439,7 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
-          const exceptionIds: string[] = exceptionTemplateItems.value.flatMap(
+          const exceptionIds: string[] = formState.exceptionTemplates.flatMap(
             (e) => (e.rightId ? [e.rightId] : []),
           );
           addExceptionsToTemplate(r.rightId, exceptionIds, () => {
@@ -459,7 +469,7 @@ export default defineComponent({
               "No RightId found when updating. This should NOT happen.";
             errorMsgIsActive.value = true;
           } else {
-            const exceptionIds: string[] = exceptionTemplateItems.value.flatMap(
+            const exceptionIds: string[] = formState.exceptionTemplates.flatMap(
               (e) => (e.rightId ? [e.rightId] : []),
             );
             addExceptionsToTemplate(
@@ -519,7 +529,7 @@ export default defineComponent({
       templateApi
         .addBookmarksByRightId(
           rightId,
-          bookmarkItems.value
+          formState.selectedBookmarks
             .map((elem) => elem.bookmarkId)
             .filter((elem): elem is number => !!elem),
           true,
@@ -535,6 +545,30 @@ export default defineComponent({
         });
     };
 
+    const errorSources = ref([] as string[]);
+    const getErrorSources: () => string[] = () => {
+      let errors = [];
+      if (v$.value.templateName.$error){
+        errors.push("Template-Name (Pflichtelement)");
+      }
+      if (v$.value.selectedBookmarks.$error){
+        errors.push("Verknüpfte Suche (Pflichtelement)");
+      }
+      if (v$.value.accessState.$error){
+        errors.push("Access-Status (Pflichtelement)");
+      }
+      if (v$.value.startDate.$error){
+        errors.push("Start-Datum (Pflichtelement)");
+      }
+      if (v$.value.endDate.$error){
+        errors.push("End-Datum (darf nicht vor Start-Datum liegen)");
+      }
+      if (v$.value.selectedGroups.$error){
+        errors.push("IP-Gruppe (Pflichtelement) → erscheint nur wenn Access Status = Restricted");
+      }
+      return errors;
+    };
+
     const save: () => Promise<void> = async () => {
       // Vuelidate expects this field to be filled. When editing rights it is not required.
       if (!isTemplate.value) {
@@ -544,6 +578,9 @@ export default defineComponent({
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
       if (!isValid) {
+        errorMsg.value = "Fehler beim Speichern des Templates. Folgende Felder haben Fehler oder wurden nicht ausgefüllt:";
+        errorSources.value = getErrorSources();
+        errorMsgIsActive.value = true;
         return;
       }
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
@@ -795,7 +832,7 @@ export default defineComponent({
 
     const addInitialBookmark = () => {
       if (props.initialBookmark != undefined) {
-        bookmarkItems.value = Array(props.initialBookmark);
+        formState.selectedBookmarks = Array(props.initialBookmark);
       }
     };
 
@@ -829,7 +866,7 @@ export default defineComponent({
       formState.templateName = "";
       formState.templateDescription = "";
       formState.accessState = "";
-      bookmarkItems.value = [];
+      formState.selectedBookmarks = [];
     };
 
     const getRightsData = (callback: () => void) => {
@@ -885,7 +922,6 @@ export default defineComponent({
       bookmarkDialogOn.value = false;
     };
 
-    const bookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const lastSavedBookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
     const bookmarkHeaders = [
       {
@@ -920,7 +956,6 @@ export default defineComponent({
       dialogCreateException.value = false;
     };
 
-    const exceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
     const lastSavedExceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
     const exceptionTemplateHeaders = [
       {
@@ -944,14 +979,14 @@ export default defineComponent({
     ];
 
     const addNewException = (excTemplate: RightRest) => {
-      exceptionTemplateItems.value =
-        exceptionTemplateItems.value.concat(excTemplate);
+      formState.exceptionTemplates =
+        formState.exceptionTemplates.concat(excTemplate);
       renderTemplateKey.value += 1;
     };
 
     const deleteExceptionEntry = (entry: RightRest) => {
-      const editedIndex = exceptionTemplateItems.value.indexOf(entry);
-      exceptionTemplateItems.value.splice(editedIndex, 1);
+      const editedIndex = formState.exceptionTemplates.indexOf(entry);
+      formState.exceptionTemplates.splice(editedIndex, 1);
       if (entry.rightId != undefined) {
         templateApi.deleteTemplateById(entry.rightId).catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -972,7 +1007,7 @@ export default defineComponent({
         templateApi
           .getBookmarksByRightId(computedRightId.value)
           .then((bookmarks: Array<BookmarkRest>) => {
-            bookmarkItems.value = bookmarks;
+            formState.selectedBookmarks = bookmarks;
             lastSavedBookmarkItems.value = Array.from(bookmarks);
           })
           .catch((e) => {
@@ -993,7 +1028,7 @@ export default defineComponent({
         templateApi
           .getExceptionsById(computedRightId.value)
           .then((exceptions: Array<RightRest>) => {
-            exceptionTemplateItems.value = exceptions;
+            formState.exceptionTemplates = exceptions;
             lastSavedExceptionTemplateItems.value = Array.from(exceptions);
           })
           .catch((e) => {
@@ -1007,16 +1042,16 @@ export default defineComponent({
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
-      bookmarkItems.value = bookmarkItems.value.concat(bookmarks);
-      bookmarkItems.value = uniqWith(bookmarkItems.value, isEqual).sort(
+      formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
+      formState.selectedBookmarks = uniqWith(formState.selectedBookmarks, isEqual).sort(
         (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1),
       );
       renderBookmarkKey.value += 1;
     };
 
     const deleteBookmarkEntry = (bookmark: BookmarkRest) => {
-      const editedIndex = bookmarkItems.value.indexOf(bookmark);
-      bookmarkItems.value.splice(editedIndex, 1);
+      const editedIndex = formState.selectedBookmarks.indexOf(bookmark);
+      formState.selectedBookmarks.splice(editedIndex, 1);
     };
 
     // Groups
@@ -1116,7 +1151,6 @@ export default defineComponent({
       basisAccessState,
       basisStorage,
       bookmarkDialogOn,
-      bookmarkItems,
       bookmarkHeaders,
       cardTitle,
       computedRightId,
@@ -1130,6 +1164,7 @@ export default defineComponent({
       errorAccessState,
       errorEndDate,
       errorTemplateName,
+      errorSources,
       errorStartDate,
       exceptionsAllowed,
       formWasChanged,
@@ -1154,7 +1189,6 @@ export default defineComponent({
       renderBookmarkKey,
       renderTemplateKey,
       startDateFormatted,
-      exceptionTemplateItems,
       exceptionTemplateHeaders,
       readOnlyProps,
       unsavedChangesDialog,
@@ -1316,7 +1350,13 @@ export default defineComponent({
           v-model="errorMsgIsActive"
           color="error"
       >
-        {{ errorMsg }}
+        <div>{{ errorMsg }}</div>
+        <v-list-item
+            prepend-icon="mdi-disc"
+            v-for="(item, i) in errorSources"
+            :key="i"
+            :title="`${item}`"
+        ></v-list-item>
       </v-snackbar>
       <v-snackbar
           contained
@@ -1477,7 +1517,7 @@ export default defineComponent({
                   <v-data-table
                     :key="renderBookmarkKey"
                     :headers="bookmarkHeaders"
-                    :items="bookmarkItems"
+                    :items="formState.selectedBookmarks"
                     item-value="bookmarkId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
@@ -1512,7 +1552,7 @@ export default defineComponent({
                       v-if="isEditable"
                       color="blue darken-1"
                       @click="selectBookmark"
-                      :disabled="!isEditable || bookmarkItems.length > 0"
+                      :disabled="!isEditable || formState.selectedBookmarks.length > 0"
                   >Gespeicherte Suche verknüpfen
                   </v-btn>
                   <v-tooltip location="bottom">
@@ -1549,7 +1589,7 @@ export default defineComponent({
                   <v-data-table
                     :key="renderTemplateKey"
                     :headers="exceptionTemplateHeaders"
-                    :items="exceptionTemplateItems"
+                    :items="formState.exceptionTemplates"
                     item-value="rightId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
