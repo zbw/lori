@@ -929,20 +929,35 @@ export default defineComponent({
         align: "start",
         value: "bookmarkId",
         sortable: true,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
       {
         title: "Name",
         align: "start",
         value: "bookmarkName",
         sortable: true,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
       {
         title: "Beschreibung",
         align: "start",
         value: "description",
-        sortable: true,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
-      { title: "Aktionen", value: "actions", sortable: false },
+      {
+        title: "Aktionen",
+        value: "actions",
+        sortable: false,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
+      },
     ];
 
     // Template Exceptions
@@ -963,19 +978,35 @@ export default defineComponent({
         align: "start",
         value: "rightId",
         sortable: true,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
       {
         title: "Name",
         align: "start",
         value: "templateName",
         sortable: true,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
       {
         title: "Beschreibung",
         align: "start",
         value: "templateDescription",
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
       },
-      { title: "Aktionen", value: "actions", sortable: false },
+      {
+        title: "Aktionen",
+        value: "actions",
+        sortable: false,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
+      },
     ];
 
     const addNewException = (excTemplate: RightRest) => {
@@ -1393,7 +1424,7 @@ export default defineComponent({
             </v-btn>
           </div>
         </template>
-        <span v-if="isNew || isTemplateAndException">Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-if="isTemplateAndException">Ausnahme-Templates können nicht gelöscht werden</span>
         <span v-else>Löschen</span>
       </v-tooltip>
 
@@ -1512,7 +1543,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Verknüpfte Suchen</v-col>
+                <v-col cols="4"> Verknüpfte Suche</v-col>
                 <v-col cols="8">
                   <v-data-table
                     :key="renderBookmarkKey"
@@ -1529,16 +1560,12 @@ export default defineComponent({
                       >
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
-                            <v-btn
+                            <v-icon
                                 :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
                                 @click="deleteBookmarkEntry(item)"
                                 >
-                            <v-icon
-                                small
-                            >
                               mdi-delete
                             </v-icon>
-                            </v-btn>
                           </div>
                         </template>
                         <span>
@@ -1560,6 +1587,7 @@ export default defineComponent({
                       <div v-bind="props" class="d-inline-block">
                       <v-btn
                         v-if="!isEditable"
+                        color="blue darken-1"
                         :disabled="!isEditable"
                         v-bind="props"
                         >Gespeicherte Suche verknüpfen
@@ -1584,7 +1612,7 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row v-if="exceptionsAllowed">
-                <v-col cols="4">Ausnahmen</v-col>
+                <v-col cols="4">Ausnahme</v-col>
                 <v-col cols="8">
                   <v-data-table
                     :key="renderTemplateKey"

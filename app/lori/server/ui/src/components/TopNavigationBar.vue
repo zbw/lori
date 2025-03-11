@@ -135,7 +135,8 @@ export default defineComponent({
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>
 <template>
   <v-dialog
       v-model="dialogStore.groupOverviewActivated"
@@ -210,9 +211,10 @@ export default defineComponent({
           </template>
         </v-hover>
       </v-list>
-      <v-list v-if="userStore.isLoggedIn" class="cursor-pointer">
+      <v-list v-if="userStore.isLoggedIn" class="cursor-pointer pa-0">
+        <!-- First list item: User email -->
         <v-hover>
-          <template v-slot:default="{isHovering, props }">
+          <template v-slot:default="{ isHovering, props }">
             <v-list-item
                 v-bind="props"
                 :key="1"
@@ -223,20 +225,20 @@ export default defineComponent({
             </v-list-item>
           </template>
         </v-hover>
-        <v-list-item :key="2" :value="2">
-          <v-hover>
-            <template v-slot:default="{isHovering, props }">
-              <v-list-item
-                  v-bind="props"
-                  :key="1"
-                  :value="1"
-                  :base-color="isHovering ? 'primary' : undefined"
-              >
-                <v-list-item-title @click="logout">Logout</v-list-item-title>
-              </v-list-item>
-            </template>
-          </v-hover>
-        </v-list-item>
+
+        <!-- Second list item: Logout button -->
+        <v-hover>
+          <template v-slot:default="{ isHovering, props }">
+            <v-list-item
+                v-bind="props"
+                :key="2"
+                :value="2"
+                :base-color="isHovering ? 'primary' : undefined"
+            >
+              <v-list-item-title @click="logout">Logout</v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-hover>
       </v-list>
     </v-menu>
     <v-dialog v-model="loginError" max-width="290">
