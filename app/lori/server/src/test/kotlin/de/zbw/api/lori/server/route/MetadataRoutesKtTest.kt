@@ -264,8 +264,7 @@ class MetadataRoutesKtTest {
                 title = "Important title",
                 titleJournal = null,
                 titleSeries = null,
-                zdbIdJournal = null,
-                zdbIdSeries = null,
+                zdbIds = listOf("zdbIds"),
             )
 
         fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)

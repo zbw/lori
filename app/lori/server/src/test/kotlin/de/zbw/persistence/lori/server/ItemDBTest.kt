@@ -253,8 +253,7 @@ class ItemDBTest : DatabaseTest() {
                 title = "Important title",
                 titleJournal = "anything",
                 titleSeries = null,
-                zdbIdJournal = "some journal id",
-                zdbIdSeries = "some series id",
+                zdbIds = listOf("some journal id"),
             )
 
         val TEST_RIGHT =

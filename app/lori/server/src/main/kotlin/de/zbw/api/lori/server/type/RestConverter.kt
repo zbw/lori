@@ -175,8 +175,7 @@ fun MetadataRest.toBusiness() =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zdbIdJournal = zdbIdJournal,
-        zdbIdSeries = zdbIdSeries,
+        zdbIds = zdbIds,
     )
 
 fun ItemMetadata.toRest(): MetadataRest =
@@ -208,8 +207,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         title = title,
         titleJournal = titleJournal,
         titleSeries = titleSeries,
-        zdbIdJournal = zdbIdJournal,
-        zdbIdSeries = zdbIdSeries,
+        zdbIds = zdbIds,
     )
 
 fun RightRest.toBusiness(): ItemRight =
@@ -523,21 +521,21 @@ fun DAItem.toBusiness(
                     }
                     it[0]
                 },
-            // TODO(CB): Will be fixed in next commmit as well
-            zdbIdJournal =
-                RestConverter.extractMetadata("dc.relation.journalzdbid", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple zdbIdJournals: $this")
-                    }
-                    it[0]
-                },
-            zdbIdSeries =
-                RestConverter.extractMetadata("dc.relation.serieszdbid", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple zdbIDSeries: $this")
-                    }
-                    it[0]
-                },
+            zdbIds =
+                listOfNotNull(
+                    RestConverter.extractMetadata("dc.relation.journalzdbid", metadata)?.let {
+                        if (it.size > 1) {
+                            LOG.warn("Item has multiple zdbIdJournals: $this")
+                        }
+                        it[0]
+                    },
+                    RestConverter.extractMetadata("dc.relation.serieszdbid", metadata)?.let {
+                        if (it.size > 1) {
+                            LOG.warn("Item has multiple zdbIDSeries: $this")
+                        }
+                        it[0]
+                    },
+                ),
         )
     }
 }

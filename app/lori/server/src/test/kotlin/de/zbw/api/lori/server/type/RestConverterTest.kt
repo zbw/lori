@@ -82,8 +82,7 @@ class RestConverterTest {
                         title = TEST_METADATA.title,
                         titleJournal = TEST_METADATA.titleJournal,
                         titleSeries = TEST_METADATA.titleSeries,
-                        zdbIdJournal = TEST_METADATA.zdbIdJournal,
-                        zdbIdSeries = TEST_METADATA.zdbIdSeries,
+                        zdbIds = TEST_METADATA.zdbIds,
                     ),
                 rights =
                     listOf(
@@ -167,8 +166,7 @@ class RestConverterTest {
                 title = "some_title",
                 titleJournal = "some_journal",
                 titleSeries = "some_series",
-                zdbIdJournal = null,
-                zdbIdSeries = null,
+                zdbIds = listOf("zdbId1", "zdbId2"),
             )
 
         // when
@@ -645,8 +643,7 @@ class RestConverterTest {
                 title = "Important title",
                 titleJournal = null,
                 titleSeries = null,
-                zdbIdJournal = null,
-                zdbIdSeries = null,
+                zdbIds = listOf("zdbIds"),
             )
 
         val TEST_RIGHT =
@@ -867,6 +864,16 @@ class RestConverterTest {
                         DAMetadata(
                             key = "dc.relation.ispartofseries",
                             value = "seriespart",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.relation.journalzdbid",
+                            value = "zdbId1",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.relation.serieszdbid",
+                            value = "zdbId2",
                             language = "EN",
                         ),
                     ),

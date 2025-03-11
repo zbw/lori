@@ -877,8 +877,7 @@ class ItemRoutesKtTest {
                 title = "Important title",
                 titleJournal = null,
                 titleSeries = null,
-                zdbIdJournal = null,
-                zdbIdSeries = null,
+                zdbIds = listOf("zdb"),
             )
 
         val TEST_ITEM =

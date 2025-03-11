@@ -199,13 +199,9 @@ export default defineComponent({
               <v-col>Titel Serie</v-col>
               <v-col>{{ prettyPrint(currentMetadata.titleSeries) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.zdbIdJournal">
-              <v-col>ZDB-ID (Zeitschrift)</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.zdbIdJournal) }}</v-col>
-            </v-row>
-            <v-row v-show="currentMetadata.zdbIdSeries">
-              <v-col>ZDB-ID (Serie)</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.zdbIdSeries) }}</v-col>
+            <v-row v-show="currentMetadata.zdbIds">
+              <v-col>ZDB-IDs</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.zdbIds?.join()) }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.licenceUrl">
               <v-col>OC-/CC-Lizenz-URL</v-col>

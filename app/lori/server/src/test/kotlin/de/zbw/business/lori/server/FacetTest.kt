@@ -162,11 +162,10 @@ class FacetTest : DatabaseTest() {
                     itemSigel3.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemZDB1.zdbIdJournal to 1,
-                    itemZDB2.zdbIdJournal to 1,
-                    itemZDB3.zdbIdJournal to 1,
-                    itemSigel1.zdbIdJournal to 3,
-                    itemZDB1.zdbIdSeries to 6,
+                    itemZDB1.zdbIds to 1,
+                    itemZDB2.zdbIds to 1,
+                    itemZDB3.zdbIds to 1,
+                    itemSigel1.zdbIds to 3,
                 ).toMap(),
                 listOf(
                     AccessState.OPEN to 2,
@@ -194,8 +193,7 @@ class FacetTest : DatabaseTest() {
                     itemSigel1.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemSigel1.zdbIdJournal to 1,
-                    itemZDB1.zdbIdSeries to 1,
+                    itemSigel1.zdbIds to 1,
                 ).toMap(),
                 listOf(AccessState.OPEN to 1).toMap(),
                 "search for all items, filter by PaketSigel Id",
@@ -203,11 +201,7 @@ class FacetTest : DatabaseTest() {
             arrayOf(
                 "col:'common'",
                 listOf(
-                    ZDBIdFilter(
-                        listOf(
-                            itemZDB1.zdbIdJournal!!,
-                        ),
-                    ),
+                    ZDBIdFilter(itemZDB1.zdbIds!!),
                 ),
                 emptyList<RightSearchFilter>(),
                 setOf(
@@ -221,8 +215,7 @@ class FacetTest : DatabaseTest() {
                     itemZDB1.paketSigel to 1,
                 ).toMap(),
                 listOf(
-                    itemZDB1.zdbIdJournal to 1,
-                    itemZDB1.zdbIdSeries to 1,
+                    itemZDB1.zdbIds to 1,
                 ).toMap(),
                 listOf(AccessState.CLOSED to 1).toMap(),
                 "search for all items, filter by ZDB-Id",
@@ -233,11 +226,7 @@ class FacetTest : DatabaseTest() {
                     PaketSigelFilter(
                         itemSigel1.paketSigel,
                     ),
-                    ZDBIdFilter(
-                        listOf(
-                            itemZDB1.zdbIdJournal,
-                        ),
-                    ),
+                    ZDBIdFilter(itemZDB1.zdbIds),
                 ),
                 emptyList<RightSearchFilter>(),
                 emptySet<ItemMetadata>(),
@@ -259,7 +248,7 @@ class FacetTest : DatabaseTest() {
         expectedNumberOfResults: Int,
         expectedPublicationType: Map<PublicationType, Int>,
         expectedPaketSigelIds: Map<List<String>, Int>,
-        expectedZDBIds: Map<String, Int>,
+        expectedZDBIds: Map<List<String>, Int>,
         expectedAccessState: Map<AccessState, Int>,
         description: String,
     ) {
@@ -296,7 +285,7 @@ class FacetTest : DatabaseTest() {
         assertThat(
             searchResult.zdbIds,
             `is`(
-                expectedZDBIds,
+                LoriServerBackend.sumUpIndividualMapEntries(expectedZDBIds),
             ),
         )
 
@@ -331,7 +320,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "zdb1",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_1,
+                zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
@@ -348,7 +337,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "zdb2",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_2,
+                zdbIds = listOf(ZDB_2),
                 publicationYear = 2012,
                 publicationType = PublicationType.CONFERENCE_PAPER,
             )
@@ -365,7 +354,7 @@ class FacetTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "zdb3",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_3,
+                zdbIds = listOf(ZDB_3),
                 publicationYear = 2014,
                 publicationType = PublicationType.PROCEEDING,
             )

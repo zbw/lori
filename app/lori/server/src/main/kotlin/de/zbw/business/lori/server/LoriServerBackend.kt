@@ -422,7 +422,7 @@ class LoriServerBackend(
                 paketSigels = sumUpIndividualMapEntries(facets.paketSigels),
                 publicationType = facets.publicationType,
                 templateNamesToOcc = getRightIdsByTemplateNames(facets.templateIdToOccurence),
-                zdbIds = facets.zdbIdsJournal + facets.zdbIdsSeries,
+                zdbIds = sumUpIndividualMapEntries(facets.zdbIds),
                 licenceUrl = facets.licenceUrls,
                 filtersAsQuery =
                     SearchFilter.filtersToString(
@@ -872,26 +872,6 @@ class LoriServerBackend(
          * Valid special characters: '-:;'
          */
         val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
-
-        fun parseSearchTermToFilters(s: String?): List<SearchFilter> =
-            s?.let { tokenizeSearchInput(it) }?.mapNotNull {
-                SearchFilter.toSearchFilter(
-                    it.substringBefore(":"),
-                    it.substringAfter(":").trim(),
-                )
-            }
-                ?: emptyList()
-
-        private fun tokenizeSearchInput(s: String): List<String> {
-            val iter = SEARCH_KEY_REGEX.findAll(s).iterator()
-            return generateSequence {
-                if (iter.hasNext()) {
-                    iter.next().value.filter { it != '\'' && it != '\"' }
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
 
         fun hasSearchTokensWithNoKey(s: String): Boolean =
             s

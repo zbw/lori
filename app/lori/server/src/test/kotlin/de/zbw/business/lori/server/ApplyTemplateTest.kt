@@ -172,7 +172,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 ),
             )
             // Update old item from database so it no longer matches for bookmark
-            backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIdJournal = "foobar")))
+            backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIds = listOf("foobar"))))
 
             // Apply Template
             val received3: TemplateApplicationResult? =
@@ -476,7 +476,7 @@ class ApplyTemplateTest : DatabaseTest() {
             TEST_METADATA.copy(
                 handle = "item1_zdb1",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_1,
+                zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
@@ -484,7 +484,7 @@ class ApplyTemplateTest : DatabaseTest() {
             TEST_METADATA.copy(
                 handle = "item2_zdb2",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_1,
+                zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
@@ -492,24 +492,24 @@ class ApplyTemplateTest : DatabaseTest() {
             TEST_METADATA.copy(
                 handle = "item3_zdb3",
                 collectionName = "common zdb",
-                zdbIdJournal = ZDB_1,
+                zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
                 publicationType = PublicationType.BOOK,
             )
         val item1ZDB2 =
             TEST_METADATA.copy(
                 handle = "foo-zdb2",
-                zdbIdJournal = ZDB_2,
+                zdbIds = listOf(ZDB_2),
             )
         val item2ZDB2 =
             TEST_METADATA.copy(
                 handle = "bar-zdb2",
-                zdbIdJournal = ZDB_2,
+                zdbIds = listOf(ZDB_2),
             )
         val item1ZDB3 =
             TEST_METADATA.copy(
                 handle = "item1_zdb3",
-                zdbIdJournal = ZDB_3,
+                zdbIds = listOf(ZDB_3),
             )
     }
 }

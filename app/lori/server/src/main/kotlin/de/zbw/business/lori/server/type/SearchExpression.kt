@@ -11,7 +11,7 @@ import com.github.h0tk3y.betterParse.lexer.TokenMatch
 import com.github.h0tk3y.betterParse.lexer.literalToken
 import com.github.h0tk3y.betterParse.lexer.regexToken
 import com.github.h0tk3y.betterParse.parser.Parser
-import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.LoriServerBackend.Companion.SEARCH_KEY_REGEX
 import de.zbw.business.lori.server.SearchFilter
 
 /**
@@ -49,7 +49,7 @@ data class SEPar(
 ) : SearchExpression()
 
 object SearchGrammar : Grammar<SearchExpression>() {
-    val id by regexToken(LoriServerBackend.SEARCH_KEY_REGEX)
+    val id by regexToken(SEARCH_KEY_REGEX)
     private val lpar by literalToken("(")
     private val rpar by literalToken(")")
     val not by literalToken("!")
@@ -66,8 +66,7 @@ object SearchGrammar : Grammar<SearchExpression>() {
     private val term: Parser<SearchExpression> by
         (
             id map { searchPairInQuery: TokenMatch ->
-                LoriServerBackend
-                    .parseSearchTermToFilters(searchPairInQuery.text)
+                parseSearchTermToFilters(searchPairInQuery.text)
                     .takeIf { it.isNotEmpty() }
                     ?.let { it: List<SearchFilter> ->
                         SEVariable(it.first())
@@ -82,6 +81,28 @@ object SearchGrammar : Grammar<SearchExpression>() {
     private val orChain by leftAssociative(andChain, or) { a, _, b -> SEOr(a, b) }
 
     override val rootParser by orChain
+
+    fun parseSearchTermToFilters(s: String?): List<SearchFilter> =
+        s?.let { tokenizeSearchInput(it) }?.mapNotNull {
+            SearchFilter.toSearchFilter(
+                it.substringBefore(":"),
+                it
+                    .substringAfter(":")
+                    .trim(),
+            )
+        }
+            ?: emptyList()
+
+    fun tokenizeSearchInput(s: String): List<String> {
+        val iter = SEARCH_KEY_REGEX.findAll(s).iterator()
+        return generateSequence {
+            if (iter.hasNext()) {
+                iter.next().value.filter { it != '\'' && it != '\"' }
+            } else {
+                null
+            }
+        }.takeWhile { true }.toList()
+    }
 }
 
 class ParsingException(

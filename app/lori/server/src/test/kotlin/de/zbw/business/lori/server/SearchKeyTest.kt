@@ -57,7 +57,7 @@ class SearchKeyTest : DatabaseTest() {
     fun createDataForSearchQuery() =
         arrayOf(
             arrayOf(
-                "!${FilterType.ZDB_ID.keyAlias}:'${METADATA_TEST.zdbIdJournal}'",
+                "!${FilterType.ZDB_ID.keyAlias}:'${METADATA_TEST.zdbIds?.get(0)}'",
                 10,
                 0,
                 setOf(METADATA_TEST_2, METADATA_TEST_3),
@@ -163,11 +163,12 @@ class SearchKeyTest : DatabaseTest() {
         val METADATA_TEST =
             TEST_Metadata.copy(
                 handle = TEST_HANDLE,
+                zdbIds = listOf("zdbId"),
             )
         val METADATA_TEST_2 =
             TEST_Metadata.copy(
                 handle = "second",
-                zdbIdJournal = null,
+                zdbIds = null,
                 licenceUrl = "foobar.baz",
                 licenceUrlFilter = "other",
                 paketSigel = listOf("someothersigel2"),
@@ -175,7 +176,7 @@ class SearchKeyTest : DatabaseTest() {
         val METADATA_TEST_3 =
             TEST_Metadata.copy(
                 handle = "third",
-                zdbIdJournal = "someotherzdbid",
+                zdbIds = listOf("someotherzdbid"),
                 licenceUrl = "foobar",
                 licenceUrlFilter = "other",
                 paketSigel = listOf("someothersigel"),

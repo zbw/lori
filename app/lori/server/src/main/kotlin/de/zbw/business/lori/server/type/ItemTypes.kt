@@ -42,8 +42,7 @@ data class ItemMetadata(
     val title: String,
     val titleJournal: String?,
     val titleSeries: String?,
-    val zdbIdJournal: String?,
-    val zdbIdSeries: String?,
+    val zdbIds: List<String>?,
 )
 
 enum class AccessState(
