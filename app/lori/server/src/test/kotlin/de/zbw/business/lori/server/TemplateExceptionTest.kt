@@ -113,12 +113,12 @@ class TemplateExceptionTest : DatabaseTest() {
         val item1ZDB2 =
             TEST_METADATA.copy(
                 handle = "foo-zdb2",
-                zdbIdJournal = ZDB_2,
+                zdbIds = listOf(ZDB_2),
             )
         val item2ZDB2 =
             TEST_METADATA.copy(
                 handle = "bar-zdb2",
-                zdbIdJournal = ZDB_2,
+                zdbIds = listOf(ZDB_2),
             )
     }
 }

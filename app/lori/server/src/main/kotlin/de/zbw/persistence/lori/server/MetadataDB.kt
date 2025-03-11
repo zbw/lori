@@ -256,8 +256,7 @@ class MetadataDB(
         const val COLUMN_METADATA_TITLE = "title"
         const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
-        const val COLUMN_METADATA_ZDB_ID_JOURNAL = "zdb_id_journal"
-        const val COLUMN_METADATA_ZDB_ID_SERIES = "zdb_id_series"
+        const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
 
         const val STATEMENT_METADATA_CONTAINS_HANDLE =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE handle=?)"
@@ -270,12 +269,12 @@ class MetadataDB(
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
@@ -292,12 +291,12 @@ class MetadataDB(
         const val STATEMENT_SELECT_ALL_METADATA =
             "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle," +
-                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES," +
+                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
                 "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME"
@@ -314,11 +313,11 @@ class MetadataDB(
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED) " +
                 "VALUES(" +
                 "?,?,?,?," +
@@ -326,8 +325,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?,?,?,?," +
-                "?) " +
+                "?,?,?,?,?)" +
                 "ON CONFLICT (handle) " +
                 "DO UPDATE SET " +
                 "ppn = EXCLUDED.ppn," +
@@ -340,7 +338,7 @@ class MetadataDB(
                 "doi = EXCLUDED.doi," +
                 "isbn = EXCLUDED.isbn," +
                 "$COLUMN_METADATA_PAKET_SIGEL = EXCLUDED.$COLUMN_METADATA_PAKET_SIGEL," +
-                "$COLUMN_METADATA_ZDB_ID_JOURNAL = EXCLUDED.$COLUMN_METADATA_ZDB_ID_JOURNAL," +
+                "$COLUMN_METADATA_ZDB_IDS = EXCLUDED.$COLUMN_METADATA_ZDB_IDS," +
                 "issn = EXCLUDED.issn," +
                 "last_updated_on = EXCLUDED.last_updated_on," +
                 "last_updated_by = EXCLUDED.last_updated_by," +
@@ -354,7 +352,6 @@ class MetadataDB(
                 "licence_url = EXCLUDED.licence_url," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                "$COLUMN_METADATA_ZDB_ID_SERIES = EXCLUDED.$COLUMN_METADATA_ZDB_ID_SERIES," +
                 "$COLUMN_METADATA_LICENCE_URL_FILTER = EXCLUDED.$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED = EXCLUDED.$COLUMN_METADATA_DELETED;"
 
@@ -365,11 +362,11 @@ class MetadataDB(
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_ID_JOURNAL,issn," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
-                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_ZDB_ID_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED" +
                 ") " +
                 "VALUES(" +
@@ -378,8 +375,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?,?,?,?," +
-                "?)"
+                "?,?,?,?,?)"
 
         fun extractMetadataRS(rs: ResultSet) =
             ItemMetadata(
@@ -394,7 +390,7 @@ class MetadataDB(
                 doi = rs.getString(9),
                 isbn = rs.getString(10),
                 paketSigel = (rs.getArray(11)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                zdbIdJournal = rs.getString(12),
+                zdbIds = (rs.getArray(12)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 issn = rs.getString(13),
                 createdOn = rs.getTimestamp(14)?.toOffsetDateTime(),
                 lastUpdatedOn = rs.getTimestamp(15)?.toOffsetDateTime(),
@@ -410,9 +406,8 @@ class MetadataDB(
                 licenceUrl = rs.getString(25),
                 subCommunityName = rs.getString(26),
                 isPartOfSeries = (rs.getArray(27)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                zdbIdSeries = rs.getString(28),
-                licenceUrlFilter = rs.getString(29),
-                deleted = rs.getBoolean(30),
+                licenceUrlFilter = rs.getString(28),
+                deleted = rs.getBoolean(29),
             )
 
         private fun insertUpsertMetadataSetParameters(
@@ -449,8 +444,8 @@ class MetadataDB(
                 this.setIfNotNull(11, itemMetadata.paketSigel) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(12, itemMetadata.zdbIdJournal) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                this.setIfNotNull(12, itemMetadata.zdbIds) { value, idx, prepStmt ->
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(13, itemMetadata.issn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
@@ -493,13 +488,10 @@ class MetadataDB(
                 this.setIfNotNull(27, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(28, itemMetadata.zdbIdSeries) { value, idx, prepStmt ->
+                this.setIfNotNull(28, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(29, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
-                this.setBoolean(30, itemMetadata.deleted)
+                this.setBoolean(29, itemMetadata.deleted)
             }
         }
     }

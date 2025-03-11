@@ -27,6 +27,8 @@ import de.zbw.business.lori.server.type.PublicationType
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlin.text.dropLast
+import kotlin.text.last
 
 /**
  * Helper object for parsing all sort of query parameters.
@@ -75,7 +77,12 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val paketSigelIds: List<String> = s.split(",".toRegex())
+        val paketSigelIds: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
         return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilter(it) }
     }
 
@@ -83,7 +90,12 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val zdbIds: List<String> = s.split(",".toRegex())
+        val zdbIds: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
         return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilter(it) }
     }
 
@@ -91,7 +103,12 @@ object QueryParameterParser {
         if (s == null) {
             return null
         }
-        val seriesNames: List<String> = s.split(",".toRegex())
+        val seriesNames: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
         return seriesNames.takeIf { it.isNotEmpty() }?.let { SeriesFilter(it) }
     }
 
@@ -197,6 +214,8 @@ object QueryParameterParser {
             ?.split(",".toRegex())
             ?.takeIf {
                 it.isNotEmpty()
+            }?.map {
+                escapeWildcards(it)
             }?.let {
                 TemplateNameFilter(it)
             }
@@ -244,5 +263,17 @@ object QueryParameterParser {
             ?.let { parseDate(it) }
             ?.let { DashboardTimeIntervalEndFilter(it) }
 
-    fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(it) }
+    fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(escapeWildcards(it)) }
+
+    fun escapeWildcards(s: String): String {
+        val escaped =
+            s
+                .replace("&", "\\&")
+                .replace("_", "\\_")
+        return if (escaped.last() == '*') {
+            escaped.dropLast(1) + "%"
+        } else {
+            escaped
+        }
+    }
 }

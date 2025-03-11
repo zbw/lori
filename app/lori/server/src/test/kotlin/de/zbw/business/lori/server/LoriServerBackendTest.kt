@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -271,7 +272,7 @@ class LoriServerBackendTest : DatabaseTest() {
         expectedKeys: String,
         description: String,
     ) {
-        val receivedPairs = LoriServerBackend.parseSearchTermToFilters(searchTerm)
+        val receivedPairs = SearchGrammar.parseSearchTermToFilters(searchTerm)
         assertThat(
             description,
             receivedPairs.joinToString(separator = ","),
@@ -302,8 +303,8 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "search_test_1", zdbIdJournal = "zbdTest"),
-                    TEST_METADATA.copy(handle = "search_test_2", zdbIdJournal = "zbdTest"),
+                    TEST_METADATA.copy(handle = "search_test_1", zdbIds = listOf("zbdTest")),
+                    TEST_METADATA.copy(handle = "search_test_2", zdbIds = listOf("zbdTest")),
                 )
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
@@ -314,7 +315,7 @@ class LoriServerBackendTest : DatabaseTest() {
             val (number, items) =
                 runBlocking {
                     backend.searchQuery(
-                        "zdb:${givenMetadataEntries[0].zdbIdJournal!!}",
+                        "zdb:${givenMetadataEntries[0].zdbIds?.get(0)}",
                         5,
                         0,
                     )
@@ -789,8 +790,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 title = "Important title",
                 titleJournal = null,
                 titleSeries = null,
-                zdbIdJournal = null,
-                zdbIdSeries = null,
+                zdbIds = listOf("zdbId"),
             )
 
         private val TEST_RIGHT =

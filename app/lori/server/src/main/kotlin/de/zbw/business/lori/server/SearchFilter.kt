@@ -9,7 +9,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_E
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_ID_SERIES
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
@@ -52,18 +51,32 @@ abstract class SearchFilter(
             try {
                 when (searchKey) {
                     "acc" -> QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
-                    "com" -> CommunityNameFilter(searchValue)
-                    "col" -> CollectionNameFilter(searchValue)
-                    "hdl" -> HandleFilter(searchValue)
+                    "com" ->
+                        CommunityNameFilter(searchValue)
+                    "col" ->
+                        CollectionNameFilter(searchValue)
+                    "hdl" ->
+                        HandleFilter(searchValue)
                     "sig" -> QueryParameterParser.parsePaketSigelFilter(searchValue)
-                    "tit" -> TitleFilter(searchValue)
+                    "tit" ->
+                        TitleFilter(searchValue)
                     "zdb" -> QueryParameterParser.parseZDBIdFilter(searchValue)
-                    "hdlcol" -> CollectionHandleFilter(searchValue)
-                    "hdlcom" -> CommunityHandleFilter(searchValue)
-                    "hdlsubcom" -> SubcommunityHandleFilter(searchValue)
+                    "hdlcol" ->
+                        CollectionHandleFilter(searchValue)
+                    "hdlcom" ->
+                        CommunityHandleFilter(
+                            searchValue,
+                        )
+                    "hdlsubcom" ->
+                        SubcommunityHandleFilter(
+                            searchValue,
+                        )
                     "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
-                    "lur" -> LicenceUrlFilter(searchValue)
-                    "subcom" -> SubcommunityNameFilter(searchValue)
+                    "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
+                    "subcom" ->
+                        SubcommunityNameFilter(
+                            searchValue,
+                        )
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
                     "typ" ->
                         QueryParameterParser.parsePublicationTypeFilter(searchValue)
@@ -143,9 +156,18 @@ abstract class TSVectorMetadataSearchFilter(
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         fun prepareValue(v: String): String =
-            insertDefaultAndOperator(
-                escapeSpecialChars(v),
+            escapeWildcards(
+                insertDefaultAndOperator(
+                    escapeSpecialChars(v),
+                ),
             )
+
+        fun escapeWildcards(s: String): String =
+            if (s.last() == '*') {
+                s.dropLast(1) + ":*"
+            } else {
+                s
+            }
 
         private fun escapeSpecialChars(v: String): String =
             v
@@ -251,7 +273,7 @@ class LicenceUrlFilter(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER,
     ) {
-    override fun toWhereClause(): String = "(LOWER($dbColumnName) = ? AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "(LOWER($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -363,7 +385,13 @@ class PaketSigelFilter(
     ) {
     override fun toWhereClause(): String =
         paketSigels.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
-            "$dbColumnName @> ARRAY[?]::text[]"
+            "(" +
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (element ILIKE ?)" +
+                ")" +
+                ")"
         }
 
     override fun setSQLParameter(
@@ -391,12 +419,17 @@ class PaketSigelFilter(
 class ZDBIdFilter(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ZDB_ID_JOURNAL,
+        MetadataDB.COLUMN_METADATA_ZDB_IDS,
     ) {
     override fun toWhereClause(): String =
-        zdbIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "(LOWER($dbColumnName) = LOWER(?) AND $dbColumnName is not null) OR " +
-                "(LOWER($COLUMN_METADATA_ZDB_ID_SERIES) = LOWER(?) AND $COLUMN_METADATA_ZDB_ID_SERIES is not null)"
+        zdbIds.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
+            "(" +
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
         }
 
     override fun setSQLParameter(
@@ -405,7 +438,6 @@ class ZDBIdFilter(
     ): Int {
         var localCounter = counter
         zdbIds.forEach {
-            preparedStatement.setString(localCounter++, it)
             preparedStatement.setString(localCounter++, it)
         }
         return localCounter
@@ -429,7 +461,13 @@ class SeriesFilter(
     ) {
     override fun toWhereClause(): String =
         seriesNames.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
-            "$dbColumnName @> ARRAY[?]::text[]"
+            "(" +
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
         }
 
     override fun setSQLParameter(
@@ -660,10 +698,12 @@ class TemplateNameFilter(
     val templateNames: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_TEMPLATE_NAME) {
     override fun toWhereClause(): String =
-        "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true AND " +
-            templateNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "(LOWER(${ALIAS_ITEM_RIGHT}.$dbColumnName) = LOWER(?) AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null)"
-            } + " AND $WHERE_REQUIRE_RIGHT_ID)"
+        "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true" +
+            " AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null" +
+            " AND $WHERE_REQUIRE_RIGHT_ID" +
+            templateNames.joinToString(prefix = " AND (", postfix = ")", separator = " AND ") {
+                "LOWER(${ALIAS_ITEM_RIGHT}.$dbColumnName) ILIKE ?"
+            } + ")"
 
     override fun setSQLParameter(
         counter: Int,

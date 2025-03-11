@@ -131,12 +131,8 @@ export default defineComponent({
         value: "titleSeries",
       },
       {
-        title: "ZDB-ID (Journal)",
-        value: "zdbIdJournal",
-      },
-      {
-        title: "ZDB-ID (Serie)",
-        value: "zdbIdSeries",
+        title: "ZDB-IDs (Journal + Serie)",
+        value: "zdbIds",
       },
       {
         title: "Serie",
@@ -1174,6 +1170,12 @@ table.special, th.special, td.special {
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     col:'(subject1 | subject2) & !subject3'
+                  </p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Rechtstrunkierung ist ebenfalls möglich für alle Textbasierten Suchwerte mit *, z.B:
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    lur:'by-nc-nd*'
                   </p>
                 </v-card-text>
               </v-card>

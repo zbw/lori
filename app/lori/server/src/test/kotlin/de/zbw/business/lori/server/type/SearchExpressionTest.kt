@@ -117,21 +117,20 @@ class SearchExpressionTest {
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
                 "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND" +
-                    " ((LOWER(zdb_id_journal) = LOWER(?) AND zdb_id_journal is not null)" +
-                    " OR (LOWER(zdb_id_series) = LOWER(?) AND zdb_id_series is not null)))" +
+                    " ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null))" +
                     " OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
                 "zdb key searchs on two fields",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "(paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
+                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negation, parenthesis, or, and",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "(paket_sigel @> ARRAY[?]::text[] AND paket_sigel is not null)" +
+                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negate term before paranthesis",

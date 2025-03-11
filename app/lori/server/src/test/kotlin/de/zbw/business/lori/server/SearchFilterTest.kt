@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
@@ -73,18 +74,15 @@ class SearchFilterTest : DatabaseTest() {
         listOf(
             TEST_Metadata.copy(
                 handle = "journalId only",
-                zdbIdJournal = "555nase",
-                zdbIdSeries = null,
+                zdbIds = listOf("555nase"),
             ),
             TEST_Metadata.copy(
                 handle = "seriesId only",
-                zdbIdJournal = null,
-                zdbIdSeries = "444nase",
+                zdbIds = listOf("444nase"),
             ),
             TEST_Metadata.copy(
                 handle = "both zdb ids",
-                zdbIdJournal = "444nase",
-                zdbIdSeries = "333nase",
+                zdbIds = listOf("444nase", "333nase"),
             ),
         )
 
@@ -430,7 +428,7 @@ class SearchFilterTest : DatabaseTest() {
         )
 
         val roundTripFilters =
-            LoriServerBackend.parseSearchTermToFilters(
+            SearchGrammar.parseSearchTermToFilters(
                 searchTermReceived.replace(" & ", " "),
             )
         assertThat(
