@@ -288,6 +288,9 @@ export default defineComponent({
 .multi-line {
   white-space: pre-line;
 }
+.tooltip-btn {
+  margin-right: 20px; /* Adds space between the two buttons */
+}
 </style>
 <template>
   <v-card position="relative">
@@ -400,14 +403,24 @@ export default defineComponent({
         <template v-slot:item.actions="{ item }">
           <v-tooltip location="bottom" text="Kopieren">
             <template v-slot:activator="{ props }">
-              <v-icon small v-bind="props" @click="copyTemplate(item)">
+              <v-icon
+                  class="tooltip-btn"
+                  small
+                  v-bind="props"
+                  @click="copyTemplate(item)"
+              >
                 mdi-content-copy
               </v-icon>
             </template>
           </v-tooltip>
           <v-tooltip location="bottom" text="Editieren">
             <template v-slot:activator="{ props }">
-              <v-icon small v-bind="props" @click="editTemplate(item)">
+              <v-icon
+                  small
+                  v-bind="props"
+                  @click="editTemplate(item)"
+                  class="tooltip-btn"
+              >
                 mdi-pencil
               </v-icon>
             </template>
