@@ -52,7 +52,14 @@ export default defineComponent({
         value: "applyTemplate",
         sortable: true,
       },
-      { title: "Aktionen", value: "actions", sortable: false },
+      {
+        title: "Aktionen",
+        value: "actions",
+        sortable: false,
+        width: "100px",
+        minWidth: "100px",
+        maxWidth: "100px",
+      },
     ];
     const templateItems: Ref<Array<RightRest>> = ref([]);
     const searchTerm = ref("");
@@ -289,7 +296,7 @@ export default defineComponent({
   white-space: pre-line;
 }
 .tooltip-btn {
-  margin-right: 20px; /* Adds space between the two buttons */
+  margin-right: 10px; /* Adds space between the two buttons */
 }
 </style>
 <template>
