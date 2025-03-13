@@ -30,6 +30,7 @@ dependencies {
     implementation("io.ktor:ktor-client-cio-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    runtimeOnly("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-serialization-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-gson-jvm:$ktorVersion")

@@ -62,10 +62,10 @@ import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.collections.flatten
 import kotlin.math.ceil
 
 /**
@@ -356,15 +356,12 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.OTHER -> PublicationTypeRest.other
     }
 
-fun DAItem.toBusiness(
-    directParentCommunityId: Int,
-    logger: Logger,
-): ItemMetadata? {
+fun DAItem.toBusiness(directParentCommunityId: Int): ItemMetadata? {
     val metadata = this.metadata
     val handle =
         RestConverter.extractMetadata("dc.identifier.uri", metadata)?.let {
             if (it.size > 1) {
-                LOG.warn("Item has multiple handles: $this")
+                LOG.warn("Item has multiple handles: Handle ${this.handle}")
             }
             it[0]
         }
@@ -372,7 +369,7 @@ fun DAItem.toBusiness(
         try {
             RestConverter.extractMetadata("dc.type", metadata)?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple publication types : $this")
+                    LOG.warn("Item has multiple publication types: Handle ${this.handle}")
                 }
                 PublicationType.valueOf(
                     it[0]
@@ -382,7 +379,7 @@ fun DAItem.toBusiness(
                 )
             }
         } catch (iae: IllegalArgumentException) {
-            logger.error("Unknown PublicationType found for ${this.id}")
+            LOG.warn("Unknown PublicationType found: Handle ${this.handle}")
             throw iae
         }
     val publicationYear: String? =
@@ -390,14 +387,14 @@ fun DAItem.toBusiness(
             .extractMetadata("dc.date.issued", metadata)
             ?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple publication years : $this")
+                    LOG.warn("Item has multiple publication years: Handle ${this.handle}")
                 }
                 it[0]
             }
     val title =
         RestConverter.extractMetadata("dc.title", metadata)?.let {
             if (it.size > 1) {
-                LOG.warn("Item has multiple titles: $this")
+                LOG.warn("Item has multiple titles: Handle ${this.handle}")
             }
             it[0]
         }
@@ -407,7 +404,7 @@ fun DAItem.toBusiness(
         publicationType == null ||
         title == null
     ) {
-        logger.warn("Required field missing for metadata: ${this.metadata}")
+        LOG.warn("Required field missing for metadata: Handle ${this.handle}")
         null
     } else {
         var subDACommunity: DACommunity? = null
@@ -424,14 +421,14 @@ fun DAItem.toBusiness(
 
             else -> {
                 // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
-                logger.warn("Invalid numbers of parent communities (should be 1 or 2): Handle ${this.handle}")
+                LOG.warn("Invalid numbers of parent communities (should be 1 or 2): Handle ${this.handle}")
                 return null
             }
         }
         val licenceUrl =
             RestConverter.extractMetadata("dc.rights.license", metadata)?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple licenceUrls: $this")
+                    LOG.warn("Item has multiple licenceUrls: Handle ${this.handle}")
                 }
                 it[0]
             }
@@ -457,7 +454,7 @@ fun DAItem.toBusiness(
             doi =
                 RestConverter.extractMetadata("dc.identifier.pi", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple dois: $this")
+                        LOG.warn("Item has multiple dois: Handle ${this.handle}")
                     }
                     it[0]
                 },
@@ -465,14 +462,14 @@ fun DAItem.toBusiness(
             isbn =
                 RestConverter.extractMetadata("dc.identifier.isbn", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple isbns: $this")
+                        LOG.warn("Item has multiple isbns: Handle ${this.handle}")
                     }
                     it[0]
                 },
             issn =
                 RestConverter.extractMetadata("dc.identifier.issn", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple issns: $this")
+                        LOG.warn("Item has multiple issns: Handle ${this.handle}")
                     }
                     it[0]
                 },
@@ -486,7 +483,7 @@ fun DAItem.toBusiness(
             ppn =
                 RestConverter.extractMetadata("dc.identifier.ppn", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple ppns: $this")
+                        LOG.warn("Item has multiple ppns: Handle ${this.handle}")
                     }
                     it[0]
                 },
@@ -502,7 +499,7 @@ fun DAItem.toBusiness(
                     .extractMetadata("dc.date.accessioned", metadata)
                     ?.let {
                         if (it.size > 1) {
-                            LOG.warn("Item has multiple storage dates: $this")
+                            LOG.warn("Item has multiple storage dates: Handle ${this.handle}")
                         }
                         OffsetDateTime.parse(it[0])
                     },
@@ -510,32 +507,22 @@ fun DAItem.toBusiness(
             titleJournal =
                 RestConverter.extractMetadata("dc.journalname", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple journal tiles: $this")
+                        LOG.warn("Item has multiple journal tiles: Handle ${this.handle}")
                     }
                     it[0]
                 },
             titleSeries =
                 RestConverter.extractMetadata("dc.seriesname", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple series names: $this")
+                        LOG.warn("Item has multiple title series names: ${this.handle}")
                     }
                     it[0]
                 },
             zdbIds =
                 listOfNotNull(
-                    RestConverter.extractMetadata("dc.relation.journalzdbid", metadata)?.let {
-                        if (it.size > 1) {
-                            LOG.warn("Item has multiple zdbIdJournals: $this")
-                        }
-                        it[0]
-                    },
-                    RestConverter.extractMetadata("dc.relation.serieszdbid", metadata)?.let {
-                        if (it.size > 1) {
-                            LOG.warn("Item has multiple zdbIDSeries: $this")
-                        }
-                        it[0]
-                    },
-                ),
+                    RestConverter.extractMetadata("dc.relation.journalzdbid", metadata),
+                    RestConverter.extractMetadata("dc.relation.serieszdbid", metadata),
+                ).flatten(),
         )
     }
 }

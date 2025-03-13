@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.type
 
-import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.RightIdFilter
@@ -170,7 +169,7 @@ class RestConverterTest {
             )
 
         // when
-        val receivedItem = TEST_DA_ITEM.toBusiness(2, DAConnector.LOG)
+        val receivedItem = TEST_DA_ITEM.toBusiness(2)
         // then
         assertThat(receivedItem, `is`(expected))
 
