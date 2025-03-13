@@ -40,11 +40,15 @@ MetadataRest:
     deleted:
       type: boolean
     doi:
-      type: string
+      type: array
+      items:
+        type: string
     handle:
       type: string
     isbn:
-      type: string
+      type: array
+      items:
+        type: string
     issn:
       type: string
     isPartOfSeries:

@@ -173,11 +173,11 @@ export default defineComponent({
             </v-row>
             <v-row v-show="currentMetadata.doi">
               <v-col>DOI</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.doi) }}</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.doi?.join()) }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.isbn">
               <v-col>ISBN</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.isbn) }}</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.isbn?.join()) }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.ppn">
               <v-col>PPN</v-col>

@@ -1,7 +1,6 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
-import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
@@ -221,30 +220,6 @@ class MetadataRoutesKtTest {
     }
 
     companion object {
-        val CONFIG =
-            LoriConfiguration(
-                grpcPort = 9092,
-                httpPort = 8080,
-                sqlUser = "postgres",
-                sqlPassword = "postgres",
-                sqlUrl = "jdbc:someurl",
-                digitalArchiveAddress = "https://archiveaddress",
-                digitalArchiveUsername = "testuser",
-                digitalArchivePassword = "password",
-                digitalArchiveBasicAuth = "basicauth",
-                jwtAudience = "0.0.0.0:8080/ui",
-                jwtIssuer = "0.0.0.0:8080",
-                jwtRealm = "Lori ui",
-                jwtSecret = "foobar",
-                duoUrlMetadata = "someId",
-                sessionSignKey = "8BADF00DDEADBEAFDEADBAADDEADBAAD",
-                sessionEncryptKey = "CAFEBABEDEADBEAFDEADBAADDEFEC8ED",
-                stage = "dev",
-                handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
-                duoUrlSLO = "https://duo/slo",
-                duoUrlSSO = "https://duo/sso",
-            )
-
         val TEST_METADATA =
             MetadataRest(
                 author = "Colbjørnsen, Terje",
@@ -252,9 +227,9 @@ class MetadataRoutesKtTest {
                 collectionName = "collectionName",
                 communityName = "communityName",
                 deleted = false,
-                doi = "doi:example.org",
+                doi = listOf("doi:example.org"),
                 handle = "hdl:example.handle.net",
-                isbn = "1234567890123",
+                isbn = listOf("1234567890123"),
                 issn = "123456",
                 paketSigel = listOf("sigel"),
                 ppn = "ppn",
@@ -266,7 +241,5 @@ class MetadataRoutesKtTest {
                 titleSeries = null,
                 zdbIds = listOf("zdbIds"),
             )
-
-        fun jsonAsString(any: Any): String = RightRoutesKtTest.GSON.toJson(any)
     }
 }

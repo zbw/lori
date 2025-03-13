@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.type
 
-import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.RightIdFilter
@@ -137,9 +136,9 @@ class RestConverterTest {
                 createdBy = null,
                 createdOn = null,
                 deleted = false,
-                doi = null,
+                doi = listOf("10.7298/c5ps-be97"),
                 handle = "11159/848",
-                isbn = null,
+                isbn = listOf("9781847200235", "9781845420680"),
                 issn = null,
                 isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = null,
@@ -170,7 +169,7 @@ class RestConverterTest {
             )
 
         // when
-        val receivedItem = TEST_DA_ITEM.toBusiness(2, DAConnector.LOG)
+        val receivedItem = TEST_DA_ITEM.toBusiness(2)
         // then
         assertThat(receivedItem, `is`(expected))
 
@@ -614,9 +613,9 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 deleted = false,
-                doi = "doi:example.org",
+                doi = listOf("10.0002", "10.982301"),
                 handle = "hdl:example.handle.net",
-                isbn = "1234567890123",
+                isbn = listOf("1234567", "890123"),
                 issn = "123456",
                 isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = "user2",
@@ -874,6 +873,26 @@ class RestConverterTest {
                         DAMetadata(
                             key = "dc.relation.serieszdbid",
                             value = "zdbId2",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.identifier.pi",
+                            value = "10.7298/c5ps-be97",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.identifier.pi",
+                            value = "1813/110555",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.identifier.isbn",
+                            value = "9781847200235",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = "dc.identifier.isbn",
+                            value = "9781845420680",
                             language = "EN",
                         ),
                     ),
