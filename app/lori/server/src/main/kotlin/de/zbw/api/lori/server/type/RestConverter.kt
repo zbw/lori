@@ -452,20 +452,13 @@ fun DAItem.toBusiness(directParentCommunityId: Int): ItemMetadata? {
             createdOn = null,
             deleted = this.withdrawn?.toBoolean() == true,
             doi =
-                RestConverter.extractMetadata("dc.identifier.pi", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple dois: Handle ${this.handle}")
-                    }
-                    it[0]
-                },
+                RestConverter
+                    .extractMetadata("dc.identifier.pi", metadata)
+                    ?.filter {
+                        it.startsWith("10.")
+                    },
             handle = RestConverter.parseHandle(handle),
-            isbn =
-                RestConverter.extractMetadata("dc.identifier.isbn", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple isbns: Handle ${this.handle}")
-                    }
-                    it[0]
-                },
+            isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
             issn =
                 RestConverter.extractMetadata("dc.identifier.issn", metadata)?.let {
                     if (it.size > 1) {

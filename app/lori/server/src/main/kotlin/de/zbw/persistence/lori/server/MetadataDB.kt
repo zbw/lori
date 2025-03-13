@@ -387,8 +387,8 @@ class MetadataDB(
                 publicationYear = rs.getInt(6),
                 band = rs.getString(7),
                 publicationType = PublicationType.valueOf(rs.getString(8)),
-                doi = rs.getString(9),
-                isbn = rs.getString(10),
+                doi = (rs.getArray(9)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                isbn = (rs.getArray(10)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 paketSigel = (rs.getArray(11)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIds = (rs.getArray(12)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 issn = rs.getString(13),
@@ -435,10 +435,10 @@ class MetadataDB(
                 }
                 this.setString(8, itemMetadata.publicationType.toString())
                 this.setIfNotNull(9, itemMetadata.doi) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(10, itemMetadata.isbn) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
 
                 this.setIfNotNull(11, itemMetadata.paketSigel) { value, idx, prepStmt ->

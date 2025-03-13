@@ -572,19 +572,11 @@ class SearchDB(
     companion object {
         const val SUBQUERY_NAME = "sub"
         const val ALIAS_ITEM_RIGHT = "o"
-        private const val STATEMENT_SELECT_ALL_FACETS =
-            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
-                "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_YEAR," +
-                "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
-                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,$COLUMN_METADATA_ISSN," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_CREATED_ON,$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_ON," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_CREATED_BY," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_BY,$COLUMN_METADATA_AUTHOR,$COLUMN_METADATA_COLLECTION_NAME," +
-                "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-                "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
-                "$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+        const val STATEMENT_SELECT_ALL_FACETS =
+            "SELECT " +
+                "$COLUMN_METADATA_PUBLICATION_YEAR,$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
@@ -925,7 +917,6 @@ class SearchDB(
 
         private fun buildSearchQuerySelect(
             hasRightSearchFilter: Boolean = false,
-            forceRightTableJoin: Boolean = false,
             collectOccurrences: Boolean = false,
             rightColumnToCollect: String? = null,
         ): String =
@@ -933,8 +924,6 @@ class SearchDB(
                 getSelectOccurrenceStatementRights(rightColumnToCollect)
             } else if (collectOccurrences) {
                 STATEMENT_SELECT_OCCURRENCE_DISTINCT
-            } else if (forceRightTableJoin) {
-                STATEMENT_SELECT_ALL_FACETS
             } else if (!hasRightSearchFilter) {
                 STATEMENT_SELECT_ALL_METADATA
             } else {

@@ -1251,6 +1251,11 @@ table.special, th.special, td.special {
                 {{ item.isPartOfSeries?.join() }}
               </td>
             </template>
+            <template v-slot:item.isbn="{ item }">
+              <td>
+                {{ item.isbn?.join() }}
+              </td>
+            </template>
             <template v-slot:item.handle="{ item }">
               <td>
                 <a
