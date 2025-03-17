@@ -546,6 +546,9 @@ export default defineComponent({
     };
 
     const errorSources = ref([] as string[]);
+    const hasMissingBookmark = computed(() =>{
+      return v$.value.selectedBookmarks.$error;
+    });
     const getErrorSources: () => string[] = () => {
       let errors = [];
       if (v$.value.templateName.$error){
@@ -564,7 +567,7 @@ export default defineComponent({
         errors.push("End-Datum (darf nicht vor Start-Datum liegen)");
       }
       if (v$.value.selectedGroups.$error){
-        errors.push("IP-Gruppe (Pflichtelement) → erscheint nur wenn Access Status = Restricted");
+        errors.push("IP-Gruppe (Pflichtelement)");
       }
       return errors;
     };
@@ -578,7 +581,7 @@ export default defineComponent({
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
       if (!isValid) {
-        errorMsg.value = "Fehler beim Speichern des Templates. Folgende Felder haben Fehler oder wurden nicht ausgefüllt:";
+        errorMsg.value = "Fehler beim Speichern des Templates wegen unvollständiger oder fehlerhafter Angaben:";
         errorSources.value = getErrorSources();
         errorMsgIsActive.value = true;
         return;
@@ -1209,6 +1212,7 @@ export default defineComponent({
       errorMsgIsActive,
       errorMsg,
       groupItems,
+      hasMissingBookmark,
       isStartDateMenuOpen,
       isEndDateMenuOpen,
       lastSavedRight,
@@ -1543,7 +1547,14 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
-                <v-col cols="4"> Verknüpfte Suche</v-col>
+                <v-col cols="4">
+                  <v-div>
+                    Verknüpfte Suche
+                  </v-div>
+                  <p v-if="hasMissingBookmark" class="text-error">
+                    Eine verknüpfte Suche wird benötigt.
+                  </p>
+                </v-col>
                 <v-col cols="8">
                   <v-data-table
                     :key="renderBookmarkKey"
