@@ -564,7 +564,7 @@ export default defineComponent({
         errors.push("End-Datum (darf nicht vor Start-Datum liegen)");
       }
       if (v$.value.selectedGroups.$error){
-        errors.push("IP-Gruppe (Pflichtelement) → erscheint nur wenn Access Status = Restricted");
+        errors.push("IP-Gruppe (Pflichtelement)");
       }
       return errors;
     };
@@ -578,7 +578,7 @@ export default defineComponent({
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
       if (!isValid) {
-        errorMsg.value = "Fehler beim Speichern des Templates. Folgende Felder haben Fehler oder wurden nicht ausgefüllt:";
+        errorMsg.value = "Fehler beim Speichern des Templates wegen unvollständiger oder fehlerhafter Angaben:";
         errorSources.value = getErrorSources();
         errorMsgIsActive.value = true;
         return;
