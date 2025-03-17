@@ -347,7 +347,7 @@ export default defineComponent({
       searchStore.searchTerm = "";
       templateSearchIsActive.value = true;
       currentPage.value = 1;
-      currentRightId.value = templateName;
+      currentRightId.value = rightId;
       closeTemplateOverview();
       successMsg.value =
         "Alle gespeicherten Suchen für Template " +
@@ -355,7 +355,7 @@ export default defineComponent({
         " wurden ausgeführt.";
       successMsgIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
-      executeSearchByRightId(templateName);
+      executeSearchByRightId(rightId);
     };
 
     const getAccessStatesForDate = () => {
