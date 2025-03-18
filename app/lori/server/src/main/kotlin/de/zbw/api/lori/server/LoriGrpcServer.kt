@@ -87,7 +87,6 @@ class LoriGrpcServer(
             try {
                 val startTime = Instant.now()
                 val token = daConnector.login()
-                LOG.info("Login Token: $token}")
                 val communityIds = daConnector.getAllCommunityIds(token)
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
                 val imports = runImports(communityIds, token)

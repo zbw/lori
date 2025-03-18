@@ -38,8 +38,8 @@ object Main {
                     LoriClientConfiguration(
                         9092,
                         "lori",
-                        // Wait for one hour max. Anything above that is at least worth investigating.
-                        3600000,
+                        // Wait for four hour max. Anything above that is at least worth investigating.
+                        4 * 3600000,
                     ),
                 openTelemetry = openTelemetry,
             )
