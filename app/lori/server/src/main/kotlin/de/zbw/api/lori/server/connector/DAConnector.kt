@@ -35,10 +35,12 @@ import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.SerializationException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import kotlin.collections.flatten
 import kotlin.math.ceil
 
 /**
@@ -61,7 +63,7 @@ class DAConnector(
                 level = LogLevel.ALL
             }
             install(HttpTimeout) {
-                requestTimeoutMillis = 20000
+                requestTimeoutMillis = 30000
             }
         },
 ) {
@@ -130,23 +132,18 @@ class DAConnector(
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
-                val daItemList: List<DAItem> =
-                    importCollection(loginToken, cId)
-                val metadataList: List<ItemMetadata> =
-                    daItemList
-                        .mapNotNull { it.toBusiness(community.id) }
-                        .map { shortenHandle(it) }
-                backend.upsertMetadata(metadataList).filter { it == 1 }.size
+                importCollection(loginToken, cId, community.id)
             }
         }
 
     suspend fun importCollection(
         loginToken: String,
-        cId: Int,
-    ): List<DAItem> {
+        collectionId: Int,
+        communityId: Int,
+    ): Int {
         val numberItems: Int =
             client
-                .get("$restURL/collections/$cId") {
+                .get("$restURL/collections/$collectionId") {
                     headers {
                         append(HttpHeaders.Accept, "application/json")
                         append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
@@ -154,16 +151,16 @@ class DAConnector(
                     }
                 }.body<DACollection>()
                 .numberItems ?: 0
-        LOG.info("CollectionId $cId: Number of Items: $numberItems")
+        LOG.info("CollectionId $collectionId: Number of Items: $numberItems")
 
-        return (1..ceil(numberItems.toDouble() / 100).toInt())
-            .map {
-                LOG.info("CollectionId $cId: Offset ${(it - 1) * 100}")
+        return (1..ceil(numberItems.toDouble() / 100).toInt()).sumOf {
+            semaphore.withPermit {
+                LOG.info("CollectionId $collectionId: Offset ${(it - 1) * 100}")
 
                 val response: ApiResponse<List<DAItem>, String> =
-                    client.safeRequest {
+                    client.safeRequest(2, 2000L) {
                         method = HttpMethod.Get
-                        url("$restURL/collections/$cId/items")
+                        url("$restURL/collections/$collectionId/items")
                         headers {
                             append(HttpHeaders.Accept, "application/json")
                             append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
@@ -178,34 +175,59 @@ class DAConnector(
                 when (response) {
                     is ApiResponse.Error.HttpError<*> -> {
                         LOG.warn("HttpError: Status Code" + response.code + "; Error Body" + response.errorBody)
-                        emptyList()
+                        0
                     }
+
                     is ApiResponse.Error.NetworkError -> {
                         LOG.warn("Network Error: ${response.message}")
-                        emptyList()
+                        0
                     }
+
                     is ApiResponse.Error.SerializationError -> {
                         LOG.warn("Serialization Error: ${response.message}")
-                        emptyList()
+                        0
                     }
-                    is ApiResponse.Success<List<DAItem>> -> response.body
+
+                    is ApiResponse.Success<List<DAItem>> -> {
+                        val daItemList = response.body
+                        val metadataList =
+                            daItemList
+                                .mapNotNull { it.toBusiness(communityId) }
+                                .map { shortenHandle(it) }
+                        backend.upsertMetadata(metadataList).filter { it == 1 }.size
+                    }
                 }
-            }.flatten()
+            }
+        }
     }
 
-    suspend inline fun <reified T, reified E> HttpClient.safeRequest(block: HttpRequestBuilder.() -> Unit): ApiResponse<T, E> =
-        try {
-            val response = request { block() }
-            ApiResponse.Success(response.body())
-        } catch (e: ClientRequestException) {
-            ApiResponse.Error.HttpError(e.response.status.value, e.errorBody())
-        } catch (e: ServerResponseException) {
-            ApiResponse.Error.HttpError(e.response.status.value, e.errorBody())
-        } catch (e: IOException) {
-            ApiResponse.Error.NetworkError(e.message ?: "No message")
-        } catch (e: SerializationException) {
-            ApiResponse.Error.SerializationError(e.message ?: "No message")
+    suspend inline fun <reified T, reified E> HttpClient.safeRequest(
+        retries: Int,
+        delayMillis: Long,
+        block: HttpRequestBuilder.() -> Unit,
+    ): ApiResponse<T, E> {
+        var currentAttempt = 0
+        while (currentAttempt < retries) {
+            try {
+                val response = request { block() }
+                return ApiResponse.Success(response.body())
+            } catch (e: ClientRequestException) {
+                return ApiResponse.Error.HttpError(e.response.status.value, e.errorBody())
+            } catch (e: ServerResponseException) {
+                return ApiResponse.Error.HttpError(e.response.status.value, e.errorBody())
+            } catch (e: IOException) {
+                if (currentAttempt < retries - 1) {
+                    delay(delayMillis)
+                    currentAttempt++
+                } else {
+                    return ApiResponse.Error.NetworkError(e.message ?: "No message")
+                }
+            } catch (e: SerializationException) {
+                return ApiResponse.Error.SerializationError(e.message ?: "No message")
+            }
         }
+        throw IllegalStateException("Unexpected error") // should never happen
+    }
 
     suspend inline fun <reified E> ResponseException.errorBody(): E? =
         try {
@@ -218,6 +240,9 @@ class DAConnector(
         const val DSPACE_TOKEN = "rest-dspace-token"
         private const val HANDLE_URL = "http://hdl.handle.net/"
         internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
+
+        private val MAX_PARALLEL_CONNECTIONS = 5
+        private val semaphore = Semaphore(MAX_PARALLEL_CONNECTIONS)
 
         internal fun shortenHandle(item: ItemMetadata) =
             item.copy(
