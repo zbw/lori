@@ -24,7 +24,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
@@ -129,7 +128,7 @@ class DAConnectorTest {
                         backend = backend,
                     ),
                 ) {
-                    coEvery { importCollection(any(), any()) } returns listOf(TEST_ITEM)
+                    coEvery { importCollection(any(), any(), any()) } returns 1
                 }
             // when
             val receivedItems =
@@ -147,8 +146,7 @@ class DAConnectorTest {
 
             // then
             assertThat(receivedItems, `is`(listOf(1, 1, 1)))
-            coVerify(exactly = 3) { daConnector.importCollection("token", any()) }
-            coVerify(exactly = 3) { backend.upsertMetadata(any()) }
+            coVerify(exactly = 3) { daConnector.importCollection("token", any(), any()) }
         }
     }
 
@@ -156,10 +154,10 @@ class DAConnectorTest {
     fun testImportCollection() {
         runBlocking {
             // given
-            val givenCommunityId = 6
+            val givenCollectionId = 6
             val mockEngine =
                 MockEngine { request ->
-                    if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCommunityId/items")) {
+                    if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCollectionId/items")) {
                         respond(
                             content =
                                 ByteReadChannel(
@@ -244,12 +242,15 @@ class DAConnectorTest {
                             every { digitalArchiveBasicAuth } returns "pw"
                         },
                     engine = mockEngine,
-                    backend = mockk(),
+                    backend =
+                        mockk {
+                            coEvery { upsertMetadata(any()) } returns IntArray(1) { _ -> 1 }
+                        },
                 )
-            val expected = listOf(TEST_ITEM)
+            val expected = 1
 
             // when
-            val received: List<DAItem> = daConnector.importCollection("sometoken", givenCommunityId)
+            val received: Int = daConnector.importCollection("sometoken", givenCollectionId, 1)
             // then
             assertThat(received, `is`(expected))
         }
@@ -349,10 +350,10 @@ class DAConnectorTest {
                     engine = mockEngine,
                     backend = mockk(),
                 )
-            val expected = emptyList<DAItem>()
+            val expected = 0
 
             // when
-            val received: List<DAItem> = daConnector.importCollection("sometoken", givenCommunityId)
+            val received: Int = daConnector.importCollection("sometoken", givenCommunityId, 1)
             // then
             assertThat(received, `is`(expected))
         }

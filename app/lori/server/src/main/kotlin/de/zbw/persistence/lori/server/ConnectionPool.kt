@@ -3,9 +3,7 @@ package de.zbw.persistence.lori.server
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import de.zbw.api.lori.server.config.LoriConfiguration
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.invoke
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.apache.logging.log4j.LogManager
@@ -25,21 +23,20 @@ class ConnectionPool(
         block: suspend (Connection) -> T,
     ): T =
         jdbcSemaphore.withPermit {
-            jdbcDispatcher.invoke {
-                LOG.debug("Init: $methodName; Available ${jdbcSemaphore.availablePermits}")
-                val connection: Connection = ds.connection
-                connection.use { block(it) }.also {
-                    LOG.debug("End: $methodName: Available: ${jdbcSemaphore.availablePermits}")
-                }
+            LOG.debug("Init: $methodName; Available ${jdbcSemaphore.availablePermits}")
+            val connection: Connection = ds.connection
+            connection.use { block(it) }.also {
+                LOG.debug("End: $methodName: Available: ${jdbcSemaphore.availablePermits}")
             }
         }
 
     companion object {
         private const val JDBC_PARALLELISM = 5
+        private const val IDLE_TIMEOUT = 60000L
+        private const val CONNECTION_TIMEOUT = 30000L
         private val LOG = LogManager.getLogger(ConnectionPool::class.java)
 
         @OptIn(ExperimentalCoroutinesApi::class)
-        private val jdbcDispatcher = Dispatchers.IO.limitedParallelism(JDBC_PARALLELISM)
         private val jdbcSemaphore = Semaphore(JDBC_PARALLELISM)
 
         fun createConnection(config: LoriConfiguration): HikariDataSource {
@@ -52,6 +49,9 @@ class ConnectionPool(
             hiConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
             hiConfig.isAutoCommit = false
             hiConfig.maximumPoolSize = JDBC_PARALLELISM
+            hiConfig.idleTimeout = IDLE_TIMEOUT
+            hiConfig.connectionTimeout = CONNECTION_TIMEOUT
+            hiConfig.minimumIdle = JDBC_PARALLELISM
             return HikariDataSource(hiConfig)
         }
     }
