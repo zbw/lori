@@ -210,14 +210,18 @@ export default defineComponent({
     };
 
     const bookmarksCheck = (value: Array<RightRest>, siblings: FormState) => {
-      return value.length != 0;
+      return !(value.length == 0 && isTemplate.value);
+    };
+
+    const templateNameCheck = (value: string, siblings: FormState) => {
+      return !((value == undefined || value == "") && isTemplate.value);
     };
 
     const rules = {
       accessState: { required },
       startDate: { required },
       endDate: { endDateCheck },
-      templateName: { required },
+      templateName: { templateNameCheck },
       selectedGroups: { groupCheck },
       selectedBookmarks: { bookmarksCheck },
     };
