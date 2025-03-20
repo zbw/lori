@@ -87,10 +87,12 @@ class LoriGrpcServer(
             try {
                 val startTime = Instant.now()
                 val token = daConnector.login()
+                LOG.info("Login-Token: $token")
                 val communityIds = daConnector.getAllCommunityIds(token)
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
-                val imports = runImports(communityIds, token)
-                val deleted = backend.updateMetadataAsDeleted(startTime)
+                val imports: Int = runImports(communityIds, token)
+                val deleted: Int = backend.updateMetadataAsDeleted(startTime)
+                LOG.info("Number of imported Items: " + imports)
                 LOG.info("Number of deleted Items found: " + deleted)
 
                 FullImportResponse
