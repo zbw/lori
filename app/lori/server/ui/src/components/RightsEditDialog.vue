@@ -777,7 +777,7 @@ export default defineComponent({
     const isEditable = computed(
       () =>
         isNew.value ||
-        (lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined),
+        (lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
     );
     const isTemplate = computed(
       () =>
