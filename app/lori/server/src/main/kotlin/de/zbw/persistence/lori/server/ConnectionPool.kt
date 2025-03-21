@@ -31,9 +31,12 @@ class ConnectionPool(
         }
 
     companion object {
-        private const val JDBC_PARALLELISM = 5
-        private const val IDLE_TIMEOUT = 60000L
         private const val CONNECTION_TIMEOUT = 30000L
+        private const val IDLE_TIMEOUT = 80000L
+        private const val JDBC_PARALLELISM = 5
+        private const val LEAK_DETECTION_THRESHOLD = 2000L
+        private const val MAXIMUM_POOL_SIZE = 10
+        private const val MINIMUM_IDLE = 2
         private val LOG = LogManager.getLogger(ConnectionPool::class.java)
 
         @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,11 +50,12 @@ class ConnectionPool(
             hiConfig.addDataSourceProperty("cachePrepStmts", "true")
             hiConfig.addDataSourceProperty("prepStmtCacheSize", "250")
             hiConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+            hiConfig.leakDetectionThreshold = LEAK_DETECTION_THRESHOLD
             hiConfig.isAutoCommit = false
-            hiConfig.maximumPoolSize = JDBC_PARALLELISM
+            hiConfig.maximumPoolSize = MAXIMUM_POOL_SIZE
             hiConfig.idleTimeout = IDLE_TIMEOUT
             hiConfig.connectionTimeout = CONNECTION_TIMEOUT
-            hiConfig.minimumIdle = JDBC_PARALLELISM
+            hiConfig.minimumIdle = MINIMUM_IDLE
             return HikariDataSource(hiConfig)
         }
     }
