@@ -149,6 +149,12 @@ export default defineComponent({
       }
     });
 
+   const updateEndDate = (newValue : string | undefined) => {
+     if (newValue == '' || newValue == undefined){
+       formState.endDate = undefined;
+     }
+   };
+
     const newRightHasChanges = computed (() => {
       return isNew.value &&
       (formState.accessState != "" ||
@@ -614,6 +620,8 @@ export default defineComponent({
         tmpRight.value.endDate.setUTCDate(
             formState.endDate.getDate()
         );
+      } else {
+        tmpRight.value.endDate = undefined;
       }
       tmpRight.value.startDate = new Date();
 
@@ -1260,6 +1268,7 @@ export default defineComponent({
       setSelectedBookmarks,
       save,
       templateBookmarkClosed,
+      updateEndDate,
       updateRight,
     };
   },
@@ -1757,6 +1766,7 @@ export default defineComponent({
                   <template v-slot:activator="{ props }">
                     <v-text-field
                       :modelValue="endDateFormatted"
+                      @update:modelValue="updateEndDate"
                       :error-messages="errorEndDate"
                       label="End-Datum"
                       variant="outlined"
