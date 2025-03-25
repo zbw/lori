@@ -401,6 +401,7 @@ export default defineComponent({
               close();
             })
             .catch((e) => {
+              updateInProgress.value = false;
               error.errorHandling(e, (errMsg: string) => {
                 errorMsgIsActive.value = true;
                 errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
@@ -430,6 +431,7 @@ export default defineComponent({
           reinitializeRight();
         })
         .catch((e) => {
+          updateInProgress.value = false;
           error.errorHandling(e, (errMsg: string) => {
             errorMsgIsActive.value = true;
             errorMsg.value = "Update war nicht erfolgreich: " +  errMsg;
@@ -461,6 +463,7 @@ export default defineComponent({
           });
         })
         .catch((e) => {
+          updateInProgress.value = false;
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
             errorMsgIsActive.value = true;
@@ -500,6 +503,7 @@ export default defineComponent({
           }
         })
         .catch((e) => {
+          updateInProgress.value = false;
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
             errorMsgIsActive.value = true;
@@ -605,6 +609,7 @@ export default defineComponent({
       );
       updateInProgress.value = true;
       if (formState.startDate == undefined) {
+        updateInProgress.value = false;
         return;
       }
 

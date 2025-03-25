@@ -127,7 +127,15 @@ class LoriServerBackend(
         updateBy: String,
     ): Int = dbConnector.groupDB.updateGroup(group, updateBy)
 
-    suspend fun upsertRight(right: ItemRight): Int {
+    suspend fun upsertRight(right: ItemRight): Either<Pair<HttpStatusCode, ErrorRest>, Int> {
+        if (checkRightConflictsOnUpdate(right) && !right.isTemplate) {
+            return Either.Left(
+                Pair(
+                    HttpStatusCode.Conflict,
+                    ApiError.conflictError("Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten"),
+                ),
+            )
+        }
         val rightId = right.rightId!!
         val oldGroupIds =
             dbConnector.groupDB
@@ -152,7 +160,7 @@ class LoriServerBackend(
             )
         }
 
-        return dbConnector.rightDB.upsertRight(right)
+        return Either.Right(dbConnector.rightDB.upsertRight(right))
     }
 
     suspend fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
@@ -328,6 +336,28 @@ class LoriServerBackend(
         // Get data for all rights
         val rights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(rightIds)
         val newRight: ItemRight = dbConnector.rightDB.getRightsByIds(listOf(newRightId)).firstOrNull() ?: return false
+        // Check for conflicts
+        return rights.foldRight(false) { r, acc ->
+            acc || checkForDateConflict(newRight, r)
+        }
+    }
+
+    private suspend fun checkRightConflictsOnUpdate(newRight: ItemRight): Boolean {
+        if (newRight.isTemplate || newRight.rightId == null) {
+            return false // Templates are not verified here.
+        }
+        // Get all handles
+        val handles = dbConnector.itemDB.getHandlesByRightId(newRight.rightId)
+        if (handles.size != 1) {
+            return false // No handle makes no sense
+        }
+        // Get all right ids
+        val rightIds = dbConnector.itemDB.getRightIdsByHandle(handles.first())
+        // Get data for all rights
+        val rights: List<ItemRight> =
+            dbConnector.rightDB
+                .getRightsByIds(rightIds)
+                .filter { it.rightId != newRight.rightId } // Don't keep the own right id, because an update is done
         // Check for conflicts
         return rights.foldRight(false) { r, acc ->
             acc || checkForDateConflict(newRight, r)

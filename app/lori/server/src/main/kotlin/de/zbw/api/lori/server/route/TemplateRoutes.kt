@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
@@ -131,18 +132,25 @@ fun Routing.templateRoutes(
                                 ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
                             )
                         }
-                        val insertedRows = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
-                        if (insertedRows == 1) {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.NoContent)
-                        } else {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
-                                ),
-                            )
+                        val ret = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
+                        when (ret) {
+                            is Either.Left -> {
+                                call.respond(ret.value.first, ret.value.second)
+                            }
+                            is Either.Right -> {
+                                if (ret.value == 1) {
+                                    span.setStatus(StatusCode.OK)
+                                    call.respond(HttpStatusCode.NoContent)
+                                } else {
+                                    span.setStatus(StatusCode.ERROR)
+                                    call.respond(
+                                        HttpStatusCode.NotFound,
+                                        ApiError.notFoundError(
+                                            detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
+                                        ),
+                                    )
+                                }
+                            }
                         }
                     } catch (pe: PSQLException) {
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {

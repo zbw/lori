@@ -6,9 +6,9 @@ import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
+import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.extension.kotlin.asContextElement
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
@@ -22,10 +22,7 @@ import org.apache.logging.log4j.LogManager
 object Main {
     @JvmStatic
     fun main(args: Array<String>) {
-        val openTelemetry =
-            AutoConfiguredOpenTelemetrySdk
-                .initialize()
-                .openTelemetrySdk
+        val openTelemetry = OpenTelemetry.noop()
         val tracer = openTelemetry.getTracer("de.zbw.job.templateapply.Main")
 
         val span =
@@ -43,7 +40,6 @@ object Main {
                         // Wait for one hour max. Anything above that is at least worth investigating.
                         3600000,
                     ),
-                openTelemetry = openTelemetry,
             )
 
         runBlocking {

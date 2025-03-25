@@ -41,6 +41,29 @@ class ItemDB(
             }.takeWhile { true }.toList()
         }
 
+    suspend fun getHandlesByRightId(rightId: String): List<String> =
+        connectionPool.useConnection { connection ->
+            val span = tracer.spanBuilder("getHandlesByRightId").startSpan()
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_HANDLES_BY_RIGHT_ID).apply {
+                    this.setString(1, rightId)
+                }
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    rs.getString(1)
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
     suspend fun getAllHandles(): List<String> =
         connectionPool.useConnection { connection ->
             val span = tracer.spanBuilder("getAllHandles").startSpan()
@@ -230,6 +253,11 @@ class ItemDB(
             "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_ITEM" +
                 " WHERE $COLUMN_HANDLE = ?"
+
+        const val STATEMENT_GET_HANDLES_BY_RIGHT_ID =
+            "SELECT $COLUMN_HANDLE" +
+                " FROM $TABLE_NAME_ITEM" +
+                " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_SELECT_DISTINCT_HANDLE =
             "SELECT DISTINCT ($COLUMN_HANDLE)" +

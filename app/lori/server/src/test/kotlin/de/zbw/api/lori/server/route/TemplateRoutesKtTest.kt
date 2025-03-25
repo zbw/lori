@@ -3,6 +3,7 @@ package de.zbw.api.lori.server.route
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
@@ -217,7 +218,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { upsertRight(any()) } returns 1
+                coEvery { upsertRight(any()) } returns Either.Right(1)
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
@@ -241,7 +242,7 @@ class TemplateRoutesKtTest {
         // given
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { upsertRight(any()) } returns 1
+                coEvery { upsertRight(any()) } returns Either.Right(1)
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         // when + then
