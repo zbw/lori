@@ -91,7 +91,7 @@ class LoriServerBackend(
             Either.Left(
                 Pair(
                     HttpStatusCode.Conflict,
-                    ApiError.conflictError("Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten"),
+                    ApiError.conflictError(ApiError.CONFLICT_RIGHTS),
                 ),
             )
         } else {
@@ -132,7 +132,7 @@ class LoriServerBackend(
             return Either.Left(
                 Pair(
                     HttpStatusCode.Conflict,
-                    ApiError.conflictError("Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten"),
+                    ApiError.conflictError(ApiError.CONFLICT_RIGHTS),
                 ),
             )
         }

@@ -63,7 +63,7 @@ fun Routing.groupRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         val pk =
                             backend.insertGroup(
@@ -149,7 +149,7 @@ fun Routing.groupRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) //
                         val pk =
                             backend.updateGroup(

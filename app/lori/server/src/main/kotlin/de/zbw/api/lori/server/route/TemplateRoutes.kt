@@ -61,12 +61,12 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
                         val pk: String = backend.insertTemplate(right.toBusiness().copy(createdBy = userSession.email))
@@ -124,12 +124,12 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
                         val ret = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
@@ -291,7 +291,7 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         val rightIds: List<String> =
                             call.receive(RightIdsRest::class).takeIf { it.rightIds != null }?.rightIds

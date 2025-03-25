@@ -100,12 +100,12 @@ fun Routing.rightRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
                         val pk =
@@ -157,12 +157,12 @@ fun Routing.rightRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User ist nicht authenfiziert"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
 
