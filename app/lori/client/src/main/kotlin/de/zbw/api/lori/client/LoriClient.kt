@@ -33,7 +33,7 @@ class LoriClient(
             .usePlaintext()
             .build(),
     val stub: LoriServiceGrpcKt.LoriServiceCoroutineStub = LoriServiceGrpcKt.LoriServiceCoroutineStub(channel),
-    private val openTelemetry: OpenTelemetry,
+    private val openTelemetry: OpenTelemetry = OpenTelemetry.noop(),
     private val tracer: Tracer = openTelemetry.getTracer("de.zbw.api.lori.client.LoriClient"),
 ) {
     suspend fun applyTemplates(request: ApplyTemplatesRequest): ApplyTemplatesResponse =

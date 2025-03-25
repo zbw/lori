@@ -211,7 +211,7 @@ class ServicePoolWithProbes(
                 challenge {
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                        ApiError.unauthorizedError("Benutzer hat nicht die notwendigen Rechte"),
+                        ApiError.unauthorizedError(ApiError.USER_MISSING_RIGHTS),
                     )
                 }
             }

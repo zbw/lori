@@ -277,7 +277,7 @@ fun Routing.bookmarkRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         val pk =
                             backend.insertBookmark(
@@ -343,7 +343,7 @@ fun Routing.bookmarkRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         val insertedRows =
                             backend.updateBookmark(

@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
@@ -49,24 +50,23 @@ fun Routing.rightRoutes(
                     span.setAttribute("rightId", rightId ?: "null")
                     if (rightId == null) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: No valid id has been provided in the url.")
-                        call.respond(
+                        return@withContext call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
                                 detail = ApiError.NO_VALID_ID,
                             ),
                         )
-                    } else {
-                        val right: ItemRight? = backend.getRightsByIds(listOf(rightId)).firstOrNull()
-                        right?.let {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(it.toRest())
-                        } ?: let {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
-                            )
-                        }
+                    }
+                    val right: ItemRight? = backend.getRightsByIds(listOf(rightId)).firstOrNull()
+                    right?.let {
+                        span.setStatus(StatusCode.OK)
+                        call.respond(it.toRest())
+                    } ?: let {
+                        span.setStatus(StatusCode.ERROR)
+                        call.respond(
+                            HttpStatusCode.NotFound,
+                            ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
+                        )
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
@@ -100,12 +100,12 @@ fun Routing.rightRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
                         val pk =
@@ -152,35 +152,41 @@ fun Routing.rightRoutes(
                                 .takeIf { it.rightId != null && it.startDate != null && it.accessState != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("right", right.toString())
+
                         val userSession: UserSession =
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
-                        if (backend.rightContainsId(right.rightId!!)) {
-                            backend.upsertRight(
-                                right.toBusiness().copy(
-                                    lastUpdatedBy = userSession.email,
-                                ),
+
+                        if (!backend.rightContainsId(right.rightId!!)) {
+                            return@withContext call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
                             )
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.NoContent)
-                        } else {
-                            backend.insertRight(
-                                right.toBusiness().copy(
-                                    lastUpdatedBy = userSession.email,
-                                    createdBy = userSession.email,
-                                ),
-                            )
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.Created)
+                        }
+                        when (
+                            val ret =
+                                backend.upsertRight(
+                                    right.toBusiness().copy(
+                                        lastUpdatedBy = userSession.email,
+                                    ),
+                                )
+                        ) {
+                            is Either.Left -> {
+                                call.respond(ret.value.first, ret.value.second)
+                            }
+                            is Either.Right -> {
+                                span.setStatus(StatusCode.OK)
+                                call.respond(HttpStatusCode.NoContent)
+                            }
                         }
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")

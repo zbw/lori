@@ -633,6 +633,38 @@ class LoriServerBackendTest : DatabaseTest() {
                 existingRights,
                 `is`(setOf(givenRight1.rightId, givenRight2.rightId)),
             )
+
+            // Add another entry successfully
+            val givenRight4 =
+                TEST_RIGHT.copy(
+                    rightId = "4",
+                    startDate = LoriServerBackendTest.TODAY.minusDays(10),
+                    endDate = LoriServerBackendTest.TODAY.minusDays(6),
+                )
+            backend.insertRight(givenRight4)
+            when (
+                backend.insertItemEntry(givenMetadata.handle, givenRight4.rightId!!)
+            ) {
+                is Either.Left -> {
+                    Assert.fail("No conflicts expected.")
+                }
+
+                is Either.Right -> {
+                }
+            }
+
+            // Test update conflicts
+            val ret =
+                backend.upsertRight(
+                    givenRight4.copy(endDate = null),
+                )
+            when (ret) {
+                is Either.Left -> {
+                }
+                is Either.Right -> {
+                    Assert.fail("An error should be raised due to a given conflict.")
+                }
+            }
         }
 
     @DataProvider(name = DATA_FOR_FIND_RIGHT_CONFLICTS)
@@ -759,7 +791,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ZoneOffset.UTC,
             )!!
 
-        private val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
+        val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA =
             ItemMetadata(
                 author = "Colbjørnsen, Terje",

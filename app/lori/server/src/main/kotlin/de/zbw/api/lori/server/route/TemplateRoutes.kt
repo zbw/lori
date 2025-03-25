@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
@@ -60,12 +61,12 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
                         val pk: String = backend.insertTemplate(right.toBusiness().copy(createdBy = userSession.email))
@@ -123,26 +124,33 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         if (right.endDate != null && right.endDate!! <= right.startDate) {
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
-                                ApiError.badRequestError("Enddatum muss nach dem Startdatum liegen."),
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
                             )
                         }
-                        val insertedRows = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
-                        if (insertedRows == 1) {
-                            span.setStatus(StatusCode.OK)
-                            call.respond(HttpStatusCode.NoContent)
-                        } else {
-                            span.setStatus(StatusCode.ERROR)
-                            call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(
-                                    detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
-                                ),
-                            )
+                        val ret = backend.upsertRight(right.toBusiness().copy(lastUpdatedBy = userSession.email))
+                        when (ret) {
+                            is Either.Left -> {
+                                call.respond(ret.value.first, ret.value.second)
+                            }
+                            is Either.Right -> {
+                                if (ret.value == 1) {
+                                    span.setStatus(StatusCode.OK)
+                                    call.respond(HttpStatusCode.NoContent)
+                                } else {
+                                    span.setStatus(StatusCode.ERROR)
+                                    call.respond(
+                                        HttpStatusCode.NotFound,
+                                        ApiError.notFoundError(
+                                            detail = "Für das Template mit Id ${right.rightId} existiert kein Eintrag.",
+                                        ),
+                                    )
+                                }
+                            }
                         }
                     } catch (pe: PSQLException) {
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
@@ -283,7 +291,7 @@ fun Routing.templateRoutes(
                             call.principal<UserSession>()
                                 ?: return@withContext call.respond(
                                     HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError("User is not authorized"),
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
                         val rightIds: List<String> =
                             call.receive(RightIdsRest::class).takeIf { it.rightIds != null }?.rightIds

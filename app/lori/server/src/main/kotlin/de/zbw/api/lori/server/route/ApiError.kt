@@ -57,11 +57,14 @@ object ApiError {
             status = "401",
         )
 
-    const val EXPIRED_JWT = "Authentifizierung ist nicht mehr gültig.."
+    const val BAD_REQUEST_END_DATE = "Enddatum muss nach dem Startdatum liegen."
+    const val CONFLICT_RIGHTS = "Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten"
     const val INVALID_JSON = "Das JSON Format ist ungültig und konnte nicht gelesen werden."
     const val NO_VALID_ID = "Die URL enthält keine gültige Id."
     const val NO_RESOURCE_FOR_ID = "Für die Id wurde keine Resource gefunden."
     const val RESOURCE_STILL_IN_USE = "Diese Resource wird noch benutzt und kann nicht gelöscht werden."
+    const val USER_MISSING_RIGHTS = "Benutzer hat nicht die notwendigen Rechte\""
+    const val USER_NOT_AUTHED = "User ist nicht authentifiziert."
 
     // Postgres Error code when inserting a duplicate (primary key) into the database.
     const val PSQL_CONFLICT_ERR_CODE = "23505"

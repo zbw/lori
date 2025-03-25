@@ -7,6 +7,7 @@ import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.ServicePoolWithProbes
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
@@ -280,7 +281,7 @@ class RightRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns true
-                coEvery { upsertRight(any()) } returns 1
+                coEvery { upsertRight(any()) } returns Either.Right(1)
             }
         val servicePool = getServicePool(backend)
 
@@ -315,11 +316,10 @@ class RightRoutesKtTest {
             )
             val response =
                 client.put("/api/v1/right") {
-                    header(HttpHeaders.Accept, ContentType.Text.Plain.contentType)
                     header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                     setBody(jsonAsString(TEST_RIGHT))
                 }
-            assertThat("Should return CREATED", response.status, `is`(HttpStatusCode.Created))
+            assertThat("Should return 404", response.status, `is`(HttpStatusCode.NotFound))
         }
     }
 
@@ -352,7 +352,7 @@ class RightRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns true
-                coEvery { upsertRight(any()) } returns 1
+                coEvery { upsertRight(any()) } returns Either.Right(1)
             }
         val servicePool = getServicePool(backend)
 
