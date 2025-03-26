@@ -671,7 +671,7 @@ class RightIdFilter(
     override fun toWhereClause(): String =
         "(" +
             rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "(${ALIAS_ITEM_RIGHT}.$dbColumnName = ? AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null)"
+                "($ALIAS_ITEM_RIGHT.$dbColumnName = ? AND $ALIAS_ITEM_RIGHT.$dbColumnName is not null)"
             } + " AND $WHERE_REQUIRE_RIGHT_ID)"
 
     override fun setSQLParameter(
@@ -702,7 +702,7 @@ class TemplateNameFilter(
             " AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null" +
             " AND $WHERE_REQUIRE_RIGHT_ID" +
             templateNames.joinToString(prefix = " AND (", postfix = ")", separator = " AND ") {
-                "LOWER(${ALIAS_ITEM_RIGHT}.$dbColumnName) ILIKE ?"
+                "LOWER($ALIAS_ITEM_RIGHT.$dbColumnName) ILIKE ?"
             } + ")"
 
     override fun setSQLParameter(
