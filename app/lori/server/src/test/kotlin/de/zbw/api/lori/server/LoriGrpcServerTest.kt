@@ -207,6 +207,7 @@ class LoriGrpcServerTest {
                 FullImportResponse
                     .newBuilder()
                     .setItemsImported(communityIds.size * importsPerCommunity)
+                    .setItemsDeleted(5)
                     .build()
 
             val request = FullImportRequest.getDefaultInstance()

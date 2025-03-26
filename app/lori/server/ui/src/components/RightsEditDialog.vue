@@ -78,6 +78,10 @@ export default defineComponent({
       type: Object as PropType<RightRest>,
       required: false,
     },
+    isTabEntry: {
+      type: Boolean,
+      default: false,
+    },
   },
   // Emits
   emits: [
@@ -1293,12 +1297,13 @@ export default defineComponent({
 
 <template>
   <v-card position="relative" class="my-scroll">
-   <v-toolbar>
-    <v-spacer></v-spacer>
-    <v-btn
-        icon="mdi-close"
-        @click="checkForChangesAndClose"
-    ></v-btn>
+    <v-toolbar>
+      <v-spacer></v-spacer>
+      <v-btn
+          v-if="!isTabEntry"
+          icon="mdi-close"
+          @click="checkForChangesAndClose"
+      ></v-btn>
     </v-toolbar>
     <v-dialog
     max-width="500px"

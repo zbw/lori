@@ -127,6 +127,10 @@ export default defineComponent({
     <v-toolbar :key="renderKey" color="cyan" dark flat>
       <v-toolbar-title> Editiere Rechte für {{ handle }} </v-toolbar-title>
       <v-spacer></v-spacer>
+      <v-btn
+          icon="mdi-close"
+          @click="tabDialogClosed"
+      ></v-btn>
       <template v-slot:extension>
         <v-tabs
           v-model="tab"
@@ -161,6 +165,7 @@ export default defineComponent({
           :isNewTemplate="false"
           :handle="handle"
           :rightId="item.rightId"
+          :isTabEntry="true"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
           v-on:updateSuccessful="updateSuccessful"

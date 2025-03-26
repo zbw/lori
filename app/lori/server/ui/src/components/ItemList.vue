@@ -885,6 +885,7 @@ table.special, th.special, td.special {
       persistent
     >
       <BookmarkSave
+        :isNew="true"
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>

@@ -5,9 +5,10 @@ import bookmarkApi from "@/api/bookmarkApi";
 import error from "@/utils/error";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import BookmarkSave from "@/components/BookmarkSave.vue";
 
 export default defineComponent({
-  components: { RightsEditDialog },
+  components: {BookmarkSave, RightsEditDialog },
   props: {},
   emits: [
       "executeBookmarkSearch",
@@ -31,12 +32,6 @@ export default defineComponent({
      */
     const renderKey = ref(0);
     const headers = [
-      {
-        title: "Id",
-        key: "bookmarkId",
-        align: "start",
-        sortable: true,
-      },
       {
         title: "Name",
         key: "bookmarkName",
@@ -67,6 +62,7 @@ export default defineComponent({
     const editBookmark = ref({} as BookmarkRest);
     const editIndex = ref(-1);
     const confirmationDialog = ref(false);
+    const editDialogActivated = ref(false);
     const getBookmarkList = () => {
       bookmarkApi
         // TODO: Load entries dynamically
@@ -115,6 +111,24 @@ export default defineComponent({
       confirmationDialog.value = true;
     };
 
+    const openEditDialog = (bookmark: BookmarkRest) => {
+      editBookmark.value = Object.assign({}, bookmark);
+      editIndex.value = bookmarkItems.value.indexOf(bookmark);
+      bookmarkEditReinitCounter.value += 1;
+      editDialogActivated.value = true;
+    };
+
+    const editDialogSuccessful = (bookmark: BookmarkRest) => {
+      bookmarkItems.value[editIndex.value] = bookmark;
+      alertSuccessful.value = true;
+      alertSuccessfulMsg.value =
+          "Bookmark '" + bookmark.bookmarkName + "' erfolgreich editiert.";
+    };
+
+    const closeEditDialog = () => {
+      editDialogActivated.value = false;
+    };
+
     const closeDeleteDialog = () => {
       confirmationDialog.value = false;
     };
@@ -140,6 +154,7 @@ export default defineComponent({
      */
     const templateDialogActivated = ref(false);
     const templateReinitCounter = ref(0);
+    const bookmarkEditReinitCounter = ref(0);
     const currentBookmark = ref({} as BookmarkRest);
 
     const activateTemplateDialog = (bookmark: BookmarkRest) => {
@@ -181,11 +196,14 @@ export default defineComponent({
     return {
       alertSuccessful,
       alertSuccessfulMsg,
+      bookmarkEditReinitCounter,
       bookmarkError,
       bookmarkErrorMsg,
       bookmarkItems,
       confirmationDialog,
       currentBookmark,
+      editBookmark,
+      editDialogActivated,
       headers,
       renderKey,
       searchTerm,
@@ -195,11 +213,14 @@ export default defineComponent({
       childTemplateAdded,
       close,
       closeDeleteDialog,
+      closeEditDialog,
       closeTemplateDialog,
       copyToClipboard,
       deleteBookmarkEntry,
+      editDialogSuccessful,
       executeBookmarkSearch,
       openDeleteDialog,
+      openEditDialog,
     };
   },
 });
@@ -308,6 +329,12 @@ export default defineComponent({
           </v-btn>
           <v-btn
               variant="text"
+              icon="mdi-pencil"
+              @click="openEditDialog(item)"
+          >
+          </v-btn>
+          <v-btn
+              variant="text"
               @click="openDeleteDialog(item)"
               icon="mdi-delete"
           >
@@ -331,6 +358,20 @@ export default defineComponent({
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:editRightClosed="closeTemplateDialog"
         ></RightsEditDialog>
+      </v-dialog>
+      <v-dialog
+          v-model="editDialogActivated"
+          :retain-focus="false"
+          max-width="1000px"
+          persistent
+      >
+        <BookmarkSave
+            :isNew="false"
+            :reinitCounter="bookmarkEditReinitCounter"
+            :bookmark="editBookmark"
+            v-on:closeEditDialog="closeEditDialog"
+            v-on:editBookmarkSuccessful="editDialogSuccessful"
+        ></BookmarkSave>
       </v-dialog>
     </v-container>
   </v-card>

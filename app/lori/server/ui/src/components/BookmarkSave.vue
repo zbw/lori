@@ -1,5 +1,5 @@
 <script lang="ts">
-import { computed, defineComponent, reactive, ref } from "vue";
+import {computed, defineComponent, PropType, reactive, ref, watch} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
@@ -7,16 +7,36 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import {BookmarkIdCreated} from "@/generated-sources/openapi";
+import {BookmarkIdCreated, BookmarkRest, RightRest} from "@/generated-sources/openapi";
 
 export default defineComponent({
-  emits: ["addBookmarkSuccessful"],
+  emits: [
+    "addBookmarkSuccessful",
+    "closeEditDialog",
+    "editBookmarkSuccessful",
+  ],
+  props: {
+    isNew: {
+      type: Boolean,
+      required: true,
+    },
+    bookmark: {
+      type: Object as PropType<BookmarkRest>,
+      required: false,
+    },
+    reinitCounter: {
+      type: Number,
+      required: false,
+    },
+  },
   setup(props, { emit }) {
     /**
      * Constants:
      */
     const updateInProgress = ref(false);
     const description = ref("");
+    const query = ref("");
+    const tmpBookmark = ref({} as BookmarkRest);
     /**
      * Vuelidate:
      */
@@ -53,14 +73,19 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
       formState.name = "";
       description.value = "";
+      emit("closeEditDialog");
     };
 
     /**
      * Changes:
      */
     const formWasChanged = computed(() => {
-      return formState.name != "" ||
-          description.value != ""
+      return (props.isNew && (formState.name != "" ||
+          description.value != "")) ||
+          (!props.isNew && (
+              formState.name != props.bookmark?.bookmarkName ||
+              description.value != props.bookmark?.description
+          ))
     });
     const unsavedChangesDialog = ref(false);
     const checkForChangesAndClose = () => {
@@ -75,16 +100,24 @@ export default defineComponent({
       unsavedChangesDialog.value = false;
     };
 
-
     const save = () => {
       v$.value.$validate().then((isValid) => {
         if (!isValid) {
           return;
         }
-        let bookmarkName = formState.name;
         updateInProgress.value = true;
-        bookmarkApi
-          .addRawBookmark(
+        if(props.isNew){
+          create();
+        } else {
+          update();
+        }
+      });
+    };
+
+    const create = () => {
+      let bookmarkName = formState.name;
+      bookmarkApi
+        .addRawBookmark(
             bookmarkName,
             description.value,
             searchStore.lastSearchTerm,
@@ -103,9 +136,31 @@ export default defineComponent({
             searchquerybuilder.buildLicenceUrlFilter(searchStore),
             searchquerybuilder.buildManualRightFilter(searchStore),
             searchquerybuilder.buildAccessOnDateFilter(searchStore),
-          )
-          .then((r: BookmarkIdCreated) => {
-            emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
+        )
+        .then((r: BookmarkIdCreated) => {
+          emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
+          close();
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            updateInProgress.value = false;
+            saveAlertError.value = true;
+            saveAlertErrorMessage.value = errMsg;
+          });
+        }).finally(() =>{
+          updateInProgress.value = false;
+        }
+      );
+    };
+
+    const update = () => {
+      tmpBookmark.value = Object.assign({}, props.bookmark);
+      tmpBookmark.value.bookmarkName = formState.name;
+      tmpBookmark.value.description = description.value;
+      bookmarkApi
+          .updateBookmark(tmpBookmark.value)
+          .then(() => {
+            emit("editBookmarkSuccessful", { ...tmpBookmark.value });
             close();
           })
           .catch((e) => {
@@ -114,14 +169,50 @@ export default defineComponent({
               saveAlertError.value = true;
               saveAlertErrorMessage.value = errMsg;
             });
-          });
+          }).finally(() => {
+        updateInProgress.value = false;
       });
     };
+
+
+    const cardTitle = computed(() => {
+      const mode = props.isNew ? "speichern" : "bearbeiten";
+      return "Suche " + mode;
+    });
+
+    const reinitializeBookmark = () => {
+      if(!props.isNew){
+        description.value = props.bookmark?.description ?? '';
+        formState.name = props.bookmark?.bookmarkName ?? '';
+        query.value = props.bookmark?.filtersAsQuery ?? '';
+      }
+    };
+
+    const resetAllValues = () => {
+      description.value = '';
+      formState.name = '';
+      query.value = '';
+    };
+
+    watch(
+        () => props.reinitCounter,
+        () => {
+      if(props.isNew){
+        resetAllValues();
+      } else {
+        reinitializeBookmark();
+      }
+    },
+    { immediate: true }
+    );
+
     return {
+      cardTitle,
       description,
       dialogStore,
       errorName,
       formState,
+      query,
       saveAlertError,
       saveAlertErrorMessage,
       unsavedChangesDialog,
@@ -170,7 +261,7 @@ export default defineComponent({
       </v-card>
     </v-dialog>
     <v-container>
-      <v-card-title>Suche Speichern</v-card-title>
+      <v-card-title class="">{{ cardTitle }}</v-card-title>
       <v-row>
         <v-col cols="4">Name</v-col>
         <v-col cols="8">
@@ -184,22 +275,23 @@ export default defineComponent({
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4"> Bookmark-Id </v-col>
+        <v-col cols="4"> Beschreibung</v-col>
         <v-col cols="8">
-          <v-text-field
-            disabled
-            label="Wird automatisch generiert"
-            variant="outlined"
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="4"> Beschreibung </v-col>
-        <v-col cols="8">
-          <v-text-field
+          <v-textarea
             hint="Beschreibung des Bookmarks"
             v-model="description"
             outlined
+          ></v-textarea>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="4"> Query</v-col>
+        <v-col cols="8">
+          <v-text-field
+              v-model="query"
+              bg-color="grey-lighten-2"
+              readonly
+              variant="outlined"
           ></v-text-field>
         </v-col>
       </v-row>

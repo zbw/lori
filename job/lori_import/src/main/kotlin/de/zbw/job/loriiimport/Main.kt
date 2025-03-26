@@ -35,7 +35,7 @@ object Main {
                 configuration =
                     LoriClientConfiguration(
                         9092,
-                        "lori",
+                        "localhost",
                         // Wait for four hour max. Anything above that is at least worth investigating.
                         4 * 3600000,
                     ),
@@ -46,7 +46,10 @@ object Main {
                 withContext(span.asContextElement()) {
                     LOG.info("Start full import:")
                     val response: FullImportResponse = loriClient.fullImport(FullImportRequest.getDefaultInstance())
-                    span.setAttribute("Items Imported", response.itemsImported.toLong())
+                    LOG.info("Items imported: ${response.itemsImported}")
+                    LOG.info("Items deleted: ${response.itemsDeleted}")
+                    span.setAttribute("Items imported", response.itemsImported.toLong())
+                    span.setAttribute("Items deleted", response.itemsDeleted.toLong())
                 }
             } catch (e: Exception) {
                 LOG.error("An error occurred on full import procedure: ${e.message}")

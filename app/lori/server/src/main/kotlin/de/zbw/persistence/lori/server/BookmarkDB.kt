@@ -150,10 +150,10 @@ class BookmarkDB(
             }.takeWhile { true }.toList()
         }
 
-    suspend fun getBookmarkNamesByQuerystring(query: String): List<String> =
+    suspend fun getBookmarkIdByQuerystring(query: String): List<Int> =
         connectionPool.useConnection("getBookmarkNamesByQuerystring") { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_BOOKMARK_BY_QUERYSTRING).apply {
+                connection.prepareStatement(STATEMENT_GET_ID_BY_QUERYSTRING).apply {
                     this.setString(1, query)
                 }
 
@@ -167,7 +167,7 @@ class BookmarkDB(
                 }
             return@useConnection generateSequence {
                 if (rs.next()) {
-                    rs.getString(1)
+                    rs.getInt(1)
                 } else {
                     null
                 }
@@ -276,8 +276,8 @@ class BookmarkDB(
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
 
-        const val STATEMENT_GET_BOOKMARK_BY_QUERYSTRING =
-            "SELECT $COLUMN_BOOKMARK_NAME" +
+        const val STATEMENT_GET_ID_BY_QUERYSTRING =
+            "SELECT $COLUMN_BOOKMARK_ID" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " WHERE $COLUMN_QUERYSTRING = ?;"
 
