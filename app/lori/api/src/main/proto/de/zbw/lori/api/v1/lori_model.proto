@@ -10,6 +10,7 @@ message FullImportRequest {
 
 message FullImportResponse {
   int32 items_imported = 1;
+  int32 items_deleted = 2;
 }
 
 message CheckForRightErrorsRequest{

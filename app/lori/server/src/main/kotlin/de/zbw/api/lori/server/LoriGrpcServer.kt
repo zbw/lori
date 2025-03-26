@@ -92,12 +92,13 @@ class LoriGrpcServer(
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
                 val imports: Int = runImports(communityIds, token)
                 val deleted: Int = backend.updateMetadataAsDeleted(startTime)
-                LOG.info("Number of imported Items: " + imports)
-                LOG.info("Number of deleted Items found: " + deleted)
+                LOG.info("Number of imported Items: $imports")
+                LOG.info("Number of deleted Items found: $deleted")
 
                 FullImportResponse
                     .newBuilder()
                     .setItemsImported(imports)
+                    .setItemsDeleted(deleted)
                     .build()
             } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
