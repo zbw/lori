@@ -328,6 +328,12 @@ item-search:
         required: false
         schema:
           type: boolean
+      - name: noFacets
+        in: query
+        description: Return only everything except for facets
+        required: false
+        schema:
+          type: boolean
       - name: filterPublicationYear
         in: query
         schema:
