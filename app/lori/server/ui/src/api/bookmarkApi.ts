@@ -71,4 +71,10 @@ export default {
       limit: limit,
     });
   },
+
+  updateBookmark(bookmark: BookmarkRest): Promise<void> {
+    return bookmarkApi.updateBookmark({
+      body: bookmark,
+    });
+  }
 };

@@ -487,12 +487,12 @@ class LoriServerBackend(
         )
 
     suspend fun insertBookmark(bookmark: Bookmark): Int {
-        val bookmarkNamesSameFilters = dbConnector.bookmarkDB.getBookmarkNamesByQuerystring(bookmark.computeQueryString())
-        if (bookmarkNamesSameFilters.isEmpty()) {
+        val bookmarkIdsSameFilters = dbConnector.bookmarkDB.getBookmarkIdByQuerystring(bookmark.computeQueryString())
+        if (bookmarkIdsSameFilters.isEmpty()) {
             return dbConnector.bookmarkDB.insertBookmark(bookmark)
         } else {
             throw ResourceConflictException(
-                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkNamesSameFilters[0]}'",
+                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkIdsSameFilters[0]}'",
             )
         }
     }
@@ -535,14 +535,14 @@ class LoriServerBackend(
         bookmarkId: Int,
         bookmark: Bookmark,
     ): Int {
-        val bookmarkNamesSameFilters = dbConnector.bookmarkDB.getBookmarkNamesByQuerystring(bookmark.computeQueryString())
-        return if (bookmarkNamesSameFilters.isEmpty() ||
-            (bookmarkNamesSameFilters.size == 1 && bookmarkNamesSameFilters[0] == bookmark.bookmarkName)
+        val bookmarkIdsSameFilters = dbConnector.bookmarkDB.getBookmarkIdByQuerystring(bookmark.computeQueryString())
+        return if (bookmarkIdsSameFilters.isEmpty() ||
+            (bookmarkIdsSameFilters.size == 1 && bookmarkIdsSameFilters[0] == bookmark.bookmarkId)
         ) {
             dbConnector.bookmarkDB.updateBookmarkById(bookmarkId, bookmark)
         } else {
             throw ResourceConflictException(
-                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkNamesSameFilters[0]}'",
+                "Es existiert bereits eine andere gespeicherte Suche mit den identischen Suchfiltern: '${bookmarkIdsSameFilters[0]}'",
             )
         }
     }
