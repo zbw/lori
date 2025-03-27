@@ -255,6 +255,109 @@ export default defineComponent({
       }
     };
 
+    /**
+     * Lazy loading
+     */
+    // Series
+    const seriesToShow = computed(() => searchStore.seriesReceived.slice(0, seriesPerPage.value));
+    const isSeriesGroupOpen = ref(false); // Track if the group is open
+    const isSeriesLoading = ref(false); // Prevent multiple loads
+    const seriesPerPage = ref(20); // Number of items to load per scroll
+    const scrollWrapperSeries = ref<HTMLElement | null>(null); // Scroll wrapper ref
+    const handleScrollSeries = (event: Event) => {
+      if (scrollWrapperSeries.value) {
+        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSeries.value;
+        // If the user has scrolled to the bottom
+        if (scrollHeight - scrollTop === clientHeight) {
+          loadMoreSeries();
+        }
+      }
+    };
+
+    const loadMoreSeries = () => {
+      isSeriesLoading.value = true;
+      // Simulate loading more items
+      setTimeout(() => {
+        seriesPerPage.value += 20; // Load more items as the user scrolls
+        isSeriesLoading.value = false;
+      }, 500); // Simulate API delay (adjust as needed)
+    };
+
+    // PaketSigel
+    const sigelToShow = computed(() => searchStore.paketSigelIdReceived.slice(0, sigelPerPage.value));
+    const isSigelGroupOpen = ref(false); // Track if the group is open
+    const isSigelLoading = ref(false); // Prevent multiple loads
+    const sigelPerPage = ref(20); // Number of items to load per scroll
+    const scrollWrapperSigel = ref<HTMLElement | null>(null); // Scroll wrapper ref
+    const handleScrollSigel = (event: Event) => {
+      if (scrollWrapperSigel.value) {
+        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSigel.value;
+        // If the user has scrolled to the bottom
+        if (scrollHeight - scrollTop === clientHeight) {
+          loadMoreSigel();
+        }
+      }
+    };
+
+    const loadMoreSigel = () => {
+      isSigelLoading.value = true;
+      // Simulate loading more items
+      setTimeout(() => {
+        sigelPerPage.value += 20; // Load more items as the user scrolls
+        isSigelLoading.value = false;
+      }, 500); // Simulate API delay (adjust as needed)
+    };
+
+    // ZDB-Ids
+    const zdbToShow = computed(() => searchStore.zdbIdReceived.slice(0, zdbPerPage.value));
+    const isZdbGroupOpen = ref(false); // Track if the group is open
+    const isZdbLoading = ref(false); // Prevent multiple loads
+    const zdbPerPage = ref(20); // Number of items to load per scroll
+    const scrollWrapperZdb = ref<HTMLElement | null>(null); // Scroll wrapper ref
+    const handleScrollZdb = (event: Event) => {
+      if (scrollWrapperZdb.value) {
+        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperZdb.value;
+        // If the user has scrolled to the bottom
+        if (scrollHeight - scrollTop === clientHeight) {
+          loadMoreZdb();
+        }
+      }
+    };
+
+    const loadMoreZdb = () => {
+      isZdbLoading.value = true;
+      // Simulate loading more items
+      setTimeout(() => {
+        zdbPerPage.value += 20; // Load more items as the user scrolls
+        isZdbLoading.value = false;
+      }, 500); // Simulate API delay (adjust as needed)
+    };
+
+    // Licence-URL
+    const licenceToShow = computed(() => searchStore.licenceUrlReceived.slice(0, licencePerPage.value));
+    const isLicenceGroupOpen = ref(false); // Track if the group is open
+    const isLicenceLoading = ref(false); // Prevent multiple loads
+    const licencePerPage = ref(20); // Number of items to load per scroll
+    const scrollWrapperLicence = ref<HTMLElement | null>(null); // Scroll wrapper ref
+    const handleScrollLicence = (event: Event) => {
+      if (scrollWrapperLicence.value) {
+        const { scrollHeight, scrollTop, clientHeight } = scrollWrapperLicence.value;
+        // If the user has scrolled to the bottom
+        if (scrollHeight - scrollTop === clientHeight) {
+          loadMoreLicence();
+        }
+      }
+    };
+
+    const loadMoreLicence = () => {
+      isLicenceLoading.value = true;
+      // Simulate loading more items
+      setTimeout(() => {
+        licencePerPage.value += 20; // Load more items as the user scrolls
+        isLicenceLoading.value = false;
+      }, 500); // Simulate API delay (adjust as needed)
+    };
+
     return {
       accessStateDate,
       canReset,
@@ -271,12 +374,40 @@ export default defineComponent({
       tempValidOnMenu,
       searchStore,
       v$,
+      isLicenceGroupOpen,
+      isSeriesGroupOpen,
+      isSigelGroupOpen,
+      isZdbGroupOpen,
+      licenceToShow,
+      seriesToShow,
+      sigelToShow,
+      zdbToShow,
+      isLicenceLoading,
+      isSeriesLoading,
+      isSigelLoading,
+      isZdbLoading,
+      licencePerPage,
+      seriesPerPage,
+      sigelPerPage,
+      zdbPerPage,
+      scrollWrapperLicence,
+      scrollWrapperSeries,
+      scrollWrapperSigel,
+      scrollWrapperZdb,
       accessStateDateEntered,
       activateBookmarkSaveDialog,
       emitGetAccessStateOnDateSearch,
       emitSearchStart,
       emitSearchStartAccessStateOn,
       emitSearchStartPublicationYear,
+      handleScrollLicence,
+      handleScrollSeries,
+      handleScrollSigel,
+      handleScrollZdb,
+      loadMoreLicence,
+      loadMoreSigel,
+      loadMoreSeries,
+      loadMoreZdb,
       parseAccessState,
       parsePublicationType,
       ppLicenceUrl,
@@ -386,117 +517,149 @@ export default defineComponent({
                 </v-list-item>
               </v-list>
             </v-list-group>
-            <v-list-group sub-group>
+            <v-list-group sub-group v-model="isSigelGroupOpen">
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="Paketsigel"></v-list-item>
               </template>
               <h6></h6>
-              <v-list>
-                <v-list-item
-                    v-for="(item, i) in searchStore.paketSigelIdReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
-                >
-                  <v-checkbox
-                      :label="ppPaketSigel(item.paketSigel, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      v-model="searchStore.paketSigelIdIdx[i]"
-                      @update:modelValue="emitSearchStart"
-                  ></v-checkbox>
-                  <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
-                  ></v-divider>
-                </v-list-item>
-              </v-list>
+              <v-expand-transition>
+                <div ref="scrollWrapperSigel" @scroll="handleScrollSigel" style="max-height: 400px; overflow-y: auto;">
+                  <v-virtual-scroll
+                      :items="sigelToShow"
+                      item-height="64"
+                      v-slot:default="{ item, index }"
+                      :items-per-page="sigelPerPage"
+                  >
+                    <v-list-item
+                        :key="item.paketSigel"
+                        :value="item"
+                        color="primary"
+                        rounded="shaped"
+                    >
+                      <v-checkbox
+                          :label="ppPaketSigel(item.paketSigel, item.count)"
+                          hide-details
+                          class="pl-9 ml-4"
+                          v-model="searchStore.paketSigelIdIdx[index]"
+                          @update:modelValue="emitSearchStart"
+                      ></v-checkbox>
+                      <v-divider
+                          :thickness="1"
+                          class="border-opacity-100"
+                          color="grey-lighten-1"
+                      ></v-divider>
+                    </v-list-item>
+                  </v-virtual-scroll>
+                </div>
+              </v-expand-transition>
             </v-list-group>
-            <v-list-group sub-group>
+            <v-list-group sub-group v-model="isSeriesGroupOpen">
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="Serie"></v-list-item>
               </template>
               <h6></h6>
-              <v-list>
-                <v-list-item
-                    v-for="(item, i) in searchStore.seriesReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
-                >
-                  <v-checkbox
-                      :label="ppZDBId(item.series, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      v-model="searchStore.seriesIdx[i]"
-                      @update:modelValue="emitSearchStart"
-                  ></v-checkbox>
-                  <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
-                  ></v-divider>
-                </v-list-item>
-              </v-list>
+              <v-expand-transition>
+                <div ref="scrollWrapperSeries" @scroll="handleScrollSeries" style="max-height: 400px; overflow-y: auto;">
+                  <v-virtual-scroll
+                      :items="seriesToShow"
+                      item-height="64"
+                      v-slot:default="{ item, index }"
+                      :items-per-page="seriesPerPage"
+                  >
+                    <v-list-item
+                        :key="item.series"
+                        :value="item"
+                        color="primary"
+                        rounded="shaped"
+                    >
+                      <v-checkbox
+                          :label="ppZDBId(item.series, item.count)"
+                          hide-details
+                          class="pl-9 ml-4"
+                          v-model="searchStore.seriesIdx[index]"
+                          @update:modelValue="emitSearchStart"
+                      ></v-checkbox>
+                      <v-divider
+                          :thickness="1"
+                          class="border-opacity-100"
+                          color="grey-lighten-1"
+                      ></v-divider>
+                    </v-list-item>
+                  </v-virtual-scroll>
+                </div>
+              </v-expand-transition>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="ZDB-IDs"></v-list-item>
               </template>
               <h6></h6>
-              <v-list>
-                <v-list-item
-                    v-for="(item, i) in searchStore.zdbIdReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
-                >
-                  <v-checkbox
-                      :label="ppZDBId(item.zdbId, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      v-model="searchStore.zdbIdIdx[i]"
-                      @update:modelValue="emitSearchStart"
-                  ></v-checkbox>
-                  <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
-                  ></v-divider>
-                </v-list-item>
-              </v-list>
+              <v-expand-transition>
+                <div ref="scrollWrapperZdb" @scroll="handleScrollZdb" style="max-height: 400px; overflow-y: auto;">
+                  <v-virtual-scroll
+                      :items="zdbToShow"
+                      item-height="64"
+                      v-slot:default="{ item, index }"
+                      :items-per-page="zdbPerPage"
+                  >
+                    <v-list-item
+                        :key="item.zdbId"
+                        :value="item"
+                        color="primary"
+                        rounded="shaped"
+                    >
+                      <v-checkbox
+                          :label="ppZDBId(item.zdbId, item.count)"
+                          hide-details
+                          class="pl-9 ml-4"
+                          v-model="searchStore.zdbIdIdx[index]"
+                          @update:modelValue="emitSearchStart"
+                      ></v-checkbox>
+                      <v-divider
+                          :thickness="1"
+                          class="border-opacity-100"
+                          color="grey-lighten-1"
+                      ></v-divider>
+                    </v-list-item>
+                  </v-virtual-scroll>
+                </div>
+              </v-expand-transition>
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
                 <v-list-item v-bind="props" title="CC-Lizenz"></v-list-item>
               </template>
               <h6></h6>
-              <v-list>
-                <v-list-item
-                    v-for="(item, i) in searchStore.licenceUrlReceived"
-                    :key="i"
-                    :value="item"
-                    color="primary"
-                    rounded="shaped"
-                >
-                  <v-checkbox
-                      :label="ppLicenceUrl(item.licenceUrl, item.count)"
-                      hide-details
-                      class="pl-9 ml-4"
-                      v-model="searchStore.licenceUrlIdx[i]"
-                      @update:modelValue="emitSearchStart"
-                  ></v-checkbox>
-                  <v-divider
-                      :thickness="1"
-                      class="border-opacity-100"
-                      color="grey-lighten-1"
-                  ></v-divider>
-                </v-list-item>
-              </v-list>
+              <v-expand-transition>
+                <div ref="scrollWrapperLicence" @scroll="handleScrollLicence" style="max-height: 400px; overflow-y: auto;">
+                  <v-virtual-scroll
+                      :items="licenceToShow"
+                      item-height="64"
+                      v-slot:default="{ item, index }"
+                      :items-per-page="licencePerPage"
+                  >
+                    <v-list-item
+                        :key="item.licenceUrl"
+                        :value="item"
+                        color="primary"
+                        rounded="shaped"
+                    >
+                      <v-checkbox
+                          :label="ppLicenceUrl(item.licenceUrl, item.count)"
+                          hide-details
+                          class="pl-9 ml-4"
+                          v-model="searchStore.licenceUrlIdx[index]"
+                          @update:modelValue="emitSearchStart"
+                      ></v-checkbox>
+                      <v-divider
+                          :thickness="1"
+                          class="border-opacity-100"
+                          color="grey-lighten-1"
+                      ></v-divider>
+                    </v-list-item>
+                  </v-virtual-scroll>
+                </div>
+              </v-expand-transition>
             </v-list-group>
           </v-list>
         </v-col>

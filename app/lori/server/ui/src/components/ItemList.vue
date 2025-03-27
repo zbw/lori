@@ -432,40 +432,52 @@ export default defineComponent({
           });
         });
       api
-          .searchQuery(
-              "",
-              (currentPage.value - 1) * pageSize.value, // offset
-              pageSize.value, // limit
-              pageSize.value,
-              false,
-              true,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-              rightId,
-              undefined,
-              undefined,
-              undefined,
-              undefined,
-          )
-          .then((response: ItemInformation) => {
+        .searchQuery(
+            "",
+            (currentPage.value - 1) * pageSize.value, // offset
+            pageSize.value, // limit
+            pageSize.value,
+            false,
+            true,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            rightId,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        )
+        .then((response: ItemInformation) => {
+          const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
+
+          // Send the response to the worker for processing
+          worker.postMessage(response);
+
+          // Handle the message from the worker
+          worker.onmessage = (event) => {
+            const minifiedResponse = event.data;
             getAccessStatesForDate();
-            processFacets(response);
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              tableContentLoading.value = false;
-              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
-              errorMsgIsActive.value = true;
-            });
+            processFacets(minifiedResponse);
+
+            // Optionally, terminate the worker after use
+            worker.terminate();
+          }
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+            errorMsgIsActive.value = true;
           });
+        });
     };
 
     const searchQueryByTerm = (searchTerm: string, callback: () => void) => {
@@ -646,8 +658,20 @@ export default defineComponent({
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
           )
           .then((response: ItemInformation) => {
-            getAccessStatesForDate();
-            processFacets(response);
+            const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
+
+            // Send the response to the worker for processing
+            worker.postMessage(response);
+
+            // Handle the message from the worker
+            worker.onmessage = (event) => {
+              const minifiedResponse = event.data;
+              getAccessStatesForDate();
+              processFacets(minifiedResponse);
+
+              // Optionally, terminate the worker after use
+              worker.terminate();
+            };
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -659,10 +683,7 @@ export default defineComponent({
     };
 
     const processFacets = (response: ItemInformation) => {
-      console.log("Process facets");
-
       if (response.paketSigelWithCount != undefined) {
-        console.log("Process paketsigel");
         searchStore.paketSigelIdReceived = response.paketSigelWithCount;
       }
       if (response.hasLicenceContract != undefined) {
