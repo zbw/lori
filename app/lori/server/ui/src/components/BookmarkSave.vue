@@ -7,7 +7,7 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
-import {BookmarkIdCreated, BookmarkRest, RightRest} from "@/generated-sources/openapi";
+import {BookmarkIdCreated, BookmarkRest} from "@/generated-sources/openapi";
 
 export default defineComponent({
   emits: [
@@ -35,7 +35,6 @@ export default defineComponent({
      */
     const updateInProgress = ref(false);
     const description = ref("");
-    const query = ref("");
     const tmpBookmark = ref({} as BookmarkRest);
     /**
      * Vuelidate:
@@ -184,14 +183,12 @@ export default defineComponent({
       if(!props.isNew){
         description.value = props.bookmark?.description ?? '';
         formState.name = props.bookmark?.bookmarkName ?? '';
-        query.value = props.bookmark?.filtersAsQuery ?? '';
       }
     };
 
     const resetAllValues = () => {
       description.value = '';
       formState.name = '';
-      query.value = '';
     };
 
     watch(
@@ -212,7 +209,6 @@ export default defineComponent({
       dialogStore,
       errorName,
       formState,
-      query,
       saveAlertError,
       saveAlertErrorMessage,
       unsavedChangesDialog,
@@ -280,19 +276,8 @@ export default defineComponent({
           <v-textarea
             hint="Beschreibung des Bookmarks"
             v-model="description"
-            outlined
+            variant="outlined"
           ></v-textarea>
-        </v-col>
-      </v-row>
-      <v-row>
-        <v-col cols="4"> Query</v-col>
-        <v-col cols="8">
-          <v-text-field
-              v-model="query"
-              bg-color="grey-lighten-2"
-              readonly
-              variant="outlined"
-          ></v-text-field>
         </v-col>
       </v-row>
       <v-card-actions>
