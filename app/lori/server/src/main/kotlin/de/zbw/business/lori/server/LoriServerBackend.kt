@@ -28,6 +28,7 @@ import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.DashboardUtil
 import de.zbw.lori.model.ErrorRest
 import de.zbw.persistence.lori.server.DatabaseConnector
+import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.RightErrorDB
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
@@ -373,6 +374,7 @@ class LoriServerBackend(
         noRightInformationFilter: NoRightInformationFilter? = null,
         handlesToIgnore: List<String> = emptyList(),
         facetsOnly: Boolean = false,
+        noFacets: Boolean = false,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -406,12 +408,27 @@ class LoriServerBackend(
             // Collect all publication types, zdbIds and paketSigels
             val facetsDef =
                 async {
-                    dbConnector.searchDB.searchForFacets(
-                        searchExpression,
-                        metadataSearchFilter,
-                        rightSearchFilter,
-                        noRightInformationFilter,
-                    )
+                    if (!noFacets) {
+                        dbConnector.searchDB.searchForFacets(
+                            searchExpression,
+                            metadataSearchFilter,
+                            rightSearchFilter,
+                            noRightInformationFilter,
+                        )
+                    } else {
+                        return@async FacetTransientSet(
+                            accessState = emptyMap(),
+                            hasLicenceContract = false,
+                            hasOpenContentLicence = false,
+                            hasZbwUserAgreement = false,
+                            isPartOfSeries = emptyMap(),
+                            licenceUrls = emptyMap(),
+                            paketSigels = emptyMap(),
+                            publicationType = emptyMap(),
+                            templateIdToOccurence = emptyMap(),
+                            zdbIds = emptyMap(),
+                        )
+                    }
                 }
 
             // Combine Metadata entries with their rights

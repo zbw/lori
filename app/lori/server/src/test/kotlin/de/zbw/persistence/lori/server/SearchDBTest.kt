@@ -31,10 +31,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLI
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_YEAR
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
-import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
-import de.zbw.persistence.lori.server.SearchDB.Companion.buildSearchQueryForFacets
 import de.zbw.persistence.lori.server.SearchDB.Companion.buildSearchQueryOccurrence
-import de.zbw.persistence.lori.server.SearchDB.Companion.buildSearchQueryOccurrenceRight
 import io.mockk.every
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
@@ -261,8 +258,8 @@ class SearchDBTest : DatabaseTest() {
                 false,
                 "$SELECT_DISTINCT_ON FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL) AND" +
-                    " (((access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL) AND" +
+                    " (((access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
@@ -275,7 +272,7 @@ class SearchDBTest : DatabaseTest() {
                 false,
                 "$SELECT_DISTINCT_ON FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
@@ -298,11 +295,11 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL +
                     " FROM ($SELECT_DISTINCT_ON FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND" +
                     " (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
-                    " AND ${ALIAS_ITEM_RIGHT}.right_id IS NULL)" +
+                    " AND ir.right_id IS NULL)" +
                     " as sub" +
                     " WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)" +
                     " ORDER BY $COLUMN_METADATA_HANDLE ASC" +
@@ -414,9 +411,9 @@ class SearchDBTest : DatabaseTest() {
                     SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                    " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT" +
-                    " ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " LEFT JOIN item_right as ir" +
+                    " ON item.right_id = ir.right_id" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
@@ -429,9 +426,9 @@ class SearchDBTest : DatabaseTest() {
                     SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
                     " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                    " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT" +
-                    " ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " LEFT JOIN item_right as ir" +
+                    " ON item.right_id = ir.right_id" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "only right filter",
@@ -467,7 +464,7 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query only right filter",
@@ -478,7 +475,7 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_DISTINCT_ON +
                     " FROM item_metadata" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
                     " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
@@ -506,63 +503,6 @@ class SearchDBTest : DatabaseTest() {
         )
     }
 
-    @DataProvider(name = DATA_FOR_BUILD_SIGEL_AND_ZDB)
-    private fun createQueryFilterSearchForSigelAndZDB() =
-        arrayOf(
-            arrayOf(
-                null,
-                listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
-                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "FROM (${SearchDB.STATEMENT_SELECT_ALL_FACETS} FROM item_metadata" +
-                    " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
-                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    ") as sub",
-                "query with both filters and no searchkey",
-            ),
-            arrayOf(
-                SEVariable(CollectionNameFilter("foo")),
-                emptyList<MetadataSearchFilter>(),
-                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                "FROM (${SearchDB.STATEMENT_SELECT_ALL_FACETS} FROM item_metadata" +
-                    " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ${ALIAS_ITEM_RIGHT}.right_id IS NOT NULL)" +
-                    " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    ") as sub",
-                "query with search and right filter",
-            ),
-            arrayOf(
-                null,
-                listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
-                emptyList<RightSearchFilter>(),
-                "FROM (${SearchDB.STATEMENT_SELECT_ALL_FACETS} FROM item_metadata" +
-                    " $LEFT_JOIN_RIGHT" +
-                    " WHERE ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    ") as sub",
-                "query with metadata filter only",
-            ),
-        )
-
-    @Test(dataProvider = DATA_FOR_BUILD_SIGEL_AND_ZDB)
-    fun testBuildQueryForFacetSearch(
-        searchExpression: SearchExpression?,
-        metadataSearchFilter: List<MetadataSearchFilter>,
-        rightSearchFilter: List<RightSearchFilter>,
-        expectedSQLQuery: String,
-        description: String,
-    ) {
-        assertThat(
-            description,
-            buildSearchQueryForFacets(
-                searchExpression,
-                metadataSearchFilter,
-                rightSearchFilter,
-                null,
-            ),
-            `is`(expectedSQLQuery),
-        )
-    }
-
     @DataProvider(name = DATA_FOR_BUILD_OCCURRENCE_QUERY)
     fun createDataForOccurrenceQuery() =
         arrayOf(
@@ -572,19 +512,23 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.publication_type, COUNT(sub.publication_type)" +
-                    " FROM(SELECT DISTINCT(sub.publication_type)" +
-                    " FROM (" +
-                    SearchDB.STATEMENT_SELECT_ALL_FACETS +
-                    " FROM item_metadata" +
-                    " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null))" +
-                    " AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null)" +
-                    " AND (LOWER(publication_type) = LOWER(?))) as sub" +
-                    " WHERE sub.publication_type IS NOT NULL" +
-                    " GROUP BY sub.publication_type) as A(publication_type)" +
-                    " LEFT JOIN (SELECT DISTINCT ON (item_metadata.handle) item_metadata.handle,publication_type,paket_sigel,zdb_ids,licence_url_filter,o.access_state,template_name,is_part_of_series,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_subcom_name FROM item_metadata LEFT JOIN item ON item.handle = item_metadata.handle LEFT JOIN item_right as o ON item.right_id = o.right_id WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))) AS sub ON A.publication_type = sub.publication_type  GROUP BY A.publication_type",
+                "WITH metadata_with_rights AS (" +
+                    " SELECT im.publication_type, ir.right_id, im.handle" +
+                    " FROM item_metadata im" +
+                    " LEFT JOIN item i ON i.handle = im.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
+                    " WHERE im.publication_type IS NOT NULL" +
+                    " AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
+                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))," +
+                    "metadata_unique AS (" +
+                    " SELECT handle, publication_type" +
+                    " FROM metadata_with_rights" +
+                    " GROUP BY handle, publication_type)" +
+                    " SELECT mw.publication_type, COUNT(*)" +
+                    " FROM metadata_unique mw" +
+                    " GROUP BY mw.publication_type;",
                 "Publication Type occurence",
             ),
             arrayOf(
@@ -593,13 +537,22 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT A.zdb_ids, COUNT(sub.zdb_ids)" +
-                    " FROM(SELECT DISTINCT(sub.zdb_ids)" +
-                    " FROM (" +
-                    SearchDB.STATEMENT_SELECT_ALL_FACETS +
-                    " FROM item_metadata" +
-                    " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))) as sub WHERE sub.zdb_ids IS NOT NULL GROUP BY sub.zdb_ids) as A(zdb_ids) LEFT JOIN (SELECT DISTINCT ON (item_metadata.handle) item_metadata.handle,publication_type,paket_sigel,zdb_ids,licence_url_filter,o.access_state,template_name,is_part_of_series,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl,ts_hdl,ts_subcom_name FROM item_metadata LEFT JOIN item ON item.handle = item_metadata.handle LEFT JOIN item_right as o ON item.right_id = o.right_id WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))) AS sub ON A.zdb_ids = sub.zdb_ids  GROUP BY A.zdb_ids",
+                "WITH metadata_with_rights AS (" +
+                    " SELECT im.zdb_ids, ir.right_id, im.handle" +
+                    " FROM item_metadata im" +
+                    " LEFT JOIN item i ON i.handle = im.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
+                    " WHERE im.zdb_ids IS NOT NULL AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
+                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))," +
+                    "metadata_unique AS (" +
+                    " SELECT handle, zdb_ids" +
+                    " FROM metadata_with_rights" +
+                    " GROUP BY handle, zdb_ids)" +
+                    " SELECT mw.zdb_ids, COUNT(*)" +
+                    " FROM metadata_unique mw" +
+                    " GROUP BY mw.zdb_ids;",
                 "ZDB ID Series with right filter",
             ),
         )
@@ -614,18 +567,9 @@ class SearchDBTest : DatabaseTest() {
         expectedQuery: String,
         reason: String,
     ) {
-        val facetBaseQuery =
-            buildSearchQueryForFacets(
-                searchExpression = searchExpression,
-                metadataSearchFilters = metadataSearchFilters,
-                rightSearchFilters = rightSearchFilters,
-                noRightInformationFilter = noRightInformationFilter,
-            )
-
         val finalQuery =
             buildSearchQueryOccurrence(
                 columnName = columnName,
-                baseQuery = facetBaseQuery,
                 searchExpression = searchExpression,
                 metadataSearchFilters = metadataSearchFilters,
                 rightSearchFilters = rightSearchFilters,
@@ -647,15 +591,19 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT o.access_state, COUNT(o.access_state)" +
-                    " FROM (" +
-                    "SELECT DISTINCT(sub.handle)" +
-                    " FROM (" +
-                    SearchDB.STATEMENT_SELECT_ALL_FACETS +
-                    " FROM item_metadata " +
-                    LEFT_JOIN_RIGHT +
-                    " WHERE (((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)) AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))) as sub GROUP BY sub.handle) as A(handle) LEFT JOIN item ON item.handle = A.handle LEFT JOIN item_right as o ON item.right_id = o.right_id WHERE o.access_state IS NOT NULL GROUP BY o.access_state",
+                "WITH metadata_with_rights AS (" +
+                    " SELECT DISTINCT ON (im.handle, ir.access_state) ir.access_state" +
+                    " FROM item_metadata im" +
+                    " LEFT JOIN item i ON i.handle = im.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
+                    " WHERE ir.access_state IS NOT NULL AND" +
+                    " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
+                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))" +
+                    " SELECT mw.access_state, COUNT(*)" +
+                    " FROM metadata_with_rights mw" +
+                    " GROUP BY mw.access_state;",
                 "Access state occurrence",
             ),
             arrayOf(
@@ -664,13 +612,19 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
-                "SELECT o.template_name, COUNT(o.template_name)" +
-                    " FROM (SELECT DISTINCT(sub.handle)" +
-                    " FROM (" +
-                    SearchDB.STATEMENT_SELECT_ALL_FACETS +
-                    " FROM item_metadata " +
-                    LEFT_JOIN_RIGHT +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND o.right_id IS NOT NULL) AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))) as sub GROUP BY sub.handle) as A(handle) LEFT JOIN item ON item.handle = A.handle LEFT JOIN item_right as o ON item.right_id = o.right_id WHERE o.template_name IS NOT NULL GROUP BY o.template_name",
+                "WITH metadata_with_rights AS (" +
+                    " SELECT DISTINCT ON (im.handle, ir.template_name) ir.template_name" +
+                    " FROM item_metadata im" +
+                    " LEFT JOIN item i ON i.handle = im.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
+                    " WHERE ir.template_name IS NOT NULL AND" +
+                    " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
+                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))" +
+                    " SELECT mw.template_name, COUNT(*)" +
+                    " FROM metadata_with_rights mw" +
+                    " GROUP BY mw.template_name;",
                 "Template name",
             ),
         )
@@ -685,18 +639,13 @@ class SearchDBTest : DatabaseTest() {
         expectedQuery: String,
         reason: String,
     ) {
-        val facetBaseQuery =
-            buildSearchQueryForFacets(
+        val finalQuery =
+            buildSearchQueryOccurrence(
+                columnName = columnName,
                 searchExpression = searchExpression,
                 metadataSearchFilters = metadataSearchFilters,
                 rightSearchFilters = rightSearchFilters,
                 noRightInformationFilter = noRightInformationFilter,
-            )
-
-        val finalQuery =
-            buildSearchQueryOccurrenceRight(
-                rightColumn = columnName,
-                baseQuery = facetBaseQuery,
             )
         assertThat(
             reason,
@@ -747,16 +696,16 @@ class SearchDBTest : DatabaseTest() {
                 "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
                 "is_part_of_series,${COLUMN_METADATA_LICENCE_URL_FILTER}," +
-                "$COLUMN_METADATA_DELETED,${ALIAS_ITEM_RIGHT}.access_state," +
-                "${ALIAS_ITEM_RIGHT}.licence_contract," +
-                "${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence,${ALIAS_ITEM_RIGHT}.non_standard_open_content_licence_url," +
-                "${ALIAS_ITEM_RIGHT}.open_content_licence,${ALIAS_ITEM_RIGHT}.restricted_open_content_licence,${ALIAS_ITEM_RIGHT}.zbw_user_agreement," +
+                "$COLUMN_METADATA_DELETED,ir.access_state," +
+                "ir.licence_contract," +
+                "ir.non_standard_open_content_licence,ir.non_standard_open_content_licence_url," +
+                "ir.open_content_licence,ir.restricted_open_content_licence,ir.zbw_user_agreement," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name"
 
         const val LEFT_JOIN_RIGHT =
             "LEFT JOIN item" +
                 " ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                " LEFT JOIN item_right as $ALIAS_ITEM_RIGHT ON item.right_id = ${ALIAS_ITEM_RIGHT}.right_id"
+                " LEFT JOIN item_right as ir ON item.right_id = ir.right_id"
     }
 }

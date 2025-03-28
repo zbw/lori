@@ -98,7 +98,6 @@ class ServicePoolWithProbes(
     private fun Application.allNonAuth() {
         install(ContentNegotiation) {
             gson {
-                setPrettyPrinting()
                 registerTypeAdapter(
                     OffsetDateTime::class.java,
                     JsonDeserializer { json, _, _ ->

@@ -366,6 +366,7 @@ export default defineComponent({
               1,
               0,
               true,
+              false,
               searchquerybuilder.buildPublicationYearFilter(searchStore),
               searchquerybuilder.buildPublicationTypeFilter(searchStore),
               searchquerybuilder.buildAccessStateFilter(searchStore),
@@ -395,7 +396,7 @@ export default defineComponent({
           });
     };
 
-          const executeSearchByRightId = (rightId: string) => {
+    const executeSearchByRightId = (rightId: string) => {
       api
         .searchQuery(
           "",
@@ -403,6 +404,7 @@ export default defineComponent({
           pageSize.value, // limit
           pageSize.value,
             false,
+          true,
           undefined,
           undefined,
           undefined,
@@ -429,6 +431,53 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+      api
+        .searchQuery(
+            "",
+            (currentPage.value - 1) * pageSize.value, // offset
+            pageSize.value, // limit
+            pageSize.value,
+            false,
+            true,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            rightId,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        )
+        .then((response: ItemInformation) => {
+          const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
+
+          // Send the response to the worker for processing
+          worker.postMessage(response);
+
+          // Handle the message from the worker
+          worker.onmessage = (event) => {
+            const minifiedResponse = event.data;
+            getAccessStatesForDate();
+            processFacets(minifiedResponse);
+
+            // Optionally, terminate the worker after use
+            worker.terminate();
+          }
+        })
+        .catch((e) => {
+          error.errorHandling(e, (errMsg: string) => {
+            tableContentLoading.value = false;
+            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+            errorMsgIsActive.value = true;
+          });
+        });
     };
 
     const searchQueryByTerm = (searchTerm: string, callback: () => void) => {
@@ -440,6 +489,7 @@ export default defineComponent({
           pageSize.value, // limit
           currentPage.value,
             false,
+          true,
           undefined,
           undefined,
           undefined,
@@ -458,7 +508,6 @@ export default defineComponent({
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
-          callback();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -467,6 +516,41 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+      api
+          .searchQuery(
+              searchTerm,
+              (currentPage.value - 1) * pageSize.value, // offset
+              pageSize.value, // limit
+              currentPage.value,
+              true,
+              false,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+          )
+          .then((response: ItemInformation) => {
+            processFacets(response);
+            callback();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
     };
 
     const executeBookmarkSearch = (bookmark: BookmarkRest) => {
@@ -522,6 +606,7 @@ export default defineComponent({
           pageSize.value,
           pageSize.value,
             false,
+          true,
           searchquerybuilder.buildPublicationYearFilter(searchStore),
           searchquerybuilder.buildPublicationTypeFilter(searchStore),
           searchquerybuilder.buildAccessStateFilter(searchStore),
@@ -539,7 +624,6 @@ export default defineComponent({
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
         )
         .then((response: ItemInformation) => {
-          getAccessStatesForDate();
           processSearchResult(response);
         })
         .catch((e) => {
@@ -549,16 +633,56 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+      api
+          .searchQuery(
+              searchStore.searchTerm,
+              (currentPage.value - 1) * pageSize.value,
+              pageSize.value,
+              pageSize.value,
+              true,
+              false,
+              searchquerybuilder.buildPublicationYearFilter(searchStore),
+              searchquerybuilder.buildPublicationTypeFilter(searchStore),
+              searchquerybuilder.buildAccessStateFilter(searchStore),
+              searchquerybuilder.buildStartDateAtFilter(searchStore),
+              searchquerybuilder.buildEndDateAtFilter(searchStore),
+              searchquerybuilder.buildFormalRuleFilter(searchStore),
+              searchquerybuilder.buildValidOnFilter(searchStore),
+              searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+              searchquerybuilder.buildZDBIdFilter(searchStore),
+              searchquerybuilder.buildNoRightInformation(searchStore),
+              searchquerybuilder.buildTemplateNameFilter(searchStore),
+              searchquerybuilder.buildSeriesFilter(searchStore),
+              searchquerybuilder.buildLicenceUrlFilter(searchStore),
+              searchquerybuilder.buildManualRightFilter(searchStore),
+              searchquerybuilder.buildAccessOnDateFilter(searchStore),
+          )
+          .then((response: ItemInformation) => {
+            const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
+
+            // Send the response to the worker for processing
+            worker.postMessage(response);
+
+            // Handle the message from the worker
+            worker.onmessage = (event) => {
+              const minifiedResponse = event.data;
+              getAccessStatesForDate();
+              processFacets(minifiedResponse);
+
+              // Optionally, terminate the worker after use
+              worker.terminate();
+            };
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
     };
 
-    const processSearchResult = (response: ItemInformation) => {
-      filtersAsQuery.value = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
-      items.value = response.itemArray;
-      tableContentLoading.value = false;
-      totalPages.value = response.totalPages;
-      numberOfResults.value = response.numberOfResults;
-
-      // TODO: wird nur in abhängigkeit von ergebnis angezeigt
+    const processFacets = (response: ItemInformation) => {
       if (response.paketSigelWithCount != undefined) {
         searchStore.paketSigelIdReceived = response.paketSigelWithCount;
       }
@@ -571,11 +695,15 @@ export default defineComponent({
       if (response.hasZbwUserAgreement != undefined) {
         searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
       }
-      if (response.itemArray.length == 0) {
-        reduceToSelectedFilters();
-      } else {
-        resetAllDynamicFilter(response);
-      }
+      resetAllDynamicFilter(response);
+    };
+
+    const processSearchResult = (response: ItemInformation) => {
+      filtersAsQuery.value = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
+      items.value = response.itemArray;
+      tableContentLoading.value = false;
+      totalPages.value = response.totalPages;
+      numberOfResults.value = response.numberOfResults;
     };
 
     const reduceToSelectedFilters = () => {

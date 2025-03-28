@@ -10,9 +10,9 @@ import "material-design-icons-iconfont/dist/material-design-icons.css";
 const pinia: Pinia = createPinia();
 
 const app = createApp(App);
-app.use(pinia);
 app.use(router);
 app.use(vuetify);
+app.use(pinia);
 app.mount("#app");
 
 

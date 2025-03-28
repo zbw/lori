@@ -367,6 +367,7 @@ fun Routing.itemRoutes(
                     val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                     val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
+                    val noFacets: Boolean = call.request.queryParameters["noFacets"]?.toBoolean() == true
                     val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
                     val publicationYearFilter: PublicationYearFilter? =
                         QueryParameterParser.parsePublicationYearFilter(call.request.queryParameters["filterPublicationYear"])
@@ -493,6 +494,7 @@ fun Routing.itemRoutes(
                             noRightInformationFilter,
                             emptyList(),
                             facetsOnly,
+                            noFacets,
                         )
                     span.setStatus(StatusCode.OK)
                     call.respond(
