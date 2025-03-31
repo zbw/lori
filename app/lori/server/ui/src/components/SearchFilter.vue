@@ -238,7 +238,15 @@ export default defineComponent({
     });
 
     const emitSearchStart = () => {
+      resetPerPageValues();
       emit("startSearch");
+    };
+
+    const resetPerPageValues = () => {
+      seriesPerPage.value = 20;
+      zdbPerPage.value = 20;
+      licencePerPage.value = 20;
+      sigelPerPage.value = 20;
     };
 
     const emitSearchStartPublicationYear = (date: string) => {
@@ -259,10 +267,17 @@ export default defineComponent({
      * Lazy loading
      */
     // Series
-    const seriesToShow = computed(() => searchStore.seriesReceived.slice(0, seriesPerPage.value));
+    const seriesToShow = computed(() => {
+      if (seriesPerPage.value == 20) {
+        rerenderId.value += 1;
+        console.log("renderid changed");
+      }
+      return searchStore.seriesReceived.slice(0, seriesPerPage.value)
+    });
     const isSeriesGroupOpen = ref(false); // Track if the group is open
     const isSeriesLoading = ref(false); // Prevent multiple loads
     const seriesPerPage = ref(20); // Number of items to load per scroll
+    const rerenderId = ref(0);
     const scrollWrapperSeries = ref<HTMLElement | null>(null); // Scroll wrapper ref
     const handleScrollSeries = (event: Event) => {
       if (scrollWrapperSeries.value) {
@@ -285,7 +300,9 @@ export default defineComponent({
     };
 
     // PaketSigel
-    const sigelToShow = computed(() => searchStore.paketSigelIdReceived.slice(0, sigelPerPage.value));
+    const sigelToShow = computed(() => {
+      return searchStore.paketSigelIdReceived.slice(0, sigelPerPage.value)
+    });
     const isSigelGroupOpen = ref(false); // Track if the group is open
     const isSigelLoading = ref(false); // Prevent multiple loads
     const sigelPerPage = ref(20); // Number of items to load per scroll
@@ -311,7 +328,9 @@ export default defineComponent({
     };
 
     // ZDB-Ids
-    const zdbToShow = computed(() => searchStore.zdbIdReceived.slice(0, zdbPerPage.value));
+    const zdbToShow = computed(() => {
+      return searchStore.zdbIdReceived.slice(0, zdbPerPage.value)
+    });
     const isZdbGroupOpen = ref(false); // Track if the group is open
     const isZdbLoading = ref(false); // Prevent multiple loads
     const zdbPerPage = ref(20); // Number of items to load per scroll
@@ -337,7 +356,9 @@ export default defineComponent({
     };
 
     // Licence-URL
-    const licenceToShow = computed(() => searchStore.licenceUrlReceived.slice(0, licencePerPage.value));
+    const licenceToShow = computed(() => {
+      return searchStore.licenceUrlReceived.slice(0, licencePerPage.value)
+    });
     const isLicenceGroupOpen = ref(false); // Track if the group is open
     const isLicenceLoading = ref(false); // Prevent multiple loads
     const licencePerPage = ref(20); // Number of items to load per scroll
@@ -391,6 +412,7 @@ export default defineComponent({
       isSigelLoading,
       isZdbLoading,
       licencePerPage,
+      rerenderId,
       seriesPerPage,
       sigelPerPage,
       zdbPerPage,
@@ -535,7 +557,7 @@ export default defineComponent({
                       :items-per-page="sigelPerPage"
                   >
                     <v-list-item
-                        :key="item.paketSigel"
+                        :key="item.paketSigel + rerenderId"
                         :value="item"
                         color="primary"
                         rounded="shaped"
@@ -571,7 +593,7 @@ export default defineComponent({
                       :items-per-page="seriesPerPage"
                   >
                     <v-list-item
-                        :key="item.series"
+                        :key="item.series + rerenderId"
                         :value="item"
                         color="primary"
                         rounded="shaped"
@@ -607,7 +629,7 @@ export default defineComponent({
                       :items-per-page="zdbPerPage"
                   >
                     <v-list-item
-                        :key="item.zdbId"
+                        :key="item.zdbId + rerenderId"
                         :value="item"
                         color="primary"
                         rounded="shaped"
@@ -643,7 +665,7 @@ export default defineComponent({
                       :items-per-page="licencePerPage"
                   >
                     <v-list-item
-                        :key="item.licenceUrl"
+                        :key="item.licenceUrl + rerenderId"
                         :value="item"
                         color="primary"
                         rounded="shaped"
