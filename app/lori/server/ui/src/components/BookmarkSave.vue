@@ -226,6 +226,17 @@ export default defineComponent({
 <style scoped></style>
 
 <template>
+  <v-snackbar
+      contained
+      multi-line
+      location="top"
+      timer="true"
+      timeout="5000"
+      v-model="saveAlertError"
+      color="error"
+  >
+    {{ saveAlertErrorMessage }}
+  </v-snackbar>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
@@ -289,17 +300,6 @@ export default defineComponent({
           @click="save"
         ></v-btn>
       </v-card-actions>
-      <v-snackbar
-          contained
-          multi-line
-          location="top"
-          timer="true"
-          timeout="5000"
-          v-model="saveAlertError"
-          color="error"
-      >
-        {{ saveAlertErrorMessage }}
-      </v-snackbar>
     </v-container>
   </v-card>
 </template>
