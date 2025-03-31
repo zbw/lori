@@ -268,7 +268,8 @@ export default defineComponent({
       if (scrollWrapperSeries.value) {
         const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSeries.value;
         // If the user has scrolled to the bottom
-        if (scrollHeight - scrollTop === clientHeight) {
+        let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
+        if (diff < 3) {
           loadMoreSeries();
         }
       }
@@ -293,7 +294,8 @@ export default defineComponent({
       if (scrollWrapperSigel.value) {
         const { scrollHeight, scrollTop, clientHeight } = scrollWrapperSigel.value;
         // If the user has scrolled to the bottom
-        if (scrollHeight - scrollTop === clientHeight) {
+        let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
+        if (diff < 3) {
           loadMoreSigel();
         }
       }
@@ -318,7 +320,8 @@ export default defineComponent({
       if (scrollWrapperZdb.value) {
         const { scrollHeight, scrollTop, clientHeight } = scrollWrapperZdb.value;
         // If the user has scrolled to the bottom
-        if (scrollHeight - scrollTop === clientHeight) {
+        let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
+        if (diff < 3) {
           loadMoreZdb();
         }
       }
@@ -343,7 +346,8 @@ export default defineComponent({
       if (scrollWrapperLicence.value) {
         const { scrollHeight, scrollTop, clientHeight } = scrollWrapperLicence.value;
         // If the user has scrolled to the bottom
-        if (scrollHeight - scrollTop === clientHeight) {
+        let diff = Math.abs(clientHeight - (scrollHeight - scrollTop));
+        if (diff < 3) {
           loadMoreLicence();
         }
       }
