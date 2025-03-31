@@ -683,9 +683,6 @@ export default defineComponent({
     };
 
     const processFacets = (response: ItemInformation) => {
-      if (response.paketSigelWithCount != undefined) {
-        searchStore.paketSigelIdReceived = response.paketSigelWithCount;
-      }
       if (response.hasLicenceContract != undefined) {
         searchStore.hasLicenceContract = response.hasLicenceContract;
       }
@@ -776,8 +773,8 @@ export default defineComponent({
       // Reset AccessState
       searchStore.accessStateReceived =
         response.accessStateWithCount != undefined
-          ? response.accessStateWithCount
-          : Array(0);
+          ? [...response.accessStateWithCount]
+          : [...Array(0)];
       searchStore.accessStateIdx = Array(
         searchStore.accessStateReceived.length,
       ).fill(false);
@@ -789,8 +786,8 @@ export default defineComponent({
       // Reset Paket Sigel
       searchStore.paketSigelIdReceived =
         response.paketSigelWithCount != undefined
-          ? response.paketSigelWithCount
-          : Array(0);
+          ? [...response.paketSigelWithCount]
+          : [...Array(0)];
       searchStore.paketSigelIdIdx = Array(
         searchStore.paketSigelIdReceived.length,
       ).fill(false);
@@ -802,8 +799,8 @@ export default defineComponent({
       // Reset Publication Type
       searchStore.publicationTypeReceived =
         response.publicationTypeWithCount != undefined
-          ? response.publicationTypeWithCount
-          : Array(0);
+          ? [...response.publicationTypeWithCount]
+          : [...Array(0)];
       searchStore.publicationTypeIdx = Array(
         searchStore.publicationTypeReceived.length,
       ).fill(false);
@@ -815,8 +812,8 @@ export default defineComponent({
       // Reset ZDB Id
       searchStore.zdbIdReceived =
         response.zdbIdWithCount != undefined
-          ? response.zdbIdWithCount
-          : Array(0);
+          ? [...response.zdbIdWithCount]
+          : [...Array(0)];
       searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
         false,
       );
@@ -828,8 +825,8 @@ export default defineComponent({
       // Reset Series
       searchStore.seriesReceived =
           response.isPartOfSeriesCount != undefined
-              ? response.isPartOfSeriesCount
-              : Array(0);
+              ? [...response.isPartOfSeriesCount]
+              : [...Array(0)];
       searchStore.seriesIdx = Array(searchStore.seriesReceived.length).fill(
           false,
       );
@@ -841,8 +838,8 @@ export default defineComponent({
       // Reset Template Names
       searchStore.templateNameReceived =
         response.templateNameWithCount != undefined
-          ? response.templateNameWithCount
-          : Array(0);
+          ? [...response.templateNameWithCount]
+          : [...Array(0)];
       searchStore.templateNameIdx = Array(
         searchStore.templateNameReceived.length,
       ).fill(false);
@@ -854,8 +851,8 @@ export default defineComponent({
       // Reset Licence Url
       searchStore.licenceUrlReceived =
           response.licenceUrlCount != undefined
-              ? response.licenceUrlCount
-              : Array(0);
+              ? [...response.licenceUrlCount]
+              : [...Array(0)];
       searchStore.licenceUrlIdx = Array(
           searchStore.licenceUrlReceived.length,
       ).fill(false);
