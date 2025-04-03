@@ -88,6 +88,7 @@ export default defineComponent({
     "addSuccessful",
     "addTemplateSuccessful",
     "deleteTemplateSuccessful",
+    "hasFormChanged",
     "updateTemplateSuccessful",
     "deleteSuccessful",
     "editRightClosed",
@@ -195,6 +196,7 @@ export default defineComponent({
       if (isNew.value){
         return newRightHasChanges.value
       } else {
+        emit("hasFormChanged", existingRightHasChanges.value, props.rightId??'0')
         return existingRightHasChanges.value;
       }
     });

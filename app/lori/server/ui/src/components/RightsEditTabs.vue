@@ -1,7 +1,7 @@
 <script lang="ts">
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
-import {computed, ComputedRef, defineComponent, onMounted, PropType, ref, watch} from "vue";
+import {computed, ComputedRef, defineComponent, onMounted, PropType, Ref, ref, watch} from "vue";
 
 export default defineComponent({
   props: {
@@ -29,6 +29,8 @@ export default defineComponent({
     const lastDeletionSuccessful = ref(false);
     const lastUpdatedRight = ref("");
     const lastUpdateSuccessful = ref(false);
+    const formStatus: Ref<Record<string, boolean>> = ref({});
+    const unsavedChangesDialog = ref(false);
 
     // Methods
     const deleteSuccessful = (
@@ -47,8 +49,22 @@ export default defineComponent({
       lastDeletionSuccessful.value = false;
     };
 
-    const tabDialogClosed = () => {
+    const closeUnsavedChangesDialog = () => {
+      unsavedChangesDialog.value = false;
+    };
+
+    const closeTabDisregardChanges = () => {
+      formStatus.value = Object.assign({} as Ref<Record<string, boolean>>);
+      unsavedChangesDialog.value = false;
       emit("tabDialogClosed");
+    };
+
+    const tabDialogClosed = () => {
+      if(Object.values(formStatus.value).includes(true)){
+        unsavedChangesDialog.value = true;
+      } else {
+        emit("tabDialogClosed");
+      }
     };
 
     const updateSuccessful = (right: RightRest, index: number) => {
@@ -69,6 +85,9 @@ export default defineComponent({
       }
     };
 
+    const setFormStatus = (b: boolean, rightId: string) => {
+      formStatus.value[rightId] = b;
+    };
     // Computed properties
     const tabNames = computed(() => {
       return props.rights.map((r) => r.rightId);
@@ -110,10 +129,14 @@ export default defineComponent({
       renderKey,
       tab,
       tabNames,
+      unsavedChangesDialog,
+      closeUnsavedChangesDialog,
+      closeTabDisregardChanges,
       deleteSuccessful,
       parseDate,
       resetLastDeletionSuccessful,
       resetLastUpdateSuccessful,
+      setFormStatus,
       tabDialogClosed,
       updateSuccessful,
     };
@@ -168,8 +191,31 @@ export default defineComponent({
           :isTabEntry="true"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
+          v-on:hasFormChanged="setFormStatus"
           v-on:updateSuccessful="updateSuccessful"
         ></RightsEditDialog>
+        <v-dialog v-model="unsavedChangesDialog" max-width="500px">
+          <v-card>
+            <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+            <v-card-text class="text-center">
+              Änderungen wurden noch nicht gespeichert!
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn
+                  @click="closeUnsavedChangesDialog"
+                  color="blue darken-1"
+              >Abbrechen
+              </v-btn>
+              <v-btn
+                  color="error"
+                  @click="closeTabDisregardChanges">
+                Änderungen verwerfen
+              </v-btn>
+              <v-spacer></v-spacer>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-window-item>
     </v-window>
   </v-card>
