@@ -734,10 +734,7 @@ class FormalRuleFilter(
                 FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
                 FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
                 FormalRule.OPEN_CONTENT_LICENCE ->
-                    "(${DatabaseConnector.COLUMN_RIGHT_OPEN_CONTENT_LICENCE} <> '' OR" +
-                        " ${DatabaseConnector.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE} = true OR" +
-                        " ${DatabaseConnector.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL} <> '' OR" +
-                        " ${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true)"
+                    "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true"
             }
         } + " AND $WHERE_REQUIRE_RIGHT_ID"
 

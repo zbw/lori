@@ -698,8 +698,7 @@ class SearchDBTest : DatabaseTest() {
                 "is_part_of_series,${COLUMN_METADATA_LICENCE_URL_FILTER}," +
                 "$COLUMN_METADATA_DELETED,ir.access_state," +
                 "ir.licence_contract," +
-                "ir.non_standard_open_content_licence,ir.non_standard_open_content_licence_url," +
-                "ir.open_content_licence,ir.restricted_open_content_licence,ir.zbw_user_agreement," +
+                "ir.restricted_open_content_licence,ir.zbw_user_agreement," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name"
 

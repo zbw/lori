@@ -193,16 +193,17 @@ class RightFilterTest : DatabaseTest() {
                         licenceContract = null,
                         isTemplate = false,
                         templateName = null,
+                        restrictedOpenContentLicence = true,
                     ),
                 ),
             formalRuleOCL to
                 listOf(
                     TEST_RIGHT.copy(
-                        openContentLicence = "foobar",
                         licenceContract = null,
                         zbwUserAgreement = false,
                         isTemplate = false,
                         templateName = null,
+                        restrictedOpenContentLicence = true,
                     ),
                 ),
         )
@@ -565,7 +566,7 @@ class RightFilterTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 1,
                 setOf(formalRuleUserAgreement),
-                "formal rule zbw agreement with upper search bar",
+                "formal rule zbw agreement with restricted open content licence",
             ),
             arrayOf(
                 "col:ocl",
@@ -758,13 +759,10 @@ class RightFilterTest : DatabaseTest() {
                     ),
                 startDate = RestConverterTest.TODAY.minusDays(1),
                 licenceContract = "some contract",
-                nonStandardOpenContentLicence = true,
-                nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
                 notesGeneral = "Some general notes",
                 notesFormalRules = "Some formal rule notes",
                 notesProcessDocumentation = "Some process documentation",
                 notesManagementRelated = "Some management related notes",
-                openContentLicence = "some licence",
                 restrictedOpenContentLicence = false,
                 zbwUserAgreement = true,
                 templateDescription = "some description",
