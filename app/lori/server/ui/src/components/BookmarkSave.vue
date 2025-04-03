@@ -8,6 +8,7 @@ import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import {BookmarkIdCreated, BookmarkRest} from "@/generated-sources/openapi";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   emits: [
@@ -66,6 +67,7 @@ export default defineComponent({
      */
     const dialogStore = useDialogsStore();
     const searchStore = useSearchStore();
+    const userStore = useUserStore();
     const close = () => {
       v$.value.$reset();
       updateInProgress.value = false;
@@ -191,6 +193,20 @@ export default defineComponent({
       formState.name = '';
     };
 
+    const loginStatusProps = computed(() => {
+      if (!userStore.isLoggedIn) {
+        return {
+          "readonly": true,
+          "bg-color": "grey-lighten-2",
+        };
+      } else {
+        return {
+          "bg-color": "white",
+          "clearable" : true
+        };
+      }
+    });
+
     watch(
         () => props.reinitCounter,
         () => {
@@ -209,10 +225,12 @@ export default defineComponent({
       dialogStore,
       errorName,
       formState,
+      loginStatusProps,
       saveAlertError,
       saveAlertErrorMessage,
       unsavedChangesDialog,
       updateInProgress,
+      userStore,
       v$,
       checkForChangesAndClose,
       closeUnsavedChangesDialog,
@@ -278,6 +296,7 @@ export default defineComponent({
             hint="Name des Bookmarks"
             maxlength="256"
             variant="outlined"
+            v-bind="{...$attrs, ...loginStatusProps}"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -288,6 +307,7 @@ export default defineComponent({
             hint="Beschreibung des Bookmarks"
             v-model="description"
             variant="outlined"
+            v-bind="{...$attrs, ...loginStatusProps}"
           ></v-textarea>
         </v-col>
       </v-row>

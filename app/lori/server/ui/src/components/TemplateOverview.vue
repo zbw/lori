@@ -9,8 +9,8 @@ import {
   TemplateApplicationRest,
   TemplateApplicationsRest,
 } from "@/generated-sources/openapi";
-import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: { RightsEditDialog },
@@ -20,6 +20,10 @@ export default defineComponent({
       "templateOverviewClosed",
   ],
   setup(props, { emit }) {
+    /**
+     * Stores:
+     */
+    const userStore = useUserStore();
     /**
      *  Data-Table related.
      */
@@ -271,6 +275,7 @@ export default defineComponent({
       templateEditDialogActivated,
       errorMsgIsActive,
       errorMsg,
+      userStore,
       templateDraft,
       templateItems,
       applyTemplate,
@@ -359,7 +364,10 @@ export default defineComponent({
       <v-card-title>Template Übersicht</v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" @click="createNewTemplate"
+        <v-btn
+            color="blue darken-1"
+            @click="createNewTemplate"
+            :disabled="!userStore.isLoggedIn"
           >Neues Template anlegen
         </v-btn>
       </v-card-actions>
@@ -399,6 +407,7 @@ export default defineComponent({
             v-if="item.exceptionFrom == undefined"
             color="blue darken-1"
             @click="applyTemplate(item)"
+            :disabled="!userStore.isLoggedIn"
             >Template anwenden</v-btn
           >
         </template>

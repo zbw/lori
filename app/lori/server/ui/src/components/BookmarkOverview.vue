@@ -6,6 +6,7 @@ import error from "@/utils/error";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import BookmarkSave from "@/components/BookmarkSave.vue";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: {BookmarkSave, RightsEditDialog },
@@ -149,6 +150,7 @@ export default defineComponent({
      * Stores and their actions.
      */
     const dialogStore = useDialogsStore();
+    const userStore = useUserStore();
     const close = () => {
       dialogStore.bookmarkOverviewActivated = false;
       bookmarkError.value = false;
@@ -221,6 +223,7 @@ export default defineComponent({
       searchTerm,
       templateDialogActivated,
       templateReinitCounter,
+      userStore,
       activateTemplateDialog,
       childTemplateAdded,
       close,
@@ -311,6 +314,7 @@ export default defineComponent({
             color="blue darken-1"
             text="Template anlegen"
             @click="activateTemplateDialog(item)"
+            :disabled="!userStore.isLoggedIn"
           ></v-btn>
         </template>
         <template v-slot:item.executeSearch="{ item }">
@@ -349,6 +353,7 @@ export default defineComponent({
               variant="text"
               @click="openDeleteDialog(item)"
               icon="mdi-delete"
+              :disabled="!userStore.isLoggedIn"
           >
           </v-btn>
         </template>

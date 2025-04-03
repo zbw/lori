@@ -5,6 +5,7 @@ import { GroupRest } from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import error from "@/utils/error";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: { GroupEdit },
@@ -18,11 +19,6 @@ export default defineComponent({
         title: "Name",
         align: "start",
         value: "title",
-      },
-      {
-        title: "ID",
-        align: "start",
-        value: "groupId",
       },
       {
         title: "Aktionen",
@@ -49,7 +45,12 @@ export default defineComponent({
     };
 
     onMounted(() => getGroupList());
+
+    /**
+     * Stores:
+     */
     const dialogStore = useDialogsStore();
+    const userStore = useUserStore();
 
     /**
      * Edit or create new group.
@@ -151,6 +152,7 @@ export default defineComponent({
       renderKey,
       successMsgIsActive,
       successMsg,
+      userStore,
       activateGroupEditDialog,
       addGroupEntry,
       close,
@@ -199,7 +201,10 @@ export default defineComponent({
     </v-snackbar>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="blue darken-1" @click="createNewGroup"
+      <v-btn
+          color="blue darken-1"
+          @click="createNewGroup"
+          :disabled="!userStore.isLoggedIn"
         >Neue IP-Gruppe anlegen
       </v-btn>
     </v-card-actions>

@@ -34,6 +34,7 @@ import date_utils from "@/utils/date_utils";
 import Dashboard from "@/components/Dashboard.vue";
 import rightErrorApi from "@/api/rightErrorApi";
 import rightApi from "@/api/rightApi";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   computed: {
@@ -88,6 +89,7 @@ export default defineComponent({
     "addSuccessful",
     "addTemplateSuccessful",
     "deleteTemplateSuccessful",
+    "hasFormChanged",
     "updateTemplateSuccessful",
     "deleteSuccessful",
     "editRightClosed",
@@ -103,7 +105,11 @@ export default defineComponent({
 
   setup(props, { emit }) {
     /**
-     * Vuelidate.
+     * Stores:
+     */
+    const userStore = useUserStore();
+    /**
+     * Vuelidate:
      */
     type FormState = {
       accessState: string;
@@ -195,6 +201,7 @@ export default defineComponent({
       if (isNew.value){
         return newRightHasChanges.value
       } else {
+        emit("hasFormChanged", existingRightHasChanges.value, props.rightId??'0')
         return existingRightHasChanges.value;
       }
     });
@@ -793,8 +800,8 @@ export default defineComponent({
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
       () =>
-        isNew.value ||
-        (lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
+        (userStore.isLoggedIn && isNew.value) ||
+        (userStore.isLoggedIn && lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
     );
     const isTemplate = computed(
       () =>
@@ -1191,6 +1198,20 @@ export default defineComponent({
       }
     });
 
+    const loginStatusProps = computed(() => {
+      if (!userStore.isLoggedIn) {
+        return {
+          "readonly": true,
+          "bg-color": "grey-lighten-2",
+        };
+      } else {
+        return {
+          "bg-color": "white",
+          "clearable" : true,
+        };
+      }
+    });
+
     watch(dashboardViewActivated, (currentValue) => {
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
@@ -1237,6 +1258,7 @@ export default defineComponent({
       isStartDateMenuOpen,
       isEndDateMenuOpen,
       lastSavedRight,
+      loginStatusProps,
       menuStartDate,
       menuEndDate,
       metadataCount,
@@ -1254,6 +1276,7 @@ export default defineComponent({
       testId,
       tmpRight,
       updateInProgress,
+      userStore,
       // methods
       addNewException,
       cancel,
@@ -1444,7 +1467,7 @@ export default defineComponent({
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :disabled="isNew || isTemplateAndException"
+              :disabled="isNew || isTemplateAndException || !userStore.isLoggedIn"
               @click="initiateDeleteDialog"
             >
               <v-icon>mdi-delete</v-icon>
@@ -1499,6 +1522,7 @@ export default defineComponent({
                     :error-messages="errorTemplateName"
                     hint="Name des Templates"
                     variant="outlined"
+                    v-bind="{...$attrs, ...loginStatusProps}"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1509,6 +1533,7 @@ export default defineComponent({
                     v-model="formState.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
+                    v-bind="{...$attrs, ...loginStatusProps}"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -1772,6 +1797,7 @@ export default defineComponent({
                   :close-on-content-click="false"
                   :location="'bottom'"
                   v-model="isEndDateMenuOpen"
+                  :disabled="!userStore.isLoggedIn"
                 >
                   <template v-slot:activator="{ props }">
                     <v-text-field
@@ -1783,11 +1809,9 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       readonly
                       required
-                      clearable
-                      bg-color="white"
-                      v-bind="props"
                       @blur="v$.endDate.$touch()"
                       @change="v$.endDate.$touch()"
+                      v-bind="{...$attrs, ...props, ...loginStatusProps}"
                     ></v-text-field>
                   </template>
                   <v-date-picker v-model="formState.endDate" color="primary">
@@ -1845,6 +1869,7 @@ export default defineComponent({
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   variant="outlined"
+                  v-bind="{...$attrs, ...loginStatusProps}"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1953,6 +1978,7 @@ export default defineComponent({
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
                   variant="outlined"
+                  v-bind="{...$attrs, ...loginStatusProps}"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -1996,6 +2022,7 @@ export default defineComponent({
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
                   variant="outlined"
+                  v-bind="{...$attrs, ...loginStatusProps}"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -2061,6 +2088,7 @@ export default defineComponent({
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
                   variant="outlined"
+                  v-bind="{...$attrs, ...loginStatusProps}"
                 ></v-textarea>
               </v-col>
             </v-row>

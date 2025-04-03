@@ -1,17 +1,12 @@
 <script lang="ts">
 import {
   AboutRest,
-  AccessStateWithCountRest,
-  BookmarkRest, IsPartOfSeriesCountRest,
+  BookmarkRest,
   ItemInformation,
-  ItemRest, LicenceUrlCountRest,
-  PaketSigelWithCountRest,
-  PublicationTypeWithCountRest,
+  ItemRest,
   RightRest,
-  ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
-import rightApi from "@/api/rightApi";
 import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
@@ -252,27 +247,6 @@ export default defineComponent({
       } else {
         return rightId;
       }
-    };
-
-    const loadRightView: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
-      if (rightId == null || rightId == "") {
-        return false;
-      }
-      rightApi
-        .getRightById(rightId)
-        .then((response: RightRest) => {
-          queryParameterRight.value = response;
-          rightEditActivated.value = true;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            templateLoadErrorMsg.value = errMsg;
-            templateLoadError.value = true;
-          });
-        });
-      return true;
     };
 
     const loadMetadataView: () => boolean = () => {
@@ -701,72 +675,6 @@ export default defineComponent({
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
       numberOfResults.value = response.numberOfResults;
-    };
-
-    const reduceToSelectedFilters = () => {
-      searchStore.accessStateReceived =
-        searchStore.accessStateSelectedLastSearch.map((elem: string) => {
-          return {
-            count: 0,
-            accessState: searchquerybuilder.accessStateToType(elem),
-          } as AccessStateWithCountRest;
-        });
-      searchStore.accessStateIdx = reduceIdx(searchStore.accessStateIdx);
-
-      searchStore.paketSigelIdReceived =
-        searchStore.paketSigelSelectedLastSearch.map((elem: string) => {
-          return {
-            count: 0,
-            paketSigel: elem,
-          } as PaketSigelWithCountRest;
-        });
-      searchStore.paketSigelIdIdx = reduceIdx(searchStore.paketSigelIdIdx);
-
-      searchStore.publicationTypeReceived =
-        searchStore.publicationTypeSelectedLastSearch.map((elem: string) => {
-          return {
-            count: 0,
-            publicationType: searchquerybuilder.publicationTypeToType(elem),
-          } as PublicationTypeWithCountRest;
-        });
-      searchStore.publicationTypeIdx = reduceIdx(
-        searchStore.publicationTypeIdx,
-      );
-
-      searchStore.zdbIdReceived = searchStore.zdbIdSelectedLastSearch.map(
-        (elem: string) => {
-          return {
-            count: 0,
-            zdbId: elem,
-          } as ZdbIdWithCountRest;
-        },
-      );
-      searchStore.zdbIdIdx = reduceIdx(searchStore.zdbIdIdx);
-      searchStore.seriesReceived = searchStore.seriesSelectedLastSearch.map(
-          (elem: string) => {
-            return {
-              count: 0,
-              series: elem,
-            } as IsPartOfSeriesCountRest;
-          },
-      );
-      searchStore.seriesIdx = reduceIdx(searchStore.seriesIdx);
-
-      searchStore.licenceUrlReceived = searchStore.licenceUrlSelectedLastSearch.map(
-          (elem: string) => {
-            return {
-              count: 0,
-              licenceUrl: elem,
-            } as LicenceUrlCountRest;
-          },
-      );
-      searchStore.licenceUrlIdx = reduceIdx(searchStore.licenceUrlIdx);
-    };
-
-    const reduceIdx = (idxMap: Array<boolean>): Array<boolean> => {
-      return idxMap.filter((elem: boolean): boolean => {
-        return elem;
-      });
     };
 
     const resetAllDynamicFilter = (response: ItemInformation) => {
