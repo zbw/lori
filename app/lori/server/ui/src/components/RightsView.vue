@@ -6,6 +6,7 @@ import { computed, defineComponent, PropType, ref } from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import metadata_utils from "@/utils/metadata_utils";
 import { useSearchStore } from "@/stores/search";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   computed: {
@@ -38,6 +39,7 @@ export default defineComponent({
 
   setup(props, { emit }) {
     const searchStore = useSearchStore();
+    const userStore = useUserStore();
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
     const headers = [
@@ -126,6 +128,7 @@ export default defineComponent({
       renderKey,
       headers,
       searchStore,
+      userStore,
       // Methods
       activateTabEdit,
       addRight,
@@ -162,7 +165,12 @@ export default defineComponent({
             >
           </v-toolbar-title>
           <v-divider class="mx-4" inset vertical></v-divider>
-          <v-btn class="mb-2" color="primary" dark @click="newRight()">
+          <v-btn
+              class="mb-2"
+              color="primary"
+              dark
+              :disabled="!userStore.isLoggedIn"
+              @click="newRight()">
             Neu
           </v-btn>
         </v-toolbar>

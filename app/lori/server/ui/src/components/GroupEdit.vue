@@ -17,6 +17,7 @@ import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 import error from "@/utils/error";
 import {GroupIdCreated, OldGroupVersionRest} from "@/generated-sources/openapi";
 import {unparse} from "papaparse";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: {GroupDeleteDialog},
@@ -104,6 +105,7 @@ export default defineComponent({
     /**
      * Dialog management.
      */
+    const userStore = useUserStore();
     const dialogStore = useDialogsStore();
     const close = () => {
       v$.value.$reset();
@@ -342,6 +344,20 @@ export default defineComponent({
       unsavedChangesDialog.value = false;
     };
 
+    const loginStatusProps = computed(() => {
+      if (!userStore.isLoggedIn) {
+        return {
+          "readonly": true,
+          "bg-color": "grey-lighten-2",
+        };
+      } else {
+        return {
+          "bg-color": "white",
+          "clearable" : true,
+        };
+      }
+    });
+
     return {
       unsavedChangesDialog,
       computedGroup,
@@ -355,11 +371,13 @@ export default defineComponent({
       groupTmp,
       hasNoCSVHeader,
       headersVersion,
+      loginStatusProps,
       oldVersion,
       oldVersions,
       saveAlertError,
       saveAlertErrorMessage,
       showDialogOldVersion,
+      userStore,
       v$,
       checkForChangesAndClose,
       close,
@@ -483,27 +501,6 @@ export default defineComponent({
         </v-col>
       </v-row>
       <v-row>
-        <v-col cols="4"> ID</v-col>
-        <v-col cols="8">
-          <v-text-field
-              v-if="isNew"
-              readonly
-              bg-color="grey-lighten-2"
-              variant="outlined"
-              label="Wird automatisch generiert"
-              hint="ID der Berechtigungsgruppe"
-          ></v-text-field>
-          <v-text-field
-              v-else
-              v-model="formState.groupId"
-              readonly
-              bg-color="grey-lighten-2"
-              variant="outlined"
-              hint="ID der Berechtigungsgruppe"
-          ></v-text-field>
-        </v-col>
-      </v-row>
-      <v-row>
         <v-col cols="4"> Erstellt am</v-col>
         <v-col cols="8">
           <v-text-field
@@ -570,7 +567,7 @@ export default defineComponent({
               label="IP-Adressen"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
-              bg-color="white"
+              v-bind="{...$attrs, ...loginStatusProps}"
               variant="outlined"
           ></v-textarea>
           <v-checkbox
@@ -587,6 +584,7 @@ export default defineComponent({
               label="CSV-Datei"
               v-model="formState.ipAddressesFile"
               :error-messages="errorIpAddresses"
+              v-bind="{...$attrs, ...loginStatusProps}"
               variant="outlined"
           ></v-file-input>
           Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
@@ -599,6 +597,7 @@ export default defineComponent({
               v-model="formState.description"
               variant="outlined"
               bg-color="white"
+              v-bind="{...$attrs, ...loginStatusProps}"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -638,8 +637,18 @@ export default defineComponent({
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn @click="save" color="blue darken-1">Speichern</v-btn>
-      <v-btn v-if="!isNew" @click="initiateDeleteDialog">
+      <v-btn
+          @click="save"
+          color="blue darken-1"
+          :disabled="!userStore.isLoggedIn"
+      >
+        Speichern
+      </v-btn>
+      <v-btn
+          :disabled="!userStore.isLoggedIn"
+          v-if="!isNew"
+          @click="initiateDeleteDialog"
+      >
         <v-icon>mdi-delete</v-icon>
       </v-btn>
       <v-btn v-if="isNew" disabled>

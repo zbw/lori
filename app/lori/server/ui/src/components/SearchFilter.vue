@@ -5,11 +5,13 @@ import { useVuelidate } from "@vuelidate/core";
 import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
 import metadata_utils from "@/utils/metadata_utils";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   emits: ["startEmptySearch", "startSearch", "getAccessStatesOnDate"],
   setup(props, { emit }) {
     const searchStore = useSearchStore();
+    const userStore = useUserStore();
     const temporalEvent = -1;
 
     const tempEventMenu = ref(false);
@@ -420,6 +422,7 @@ export default defineComponent({
       scrollWrapperSeries,
       scrollWrapperSigel,
       scrollWrapperZdb,
+      userStore,
       accessStateDateEntered,
       activateBookmarkSaveDialog,
       emitGetAccessStateOnDateSearch,
@@ -472,6 +475,7 @@ export default defineComponent({
           class="ml-8"
           color="blue darken-1"
           @click="activateBookmarkSaveDialog"
+          :disabled="!userStore.isLoggedIn"
         >
           Suche speichern
         </v-btn>
