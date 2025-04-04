@@ -377,121 +377,124 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?)"
 
-        fun extractMetadataRS(rs: ResultSet) =
-            ItemMetadata(
-                handle = rs.getString(1),
-                ppn = rs.getString(2),
-                title = rs.getString(3),
-                titleJournal = rs.getString(4),
-                titleSeries = rs.getString(5),
-                publicationYear = rs.getInt(6),
-                band = rs.getString(7),
-                publicationType = PublicationType.valueOf(rs.getString(8)),
-                doi = (rs.getArray(9)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                isbn = (rs.getArray(10)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                paketSigel = (rs.getArray(11)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                zdbIds = (rs.getArray(12)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                issn = rs.getString(13),
-                createdOn = rs.getTimestamp(14)?.toOffsetDateTime(),
-                lastUpdatedOn = rs.getTimestamp(15)?.toOffsetDateTime(),
-                createdBy = rs.getString(16),
-                lastUpdatedBy = rs.getString(17),
-                author = rs.getString(18),
-                collectionName = rs.getString(19),
-                communityName = rs.getString(20),
-                storageDate = rs.getTimestamp(21)?.toOffsetDateTime(),
-                subCommunityHandle = rs.getString(22),
-                communityHandle = rs.getString(23),
-                collectionHandle = rs.getString(24),
-                licenceUrl = rs.getString(25),
-                subCommunityName = rs.getString(26),
-                isPartOfSeries = (rs.getArray(27)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                licenceUrlFilter = rs.getString(28),
-                deleted = rs.getBoolean(29),
+        fun extractMetadataRS(rs: ResultSet): ItemMetadata {
+            var localCounter = 1
+            return ItemMetadata(
+                handle = rs.getString(localCounter++),
+                ppn = rs.getString(localCounter++),
+                title = rs.getString(localCounter++),
+                titleJournal = rs.getString(localCounter++),
+                titleSeries = rs.getString(localCounter++),
+                publicationYear = rs.getInt(localCounter++),
+                band = rs.getString(localCounter++),
+                publicationType = PublicationType.valueOf(rs.getString(localCounter++)),
+                doi = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                isbn = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                paketSigel = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                zdbIds = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                issn = rs.getString(localCounter++),
+                createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                lastUpdatedOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                createdBy = rs.getString(localCounter++),
+                lastUpdatedBy = rs.getString(localCounter++),
+                author = rs.getString(localCounter++),
+                collectionName = rs.getString(localCounter++),
+                communityName = rs.getString(localCounter++),
+                storageDate = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                subCommunityHandle = rs.getString(localCounter++),
+                communityHandle = rs.getString(localCounter++),
+                collectionHandle = rs.getString(localCounter++),
+                licenceUrl = rs.getString(localCounter++),
+                subCommunityName = rs.getString(localCounter++),
+                isPartOfSeries = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                licenceUrlFilter = rs.getString(localCounter++),
+                deleted = rs.getBoolean(localCounter++),
             )
+        }
 
         private fun insertUpsertMetadataSetParameters(
             itemMetadata: ItemMetadata,
             prep: PreparedStatement,
         ): PreparedStatement {
             val now = Instant.now()
+            var localCounter = 1
             return prep.apply {
-                this.setString(1, itemMetadata.handle)
-                this.setIfNotNull(2, itemMetadata.ppn) { value, idx, prepStmt ->
+                this.setString(localCounter++, itemMetadata.handle)
+                this.setIfNotNull(localCounter++, itemMetadata.ppn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setString(3, itemMetadata.title)
-                this.setIfNotNull(4, itemMetadata.titleJournal) { value, idx, prepStmt ->
+                this.setString(localCounter++, itemMetadata.title)
+                this.setIfNotNull(localCounter++, itemMetadata.titleJournal) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(5, itemMetadata.titleSeries) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.titleSeries) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(6, itemMetadata.publicationYear) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.publicationYear) { value, idx, prepStmt ->
                     prepStmt.setInt(idx, value)
                 }
-                this.setIfNotNull(7, itemMetadata.band) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.band) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setString(8, itemMetadata.publicationType.toString())
-                this.setIfNotNull(9, itemMetadata.doi) { value, idx, prepStmt ->
+                this.setString(localCounter++, itemMetadata.publicationType.toString())
+                this.setIfNotNull(localCounter++, itemMetadata.doi) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(10, itemMetadata.isbn) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.isbn) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
 
-                this.setIfNotNull(11, itemMetadata.paketSigel) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.paketSigel) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(12, itemMetadata.zdbIds) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.zdbIds) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(13, itemMetadata.issn) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.issn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setTimestamp(14, Timestamp.from(now))
-                this.setTimestamp(15, Timestamp.from(now))
-                this.setIfNotNull(16, itemMetadata.createdBy) { value, idx, prepStmt ->
+                this.setTimestamp(localCounter++, Timestamp.from(now))
+                this.setTimestamp(localCounter++, Timestamp.from(now))
+                this.setIfNotNull(localCounter++, itemMetadata.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(17, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(18, itemMetadata.author) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.author) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(19, itemMetadata.collectionName) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.collectionName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(20, itemMetadata.communityName) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.communityName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(21, itemMetadata.storageDate) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.storageDate) { value, idx, prepStmt ->
                     prepStmt.setTimestamp(idx, Timestamp.from(value.toInstant()))
                 }
-                this.setIfNotNull(22, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.subCommunityHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(23, itemMetadata.communityHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.communityHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(24, itemMetadata.collectionHandle) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.collectionHandle) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(25, itemMetadata.licenceUrl) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.licenceUrl) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(26, itemMetadata.subCommunityName) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.subCommunityName) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(27, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.isPartOfSeries) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
-                this.setIfNotNull(28, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.licenceUrlFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setBoolean(29, itemMetadata.deleted)
+                this.setBoolean(localCounter++, itemMetadata.deleted)
             }
         }
     }

@@ -7,9 +7,6 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_TEMPLATE_NAME
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ZBW_USER_AGREEMENT
@@ -83,75 +80,67 @@ class RightDB(
         prep: PreparedStatement,
     ): PreparedStatement {
         val now = Instant.now()
+        var localCounter = 1
 
         return prep.apply {
-            this.setString(1, right.rightId)
-            this.setTimestamp(2, Timestamp.from(now))
-            this.setTimestamp(3, Timestamp.from(now))
-            this.setIfNotNull(4, right.createdBy) { value, idx, prepStmt ->
+            this.setString(localCounter++, right.rightId)
+            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(5, right.lastUpdatedBy) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.lastUpdatedBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(6, right.accessState) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.accessState) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(7, right.startDate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.startDate) { value, idx, prepStmt ->
                 prepStmt.setDate(idx, Date.valueOf(value))
             }
-            this.setIfNotNull(8, right.endDate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.endDate) { value, idx, prepStmt ->
                 prepStmt.setDate(idx, Date.valueOf(value))
             }
-            this.setIfNotNull(9, right.notesGeneral) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesGeneral) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(10, right.licenceContract) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.licenceContract) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(11, right.authorRightException) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.authorRightException) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(12, right.zbwUserAgreement) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.zbwUserAgreement) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(13, right.openContentLicence) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(14, right.nonStandardOpenContentLicenceURL) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(15, right.nonStandardOpenContentLicence) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(16, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
-                prepStmt.setBoolean(idx, value)
-            }
-            this.setIfNotNull(17, right.notesFormalRules) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesFormalRules) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(18, right.basisStorage) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.basisStorage) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(19, right.basisAccessState) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.basisAccessState) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(20, right.notesProcessDocumentation) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesProcessDocumentation) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(21, right.notesManagementRelated) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(22, right.isTemplate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.isTemplate) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(23, right.templateName) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.templateName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(24, right.templateDescription) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.templateDescription) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(25, right.exceptionFrom) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -162,74 +151,66 @@ class RightDB(
         prep: PreparedStatement,
     ): PreparedStatement {
         val now = Instant.now()
+        var localCounter = 1
 
         return prep.apply {
-            this.setTimestamp(1, Timestamp.from(now))
-            this.setTimestamp(2, Timestamp.from(now))
-            this.setIfNotNull(3, right.createdBy) { value, idx, prepStmt ->
+            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(4, right.lastUpdatedBy) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.lastUpdatedBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(5, right.accessState) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.accessState) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(6, right.startDate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.startDate) { value, idx, prepStmt ->
                 prepStmt.setDate(idx, Date.valueOf(value))
             }
-            this.setIfNotNull(7, right.endDate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.endDate) { value, idx, prepStmt ->
                 prepStmt.setDate(idx, Date.valueOf(value))
             }
-            this.setIfNotNull(8, right.notesGeneral) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesGeneral) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(9, right.licenceContract) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.licenceContract) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(10, right.authorRightException) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.authorRightException) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(11, right.zbwUserAgreement) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.zbwUserAgreement) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(12, right.openContentLicence) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(13, right.nonStandardOpenContentLicenceURL) { value, idx, prepStmt ->
-                prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(14, right.nonStandardOpenContentLicence) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(15, right.restrictedOpenContentLicence) { value, idx, prepStmt ->
-                prepStmt.setBoolean(idx, value)
-            }
-            this.setIfNotNull(16, right.notesFormalRules) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesFormalRules) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(17, right.basisStorage) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.basisStorage) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(18, right.basisAccessState) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.basisAccessState) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value.toString())
             }
-            this.setIfNotNull(19, right.notesProcessDocumentation) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesProcessDocumentation) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(20, right.notesManagementRelated) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.notesManagementRelated) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(21, right.isTemplate) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.isTemplate) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
-            this.setIfNotNull(22, right.templateName) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.templateName) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(23, right.templateDescription) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.templateDescription) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(24, right.exceptionFrom) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -532,8 +513,6 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                " $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on, $COLUMN_EXCEPTION_FROM," +
@@ -555,13 +534,10 @@ class RightDB(
                 "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                " $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
                 "VALUES(?,?," +
-                "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -576,13 +552,10 @@ class RightDB(
                 "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
                 "VALUES(?,?,?," +
-                "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -599,9 +572,6 @@ class RightDB(
                 "end_date = EXCLUDED.end_date," +
                 "notes_general = EXCLUDED.notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT = EXCLUDED.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE ," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL = EXCLUDED.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE = EXCLUDED.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_ZBW_USER_AGREEMENT = EXCLUDED.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "notes_formal_rules = EXCLUDED.notes_formal_rules," +
@@ -624,8 +594,6 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -636,8 +604,6 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE, $COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -649,8 +615,6 @@ class RightDB(
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_OPEN_CONTENT_LICENCE,$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
@@ -673,52 +637,50 @@ class RightDB(
                 " WHERE $COLUMN_RIGHT_ID=ANY(?)"
 
         fun extractRightFromRS(rs: ResultSet): ItemRight {
-            val currentRightId = rs.getString(1)
+            var localCounter = 1
+            val currentRightId = rs.getString(localCounter++)
             return ItemRight(
                 rightId = currentRightId,
                 createdOn =
-                    rs.getTimestamp(2)?.let {
+                    rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             ZoneId.of("UTC+00:00"),
                         )
                     },
                 lastUpdatedOn =
-                    rs.getTimestamp(3)?.let {
+                    rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             ZoneId.of("UTC+00:00"),
                         )
                     },
-                createdBy = rs.getString(4),
-                lastUpdatedBy = rs.getString(5),
-                accessState = rs.getString(6)?.let { AccessState.valueOf(it) },
-                startDate = rs.getDate(7).toLocalDate(),
-                endDate = rs.getDate(8)?.toLocalDate(),
-                notesGeneral = rs.getString(9),
-                licenceContract = rs.getString(10),
-                authorRightException = rs.getBoolean(11),
-                zbwUserAgreement = rs.getBoolean(12),
-                openContentLicence = rs.getString(13),
-                nonStandardOpenContentLicenceURL = rs.getString(14),
-                nonStandardOpenContentLicence = rs.getBoolean(15),
-                restrictedOpenContentLicence = rs.getBoolean(16),
-                notesFormalRules = rs.getString(17),
-                basisStorage = rs.getString(18)?.let { BasisStorage.valueOf(it) },
-                basisAccessState = rs.getString(19)?.let { BasisAccessState.valueOf(it) },
-                notesProcessDocumentation = rs.getString(20),
-                notesManagementRelated = rs.getString(21),
-                isTemplate = rs.getBoolean(22),
-                templateName = rs.getString(23),
-                templateDescription = rs.getString(24),
+                createdBy = rs.getString(localCounter++),
+                lastUpdatedBy = rs.getString(localCounter++),
+                accessState = rs.getString(localCounter++)?.let { AccessState.valueOf(it) },
+                startDate = rs.getDate(localCounter++).toLocalDate(),
+                endDate = rs.getDate(localCounter++)?.toLocalDate(),
+                notesGeneral = rs.getString(localCounter++),
+                licenceContract = rs.getString(localCounter++),
+                authorRightException = rs.getBoolean(localCounter++),
+                zbwUserAgreement = rs.getBoolean(localCounter++),
+                restrictedOpenContentLicence = rs.getBoolean(localCounter++),
+                notesFormalRules = rs.getString(localCounter++),
+                basisStorage = rs.getString(localCounter++)?.let { BasisStorage.valueOf(it) },
+                basisAccessState = rs.getString(localCounter++)?.let { BasisAccessState.valueOf(it) },
+                notesProcessDocumentation = rs.getString(localCounter++),
+                notesManagementRelated = rs.getString(localCounter++),
+                isTemplate = rs.getBoolean(localCounter++),
+                templateName = rs.getString(localCounter++),
+                templateDescription = rs.getString(localCounter++),
                 lastAppliedOn =
-                    rs.getTimestamp(25)?.let {
+                    rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             ZoneId.of("UTC+00:00"),
                         )
                     },
-                exceptionFrom = rs.getString(26),
+                exceptionFrom = rs.getString(localCounter++),
                 groups = null,
                 groupIds = null,
             )

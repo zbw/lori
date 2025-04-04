@@ -228,13 +228,10 @@ fun RightRest.toBusiness(): ItemRight =
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
-        nonStandardOpenContentLicence = nonStandardOpenContentLicence,
-        nonStandardOpenContentLicenceURL = nonStandardOpenContentLicenceURL,
         notesGeneral = notesGeneral,
         notesFormalRules = notesFormalRules,
         notesProcessDocumentation = notesProcessDocumentation,
         notesManagementRelated = notesManagementRelated,
-        openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateDescription = templateDescription,
@@ -260,13 +257,10 @@ fun ItemRight.toRest(): RightRest =
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
         licenceContract = licenceContract,
-        nonStandardOpenContentLicence = nonStandardOpenContentLicence,
-        nonStandardOpenContentLicenceURL = nonStandardOpenContentLicenceURL,
         notesGeneral = notesGeneral,
         notesFormalRules = notesFormalRules,
         notesProcessDocumentation = notesProcessDocumentation,
         notesManagementRelated = notesManagementRelated,
-        openContentLicence = openContentLicence,
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
         templateDescription = templateDescription,
@@ -356,7 +350,10 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.OTHER -> PublicationTypeRest.other
     }
 
-fun DAItem.toBusiness(directParentCommunityId: Int): ItemMetadata? {
+fun DAItem.toBusiness(
+    daCommunity: DACommunity,
+    daCollection: DACollection,
+): ItemMetadata? {
     val metadata = this.metadata
     val handle =
         RestConverter.extractMetadata("dc.identifier.uri", metadata)?.let {
@@ -407,24 +404,7 @@ fun DAItem.toBusiness(directParentCommunityId: Int): ItemMetadata? {
         LOG.warn("Required field missing for metadata: Handle ${this.handle}")
         null
     } else {
-        var subDACommunity: DACommunity? = null
-        val parentDACommunity: DACommunity?
-        when (this.parentCommunityList.size) {
-            2 -> {
-                subDACommunity = this.parentCommunityList.firstOrNull { it.id == directParentCommunityId }
-                parentDACommunity = this.parentCommunityList.firstOrNull { it.id != directParentCommunityId }
-            }
-
-            1 -> {
-                parentDACommunity = this.parentCommunityList.firstOrNull()
-            }
-
-            else -> {
-                // This case should not happen. If it does however, a warning will be printed and the item will be irgnored for now.
-                LOG.warn("Invalid numbers of parent communities (should be 1 or 2): Handle ${this.handle}")
-                return null
-            }
-        }
+        val subDACommunity: DACommunity? = daCommunity.subcommunities?.firstOrNull()
         val licenceUrl =
             RestConverter.extractMetadata("dc.rights.license", metadata)?.let {
                 if (it.size > 1) {
@@ -434,20 +414,20 @@ fun DAItem.toBusiness(directParentCommunityId: Int): ItemMetadata? {
             }
 
         ItemMetadata(
-            // TODO(CB): Needs to be fixed asap -> multiple authors
+            // TODO(CB): Multiple authors may exist -> information not needed yet in frontend
             author = RestConverter.extractMetadata("dc.contributor.author", metadata)?.let { it[0] },
             // Not in DA yet
             band = null,
             collectionHandle =
-                this.parentCollection?.handle?.let {
+                daCollection.handle?.let {
                     RestConverter.parseHandle(it)
                 },
-            collectionName = this.parentCollection?.name,
+            collectionName = daCollection.name,
             communityHandle =
-                parentDACommunity?.handle?.let {
+                daCommunity.handle?.let {
                     RestConverter.parseHandle(it)
                 },
-            communityName = parentDACommunity?.name,
+            communityName = daCommunity.name,
             createdBy = null,
             createdOn = null,
             deleted = this.withdrawn?.toBoolean() == true,

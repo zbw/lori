@@ -1892,7 +1892,7 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Urheberrechtschrankennutzung</v-col>
+              <v-col cols="4"> Anwendbarkeit Urheberrechtsschranke</v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
@@ -1918,52 +1918,13 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Uneingeschränkte Open-Content-Lizenz</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-bind="{...$attrs, ...readOnlyProps}"
-                  hint="Eine per URI eindeutig referenzierte Standard-Open-Content-Lizenz, die für das Item gilt."
-                  v-model="tmpRight.openContentLicence"
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4">
-                Nicht-standardisierte Open-Content-Lizenz (URL)
-              </v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-bind="{...$attrs, ...readOnlyProps}"
-                  v-model="tmpRight.nonStandardOpenContentLicenceURL"
-                  hint="Eine per URL eindeutig referenzierbare Nicht-standardisierte Open-Content-Lizenz, die für das Item gilt."
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4">
-                Nicht-standardisierte Open-Content-Lizenz (keine URL)
-              </v-col>
-              <v-col cols="8">
-                <v-switch
-                  v-model="tmpRight.nonStandardOpenContentLicence"
-                  :readonly="!isEditable"
-                  color="indigo"
-                  hint="Ohne URL, als Freitext (bzw. derzeit als Screenshot in Clearingstelle)"
-                  :label="labelModelToString(tmpRight.nonStandardOpenContentLicence)"
-                  persistent-hint
-                ></v-switch>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Eingeschränkte Open-Content-Lizenz</v-col>
+              <v-col cols="4"> Open-Content mit Einschränkung</v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.restrictedOpenContentLicence"
                   :readonly="!isEditable"
                   color="indigo"
-                  hint="Gilt für dieses Item, dem im Element 'Open-Content-Licence' eine standardisierte Open-Content-Lizenz zugeordnet ist, eine Einschränkung?"
+                  hint="Gilt für die Open-Content-Lizenz dieses Items eine Einschränkung, weil Material mit anderen Lizenzen enthalten ist?"
                   :label="labelModelToString(tmpRight.restrictedOpenContentLicence)"
                   persistent-hint
                 ></v-switch>

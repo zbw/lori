@@ -172,24 +172,7 @@ class DAConnectorTest {
                                     "parentCollectionList":[],
                                     "parentCommunityList":[],
                                     "metadata":[{"key":"dc.contributor.author","value":"Iacobuta, Gabriela","language":"DE_de"}],
-                                    "bitstreams":[{
-                                         "id":13358,
-                                         "name":"National climate change mitigation legislation strategy and targets a global update.pdf.txt",
-                                         "handle":null,
-                                         "type":"bitstream",
-                                         "link":"/econis-archiv/rest/bitstreams/13358",
-                                         "expand":["parent","policies","all"],
-                                         "bundleName":"TEXT",
-                                         "description":"Extracted Text",
-                                         "format":"Text",
-                                         "mimeType":"text/plain",
-                                         "sizeBytes":60303,
-                                         "parentObject":null,
-                                         "retrieveLink":"/econis-archiv/rest/bitstreams/13358/retrieve",
-                                         "checkSum":{"value":"ff6f2af4afdf3b8afabf85de4a77be97","checkSumAlgorithm":"MD5"},
-                                         "sequenceId":3,
-                                         "policies":null
-                                         }],
+                                    "bitstreams":[],
                                      "archived":"true",
                                      "withdrawn":"false"}] 
                                     """.trimIndent(),
@@ -250,7 +233,12 @@ class DAConnectorTest {
             val expected = 1
 
             // when
-            val received: Int = daConnector.importCollection("sometoken", givenCollectionId, 1)
+            val received: Int =
+                daConnector.importCollection(
+                    "sometoken",
+                    givenCollectionId,
+                    TEST_COMMUNITY,
+                )
             // then
             assertThat(received, `is`(expected))
         }
@@ -353,7 +341,7 @@ class DAConnectorTest {
             val expected = 0
 
             // when
-            val received: Int = daConnector.importCollection("sometoken", givenCommunityId, 1)
+            val received: Int = daConnector.importCollection("sometoken", givenCommunityId, TEST_COMMUNITY)
             // then
             assertThat(received, `is`(expected))
         }

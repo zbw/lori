@@ -66,10 +66,6 @@ RightRest:
       format: date-time
     licenceContract:
       type: string
-    nonStandardOpenContentLicence:
-      type: boolean
-    nonStandardOpenContentLicenceURL:
-      type: string
     notesGeneral:
       type: string
     notesFormalRules:
@@ -77,8 +73,6 @@ RightRest:
     notesProcessDocumentation:
       type: string
     notesManagementRelated:
-      type: string
-    openContentLicence:
       type: string
     restrictedOpenContentLicence:
       type: boolean

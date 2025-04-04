@@ -34,6 +34,9 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
 import io.ktor.utils.io.errors.IOException
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Semaphore
@@ -120,7 +123,7 @@ class DAConnector(
                     headers {
                         append(DSPACE_TOKEN, loginToken)
                     }
-                    parameter("expand", "collections")
+                    parameter("expand", "collections,subCommunities")
                 }.body<DACommunity>()
         return response
     }
@@ -132,74 +135,89 @@ class DAConnector(
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
-                importCollection(loginToken, cId, community.id)
+                importCollection(loginToken, cId, community).also {
+                    LOG.info("CollectionId $cId: Successfully imported $it entries")
+                }
             }
         }
 
     suspend fun importCollection(
         loginToken: String,
         collectionId: Int,
-        communityId: Int,
-    ): Int {
-        val numberItems: Int =
-            client
-                .get("$restURL/collections/$collectionId") {
-                    headers {
-                        append(HttpHeaders.Accept, "application/json")
-                        append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
-                        append(DSPACE_TOKEN, loginToken)
-                    }
-                }.body<DACollection>()
-                .numberItems ?: 0
-        LOG.info("CollectionId $collectionId: Number of Items: $numberItems")
-
-        return (1..ceil(numberItems.toDouble() / 100).toInt()).sumOf {
-            semaphore.withPermit {
-                LOG.info("CollectionId $collectionId: Offset ${(it - 1) * 100}")
-
-                val response: ApiResponse<List<DAItem>, String> =
-                    client.safeRequest(2, 2000L) {
-                        method = HttpMethod.Get
-                        url("$restURL/collections/$collectionId/items")
+        community: DACommunity,
+    ): Int =
+        coroutineScope {
+            val collection: DACollection =
+                client
+                    .get("$restURL/collections/$collectionId") {
                         headers {
                             append(HttpHeaders.Accept, "application/json")
                             append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
-                        }
-                        headers {
                             append(DSPACE_TOKEN, loginToken)
                         }
-                        parameter("expand", "metadata,parentCommunityList,parentCollection")
-                        parameter("offset", "${(it - 1) * 100}")
-                        parameter("limit", "100")
-                    }
-                when (response) {
-                    is ApiResponse.Error.HttpError<*> -> {
-                        LOG.warn("HttpError: Status Code" + response.code + "; Error Body" + response.errorBody)
-                        0
-                    }
+                    }.body<DACollection>()
+            val numberItems: Int = collection.numberItems ?: 0
+            LOG.info("CollectionId $collectionId: Start importing $numberItems items")
+            var deferredResults = mutableListOf<Deferred<Int>>()
+            var importedItems = 0
+            for (offset in 0..ceil(numberItems.toDouble() / 100).toInt() - 1) {
+                deferredResults +=
+                    async {
+                        semaphore.withPermit {
+                            LOG.debug("CollectionId $collectionId: Offset ${offset * 100}")
 
-                    is ApiResponse.Error.NetworkError -> {
-                        LOG.warn("Network Error: ${response.message}")
-                        0
-                    }
+                            val response: ApiResponse<List<DAItem>, String> =
+                                client.safeRequest(2, 2000L) {
+                                    method = HttpMethod.Get
+                                    url("$restURL/collections/$collectionId/items")
+                                    headers {
+                                        append(HttpHeaders.Accept, "application/json")
+                                        append(HttpHeaders.Authorization, "Basic ${config.digitalArchiveBasicAuth}")
+                                    }
+                                    headers {
+                                        append(DSPACE_TOKEN, loginToken)
+                                    }
+                                    parameter("expand", "metadata")
+                                    parameter("offset", "${offset * 100}")
+                                    parameter("limit", "100")
+                                }
+                            when (response) {
+                                is ApiResponse.Error.HttpError<*> -> {
+                                    LOG.warn("HttpError: Status Code" + response.code + "; Error Body" + response.errorBody)
+                                    return@withPermit 0
+                                }
 
-                    is ApiResponse.Error.SerializationError -> {
-                        LOG.warn("Serialization Error: ${response.message}")
-                        0
-                    }
+                                is ApiResponse.Error.NetworkError -> {
+                                    LOG.warn("Network Error: ${response.message}")
+                                    0
+                                }
 
-                    is ApiResponse.Success<List<DAItem>> -> {
-                        val daItemList = response.body
-                        val metadataList =
-                            daItemList
-                                .mapNotNull { it.toBusiness(communityId) }
-                                .map { shortenHandle(it) }
-                        backend.upsertMetadata(metadataList).filter { it == 1 }.size
+                                is ApiResponse.Error.SerializationError -> {
+                                    LOG.warn("Serialization Error: ${response.message}")
+                                    0
+                                }
+
+                                is ApiResponse.Success<List<DAItem>> -> {
+                                    val daItemList = response.body
+                                    val metadataList =
+                                        daItemList
+                                            .mapNotNull {
+                                                it.toBusiness(
+                                                    daCollection = collection,
+                                                    daCommunity = community,
+                                                )
+                                            }.map { shortenHandle(it) }
+                                    val writtenToDB = backend.upsertMetadata(metadataList).filter { it == 1 }.size
+                                    importedItems += writtenToDB
+                                    return@withPermit importedItems
+                                }
+                            }
+                        }
                     }
-                }
             }
+            deferredResults.awaitAll()
+            return@coroutineScope importedItems
         }
-    }
 
     suspend inline fun <reified T, reified E> HttpClient.safeRequest(
         retries: Int,

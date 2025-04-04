@@ -1,5 +1,7 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_COLLECTION
+import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_COMMUNITY
 import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.RightIdFilter
@@ -101,13 +103,10 @@ class RestConverterTest {
                             lastUpdatedBy = TEST_RIGHT.lastUpdatedBy,
                             lastUpdatedOn = TEST_RIGHT.lastUpdatedOn,
                             licenceContract = TEST_RIGHT.licenceContract,
-                            nonStandardOpenContentLicence = TEST_RIGHT.nonStandardOpenContentLicence,
-                            nonStandardOpenContentLicenceURL = TEST_RIGHT.nonStandardOpenContentLicenceURL,
                             notesGeneral = TEST_RIGHT.notesGeneral,
                             notesFormalRules = TEST_RIGHT.notesFormalRules,
                             notesProcessDocumentation = TEST_RIGHT.notesProcessDocumentation,
                             notesManagementRelated = TEST_RIGHT.notesManagementRelated,
-                            openContentLicence = TEST_RIGHT.openContentLicence,
                             restrictedOpenContentLicence = TEST_RIGHT.restrictedOpenContentLicence,
                             startDate = TEST_RIGHT.startDate,
                             templateDescription = TEST_RIGHT.templateDescription,
@@ -129,10 +128,10 @@ class RestConverterTest {
             ItemMetadata(
                 author = "Colbjørnsen, Terje",
                 band = null,
-                collectionHandle = "11159/849",
-                collectionName = "Collectionname",
-                communityName = "Communityname",
-                communityHandle = "11159/850",
+                collectionHandle = TEST_COLLECTION.handle,
+                collectionName = TEST_COLLECTION.name,
+                communityName = TEST_COMMUNITY.name,
+                communityHandle = TEST_COMMUNITY.handle,
                 createdBy = null,
                 createdOn = null,
                 deleted = false,
@@ -160,8 +159,8 @@ class RestConverterTest {
                         0,
                         ZoneOffset.UTC,
                     ),
-                subCommunityHandle = "11159/1114",
-                subCommunityName = "Department",
+                subCommunityHandle = TEST_COMMUNITY.subcommunities?.get(0)!!.handle,
+                subCommunityName = TEST_COMMUNITY.subcommunities?.get(0)!!.name,
                 title = "some_title",
                 titleJournal = "some_journal",
                 titleSeries = "some_series",
@@ -169,7 +168,11 @@ class RestConverterTest {
             )
 
         // when
-        val receivedItem = TEST_DA_ITEM.toBusiness(2)
+        val receivedItem =
+            TEST_DA_ITEM.toBusiness(
+                TEST_COMMUNITY,
+                TEST_COLLECTION,
+            )
         // then
         assertThat(receivedItem, `is`(expected))
 
@@ -734,13 +737,10 @@ class RestConverterTest {
                     ),
                 startDate = TODAY.minusDays(1),
                 licenceContract = "some contract",
-                nonStandardOpenContentLicence = true,
-                nonStandardOpenContentLicenceURL = "https://nonstandardoclurl.de",
                 notesGeneral = "Some general notes",
                 notesFormalRules = "Some formal rule notes",
                 notesProcessDocumentation = "Some process documentation",
                 notesManagementRelated = "Some management related notes",
-                openContentLicence = "some licence",
                 restrictedOpenContentLicence = false,
                 templateDescription = "foo",
                 templateName = "name",

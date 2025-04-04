@@ -13,9 +13,6 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_A
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_TEMPLATE_NAME
@@ -238,54 +235,6 @@ class SearchDB(
                     }
                 }
 
-            val nonStandardOCLFacet =
-                async {
-                    searchOccurrences(
-                        searchExpression = searchExpression,
-                        metadataSearchFilters = metadataSearchFilter,
-                        rightSearchFilters = rightSearchFilter,
-                        occurrenceForColumn = COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE,
-                        noRightInformationFilter = noRightInformationFilter,
-                    ) { rs ->
-                        Pair(
-                            rs.getBoolean(1),
-                            rs.getInt(2),
-                        )
-                    }
-                }
-
-            val oclFacet =
-                async {
-                    searchOccurrences(
-                        searchExpression = searchExpression,
-                        metadataSearchFilters = metadataSearchFilter,
-                        rightSearchFilters = rightSearchFilter,
-                        occurrenceForColumn = COLUMN_RIGHT_OPEN_CONTENT_LICENCE,
-                        noRightInformationFilter = noRightInformationFilter,
-                    ) { rs ->
-                        Pair(
-                            rs.getString(1),
-                            rs.getInt(2),
-                        )
-                    }
-                }
-
-            val nonStandardOCLLicenceFacet =
-                async {
-                    searchOccurrences(
-                        searchExpression = searchExpression,
-                        metadataSearchFilters = metadataSearchFilter,
-                        rightSearchFilters = rightSearchFilter,
-                        occurrenceForColumn = COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL,
-                        noRightInformationFilter = noRightInformationFilter,
-                    ) { rs ->
-                        Pair(
-                            rs.getString(1),
-                            rs.getInt(2),
-                        )
-                    }
-                }
-
             return@coroutineScope FacetTransientSet(
                 paketSigels = paketSigelFacet.await(),
                 publicationType = publicationTypeFacet.await(),
@@ -303,13 +252,6 @@ class SearchDB(
                         ?.let { true } == true,
                 hasOpenContentLicence =
                     listOf(
-                        oclFacet.await().isNotEmpty(),
-                        nonStandardOCLFacet
-                            .await()
-                            .getOrDefault(true, 0)
-                            .takeIf { it > 0 }
-                            ?.let { true } == true,
-                        nonStandardOCLLicenceFacet.await().isNotEmpty(),
                         oclRestrictedFacet
                             .await()
                             .getOrDefault(true, 0)
@@ -568,9 +510,6 @@ class SearchDB(
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_OPEN_CONTENT_LICENCE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
@@ -681,9 +620,6 @@ class SearchDB(
                     columnName == COLUMN_RIGHT_ACCESS_STATE ||
                     columnName == COLUMN_RIGHT_END_DATE ||
                     columnName == COLUMN_RIGHT_LICENCE_CONTRACT ||
-                    columnName == COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE ||
-                    columnName == COLUMN_RIGHT_NON_STANDARD_OPEN_CONTENT_LICENCE_URL ||
-                    columnName == COLUMN_RIGHT_OPEN_CONTENT_LICENCE ||
                     columnName == COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE ||
                     columnName == COLUMN_RIGHT_START_DATE
 

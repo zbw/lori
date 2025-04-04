@@ -161,12 +161,13 @@ class GroupDB(
 
             generateSequence {
                 if (rs.next()) {
+                    var localCounter = 1
                     GroupVersion(
-                        groupId = rs.getInt(1),
-                        createdBy = rs.getString(2),
-                        createdOn = rs.getTimestamp(3)?.toOffsetDateTime(),
-                        description = rs.getString(4),
-                        version = rs.getInt(5),
+                        groupId = rs.getInt(localCounter++),
+                        createdBy = rs.getString(localCounter++),
+                        createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                        description = rs.getString(localCounter++),
+                        version = rs.getInt(localCounter++),
                     )
                 } else {
                     null
@@ -517,19 +518,20 @@ class GroupDB(
             rs: ResultSet,
             gson: Gson,
         ): Group {
+            var localCounter = 1
             val groupListType: Type = object : TypeToken<ArrayList<GroupEntry>>() {}.type
-            val groupId = rs.getInt(1)
-            val description = rs.getString(2)
+            val groupId = rs.getInt(localCounter++)
+            val description = rs.getString(localCounter++)
             val ipAddressJson: String? =
                 rs
-                    .getObject(3, PGobject::class.java)
+                    .getObject(localCounter++, PGobject::class.java)
                     .value
-            val title = rs.getString(4)
-            val createdBy = rs.getString(5)
-            val createdOn = rs.getTimestamp(6)?.toOffsetDateTime()
-            val lastUpdatedBy = rs.getString(7)
-            val lastUpdatedOn = rs.getTimestamp(8)?.toOffsetDateTime()
-            val version = rs.getInt(9)
+            val title = rs.getString(localCounter++)
+            val createdBy = rs.getString(localCounter++)
+            val createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime()
+            val lastUpdatedBy = rs.getString(localCounter++)
+            val lastUpdatedOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime()
+            val version = rs.getInt(localCounter++)
 
             return Group(
                 groupId = groupId,
