@@ -98,7 +98,7 @@ class DAConnectorTest {
             val expected = TEST_COMMUNITY
 
             // when
-            val received = daConnector.getCommunity("sometoken", 240)
+            val received = daConnector.getCommunityById("sometoken", 240)
 
             // then
             assertThat(received, `is`(expected))

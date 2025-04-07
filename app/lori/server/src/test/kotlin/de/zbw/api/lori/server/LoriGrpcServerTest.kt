@@ -198,7 +198,7 @@ class LoriGrpcServerTest {
             val importer =
                 mockk<DAConnector> {
                     coEvery { login() } returns token
-                    coEvery { getCommunity(token, any()) } returns community
+                    coEvery { getCommunityById(token, any()) } returns community
                     coEvery { getAllCommunityIds(token) } returns listOf(community.id)
                     coEvery { startFullImport(token, any()) } returns listOf(importsPerCommunity)
                 }

@@ -219,7 +219,10 @@ class LoriGrpcServer(
     ): Int {
         semaphore.acquire()
         LOG.info("Start importing community $communityId")
-        val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
+        val daCommunity: DACommunity? = daConnector.getCommunityById(token, communityId)
+        if (daCommunity == null) {
+            return 0
+        }
         val import = daConnector.startFullImport(token, daCommunity)
         semaphore.release()
         LOG.info("Finished importing community $communityId")

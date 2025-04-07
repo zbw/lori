@@ -139,15 +139,24 @@ class MetadataDB(
 
     suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
         connectionPool.useConnection { connection ->
-            val prep = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
-            itemMetadata.map {
-                val p = insertUpsertMetadataSetParameters(it, prep)
-                p.addBatch()
+            val prep: PreparedStatement = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
+            val prepLock: PreparedStatement = connection.prepareStatement(STATEMENT_LOCK_METADATA_ROW)
+            itemMetadata.forEach {
+                prepLock.setString(1, it.handle)
+                prepLock.addBatch()
+                insertUpsertMetadataSetParameters(
+                    itemMetadata = it,
+                    prep = prep,
+                )
+                prep.addBatch()
             }
             val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
             try {
                 span.makeCurrent()
-                return@useConnection runInTransaction(connection) { prep.executeBatch() }
+                return@useConnection runInTransaction(connection) {
+                    prepLock.executeBatch()
+                    prep.executeBatch()
+                }
             } finally {
                 span.end()
             }
@@ -309,6 +318,9 @@ class MetadataDB(
             STATEMENT_SELECT_ALL_METADATA_FROM +
                 " WHERE $COLUMN_METADATA_DELETED = true"
 
+        const val STATEMENT_LOCK_METADATA_ROW =
+            "SELECT * FROM $TABLE_NAME_ITEM_METADATA WHERE $COLUMN_METADATA_HANDLE = ? FOR UPDATE;"
+
         const val STATEMENT_UPSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
                 "(handle,ppn,title,title_journal," +
@@ -415,9 +427,10 @@ class MetadataDB(
         private fun insertUpsertMetadataSetParameters(
             itemMetadata: ItemMetadata,
             prep: PreparedStatement,
+            sqlCounter: Int = 1,
         ): PreparedStatement {
             val now = Instant.now()
-            var localCounter = 1
+            var localCounter = sqlCounter
             return prep.apply {
                 this.setString(localCounter++, itemMetadata.handle)
                 this.setIfNotNull(localCounter++, itemMetadata.ppn) { value, idx, prepStmt ->
