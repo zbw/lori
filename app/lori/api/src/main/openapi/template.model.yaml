@@ -35,10 +35,8 @@ TemplateApplicationRest:
       type: string
     templateName:
       type: string
-    exceptionTemplateApplications:
-      type: array
-      items:
-        $ref: 'template.model.yaml#/TemplateApplicationRest'
+    exceptionTemplateApplication:
+      $ref: 'template.model.yaml#/TemplateApplicationRest'
     errors:
       type: array
       items:

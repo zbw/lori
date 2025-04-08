@@ -423,7 +423,7 @@ class RightDB(
     /**
      * Return all Templates that are an exception for the given rightId.
      */
-    suspend fun getExceptionsByRightId(rightId: String): List<ItemRight> {
+    suspend fun getExceptionByRightId(rightId: String): ItemRight? {
         val rights =
             connectionPool.useConnection("getExceptionsByRightId") { connection ->
                 val prepStmt =
@@ -447,7 +447,8 @@ class RightDB(
                     }
                 }.takeWhile { true }.toList()
             }
-        return rights.map { r ->
+        // Maximum of one exception is allowed
+        return rights.firstOrNull()?.let { r ->
             val groups = groupDB.getGroupsByRightId(r.rightId!!)
             r.copy(
                 groups = groups,

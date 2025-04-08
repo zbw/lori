@@ -303,13 +303,15 @@ class LoriServerBackend(
 
     suspend fun deleteRight(rightId: String): Int {
         // Delete exceptions first
-        val exceptionIds = dbConnector.rightDB.getExceptionsByRightId(rightId).mapNotNull { it.rightId }
-        exceptionIds.forEach {
+        val exceptionId: String? = dbConnector.rightDB.getExceptionByRightId(rightId)?.rightId
+        exceptionId?.also {
             deleteItemEntriesByRightId(it)
             deleteBookmarkTemplatePairsByRightId(it)
             dbConnector.groupDB.deleteGroupPairsByRightId(it)
         }
-        dbConnector.rightDB.deleteRightsByIds(exceptionIds)
+        exceptionId?.let {
+            dbConnector.rightDB.deleteRightsByIds(listOf(it))
+        }
         // Delete rightId
         deleteItemEntriesByRightId(rightId)
         deleteBookmarkTemplatePairsByRightId(rightId)
@@ -747,9 +749,9 @@ class LoriServerBackend(
             return null
         }
         // Exceptions
-        val exceptionTemplates: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
-        val exceptionTemplateApplicationResult: List<TemplateApplicationResult> =
-            exceptionTemplates.mapNotNull { excTemp ->
+        val exceptionTemplate: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
+        val exceptionTemplateApplicationResult: TemplateApplicationResult? =
+            exceptionTemplate?.let { excTemp ->
                 excTemp.rightId?.let {
                     applyTemplate(
                         it,
@@ -760,7 +762,9 @@ class LoriServerBackend(
                 }
             }
         val bookmarksIdsExceptions: Set<Int> =
-            dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(exceptionTemplates.mapNotNull { it.rightId })
+            dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
+                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList<String>(),
+            )
         val bookmarksExceptions: List<Bookmark> =
             dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
 
@@ -861,7 +865,7 @@ class LoriServerBackend(
         }
     }
 
-    suspend fun getExceptionsByRightId(rightId: String): List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId)
+    suspend fun getExceptionByRightId(rightId: String): ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
 
     /**
      * Errors.

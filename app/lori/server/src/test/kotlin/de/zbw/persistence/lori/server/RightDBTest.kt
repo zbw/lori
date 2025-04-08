@@ -132,14 +132,10 @@ class RightDBTest : DatabaseTest() {
                     ),
                 )
 
-            val exceptionRights: List<ItemRight> = dbConnector.rightDB.getExceptionsByRightId(rightId1)
-            assertThat(
-                exceptionRights.size,
-                `is`(1),
-            )
+            val exceptionRights: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId1)
 
             assertThat(
-                exceptionRights.first().rightId,
+                exceptionRights!!.rightId,
                 `is`(rightId2),
             )
 
@@ -173,15 +169,12 @@ class RightDBTest : DatabaseTest() {
             val exceptionTemplate1 =
                 TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException)
             val excID1 = dbConnector.rightDB.insertRight(exceptionTemplate1)
-            val exceptionTemplate2 =
-                TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException + "2")
-            val excID2 = dbConnector.rightDB.insertRight(exceptionTemplate2)
 
             assertFalse(
                 dbConnector.rightDB.isException(upperID),
             )
             dbConnector.rightDB.addExceptionToTemplate(
-                rightIdExceptions = listOf(excID1, excID2),
+                rightIdExceptions = listOf(excID1),
                 rightIdTemplate = upperID,
             )
             assertFalse(
@@ -190,17 +183,11 @@ class RightDBTest : DatabaseTest() {
             assertTrue(
                 dbConnector.rightDB.isException(excID1),
             )
-            assertTrue(
-                dbConnector.rightDB.isException(excID2),
-            )
-            val result = dbConnector.rightDB.getExceptionsByRightId(upperID)
+            val result = dbConnector.rightDB.getExceptionByRightId(upperID)
             assertThat(
-                result.toSet(),
+                result,
                 `is`(
-                    setOf(
-                        exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
-                        exceptionTemplate2.copy(rightId = excID2, exceptionFrom = upperID),
-                    ),
+                    exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
                 ),
             )
         }

@@ -7,5 +7,5 @@ data class TemplateApplicationResult(
     val appliedMetadataHandles: List<String>,
     val errors: List<RightError>,
     val numberOfErrors: Int,
-    val exceptionTemplateApplicationResult: List<TemplateApplicationResult>,
+    val exceptionTemplateApplicationResult: TemplateApplicationResult?,
 )

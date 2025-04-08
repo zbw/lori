@@ -307,7 +307,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 `is`(setOf(item1ZDB2.handle)),
             )
             assertThat(
-                receivedUpperWithExc.exceptionTemplateApplicationResult.flatMap { it.appliedMetadataHandles }.toSet(),
+                receivedUpperWithExc.exceptionTemplateApplicationResult?.appliedMetadataHandles?.toSet(),
                 `is`(setOf(item2ZDB2.handle)),
             )
             val receivedException =

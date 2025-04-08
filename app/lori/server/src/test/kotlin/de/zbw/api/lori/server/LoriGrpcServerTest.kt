@@ -11,7 +11,6 @@ import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
-import de.zbw.lori.api.RightError
 import de.zbw.lori.api.TemplateApplication
 import io.grpc.StatusRuntimeException
 import io.mockk.coEvery
@@ -45,7 +44,7 @@ class LoriGrpcServerTest {
                         errors = emptyList(),
                         appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
-                        exceptionTemplateApplicationResult = emptyList(),
+                        exceptionTemplateApplicationResult = null,
                         testId = "123",
                         numberOfErrors = 0,
                     ),
@@ -57,11 +56,12 @@ class LoriGrpcServerTest {
                         listOf(
                             TemplateApplication
                                 .newBuilder()
-                                .addHandles("2")
                                 .setRightId("1")
                                 .setTemplateName("foobar")
                                 .setNumberAppliedEntries(1)
-                                .build(),
+                                .setException(
+                                    TemplateApplication.newBuilder().build(),
+                                ).build(),
                         ),
                     ).build()
 
@@ -107,7 +107,7 @@ class LoriGrpcServerTest {
                         errors = emptyList(),
                         appliedMetadataHandles = listOf("2"),
                         templateName = "foobar",
-                        exceptionTemplateApplicationResult = emptyList(),
+                        exceptionTemplateApplicationResult = null,
                         testId = "123",
                         numberOfErrors = 0,
                     ),
@@ -119,11 +119,12 @@ class LoriGrpcServerTest {
                         listOf(
                             TemplateApplication
                                 .newBuilder()
-                                .addHandles("2")
                                 .setRightId("1")
                                 .setTemplateName("foobar")
                                 .setNumberAppliedEntries(1)
-                                .build(),
+                                .setException(
+                                    TemplateApplication.newBuilder().build(),
+                                ).build(),
                         ),
                     ).build()
 
@@ -269,18 +270,8 @@ class LoriGrpcServerTest {
             val expectedResponse =
                 CheckForRightErrorsResponse
                     .newBuilder()
-                    .addAllErrors(
-                        listOf(
-                            RightError
-                                .newBuilder()
-                                .setErrorContext("sigel1234")
-                                .setConflictType(de.zbw.lori.api.ConflictType.CONFLICT_TYPE_GAP)
-                                .setErrorId(1)
-                                .setHandle("handle")
-                                .setMessage("foobar")
-                                .setCreatedOn(NOW.toInstant().toEpochMilli())
-                                .build(),
-                        ),
+                    .setNumberOfErrors(
+                        1,
                     ).build()
 
             val request =

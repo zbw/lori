@@ -780,8 +780,8 @@ fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
         numberOfErrors = numberOfErrors,
         numberOfAppliedEntries = appliedMetadataHandles.size,
         testId = testId,
-        exceptionTemplateApplications =
-            exceptionTemplateApplicationResult.map { exc ->
+        exceptionTemplateApplication =
+            exceptionTemplateApplicationResult?.let { exc ->
                 TemplateApplicationRest(
                     rightId = exc.rightId,
                     handles = exc.appliedMetadataHandles,
@@ -790,7 +790,7 @@ fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
                     numberOfAppliedEntries = exc.appliedMetadataHandles.size,
                     testId = exc.testId,
                     numberOfErrors = exc.numberOfErrors,
-                    exceptionTemplateApplications = emptyList(),
+                    exceptionTemplateApplication = null,
                 )
             },
     )
