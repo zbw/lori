@@ -1299,6 +1299,7 @@ table.special, th.special, td.special {
                       searchStore.handleURLResolver,
                     )
                   "
+                  target="_blank"
                   >{{ metadata_utils.shortenHandle(item.handle) }}</a
                 >
               </td>

@@ -452,7 +452,12 @@ fun Routing.templateRoutes(
                         }
                         val exception = backend.getExceptionByRightId(rightId)
                         if (exception == null) {
-                            call.respond(HttpStatusCode.OK)
+                            call.respond(
+                                HttpStatusCode.NotFound,
+                                ApiError.notFoundError(
+                                    detail = "Keine Ausnahme zu diesem Template.",
+                                ),
+                            )
                         } else {
                             call.respond(exception.toRest())
                         }
