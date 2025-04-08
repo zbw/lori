@@ -5,7 +5,7 @@ import {
   AccessStateRest,
   BookmarkRest,
   GroupRest,
-  ItemEntry,
+  ItemEntry, ResponseError,
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
@@ -1093,11 +1093,15 @@ export default defineComponent({
             formState.exceptionTemplates = exceptions;
             lastSavedExceptionTemplateItems.value = Array.from(exceptions);
           })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
+          .catch((e: ResponseError) => {
+            if(e.response && e.response.status == 404){
+              // Do nothing. This is expected.
+            } else {
+              error.errorHandling(e, (errMsg: string) => {
+                errorMsg.value = errMsg;
+                errorMsgIsActive.value = true;
+              });
+            }
           });
       }
     };
@@ -1457,7 +1461,12 @@ export default defineComponent({
           href="https://zbwintern/wiki/x/8wPUG"
           target="_blank"
       ></v-btn>
-      <v-btn v-if="!isTemplate" :readonly="updateInProgress" color="blue darken-1" @click="save"
+      <v-btn
+          v-if="isTabEntry"
+          :readonly="updateInProgress"
+          color="blue darken-1"
+          @click="save"
+          :disabled="!userStore.isLoggedIn"
         >Speichern
       </v-btn>
 
@@ -1596,9 +1605,9 @@ export default defineComponent({
               </v-row>
               <v-row>
                 <v-col cols="4">
-                  <v-div>
+                  <div>
                     Verknüpfte Suche
-                  </v-div>
+                  </div>
                   <p v-if="hasMissingBookmark" class="text-error">
                     Eine verknüpfte Suche wird benötigt.
                   </p>
@@ -2060,7 +2069,10 @@ export default defineComponent({
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn :disabled="updateInProgress" color="blue darken-1" @click="save"
+      <v-btn
+          :disabled="updateInProgress || !userStore.isLoggedIn"
+          color="blue darken-1"
+          @click="save"
         >Speichern
       </v-btn>
       <v-tooltip location="bottom">
@@ -2072,6 +2084,7 @@ export default defineComponent({
                 v-bind="props"
                 @click="dryRunTemplate"
                 :readonly="isNewTemplate || formWasChanged"
+                :disabled="!userStore.isLoggedIn"
             >Testen</v-btn>
           </div>
         </template>
