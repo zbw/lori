@@ -3,7 +3,6 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
-import de.zbw.api.lori.server.type.toProto
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.lori.api.ApplyTemplatesRequest
@@ -13,7 +12,6 @@ import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
-import de.zbw.lori.api.RightError
 import de.zbw.lori.api.TemplateApplication
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
@@ -51,20 +49,10 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val errors =
-                    daConnector.backend.checkForRightErrors(grpcUser).map {
-                        RightError
-                            .newBuilder()
-                            .setErrorId(it.errorId ?: -1)
-                            .setMessage(it.message)
-                            .setHandle(it.handle)
-                            .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
-                            .setErrorContext(it.conflictByContext)
-                            .setConflictType(it.conflictType.toProto())
-                            .build()
-                    }
+                    daConnector.backend.checkForRightErrors(GPRC_USER).size
                 CheckForRightErrorsResponse
                     .newBuilder()
-                    .addAllErrors(errors)
+                    .setNumberOfErrors(errors)
                     .build()
             } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
@@ -126,14 +114,14 @@ class LoriGrpcServer(
                         daConnector.backend.applyAllTemplates(
                             request.skipDraft,
                             request.dryRun,
-                            grpcUser,
+                            GPRC_USER,
                         )
                     } else {
                         daConnector.backend.applyTemplates(
                             request.rightIdsList,
                             request.skipDraft,
                             request.dryRun,
-                            grpcUser,
+                            GPRC_USER,
                         )
                     }
                 val templateApplications: List<TemplateApplication> =
@@ -143,43 +131,19 @@ class LoriGrpcServer(
                             .setRightId(e.rightId)
                             .setTemplateName(e.templateName)
                             .setNumberAppliedEntries(e.appliedMetadataHandles.size)
-                            .addAllHandles(e.appliedMetadataHandles)
-                            .addAllErrors(
-                                e.errors.map {
-                                    RightError
-                                        .newBuilder()
-                                        .setErrorId(it.errorId ?: -1)
-                                        .setMessage(it.message)
-                                        .setRightIdSource(it.conflictingWithRightId)
-                                        .setHandle(it.handle)
-                                        .setConflictingRightId(it.conflictByRightId)
-                                        .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
-                                        .setErrorContext(it.conflictByContext)
-                                        .build()
-                                },
-                            ).addAllExceptions(
-                                e.exceptionTemplateApplicationResult.map { exc ->
+                            .setNumberOfErrors(
+                                e.errors.size,
+                            ).setException(
+                                e.exceptionTemplateApplicationResult?.let { exc ->
                                     TemplateApplication
                                         .newBuilder()
                                         .setRightId(exc.rightId)
                                         .setTemplateName(exc.templateName)
                                         .setNumberAppliedEntries(exc.appliedMetadataHandles.size)
-                                        .addAllHandles(exc.appliedMetadataHandles)
-                                        .addAllErrors(
-                                            exc.errors.map {
-                                                RightError
-                                                    .newBuilder()
-                                                    .setErrorId(it.errorId ?: -1)
-                                                    .setMessage(it.message)
-                                                    .setRightIdSource(it.conflictingWithRightId)
-                                                    .setHandle(it.handle)
-                                                    .setConflictingRightId(it.conflictByRightId)
-                                                    .setCreatedOn(it.createdOn.toInstant().toEpochMilli())
-                                                    .setErrorContext(it.conflictByContext)
-                                                    .build()
-                                            },
+                                        .setNumberOfErrors(
+                                            exc.errors.size,
                                         ).build()
-                                },
+                                } ?: TemplateApplication.newBuilder().build(),
                             ).build()
                     }
                 ApplyTemplatesResponse
@@ -219,7 +183,10 @@ class LoriGrpcServer(
     ): Int {
         semaphore.acquire()
         LOG.info("Start importing community $communityId")
-        val daCommunity: DACommunity = daConnector.getCommunity(token, communityId)
+        val daCommunity: DACommunity? = daConnector.getCommunityById(token, communityId)
+        if (daCommunity == null) {
+            return 0
+        }
         val import = daConnector.startFullImport(token, daCommunity)
         semaphore.release()
         LOG.info("Finished importing community $communityId")
@@ -228,6 +195,6 @@ class LoriGrpcServer(
 
     companion object {
         private val LOG = LogManager.getLogger(LoriGrpcServer::class.java)
-        private val grpcUser = "GRPC_INTERFACE"
+        private const val GPRC_USER = "GRPC_INTERFACE"
     }
 }

@@ -450,8 +450,12 @@ fun Routing.templateRoutes(
                                 "No valid id has been provided in the url.",
                             )
                         }
-                        val exceptions = backend.getExceptionsByRightId(rightId)
-                        call.respond(exceptions.map { it.toRest() })
+                        val exception = backend.getExceptionByRightId(rightId)
+                        if (exception == null) {
+                            call.respond(HttpStatusCode.OK)
+                        } else {
+                            call.respond(exception.toRest())
+                        }
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(

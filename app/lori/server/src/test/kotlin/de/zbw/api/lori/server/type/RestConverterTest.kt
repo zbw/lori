@@ -562,9 +562,7 @@ class RestConverterTest {
         val example: TemplateApplicationResult =
             TEST_TEMPLATE_APPLICATION_RESULT.copy(
                 exceptionTemplateApplicationResult =
-                    listOf(
-                        TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc"),
-                    ),
+                    TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc"),
             )
         val expected =
             TemplateApplicationRest(
@@ -575,10 +573,8 @@ class RestConverterTest {
                 numberOfErrors = TEST_TEMPLATE_APPLICATION_RESULT.numberOfErrors,
                 numberOfAppliedEntries = TEST_TEMPLATE_APPLICATION_RESULT.appliedMetadataHandles.size,
                 testId = TEST_TEMPLATE_APPLICATION_RESULT.testId,
-                exceptionTemplateApplications =
-                    listOf(
-                        TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc").toRest(),
-                    ),
+                exceptionTemplateApplication =
+                    TEST_TEMPLATE_APPLICATION_RESULT.copy(rightId = "6", templateName = "exc").toRest(),
             )
 
         // when
@@ -967,7 +963,7 @@ class RestConverterTest {
                         ),
                     ),
                 numberOfErrors = 1,
-                exceptionTemplateApplicationResult = emptyList(),
+                exceptionTemplateApplicationResult = null,
             )
     }
 }

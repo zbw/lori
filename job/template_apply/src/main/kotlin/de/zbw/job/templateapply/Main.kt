@@ -56,6 +56,11 @@ object Main {
                         )
                     span.setAttribute("Templates Applied", response.templateApplicationsList.toString())
                     LOG.info("Application procedure was successful")
+                    response.templateApplicationsList.forEach {
+                        LOG.info("-------------------------------")
+                        LOG.info("Applied template ${it.templateName} (ID: ${it.rightId}): ${it.numberAppliedEntries}")
+                        LOG.info("Errors found: ${it.numberOfErrors}")
+                    }
                 }
             } catch (e: Exception) {
                 LOG.error("An error occurred on template application procedure: ${e.message}")
@@ -69,13 +74,14 @@ object Main {
         runBlocking {
             try {
                 withContext(span.asContextElement()) {
+                    LOG.info("-------------------------------")
                     LOG.info("Start checking for errors:")
                     val response: CheckForRightErrorsResponse =
                         loriClient.checkForErrors(
                             CheckForRightErrorsRequest.getDefaultInstance(),
                         )
-                    span.setAttribute("Number of errors found", response.errorsCount.toString())
-                    LOG.info("Checking for errors procedure was successful; Found ${response.errorsCount} errors.")
+                    span.setAttribute("Number of errors found", response.numberOfErrors.toLong())
+                    LOG.info("Checking for errors procedure was successful; Found ${response.numberOfErrors} errors.")
                 }
             } catch (e: Exception) {
                 LOG.error("An error occurred on error checking procedure: ${e.message}")

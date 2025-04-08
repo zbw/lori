@@ -587,7 +587,7 @@ class TemplateRoutesKtTest {
                             errors = emptyList(),
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
-                            exceptionTemplateApplicationResult = emptyList(),
+                            exceptionTemplateApplicationResult = null,
                             testId = null,
                             numberOfErrors = 0,
                         ),
@@ -605,7 +605,7 @@ class TemplateRoutesKtTest {
                             errors = emptyList(),
                             appliedMetadataHandles = expectedHandles,
                             templateName = "foobar",
-                            exceptionTemplateApplicationResult = emptyList(),
+                            exceptionTemplateApplicationResult = null,
                             testId = null,
                             numberOfErrors = 0,
                         ),
@@ -614,7 +614,7 @@ class TemplateRoutesKtTest {
                             errors = emptyList(),
                             appliedMetadataHandles = expectedHandles,
                             templateName = "baz",
-                            exceptionTemplateApplicationResult = emptyList(),
+                            exceptionTemplateApplicationResult = null,
                             testId = null,
                             numberOfErrors = 0,
                         ),
@@ -654,7 +654,7 @@ class TemplateRoutesKtTest {
                                     handles = expectedHandles,
                                     numberOfAppliedEntries = expectedHandles.size,
                                     errors = emptyList(),
-                                    exceptionTemplateApplications = emptyList(),
+                                    exceptionTemplateApplication = null,
                                     templateName = "foobar",
                                     numberOfErrors = 0,
                                 ),
@@ -698,7 +698,7 @@ class TemplateRoutesKtTest {
                                     numberOfAppliedEntries = expectedHandles.size,
                                     errors = emptyList(),
                                     templateName = "foobar",
-                                    exceptionTemplateApplications = emptyList(),
+                                    exceptionTemplateApplication = null,
                                     numberOfErrors = 0,
                                 ),
                                 TemplateApplicationRest(
@@ -707,7 +707,7 @@ class TemplateRoutesKtTest {
                                     numberOfAppliedEntries = expectedHandles.size,
                                     errors = emptyList(),
                                     templateName = "baz",
-                                    exceptionTemplateApplications = emptyList(),
+                                    exceptionTemplateApplication = null,
                                     numberOfErrors = 0,
                                 ),
                             ),
@@ -912,8 +912,8 @@ class TemplateRoutesKtTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
-                    getExceptionsByRightId(givenRightIdTemplate)
-                } returns listOf(expected.toBusiness())
+                    getExceptionByRightId(givenRightIdTemplate)
+                } returns expected.toBusiness()
             }
         val servicePool = ItemRoutesKtTest.getServicePool(backend)
         testApplication {
@@ -923,9 +923,9 @@ class TemplateRoutesKtTest {
             )
             val response = client.get("/api/v1/template/exceptions/$givenRightIdTemplate")
             val content: String = response.bodyAsText()
-            val templateListType: Type = object : TypeToken<Array<RightRest>>() {}.type
-            val received: Array<RightRest> = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
-            assertThat(received.toList(), `is`(listOf(expected)))
+            val templateListType: Type = object : TypeToken<RightRest?>() {}.type
+            val received: RightRest? = ItemRoutesKtTest.GSON.fromJson(content, templateListType)
+            assertThat(received, `is`(expected))
             assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
         }
 
@@ -933,7 +933,7 @@ class TemplateRoutesKtTest {
         val backend2 =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
-                    getExceptionsByRightId(givenRightIdTemplate)
+                    getExceptionByRightId(givenRightIdTemplate)
                 } throws PSQLException(ServerErrorMessage("foo"))
             }
         val servicePool2 = ItemRoutesKtTest.getServicePool(backend2)

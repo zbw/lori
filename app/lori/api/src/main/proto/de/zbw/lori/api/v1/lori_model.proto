@@ -17,7 +17,7 @@ message CheckForRightErrorsRequest{
 }
 
 message CheckForRightErrorsResponse{
-  repeated RightError errors = 1;
+  int32 number_of_errors = 1;
 }
 
 message ApplyTemplatesRequest {
@@ -35,24 +35,12 @@ enum ConflictType {
   CONFLICT_TYPE_DELETION = 4;
 }
 
-message RightError {
-  int32 error_id = 1;
-  string message = 2;
-  string right_id_source = 3;
-  string handle = 4;
-  string conflicting_right_id = 5;
-  uint64 created_on = 6;
-  ConflictType conflict_type = 7;
-  string error_context = 8;
-}
-
 message TemplateApplication {
-  repeated string handles = 1;
-  string right_id = 2;
-  int32 number_applied_entries = 3;
-  string template_name = 4;
-  repeated RightError errors = 5;
-  repeated TemplateApplication exceptions = 6;
+  string right_id = 1;
+  int32 number_applied_entries = 2;
+  string template_name = 3;
+  int32 number_of_errors = 4;
+  TemplateApplication exception = 6;
 }
 
 message ApplyTemplatesResponse {
