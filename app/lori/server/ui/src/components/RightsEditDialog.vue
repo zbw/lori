@@ -299,17 +299,18 @@ export default defineComponent({
     const accessStatusSelect = ["Open", "Closed", "Restricted"];
     const basisAccessState = ref([
       "Lizenzvertrag",
-      "OA-Rechte aus Lizenzvertrag",
       "Nutzungsvereinbarung",
+      "OA-Rechte aus Lizenzvertrag",
+      "Open Content",
       "Urheberrechtschranke",
       "ZBW-Policy",
     ]);
     const basisStorage = ref([
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
+      "Open Content",
       "Urheberrechtschranke",
-      "Uneingeschränkte Open-Content-Lizenz",
-      "ZBW-Policy (Eingeschränkte OCL)",
+      "ZBW-Policy (Open Content mit Einschränkung)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
     const dialogDeleteRight = ref(false);
@@ -703,11 +704,11 @@ export default defineComponent({
           case RightRestBasisStorageEnum.Useragreement:
             return "Nutzungsvereinbarung";
           case RightRestBasisStorageEnum.Opencontentlicence:
-            return "Uneingeschränkte Open-Content-Lizenz";
+            return "Open Content";
           case RightRestBasisStorageEnum.Zbwpolicyunanswered:
             return "ZBW-Policy (unbeantwortete Rechteanforderung)";
           case RightRestBasisStorageEnum.Zbwpolicyrestricted:
-            return "ZBW-Policy (Eingeschränkte OCL)";
+            return "ZBW-Policy (Open Content mit Einschränkung)";
           case RightRestBasisStorageEnum.Licencecontract:
             return "Lizenzvertrag";
           default:
@@ -727,9 +728,9 @@ export default defineComponent({
             return RightRestBasisStorageEnum.Useragreement;
           case "Urheberrechtschranke":
             return RightRestBasisStorageEnum.Authorrightexception;
-          case "Uneingeschränkte Open-Content-Lizenz":
+          case "Open Content":
             return RightRestBasisStorageEnum.Opencontentlicence;
-          case "ZBW-Policy (Eingeschränkte OCL)":
+          case "ZBW-Policy (Open Content mit Einschränkung)":
             return RightRestBasisStorageEnum.Zbwpolicyrestricted;
           case "ZBW-Policy (unbeantwortete Rechteanforderung)":
             return RightRestBasisStorageEnum.Zbwpolicyunanswered;
@@ -756,6 +757,8 @@ export default defineComponent({
             return "ZBW-Policy";
           case RightRestBasisAccessStateEnum.Licencecontractoa:
             return "OA-Rechte aus Lizenzvertrag";
+          case RightRestBasisStorageEnum.Opencontentlicence:
+            return "Open Content";
           default:
             return "";
         }
@@ -777,6 +780,8 @@ export default defineComponent({
             return RightRestBasisAccessStateEnum.Authorrightexception;
           case "ZBW-Policy":
             return RightRestBasisAccessStateEnum.Zbwpolicy;
+          case "Open Content":
+            return RightRestBasisAccessStateEnum.Opencontentlicence;
           default:
             return undefined;
         }
