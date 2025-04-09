@@ -1228,6 +1228,14 @@ export default defineComponent({
       }
     });
 
+    watch(
+        () => tmpRight.value.authorRightException,
+        (currentValue) => {
+      if(currentValue == false && tmpRight.value.hasLegalRisk == false){
+        tmpRight.value.hasLegalRisk = true;
+      }
+    });
+
     return {
       formState,
       v$,
@@ -1915,6 +1923,33 @@ export default defineComponent({
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
                   :label="labelModelToString(tmpRight.authorRightException)"
                   persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col
+                  v-if="tmpRight.authorRightException"
+                  cols="4"
+              >
+                Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+              </v-col>
+              <v-col
+                  v-else
+                  cols="4"
+              >
+                <span class="text-grey-darken-1">
+                   Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+                 </span>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                    v-model="tmpRight.hasLegalRisk"
+                    :false-value="true"
+                    :true-value="false"
+                    :readonly="!isEditable || !tmpRight.authorRightException"
+                    color="indigo"
+                    :label="labelModelToString(!tmpRight.hasLegalRisk)"
+                    persistent-hint
                 ></v-switch>
               </v-col>
             </v-row>

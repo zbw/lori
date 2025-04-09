@@ -223,6 +223,7 @@ fun RightRest.toBusiness(): ItemRight =
         exceptionFrom = exceptionFrom,
         groups = groups?.map { it.toBusiness() },
         groupIds = groupIds,
+        hasLegalRisk = hasLegalRisk,
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
@@ -250,6 +251,7 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         exceptionFrom = exceptionFrom,
+        hasLegalRisk = hasLegalRisk,
         groupIds = groups?.map { it.groupId },
         groups = groups?.map { it.toRest() },
         isTemplate = isTemplate,
@@ -748,15 +750,6 @@ fun ConflictType.toRest(): ConflictTypeRest =
         ConflictType.GAP -> ConflictTypeRest.gap
         ConflictType.DELETION -> ConflictTypeRest.deletion
         ConflictType.NO_RIGHT -> ConflictTypeRest.no_right
-    }
-
-fun ConflictType.toProto(): de.zbw.lori.api.ConflictType =
-    when (this) {
-        ConflictType.DATE_OVERLAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_DATE_OVERLAP
-        ConflictType.UNSPECIFIED -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_UNSPECIFIED
-        ConflictType.DELETION -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_DELETION
-        ConflictType.GAP -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_GAP
-        ConflictType.NO_RIGHT -> de.zbw.lori.api.ConflictType.CONFLICT_TYPE_NO_RIGHT
     }
 
 fun RightError.toRest(): RightErrorRest =

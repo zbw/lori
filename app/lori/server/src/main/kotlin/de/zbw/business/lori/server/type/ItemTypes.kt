@@ -103,6 +103,7 @@ data class ItemRight(
     val lastUpdatedBy: String?,
     val lastUpdatedOn: OffsetDateTime?,
     val licenceContract: String?,
+    val hasLegalRisk: Boolean?,
     val notesGeneral: String?,
     val notesFormalRules: String?,
     val notesProcessDocumentation: String?,

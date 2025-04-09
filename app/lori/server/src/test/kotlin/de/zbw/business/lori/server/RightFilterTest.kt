@@ -731,6 +731,7 @@ class RightFilterTest : DatabaseTest() {
                         0,
                         ZoneOffset.UTC,
                     ),
+                hasLegalRisk = true,
                 endDate = RestConverterTest.TODAY,
                 exceptionFrom = null,
                 isTemplate = false,

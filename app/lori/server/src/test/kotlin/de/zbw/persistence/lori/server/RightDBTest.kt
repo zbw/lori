@@ -204,6 +204,7 @@ class RightDBTest : DatabaseTest() {
                 createdOn = TEST_RIGHT.createdOn,
                 endDate = TEST_RIGHT.endDate!!.plusDays(1),
                 exceptionFrom = null,
+                hasLegalRisk = true,
                 groups = TEST_RIGHT.groups,
                 groupIds = TEST_RIGHT.groups?.map { it.groupId },
                 isTemplate = true,
