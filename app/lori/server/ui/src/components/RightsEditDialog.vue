@@ -299,17 +299,18 @@ export default defineComponent({
     const accessStatusSelect = ["Open", "Closed", "Restricted"];
     const basisAccessState = ref([
       "Lizenzvertrag",
-      "OA-Rechte aus Lizenzvertrag",
       "Nutzungsvereinbarung",
+      "OA-Rechte aus Lizenzvertrag",
+      "Open Content",
       "Urheberrechtschranke",
       "ZBW-Policy",
     ]);
     const basisStorage = ref([
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
+      "Open Content",
       "Urheberrechtschranke",
-      "Uneingeschränkte Open-Content-Lizenz",
-      "ZBW-Policy (Eingeschränkte OCL)",
+      "ZBW-Policy (Open Content mit Einschränkung)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
     const dialogDeleteRight = ref(false);
@@ -703,11 +704,11 @@ export default defineComponent({
           case RightRestBasisStorageEnum.Useragreement:
             return "Nutzungsvereinbarung";
           case RightRestBasisStorageEnum.Opencontentlicence:
-            return "Uneingeschränkte Open-Content-Lizenz";
+            return "Open Content";
           case RightRestBasisStorageEnum.Zbwpolicyunanswered:
             return "ZBW-Policy (unbeantwortete Rechteanforderung)";
           case RightRestBasisStorageEnum.Zbwpolicyrestricted:
-            return "ZBW-Policy (Eingeschränkte OCL)";
+            return "ZBW-Policy (Open Content mit Einschränkung)";
           case RightRestBasisStorageEnum.Licencecontract:
             return "Lizenzvertrag";
           default:
@@ -727,9 +728,9 @@ export default defineComponent({
             return RightRestBasisStorageEnum.Useragreement;
           case "Urheberrechtschranke":
             return RightRestBasisStorageEnum.Authorrightexception;
-          case "Uneingeschränkte Open-Content-Lizenz":
+          case "Open Content":
             return RightRestBasisStorageEnum.Opencontentlicence;
-          case "ZBW-Policy (Eingeschränkte OCL)":
+          case "ZBW-Policy (Open Content mit Einschränkung)":
             return RightRestBasisStorageEnum.Zbwpolicyrestricted;
           case "ZBW-Policy (unbeantwortete Rechteanforderung)":
             return RightRestBasisStorageEnum.Zbwpolicyunanswered;
@@ -756,6 +757,8 @@ export default defineComponent({
             return "ZBW-Policy";
           case RightRestBasisAccessStateEnum.Licencecontractoa:
             return "OA-Rechte aus Lizenzvertrag";
+          case RightRestBasisStorageEnum.Opencontentlicence:
+            return "Open Content";
           default:
             return "";
         }
@@ -777,6 +780,8 @@ export default defineComponent({
             return RightRestBasisAccessStateEnum.Authorrightexception;
           case "ZBW-Policy":
             return RightRestBasisAccessStateEnum.Zbwpolicy;
+          case "Open Content":
+            return RightRestBasisAccessStateEnum.Opencontentlicence;
           default:
             return undefined;
         }
@@ -1220,6 +1225,14 @@ export default defineComponent({
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
         rightErrorApi.deleteRightErrorsByTestId(testId.value)
+      }
+    });
+
+    watch(
+        () => tmpRight.value.authorRightException,
+        (currentValue) => {
+      if(currentValue == false && tmpRight.value.hasLegalRisk == false){
+        tmpRight.value.hasLegalRisk = true;
       }
     });
 
@@ -1910,6 +1923,33 @@ export default defineComponent({
                   hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
                   :label="labelModelToString(tmpRight.authorRightException)"
                   persistent-hint
+                ></v-switch>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col
+                  v-if="tmpRight.authorRightException"
+                  cols="4"
+              >
+                Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+              </v-col>
+              <v-col
+                  v-else
+                  cols="4"
+              >
+                <span class="text-grey-darken-1">
+                   Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+                 </span>
+              </v-col>
+              <v-col cols="8">
+                <v-switch
+                    v-model="tmpRight.hasLegalRisk"
+                    :false-value="true"
+                    :true-value="false"
+                    :readonly="!isEditable || !tmpRight.authorRightException"
+                    color="indigo"
+                    :label="labelModelToString(!tmpRight.hasLegalRisk)"
+                    persistent-hint
                 ></v-switch>
               </v-col>
             </v-row>

@@ -17,6 +17,8 @@ RightRest:
       $ref: 'right.model.yaml#/AccessStateRest'
     authorRightException:
       type: boolean
+    hasLegalRisk:
+      type: boolean
     basisAccessState:
       type: string
       enum:

@@ -96,6 +96,7 @@ class RestConverterTest {
                             createdBy = TEST_RIGHT.createdBy,
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
+                            hasLegalRisk = TEST_RIGHT.hasLegalRisk,
                             groupIds = TEST_RIGHT.groupIds,
                             groups = TEST_RIGHT.groups?.map { it.toRest() },
                             isTemplate = TEST_RIGHT.isTemplate,
@@ -741,6 +742,7 @@ class RestConverterTest {
                 templateDescription = "foo",
                 templateName = "name",
                 zbwUserAgreement = true,
+                hasLegalRisk = true,
             )
 
         val TEST_DA_ITEM =

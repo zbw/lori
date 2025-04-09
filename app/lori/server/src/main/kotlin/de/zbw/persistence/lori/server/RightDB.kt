@@ -143,6 +143,7 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setBoolean(localCounter++, right.hasLegalRisk != false)
         }
     }
 
@@ -213,6 +214,7 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setBoolean(localCounter++, right.hasLegalRisk != false)
         }
     }
 
@@ -504,6 +506,7 @@ class RightDB(
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_FROM = "exception_from"
+        private const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -517,7 +520,7 @@ class RightDB(
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on, $COLUMN_EXCEPTION_FROM," +
-                COLUMN_EXCEPTION_FROM +
+                "$COLUMN_HAS_LEGAL_RISK" +
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
@@ -537,7 +540,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM," +
+                "$COLUMN_HAS_LEGAL_RISK) " +
                 "VALUES(?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -545,7 +549,7 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?)"
+                "?,?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -555,7 +559,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM) " +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM," +
+                "$COLUMN_HAS_LEGAL_RISK) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -563,7 +568,7 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?)" +
+                "?,?)" +
                 " ON CONFLICT ($COLUMN_RIGHT_ID)" +
                 " DO UPDATE SET" +
                 " last_updated_on = EXCLUDED.last_updated_on," +
@@ -584,7 +589,8 @@ class RightDB(
                 "template_name = EXCLUDED.template_name," +
                 "template_description = EXCLUDED.template_description," +
                 "author_right_exception = EXCLUDED.author_right_exception," +
-                "$COLUMN_EXCEPTION_FROM = EXCLUDED.$COLUMN_EXCEPTION_FROM;"
+                "$COLUMN_EXCEPTION_FROM = EXCLUDED.$COLUMN_EXCEPTION_FROM," +
+                "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK;"
 
         const val STATEMENT_DELETE_RIGHTS =
             "DELETE " +
@@ -597,7 +603,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
+                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_EXCEPTION_FROM = ?"
 
@@ -607,7 +614,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
+                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_IS_TEMPLATE = true" +
                 " ORDER BY created_on DESC LIMIT ? OFFSET ?"
@@ -618,7 +626,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on,$COLUMN_EXCEPTION_FROM" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
+                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_RIGHT_TEMPLATE_NAME = ANY(?)"
 
@@ -682,6 +691,7 @@ class RightDB(
                         )
                     },
                 exceptionFrom = rs.getString(localCounter++),
+                hasLegalRisk = rs.getBoolean(localCounter++),
                 groups = null,
                 groupIds = null,
             )
