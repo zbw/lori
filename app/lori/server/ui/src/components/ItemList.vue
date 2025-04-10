@@ -1337,6 +1337,7 @@ table.special, th.special, td.special {
             :handle="currentItem.metadata.handle"
             :rights="currentItem.rights"
             :title="currentItem.metadata.title"
+            :licenceUrl="currentItem.metadata.licenceUrl"
             v-on:addRightSuccessful="addRightSuccessful"
         ></RightsView>
         <MetadataView

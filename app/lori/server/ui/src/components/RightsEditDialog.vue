@@ -83,6 +83,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    licenceUrl: {
+      type: String,
+      required: false,
+    },
   },
   // Emits
   emits: [
@@ -1911,6 +1915,12 @@ export default defineComponent({
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   variant="outlined"
                 ></v-text-field>
+              </v-col>
+            </v-row>
+            <v-row v-if="isTabEntry || isNewRight">
+              <v-col cols="4"> Lizenz-URL</v-col>
+              <v-col cols="8">
+                {{ licenceUrl ?? '' }}
               </v-col>
             </v-row>
             <v-row>
