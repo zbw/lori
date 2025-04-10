@@ -27,6 +27,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    licenceUrl: {
+      type: String,
+      required: false,
+    },
   },
   components: {
     RightsEditDialog,
@@ -212,6 +216,7 @@ export default defineComponent({
         :isNewTemplate="false"
         :handle="handle"
         :rightId="currentRight.rightId"
+        :licenceUrl="licenceUrl"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
       ></RightsEditDialog>
@@ -231,6 +236,7 @@ export default defineComponent({
         :handle="handle"
         :rights="rights"
         :selectedRight="dialogStore.rightsEditTabsSelectedRight"
+        :licenceUrl="licenceUrl"
         v-on:tabDialogClosed="tabDialogClosed"
         v-on:updateSuccessful="updateRight"
       ></RightsEditTabs>

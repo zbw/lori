@@ -17,6 +17,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    licenceUrl: {
+      type: String,
+      required: false,
+    }
   },
   emits: ["deleteSuccessful", "tabDialogClosed", "updateSuccessful"],
   components: {
@@ -189,6 +193,7 @@ export default defineComponent({
           :handle="handle"
           :rightId="item.rightId"
           :isTabEntry="true"
+          :licenceUrl="licenceUrl"
           v-on:deleteSuccessful="deleteSuccessful"
           v-on:editRightClosed="tabDialogClosed"
           v-on:hasFormChanged="setFormStatus"
