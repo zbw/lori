@@ -57,7 +57,6 @@ export default defineComponent({
      */
     const items: Ref<Array<ItemRest>> = ref([]);
     const currentItem = ref({} as ItemRest);
-    const headersValueVSelect = ref([]);
     const selectedItems: Ref<Array<string>> = ref([]);
     const tableContentLoading = ref(true);
 
@@ -136,6 +135,7 @@ export default defineComponent({
     ];
 
     const selectedHeaders = ref(headers.slice(0, 6));
+    const headersValueVSelect = ref(selectedHeaders.value.map((e) => e.value));
 
     const currentPage = ref(1);
     const currentRightId = ref("");
