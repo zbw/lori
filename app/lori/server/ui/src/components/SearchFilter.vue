@@ -272,7 +272,6 @@ export default defineComponent({
     const seriesToShow = computed(() => {
       if (seriesPerPage.value == 20) {
         rerenderId.value += 1;
-        console.log("renderid changed");
       }
       return searchStore.seriesReceived.slice(0, seriesPerPage.value)
     });
