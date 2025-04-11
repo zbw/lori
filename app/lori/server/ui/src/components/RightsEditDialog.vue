@@ -312,8 +312,8 @@ export default defineComponent({
     const basisStorage = ref([
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
-      "Open Content",
       "Urheberrechtschranke",
+      "Open Content",
       "ZBW-Policy (Open Content mit Einschränkung)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
@@ -1225,6 +1225,14 @@ export default defineComponent({
       }
     });
 
+    const computedLicenceUrl = computed(() => {
+      if(props.licenceUrl == undefined || props.licenceUrl == ''){
+        return 'Nicht vorhanden';
+      } else {
+        return props.licenceUrl;
+      }
+    });
+
     watch(dashboardViewActivated, (currentValue) => {
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
@@ -1250,6 +1258,7 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkHeaders,
       cardTitle,
+      computedLicenceUrl,
       computedRightId,
       currentTemplateApplicationResult,
       dashboardViewActivated,
@@ -1920,7 +1929,7 @@ export default defineComponent({
             <v-row v-if="isTabEntry || isNewRight">
               <v-col cols="4"> Lizenz-URL</v-col>
               <v-col cols="8">
-                {{ licenceUrl ?? '' }}
+                {{ computedLicenceUrl }}
               </v-col>
             </v-row>
             <v-row>
@@ -1936,19 +1945,19 @@ export default defineComponent({
                 ></v-switch>
               </v-col>
             </v-row>
-            <v-row>
+            <v-row class="ml-6">
               <v-col
                   v-if="tmpRight.authorRightException"
                   cols="4"
               >
-                Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+                Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
               </v-col>
               <v-col
                   v-else
                   cols="4"
               >
                 <span class="text-grey-darken-1">
-                   Urheberrechtsschranke ohne vertragliches Risiko anwendbar?
+                   Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
                  </span>
               </v-col>
               <v-col cols="8">
