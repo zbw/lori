@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, onMounted, ref } from "vue";
+import {computed, defineComponent, onMounted, ref} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import usersApi from "@/api/usersApi";
 import error from "@/utils/error";
@@ -7,11 +7,13 @@ import { useCookies } from "vue3-cookies";
 import { UserSessionRest } from "@/generated-sources/openapi";
 import { useUserStore } from "@/stores/user";
 import GroupOverview from "@/components/GroupOverview.vue";
+import {useSearchStore} from "@/stores/search";
 
 export default defineComponent({
   components: {GroupOverview},
   setup() {
     const cookies = useCookies();
+    const searchStore = useSearchStore();
     const menuTopics = [{ title: "IP-Gruppen" }, { title: "Einstellungen" }];
     const dialogStore = useDialogsStore();
     const activateGroupDialog = () => {
@@ -109,8 +111,20 @@ export default defineComponent({
       dialogStore.groupOverviewActivated = false;
     };
 
+    const appBarColor = computed(() => {
+      switch (searchStore.stage) {
+        case 'prod':
+          return "#1565C0";
+        case 'dev':
+          return "#EB6B05";
+        default:
+          return "#FFFFFF"; // default or loading state
+      }
+    });
+
     onMounted(() => login(true));
     return {
+      appBarColor,
       dialogStore,
       loginError,
       loginErrorMsg,
@@ -120,6 +134,7 @@ export default defineComponent({
       loginUnauthorized,
       logoutDialog,
       menuTopics,
+      searchStore,
       userStore,
       activateBookmarkOverviewDialog,
       activateDashboardDialog,
@@ -149,7 +164,10 @@ export default defineComponent({
         v-on:groupOverviewClosed="closeGroupDialog">
     </GroupOverview>
   </v-dialog>
-  <v-app-bar app color="primary" dark>
+  <v-app-bar
+      app
+      :color="appBarColor"
+      >
     <div class="d-flex align-center">
       <v-img
         alt="Lori Logo"
@@ -189,7 +207,9 @@ export default defineComponent({
         </v-list-item>
       </v-list>
     </v-menu>
-
+    <div v-if="searchStore.stage == 'dev'">
+      Testsystem
+    </div>
     <v-spacer></v-spacer>
     <v-menu :location="'bottom'">
       <template v-slot:activator="{ props }">
