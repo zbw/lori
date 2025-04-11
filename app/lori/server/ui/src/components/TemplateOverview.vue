@@ -424,6 +424,7 @@ export default defineComponent({
                   small
                   v-bind="props"
                   @click="copyTemplate(item)"
+                  :disabled="!userStore.isLoggedIn"
               >
                 mdi-content-copy
               </v-icon>
