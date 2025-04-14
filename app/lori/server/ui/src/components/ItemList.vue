@@ -135,7 +135,7 @@ export default defineComponent({
     ];
 
     const selectedHeaders = ref(headers.slice(0, 6));
-    const headersValueVSelect = ref(selectedHeaders.value.map((e) => e.value));
+    const headersValueVSelect = ref(selectedHeaders.value);
 
     const currentPage = ref(1);
     const currentRightId = ref("");
