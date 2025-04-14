@@ -97,8 +97,10 @@ export default defineComponent({
     const dialogTitle = computed(() => {
       if (props.isNew) {
         return "Neue IP-Gruppe anlegen";
+      } else if (userStore.isLoggedIn){
+        return "IP-Gruppe bearbeiten";
       } else {
-        return "IP-Gruppe editieren";
+        return "IP-Gruppe ansehen";
       }
     });
 

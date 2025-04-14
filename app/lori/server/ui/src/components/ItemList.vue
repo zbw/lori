@@ -818,6 +818,7 @@ export default defineComponent({
           "'" + bookmarkName + " (" + bookmarkId + ")'" +
           " erfolgreich hinzugefügt."
       successMsgIsActive.value = true;
+      dialogStore.bookmarkOverviewActivated = true;
     };
 
     const addRightSuccessful = (title: string, handle: string) => {

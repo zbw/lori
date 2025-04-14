@@ -323,10 +323,11 @@ export default defineComponent({
           @click="close"
       ></v-btn>
     </v-toolbar>
+    <v-card-title class="text-h5"
+    >Dashboard</v-card-title
+    >
     <v-container>
-      <v-card-title class="text-h5"
-      >Meldungen</v-card-title
-      >
+
       <v-snackbar
           contained
           multi-line

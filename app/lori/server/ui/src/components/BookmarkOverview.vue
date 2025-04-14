@@ -274,7 +274,7 @@ export default defineComponent({
       >
         {{ alertSuccessfulMsg }}
       </v-snackbar>
-      <v-card-title>Gespeicherte Suchen verwalten</v-card-title>
+      <v-card-title>Gespeicherte Suchen</v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">
         <v-card>
           <v-card-title class="text-h5">Löschen bestätigen</v-card-title>

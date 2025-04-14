@@ -835,8 +835,17 @@ export default defineComponent({
           (lastSavedRight.value != undefined && lastSavedRight.value.exceptionFrom == undefined)),
     );
 
+    const mode = computed(() => {
+      if (isNew.value) {
+        return "erstellen";
+      } else if (userStore.isLoggedIn) {
+        return "bearbeiten";
+      } else {
+        return "ansehen";
+      }
+    });
+
     const cardTitle = computed(() => {
-      const mode = isNew.value ? "erstellen" : "bearbeiten";
       if (isTemplate.value) {
         let description: string;
         if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
@@ -848,9 +857,9 @@ export default defineComponent({
         } else {
           description = ""
         }
-        return "Template " + description + " " + mode;
+        return "Template " + description + " " + mode.value;
       } else {
-        return "Rechteinformation " + mode;
+        return "Rechteinformation " + mode.value;
       }
     });
 
@@ -1927,13 +1936,20 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row v-if="isTabEntry || isNewRight">
-              <v-col cols="4"> Lizenz-URL</v-col>
+              <v-col cols="4">
+                Lizenz-URL am Objekt
+              </v-col>
               <v-col cols="8">
                 {{ computedLicenceUrl }}
+                <div class="text-caption text-grey-darken-1 mt-1">
+                  Kommt aus den bibliographischen Metadaten.
+                </div>
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Anwendbarkeit Urheberrechtsschranke</v-col>
+              <v-col cols="4">
+                Anwendbarkeit Urheberrechtsschranke
+              </v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
