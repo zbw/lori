@@ -835,8 +835,17 @@ export default defineComponent({
           (lastSavedRight.value != undefined && lastSavedRight.value.exceptionFrom == undefined)),
     );
 
+    const mode = computed(() => {
+      if (isNew.value) {
+        return "erstellen";
+      } else if (userStore.isLoggedIn) {
+        return "bearbeiten";
+      } else {
+        return "ansehen";
+      }
+    });
+
     const cardTitle = computed(() => {
-      const mode = isNew.value ? "erstellen" : "bearbeiten";
       if (isTemplate.value) {
         let description: string;
         if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
@@ -848,9 +857,9 @@ export default defineComponent({
         } else {
           description = ""
         }
-        return "Template " + description + " " + mode;
+        return "Template " + description + " " + mode.value;
       } else {
-        return "Rechteinformation " + mode;
+        return "Rechteinformation " + mode.value;
       }
     });
 

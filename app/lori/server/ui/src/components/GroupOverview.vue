@@ -1,6 +1,6 @@
 <script lang="ts">
 import api from "@/api/api";
-import { defineComponent, onMounted, ref, Ref } from "vue";
+import {computed, defineComponent, onMounted, ref, Ref} from "vue";
 import { GroupRest } from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
@@ -133,6 +133,14 @@ export default defineComponent({
       successMsgIsActive.value = true;
     };
 
+    const tooltipEditText = computed(() => {
+      if(userStore.isLoggedIn){
+        return "Bearbeiten";
+      } else {
+        return "Ansehen";
+      }
+    });
+
     /**
      * Closing
      */
@@ -152,6 +160,7 @@ export default defineComponent({
       renderKey,
       successMsgIsActive,
       successMsg,
+      tooltipEditText,
       userStore,
       activateGroupEditDialog,
       addGroupEntry,
@@ -199,6 +208,7 @@ export default defineComponent({
     >
       {{ groupLoadErrorMsg }}
     </v-snackbar>
+    <v-card-title>IP-Gruppen</v-card-title>
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn
@@ -216,12 +226,19 @@ export default defineComponent({
       item-value="groupName"
     >
       <template v-slot:item.actions="{ item }">
-        <v-btn
-            variant="text"
-            @click="editGroup(item)"
-            icon="mdi-pencil"
-        >
-        </v-btn>
+
+        <v-tooltip location="bottom" :text="tooltipEditText">
+          <template v-slot:activator="{ props }">
+            <v-btn
+                variant="text"
+                @click="editGroup(item)"
+                icon="mdi-pencil"
+                v-bind="props"
+                class="tooltip-btn"
+            >
+            </v-btn>
+          </template>
+        </v-tooltip>
       </template>
 
     </v-data-table>

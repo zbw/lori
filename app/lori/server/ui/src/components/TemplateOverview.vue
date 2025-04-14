@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, onMounted, Ref, ref } from "vue";
+import {computed, defineComponent, onMounted, Ref, ref} from "vue";
 import error from "@/utils/error";
 import info from "@/utils/info";
 import templateApi from "@/api/templateApi";
@@ -237,6 +237,14 @@ export default defineComponent({
       renderKey.value += 1;
     };
 
+    const tooltipEditText = computed(() => {
+      if(userStore.isLoggedIn){
+        return "Bearbeiten";
+      } else {
+        return "Ansehen";
+      }
+    });
+
     /**
      * EMITS
      */
@@ -273,6 +281,7 @@ export default defineComponent({
       templateApplyErrorNumber,
       templateApplyItemsApplied,
       templateEditDialogActivated,
+      tooltipEditText,
       errorMsgIsActive,
       errorMsg,
       userStore,
@@ -361,7 +370,7 @@ export default defineComponent({
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-card-title>Template Übersicht</v-card-title>
+      <v-card-title>Templates</v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
@@ -430,7 +439,7 @@ export default defineComponent({
               </v-icon>
             </template>
           </v-tooltip>
-          <v-tooltip location="bottom" text="Editieren">
+          <v-tooltip location="bottom" :text="tooltipEditText">
             <template v-slot:activator="{ props }">
               <v-icon
                   small
