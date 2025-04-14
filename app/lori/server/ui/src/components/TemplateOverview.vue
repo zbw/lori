@@ -161,13 +161,11 @@ export default defineComponent({
           // Check for errors
           let exceptionErrors: Array<RightErrorRest> = [];
           if (
-            templateApplicationResult.exceptionTemplateApplications !==
+            templateApplicationResult.exceptionTemplateApplication !==
             undefined
           ) {
             exceptionErrors =
-              templateApplicationResult.exceptionTemplateApplications.flatMap(
-                (t) => (t.errors != undefined ? t.errors : []),
-              );
+              templateApplicationResult.exceptionTemplateApplication.errors ?? [];
           }
           const errors: Array<RightErrorRest> = r.templateApplication
             .flatMap((t) => (t.errors != undefined ? t.errors : []))
