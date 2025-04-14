@@ -1927,13 +1927,20 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row v-if="isTabEntry || isNewRight">
-              <v-col cols="4"> Lizenz-URL</v-col>
+              <v-col cols="4">
+                Lizenz-URL am Objekt
+              </v-col>
               <v-col cols="8">
                 {{ computedLicenceUrl }}
+                <div class="text-caption text-grey-darken-1 mt-1">
+                  Kommt aus den bibliographischen Metadaten.
+                </div>
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4"> Anwendbarkeit Urheberrechtsschranke</v-col>
+              <v-col cols="4">
+                Anwendbarkeit Urheberrechtsschranke
+              </v-col>
               <v-col cols="8">
                 <v-switch
                   v-model="tmpRight.authorRightException"
