@@ -6,6 +6,10 @@ const routes: Array<RouteRecordRaw> = [
     name: "ui",
     component: () => import("../components/ItemList.vue"),
   },
+  {
+    path: "/",
+    redirect: "/ui",
+  },
 ];
 
 const router = createRouter({
