@@ -808,9 +808,6 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
     };
 
-    const handleClickOutside = () => {
-    };
-
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
@@ -871,7 +868,6 @@ export default defineComponent({
       closeDashboard,
       closeTemplateEditDialog,
       closeTemplateOverview,
-      handleClickOutside,
       executeBookmarkSearch,
       getAccessStatesForDate,
       initSearchByRightId,
@@ -974,7 +970,6 @@ table.special, th.special, td.special {
       :retain-focus="false"
       max-width="1000px"
       v-on:close="closeTemplateEditDialog"
-      v-click-outside="handleClickOutside"
       persistent
     >
       <RightsEditDialog
