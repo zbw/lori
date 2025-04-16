@@ -1737,7 +1737,7 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                     color="blue darken-1"
-                    :disabled="!isEditable"
+                    :disabled="!isEditable || formState.exceptionTemplates.length != 0"
                     @click="openCreateExceptionDialog"
                     >Erstelle neue Ausnahme
                   </v-btn>
