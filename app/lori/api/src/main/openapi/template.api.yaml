@@ -444,8 +444,8 @@ template-exceptions-id:
   get:
     tags:
       - template
-    summary: Receive all exceptions for a given right id
-    operationId: getExceptionsById
+    summary: Receive exception for a given right id
+    operationId: getExceptionById
     parameters:
       - name: id
         in: path
@@ -459,9 +459,7 @@ template-exceptions-id:
         content:
           application/json:
             schema:
-              type: array
-              items:
-                $ref: 'right.model.yaml#/RightRest'
+              $ref: 'right.model.yaml#/RightRest'
       400:
         description: Bad Request
         content:

@@ -1,7 +1,7 @@
 import {
   AccessStateRest,
   AccessStateWithCountRest,
-  BookmarkRest, BookmarkRestFilterRightIdInner, FilterRightIdRest, IsPartOfSeriesCountRest, LicenceUrlCountRest,
+  BookmarkRest, FilterRightIdRest, IsPartOfSeriesCountRest, LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeRest,
   PublicationTypeWithCountRest,

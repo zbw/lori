@@ -92,8 +92,8 @@ export default {
       },
     });
   },
-  getExceptionsById(rightId: string): Promise<Array<RightRest>> {
-    return templateApi.getExceptionsById({
+  getExceptionById(rightId: string): Promise<RightRest> {
+    return templateApi.getExceptionById({
       id: rightId,
     });
   },
