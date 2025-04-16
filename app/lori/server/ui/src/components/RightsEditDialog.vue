@@ -1106,10 +1106,10 @@ export default defineComponent({
         errorMsgIsActive.value = true;
       } else {
         templateApi
-          .getExceptionsById(computedRightId.value)
-          .then((exceptions: Array<RightRest>) => {
-            formState.exceptionTemplates = exceptions;
-            lastSavedExceptionTemplateItems.value = Array.from(exceptions);
+          .getExceptionById(computedRightId.value)
+          .then((exception: RightRest) => {
+            formState.exceptionTemplates = [exception];
+            lastSavedExceptionTemplateItems.value = [exception];
           })
           .catch((e: ResponseError) => {
             if(e.response && e.response.status == 404){
