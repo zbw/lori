@@ -9,19 +9,14 @@ export default {
             "' wurde für " +
             templateApplication.numberOfAppliedEntries +
             " Einträge angewandt.";
-        let exceptions: string = "";
-        if (templateApplication.exceptionTemplateApplications !== undefined) {
-            exceptions = templateApplication.exceptionTemplateApplications
-                .map(
-                    (tA: TemplateApplicationRest) =>
-                        "Template (Ausnahme) '" +
-                        tA.templateName +
-                        "' wurde für " +
-                        tA.numberOfAppliedEntries +
-                        " Einträge angewandt.",
-                )
-                .join("\n");
+        let exception: string = "";
+        if (templateApplication.exceptionTemplateApplication !== undefined) {
+            exception = "Template (Ausnahme) '" +
+                templateApplication.exceptionTemplateApplication.templateName +
+                "' wurde für " +
+                templateApplication.exceptionTemplateApplication.numberOfAppliedEntries +
+                " Einträge angewandt."
         }
-        return parent + "\n" + exceptions;
+        return parent + "\n" + exception;
     },
 };
