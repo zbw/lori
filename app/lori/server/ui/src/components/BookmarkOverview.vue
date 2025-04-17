@@ -3,6 +3,7 @@ import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import { BookmarkRest, RightRest } from "@/generated-sources/openapi";
 import bookmarkApi from "@/api/bookmarkApi";
 import error from "@/utils/error";
+import navigator_utils from "@/utils/navigator_utils";
 import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import BookmarkSave from "@/components/BookmarkSave.vue";
@@ -10,6 +11,11 @@ import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: {BookmarkSave, RightsEditDialog },
+  computed: {
+    navigator_utils() {
+      return navigator_utils;
+    },
+  },
   props: {},
   emits: [
       "executeBookmarkSearch",
@@ -109,13 +115,6 @@ export default defineComponent({
           });
           closeDeleteDialog();
         });
-    };
-
-    const copyToClipboard = (textToCopy: string | undefined) => {
-      if (textToCopy == undefined){
-        return;
-      }
-      navigator.clipboard.writeText(textToCopy);
     };
 
     const openDeleteDialog = (bookmark: BookmarkRest) => {
@@ -230,7 +229,6 @@ export default defineComponent({
       closeDeleteDialog,
       closeEditDialog,
       closeTemplateDialog,
-      copyToClipboard,
       deleteBookmarkEntry,
       editDialogSuccessful,
       executeBookmarkSearch,
@@ -336,7 +334,7 @@ export default defineComponent({
               <v-card class="pa-2">
                 {{item.filtersAsQuery}}
                 <v-btn
-                    @click="copyToClipboard(item.filtersAsQuery)"
+                    @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
                     icon="mdi-content-copy"
                 >
                 </v-btn>

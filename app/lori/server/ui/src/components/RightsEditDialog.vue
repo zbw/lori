@@ -35,12 +35,16 @@ import Dashboard from "@/components/Dashboard.vue";
 import rightErrorApi from "@/api/rightErrorApi";
 import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
+import navigator_utils from "@/utils/navigator_utils";
 
 export default defineComponent({
   computed: {
     info() {
       return info
-    }
+    },
+    navigator_utils() {
+      return navigator_utils;
+    },
   },
   props: {
     rightId: {
@@ -1657,6 +1661,26 @@ export default defineComponent({
                   >
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
+                      <v-btn
+                          variant="text"
+                          icon="mdi-eye"
+                      >
+                        <v-icon small>mdi-eye
+                        </v-icon>
+                        <v-overlay
+                            activator="parent"
+                            location="top center"
+                            location-strategy="connected">
+                          <v-card class="pa-2">
+                            {{item.filtersAsQuery}}
+                            <v-btn
+                                @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
+                                icon="mdi-content-copy"
+                            >
+                            </v-btn>
+                          </v-card>
+                        </v-overlay>
+                      </v-btn>
                       <v-tooltip
                           location="bottom"
                           :disabled="lastSavedRight?.lastAppliedOn == undefined"
