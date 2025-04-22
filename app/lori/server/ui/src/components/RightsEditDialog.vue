@@ -36,6 +36,7 @@ import rightErrorApi from "@/api/rightErrorApi";
 import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
+import ExceptionConnect from "@/components/ExceptionConnect.vue";
 
 export default defineComponent({
   computed: {
@@ -106,6 +107,7 @@ export default defineComponent({
 
   // Components
   components: {
+    ExceptionConnect,
     Dashboard,
     TemplateBookmark,
     RightsDeleteDialog,
@@ -471,10 +473,16 @@ export default defineComponent({
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
-          const exceptionIds: string[] = formState.exceptionTemplates.flatMap(
-            (e) => (e.rightId ? [e.rightId] : []),
-          );
-          addExceptionsToTemplate(r.rightId, exceptionIds, () => {
+          const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
+          if(exceptionId == undefined){
+            updateBookmarks(r.rightId, () => {
+              tmpRight.value.rightId = r.rightId;
+              emit("addTemplateSuccessful", tmpRight.value);
+              close();
+            });
+            return;
+          }
+          addExceptionsToTemplate(r.rightId, exceptionId, () => {
             updateBookmarks(r.rightId, () => {
               tmpRight.value.rightId = r.rightId;
               emit("addTemplateSuccessful", tmpRight.value);
@@ -502,24 +510,34 @@ export default defineComponent({
               "No RightId found when updating. This should NOT happen.";
             errorMsgIsActive.value = true;
           } else {
-            const exceptionIds: string[] = formState.exceptionTemplates.flatMap(
-              (e) => (e.rightId ? [e.rightId] : []),
-            );
-            addExceptionsToTemplate(
-              tmpRight.value.rightId,
-              exceptionIds,
-              () => {
-                updateBookmarks(tmpRight.value.rightId, () => {
-                  successMsg.value =
+            const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
+            if(exceptionId == undefined){
+              updateBookmarks(tmpRight.value.rightId, () => {
+                successMsg.value =
                     "Template " +
                     tmpRight.value.templateName +
                     " erfolgreich geupdated";
-                  successMsgIsActive.value = true;
-                  emit("updateTemplateSuccessful", formState.templateName);
-                  reinitializeRight();
-                });
-              },
-            );
+                successMsgIsActive.value = true;
+                emit("updateTemplateSuccessful", formState.templateName);
+                reinitializeRight();
+              });
+            } else {
+              addExceptionsToTemplate(
+                  tmpRight.value.rightId,
+                  exceptionId,
+                  () => {
+                    updateBookmarks(tmpRight.value.rightId, () => {
+                      successMsg.value =
+                          "Template " +
+                          tmpRight.value.templateName +
+                          " erfolgreich geupdated";
+                      successMsgIsActive.value = true;
+                      emit("updateTemplateSuccessful", formState.templateName);
+                      reinitializeRight();
+                    });
+                  },
+              );
+            }
           }
         })
         .catch((e) => {
@@ -537,11 +555,11 @@ export default defineComponent({
      */
     const addExceptionsToTemplate = (
       rightId: string,
-      exceptionIds: Array<string>,
+      exceptionId: string,
       callback: () => void,
     ) => {
       templateApi
-        .addExceptionToTemplate(rightId, exceptionIds)
+        .addExceptionToTemplate(rightId, exceptionId)
         .then(() => {
           callback();
         })
@@ -836,7 +854,7 @@ export default defineComponent({
       () =>
         !props.isExceptionTemplate &&
         (props.isNewTemplate ||
-          (lastSavedRight.value != undefined && lastSavedRight.value.exceptionFrom == undefined)),
+          (lastSavedRight.value != undefined && lastSavedRight.value.exceptionOfId == undefined)),
     );
 
     const mode = computed(() => {
@@ -1015,6 +1033,8 @@ export default defineComponent({
 
     // Template Exceptions
     const dialogCreateException = ref(false);
+    const dialogConnectException = ref(false);
+    const openDialogException = ref(0);
     const renderTemplateKey = ref(0);
 
     const openCreateExceptionDialog = () => {
@@ -1068,11 +1088,25 @@ export default defineComponent({
       renderTemplateKey.value += 1;
     };
 
+    const connectException = (rights: Array<RightRest>) => {
+      formState.exceptionTemplates = rights;
+      renderTemplateKey.value += 1;
+    };
+
+    const openDialogExceptionConnect = () => {
+      openDialogException.value += 1;
+      dialogConnectException.value = true;
+    };
+
+    const closeDialogExceptionConnect = () => {
+      dialogConnectException.value = false;
+    };
+
     const deleteExceptionEntry = (entry: RightRest) => {
       const editedIndex = formState.exceptionTemplates.indexOf(entry);
       formState.exceptionTemplates.splice(editedIndex, 1);
-      if (entry.rightId != undefined) {
-        templateApi.deleteTemplateById(entry.rightId).catch((e) => {
+      if (entry.rightId != undefined && props.rightId != undefined) {
+        templateApi.removeExceptionToTemplate(props.rightId, entry.rightId).catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
             errorMsgIsActive.value = true;
@@ -1271,10 +1305,12 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkHeaders,
       cardTitle,
+      connectException,
       computedLicenceUrl,
       computedRightId,
       currentTemplateApplicationResult,
       dashboardViewActivated,
+      dialogConnectException,
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -1307,6 +1343,7 @@ export default defineComponent({
       metadataCount,
       openPanelsDefault,
       openBookmarkSearch,
+      openDialogException,
       renderBookmarkKey,
       renderTemplateKey,
       startDateFormatted,
@@ -1327,6 +1364,7 @@ export default defineComponent({
       checkForChangesAndClose,
       closeCreateExceptionDialog,
       closeDashboard,
+      closeDialogExceptionConnect,
       closeDialogSimulationResult,
       closeUnsavedChangesDialog,
       createRight,
@@ -1339,6 +1377,7 @@ export default defineComponent({
       labelModelToString,
       openCreateExceptionDialog,
       openDashboard,
+      openDialogExceptionConnect,
       selectBookmark,
       setSelectedBookmarks,
       save,
@@ -1765,6 +1804,25 @@ export default defineComponent({
                     @click="openCreateExceptionDialog"
                     >Erstelle neue Ausnahme
                   </v-btn>
+                  <v-btn
+                      class="ma-3"
+                      color="blue darken-1"
+                      :disabled="!isEditable || formState.exceptionTemplates.length != 0"
+                      @click="openDialogExceptionConnect"
+                  >Ausnahme verknüpfen
+                  </v-btn>
+                  <v-dialog
+                      v-model="dialogConnectException"
+                      :retain-focus="false"
+                      max-width="500px"
+                  >
+                    <ExceptionConnect
+                        :reinit-counter="openDialogException"
+                        :rightId="rightId"
+                        v-on:exceptionSelected="connectException"
+                        v-on:exceptionConnectClosed="closeDialogExceptionConnect"
+                    ></ExceptionConnect>
+                  </v-dialog>
                   <v-dialog
                     v-model="dialogCreateException"
                     :retain-focus="false"

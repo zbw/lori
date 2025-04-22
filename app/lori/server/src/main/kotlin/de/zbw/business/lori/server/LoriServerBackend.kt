@@ -498,12 +498,31 @@ class LoriServerBackend(
 
     suspend fun addExceptionToTemplate(
         rightIdTemplate: String,
-        rightIdExceptions: List<String>,
+        rightIdException: String,
     ): Int =
         dbConnector.rightDB.addExceptionToTemplate(
             rightIdTemplate = rightIdTemplate,
-            rightIdExceptions = rightIdExceptions,
+            rightIdException = rightIdException,
         )
+
+    suspend fun removeExceptionFromTemplate(
+        rightIdTemplate: String,
+        rightIdException: String,
+    ): Int {
+        val template = dbConnector.rightDB.getRightsByIds(listOf(rightIdTemplate)).firstOrNull()
+        if (template == null || template.hasExceptionId == null || template.hasExceptionId != rightIdException) {
+            return 0
+        }
+        if (template.lastAppliedOn != null) {
+            throw ResourceConflictException(
+                "Das Template \"${template.templateName}\" wurde bereits angewandt. Die Ausnahme kann nicht mehr entfernt werden.",
+            )
+        }
+        return dbConnector.rightDB.removeExceptionTemplateConnection(
+            rightIdTemplate = rightIdTemplate,
+            rightIdException = rightIdException,
+        )
+    }
 
     suspend fun insertBookmark(bookmark: Bookmark): Int {
         val bookmarkIdsSameFilters = dbConnector.bookmarkDB.getBookmarkIdByQuerystring(bookmark.computeQueryString())
@@ -581,7 +600,19 @@ class LoriServerBackend(
     suspend fun getTemplateList(
         limit: Int,
         offset: Int,
-    ): List<ItemRight> = dbConnector.rightDB.getTemplateList(limit, offset)
+        draft: Boolean? = null,
+        exception: Boolean? = null,
+        excludes: List<String>? = null,
+        hasException: Boolean? = null,
+    ): List<ItemRight> =
+        dbConnector.rightDB.getTemplateList(
+            limit = limit,
+            offset = offset,
+            draftFilter = draft,
+            exceptionFilter = exception,
+            excludes = excludes,
+            hasException = hasException,
+        )
 
     /**
      * Template-Bookmark Pair.

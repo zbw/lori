@@ -1,7 +1,7 @@
 <script lang="ts">
 import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import bookmarkApi from "@/api/bookmarkApi";
-import {BookmarkRest, ItemRest} from "@/generated-sources/openapi";
+import {BookmarkRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 
 export default defineComponent({

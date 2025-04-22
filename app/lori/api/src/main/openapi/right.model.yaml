@@ -45,7 +45,9 @@ RightRest:
     endDate:
       type: string
       format: date
-    exceptionFrom:
+    exceptionOfId:
+      type: string
+    hasExceptionId:
       type: string
     groups:
       type: array

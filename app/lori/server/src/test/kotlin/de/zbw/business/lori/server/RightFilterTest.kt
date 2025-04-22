@@ -733,7 +733,8 @@ class RightFilterTest : DatabaseTest() {
                     ),
                 hasLegalRisk = true,
                 endDate = RestConverterTest.TODAY,
-                exceptionFrom = null,
+                exceptionOfId = null,
+                hasExceptionId = null,
                 isTemplate = false,
                 lastAppliedOn =
                     OffsetDateTime.of(

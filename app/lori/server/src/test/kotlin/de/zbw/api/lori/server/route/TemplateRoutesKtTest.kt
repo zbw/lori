@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
 import de.zbw.api.lori.server.type.Either
@@ -774,7 +775,7 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostTemplateExceptions() {
         val givenRightIdTemplate = "1"
-        val givenRightIdException = listOf("12")
+        val givenRightIdException = "12"
 
         // Test OK Path
         val backend =
@@ -782,7 +783,7 @@ class TemplateRoutesKtTest {
                 coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
-                        rightIdExceptions = givenRightIdException,
+                        rightIdException = givenRightIdException,
                     )
                 } returns 1
                 coEvery { isException(givenRightIdTemplate) } returns false
@@ -801,7 +802,7 @@ class TemplateRoutesKtTest {
                         ItemRoutesKtTest.jsonAsString(
                             ExceptionsForTemplateRest(
                                 idOfTemplate = givenRightIdTemplate,
-                                idsOfExceptions = givenRightIdException,
+                                idOfException = givenRightIdException,
                             ),
                         ),
                     )
@@ -815,7 +816,7 @@ class TemplateRoutesKtTest {
                 coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
-                        rightIdExceptions = givenRightIdException,
+                        rightIdException = givenRightIdException,
                     )
                 } returns 1
                 coEvery { isException(givenRightIdTemplate) } returns true
@@ -834,7 +835,7 @@ class TemplateRoutesKtTest {
                         ItemRoutesKtTest.jsonAsString(
                             ExceptionsForTemplateRest(
                                 idOfTemplate = givenRightIdTemplate,
-                                idsOfExceptions = givenRightIdException,
+                                idOfException = givenRightIdException,
                             ),
                         ),
                     )
@@ -848,7 +849,7 @@ class TemplateRoutesKtTest {
                 coEvery {
                     addExceptionToTemplate(
                         rightIdTemplate = givenRightIdTemplate,
-                        rightIdExceptions = givenRightIdException + givenRightIdTemplate,
+                        rightIdException = givenRightIdTemplate,
                     )
                 } returns 1
                 coEvery { isException(givenRightIdTemplate) } returns false
@@ -867,7 +868,7 @@ class TemplateRoutesKtTest {
                         ItemRoutesKtTest.jsonAsString(
                             ExceptionsForTemplateRest(
                                 idOfTemplate = givenRightIdTemplate,
-                                idsOfExceptions = givenRightIdException + givenRightIdTemplate,
+                                idOfException = givenRightIdTemplate,
                             ),
                         ),
                     )
@@ -894,7 +895,7 @@ class TemplateRoutesKtTest {
                         ItemRoutesKtTest.jsonAsString(
                             ExceptionsForTemplateRest(
                                 idOfTemplate = givenRightIdTemplate,
-                                idsOfExceptions = givenRightIdException,
+                                idOfException = givenRightIdException,
                             ),
                         ),
                     )
@@ -904,9 +905,86 @@ class TemplateRoutesKtTest {
     }
 
     @Test
+    fun testDeleteTemplateExceptions() {
+        val givenRightIdTemplate = "1"
+        val givenRightIdException = "12"
+        // Test OK Path
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery {
+                    removeExceptionFromTemplate(
+                        rightIdTemplate = givenRightIdTemplate,
+                        rightIdException = givenRightIdException,
+                    )
+                } returns 1
+            }
+        val servicePool = ItemRoutesKtTest.getServicePool(backend)
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.delete("/api/v1/template/exceptions?rightIdTemplate=$givenRightIdTemplate&rightIdException=$givenRightIdException") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                }
+            assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
+        }
+
+        // 409 Path
+        val backendConflict =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery {
+                    removeExceptionFromTemplate(
+                        rightIdTemplate = givenRightIdTemplate,
+                        rightIdException = givenRightIdException,
+                    )
+                } throws ResourceConflictException("foobar")
+            }
+        val servicePoolConflict = ItemRoutesKtTest.getServicePool(backendConflict)
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePoolConflict.testApplication(),
+            )
+            val response =
+                client.delete("/api/v1/template/exceptions?rightIdTemplate=$givenRightIdTemplate&rightIdException=$givenRightIdException") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                }
+            assertThat("Should return 409", response.status, `is`(HttpStatusCode.Conflict))
+        }
+
+        // 500 Path
+        val backendInternal =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery {
+                    removeExceptionFromTemplate(
+                        rightIdTemplate = givenRightIdTemplate,
+                        rightIdException = givenRightIdException,
+                    )
+                } throws PSQLException(ServerErrorMessage("foo"))
+            }
+        val servicePoolInternal = ItemRoutesKtTest.getServicePool(backendInternal)
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePoolInternal.testApplication(),
+            )
+            val response =
+                client.delete("/api/v1/template/exceptions?rightIdTemplate=$givenRightIdTemplate&rightIdException=$givenRightIdException") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                }
+            assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
     fun testGetExceptionsByRightId() {
         val givenRightIdTemplate = "1"
-        val expected = TEST_RIGHT.copy(isTemplate = true, exceptionFrom = "5")
+        val expected = TEST_RIGHT.copy(isTemplate = true, exceptionOfId = "5")
 
         // Test OK Path
         val backend =

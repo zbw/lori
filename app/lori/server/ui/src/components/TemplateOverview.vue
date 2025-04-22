@@ -87,7 +87,14 @@ export default defineComponent({
     const templateDraft = ref({} as RightRest);
     const getTemplateList = () => {
       templateApi
-        .getTemplateList(0, 100)
+        .getTemplateList(
+            0,
+            100,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+        )
         .then((r: Array<RightRest>) => {
           templateItems.value = r;
         })
@@ -106,6 +113,7 @@ export default defineComponent({
     };
     const createNewTemplate = () => {
       isNew.value = true;
+      currentTemplate.value = Object.assign({} as RightRest);
       reinitCounter.value = reinitCounter.value + 1;
       activateTemplateEditDialog();
     };
@@ -126,7 +134,7 @@ export default defineComponent({
       isNew.value = true;
       templateDraft.value = Object.assign({}, templateRight);
       templateDraft.value.rightId = undefined;
-      templateDraft.value.exceptionFrom = undefined;
+      templateDraft.value.exceptionOfId = undefined;
       templateDraft.value.createdBy = undefined;
       templateDraft.value.createdOn = undefined;
       templateDraft.value.lastAppliedOn = undefined;
@@ -411,7 +419,7 @@ export default defineComponent({
         </template>
         <template v-slot:item.applyTemplate="{ item }">
           <v-btn
-            v-if="item.exceptionFrom == undefined"
+            v-if="item.exceptionOfId == undefined"
             color="blue darken-1"
             @click="applyTemplate(item)"
             :disabled="!userStore.isLoggedIn"
@@ -419,7 +427,7 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.isException="{ item }">
-          <v-icon v-if="item.exceptionFrom !== undefined">
+          <v-icon v-if="item.exceptionOfId !== undefined">
             mdi-alpha-a-box-outline
           </v-icon>
         </template>
@@ -466,8 +474,8 @@ export default defineComponent({
           :isNewTemplate="isNew"
           :reinit-counter="reinitCounter"
           :is-exception-template="
-            currentTemplate.exceptionFrom !== undefined &&
-            currentTemplate.exceptionFrom != ''
+            currentTemplate.exceptionOfId !== undefined &&
+            currentTemplate.exceptionOfId != ''
           "
           :rightId="currentTemplate.rightId"
           :initialRight="templateDraft"

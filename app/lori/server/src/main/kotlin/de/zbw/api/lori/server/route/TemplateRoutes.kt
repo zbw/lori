@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
@@ -342,7 +343,7 @@ fun Routing.templateRoutes(
                 withContext(span.asContextElement()) {
                     try {
                         val rightId = call.parameters["id"]
-                        val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() ?: false
+                        val deleteOld: Boolean = call.request.queryParameters["deleteOld"]?.toBoolean() == true
                         val bookmarkIds = call.receive(BookmarkIdsRest::class).bookmarkIds
                         span.setAttribute("rightId", rightId ?: "null")
                         span.setAttribute("deleteOld", deleteOld)
@@ -476,6 +477,49 @@ fun Routing.templateRoutes(
             }
 
             authenticate("auth-login") {
+                delete {
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.DELETE/api/v1/template/exceptions")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
+                    withContext(span.asContextElement()) {
+                        val rightIdTemplate = call.request.queryParameters["rightIdTemplate"]
+                        val rightIdException = call.request.queryParameters["rightIdException"]
+                        if (rightIdException == null || rightIdTemplate == null) {
+                            span.setStatus(StatusCode.ERROR, "BadRequest: No valid ids have been provided in the url.")
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                "No valid id has been provided in the url.",
+                            )
+                        }
+                        try {
+                            backend.removeExceptionFromTemplate(
+                                rightIdTemplate = rightIdTemplate,
+                                rightIdException = rightIdException,
+                            )
+                            call.respond(
+                                HttpStatusCode.OK,
+                            )
+                        } catch (e: ResourceConflictException) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            call.respond(
+                                HttpStatusCode.Conflict,
+                                ApiError.conflictError(e.message),
+                            )
+                        } catch (e: Exception) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Fehler ist aufgetreten.",
+                                ),
+                            )
+                        } finally {
+                            span.end()
+                        }
+                    }
+                }
                 post {
                     val span =
                         tracer
@@ -487,10 +531,10 @@ fun Routing.templateRoutes(
                             val templateExceptionPair: ExceptionsForTemplateRest =
                                 call.receive(ExceptionsForTemplateRest::class)
                             val idOfTemplate = templateExceptionPair.idOfTemplate
-                            val idsOfExceptions = templateExceptionPair.idsOfExceptions
+                            val idOfException = templateExceptionPair.idOfException
                             span.setAttribute("idOfTemplate", idOfTemplate)
-                            span.setAttribute("idsOfExceptions", idsOfExceptions.toString())
-                            if (idsOfExceptions.contains(idOfTemplate)) {
+                            span.setAttribute("idOfException", idOfException)
+                            if (idOfException == idOfTemplate) {
                                 span.setStatus(StatusCode.ERROR)
                                 return@withContext call.respond(
                                     HttpStatusCode.BadRequest,
@@ -507,7 +551,7 @@ fun Routing.templateRoutes(
                             }
                             backend.addExceptionToTemplate(
                                 rightIdTemplate = idOfTemplate,
-                                rightIdExceptions = idsOfExceptions,
+                                rightIdException = idOfException,
                             )
 
                             span.setStatus(StatusCode.OK)
@@ -539,6 +583,13 @@ fun Routing.templateRoutes(
                     try {
                         val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
                         val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                        val draft: Boolean? = call.request.queryParameters["draft"]?.toBoolean()
+                        val exception: Boolean? = call.request.queryParameters["exception"]?.toBoolean()
+                        val hasException: Boolean? = call.request.queryParameters["hasException"]?.toBoolean()
+                        val excludes: List<String>? =
+                            call.request.queryParameters["excludes"]?.let {
+                                it.split(",".toRegex())
+                            }
                         if (limit < 1 || limit > 200) {
                             span.setStatus(
                                 StatusCode.ERROR,
@@ -555,7 +606,15 @@ fun Routing.templateRoutes(
                             )
                             return@withContext
                         }
-                        val receivedTemplates: List<ItemRight> = backend.getTemplateList(limit, offset)
+                        val receivedTemplates: List<ItemRight> =
+                            backend.getTemplateList(
+                                limit = limit,
+                                offset = offset,
+                                draft = draft,
+                                exception = exception,
+                                excludes = excludes,
+                                hasException = hasException,
+                            )
                         span.setStatus(StatusCode.OK)
                         call.respond(receivedTemplates.map { it.toRest() })
                     } catch (e: Exception) {
