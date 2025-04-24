@@ -56,13 +56,11 @@ TemplateApplicationsRest:
 
 ExceptionsForTemplateRest:
   required:
+    - idOfException
     - idOfTemplate
-    - idsOfExceptions
   type: object
   properties:
     idOfTemplate:
       type: string
-    idsOfExceptions:
-      type: array
-      items:
-        type: string
+    idOfException:
+      type: string

@@ -97,6 +97,7 @@ class RestConverterTest {
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
                             hasLegalRisk = TEST_RIGHT.hasLegalRisk,
+                            hasExceptionId = TEST_RIGHT.hasExceptionId,
                             groupIds = TEST_RIGHT.groupIds,
                             groups = TEST_RIGHT.groups?.map { it.toRest() },
                             isTemplate = TEST_RIGHT.isTemplate,
@@ -665,7 +666,7 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 endDate = TODAY,
-                exceptionFrom = null,
+                exceptionOfId = null,
                 groups =
                     listOf(
                         Group(
@@ -708,6 +709,8 @@ class RestConverterTest {
                         ),
                     ),
                 groupIds = listOf(1),
+                hasExceptionId = "5",
+                hasLegalRisk = true,
                 isTemplate = true,
                 lastAppliedOn =
                     OffsetDateTime.of(
@@ -742,7 +745,6 @@ class RestConverterTest {
                 templateDescription = "foo",
                 templateName = "name",
                 zbwUserAgreement = true,
-                hasLegalRisk = true,
             )
 
         val TEST_DA_ITEM =

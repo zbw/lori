@@ -140,10 +140,13 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.templateDescription) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
     }
 
@@ -211,10 +214,13 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.templateDescription) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(localCounter++, right.exceptionFrom) { value, idx, prepStmt ->
+            this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
             this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
     }
 
@@ -310,13 +316,59 @@ class RightDB(
     suspend fun getTemplateList(
         limit: Int,
         offset: Int,
+        draftFilter: Boolean? = null,
+        exceptionFilter: Boolean? = null,
+        excludes: List<String>? = null,
+        hasException: Boolean? = null,
     ): List<ItemRight> {
         val rights =
             connectionPool.useConnection("getTemplateList") { connection ->
+                val statement =
+                    STATEMENT_GET_TEMPLATES
+                        .let {
+                            if (draftFilter == null) {
+                                it
+                            } else if (draftFilter) {
+                                "$it AND $COLUMN_LAST_APPLIED_ON IS NULL"
+                            } else {
+                                "$it AND $COLUMN_LAST_APPLIED_ON IS NOT NULL"
+                            }
+                        }.let {
+                            if (exceptionFilter == null) {
+                                it
+                            } else if (exceptionFilter) {
+                                "$it AND $COLUMN_EXCEPTION_OF_ID IS NOT NULL"
+                            } else {
+                                "$it AND $COLUMN_EXCEPTION_OF_ID IS NULL"
+                            }
+                        }.let {
+                            if (excludes != null) {
+                                "$it AND NOT $COLUMN_RIGHT_ID = ANY(?)"
+                            } else {
+                                it
+                            }
+                        }.let {
+                            if (hasException == null) {
+                                it
+                            } else if (hasException) {
+                                "$it AND $COLUMN_HAS_EXCEPTION_ID IS NOT NULL"
+                            } else {
+                                "$it AND $COLUMN_HAS_EXCEPTION_ID IS NULL"
+                            }
+                        }.let {
+                            "$it ORDER BY created_on DESC LIMIT ? OFFSET ?;"
+                        }
                 val prepStmt =
-                    connection.prepareStatement(STATEMENT_GET_TEMPLATES).apply {
-                        this.setInt(1, limit)
-                        this.setInt(2, offset)
+                    connection.prepareStatement(statement).apply {
+                        var parameterCounter = 1
+                        if (excludes != null) {
+                            this.setArray(
+                                parameterCounter++,
+                                connection.createArrayOf("text", excludes.toTypedArray()),
+                            )
+                        }
+                        this.setInt(parameterCounter++, limit)
+                        this.setInt(parameterCounter++, offset)
                     }
 
                 val span = tracer.spanBuilder("getTemplatesByIds").startSpan()
@@ -486,13 +538,27 @@ class RightDB(
      */
     suspend fun addExceptionToTemplate(
         rightIdTemplate: String,
-        rightIdExceptions: List<String>,
-    ): Int =
-        connectionPool.useConnection("addExceptionToTemplate") { connection ->
+        rightIdException: String,
+    ): Int {
+        connectionPool.useConnection("addTemplateToException") { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM).apply {
+                connection.prepareStatement(STATEMENT_SET_EXCEPTION_OF_ID).apply {
                     this.setString(1, rightIdTemplate)
-                    this.setArray(2, connection.createArrayOf("text", rightIdExceptions.toTypedArray()))
+                    this.setString(2, rightIdException)
+                }
+            val span = tracer.spanBuilder("addTemplateToException").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+        return connectionPool.useConnection("addExceptionToTemplate") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SET_HAS_EXCEPTION_ID).apply {
+                    this.setString(1, rightIdException)
+                    this.setString(2, rightIdTemplate)
                 }
             val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
             return@useConnection try {
@@ -502,11 +568,48 @@ class RightDB(
                 span.end()
             }
         }
+    }
+
+    suspend fun removeExceptionTemplateConnection(
+        rightIdTemplate: String,
+        rightIdException: String,
+    ): Int {
+        connectionPool.useConnection("deleteExceptionTemplateConnection") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SET_EXCEPTION_OF_ID).apply {
+                    this.setString(1, null)
+                    this.setString(2, rightIdException)
+                }
+            val span = tracer.spanBuilder("addTemplateToException").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+        return connectionPool.useConnection("addExceptionToTemplate") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SET_HAS_EXCEPTION_ID).apply {
+                    this.setString(1, null)
+                    this.setString(2, rightIdTemplate)
+                }
+            val span = tracer.spanBuilder("addExceptionToTemplate").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+    }
 
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"
-        private const val COLUMN_EXCEPTION_FROM = "exception_from"
+        private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
+        private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
         private const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
+        private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -519,8 +622,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE, template_name, template_description, last_applied_on, $COLUMN_EXCEPTION_FROM," +
-                "$COLUMN_HAS_LEGAL_RISK" +
+                "$COLUMN_IS_TEMPLATE, template_name, template_description, $COLUMN_LAST_APPLIED_ON, $COLUMN_EXCEPTION_OF_ID," +
+                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
@@ -540,8 +643,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM," +
-                "$COLUMN_HAS_LEGAL_RISK) " +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
+                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID) " +
                 "VALUES(?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -549,7 +652,7 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)"
+                "?,?,?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -559,8 +662,8 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_FROM," +
-                "$COLUMN_HAS_LEGAL_RISK) " +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
+                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -568,7 +671,7 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)" +
+                "?,?,?)" +
                 " ON CONFLICT ($COLUMN_RIGHT_ID)" +
                 " DO UPDATE SET" +
                 " last_updated_on = EXCLUDED.last_updated_on," +
@@ -589,7 +692,8 @@ class RightDB(
                 "template_name = EXCLUDED.template_name," +
                 "template_description = EXCLUDED.template_description," +
                 "author_right_exception = EXCLUDED.author_right_exception," +
-                "$COLUMN_EXCEPTION_FROM = EXCLUDED.$COLUMN_EXCEPTION_FROM," +
+                "$COLUMN_EXCEPTION_OF_ID = EXCLUDED.$COLUMN_EXCEPTION_OF_ID," +
+                "$COLUMN_HAS_EXCEPTION_ID = EXCLUDED.$COLUMN_HAS_EXCEPTION_ID," +
                 "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK;"
 
         const val STATEMENT_DELETE_RIGHTS =
@@ -603,10 +707,10 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
-                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
+                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_EXCEPTION_FROM = ?"
+                " WHERE $COLUMN_EXCEPTION_OF_ID = ?"
 
         const val STATEMENT_GET_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
@@ -614,11 +718,10 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
-                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
+                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_IS_TEMPLATE = true" +
-                " ORDER BY created_on DESC LIMIT ? OFFSET ?"
+                " WHERE $COLUMN_IS_TEMPLATE = true"
 
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
@@ -626,25 +729,30 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,last_applied_on," +
-                "$COLUMN_EXCEPTION_FROM,$COLUMN_HAS_LEGAL_RISK" +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
+                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_RIGHT_TEMPLATE_NAME = ANY(?)"
 
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET last_applied_on=?" +
+                " SET $COLUMN_LAST_APPLIED_ON=?" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_IS_EXCEPTION =
             "SELECT COUNT(*)" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_EXCEPTION_FROM IS NOT NULL AND $COLUMN_IS_TEMPLATE"
+                " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_EXCEPTION_OF_ID IS NOT NULL AND $COLUMN_IS_TEMPLATE;"
 
-        const val STATEMENT_UPDATE_TEMPLATE_EXCEPTION_FROM =
+        const val STATEMENT_SET_EXCEPTION_OF_ID =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_EXCEPTION_FROM=?" +
-                " WHERE $COLUMN_RIGHT_ID=ANY(?)"
+                " SET $COLUMN_EXCEPTION_OF_ID=?" +
+                " WHERE $COLUMN_RIGHT_ID=?;"
+
+        const val STATEMENT_SET_HAS_EXCEPTION_ID =
+            "UPDATE $TABLE_NAME_ITEM_RIGHT" +
+                " SET $COLUMN_HAS_EXCEPTION_ID=?" +
+                " WHERE $COLUMN_RIGHT_ID=?;"
 
         fun extractRightFromRS(rs: ResultSet): ItemRight {
             var localCounter = 1
@@ -690,8 +798,9 @@ class RightDB(
                             ZoneId.of("UTC+00:00"),
                         )
                     },
-                exceptionFrom = rs.getString(localCounter++),
+                exceptionOfId = rs.getString(localCounter++),
                 hasLegalRisk = rs.getBoolean(localCounter++),
+                hasExceptionId = rs.getString(localCounter++),
                 groups = null,
                 groupIds = null,
             )

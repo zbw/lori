@@ -187,6 +187,34 @@ template-list:
           maximum: 100
           default: 25
         required: false
+      - name: exception
+        in: query
+        description: Determines if templates are exceptions or not
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: draft
+        in: query
+        description: Determines if templates are drafts or not
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: excludes
+        in: query
+        description: Comma separated list of right ids which will be ignored
+        required: false
+        schema:
+          type: string
+          default: false
+      - name: hasException
+        in: query
+        description: Determines if templates have an exception or not
+        required: false
+        schema:
+          type: boolean
+
     responses:
       200:
         description: Successful operation
@@ -402,6 +430,50 @@ template-bookmarks-entries:
     x-codegen-request-body-name: body
 
 template-exceptions:
+  delete:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - template
+    summary: Delete connection between template and its exception
+    operationId: deleteTemplateExceptionLink
+    parameters:
+      - name: rightIdTemplate
+        in: query
+        description: RightId of the template having an exception
+        required: true
+        schema:
+          type: string
+      - name: rightIdException
+        in: query
+        description: RightId of the exception
+        required: true
+        schema:
+          type: string
+    responses:
+      200:
+        description: Deletion of link was successful
+        content:
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      409:
+        description: Deletion not possible due to conflict
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body
+
   post:
     security:
       - cookieAuth: [ ]

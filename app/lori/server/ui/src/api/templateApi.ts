@@ -43,10 +43,21 @@ export default {
       id: rightId,
     });
   },
-  getTemplateList(offset: number, limit: number): Promise<Array<RightRest>> {
+  getTemplateList(
+      offset: number,
+      limit: number,
+      draftFilter: boolean | undefined,
+      exceptionFilter: boolean | undefined,
+      excludes: string | undefined,
+      hasExceptionFilter: boolean | undefined,
+      ): Promise<Array<RightRest>> {
     return templateApi.getTemplateList({
       offset: offset,
       limit: limit,
+      exception: exceptionFilter,
+      draft: draftFilter,
+      excludes: excludes,
+      hasException: hasExceptionFilter,
     });
   },
   updateTemplate(template: RightRest): Promise<void> {
@@ -83,13 +94,22 @@ export default {
   },
   addExceptionToTemplate(
     rightIdTemplate: string,
-    rightIdException: Array<string>,
+    rightIdException: string,
   ): Promise<void> {
     return templateApi.addExceptionsToTemplate({
       body: {
         idOfTemplate: rightIdTemplate,
-        idsOfExceptions: rightIdException,
+        idOfException: rightIdException,
       },
+    });
+  },
+  removeExceptionToTemplate(
+      rightIdTemplate: string,
+      rightIdException: string,
+  ): Promise<void> {
+    return templateApi.deleteTemplateExceptionLink({
+      rightIdTemplate: rightIdTemplate,
+      rightIdException: rightIdException,
     });
   },
   getExceptionById(rightId: string): Promise<RightRest> {

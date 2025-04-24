@@ -79,7 +79,7 @@ class TemplateExceptionTest : DatabaseTest() {
                     TEST_RIGHT.copy(
                         templateName = "exception",
                         isTemplate = true,
-                        exceptionFrom = rightIdUpper,
+                        exceptionOfId = rightIdUpper,
                     ),
                 )
 

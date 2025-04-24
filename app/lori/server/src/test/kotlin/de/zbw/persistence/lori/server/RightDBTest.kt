@@ -92,6 +92,13 @@ class RightDBTest : DatabaseTest() {
             // when + then
             assertThat(dbConnector.rightDB.getRightsByIds(listOf(generatedRightId)), `is`(emptyList()))
             assertFalse(dbConnector.rightDB.rightContainsId(generatedRightId))
+
+            dbConnector.rightDB.deleteRightsByIds(
+                listOf(
+                    generatedRightId,
+                ),
+            )
+            assertTrue(true)
         }
 
     @Test
@@ -113,6 +120,7 @@ class RightDBTest : DatabaseTest() {
             )
             // Clean up for other tests
             dbConnector.rightDB.deleteRightsByIds(listOf(rightId2, rightId1))
+            assertTrue(true)
         }
 
     @Test
@@ -128,7 +136,7 @@ class RightDBTest : DatabaseTest() {
                     TEST_RIGHT.copy(
                         isTemplate = true,
                         templateName = templateName2,
-                        exceptionFrom = rightId1,
+                        exceptionOfId = rightId1,
                     ),
                 )
 
@@ -140,8 +148,8 @@ class RightDBTest : DatabaseTest() {
             )
 
             // Clean up for other tests
-            dbConnector.rightDB.deleteRightsByIds(listOf(rightId2))
-            dbConnector.rightDB.deleteRightsByIds(listOf(rightId1))
+            dbConnector.rightDB.deleteRightsByIds(listOf(rightId1, rightId2))
+            assertTrue(true)
         }
 
     @Test(expectedExceptions = [PSQLException::class])
@@ -174,8 +182,15 @@ class RightDBTest : DatabaseTest() {
                 dbConnector.rightDB.isException(upperID),
             )
             dbConnector.rightDB.addExceptionToTemplate(
-                rightIdExceptions = listOf(excID1),
+                rightIdException = excID1,
                 rightIdTemplate = upperID,
+            )
+            assertThat(
+                dbConnector.rightDB
+                    .getRightsByIds(listOf(upperID))
+                    .first()
+                    .hasExceptionId!!,
+                `is`(excID1),
             )
             assertFalse(
                 dbConnector.rightDB.isException(upperID),
@@ -187,9 +202,176 @@ class RightDBTest : DatabaseTest() {
             assertThat(
                 result,
                 `is`(
-                    exceptionTemplate1.copy(rightId = excID1, exceptionFrom = upperID),
+                    exceptionTemplate1.copy(rightId = excID1, exceptionOfId = upperID),
                 ),
             )
+            dbConnector.rightDB.deleteRightsByIds(
+                listOf(
+                    upperID,
+                    excID1,
+                ),
+            )
+            assertTrue(true)
+        }
+
+    @Test
+    fun testTemplateGetList() =
+        runBlocking {
+            val draftRight =
+                TEST_RIGHT.copy(
+                    rightId = "draft",
+                    lastAppliedOn = null,
+                    templateName = "draft",
+                    isTemplate = true,
+                )
+            val draftRightId = dbConnector.rightDB.insertRight(draftRight)
+            val exceptionRight =
+                TEST_RIGHT.copy(
+                    rightId = "exception2",
+                    lastAppliedOn = null,
+                    exceptionOfId = draftRightId,
+                    templateName = "exception2",
+                    isTemplate = true,
+                )
+            val exceptionRightId = dbConnector.rightDB.insertRight(exceptionRight)
+            dbConnector.rightDB.addExceptionToTemplate(
+                rightIdTemplate = draftRightId,
+                rightIdException = exceptionRightId,
+            )
+            dbConnector.rightDB.updateAppliedOnByTemplateId(exceptionRightId)
+            assertThat(
+                "Get all templates",
+                dbConnector.rightDB.getTemplateList(offset = 0, limit = 100).size,
+                `is`(2),
+            )
+
+            assertThat(
+                "Get all templates",
+                dbConnector.rightDB
+                    .getTemplateList(
+                        limit = 100,
+                        offset = 0,
+                        draftFilter = true,
+                    ).map { it.rightId },
+                `is`(
+                    listOf(draftRightId),
+                ),
+            )
+            assertThat(
+                "Get all exceptions",
+                dbConnector.rightDB
+                    .getTemplateList(
+                        limit = 100,
+                        offset = 0,
+                        exceptionFilter = true,
+                    ).map { it.rightId },
+                `is`(
+                    listOf(exceptionRightId),
+                ),
+            )
+
+            val draftRight2 =
+                TEST_RIGHT.copy(
+                    rightId = "draft2",
+                    lastAppliedOn = null,
+                    templateName = "draft2",
+                    isTemplate = true,
+                )
+            val draftRightId2 = dbConnector.rightDB.insertRight(draftRight2)
+            assertThat(
+                "Get all Drafts, no exceptions and add exclusions",
+                dbConnector.rightDB
+                    .getTemplateList(
+                        limit = 100,
+                        offset = 0,
+                        exceptionFilter = false,
+                        draftFilter = true,
+                        excludes = listOf(draftRightId),
+                    ).map { it.rightId },
+                `is`(
+                    listOf(draftRightId2),
+                ),
+            )
+            assertThat(
+                "Get all templates having an exception",
+                dbConnector.rightDB
+                    .getTemplateList(
+                        limit = 100,
+                        offset = 0,
+                        exceptionFilter = null,
+                        draftFilter = null,
+                        excludes = null,
+                        hasException = true,
+                    ).map { it.rightId },
+                `is`(
+                    listOf(draftRightId),
+                ),
+            )
+            assertThat(
+                "Get all templates having no exception",
+                dbConnector.rightDB
+                    .getTemplateList(
+                        limit = 100,
+                        offset = 0,
+                        exceptionFilter = null,
+                        draftFilter = null,
+                        excludes = null,
+                        hasException = false,
+                    ).map { it.rightId }
+                    .toSet(),
+                `is`(
+                    setOf(draftRightId2, exceptionRightId),
+                ),
+            )
+            dbConnector.rightDB.deleteRightsByIds(
+                listOf(
+                    draftRightId,
+                    draftRightId2,
+                    exceptionRightId,
+                ),
+            )
+            assertTrue(true)
+        }
+
+    @Test
+    fun testRemoveExceptionConnection() =
+        runBlocking {
+            val draftRight =
+                TEST_RIGHT.copy(
+                    rightId = "upper_remove_draft",
+                    lastAppliedOn = null,
+                    templateName = "UPPER REMOVE EXCEPTION",
+                    isTemplate = true,
+                    exceptionOfId = null,
+                    hasExceptionId = null,
+                )
+            val exceptionRight =
+                TEST_RIGHT.copy(
+                    rightId = "exception_remove_exception",
+                    lastAppliedOn = null,
+                    exceptionOfId = null,
+                    hasExceptionId = null,
+                    templateName = "EXCEPTION REMOVE EXCEPTION",
+                    isTemplate = true,
+                )
+            val draftRightId = dbConnector.rightDB.insertRight(draftRight)
+            val exceptionRightId = dbConnector.rightDB.insertRight(exceptionRight)
+            dbConnector.rightDB.addExceptionToTemplate(
+                rightIdTemplate = draftRightId,
+                rightIdException = exceptionRightId,
+            )
+            assertTrue(
+                dbConnector.rightDB.isException(exceptionRightId),
+            )
+            dbConnector.rightDB.removeExceptionTemplateConnection(
+                rightIdTemplate = draftRightId,
+                rightIdException = exceptionRightId,
+            )
+            assertFalse(
+                dbConnector.rightDB.isException(exceptionRightId),
+            )
+            dbConnector.rightDB.deleteRightsByIds(listOf(draftRightId, exceptionRightId))
+            assertTrue(true)
         }
 
     companion object {
@@ -203,7 +385,8 @@ class RightDBTest : DatabaseTest() {
                 createdBy = TEST_RIGHT.createdBy,
                 createdOn = TEST_RIGHT.createdOn,
                 endDate = TEST_RIGHT.endDate!!.plusDays(1),
-                exceptionFrom = null,
+                exceptionOfId = null,
+                hasExceptionId = null,
                 hasLegalRisk = true,
                 groups = TEST_RIGHT.groups,
                 groupIds = TEST_RIGHT.groups?.map { it.groupId },
