@@ -22,6 +22,7 @@ export default defineComponent({
       dialogStore.groupDeleteActivated = false;
       deleteAlertError.value = false;
       deleteAlertErrorMessage.value = "";
+      emit("deleteDialogClosed");
     };
 
     const deleteGroup = () => {
@@ -57,18 +58,18 @@ export default defineComponent({
 <style scoped></style>
 <template>
   <v-card>
-    <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
     <v-snackbar
         contained
         multi-line
         location="top"
         timer="true"
-        timeout="5000"
+        timeout="3000"
         v-model="deleteAlertError"
         color="error"
     >
       {{ deleteAlertErrorMessage }}
     </v-snackbar>
+    <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
     <v-card-text> Soll diese Gruppe wirklich gelöscht werden? </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>

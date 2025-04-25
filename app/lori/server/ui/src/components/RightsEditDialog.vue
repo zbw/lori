@@ -1554,14 +1554,22 @@ export default defineComponent({
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :disabled="isNew || isTemplateAndException || !userStore.isLoggedIn"
+              :disabled="!isEditable || !userStore.isLoggedIn"
               @click="initiateDeleteDialog"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
           </div>
         </template>
-        <span v-if="isTemplateAndException">Ausnahme-Templates können nicht gelöscht werden</span>
+        <span v-if="!isEditable && isTemplateAndException">
+          Ausnahme kann nicht gelöscht werden, weil das Template bereits angewendet wurde
+        </span>
+        <span v-else-if="!isEditable && isTemplate">
+          Template kann nicht gelöscht werden, da es bereits angewendet wurde
+        </span>
+        <span v-else-if="!isEditable && !isTemplate">
+          Rechteinformation kann nicht gelöscht werden
+        </span>
         <span v-else>Löschen</span>
       </v-tooltip>
 

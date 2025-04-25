@@ -1,14 +1,16 @@
 <script lang="ts">
 import api from "@/api/api";
 import {computed, defineComponent, onMounted, ref, Ref} from "vue";
-import { GroupRest } from "@/generated-sources/openapi";
+import {BookmarkRest, GroupRest} from "@/generated-sources/openapi";
 import GroupEdit from "@/components/GroupEdit.vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import error from "@/utils/error";
 import {useUserStore} from "@/stores/user";
+import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
+import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 
 export default defineComponent({
-  components: { GroupEdit },
+  components: {GroupDeleteDialog, RightsDeleteDialog, GroupEdit },
   emits: [
       "groupOverviewClosed"
   ],
@@ -92,9 +94,7 @@ export default defineComponent({
           groupItems.value.unshift(group);
           renderKey.value += 1;
           successMsgIsActive.value = true;
-          successMsg.value = "Gruppe " +
-              "'" + group.title + " (" + groupId + ")'" +
-              " erfolgreich hinzugefügt.";
+          successMsg.value = "Gruppe \"" + group.title + "\" erfolgreich hinzugefügt.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -111,9 +111,7 @@ export default defineComponent({
           renderKey.value += 1;
           successMsgIsActive.value = true;
           lastModifiedGroup.value = group;
-          successMsg.value = "Gruppe " +
-              "'" + group.title + " (" + groupId + ")'" +
-              " erfolgreich geupdated.";
+          successMsg.value = "Gruppe " + "\"" + group.title + "\" erfolgreich geupdated.";
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -125,9 +123,7 @@ export default defineComponent({
 
     const deleteGroupEntry = () => {
       const deletedGroup: GroupRest = groupItems.value[index.value];
-      successMsg.value = "Gruppe " +
-          "'" + deletedGroup.title + " (" + deletedGroup.groupId + ")'" +
-          " erfolgreich gelöscht.";
+      successMsg.value = "Gruppe \"" + deletedGroup.title + "\" erfolgreich gelöscht.";
       groupItems.value.splice(index.value, 1);
       renderKey.value += 1;
       successMsgIsActive.value = true;
@@ -140,6 +136,26 @@ export default defineComponent({
         return "Ansehen";
       }
     });
+    /**
+     * Deletion
+     */
+
+    const deleteDialogActivated = ref(false);
+    const openDeleteDialog = (group: GroupRest) => {
+      currentGroup.value = Object.assign({}, group);
+      index.value = groupItems.value.indexOf(group);
+      deleteDialogActivated.value = true;
+    };
+
+    const closeDeleteDialog = () => {
+      deleteDialogActivated.value = false;
+    };
+
+    const deletionSuccessful = () =>  {
+      groupItems.value.splice(index.value, 1);
+      successMsgIsActive.value = true;
+      successMsg.value = "Gruppe \"" + currentGroup.value.title + "\" erfolgreich gelöscht.";
+    }
 
     /**
      * Closing
@@ -149,8 +165,11 @@ export default defineComponent({
     };
 
     return {
+      closeDeleteDialog,
       currentGroup,
       dialogStore,
+      deleteDialogActivated,
+      deletionSuccessful,
       groupLoadError,
       groupLoadErrorMsg,
       headers,
@@ -169,6 +188,7 @@ export default defineComponent({
       createNewGroup,
       deleteGroupEntry,
       editGroup,
+      openDeleteDialog,
       updateGroupEntry,
     };
   },
@@ -226,7 +246,6 @@ export default defineComponent({
       item-value="groupName"
     >
       <template v-slot:item.actions="{ item }">
-
         <v-tooltip location="bottom" :text="tooltipEditText">
           <template v-slot:activator="{ props }">
             <v-btn
@@ -238,6 +257,22 @@ export default defineComponent({
             >
             </v-btn>
           </template>
+        </v-tooltip>
+        <v-tooltip
+            location="bottom"
+        >
+          <template v-slot:activator="{ props }">
+            <div v-bind="props" class="d-inline-block">
+              <v-btn
+                  variant="text"
+                  @click="openDeleteDialog(item)"
+                  icon="mdi-delete"
+                  :disabled="!userStore.isLoggedIn"
+              >
+              </v-btn>
+            </div>
+          </template>
+          <span>Löschen</span>
         </v-tooltip>
       </template>
 
@@ -259,6 +294,15 @@ export default defineComponent({
         v-on:updateGroupSuccessful="updateGroupEntry"
         v-on:groupEditClosed="closeGroupEditDialog"
       ></GroupEdit>
+    </v-dialog>
+    <v-dialog
+        v-model="deleteDialogActivated" max-width="700px"
+    >
+      <GroupDeleteDialog
+          :group-id="currentGroup.groupId"
+          v-on:deleteDialogClosed="closeDeleteDialog"
+          v-on:deleteGroupSuccessful="deletionSuccessful"
+      ></GroupDeleteDialog>
     </v-dialog>
     </v-container>
   </v-card>
