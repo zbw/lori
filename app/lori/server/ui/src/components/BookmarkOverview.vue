@@ -321,39 +321,66 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.actions="{ item }">
-          <v-btn
-              variant="text"
-              icon="mdi-eye"
+          <v-tooltip
+              location="bottom"
           >
-          <v-icon small>mdi-eye
-          </v-icon>
-            <v-overlay
-                activator="parent"
-                location="top center"
-                location-strategy="connected">
-              <v-card class="pa-2">
-                {{item.filtersAsQuery}}
+            <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-inline-block">
                 <v-btn
-                    @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
-                    icon="mdi-content-copy"
+                    variant="text"
+                    icon="mdi-eye"
+                >
+                <v-icon small>mdi-eye
+                </v-icon>
+                  <v-overlay
+                      activator="parent"
+                      location="top center"
+                      location-strategy="connected">
+                    <v-card class="pa-2">
+                      {{item.filtersAsQuery}}
+                      <v-btn
+                          @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
+                          icon="mdi-content-copy"
+                      >
+                      </v-btn>
+                    </v-card>
+                  </v-overlay>
+                </v-btn>
+              </div>
+            </template>
+            <span>Ansicht Query</span>
+          </v-tooltip>
+          <v-tooltip
+              location="bottom"
+          >
+            <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-inline-block">
+                <v-btn
+                    variant="text"
+                    icon="mdi-pencil"
+                    @click="openEditDialog(item)"
                 >
                 </v-btn>
-              </v-card>
-            </v-overlay>
-          </v-btn>
-          <v-btn
-              variant="text"
-              icon="mdi-pencil"
-              @click="openEditDialog(item)"
+              </div>
+            </template>
+            <span>Bearbeiten</span>
+          </v-tooltip>
+          <v-tooltip
+              location="bottom"
           >
-          </v-btn>
-          <v-btn
-              variant="text"
-              @click="openDeleteDialog(item)"
-              icon="mdi-delete"
-              :disabled="!userStore.isLoggedIn"
-          >
-          </v-btn>
+            <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-inline-block">
+                <v-btn
+                    variant="text"
+                    @click="openDeleteDialog(item)"
+                    icon="mdi-delete"
+                    :disabled="!userStore.isLoggedIn"
+                >
+                </v-btn>
+              </div>
+            </template>
+            <span>Löschen</span>
+          </v-tooltip>
         </template>
       </v-data-table>
       <v-dialog

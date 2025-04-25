@@ -474,7 +474,7 @@ export default defineComponent({
           color="error">
         {{ saveAlertErrorMessage }}
       </v-snackbar>
-      <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="500px">
+      <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="700px">
         <GroupDeleteDialog
             :group-id="groupTmp.groupId"
             v-on:deleteGroupSuccessful="deleteGroupSuccessful"
