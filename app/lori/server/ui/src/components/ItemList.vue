@@ -1007,15 +1007,18 @@ table.special, th.special, td.special {
               cols="1"
             >
             <v-dialog v-model="searchHelpDialog" max-width="600px">
-
-              <template v-slot:activator="{ props: activatorProps }">
-                <v-btn
-                  density="compact"
-                  icon="mdi-help"
-                  v-bind="activatorProps"
-                >
-                </v-btn>
-              </template>
+                <template v-slot:activator="{ props: activatorProps }">
+                  <v-tooltip location="bottom" text="Syntax der Sucheingabe">
+                    <template v-slot:activator="{ props }">
+                      <v-btn
+                        density="compact"
+                        icon="mdi-help"
+                        v-bind="{...activatorProps, ...props}"
+                      >
+                      </v-btn>
+                    </template>
+                  </v-tooltip>
+                </template>
               <v-card
               >
                 <template v-slot:actions>

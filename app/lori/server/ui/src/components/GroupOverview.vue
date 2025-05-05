@@ -133,7 +133,7 @@ export default defineComponent({
       if(userStore.isLoggedIn){
         return "Bearbeiten";
       } else {
-        return "Ansehen";
+        return "Anzeigen";
       }
     });
     /**
@@ -249,9 +249,19 @@ export default defineComponent({
         <v-tooltip location="bottom" :text="tooltipEditText">
           <template v-slot:activator="{ props }">
             <v-btn
+                v-if="userStore.isLoggedIn"
                 variant="text"
                 @click="editGroup(item)"
                 icon="mdi-pencil"
+                v-bind="props"
+                class="tooltip-btn"
+            >
+            </v-btn>
+            <v-btn
+                v-else
+                variant="text"
+                @click="editGroup(item)"
+                icon="mdi-eye"
                 v-bind="props"
                 class="tooltip-btn"
             >

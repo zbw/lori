@@ -1533,12 +1533,17 @@ export default defineComponent({
         <span v-html="successMsg"></span>
       </v-snackbar>
       <v-spacer></v-spacer>
-      <v-btn
-          density="compact"
-          icon="mdi-help"
-          href="https://zbwintern/wiki/x/8wPUG"
-          target="_blank"
-      ></v-btn>
+      <v-tooltip location="bottom" text="Rechteinformationsdokumentation">
+        <template v-slot:activator="{ props }">
+          <v-btn
+              v-bind="props"
+              density="compact"
+              icon="mdi-help"
+              href="https://zbwintern/wiki/x/8wPUG"
+              target="_blank"
+          ></v-btn>
+        </template>
+      </v-tooltip>
       <v-btn
           v-if="isTabEntry"
           :readonly="updateInProgress"
@@ -1708,26 +1713,37 @@ export default defineComponent({
                   >
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
-                      <v-btn
-                          variant="text"
-                          icon="mdi-eye"
+                      <v-tooltip
+                          location="bottom"
                       >
-                        <v-icon small>mdi-eye
-                        </v-icon>
-                        <v-overlay
-                            activator="parent"
-                            location="top center"
-                            location-strategy="connected">
-                          <v-card class="pa-2">
-                            {{item.filtersAsQuery}}
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
                             <v-btn
-                                @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
-                                icon="mdi-content-copy"
+                                variant="text"
+                                icon="mdi-eye"
                             >
+                              <v-icon small>
+                                mdi-eye
+                              </v-icon>
+                              <v-overlay
+                                  activator="parent"
+                                  location="top center"
+                                  location-strategy="connected">
+                                <v-card class="pa-2">
+                                  {{item.filtersAsQuery}}
+                                  <v-btn
+                                      @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
+                                      icon="mdi-content-copy"
+                                  >
+                                  </v-btn>
+                                </v-card>
+                              </v-overlay>
                             </v-btn>
-                          </v-card>
-                        </v-overlay>
-                      </v-btn>
+                          </div>
+                        </template>
+                        <span>Suchstring anzeigen und kopieren</span>
+                      </v-tooltip>
+
                       <v-tooltip
                           location="bottom"
                       >
@@ -1745,33 +1761,16 @@ export default defineComponent({
                         >
                           Verknüpfte Suche kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
                         </span>
-                        <span v-else>Verknüpfung entfernen</span>
+                        <span v-else>Löschen</span>
                       </v-tooltip>
                     </template>
                   </v-data-table>
                   <v-btn
-                      v-if="isEditable"
                       color="blue darken-1"
                       @click="selectBookmark"
                       :disabled="!isEditable || formState.selectedBookmarks.length > 0"
                   >Gespeicherte Suche verknüpfen
                   </v-btn>
-                  <v-tooltip location="bottom">
-                    <template v-slot:activator="{ props }">
-                      <div v-bind="props" class="d-inline-block">
-                      <v-btn
-                        v-if="!isEditable"
-                        color="blue darken-1"
-                        :disabled="!isEditable"
-                        v-bind="props"
-                        >Gespeicherte Suche verknüpfen
-                      </v-btn>
-                      </div>
-                    </template>
-                    <span>
-                      Änderungen müssen erst abgespeichert werden.
-                    </span>
-                  </v-tooltip>
                   <v-dialog
                     v-model="bookmarkDialogOn"
                     :retain-focus="false"
@@ -1814,7 +1813,7 @@ export default defineComponent({
                         >
                           Ausnahme kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
                         </span>
-                        <span v-else>Ausnahme entfernen</span>
+                        <span v-else>Löschen</span>
                       </v-tooltip>
                     </template>
                   </v-data-table>
