@@ -1730,7 +1730,6 @@ export default defineComponent({
                       </v-btn>
                       <v-tooltip
                           location="bottom"
-                          :disabled="lastSavedRight?.lastAppliedOn == undefined"
                       >
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
@@ -1742,11 +1741,12 @@ export default defineComponent({
                             </v-icon>
                           </div>
                         </template>
-                        <span>
+                        <span v-if="lastSavedRight?.lastAppliedOn != undefined"
+                        >
                           Verknüpfte Suche kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
                         </span>
+                        <span v-else>Verknüpfung entfernen</span>
                       </v-tooltip>
-
                     </template>
                   </v-data-table>
                   <v-btn
@@ -1797,13 +1797,25 @@ export default defineComponent({
                   >
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
-                      <v-icon
-                        small
-                        :disabled="!isEditable"
-                        @click="deleteExceptionEntry(item)"
+                      <v-tooltip
+                          location="bottom"
                       >
-                        mdi-delete
-                      </v-icon>
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
+                                @click="deleteExceptionEntry(item)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span v-if="lastSavedRight?.lastAppliedOn != undefined"
+                        >
+                          Ausnahme kann nicht gelöscht werden, weil das Template bereits angewendet wurde.
+                        </span>
+                        <span v-else>Ausnahme entfernen</span>
+                      </v-tooltip>
                     </template>
                   </v-data-table>
                   <v-btn
