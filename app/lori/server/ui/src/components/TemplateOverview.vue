@@ -247,7 +247,7 @@ export default defineComponent({
       if(userStore.isLoggedIn){
         return "Bearbeiten";
       } else {
-        return "Ansehen";
+        return "Anzeigen";
       }
     });
 
@@ -427,9 +427,13 @@ export default defineComponent({
           >
         </template>
         <template v-slot:item.isException="{ item }">
-          <v-icon v-if="item.exceptionOfId !== undefined">
-            mdi-alpha-a-box-outline
-          </v-icon>
+          <v-tooltip location="bottom" text="Ausnahme">
+            <template v-slot:activator="{ props }">
+              <v-icon v-bind="props" v-if="item.exceptionOfId !== undefined">
+                mdi-alpha-a-box-outline
+              </v-icon>
+            </template>
+          </v-tooltip>
         </template>
         <template v-slot:item.actions="{ item }">
           <v-tooltip location="bottom" text="Kopieren">
@@ -452,11 +456,22 @@ export default defineComponent({
                   v-bind="props"
                   @click="editTemplate(item)"
                   class="tooltip-btn"
+                  v-if="userStore.isLoggedIn"
               >
                 mdi-pencil
               </v-icon>
+              <v-icon
+                  small
+                  v-bind="props"
+                  @click="editTemplate(item)"
+                  class="tooltip-btn"
+                  v-else
+              >
+                mdi-eye
+              </v-icon>
             </template>
           </v-tooltip>
+
         </template>
       </v-data-table>
       <v-dialog

@@ -323,6 +323,7 @@ export default defineComponent({
         <template v-slot:item.actions="{ item }">
           <v-tooltip
               location="bottom"
+              v-if="userStore.isLoggedIn"
           >
             <template v-slot:activator="{ props }">
               <div v-bind="props" class="d-inline-block">
@@ -348,7 +349,7 @@ export default defineComponent({
                 </v-btn>
               </div>
             </template>
-            <span>Ansicht Query</span>
+            <span>Suchstring anzeigen und kopieren</span>
           </v-tooltip>
           <v-tooltip
               location="bottom"
@@ -359,11 +360,20 @@ export default defineComponent({
                     variant="text"
                     icon="mdi-pencil"
                     @click="openEditDialog(item)"
+                    v-if="userStore.isLoggedIn"
+                >
+                </v-btn>
+                <v-btn
+                    variant="text"
+                    icon="mdi-eye"
+                    @click="openEditDialog(item)"
+                    v-else
                 >
                 </v-btn>
               </div>
             </template>
-            <span>Bearbeiten</span>
+            <span v-if="userStore.isLoggedIn">Bearbeiten</span>
+            <span v-else>Anzeigen</span>
           </v-tooltip>
           <v-tooltip
               location="bottom"

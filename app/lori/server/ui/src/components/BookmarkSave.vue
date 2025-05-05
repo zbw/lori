@@ -3,6 +3,7 @@ import {computed, defineComponent, PropType, reactive, ref, watch} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
+import navigator_utils from "@/utils/navigator_utils";
 import searchquerybuilder from "@/utils/searchquerybuilder";
 import error from "@/utils/error";
 import { required } from "@vuelidate/validators";
@@ -16,6 +17,11 @@ export default defineComponent({
     "closeEditDialog",
     "editBookmarkSuccessful",
   ],
+  computed: {
+    navigator_utils() {
+      return navigator_utils;
+    },
+  },
   props: {
     isNew: {
       type: Boolean,
@@ -36,6 +42,7 @@ export default defineComponent({
      */
     const updateInProgress = ref(false);
     const description = ref("");
+    const filterQuery = ref("");
     const tmpBookmark = ref({} as BookmarkRest);
     /**
      * Vuelidate:
@@ -74,6 +81,7 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
       formState.name = "";
       description.value = "";
+      filterQuery.value = "";
       emit("closeEditDialog");
     };
 
@@ -177,7 +185,14 @@ export default defineComponent({
 
 
     const cardTitle = computed(() => {
-      const mode = props.isNew ? "speichern" : "bearbeiten";
+      let mode: string;
+      if (!userStore.isLoggedIn) {
+        mode = "anzeigen";
+      } else if (props.isNew) {
+        mode = "speichern";
+      } else {
+        mode = "bearbeiten";
+      }
       return "Suche " + mode;
     });
 
@@ -185,6 +200,7 @@ export default defineComponent({
       if(!props.isNew){
         description.value = props.bookmark?.description ?? '';
         formState.name = props.bookmark?.bookmarkName ?? '';
+        filterQuery.value = props.bookmark?.filtersAsQuery ?? '';
       }
     };
 
@@ -224,6 +240,7 @@ export default defineComponent({
       description,
       dialogStore,
       errorName,
+      filterQuery,
       formState,
       loginStatusProps,
       saveAlertError,
@@ -288,7 +305,7 @@ export default defineComponent({
     <v-container>
       <v-card-title class="">{{ cardTitle }}</v-card-title>
       <v-row>
-        <v-col cols="4">Name</v-col>
+        <v-col cols="4"> Name</v-col>
         <v-col cols="8">
           <v-text-field
             v-model="formState.name"
@@ -309,6 +326,22 @@ export default defineComponent({
             variant="outlined"
             v-bind="{...$attrs, ...loginStatusProps}"
           ></v-textarea>
+        </v-col>
+      </v-row>
+      <v-row v-if="!userStore.isLoggedIn">
+        <v-col cols="4"> Suchstring</v-col>
+        <v-col cols="6">
+          <v-text-field
+              v-model="filterQuery"
+              readonly
+          ></v-text-field>
+        </v-col>
+        <v-col cols="2">
+          <v-btn
+              @click="navigator_utils.copyToClipboard(bookmark?.filtersAsQuery??'')"
+              icon="mdi-content-copy"
+          >
+          </v-btn>
         </v-col>
       </v-row>
       <v-card-actions>
