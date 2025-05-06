@@ -863,7 +863,7 @@ export default defineComponent({
       } else if (userStore.isLoggedIn) {
         return "bearbeiten";
       } else {
-        return "ansehen";
+        return "anzeigen";
       }
     });
 

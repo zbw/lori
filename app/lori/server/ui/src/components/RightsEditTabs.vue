@@ -2,6 +2,7 @@
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
 import {computed, ComputedRef, defineComponent, onMounted, PropType, Ref, ref, watch} from "vue";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   props: {
@@ -101,6 +102,18 @@ export default defineComponent({
       return props.rights;
     });
 
+    /**
+     * Dialog title.
+     */
+    const userStore = useUserStore();
+    const dialogTitle = computed(() => {
+      if (userStore.isLoggedIn){
+        return "Bearbeite Rechte für " + props.handle ;
+      } else {
+        return "Zeige Rechte an für " + props.handle ;
+      }
+    });
+
     const tab = ref(0);
     watch(() => props.selectedRight, (currentValue: string, oldValue: string) => {
       const preselectedIdx = props.rights.findIndex(
@@ -126,6 +139,7 @@ export default defineComponent({
 
     return {
       currentRights,
+      dialogTitle,
       lastDeletedRight,
       lastDeletionSuccessful,
       lastUpdatedRight,
@@ -152,7 +166,7 @@ export default defineComponent({
 <template>
   <v-card>
     <v-toolbar :key="renderKey" color="cyan" dark flat>
-      <v-toolbar-title> Editiere Rechte für {{ handle }} </v-toolbar-title>
+      <v-toolbar-title> {{ dialogTitle }} </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
           icon="mdi-close"

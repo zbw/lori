@@ -100,7 +100,7 @@ export default defineComponent({
       } else if (userStore.isLoggedIn){
         return "IP-Gruppe bearbeiten";
       } else {
-        return "IP-Gruppe ansehen";
+        return "IP-Gruppe anzeigen";
       }
     });
 
