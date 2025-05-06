@@ -379,7 +379,6 @@ class RightDBTest : DatabaseTest() {
             ItemRight(
                 rightId = "testupdated",
                 accessState = AccessState.RESTRICTED,
-                authorRightException = false,
                 basisAccessState = BasisAccessState.ZBW_POLICY,
                 basisStorage = BasisStorage.LICENCE_CONTRACT,
                 createdBy = TEST_RIGHT.createdBy,

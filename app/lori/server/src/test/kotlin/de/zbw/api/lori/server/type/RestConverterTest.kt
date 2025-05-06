@@ -90,7 +90,6 @@ class RestConverterTest {
                         RightRest(
                             rightId = TEST_RIGHT.rightId,
                             accessState = TEST_RIGHT.accessState?.toRest(),
-                            authorRightException = TEST_RIGHT.authorRightException,
                             basisAccessState = TEST_RIGHT.basisAccessState?.toRest(),
                             basisStorage = TEST_RIGHT.basisStorage?.toRest(),
                             createdBy = TEST_RIGHT.createdBy,
@@ -650,7 +649,6 @@ class RestConverterTest {
             ItemRight(
                 rightId = "123",
                 accessState = AccessState.CLOSED,
-                authorRightException = true,
                 basisAccessState = BasisAccessState.LICENCE_CONTRACT,
                 basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
                 createdBy = "user1",

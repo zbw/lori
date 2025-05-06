@@ -716,7 +716,6 @@ class RightFilterTest : DatabaseTest() {
             ItemRight(
                 rightId = "123",
                 accessState = AccessState.CLOSED,
-                authorRightException = true,
                 basisAccessState = BasisAccessState.LICENCE_CONTRACT,
                 basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
                 createdBy = "user1",

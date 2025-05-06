@@ -829,7 +829,6 @@ class LoriServerBackendTest : DatabaseTest() {
             ItemRight(
                 rightId = "12",
                 accessState = AccessState.OPEN,
-                authorRightException = true,
                 basisAccessState = BasisAccessState.LICENCE_CONTRACT,
                 basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
                 createdBy = "user1",

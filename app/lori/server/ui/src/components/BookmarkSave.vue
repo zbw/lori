@@ -303,7 +303,7 @@ export default defineComponent({
       </v-card>
     </v-dialog>
     <v-container>
-      <v-card-title class="">{{ cardTitle }}</v-card-title>
+      <v-card-title class="ml-n4">{{ cardTitle }}</v-card-title>
       <v-row>
         <v-col cols="4"> Name</v-col>
         <v-col cols="8">

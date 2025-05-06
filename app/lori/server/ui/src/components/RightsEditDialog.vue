@@ -863,7 +863,7 @@ export default defineComponent({
       } else if (userStore.isLoggedIn) {
         return "bearbeiten";
       } else {
-        return "ansehen";
+        return "anzeigen";
       }
     });
 
@@ -1284,14 +1284,6 @@ export default defineComponent({
       if(!currentValue && testId.value != undefined){
         dialogSimulationResults.value = false;
         rightErrorApi.deleteRightErrorsByTestId(testId.value)
-      }
-    });
-
-    watch(
-        () => tmpRight.value.authorRightException,
-        (currentValue) => {
-      if(currentValue == false && tmpRight.value.hasLegalRisk == false){
-        tmpRight.value.hasLegalRisk = true;
       }
     });
 
@@ -2048,43 +2040,19 @@ export default defineComponent({
               </v-col>
             </v-row>
             <v-row>
-              <v-col cols="4">
-                Anwendbarkeit Urheberrechtsschranke
-              </v-col>
-              <v-col cols="8">
-                <v-switch
-                  v-model="tmpRight.authorRightException"
-                  :readonly="!isEditable"
-                  color="indigo"
-                  hint="Ist für die ZBW die Nutzung der Urheberrechtschranken möglich?"
-                  :label="labelModelToString(tmpRight.authorRightException)"
-                  persistent-hint
-                ></v-switch>
-              </v-col>
-            </v-row>
-            <v-row class="ml-6">
               <v-col
-                  v-if="tmpRight.authorRightException"
                   cols="4"
               >
                 Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
-              </v-col>
-              <v-col
-                  v-else
-                  cols="4"
-              >
-                <span class="text-grey-darken-1">
-                   Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
-                 </span>
               </v-col>
               <v-col cols="8">
                 <v-switch
                     v-model="tmpRight.hasLegalRisk"
                     :false-value="true"
                     :true-value="false"
-                    :readonly="!isEditable || !tmpRight.authorRightException"
+                    :readonly="!isEditable"
                     color="indigo"
-                    :label="labelModelToString(!tmpRight.hasLegalRisk)"
+                    :label="labelModelToString(tmpRight.hasLegalRisk == undefined ? undefined : !tmpRight.hasLegalRisk)"
                     persistent-hint
                 ></v-switch>
               </v-col>

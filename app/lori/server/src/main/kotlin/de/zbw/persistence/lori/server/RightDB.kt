@@ -107,9 +107,6 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.licenceContract) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setIfNotNull(localCounter++, right.authorRightException) { value, idx, prepStmt ->
-                prepStmt.setBoolean(idx, value)
-            }
             this.setIfNotNull(localCounter++, right.zbwUserAgreement) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
             }
@@ -180,9 +177,6 @@ class RightDB(
             }
             this.setIfNotNull(localCounter++, right.licenceContract) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
-            }
-            this.setIfNotNull(localCounter++, right.authorRightException) { value, idx, prepStmt ->
-                prepStmt.setBoolean(idx, value)
             }
             this.setIfNotNull(localCounter++, right.zbwUserAgreement) { value, idx, prepStmt ->
                 prepStmt.setBoolean(idx, value)
@@ -619,7 +613,7 @@ class RightDB(
         const val STATEMENT_GET_RIGHTS =
             "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
                 "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
                 "basis_access_state, notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE, template_name, template_description, $COLUMN_LAST_APPLIED_ON, $COLUMN_EXCEPTION_OF_ID," +
@@ -640,7 +634,7 @@ class RightDB(
                 "(created_on,last_updated_on," +
                 "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
@@ -652,14 +646,14 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?,?)"
+                "?,?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
                 "($COLUMN_RIGHT_ID,created_on,last_updated_on," +
                 "created_by,last_updated_by,$COLUMN_RIGHT_ACCESS_STATE," +
                 "start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
@@ -671,7 +665,7 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?,?)" +
+                "?,?)" +
                 " ON CONFLICT ($COLUMN_RIGHT_ID)" +
                 " DO UPDATE SET" +
                 " last_updated_on = EXCLUDED.last_updated_on," +
@@ -691,7 +685,6 @@ class RightDB(
                 "$COLUMN_IS_TEMPLATE = EXCLUDED.$COLUMN_IS_TEMPLATE," +
                 "template_name = EXCLUDED.template_name," +
                 "template_description = EXCLUDED.template_description," +
-                "author_right_exception = EXCLUDED.author_right_exception," +
                 "$COLUMN_EXCEPTION_OF_ID = EXCLUDED.$COLUMN_EXCEPTION_OF_ID," +
                 "$COLUMN_HAS_EXCEPTION_ID = EXCLUDED.$COLUMN_HAS_EXCEPTION_ID," +
                 "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK;"
@@ -704,7 +697,7 @@ class RightDB(
         const val STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
@@ -715,7 +708,7 @@ class RightDB(
         const val STATEMENT_GET_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT, author_right_exception, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
@@ -726,7 +719,7 @@ class RightDB(
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,author_right_exception,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
@@ -780,7 +773,6 @@ class RightDB(
                 endDate = rs.getDate(localCounter++)?.toLocalDate(),
                 notesGeneral = rs.getString(localCounter++),
                 licenceContract = rs.getString(localCounter++),
-                authorRightException = rs.getBoolean(localCounter++),
                 zbwUserAgreement = rs.getBoolean(localCounter++),
                 restrictedOpenContentLicence = rs.getBoolean(localCounter++),
                 notesFormalRules = rs.getString(localCounter++),
