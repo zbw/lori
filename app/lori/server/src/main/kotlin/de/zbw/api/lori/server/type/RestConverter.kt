@@ -214,7 +214,6 @@ fun RightRest.toBusiness(): ItemRight =
     ItemRight(
         rightId = rightId,
         accessState = accessState?.toBusiness(),
-        authorRightException = authorRightException,
         basisAccessState = basisAccessState?.toBusiness(),
         basisStorage = basisStorage?.toBusiness(),
         createdBy = createdBy,
@@ -245,7 +244,6 @@ fun ItemRight.toRest(): RightRest =
     RightRest(
         rightId = rightId,
         accessState = accessState?.toRest(),
-        authorRightException = authorRightException,
         basisAccessState = basisAccessState?.toRest(),
         basisStorage = basisStorage?.toRest(),
         createdBy = createdBy,

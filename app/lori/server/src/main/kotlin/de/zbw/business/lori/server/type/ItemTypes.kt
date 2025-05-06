@@ -89,7 +89,6 @@ enum class BasisAccessState {
 data class ItemRight(
     val rightId: String?,
     val accessState: AccessState?,
-    val authorRightException: Boolean?,
     val basisAccessState: BasisAccessState?,
     val basisStorage: BasisStorage?,
     val createdBy: String?,
