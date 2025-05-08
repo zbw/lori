@@ -1,5 +1,6 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, Ref, ref} from "vue";
+import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
+import date_utils from "@/utils/date_utils";
 import error from "@/utils/error";
 import info from "@/utils/info";
 import templateApi from "@/api/templateApi";
@@ -36,9 +37,8 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Ausnahme",
-        align: "start",
-        value: "isException",
+        title: "Status",
+        value: "status",
         sortable: false,
       },
       {
@@ -47,8 +47,9 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Status",
-        value: "status",
+        title: "Ausnahme",
+        align: "start",
+        value: "isException",
         sortable: false,
       },
       {
@@ -64,7 +65,19 @@ export default defineComponent({
         minWidth: "100px",
         maxWidth: "100px",
       },
+      {
+        title: "Gültigkeit Startdatum",
+        value: "startDate",
+        sortable: false,
+      },
+      {
+        title: "Gültigkeit Enddatum",
+        value: "endDate",
+        sortable: false,
+      },
     ];
+    const selectedHeaders = ref(headers.slice(0, 6));
+    const headersValueVSelect = ref(selectedHeaders.value);
     const templateItems: Ref<Array<RightRest>> = ref([]);
     const searchTerm = ref("");
 
@@ -252,6 +265,30 @@ export default defineComponent({
     });
 
     /**
+     * Specific column logic
+     */
+    const datePrettyPrint: (date: (Date | undefined)) => string = (date: Date | undefined) => {
+      if(date == undefined){
+        return ""
+      } else {
+        return date_utils.dateToIso8601(date);
+      }
+    }
+
+    const currentDate = ref<Date>(new Date());
+    const isTemplateValid: (right: RightRest) => boolean = (right: RightRest) => {
+      let endDate: Date;
+      if(right.endDate != undefined){
+        endDate = new Date(right.endDate);
+        endDate.setDate(endDate.getDate() + 1);
+      }
+      if(currentDate.value > right.startDate && right.endDate == undefined ){
+        return true;
+      }
+      return currentDate.value > right.startDate && currentDate.value < endDate;
+    };
+
+    /**
      * EMITS
      */
     const emitGetItemsByRightId = (rightId?: string, templateName?: string) => {
@@ -264,22 +301,34 @@ export default defineComponent({
     };
 
     /**
-     * Closing.
+     * Closing:
      */
     const close = () => {
       emit("templateOverviewClosed");
     };
 
+    /**
+     * Watches:
+     */
+    watch(headersValueVSelect, (currentValue) => {
+      selectedHeaders.value = currentValue;
+    });
+
+    /**
+     * Mounting:
+     */
     onMounted(() => getTemplateList());
 
     return {
       currentTemplate,
       headers,
+      headersValueVSelect,
       lastModifiedTemplateName,
       isNew,
       reinitCounter,
       renderKey,
       searchTerm,
+      selectedHeaders,
       successMsgIsActive,
       successMsg,
       templateApplyError,
@@ -302,8 +351,10 @@ export default defineComponent({
       closeTemplateEditDialog,
       copyTemplate,
       createNewTemplate,
+      datePrettyPrint,
       editTemplate,
       emitGetItemsByRightId,
+      isTemplateValid,
       getTemplateList,
       updateTemplateOverview,
     };
@@ -317,6 +368,9 @@ export default defineComponent({
 }
 .tooltip-btn {
   margin-right: 10px; /* Adds space between the two buttons */
+}
+.invisible {
+  visibility: hidden;
 }
 </style>
 <template>
@@ -386,6 +440,24 @@ export default defineComponent({
           >Neues Template anlegen
         </v-btn>
       </v-card-actions>
+
+      <v-select
+          v-model="headersValueVSelect"
+          :items="headers"
+          label="Spaltenauswahl"
+          multiple
+          return-object
+      >
+        <template v-slot:selection="{ item, index }">
+          <v-chip v-if="index === 0">
+            <span>{{ item.title }}</span>
+          </v-chip>
+          <span v-if="index === 1" class="grey--text caption"
+          >(+{{ headersValueVSelect.length - 1 }} weitere)</span
+          >
+        </template>
+      </v-select>
+
       <v-text-field
         v-model="searchTerm"
         append-icon="mdi-magnify"
@@ -395,7 +467,7 @@ export default defineComponent({
       ></v-text-field>
       <v-data-table
         :key="renderKey"
-        :headers="headers"
+        :headers="selectedHeaders"
         :items="templateItems"
         :search="searchTerm"
         item-value="templateName"
@@ -409,6 +481,20 @@ export default defineComponent({
           </v-btn>
         </template>
         <template v-slot:item.status="{ item }">
+          <v-tooltip
+              v-if="isTemplateValid(item)"
+              location="bottom"
+              text="Aktuell gültiges Template"
+          >
+            <template v-slot:activator="{ props }">
+              <v-icon v-bind="props">
+                mdi-star
+              </v-icon>
+            </template>
+          </v-tooltip>
+          <v-icon v-else class="invisible">
+            mdi-star
+          </v-icon>
           <v-tooltip location="bottom" text="Entwurf">
             <template v-slot:activator="{ props }">
               <v-icon v-bind="props" v-if="item.lastAppliedOn == undefined">
@@ -471,7 +557,12 @@ export default defineComponent({
               </v-icon>
             </template>
           </v-tooltip>
-
+        </template>
+        <template v-slot:item.startDate="{ item }">
+          {{ datePrettyPrint(item.startDate)}}
+        </template>
+        <template v-slot:item.endDate="{ item }">
+          {{ datePrettyPrint(item.endDate)}}
         </template>
       </v-data-table>
       <v-dialog

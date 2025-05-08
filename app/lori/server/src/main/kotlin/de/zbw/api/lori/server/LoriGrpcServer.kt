@@ -187,7 +187,7 @@ class LoriGrpcServer(
         if (daCommunity == null) {
             return 0
         }
-        val import = daConnector.startFullImport(token, daCommunity)
+        val import = daConnector.importAllCollectionsOfCommunity(token, daCommunity)
         semaphore.release()
         LOG.info("Finished importing community $communityId")
         return import.sum()

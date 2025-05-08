@@ -381,7 +381,7 @@ fun DAItem.toBusiness(
             LOG.warn("Unknown PublicationType found: Handle ${this.handle}")
             throw iae
         }
-    val publicationYear: String? =
+    val publicationYear: Int? =
         RestConverter
             .extractMetadata("dc.date.issued", metadata)
             ?.let {
@@ -389,7 +389,16 @@ fun DAItem.toBusiness(
                     LOG.warn("Item has multiple publication years: Handle ${this.handle}")
                 }
                 it[0]
+            }?.let {
+                val publicationDate = RestConverter.parseToDate(it)
+                if (publicationDate == null) {
+                    LOG.warn("Item has invalid dc.date.issued: Handle: ${this.handle}, Value: $it")
+                    null
+                } else {
+                    publicationDate.year
+                }
             }
+
     val title =
         RestConverter.extractMetadata("dc.title", metadata)?.let {
             if (it.size > 1) {
@@ -463,7 +472,7 @@ fun DAItem.toBusiness(
                     it[0]
                 },
             publicationType = publicationType,
-            publicationYear = publicationYear?.let { RestConverter.parseToDate(it) }?.year,
+            publicationYear = publicationYear,
             subCommunityHandle =
                 subDACommunity?.handle?.let {
                     RestConverter.parseHandle(it)
@@ -802,7 +811,7 @@ object RestConverter {
             .takeIf { it.isNotEmpty() }
             ?.map { it.value }
 
-    fun parseToDate(s: String): LocalDate =
+    fun parseToDate(s: String): LocalDate? =
         if (s.matches("\\d{4}-\\d{2}-\\d{2}".toRegex())) {
             LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
         } else if (s.matches("\\d{4}-\\d{2}".toRegex())) {
@@ -816,7 +825,7 @@ object RestConverter {
             LocalDate.parse("$s-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
         } else {
             LOG.warn("Date format can't be recognized: $s")
-            LocalDate.parse("1970-01-01", DateTimeFormatter.ISO_LOCAL_DATE)
+            null
         }
 
     /**

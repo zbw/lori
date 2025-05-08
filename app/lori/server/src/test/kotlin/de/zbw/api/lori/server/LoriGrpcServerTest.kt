@@ -201,7 +201,7 @@ class LoriGrpcServerTest {
                     coEvery { login() } returns token
                     coEvery { getCommunityById(token, any()) } returns community
                     coEvery { getAllCommunityIds(token) } returns listOf(community.id)
-                    coEvery { startFullImport(token, any()) } returns listOf(importsPerCommunity)
+                    coEvery { importAllCollectionsOfCommunity(token, any()) } returns listOf(importsPerCommunity)
                 }
 
             val expected =

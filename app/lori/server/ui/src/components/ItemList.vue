@@ -1014,6 +1014,7 @@ table.special, th.special, td.special {
                         density="compact"
                         icon="mdi-help"
                         v-bind="{...activatorProps, ...props}"
+                        class="mb-4"
                       >
                       </v-btn>
                     </template>
@@ -1249,7 +1250,7 @@ table.special, th.special, td.special {
                 <span>{{ item.title }}</span>
               </v-chip>
               <span v-if="index === 1" class="grey--text caption"
-                >(+{{ headersValueVSelect.length - 1 }} others)</span
+                >(+{{ headersValueVSelect.length - 1 }} weitere)</span
               >
             </template>
           </v-select>
