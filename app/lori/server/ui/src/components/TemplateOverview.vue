@@ -15,11 +15,6 @@ import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   components: { RightsEditDialog },
-  computed: {
-    date_utils() {
-      return date_utils;
-    },
-  },
   props: {},
   emits: [
       "getItemsByRightId",
@@ -42,9 +37,8 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Ausnahme",
-        align: "start",
-        value: "isException",
+        title: "Status",
+        value: "status",
         sortable: false,
       },
       {
@@ -53,8 +47,9 @@ export default defineComponent({
         sortable: true,
       },
       {
-        title: "Status",
-        value: "status",
+        title: "Ausnahme",
+        align: "start",
+        value: "isException",
         sortable: false,
       },
       {
@@ -270,7 +265,7 @@ export default defineComponent({
     });
 
     /**
-     * Select columns:
+     * Specific column logic
      */
     const datePrettyPrint: (date: (Date | undefined)) => string = (date: Date | undefined) => {
       if(date == undefined){
@@ -279,6 +274,19 @@ export default defineComponent({
         return date_utils.dateToIso8601(date);
       }
     }
+
+    const currentDate = ref<Date>(new Date());
+    const isTemplateValid: (right: RightRest) => boolean = (right: RightRest) => {
+      let endDate: Date;
+      if(right.endDate != undefined){
+        endDate = new Date(right.endDate);
+        endDate.setDate(endDate.getDate() + 1);
+      }
+      if(currentDate.value > right.startDate && right.endDate == undefined ){
+        return true;
+      }
+      return currentDate.value > right.startDate && currentDate.value < endDate;
+    };
 
     /**
      * EMITS
@@ -346,6 +354,7 @@ export default defineComponent({
       datePrettyPrint,
       editTemplate,
       emitGetItemsByRightId,
+      isTemplateValid,
       getTemplateList,
       updateTemplateOverview,
     };
@@ -359,6 +368,9 @@ export default defineComponent({
 }
 .tooltip-btn {
   margin-right: 10px; /* Adds space between the two buttons */
+}
+.invisible {
+  visibility: hidden;
 }
 </style>
 <template>
@@ -469,6 +481,20 @@ export default defineComponent({
           </v-btn>
         </template>
         <template v-slot:item.status="{ item }">
+          <v-tooltip
+              v-if="isTemplateValid(item)"
+              location="bottom"
+              text="Aktuell gültiges Template"
+          >
+            <template v-slot:activator="{ props }">
+              <v-icon v-bind="props">
+                mdi-star
+              </v-icon>
+            </template>
+          </v-tooltip>
+          <v-icon v-else class="invisible">
+            mdi-star
+          </v-icon>
           <v-tooltip location="bottom" text="Entwurf">
             <template v-slot:activator="{ props }">
               <v-icon v-bind="props" v-if="item.lastAppliedOn == undefined">
