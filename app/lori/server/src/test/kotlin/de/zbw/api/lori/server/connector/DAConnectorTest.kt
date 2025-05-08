@@ -132,7 +132,7 @@ class DAConnectorTest {
                 }
             // when
             val receivedItems =
-                daConnector.startFullImport(
+                daConnector.importAllCollectionsOfCommunity(
                     "token",
                     TEST_COMMUNITY.copy(
                         collections =

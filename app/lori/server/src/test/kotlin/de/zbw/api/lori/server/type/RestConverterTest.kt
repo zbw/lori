@@ -36,11 +36,13 @@ import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert
+import org.testng.Assert.assertNull
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import kotlin.test.testng.TestNGAsserter.assertNull
 
 class RestConverterTest {
     @Test
@@ -201,9 +203,8 @@ class RestConverterTest {
             RestConverter.parseToDate("2022/09"),
             `is`(LocalDate.of(2022, 9, 1)),
         )
-        assertThat(
+        assertNull(
             RestConverter.parseToDate("foo"),
-            `is`(LocalDate.of(1970, 1, 1)),
         )
     }
 

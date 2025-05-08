@@ -150,16 +150,14 @@ class DAConnector(
         }
     }
 
-    suspend fun startFullImport(
+    suspend fun importAllCollectionsOfCommunity(
         loginToken: String,
         community: DACommunity,
     ): List<Int> =
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
             collectionIds.map { cId ->
-                importCollection(loginToken, cId, community).also {
-                    LOG.info("CollectionId $cId: Successfully imported $it entries")
-                }
+                importCollection(loginToken, cId, community)
             }
         }
 
@@ -170,7 +168,7 @@ class DAConnector(
         collection: DACollection,
         community: DACommunity,
     ): Int {
-        LOG.debug("CollectionId $collectionId: Offset ${offset * 100}")
+        LOG.debug("Collection Handle ${collection.handle}: Offset ${offset * 100}")
 
         val response: ApiResponse<List<DAItem>, String> =
             client.safeRequest(2, 2000L) {
@@ -276,8 +274,8 @@ class DAConnector(
             }
 
             val numberItems: Int = collection.numberItems ?: 0
-            LOG.info("CollectionId $collectionId: Start importing $numberItems items")
-            var deferredResults = mutableListOf<Deferred<Int>>()
+            LOG.info("Collection Handle ${collection.handle}: Start importing $numberItems items")
+            val deferredResults = mutableListOf<Deferred<Int>>()
             for (offset in 0..ceil(numberItems.toDouble() / 100).toInt() - 1) {
                 deferredResults +=
                     async {
@@ -293,7 +291,9 @@ class DAConnector(
                     }
             }
             // Sum results in the end to prevent race conditions
-            return@coroutineScope deferredResults.awaitAll().sum()
+            return@coroutineScope deferredResults.awaitAll().sum().also {
+                LOG.info("Collection Handle ${collection.handle}: Successfully imported $it entries")
+            }
         }
 
     suspend inline fun <reified T, reified E> HttpClient.safeRequest(
