@@ -41,7 +41,7 @@ import ExceptionConnect from "@/components/ExceptionConnect.vue";
 export default defineComponent({
   computed: {
     info() {
-      return info
+      return info;
     },
     navigator_utils() {
       return navigator_utils;
