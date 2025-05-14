@@ -171,7 +171,7 @@ class LoriServerBackend(
 
     suspend fun updateMetadataAsDeleted(instant: Instant): Int {
         val deletedHandles = dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(instant)
-        return dbConnector.metadataDB.updateMetadataDeleteStatus(deletedHandles, true)
+        return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles, status = true)
     }
 
     suspend fun getMetadataList(
