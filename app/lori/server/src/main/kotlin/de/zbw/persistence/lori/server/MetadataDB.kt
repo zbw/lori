@@ -235,6 +235,7 @@ class MetadataDB(
         const val TS_HANDLE = "ts_hdl"
         const val TS_SUBCOMMUNITY_HANDLE = "ts_subcom_hdl"
         const val TS_SUBCOMMUNITY_NAME = "ts_subcom_name"
+        const val TS_LICENCE_URL = "ts_licence_url"
         const val TS_TITLE = "ts_title"
 
         const val COLUMN_METADATA_AUTHOR = "author"

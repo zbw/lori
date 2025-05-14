@@ -73,6 +73,10 @@ abstract class SearchFilter(
                         )
                     "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
                     "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
+                    "luk" ->
+                        LicenceUrlFilterLUK(
+                            searchValue,
+                        )
                     "subcom" ->
                         SubcommunityNameFilter(
                             searchValue,
@@ -152,7 +156,7 @@ abstract class TSVectorMetadataSearchFilter(
     override fun toSQLString(): String = value
 
     companion object {
-        private const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
+        internal const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
         fun prepareValue(v: String): String =
@@ -266,6 +270,17 @@ class SubcommunityNameFilter(
         value = subcommunityName,
     ) {
     override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_NAME
+}
+
+class LicenceUrlFilterLUK(
+    licenceURL: String,
+) : TSVectorMetadataSearchFilter(
+        dbColumnName = MetadataDB.TS_LICENCE_URL,
+        value = licenceURL,
+    ) {
+    override fun toWhereClause(): String = "($dbColumnName @@ $SQL_FUNC_TO_TS_QUERY('simple', ?) AND $dbColumnName is not null)"
+
+    override fun getFilterType(): FilterType = FilterType.LICENCE_URL_LUK
 }
 
 class LicenceUrlFilter(
@@ -803,6 +818,7 @@ enum class FilterType(
     FORMAL_RULE("reg"),
     HANDLE("hdl"),
     LICENCE_URL("lur"),
+    LICENCE_URL_LUK("luk"),
     MANUAL_RIGHTS("man"),
     NO_RIGHTS("nor"),
     PUBLICATION_YEAR("jah"),

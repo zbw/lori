@@ -1098,6 +1098,11 @@ table.special, th.special, td.special {
                         <td class=special></td>
                       </tr>
                       <tr class=special>
+                        <td class=special>Lizenz URL ohne Protokolle, Punkte und Slashes</td>
+                        <td class=special>luk</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
                         <td class=special>Series</td>
                         <td class=special>ser</td>
                         <td class=special></td>
