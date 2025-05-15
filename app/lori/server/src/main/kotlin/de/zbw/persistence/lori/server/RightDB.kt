@@ -602,7 +602,7 @@ class RightDB(
         const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
         private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
-        private const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
+        const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
         private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =

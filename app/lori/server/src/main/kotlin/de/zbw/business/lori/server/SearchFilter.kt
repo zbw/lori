@@ -751,6 +751,8 @@ class FormalRuleFilter(
                 FormalRule.CC_LICENCE_NO_RESTRICTION ->
                     "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
                         "(LOWER(${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER}) ILIKE 'by%' AND ${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER} is not null)"
+
+                FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
             }
         } + " AND $WHERE_REQUIRE_RIGHT_ID"
 

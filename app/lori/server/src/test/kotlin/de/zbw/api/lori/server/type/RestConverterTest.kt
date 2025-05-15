@@ -453,6 +453,7 @@ class RestConverterTest {
                 isPartOfSeries = mapOf("series1" to 1),
                 filtersAsQuery = "foobar",
                 licenceUrl = mapOf("by/3.0/au" to 5),
+                hasNoLegalRisk = true,
             )
         val expected =
             ItemInformation(

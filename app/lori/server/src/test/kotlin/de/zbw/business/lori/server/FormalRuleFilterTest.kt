@@ -44,17 +44,33 @@ class FormalRuleFilterTest : DatabaseTest() {
     private val ccLicenceMetadata =
         TEST_Metadata.copy(
             handle = "CC licence",
+            licenceUrlFilter = "by/3.0/igo/",
             licenceUrl = "https://creativecommons.org/licenses/by/3.0/igo/",
+        )
+
+    private val noLegalRiskMetadata =
+        TEST_Metadata.copy(
+            handle = "no legal risk",
+            licenceUrlFilter = "blub",
+            licenceUrl = "blub",
         )
 
     private val noRestrictedOCLRight =
         TEST_RIGHT.copy(
             restrictedOpenContentLicence = false,
+            templateName = null,
+        )
+
+    private val noLegalRiskRight =
+        TEST_RIGHT.copy(
+            hasLegalRisk = false,
+            templateName = null,
         )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
             ccLicenceMetadata to listOf(noRestrictedOCLRight),
+            noLegalRiskMetadata to listOf(noLegalRiskRight),
         )
 
     @BeforeClass
@@ -98,7 +114,7 @@ class FormalRuleFilterTest : DatabaseTest() {
             arrayOf(
                 "",
                 emptyList<RightSearchFilter>(),
-                setOf(ccLicenceMetadata),
+                setOf(ccLicenceMetadata, noLegalRiskMetadata),
                 true,
                 "Empty (default search)",
             ),
@@ -135,7 +151,51 @@ class FormalRuleFilterTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_TESTING_LEGAL_RISK)
+    fun createDataForLegalRisk() =
+        arrayOf(
+            arrayOf(
+                null,
+                listOf(FormalRuleFilter(listOf(FormalRule.COPYRIGHT_EXCEPTION_RISKFREE))),
+                setOf(noLegalRiskMetadata),
+                true,
+                "search which will return item",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_TESTING_LEGAL_RISK)
+    fun testLegalRisk(
+        searchTerm: String?,
+        rightFilters: List<RightSearchFilter>,
+        expectedMetadata: Set<ItemMetadata>,
+        expectedFacet: Boolean,
+        reason: String,
+    ) {
+        val searchResult: SearchQueryResult =
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm,
+                    10,
+                    0,
+                    emptyList(),
+                    rightFilters,
+                    null,
+                )
+            }
+        assertThat(
+            reason,
+            searchResult.results.map { it.metadata }.toSet(),
+            `is`(expectedMetadata),
+        )
+        assertThat(
+            reason,
+            searchResult.hasNoLegalRisk,
+            `is`(expectedFacet),
+        )
+    }
+
     companion object {
         const val DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION = "DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION"
+        const val DATA_FOR_TESTING_LEGAL_RISK = "DATA_FOR_TESTING_LEGAL_RISK"
     }
 }

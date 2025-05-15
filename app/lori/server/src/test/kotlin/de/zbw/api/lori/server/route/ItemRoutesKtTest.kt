@@ -641,6 +641,7 @@ class ItemRoutesKtTest {
                         hasCCLicenceNoRestriction = false,
                         hasLicenceContract = false,
                         hasZbwUserAgreement = false,
+                        hasNoLegalRisk = false,
                         templateNamesToOcc = emptyMap(),
                         licenceUrl = emptyMap(),
                         filtersAsQuery = "",
@@ -724,6 +725,7 @@ class ItemRoutesKtTest {
                         templateNamesToOcc = emptyMap(),
                         isPartOfSeries = emptyMap(),
                         licenceUrl = emptyMap(),
+                        hasNoLegalRisk = false,
                         filtersAsQuery = "",
                     )
                 )

@@ -266,15 +266,18 @@ export default {
       searchStore.formalRuleLicenceContract = false;
       searchStore.formalRuleCCNoRestriction = false;
       searchStore.formalRuleUserAgreement = false;
+      searchStore.formalRuleNoLegalRisk = false;
       return;
     }
     bookmark.filterFormalRule.forEach((v: string, index: number): void => {
       if (v == "LICENCE_CONTRACT") {
         searchStore.formalRuleLicenceContract = true;
-      } else if (v == "OPEN_CONTENT_LICENCE") {
+      } else if (v == "CC_LICENCE_NO_RESTRICTION") {
         searchStore.formalRuleCCNoRestriction = true;
-      } else {
+      } else if (v == "ZBW_USER_AGREEMENT"){
         searchStore.formalRuleUserAgreement = true;
+      } else {
+        searchStore.formalRuleNoLegalRisk = true;
       }
     });
   },
@@ -289,6 +292,9 @@ export default {
     }
     if (searchStore.formalRuleUserAgreement) {
       formalRule.push("ZBW_USER_AGREEMENT");
+    }
+    if (searchStore.formalRuleNoLegalRisk) {
+      formalRule.push("COPYRIGHT_EXCEPTION_RISKFREE");
     }
     if (formalRule.length == 0) {
       return undefined;

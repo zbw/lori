@@ -41,6 +41,8 @@ ItemInformation:
       type: boolean
     hasCCLicenceNoRestriction:
       type: boolean
+    hasNoLegalRisk:
+      type: boolean
     hasZbwUserAgreement:
       type: boolean
     filtersAsQuery:

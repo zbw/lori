@@ -78,6 +78,7 @@ export default defineComponent({
         searchStore.accessStateRestricted ||
         searchStore.formalRuleLicenceContract ||
         searchStore.formalRuleCCNoRestriction ||
+        searchStore.formalRuleNoLegalRisk ||
         searchStore.formalRuleUserAgreement ||
         searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
@@ -110,6 +111,7 @@ export default defineComponent({
 
       searchStore.formalRuleLicenceContract = false;
       searchStore.formalRuleCCNoRestriction = false;
+      searchStore.formalRuleNoLegalRisk = false;
       searchStore.formalRuleUserAgreement = false;
 
       searchStore.temporalValidOnFormatted = "";
@@ -925,6 +927,19 @@ export default defineComponent({
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleUserAgreement"
                 @update:modelValue="emitSearchStart"
+              ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
+              <v-checkbox
+                  v-if="searchStore.hasNoLegalRisk"
+                  label="Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko"
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.formalRuleNoLegalRisk"
+                  @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group no-action sub-group eager>

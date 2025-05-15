@@ -54,6 +54,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
 import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
+import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_HAS_LEGAL_RISK
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -237,6 +238,22 @@ class SearchDB(
                     }
                 }
 
+            val legalRiskFacet =
+                async {
+                    searchOccurrences(
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters = rightSearchFilter,
+                        occurrenceForColumn = COLUMN_HAS_LEGAL_RISK,
+                        noRightInformationFilter = noRightInformationFilter,
+                    ) { rs ->
+                        Pair(
+                            rs.getBoolean(1),
+                            rs.getInt(2),
+                        )
+                    }
+                }
+
             return@coroutineScope FacetTransientSet(
                 paketSigels = paketSigelFacet.await(),
                 publicationType = publicationTypeFacet.await(),
@@ -246,6 +263,14 @@ class SearchDB(
                 accessState = accessStateFacet.await(),
                 templateIdToOccurence = templateIdFacet.await(),
                 hasLicenceContract = licenceContractFacet.await().isNotEmpty(),
+                hasNoLegalRisk =
+                    listOf(
+                        legalRiskFacet
+                            .await()
+                            .getOrDefault(false, 0)
+                            .takeIf { it > 0 }
+                            ?.let { true } == true,
+                    ).any { it },
                 hasZbwUserAgreement =
                     zbwUserAgreementFacet
                         .await()
@@ -623,6 +648,7 @@ class SearchDB(
                     columnName == COLUMN_RIGHT_END_DATE ||
                     columnName == COLUMN_RIGHT_LICENCE_CONTRACT ||
                     columnName == COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE ||
+                    columnName == COLUMN_HAS_LEGAL_RISK ||
                     columnName == COLUMN_RIGHT_START_DATE
 
             return if (isRightColumn) {
