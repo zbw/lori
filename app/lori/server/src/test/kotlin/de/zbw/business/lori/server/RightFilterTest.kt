@@ -101,7 +101,7 @@ class RightFilterTest : DatabaseTest() {
             collectionName = "formalRuleUserAgreement formal",
         )
 
-    private val formalRuleOCL =
+    private val formalRuleNoRestrictedOCL =
         TEST_Metadata.copy(
             handle = "formal rule filter ocl",
             collectionName = "ocl formal",
@@ -193,17 +193,17 @@ class RightFilterTest : DatabaseTest() {
                         licenceContract = null,
                         isTemplate = false,
                         templateName = null,
-                        restrictedOpenContentLicence = true,
+                        restrictedOpenContentLicence = false,
                     ),
                 ),
-            formalRuleOCL to
+            formalRuleNoRestrictedOCL to
                 listOf(
                     TEST_RIGHT.copy(
                         licenceContract = null,
                         zbwUserAgreement = false,
                         isTemplate = false,
                         templateName = null,
-                        restrictedOpenContentLicence = true,
+                        restrictedOpenContentLicence = false,
                     ),
                 ),
         )
@@ -561,31 +561,31 @@ class RightFilterTest : DatabaseTest() {
                 "formal rule zbw agreement",
             ),
             arrayOf(
-                "col:formalRuleUserAgreement & reg:Open-Content-License",
+                "col:formalRuleUserAgreement & reg:cc_licence_no_restriction",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 1,
                 setOf(formalRuleUserAgreement),
-                "formal rule zbw agreement with restricted open content licence",
+                "formal rule zbw agreement with cc licence without restriction",
             ),
             arrayOf(
                 "col:ocl",
                 emptyList<MetadataSearchFilter>(),
                 listOf(
                     FormalRuleFilter(
-                        formalRules = listOf(FormalRule.OPEN_CONTENT_LICENCE),
+                        formalRules = listOf(FormalRule.CC_LICENCE_NO_RESTRICTION),
                     ),
                 ),
                 1,
-                setOf(formalRuleOCL),
+                setOf(formalRuleNoRestrictedOCL),
                 "formal rule ocl",
             ),
             arrayOf(
-                "col:ocl & reg:Open-Content-License",
+                "col:ocl & reg:cc_licence_no_restriction",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 1,
-                setOf(formalRuleOCL),
+                setOf(formalRuleNoRestrictedOCL),
                 "formal rule ocl with upper search bar",
             ),
             arrayOf(
@@ -595,22 +595,22 @@ class RightFilterTest : DatabaseTest() {
                     FormalRuleFilter(
                         formalRules =
                             listOf(
-                                FormalRule.OPEN_CONTENT_LICENCE,
+                                FormalRule.CC_LICENCE_NO_RESTRICTION,
                                 FormalRule.LICENCE_CONTRACT,
                                 FormalRule.ZBW_USER_AGREEMENT,
                             ),
                     ),
                 ),
                 3,
-                setOf(formalRuleOCL, formalRuleUserAgreement, formalRuleLicenceContract),
+                setOf(formalRuleNoRestrictedOCL, formalRuleUserAgreement, formalRuleLicenceContract),
                 "formal rule all",
             ),
             arrayOf(
-                "col:formal & (reg:Open-Content-License | reg:ZBW-Nutzungsvereinbarung | reg:Lizenzvertrag)",
+                "col:formal & (reg:cc_licence_no_restriction | reg:ZBW-Nutzungsvereinbarung | reg:Lizenzvertrag)",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),
                 3,
-                setOf(formalRuleOCL, formalRuleUserAgreement, formalRuleLicenceContract),
+                setOf(formalRuleNoRestrictedOCL, formalRuleUserAgreement, formalRuleLicenceContract),
                 "formal rule all with upper search bar",
             ),
         )

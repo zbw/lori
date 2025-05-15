@@ -693,7 +693,7 @@ fun SearchQueryResult.toRest(pageSize: Int): ItemInformation {
                     AccessStateWithCountRest(it.key.toRest(), it.value)
                 }.toList(),
         hasLicenceContract = this.hasLicenceContract,
-        hasOpenContentLicence = this.hasOpenContentLicence,
+        hasCCLicenceNoRestriction = this.hasCCLicenceNoRestriction,
         hasZbwUserAgreement = this.hasZbwUserAgreement,
         numberOfResults = this.numberOfResults,
         paketSigelWithCount =

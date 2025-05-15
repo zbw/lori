@@ -421,7 +421,7 @@ class LoriServerBackend(
                         return@async FacetTransientSet(
                             accessState = emptyMap(),
                             hasLicenceContract = false,
-                            hasOpenContentLicence = false,
+                            hasCCLicenceNoRestriction = false,
                             hasZbwUserAgreement = false,
                             isPartOfSeries = emptyMap(),
                             licenceUrls = emptyMap(),
@@ -466,7 +466,7 @@ class LoriServerBackend(
                 results = items,
                 accessState = facets.accessState,
                 hasLicenceContract = facets.hasLicenceContract,
-                hasOpenContentLicence = facets.hasOpenContentLicence,
+                hasCCLicenceNoRestriction = facets.hasCCLicenceNoRestriction,
                 hasZbwUserAgreement = facets.hasZbwUserAgreement,
                 paketSigels = sumUpIndividualMapEntries(facets.paketSigels),
                 publicationType = facets.publicationType,

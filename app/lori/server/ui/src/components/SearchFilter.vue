@@ -77,7 +77,7 @@ export default defineComponent({
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.formalRuleLicenceContract ||
-        searchStore.formalRuleOpenContentLicence ||
+        searchStore.formalRuleCCNoRestriction ||
         searchStore.formalRuleUserAgreement ||
         searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
@@ -109,7 +109,7 @@ export default defineComponent({
       searchStore.accessStateRestricted = false;
 
       searchStore.formalRuleLicenceContract = false;
-      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleCCNoRestriction = false;
       searchStore.formalRuleUserAgreement = false;
 
       searchStore.temporalValidOnFormatted = "";
@@ -906,11 +906,11 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.hasOpenContentLicence"
-                  label="Open-Content-Licence"
+                  v-if="searchStore.hasCCLicenceNoRestriction"
+                  label="CC Lizenz ohne Einschränkung"
                   hide-details
                   class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleOpenContentLicence"
+                  v-model="searchStore.formalRuleCCNoRestriction"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider

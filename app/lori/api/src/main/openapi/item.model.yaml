@@ -39,7 +39,7 @@ ItemInformation:
         $ref: 'item.model.yaml#/LicenceUrlCountRest'
     hasLicenceContract:
       type: boolean
-    hasOpenContentLicence:
+    hasCCLicenceNoRestriction:
       type: boolean
     hasZbwUserAgreement:
       type: boolean

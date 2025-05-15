@@ -212,10 +212,10 @@ class QueryParameterParserTest {
         )
 
         // given
-        val expectedFormalRules = listOf(FormalRule.LICENCE_CONTRACT, FormalRule.OPEN_CONTENT_LICENCE)
+        val expectedFormalRules = listOf(FormalRule.LICENCE_CONTRACT, FormalRule.CC_LICENCE_NO_RESTRICTION)
         // when + then
         assertThat(
-            QueryParameterParser.parseFormalRuleFilter("licence_contract,fooobar,open_content_licence")!!.formalRules,
+            QueryParameterParser.parseFormalRuleFilter("licence_contract,cc_licence_no_restriction,open_content_licence")!!.formalRules,
             `is`(expectedFormalRules),
         )
 

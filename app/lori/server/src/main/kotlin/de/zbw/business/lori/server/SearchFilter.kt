@@ -93,7 +93,7 @@ abstract class SearchFilter(
                             searchValue
                                 .uppercase()
                                 .replace("LIZENZVERTRAG", FormalRule.LICENCE_CONTRACT.toString())
-                                .replace("OPEN-CONTENT-LICENSE", FormalRule.OPEN_CONTENT_LICENCE.toString())
+                                .replace("CC LIZENZ OHNE EINSCHRÄNKUNG", FormalRule.CC_LICENCE_NO_RESTRICTION.toString())
                                 .replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
                         )
                     "nor" ->
@@ -748,8 +748,9 @@ class FormalRuleFilter(
             when (it) {
                 FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
                 FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
-                FormalRule.OPEN_CONTENT_LICENCE ->
-                    "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = true"
+                FormalRule.CC_LICENCE_NO_RESTRICTION ->
+                    "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
+                        "(LOWER(${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER}) ILIKE 'by%' AND ${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER} is not null)"
             }
         } + " AND $WHERE_REQUIRE_RIGHT_ID"
 

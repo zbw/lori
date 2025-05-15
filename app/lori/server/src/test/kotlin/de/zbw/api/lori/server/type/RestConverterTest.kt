@@ -42,7 +42,6 @@ import org.testng.annotations.Test
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import kotlin.test.testng.TestNGAsserter.assertNull
 
 class RestConverterTest {
     @Test
@@ -445,7 +444,7 @@ class RestConverterTest {
                         AccessState.OPEN to 2,
                     ),
                 hasLicenceContract = false,
-                hasOpenContentLicence = true,
+                hasCCLicenceNoRestriction = true,
                 hasZbwUserAgreement = false,
                 paketSigels = mapOf("sigel1" to 1),
                 publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
@@ -464,7 +463,7 @@ class RestConverterTest {
                         AccessStateWithCountRest(AccessState.OPEN.toRest(), 2),
                     ),
                 hasLicenceContract = given.hasLicenceContract,
-                hasOpenContentLicence = given.hasOpenContentLicence,
+                hasCCLicenceNoRestriction = given.hasCCLicenceNoRestriction,
                 hasZbwUserAgreement = given.hasZbwUserAgreement,
                 numberOfResults = given.numberOfResults,
                 paketSigelWithCount =

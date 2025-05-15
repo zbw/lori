@@ -660,8 +660,8 @@ export default defineComponent({
       if (response.hasLicenceContract != undefined) {
         searchStore.hasLicenceContract = response.hasLicenceContract;
       }
-      if (response.hasOpenContentLicence != undefined) {
-        searchStore.hasOpenContentLicence = response.hasOpenContentLicence;
+      if (response.hasCCLicenceNoRestriction != undefined) {
+        searchStore.hasCCLicenceNoRestriction = response.hasCCLicenceNoRestriction;
       }
       if (response.hasZbwUserAgreement != undefined) {
         searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;

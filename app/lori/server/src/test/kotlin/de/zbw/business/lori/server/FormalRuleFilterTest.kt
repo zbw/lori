@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server
 
+import de.zbw.business.lori.server.RightFilterTest.Companion.TEST_RIGHT
+import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -19,17 +21,17 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
+import org.testng.annotations.Test
 import java.time.Instant
 import java.time.LocalDate
-import kotlin.test.Test
 
 /**
- * Testing [LicenceUrlFilterLUK]:
+ * Testing [FormalRuleFilter]:
  *
- * Created on 14-05-2025.
+ * Created on 15-05-2025.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class LicenceURLTest : DatabaseTest() {
+class FormalRuleFilterTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
@@ -39,36 +41,20 @@ class LicenceURLTest : DatabaseTest() {
             mockk(),
         )
 
-    private val exampleHttps =
+    private val ccLicenceMetadata =
         TEST_Metadata.copy(
-            handle = "https",
-            licenceUrl = "https://creativecommons.org/licenses/by-nc-nd/3.0/",
+            handle = "CC licence",
+            licenceUrl = "https://creativecommons.org/licenses/by/3.0/igo/",
         )
 
-    private val exampleHttp =
-        TEST_Metadata.copy(
-            handle = "http",
-            licenceUrl = "http://creativecommons.org/licenses/by-nc-sa/4.0/legalcode",
-        )
-
-    private val exampleWWW =
-        TEST_Metadata.copy(
-            handle = "www",
-            licenceUrl = "https://www.creativecommons.org/licenses/by-nc/4.0/",
-        )
-
-    private val exampleNoProtocol =
-        TEST_Metadata.copy(
-            handle = "noProtocol",
-            licenceUrl = "dx.doi.org/10.17811/ebl.5.4.2016.145-151",
+    private val noRestrictedOCLRight =
+        TEST_RIGHT.copy(
+            restrictedOpenContentLicence = false,
         )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
-            exampleHttps to emptyList(),
-            exampleHttp to emptyList(),
-            exampleWWW to emptyList(),
-            exampleNoProtocol to emptyList(),
+            ccLicenceMetadata to listOf(noRestrictedOCLRight),
         )
 
     @BeforeClass
@@ -92,31 +78,39 @@ class LicenceURLTest : DatabaseTest() {
         unmockkAll()
     }
 
-    @DataProvider(name = DATA_FOR_TEST_LICENCE_URL)
-    fun createDataForLicenceURL() =
+    @DataProvider(name = DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION)
+    fun createDataCCNoRestriction() =
         arrayOf(
             arrayOf(
-                "luk:\"creativecommons\" & luk:\"by-nc-nd\"",
-                setOf(exampleHttps),
+                null,
+                listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
+                setOf(ccLicenceMetadata),
+                true,
+                "search which will return item",
             ),
             arrayOf(
-                "luk:\"creativecommons\" & luk:\"by-nc-nd\"",
-                setOf(exampleHttps),
+                "tit:fooobarrr",
+                listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
+                emptySet<ItemMetadata>(),
+                false,
+                "search which will not return an item",
             ),
             arrayOf(
-                "luk:\"creativecommons\" & luk:\"by-nc\"",
-                setOf(exampleWWW),
-            ),
-            arrayOf(
-                "luk:\"17811\" & luk:\"ebl\"",
-                setOf(exampleNoProtocol),
+                "",
+                emptyList<RightSearchFilter>(),
+                setOf(ccLicenceMetadata),
+                true,
+                "Empty (default search)",
             ),
         )
 
-    @Test(dataProvider = DATA_FOR_TEST_LICENCE_URL)
-    fun testLicenceUrl(
-        searchTerm: String,
-        expected: Set<ItemMetadata>,
+    @Test(dataProvider = DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION)
+    fun testCCNoRestriction(
+        searchTerm: String?,
+        rightFilters: List<RightSearchFilter>,
+        expectedMetadata: Set<ItemMetadata>,
+        expectedFacet: Boolean,
+        reason: String,
     ) {
         val searchResult: SearchQueryResult =
             runBlocking {
@@ -125,17 +119,23 @@ class LicenceURLTest : DatabaseTest() {
                     10,
                     0,
                     emptyList(),
-                    emptyList(),
+                    rightFilters,
                     null,
                 )
             }
         assertThat(
+            reason,
             searchResult.results.map { it.metadata }.toSet(),
-            `is`(expected),
+            `is`(expectedMetadata),
+        )
+        assertThat(
+            reason,
+            searchResult.hasCCLicenceNoRestriction,
+            `is`(expectedFacet),
         )
     }
 
     companion object {
-        const val DATA_FOR_TEST_LICENCE_URL = "DATA_FOR_TEST_LICENCE_URL"
+        const val DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION = "DATA_FOR_TESTING_CC_LICENCE_NO_RESTRICTION"
     }
 }

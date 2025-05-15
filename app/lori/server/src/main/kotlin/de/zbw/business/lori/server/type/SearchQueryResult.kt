@@ -13,7 +13,7 @@ data class SearchQueryResult(
     val results: List<Item>,
     val accessState: Map<AccessState, Int>,
     val hasLicenceContract: Boolean,
-    val hasOpenContentLicence: Boolean,
+    val hasCCLicenceNoRestriction: Boolean,
     val hasZbwUserAgreement: Boolean,
     val isPartOfSeries: Map<String, Int>,
     val licenceUrl: Map<String, Int>,

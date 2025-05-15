@@ -117,6 +117,6 @@ data class ItemRight(
 
 enum class FormalRule {
     LICENCE_CONTRACT,
-    OPEN_CONTENT_LICENCE,
+    CC_LICENCE_NO_RESTRICTION,
     ZBW_USER_AGREEMENT,
 }

@@ -264,7 +264,7 @@ export default {
       bookmark.filterFormalRule.length == 0
     ) {
       searchStore.formalRuleLicenceContract = false;
-      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleCCNoRestriction = false;
       searchStore.formalRuleUserAgreement = false;
       return;
     }
@@ -272,7 +272,7 @@ export default {
       if (v == "LICENCE_CONTRACT") {
         searchStore.formalRuleLicenceContract = true;
       } else if (v == "OPEN_CONTENT_LICENCE") {
-        searchStore.formalRuleOpenContentLicence = true;
+        searchStore.formalRuleCCNoRestriction = true;
       } else {
         searchStore.formalRuleUserAgreement = true;
       }
@@ -284,8 +284,8 @@ export default {
     if (searchStore.formalRuleLicenceContract) {
       formalRule.push("LICENCE_CONTRACT");
     }
-    if (searchStore.formalRuleOpenContentLicence) {
-      formalRule.push("OPEN_CONTENT_LICENCE");
+    if (searchStore.formalRuleCCNoRestriction) {
+      formalRule.push("CC_LICENCE_NO_RESTRICTION");
     }
     if (searchStore.formalRuleUserAgreement) {
       formalRule.push("ZBW_USER_AGREEMENT");

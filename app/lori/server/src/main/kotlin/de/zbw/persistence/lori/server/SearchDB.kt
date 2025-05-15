@@ -1,9 +1,11 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
@@ -219,12 +221,12 @@ class SearchDB(
                     }
                 }
 
-            val oclRestrictedFacet =
+            val ccLicenceNoRestrictionFacet =
                 async {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
-                        rightSearchFilters = rightSearchFilter,
+                        rightSearchFilters = rightSearchFilter + listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                         occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
                         noRightInformationFilter = noRightInformationFilter,
                     ) { rs ->
@@ -250,11 +252,11 @@ class SearchDB(
                         .getOrDefault(true, 0)
                         .takeIf { it > 0 }
                         ?.let { true } == true,
-                hasOpenContentLicence =
+                hasCCLicenceNoRestriction =
                     listOf(
-                        oclRestrictedFacet
+                        ccLicenceNoRestrictionFacet
                             .await()
-                            .getOrDefault(true, 0)
+                            .getOrDefault(false, 0)
                             .takeIf { it > 0 }
                             ?.let { true } == true,
                     ).any { it },
