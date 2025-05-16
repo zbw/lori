@@ -102,7 +102,7 @@ export default defineComponent({
       templateApi
         .getTemplateList(
             0,
-            100,
+            500,
             undefined,
             undefined,
             undefined,
