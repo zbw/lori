@@ -399,6 +399,10 @@ class ItemRoutesKtTest {
                         ),
                     ),
                 numberOfResults = 101,
+                noLegalRisks = 0,
+                ccLicenceNoRestrictions = 0,
+                licenceContracts = 0,
+                zbwUserAgreements = 0,
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
@@ -440,6 +444,10 @@ class ItemRoutesKtTest {
                         ),
                     ),
                 numberOfResults = 0,
+                noLegalRisks = 0,
+                ccLicenceNoRestrictions = 0,
+                licenceContracts = 0,
+                zbwUserAgreements = 0,
             )
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
