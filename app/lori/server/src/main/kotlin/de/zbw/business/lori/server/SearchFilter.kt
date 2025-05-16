@@ -1,6 +1,7 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.TSVectorMetadataSearchFilter.Companion.SQL_FUNC_TO_TS_QUERY
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
@@ -750,7 +751,9 @@ class FormalRuleFilter(
                 FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
                 FormalRule.CC_LICENCE_NO_RESTRICTION ->
                     "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
-                        "(LOWER(${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER}) ILIKE 'by%' AND ${MetadataDB.COLUMN_METADATA_LICENCE_URL_FILTER} is not null)"
+                        "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +
+                        "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'licenses') AND " +
+                        "${MetadataDB.TS_LICENCE_URL} is not null"
 
                 FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
             }

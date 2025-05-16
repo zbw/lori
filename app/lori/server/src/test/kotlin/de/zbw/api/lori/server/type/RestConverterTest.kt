@@ -443,9 +443,9 @@ class RestConverterTest {
                     mapOf(
                         AccessState.OPEN to 2,
                     ),
-                hasLicenceContract = false,
-                hasCCLicenceNoRestriction = true,
-                hasZbwUserAgreement = false,
+                licenceContracts = 0,
+                ccLicenceNoRestrictions = 10,
+                zbwUserAgreements = 0,
                 paketSigels = mapOf("sigel1" to 1),
                 publicationType = mapOf(PublicationType.BOOK to 1, PublicationType.THESIS to 1),
                 templateNamesToOcc = mapOf("1" to ("name" to 2)),
@@ -453,7 +453,7 @@ class RestConverterTest {
                 isPartOfSeries = mapOf("series1" to 1),
                 filtersAsQuery = "foobar",
                 licenceUrl = mapOf("by/3.0/au" to 5),
-                hasNoLegalRisk = true,
+                noLegalRisks = 10,
             )
         val expected =
             ItemInformation(
@@ -463,9 +463,10 @@ class RestConverterTest {
                     listOf(
                         AccessStateWithCountRest(AccessState.OPEN.toRest(), 2),
                     ),
-                hasLicenceContract = given.hasLicenceContract,
-                hasCCLicenceNoRestriction = given.hasCCLicenceNoRestriction,
-                hasZbwUserAgreement = given.hasZbwUserAgreement,
+                licenceContracts = given.licenceContracts,
+                ccLicenceNoRestrictions = given.ccLicenceNoRestrictions,
+                zbwUserAgreements = given.zbwUserAgreements,
+                noLegalRisks = given.noLegalRisks,
                 numberOfResults = given.numberOfResults,
                 paketSigelWithCount =
                     listOf(

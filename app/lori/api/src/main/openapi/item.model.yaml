@@ -3,6 +3,10 @@ ItemInformation:
     - totalPages
     - numberOfResults
     - itemArray
+    - licenceContracts
+    - ccLicenceNoRestrictions
+    - noLegalRisks
+    - zbwUserAgreements
   type: object
   properties:
     totalPages:
@@ -37,14 +41,14 @@ ItemInformation:
       type: array
       items:
         $ref: 'item.model.yaml#/LicenceUrlCountRest'
-    hasLicenceContract:
-      type: boolean
-    hasCCLicenceNoRestriction:
-      type: boolean
-    hasNoLegalRisk:
-      type: boolean
-    hasZbwUserAgreement:
-      type: boolean
+    licenceContracts:
+      type: integer
+    ccLicenceNoRestrictions:
+      type: integer
+    noLegalRisks:
+      type: integer
+    zbwUserAgreements:
+      type: integer
     filtersAsQuery:
       type: string
     itemArray:

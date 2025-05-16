@@ -101,21 +101,21 @@ class FormalRuleFilterTest : DatabaseTest() {
                 null,
                 listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                 setOf(ccLicenceMetadata),
-                true,
+                1,
                 "search which will return item",
             ),
             arrayOf(
                 "tit:fooobarrr",
                 listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                 emptySet<ItemMetadata>(),
-                false,
+                0,
                 "search which will not return an item",
             ),
             arrayOf(
                 "",
                 emptyList<RightSearchFilter>(),
                 setOf(ccLicenceMetadata, noLegalRiskMetadata),
-                true,
+                1,
                 "Empty (default search)",
             ),
         )
@@ -125,7 +125,7 @@ class FormalRuleFilterTest : DatabaseTest() {
         searchTerm: String?,
         rightFilters: List<RightSearchFilter>,
         expectedMetadata: Set<ItemMetadata>,
-        expectedFacet: Boolean,
+        expectedFacet: Int,
         reason: String,
     ) {
         val searchResult: SearchQueryResult =
@@ -146,7 +146,7 @@ class FormalRuleFilterTest : DatabaseTest() {
         )
         assertThat(
             reason,
-            searchResult.hasCCLicenceNoRestriction,
+            searchResult.ccLicenceNoRestrictions,
             `is`(expectedFacet),
         )
     }
@@ -158,7 +158,7 @@ class FormalRuleFilterTest : DatabaseTest() {
                 null,
                 listOf(FormalRuleFilter(listOf(FormalRule.COPYRIGHT_EXCEPTION_RISKFREE))),
                 setOf(noLegalRiskMetadata),
-                true,
+                1,
                 "search which will return item",
             ),
         )
@@ -168,7 +168,7 @@ class FormalRuleFilterTest : DatabaseTest() {
         searchTerm: String?,
         rightFilters: List<RightSearchFilter>,
         expectedMetadata: Set<ItemMetadata>,
-        expectedFacet: Boolean,
+        expectedFacet: Int,
         reason: String,
     ) {
         val searchResult: SearchQueryResult =
@@ -189,7 +189,7 @@ class FormalRuleFilterTest : DatabaseTest() {
         )
         assertThat(
             reason,
-            searchResult.hasNoLegalRisk,
+            searchResult.noLegalRisks,
             `is`(expectedFacet),
         )
     }

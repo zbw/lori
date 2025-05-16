@@ -171,6 +171,22 @@ export default defineComponent({
       return zdbId + " (" + count + ")";
     };
 
+    const ppLicenceContracts = (count: number) => {
+      return "Lizenzvertrag " + "(" + count + ")";
+    };
+
+    const ppCCLicenceNoRestriction = (count: number) => {
+      return "CC Lizenz ohne Einschränkung " + "(" + count + ")";
+    };
+
+    const ppZBWUserAgreements = (count: number) => {
+      return "ZBW-Nutzungsvereinbarung " + "(" + count + ")";
+    };
+
+    const ppNoLegalRisk = (count: number) => {
+      return "Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko " + "(" + count + ")";
+    };
+
     /**
      * Bookmark settings.
      */
@@ -440,8 +456,12 @@ export default defineComponent({
       loadMoreZdb,
       parseAccessState,
       parsePublicationType,
+      ppCCLicenceNoRestriction,
+      ppLicenceContracts,
       ppLicenceUrl,
+      ppNoLegalRisk,
       ppPaketSigel,
+      ppZBWUserAgreements,
       ppZDBId,
       resetFilter,
       singleSelectionAccessStateOnDate,
@@ -895,8 +915,8 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-checkbox
-                v-if="searchStore.hasLicenceContract"
-                label="Lizenzvertrag"
+                v-if="searchStore.licenceContracts > 0"
+                :label=ppLicenceContracts(searchStore.licenceContracts)
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleLicenceContract"
@@ -908,8 +928,8 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.hasCCLicenceNoRestriction"
-                  label="CC Lizenz ohne Einschränkung"
+                  v-if="searchStore.ccLicenceNoRestrictions > 0"
+                  :label=ppCCLicenceNoRestriction(searchStore.ccLicenceNoRestrictions)
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleCCNoRestriction"
@@ -921,8 +941,8 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                v-if="searchStore.hasZbwUserAgreement"
-                label="ZBW-Nutzungsvereinbarung"
+                v-if="searchStore.zbwUserAgreements > 0"
+                :label=ppZBWUserAgreements(searchStore.zbwUserAgreements)
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleUserAgreement"
@@ -934,8 +954,8 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.hasNoLegalRisk"
-                  label="Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko"
+                  v-if="searchStore.noLegalRisks > 0"
+                  :label=ppNoLegalRisk(searchStore.noLegalRisks)
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleNoLegalRisk"

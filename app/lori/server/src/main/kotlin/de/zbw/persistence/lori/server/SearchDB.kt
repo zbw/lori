@@ -190,7 +190,7 @@ class SearchDB(
                     }
                 }
 
-            val licenceContractFacet =
+            val licenceContractFacet: Deferred<Map<String?, Int>> =
                 async {
                     searchOccurrences(
                         searchExpression = searchExpression,
@@ -227,7 +227,9 @@ class SearchDB(
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
-                        rightSearchFilters = rightSearchFilter + listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
+                        rightSearchFilters =
+                            rightSearchFilter +
+                                listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                         occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
                         noRightInformationFilter = noRightInformationFilter,
                     ) { rs ->
@@ -238,7 +240,7 @@ class SearchDB(
                     }
                 }
 
-            val legalRiskFacet =
+            val legalRiskFacet: Deferred<Map<Boolean, Int>> =
                 async {
                     searchOccurrences(
                         searchExpression = searchExpression,
@@ -262,29 +264,23 @@ class SearchDB(
                 licenceUrls = licenceURLFacet.await(),
                 accessState = accessStateFacet.await(),
                 templateIdToOccurence = templateIdFacet.await(),
-                hasLicenceContract = licenceContractFacet.await().isNotEmpty(),
-                hasNoLegalRisk =
-                    listOf(
-                        legalRiskFacet
-                            .await()
-                            .getOrDefault(false, 0)
-                            .takeIf { it > 0 }
-                            ?.let { true } == true,
-                    ).any { it },
-                hasZbwUserAgreement =
+                licenceContracts =
+                    licenceContractFacet
+                        .await()
+                        .values
+                        .sum(),
+                noLegalRisks =
+                    legalRiskFacet
+                        .await()
+                        .getOrDefault(false, 0),
+                zbwUserAgreements =
                     zbwUserAgreementFacet
                         .await()
-                        .getOrDefault(true, 0)
-                        .takeIf { it > 0 }
-                        ?.let { true } == true,
-                hasCCLicenceNoRestriction =
-                    listOf(
-                        ccLicenceNoRestrictionFacet
-                            .await()
-                            .getOrDefault(false, 0)
-                            .takeIf { it > 0 }
-                            ?.let { true } == true,
-                    ).any { it },
+                        .getOrDefault(true, 0),
+                ccLicenceNoRestrictions =
+                    ccLicenceNoRestrictionFacet
+                        .await()
+                        .getOrDefault(false, 0),
             )
         }
 

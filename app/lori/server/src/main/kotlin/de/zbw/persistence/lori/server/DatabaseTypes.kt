@@ -13,10 +13,10 @@ import de.zbw.business.lori.server.type.PublicationType
  */
 data class FacetTransientSet(
     val accessState: Map<AccessState, Int>,
-    val hasNoLegalRisk: Boolean,
-    val hasLicenceContract: Boolean,
-    val hasCCLicenceNoRestriction: Boolean,
-    val hasZbwUserAgreement: Boolean,
+    val noLegalRisks: Int,
+    val licenceContracts: Int,
+    val ccLicenceNoRestrictions: Int,
+    val zbwUserAgreements: Int,
     val isPartOfSeries: Map<List<String>, Int>,
     val licenceUrls: Map<String, Int>,
     val paketSigels: Map<List<String>, Int>,

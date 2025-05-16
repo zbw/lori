@@ -657,18 +657,10 @@ export default defineComponent({
     };
 
     const processFacets = (response: ItemInformation) => {
-      if (response.hasLicenceContract != undefined) {
-        searchStore.hasLicenceContract = response.hasLicenceContract;
-      }
-      if (response.hasNoLegalRisk != undefined) {
-        searchStore.hasNoLegalRisk = response.hasNoLegalRisk;
-      }
-      if (response.hasCCLicenceNoRestriction != undefined) {
-        searchStore.hasCCLicenceNoRestriction = response.hasCCLicenceNoRestriction;
-      }
-      if (response.hasZbwUserAgreement != undefined) {
-        searchStore.hasZbwUserAgreement = response.hasZbwUserAgreement;
-      }
+      searchStore.licenceContracts = response.licenceContracts;
+      searchStore.noLegalRisks = response.noLegalRisks;
+      searchStore.ccLicenceNoRestrictions = response.ccLicenceNoRestrictions;
+      searchStore.zbwUserAgreements = response.zbwUserAgreements;
       resetAllDynamicFilter(response);
     };
 
