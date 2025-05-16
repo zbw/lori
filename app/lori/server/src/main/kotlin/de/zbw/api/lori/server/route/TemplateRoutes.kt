@@ -590,7 +590,7 @@ fun Routing.templateRoutes(
                             call.request.queryParameters["excludes"]?.let {
                                 it.split(",".toRegex())
                             }
-                        if (limit < 1 || limit > 200) {
+                        if (limit < 1 || limit > 501) {
                             span.setStatus(
                                 StatusCode.ERROR,
                                 "BadRequest: Limit parameter is expected to be between 1 and 200.",
