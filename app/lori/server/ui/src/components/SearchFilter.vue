@@ -77,7 +77,8 @@ export default defineComponent({
         searchStore.accessStateOpen ||
         searchStore.accessStateRestricted ||
         searchStore.formalRuleLicenceContract ||
-        searchStore.formalRuleOpenContentLicence ||
+        searchStore.formalRuleCCNoRestriction ||
+        searchStore.formalRuleNoLegalRisk ||
         searchStore.formalRuleUserAgreement ||
         searchStore.temporalValidOnFormatted != "" ||
         searchStore.accessStateIdx.filter((element) => element).length > 0 ||
@@ -109,7 +110,8 @@ export default defineComponent({
       searchStore.accessStateRestricted = false;
 
       searchStore.formalRuleLicenceContract = false;
-      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleCCNoRestriction = false;
+      searchStore.formalRuleNoLegalRisk = false;
       searchStore.formalRuleUserAgreement = false;
 
       searchStore.temporalValidOnFormatted = "";
@@ -167,6 +169,22 @@ export default defineComponent({
 
     const ppZDBId = (zdbId: string, count: number) => {
       return zdbId + " (" + count + ")";
+    };
+
+    const ppLicenceContracts = (count: number) => {
+      return "Lizenzvertrag " + "(" + count + ")";
+    };
+
+    const ppCCLicenceNoRestriction = (count: number) => {
+      return "CC Lizenz ohne Einschränkung " + "(" + count + ")";
+    };
+
+    const ppZBWUserAgreements = (count: number) => {
+      return "ZBW-Nutzungsvereinbarung " + "(" + count + ")";
+    };
+
+    const ppNoLegalRisk = (count: number) => {
+      return "Anwendbarkeit Urheberrechtschranke ohne vertragsrechtliches Risiko " + "(" + count + ")";
     };
 
     /**
@@ -438,8 +456,12 @@ export default defineComponent({
       loadMoreZdb,
       parseAccessState,
       parsePublicationType,
+      ppCCLicenceNoRestriction,
+      ppLicenceContracts,
       ppLicenceUrl,
+      ppNoLegalRisk,
       ppPaketSigel,
+      ppZBWUserAgreements,
       ppZDBId,
       resetFilter,
       singleSelectionAccessStateOnDate,
@@ -893,8 +915,8 @@ export default defineComponent({
               </template>
               <h6></h6>
               <v-checkbox
-                v-if="searchStore.hasLicenceContract"
-                label="Lizenzvertrag"
+                v-if="searchStore.licenceContracts > 0"
+                :label=ppLicenceContracts(searchStore.licenceContracts)
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleLicenceContract"
@@ -906,11 +928,11 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                  v-if="searchStore.hasOpenContentLicence"
-                  label="Open-Content-Licence"
+                  v-if="searchStore.ccLicenceNoRestrictions > 0"
+                  :label=ppCCLicenceNoRestriction(searchStore.ccLicenceNoRestrictions)
                   hide-details
                   class="pl-9 ml-4"
-                  v-model="searchStore.formalRuleOpenContentLicence"
+                  v-model="searchStore.formalRuleCCNoRestriction"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
               <v-divider
@@ -919,12 +941,25 @@ export default defineComponent({
                   color="grey-lighten-1"
               ></v-divider>
               <v-checkbox
-                v-if="searchStore.hasZbwUserAgreement"
-                label="ZBW-Nutzungsvereinbarung"
+                v-if="searchStore.zbwUserAgreements > 0"
+                :label=ppZBWUserAgreements(searchStore.zbwUserAgreements)
                 hide-details
                 class="pl-9 ml-4"
                 v-model="searchStore.formalRuleUserAgreement"
                 @update:modelValue="emitSearchStart"
+              ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
+              <v-checkbox
+                  v-if="searchStore.noLegalRisks > 0"
+                  :label=ppNoLegalRisk(searchStore.noLegalRisks)
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.formalRuleNoLegalRisk"
+                  @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>
             <v-list-group no-action sub-group eager>

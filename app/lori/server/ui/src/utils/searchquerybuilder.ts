@@ -264,17 +264,20 @@ export default {
       bookmark.filterFormalRule.length == 0
     ) {
       searchStore.formalRuleLicenceContract = false;
-      searchStore.formalRuleOpenContentLicence = false;
+      searchStore.formalRuleCCNoRestriction = false;
       searchStore.formalRuleUserAgreement = false;
+      searchStore.formalRuleNoLegalRisk = false;
       return;
     }
     bookmark.filterFormalRule.forEach((v: string, index: number): void => {
       if (v == "LICENCE_CONTRACT") {
         searchStore.formalRuleLicenceContract = true;
-      } else if (v == "OPEN_CONTENT_LICENCE") {
-        searchStore.formalRuleOpenContentLicence = true;
-      } else {
+      } else if (v == "CC_LICENCE_NO_RESTRICTION") {
+        searchStore.formalRuleCCNoRestriction = true;
+      } else if (v == "ZBW_USER_AGREEMENT"){
         searchStore.formalRuleUserAgreement = true;
+      } else {
+        searchStore.formalRuleNoLegalRisk = true;
       }
     });
   },
@@ -284,11 +287,14 @@ export default {
     if (searchStore.formalRuleLicenceContract) {
       formalRule.push("LICENCE_CONTRACT");
     }
-    if (searchStore.formalRuleOpenContentLicence) {
-      formalRule.push("OPEN_CONTENT_LICENCE");
+    if (searchStore.formalRuleCCNoRestriction) {
+      formalRule.push("CC_LICENCE_NO_RESTRICTION");
     }
     if (searchStore.formalRuleUserAgreement) {
       formalRule.push("ZBW_USER_AGREEMENT");
+    }
+    if (searchStore.formalRuleNoLegalRisk) {
+      formalRule.push("COPYRIGHT_EXCEPTION_RISKFREE");
     }
     if (formalRule.length == 0) {
       return undefined;

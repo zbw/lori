@@ -1,9 +1,11 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
@@ -52,6 +54,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
 import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
+import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_HAS_LEGAL_RISK
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -187,7 +190,7 @@ class SearchDB(
                     }
                 }
 
-            val licenceContractFacet =
+            val licenceContractFacet: Deferred<Map<String?, Int>> =
                 async {
                     searchOccurrences(
                         searchExpression = searchExpression,
@@ -219,13 +222,31 @@ class SearchDB(
                     }
                 }
 
-            val oclRestrictedFacet =
+            val ccLicenceNoRestrictionFacet =
+                async {
+                    searchOccurrences(
+                        searchExpression = searchExpression,
+                        metadataSearchFilters = metadataSearchFilter,
+                        rightSearchFilters =
+                            rightSearchFilter +
+                                listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
+                        occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
+                        noRightInformationFilter = noRightInformationFilter,
+                    ) { rs ->
+                        Pair(
+                            rs.getBoolean(1),
+                            rs.getInt(2),
+                        )
+                    }
+                }
+
+            val legalRiskFacet: Deferred<Map<Boolean, Int>> =
                 async {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
                         rightSearchFilters = rightSearchFilter,
-                        occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
+                        occurrenceForColumn = COLUMN_HAS_LEGAL_RISK,
                         noRightInformationFilter = noRightInformationFilter,
                     ) { rs ->
                         Pair(
@@ -243,21 +264,23 @@ class SearchDB(
                 licenceUrls = licenceURLFacet.await(),
                 accessState = accessStateFacet.await(),
                 templateIdToOccurence = templateIdFacet.await(),
-                hasLicenceContract = licenceContractFacet.await().isNotEmpty(),
-                hasZbwUserAgreement =
+                licenceContracts =
+                    licenceContractFacet
+                        .await()
+                        .values
+                        .sum(),
+                noLegalRisks =
+                    legalRiskFacet
+                        .await()
+                        .getOrDefault(false, 0),
+                zbwUserAgreements =
                     zbwUserAgreementFacet
                         .await()
-                        .getOrDefault(true, 0)
-                        .takeIf { it > 0 }
-                        ?.let { true } == true,
-                hasOpenContentLicence =
-                    listOf(
-                        oclRestrictedFacet
-                            .await()
-                            .getOrDefault(true, 0)
-                            .takeIf { it > 0 }
-                            ?.let { true } == true,
-                    ).any { it },
+                        .getOrDefault(true, 0),
+                ccLicenceNoRestrictions =
+                    ccLicenceNoRestrictionFacet
+                        .await()
+                        .getOrDefault(false, 0),
             )
         }
 
@@ -621,6 +644,7 @@ class SearchDB(
                     columnName == COLUMN_RIGHT_END_DATE ||
                     columnName == COLUMN_RIGHT_LICENCE_CONTRACT ||
                     columnName == COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE ||
+                    columnName == COLUMN_HAS_LEGAL_RISK ||
                     columnName == COLUMN_RIGHT_START_DATE
 
             return if (isRightColumn) {

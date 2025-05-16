@@ -21,14 +21,17 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateOpen = ref(false);
   const accessStateRestricted = ref(false);
 
-  const hasLicenceContract = ref(false);
-  const hasOpenContentLicence = ref(false);
+  const licenceContracts = ref(0);
+  const ccLicenceNoRestrictions = ref(0);
+  const noLegalRisks = ref(0);
+  const zbwUserAgreements = ref(0);
+
   const manualRight = ref(false);
   const noRightInformation = ref(false);
-  const hasZbwUserAgreement = ref(false);
 
   const formalRuleLicenceContract = ref(false);
-  const formalRuleOpenContentLicence = ref(false);
+  const formalRuleCCNoRestriction = ref(false);
+  const formalRuleNoLegalRisk = ref(false);
   const formalRuleUserAgreement = ref(false);
 
   const publicationYearFrom = ref("");
@@ -89,13 +92,15 @@ export const useSearchStore = defineStore("search", () => {
     accessStateRestricted,
     accessStateOpen,
     accessStateReceived,
+    formalRuleNoLegalRisk,
+    formalRuleCCNoRestriction,
     formalRuleLicenceContract,
-    formalRuleOpenContentLicence,
     formalRuleUserAgreement,
     handleURLResolver,
-    hasLicenceContract,
-    hasOpenContentLicence,
-    hasZbwUserAgreement,
+    ccLicenceNoRestrictions,
+    licenceContracts,
+    noLegalRisks,
+    zbwUserAgreements,
     manualRight,
     noRightInformation,
     isLastSearchForTemplates,

@@ -118,7 +118,7 @@ class LicenceURLTest : DatabaseTest() {
         searchTerm: String,
         expected: Set<ItemMetadata>,
     ) {
-        val searchResult1: SearchQueryResult =
+        val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
                     searchTerm,
@@ -130,12 +130,12 @@ class LicenceURLTest : DatabaseTest() {
                 )
             }
         assertThat(
-            searchResult1.results.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata }.toSet(),
             `is`(expected),
         )
     }
 
     companion object {
-        const val DATA_FOR_TEST_LICENCE_URL = "DATA_FOR_TEST_LICENCE_URL "
+        const val DATA_FOR_TEST_LICENCE_URL = "DATA_FOR_TEST_LICENCE_URL"
     }
 }

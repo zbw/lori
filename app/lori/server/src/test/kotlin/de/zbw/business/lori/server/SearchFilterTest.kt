@@ -386,7 +386,7 @@ class SearchFilterTest : DatabaseTest() {
                         listOf(
                             FormalRule.LICENCE_CONTRACT,
                             FormalRule.ZBW_USER_AGREEMENT,
-                            FormalRule.OPEN_CONTENT_LICENCE,
+                            FormalRule.CC_LICENCE_NO_RESTRICTION,
                         ),
                     ),
                     TemplateNameFilter(listOf("555nase")),
@@ -406,7 +406,7 @@ class SearchFilterTest : DatabaseTest() {
                     " & nor:on" +
                     " & ser:\"series1,series2\"" +
                     " & typ:\"PROCEEDING,BOOK_PART\"" +
-                    " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,OPEN_CONTENT_LICENCE\"" +
+                    " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,CC_LICENCE_NO_RESTRICTION\"" +
                     " & tpl:\"555nase\"" +
                     " & acd:\"RESTRICTED+2025-01-21\"" +
                     " & man:on",

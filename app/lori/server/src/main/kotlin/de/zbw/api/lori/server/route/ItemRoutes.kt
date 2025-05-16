@@ -334,6 +334,10 @@ fun Routing.itemRoutes(
                                     itemArray = items.map { it.toRest() },
                                     totalPages = totalPages,
                                     numberOfResults = entries,
+                                    noLegalRisks = 0,
+                                    ccLicenceNoRestrictions = 0,
+                                    licenceContracts = 0,
+                                    zbwUserAgreements = 0,
                                 ),
                             )
                         }
