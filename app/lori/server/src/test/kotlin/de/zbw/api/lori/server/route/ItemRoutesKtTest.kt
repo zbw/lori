@@ -12,6 +12,7 @@ import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
+import de.zbw.lori.model.ItemSearch
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.PublicationTypeRest
 import de.zbw.lori.model.RightRest
@@ -666,11 +667,14 @@ class ItemRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.get(
-                    "/api/v1/item/search?searchTerm=$searchTerm&limit=$limit&offset=$offset" +
+                client.post(
+                    "/api/v1/item/search?limit=$limit&offset=$offset" +
                         "&pageSize=$pageSize&filterPublicationYear=$filterPublicationYear&" +
                         "filterPublicationType=$filterPublicationType",
-                )
+                ) {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch(searchTerm = searchTerm)))
+                }
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
@@ -749,7 +753,11 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/search")
+            val response =
+                client.post("/api/v1/item/search") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch("")))
+                }
             val content: String = response.bodyAsText()
             val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
             val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
@@ -795,7 +803,10 @@ class ItemRoutesKtTest {
                 servicePool.testApplication(),
             )
             val response =
-                client.get("/api/v1/item/search?searchTerm=foobar&limit=$limit&offset=$offset&pageSize=$pageSize")
+                client.post("/api/v1/item/search?limit=$limit&offset=$offset&pageSize=$pageSize") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch(searchTerm = "foobar")))
+                }
             assertThat(response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
@@ -816,7 +827,11 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/search?searchTerm=$searchTerm")
+            val response =
+                client.post("/api/v1/item/search") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch(searchTerm = searchTerm)))
+                }
             assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
@@ -837,7 +852,11 @@ class ItemRoutesKtTest {
             application(
                 servicePool.testApplication(),
             )
-            val response = client.get("/api/v1/item/search?searchTerm=$searchTerm")
+            val response =
+                client.post("/api/v1/item/search") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch(searchTerm = searchTerm)))
+                }
             assertThat(response.status, `is`(HttpStatusCode.BadRequest))
         }
     }

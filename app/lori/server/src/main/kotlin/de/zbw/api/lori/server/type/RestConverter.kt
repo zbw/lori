@@ -564,6 +564,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         lastUpdatedOn = lastUpdatedOn,
         createdBy = createdBy,
         createdOn = createdOn,
+        // If this ever comes up again: `templateNameFilter` is absent for a reason. It got replaced with `rightIdFilter`.
     )
 
 fun BookmarkRest.toBusiness(): Bookmark =

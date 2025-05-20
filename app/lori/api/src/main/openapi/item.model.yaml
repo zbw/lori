@@ -170,3 +170,11 @@ TemplateNameWithCountRest:
       type: string
     rightId:
       type: string
+
+ItemSearch:
+  required:
+    - searchTerm
+  type: object
+  properties:
+    searchTerm:
+      type: string

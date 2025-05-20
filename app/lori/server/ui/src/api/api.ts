@@ -8,7 +8,7 @@ import {
   ItemApi,
   ItemCountByRight,
   ItemEntry,
-  ItemInformation,
+  ItemInformation, ItemSearch,
   RightApi,
   RightIdCreated,
   RightRest,
@@ -108,7 +108,7 @@ export default {
     filterAccessStateOn: string | undefined,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
-      searchTerm: searchTerm,
+      itemSearch: { searchTerm: searchTerm} as ItemSearch,
       offset: offset,
       limit: limit,
       pageSize: pageSize,

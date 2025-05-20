@@ -298,19 +298,6 @@ class MetadataDB(
                 " SET $COLUMN_METADATA_DELETED=?" +
                 " WHERE $COLUMN_METADATA_HANDLE=ANY(?)"
 
-        const val STATEMENT_SELECT_ALL_METADATA =
-            "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
-                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
-                "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
-                "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-                "community_handle,collection_handle," +
-                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
-                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
-                "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME"
-
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
                 " WHERE $COLUMN_METADATA_HANDLE = ANY(?)"

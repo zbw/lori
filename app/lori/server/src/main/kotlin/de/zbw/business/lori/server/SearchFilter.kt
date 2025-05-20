@@ -9,8 +9,10 @@ import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
 import de.zbw.persistence.lori.server.RightDB
+import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
 import java.sql.PreparedStatement
@@ -56,8 +58,13 @@ abstract class SearchFilter(
                         CommunityNameFilter(searchValue)
                     "col" ->
                         CollectionNameFilter(searchValue)
-                    "hdl" ->
-                        HandleFilter(searchValue)
+                    "hdl" -> {
+                        if (searchValue.split(",".toRegex()).size > 1) {
+                            HandlesFilter(searchValue.split(",".toRegex()))
+                        } else {
+                            HandleFilter(searchValue)
+                        }
+                    }
                     "sig" -> QueryParameterParser.parsePaketSigelFilter(searchValue)
                     "tit" ->
                         TitleFilter(searchValue)
@@ -506,6 +513,35 @@ class SeriesFilter(
     companion object {
         fun fromString(s: String?): SeriesFilter? = QueryParameterParser.parseSeriesFilter(s)
     }
+}
+
+class HandlesFilter(
+    val handles: List<String>,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_HANDLE,
+    ) {
+    override fun toWhereClause(): String =
+        "${ALIAS_ITEM_METADATA}.$dbColumnName IN " +
+            handles.joinToString(separator = ",", prefix = "(", postfix = ")") {
+                "?"
+            }
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        handles.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = handles.joinToString(prefix = "(", postfix = ")", separator = ",") { it }
+
+    override fun getFilterType(): FilterType = FilterType.HANDLE
 }
 
 /**

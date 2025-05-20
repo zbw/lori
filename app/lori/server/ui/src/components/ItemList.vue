@@ -1197,19 +1197,23 @@ table.special, th.special, td.special {
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
                   </p>
-                  <p class="text-left text-body-1 mt-4">Sonderzeichen:</p>
+                  <p class="text-left text-body-1 mt-4 font-weight-bold">Sonderzeichen</p>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Klammersetzungen sind zulässig, z.B:
-                  </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    col:'(subject1 | subject2) & !subject3'
-                  </p>
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Rechtstrunkierung ist ebenfalls möglich für alle Textbasierten Suchwerte mit *, z.B:
+                    Rechtstrunkierung ist möglich für alle Textbasierten Suchwerte mit *, z.B:
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     lur:'by-nc-nd*'
+                  </p>
+
+                  <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
+
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Es ist möglich für den Suchschlüssel <b>hdl</b> mehrere Werte auf einmal zu suchen:
+                  </p>
+
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    hdl:'11159/1234,11159/5678'
                   </p>
                 </v-card-text>
               </v-card>

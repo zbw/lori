@@ -31,6 +31,8 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLI
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_YEAR
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
+import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
+import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import de.zbw.persistence.lori.server.SearchDB.Companion.buildSearchQueryOccurrence
 import io.mockk.every
 import io.mockk.mockkStatic
@@ -179,9 +181,9 @@ class SearchDBTest : DatabaseTest() {
                 SEVariable(CollectionNameFilter("foo")),
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
@@ -194,11 +196,11 @@ class SearchDBTest : DatabaseTest() {
                     PublicationYearFilter(fromYear = 2016, toYear = 2022),
                 ),
                 SELECT_ALL_WITH_TS +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
                     " AND ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date filter",
             ),
@@ -214,11 +216,11 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
                     " OR ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),
@@ -256,11 +258,11 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<RightSearchFilter>(),
                 null,
                 false,
-                "$SELECT_DISTINCT_ON FROM item_metadata" +
+                "$SELECT_DISTINCT_ON FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL) AND" +
-                    " (((access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " WHERE (((access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL) AND" +
+                    " (((access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
             ),
@@ -270,11 +272,11 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED))),
                 null,
                 false,
-                "$SELECT_DISTINCT_ON FROM item_metadata" +
+                "$SELECT_DISTINCT_ON FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
             ),
@@ -293,13 +295,13 @@ class SearchDBTest : DatabaseTest() {
                 NoRightInformationFilter(),
                 true,
                 SELECT_ALL +
-                    " FROM ($SELECT_DISTINCT_ON FROM item_metadata" +
+                    " FROM ($SELECT_DISTINCT_ON FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND" +
                     " (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
-                    " AND ir.right_id IS NULL)" +
+                    " AND $ALIAS_ITEM_RIGHT.right_id IS NULL)" +
                     " as sub" +
                     " WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)" +
                     " ORDER BY $COLUMN_METADATA_HANDLE ASC" +
@@ -341,9 +343,9 @@ class SearchDBTest : DatabaseTest() {
                 null,
                 "SELECT COUNT(*)" +
                     " FROM ($SELECT_ALL_WITH_TS" +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC)" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC)" +
                     " as countsearch",
                 "count query filter with one searchkey",
             ),
@@ -409,13 +411,13 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT COUNT(*) FROM (" +
                     SELECT_DISTINCT_ON +
-                    " FROM item_metadata" +
-                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                     " LEFT JOIN item_right as ir" +
-                    " ON item.right_id = ir.right_id" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
+                    " ON item.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "search bar filter metadata and right",
             ),
@@ -424,12 +426,12 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 "SELECT COUNT(*) FROM (" +
                     SELECT_DISTINCT_ON +
-                    " FROM item_metadata" +
-                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item ON item.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                     " LEFT JOIN item_right as ir" +
-                    " ON item.right_id = ir.right_id" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ON item.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "only right filter",
             ),
@@ -462,10 +464,10 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 SELECT_DISTINCT_ON +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query only right filter",
             ),
@@ -473,11 +475,11 @@ class SearchDBTest : DatabaseTest() {
                 listOf(PublicationYearFilter(2000, 2019), PublicationTypeFilter(listOf(PublicationType.PROCEEDING))),
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 SELECT_DISTINCT_ON +
-                    " FROM item_metadata" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
-                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)" +
+                    " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
-                    " ORDER BY $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query with both filters",
             ),
@@ -513,15 +515,15 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "WITH metadata_with_rights AS (" +
-                    " SELECT im.publication_type, ir.right_id, im.handle" +
-                    " FROM item_metadata im" +
-                    " LEFT JOIN item i ON i.handle = im.handle" +
-                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
-                    " WHERE im.publication_type IS NOT NULL" +
+                    " SELECT $ALIAS_ITEM_METADATA.publication_type, $ALIAS_ITEM_RIGHT.right_id, $ALIAS_ITEM_METADATA.handle" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE $ALIAS_ITEM_METADATA.publication_type IS NOT NULL" +
                     " AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))," +
+                    " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))," +
                     "metadata_unique AS (" +
                     " SELECT handle, publication_type" +
                     " FROM metadata_with_rights" +
@@ -538,14 +540,14 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "WITH metadata_with_rights AS (" +
-                    " SELECT im.zdb_ids, ir.right_id, im.handle" +
-                    " FROM item_metadata im" +
-                    " LEFT JOIN item i ON i.handle = im.handle" +
-                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
-                    " WHERE im.zdb_ids IS NOT NULL AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " SELECT $ALIAS_ITEM_METADATA.zdb_ids, $ALIAS_ITEM_RIGHT.right_id, $ALIAS_ITEM_METADATA.handle" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE $ALIAS_ITEM_METADATA.zdb_ids IS NOT NULL AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))," +
+                    " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))," +
                     "metadata_unique AS (" +
                     " SELECT handle, zdb_ids" +
                     " FROM metadata_with_rights" +
@@ -592,15 +594,15 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "WITH metadata_with_rights AS (" +
-                    " SELECT DISTINCT ON (im.handle, ir.access_state) ir.access_state" +
-                    " FROM item_metadata im" +
-                    " LEFT JOIN item i ON i.handle = im.handle" +
-                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
-                    " WHERE ir.access_state IS NOT NULL AND" +
+                    " SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.handle, $ALIAS_ITEM_RIGHT.access_state) $ALIAS_ITEM_RIGHT.access_state" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE $ALIAS_ITEM_RIGHT.access_state IS NOT NULL AND" +
                     " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))" +
+                    " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))" +
                     " SELECT mw.access_state, COUNT(*)" +
                     " FROM metadata_with_rights mw" +
                     " GROUP BY mw.access_state;",
@@ -613,15 +615,15 @@ class SearchDBTest : DatabaseTest() {
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
                 null,
                 "WITH metadata_with_rights AS (" +
-                    " SELECT DISTINCT ON (im.handle, ir.template_name) ir.template_name" +
-                    " FROM item_metadata im" +
-                    " LEFT JOIN item i ON i.handle = im.handle" +
-                    " LEFT JOIN item_right ir ON i.right_id = ir.right_id" +
-                    " WHERE ir.template_name IS NOT NULL AND" +
+                    " SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.handle, $ALIAS_ITEM_RIGHT.template_name) $ALIAS_ITEM_RIGHT.template_name" +
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
+                    " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE $ALIAS_ITEM_RIGHT.template_name IS NOT NULL AND" +
                     " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)) AND ir.right_id IS NOT NULL)))" +
+                    " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))" +
                     " SELECT mw.template_name, COUNT(*)" +
                     " FROM metadata_with_rights mw" +
                     " GROUP BY mw.template_name;",
@@ -674,11 +676,11 @@ class SearchDBTest : DatabaseTest() {
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle " +
-                "FROM $TABLE_NAME_ITEM_METADATA"
+                "FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA"
         const val SELECT_ALL_WITH_TS =
-            "SELECT $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
+            "SELECT $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
                 "$COLUMN_METADATA_PUBLICATION_YEAR,band,publication_type,doi,isbn,paket_sigel,zdb_ids,issn," +
-                "item_metadata.created_on,item_metadata.last_updated_on,item_metadata.created_by,item_metadata.last_updated_by," +
+                "$ALIAS_ITEM_METADATA.created_on,$ALIAS_ITEM_METADATA.last_updated_on,$ALIAS_ITEM_METADATA.created_by,$ALIAS_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
@@ -690,21 +692,21 @@ class SearchDBTest : DatabaseTest() {
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
                 "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED"
         const val SELECT_DISTINCT_ON =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
+            "SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "ppn,title,title_journal,title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,publication_type,doi,isbn," +
-                "paket_sigel,zdb_ids,issn,item_metadata.created_on,item_metadata.last_updated_on," +
-                "item_metadata.created_by,item_metadata.last_updated_by,author,collection_name,community_name,storage_date," +
+                "paket_sigel,zdb_ids,issn,$ALIAS_ITEM_METADATA.created_on,$ALIAS_ITEM_METADATA.last_updated_on," +
+                "$ALIAS_ITEM_METADATA.created_by,$ALIAS_ITEM_METADATA.last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
                 "is_part_of_series,${COLUMN_METADATA_LICENCE_URL_FILTER}," +
-                "$COLUMN_METADATA_DELETED,ir.access_state," +
-                "ir.licence_contract," +
-                "ir.restricted_open_content_licence,ir.zbw_user_agreement," +
+                "$COLUMN_METADATA_DELETED,$ALIAS_ITEM_RIGHT.access_state," +
+                "$ALIAS_ITEM_RIGHT.licence_contract," +
+                "$ALIAS_ITEM_RIGHT.restricted_open_content_licence,$ALIAS_ITEM_RIGHT.zbw_user_agreement," +
                 "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name"
 
         const val LEFT_JOIN_RIGHT =
             "LEFT JOIN item" +
-                " ON item.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                " LEFT JOIN item_right as ir ON item.right_id = ir.right_id"
+                " ON item.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
+                " LEFT JOIN item_right as ir ON item.right_id = $ALIAS_ITEM_RIGHT.right_id"
     }
 }

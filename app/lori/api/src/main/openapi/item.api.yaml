@@ -283,19 +283,20 @@ item-count-right:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
 item-search:
-  get:
+  post:
     tags:
       - item
     summary: Return a list of search results
     description: Return a list of Metadata elements matching the search query
     operationId: getSearchResult
+    requestBody:
+      description: Search term
+      content:
+        application/json:
+          schema:
+            $ref: 'item.model.yaml#/ItemSearch'
+      required: true
     parameters:
-      - name: searchTerm
-        in: query
-        description: Search term
-        required: true
-        schema:
-          type: string
       - name: offset
         in: query
         description: An offset.
@@ -394,8 +395,6 @@ item-search:
         in: query
         schema:
           type: string
-
-
     responses:
       200:
         description: Successful operation
