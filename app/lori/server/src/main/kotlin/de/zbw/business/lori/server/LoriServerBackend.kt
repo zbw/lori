@@ -955,7 +955,10 @@ class LoriServerBackend(
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
          */
-        val SEARCH_KEY_REGEX = Regex("\\w+:[^\"\')\\s]+|\\w+:'(\\s|[^\'])+'|\\w+:\"(\\s|[^\"])+\"")
+        val SEARCH_KEY_REGEX =
+            Regex(
+                """\w+:[^\s"'()]+|\w+:'[^']*'|\w+:"[^"]*"""",
+            )
 
         fun hasSearchTokensWithNoKey(s: String): Boolean =
             s

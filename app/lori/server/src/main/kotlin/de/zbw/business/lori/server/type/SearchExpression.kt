@@ -56,7 +56,7 @@ object SearchGrammar : Grammar<SearchExpression>() {
     val and by literalToken("&")
     val or by literalToken("|")
 
-    // Even if not used this variable seems to be necessary according to documentation
+    // Even if not used, this variable seems necessary according to documentation
     val ws by regexToken("\\s+", ignore = true)
 
     private val negation by -not * parser(this::term) map { SENot(it) }

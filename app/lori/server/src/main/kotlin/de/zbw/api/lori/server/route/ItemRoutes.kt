@@ -22,6 +22,7 @@ import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
+import de.zbw.lori.model.ItemSearch
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -359,7 +360,7 @@ fun Routing.itemRoutes(
             }
         }
 
-        get("search") {
+        post("search") {
             val span =
                 tracer
                     .spanBuilder("lori.LoriService.GET/api/v1/item/search")
@@ -367,7 +368,13 @@ fun Routing.itemRoutes(
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
-                    val searchTerm: String? = call.request.queryParameters["searchTerm"]
+                    @Suppress("SENSELESS_COMPARISON")
+                    val searchTerm: String =
+                        call
+                            .receive(ItemSearch::class)
+                            .takeIf { it.searchTerm != null }
+                            ?.searchTerm
+                            ?: throw BadRequestException("Invalid Json has been provided")
                     val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                     val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
@@ -423,7 +430,7 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterAccessStateOn"],
                         )
 
-                    span.setAttribute("searchTerm", searchTerm ?: "")
+                    span.setAttribute("searchTerm", searchTerm)
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
                     span.setAttribute("pageSize", pageSize.toString())

@@ -52,7 +52,14 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_JOURNAL
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_SERIES
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
-import de.zbw.persistence.lori.server.MetadataDB.Companion.STATEMENT_SELECT_ALL_METADATA
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_COLLECTION
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_COLLECTION_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_COMMUNITY
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_COMMUNITY_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_SUBCOMMUNITY_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_SUBCOMMUNITY_NAME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.TS_TITLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
 import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_HAS_LEGAL_RISK
 import io.opentelemetry.api.trace.Tracer
@@ -504,7 +511,21 @@ class SearchDB(
 
     companion object {
         const val ALIAS_ITEM_RIGHT = "ir"
+        const val ALIAS_ITEM_METADATA = "im"
         const val SUBQUERY_NAME = "sub"
+
+        const val STATEMENT_SELECT_ALL_METADATA =
+            "SELECT $ALIAS_ITEM_METADATA.handle,ppn,title,title_journal," +
+                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
+                "$ALIAS_ITEM_METADATA.created_on,$ALIAS_ITEM_METADATA.last_updated_on," +
+                "$ALIAS_ITEM_METADATA.created_by,$ALIAS_ITEM_METADATA.last_updated_by," +
+                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "community_handle,collection_handle," +
+                "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
+                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
+                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
+                "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME"
 
         const val STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES =
             "SELECT $COLUMN_METADATA_HANDLE,$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
@@ -519,14 +540,14 @@ class SearchDB(
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED"
 
         const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
-            "SELECT DISTINCT ON ($TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
+            "SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
                 "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_YEAR," +
                 "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
                 "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,$COLUMN_METADATA_ISSN," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_CREATED_ON,$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_ON," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_CREATED_BY," +
-                "$TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_BY,$COLUMN_METADATA_AUTHOR,$COLUMN_METADATA_COLLECTION_NAME," +
+                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_CREATED_ON,$ALIAS_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_ON," +
+                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_CREATED_BY," +
+                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_BY,$COLUMN_METADATA_AUTHOR,$COLUMN_METADATA_COLLECTION_NAME," +
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
@@ -569,7 +590,7 @@ class SearchDB(
                     noRightInformationFilter == null &&
                     metadataSearchFilters.isEmpty()
                 ) {
-                    buildSearchQuerySelect(hasRightSearchFilter = false) + " FROM $TABLE_NAME_ITEM_METADATA" +
+                    buildSearchQuerySelect(hasRightSearchFilter = false) + " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             null,
                             metadataSearchFilters,
@@ -580,7 +601,7 @@ class SearchDB(
                     SearchExpressionResolution.hasRightQueries(searchExpression).not()
                 ) {
                     buildSearchQuerySelect(hasRightSearchFilter = false) +
-                        " FROM $TABLE_NAME_ITEM_METADATA" +
+                        " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             searchExpression,
                             metadataSearchFilters,
@@ -593,7 +614,7 @@ class SearchDB(
                                     searchExpression,
                                 ),
                     ) +
-                        " FROM $TABLE_NAME_ITEM_METADATA" +
+                        " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             searchExpression,
                             metadataSearchFilters,
@@ -608,7 +629,7 @@ class SearchDB(
                     " FROM ($subquery) as $SUBQUERY_NAME" +
                     " $filterHandles ORDER BY $COLUMN_METADATA_HANDLE ASC$limit$offset"
             } else {
-                "$subquery ORDER BY item_metadata.$COLUMN_METADATA_HANDLE ASC$limit$offset"
+                "$subquery ORDER BY ${ALIAS_ITEM_METADATA}.$COLUMN_METADATA_HANDLE ASC$limit$offset"
             }
         }
 
@@ -673,11 +694,9 @@ class SearchDB(
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String {
-            val metadataReference = "im"
-            val rightReference = "ir"
             val selectInWith =
-                "SELECT $metadataReference.$columnName, $rightReference.$COLUMN_RIGHT_ID," +
-                    " $metadataReference.$COLUMN_METADATA_HANDLE"
+                "SELECT $ALIAS_ITEM_METADATA.$columnName, $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID," +
+                    " $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE"
 
             val subsequentSelect =
                 "SELECT mw.$columnName, COUNT(*)" +
@@ -695,10 +714,10 @@ class SearchDB(
             val withStatement =
                 "WITH metadata_with_rights AS (" +
                     " $selectInWith" +
-                    " FROM $TABLE_NAME_ITEM_METADATA $metadataReference" +
-                    " LEFT JOIN $TABLE_NAME_ITEM i ON i.$COLUMN_METADATA_HANDLE = $metadataReference.$COLUMN_METADATA_HANDLE" +
-                    " LEFT JOIN $TABLE_NAME_ITEM_RIGHT $rightReference ON i.$COLUMN_RIGHT_ID = $rightReference.$COLUMN_RIGHT_ID" +
-                    " WHERE $metadataReference.$columnName IS NOT NULL AND ($whereClause))"
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN $TABLE_NAME_ITEM i ON i.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
+                    " LEFT JOIN $TABLE_NAME_ITEM_RIGHT $ALIAS_ITEM_RIGHT ON i.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
+                    " WHERE $ALIAS_ITEM_METADATA.$columnName IS NOT NULL AND ($whereClause))"
 
             val metadataUnique =
                 "metadata_unique AS (" +
@@ -721,9 +740,9 @@ class SearchDB(
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String {
-            val rightReference = "ir"
-            val metadataReference = "im"
-            val selectInWith = "SELECT DISTINCT ON ($metadataReference.handle, $rightReference.$columnName) $rightReference.$columnName"
+            val selectInWith =
+                "SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.handle, $ALIAS_ITEM_RIGHT.$columnName)" +
+                    " $ALIAS_ITEM_RIGHT.$columnName"
 
             val count = "COUNT(*)"
             val subsequentSelect =
@@ -742,10 +761,10 @@ class SearchDB(
             val withStatement =
                 "WITH metadata_with_rights AS (" +
                     " $selectInWith" +
-                    " FROM item_metadata $metadataReference" +
-                    " LEFT JOIN item i ON i.handle = $metadataReference.handle" +
-                    " LEFT JOIN item_right $rightReference ON i.right_id = $rightReference.right_id" +
-                    " WHERE $rightReference.$columnName IS NOT NULL AND ($whereClause))"
+                    " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
+                    " LEFT JOIN item_right $ALIAS_ITEM_RIGHT ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
+                    " WHERE $ALIAS_ITEM_RIGHT.$columnName IS NOT NULL AND ($whereClause))"
 
             return "$withStatement $subsequentSelect"
         }
@@ -885,7 +904,7 @@ class SearchDB(
                     ?: ""
 
             return " LEFT JOIN $TABLE_NAME_ITEM" +
-                " ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $TABLE_NAME_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
+                " ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                 " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT" +
                 " ON $TABLE_NAME_ITEM.right_id = ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ID" +
                 extendedRightFilter +
