@@ -121,6 +121,7 @@ class LoriServerBackend(
                 groupId = id,
             )
         }
+        createRelationshipsByRight(right)
         return generatedRightId
     }
 
@@ -162,7 +163,12 @@ class LoriServerBackend(
             )
         }
 
-        return Either.Right(dbConnector.rightDB.upsertRight(right))
+        val insertedRows = dbConnector.rightDB.upsertRight(right)
+        if (insertedRows == 1) {
+            createRelationshipsByRight(right)
+        }
+
+        return Either.Right(insertedRows)
     }
 
     suspend fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
@@ -797,7 +803,7 @@ class LoriServerBackend(
             }
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
-                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList<String>(),
+                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList(),
             )
         val bookmarksExceptions: List<Bookmark> =
             dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
@@ -950,6 +956,32 @@ class LoriServerBackend(
                 results = results.await(),
             )
         }
+
+    suspend fun createRelationshipsByRight(right: ItemRight) {
+        if (right.rightId == null) {
+            return
+        }
+        if (right.predecessorId != null) {
+            addRelationship(
+                relationship =
+                    RelationshipRest(
+                        relationship = RelationshipRest.Relationship.predecessor,
+                        sourceRightId = right.rightId,
+                        targetRightId = right.predecessorId,
+                    ),
+            )
+        }
+        if (right.successorId != null) {
+            addRelationship(
+                relationship =
+                    RelationshipRest(
+                        relationship = RelationshipRest.Relationship.successor,
+                        sourceRightId = right.rightId,
+                        targetRightId = right.successorId,
+                    ),
+            )
+        }
+    }
 
     suspend fun addRelationship(relationship: RelationshipRest) {
         val rights =

@@ -37,6 +37,7 @@ import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
+import RelationshipConnect from "@/components/RelationshipConnect.vue";
 
 export default defineComponent({
   computed: {
@@ -107,6 +108,7 @@ export default defineComponent({
 
   // Components
   components: {
+    RelationshipConnect,
     ExceptionConnect,
     Dashboard,
     TemplateBookmark,
@@ -142,6 +144,7 @@ export default defineComponent({
       selectedGroups: [] as Array<GroupRest>,
       exceptionTemplates: [] as Array<RightRest>,
       selectedBookmarks: [] as Array<BookmarkRest>,
+      predecessors: [] as Array<RightRest>,
     });
 
     const isStartDateMenuOpen = ref(false);
@@ -186,7 +189,8 @@ export default defineComponent({
               formState.templateName != "" ||
               formState.templateDescription != "" ||
               formState.selectedBookmarks.length != 0 ||
-              formState.exceptionTemplates.length != 0
+              formState.exceptionTemplates.length != 0 ||
+              formState.predecessors.length != 0
           )
       ))
     });
@@ -202,7 +206,8 @@ export default defineComponent({
                   formState.templateName != lastSavedRight.value.templateName ||
                   formState.templateDescription != (lastSavedRight.value.templateDescription == undefined ? "" : lastSavedRight.value.templateDescription) ||
                   JSON.stringify(formState.selectedBookmarks) != JSON.stringify(lastSavedBookmarkItems.value) ||
-                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value)
+                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value) ||
+                  JSON.stringify(formState.predecessors) != JSON.stringify(lastSavedPredecessors.value)
                 )
           )
       )
@@ -470,6 +475,7 @@ export default defineComponent({
       tmpRight.value.isTemplate = true;
       tmpRight.value.templateName = formState.templateName;
       tmpRight.value.templateDescription = formState.templateDescription;
+      tmpRight.value.predecessorId = formState.predecessors.join(",");
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
@@ -502,6 +508,12 @@ export default defineComponent({
     const updateTemplate = () => {
       tmpRight.value.templateName = formState.templateName;
       tmpRight.value.templateDescription = formState.templateDescription;
+      tmpRight.value.predecessorId =
+          formState.predecessors
+              .map((e) => e.rightId)
+              .filter((id): id is string => id != null)
+              .join(",")
+
       templateApi
         .updateTemplate(tmpRight.value)
         .then(() => {
@@ -967,6 +979,7 @@ export default defineComponent({
           if (isTemplate.value) {
             loadBookmarks();
             loadExceptions();
+            loadPredecessor();
           }
         });
       } else {
@@ -1162,6 +1175,30 @@ export default defineComponent({
       }
     };
 
+    const loadPredecessor = () => {
+      if (computedRightId.value == undefined) {
+        errorMsg.value =
+            "Error while loading relationships. Invalid Template ID.";
+        errorMsgIsActive.value = true;
+        return;
+      }
+      if(lastSavedRight.value.predecessorId == undefined){
+        return;
+      }
+      rightApi
+        .getRightById(lastSavedRight.value.predecessorId)
+        .then((predecessor: RightRest) => {
+          formState.predecessors = [predecessor];
+          lastSavedPredecessors.value = [predecessor];
+        })
+        .catch((e: ResponseError) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+        });
+    };
+
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
       formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
@@ -1192,6 +1229,25 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+    };
+
+    // Relationships
+    const renderPredecessorKey = ref(0);
+    const dialogConnectRelationship = ref(false);
+    const dialogConnectRelationshipCounter = ref(0);
+    const lastSavedPredecessors: Ref<Array<RightRest>> = ref([]);
+
+    const openDialogRelationship = () => {
+      dialogConnectRelationship.value = true;
+    };
+
+    const closeDialogRelationship = () => {
+      dialogConnectRelationship.value = false;
+    };
+
+    const connectPredecessorRelationship = (rights: Array<RightRest>) => {
+      formState.predecessors = rights;
+      renderTemplateKey.value += 1;
     };
 
     // DryRun + Dashboard
@@ -1303,6 +1359,8 @@ export default defineComponent({
       currentTemplateApplicationResult,
       dashboardViewActivated,
       dialogConnectException,
+      dialogConnectRelationship,
+      dialogConnectRelationshipCounter,
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -1337,6 +1395,7 @@ export default defineComponent({
       openBookmarkSearch,
       openDialogException,
       renderBookmarkKey,
+      renderPredecessorKey,
       renderTemplateKey,
       startDateFormatted,
       exceptionTemplateHeaders,
@@ -1357,8 +1416,10 @@ export default defineComponent({
       closeCreateExceptionDialog,
       closeDashboard,
       closeDialogExceptionConnect,
+      closeDialogRelationship,
       closeDialogSimulationResult,
       closeUnsavedChangesDialog,
+      connectPredecessorRelationship,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
@@ -1370,6 +1431,7 @@ export default defineComponent({
       openCreateExceptionDialog,
       openDashboard,
       openDialogExceptionConnect,
+      openDialogRelationship,
       selectBookmark,
       setSelectedBookmarks,
       save,
@@ -1849,6 +1911,42 @@ export default defineComponent({
                       v-on:editRightClosed="closeCreateExceptionDialog"
                       v-on:addTemplateSuccessful="addNewException"
                     ></RightsEditDialog>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  Vorgänger
+                </v-col>
+                <v-col cols="8">
+                  <v-data-table
+                      :key="renderPredecessorKey"
+                      :headers="exceptionTemplateHeaders"
+                      :items="formState.predecessors"
+                      item-value="rightId"
+                      loading-text="Daten werden geladen... Bitte warten."
+                  >
+                    <template #bottom></template>
+                  </v-data-table>
+                  <v-btn
+                      color="blue darken-1"
+                      :disabled="formState.predecessors.length != 0"
+                      @click="openDialogRelationship"
+                  >Vorgänger verknüpfen
+                  </v-btn>
+                  <v-dialog
+                      v-model="dialogConnectRelationship"
+                      :retain-focus="false"
+                      max-width="500px"
+                  >
+                    <RelationshipConnect
+                        :reinit-counter="dialogConnectRelationshipCounter"
+                        :rightId="rightId"
+                        :relationship="'predecessor'"
+                        v-on:predecessorSelected="connectPredecessorRelationship"
+                        v-on:successorSelected="connectPredecessorRelationship"
+                        v-on:relationshipConnectClosed="closeDialogRelationship"
+                    ></RelationshipConnect>
                   </v-dialog>
                 </v-col>
               </v-row>
