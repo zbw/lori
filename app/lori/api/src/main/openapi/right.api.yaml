@@ -165,3 +165,42 @@ right-id:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+relationship:
+  post:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - right
+    summary: Link two templated together in a predecessor/successor relationship
+    operationId: addRelationship
+    requestBody:
+      description: Relationship
+      content:
+        application/json:
+          schema:
+            $ref: 'right.model.yaml#/RelationshipRest'
+      required: true
+    responses:
+      201:
+        description: Successfully created
+        content:
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

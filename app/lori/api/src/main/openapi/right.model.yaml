@@ -76,11 +76,15 @@ RightRest:
       type: string
     notesManagementRelated:
       type: string
+    predecessorId:
+      type: string
     restrictedOpenContentLicence:
       type: boolean
     startDate:
       type: string
       format: date
+    successorId:
+      type: string
     templateDescription:
       type: string
     templateName:
@@ -94,4 +98,21 @@ RightIdCreated:
   type: object
   properties:
     rightId:
+      type: string
+
+RelationshipRest:
+  required:
+    - relationship
+    - sourceRightId
+    - targetRightId
+  type: object
+  properties:
+    relationship:
+      type: string
+      enum:
+        - predecessor
+        - successor
+    sourceRightId:
+      type: string
+    targetRightId:
       type: string

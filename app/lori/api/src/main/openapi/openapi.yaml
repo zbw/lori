@@ -60,6 +60,8 @@ paths:
     $ref: 'right.api.yaml#/right'
   /right/{id}:
     $ref: 'right.api.yaml#/right-id'
+  /right/relationship:
+    $ref: 'right.api.yaml#/relationship'
   /users/sessions:
     $ref: 'users.api.yaml#/sessions'
   /template:

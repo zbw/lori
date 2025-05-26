@@ -144,6 +144,12 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
+            this.setIfNotNull(localCounter++, right.predecessorId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(localCounter++, right.successorId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
         }
     }
 
@@ -213,6 +219,12 @@ class RightDB(
             }
             this.setBoolean(localCounter++, right.hasLegalRisk != false)
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(localCounter++, right.predecessorId) { value, idx, prepStmt ->
+                prepStmt.setString(idx, value)
+            }
+            this.setIfNotNull(localCounter++, right.successorId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
         }
@@ -598,12 +610,62 @@ class RightDB(
         }
     }
 
+    suspend fun setPredecessor(
+        sourceRightId: String,
+        targetRightId: String,
+    ): Int =
+        connectionPool.useConnection("addPredecessor") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SET_PREDECESSOR).apply {
+                    this.setString(1, targetRightId)
+                    this.setString(2, sourceRightId)
+                }
+            val span = tracer.spanBuilder("addPredecessor").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
+    suspend fun setSuccessor(
+        sourceRightId: String,
+        targetRightId: String,
+    ): Int =
+        connectionPool.useConnection("addSuccessor") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SET_SUCCESSOR).apply {
+                    this.setString(1, targetRightId)
+                    this.setString(2, sourceRightId)
+                }
+            val span = tracer.spanBuilder("addSuccessor").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
         private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
         const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
         private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
+        private const val COLUMN_PREDECESSOR_ID = "predecessor_id"
+        private const val COLUMN_SUCCESSOR_ID = "successor_id"
+
+        const val STATEMENT_SELECT_ALL =
+            "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
+                "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
+                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
+                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
+                "basis_access_state,notes_process_documentation, notes_management_related," +
+                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
+                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID," +
+                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -611,13 +673,7 @@ class RightDB(
                 " WHERE $COLUMN_IS_TEMPLATE = true"
 
         const val STATEMENT_GET_RIGHTS =
-            "SELECT $COLUMN_RIGHT_ID, created_on, last_updated_on, created_by," +
-                "last_updated_by, $COLUMN_RIGHT_ACCESS_STATE, start_date, end_date, notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT, $COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE, notes_formal_rules, basis_storage," +
-                "basis_access_state, notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE, template_name, template_description, $COLUMN_LAST_APPLIED_ON, $COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
+            STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
@@ -638,7 +694,8 @@ class RightDB(
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID) " +
+                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID,$COLUMN_PREDECESSOR_ID," +
+                "$COLUMN_SUCCESSOR_ID) " +
                 "VALUES(?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -646,7 +703,8 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)"
+                "?,?,?," +
+                "?)"
 
         const val STATEMENT_UPSERT_RIGHT =
             "INSERT INTO $TABLE_NAME_ITEM_RIGHT" +
@@ -657,7 +715,8 @@ class RightDB(
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID) " +
+                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID,$COLUMN_PREDECESSOR_ID," +
+                "$COLUMN_SUCCESSOR_ID) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -665,7 +724,8 @@ class RightDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)" +
+                "?,?,?," +
+                "?)" +
                 " ON CONFLICT ($COLUMN_RIGHT_ID)" +
                 " DO UPDATE SET" +
                 " last_updated_on = EXCLUDED.last_updated_on," +
@@ -687,7 +747,9 @@ class RightDB(
                 "template_description = EXCLUDED.template_description," +
                 "$COLUMN_EXCEPTION_OF_ID = EXCLUDED.$COLUMN_EXCEPTION_OF_ID," +
                 "$COLUMN_HAS_EXCEPTION_ID = EXCLUDED.$COLUMN_HAS_EXCEPTION_ID," +
-                "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK;"
+                "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK," +
+                "$COLUMN_PREDECESSOR_ID = EXCLUDED.$COLUMN_PREDECESSOR_ID," +
+                "$COLUMN_SUCCESSOR_ID = EXCLUDED.$COLUMN_SUCCESSOR_ID;"
 
         const val STATEMENT_DELETE_RIGHTS =
             "DELETE " +
@@ -695,35 +757,17 @@ class RightDB(
                 "WHERE r.$COLUMN_RIGHT_ID = ANY(?)"
 
         const val STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID =
-            "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
-                "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
-                "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
-                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
+            STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_EXCEPTION_OF_ID = ?"
 
         const val STATEMENT_GET_TEMPLATES =
-            "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
-                "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
-                "basis_access_state,notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
-                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
+            STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_IS_TEMPLATE = true"
 
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
-            "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
-                "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
-                "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
-                "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
-                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID" +
+            STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
                 " WHERE $COLUMN_RIGHT_TEMPLATE_NAME = ANY(?)"
 
@@ -745,6 +789,16 @@ class RightDB(
         const val STATEMENT_SET_HAS_EXCEPTION_ID =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
                 " SET $COLUMN_HAS_EXCEPTION_ID=?" +
+                " WHERE $COLUMN_RIGHT_ID=?;"
+
+        const val STATEMENT_SET_PREDECESSOR =
+            "UPDATE $TABLE_NAME_ITEM_RIGHT" +
+                " SET $COLUMN_PREDECESSOR_ID=?" +
+                " WHERE $COLUMN_RIGHT_ID=?;"
+
+        const val STATEMENT_SET_SUCCESSOR =
+            "UPDATE $TABLE_NAME_ITEM_RIGHT" +
+                " SET $COLUMN_SUCCESSOR_ID=?" +
                 " WHERE $COLUMN_RIGHT_ID=?;"
 
         fun extractRightFromRS(rs: ResultSet): ItemRight {
@@ -793,6 +847,8 @@ class RightDB(
                 exceptionOfId = rs.getString(localCounter++),
                 hasLegalRisk = rs.getBoolean(localCounter++),
                 hasExceptionId = rs.getString(localCounter++),
+                predecessorId = rs.getString(localCounter++),
+                successorId = rs.getString(localCounter++),
                 groups = null,
                 groupIds = null,
             )

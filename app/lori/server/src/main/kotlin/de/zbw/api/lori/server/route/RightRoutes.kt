@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.lori.model.RelationshipRest
 import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightRest
 import io.ktor.http.HttpStatusCode
@@ -233,6 +234,41 @@ fun Routing.rightRoutes(
                                 )
                             }
                         }
+                    } catch (e: Exception) {
+                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
+                    } finally {
+                        span.end()
+                    }
+                }
+            }
+
+            post("/relationship") {
+                val span =
+                    tracer
+                        .spanBuilder("lori.LoriService.GET/api/v1/right/relationship")
+                        .setSpanKind(SpanKind.SERVER)
+                        .startSpan()
+                withContext(span.asContextElement()) {
+                    try {
+                        @Suppress("SENSELESS_COMPARISON")
+                        val relationship: RelationshipRest =
+                            call
+                                .receive(RelationshipRest::class)
+                                .takeIf { it.sourceRightId != null && it.targetRightId != null && it.relationship != null }
+                                ?: throw BadRequestException("Invalid Json has been provided")
+
+                        if (relationship.sourceRightId == relationship.targetRightId) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_RELATIONSHIP),
+                            )
+                        }
+                        backend.addRelationship(
+                            relationship,
+                        )
+                        span.setStatus(StatusCode.OK)
+                        call.respond(HttpStatusCode.Created)
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
