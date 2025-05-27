@@ -85,7 +85,7 @@ export default defineComponent({
     const getBookmarkList = () => {
       bookmarkApi
         // TODO: Load entries dynamically
-        .getBookmarkList(0, 200)
+        .getBookmarkList(0, 500)
         .then((r: Array<BookmarkRest>) => {
           bookmarkItems.value = r;
         })
