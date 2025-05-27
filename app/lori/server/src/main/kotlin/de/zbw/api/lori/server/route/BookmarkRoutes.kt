@@ -170,10 +170,10 @@ fun Routing.bookmarkRoutes(
                     try {
                         val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 100
                         val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
-                        if (limit < 1 || limit > 200) {
+                        if (limit < 1 || limit > 500) {
                             span.setStatus(
                                 StatusCode.ERROR,
-                                "BadRequest: Limit parameter is expected to be between 1 and 200.",
+                                "BadRequest: Limit parameter is expected to be between 1 and 500.",
                             )
                             call.respond(
                                 HttpStatusCode.BadRequest,
