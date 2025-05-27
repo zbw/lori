@@ -101,7 +101,7 @@ abstract class SearchFilter(
                             searchValue
                                 .uppercase()
                                 .replace("LIZENZVERTRAG", FormalRule.LICENCE_CONTRACT.toString())
-                                .replace("CC LIZENZ OHNE EINSCHRÄNKUNG", FormalRule.CC_LICENCE_NO_RESTRICTION.toString())
+                                .replace("CC-LIZENZ OHNE EINSCHRÄNKUNG", FormalRule.CC_LICENCE_NO_RESTRICTION.toString())
                                 .replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
                         )
                     "nor" ->

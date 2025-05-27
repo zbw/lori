@@ -176,7 +176,7 @@ export default defineComponent({
     };
 
     const ppCCLicenceNoRestriction = (count: number) => {
-      return "CC Lizenz ohne Einschränkung " + "(" + count + ")";
+      return "CC-Lizenz ohne Einschränkung " + "(" + count + ")";
     };
 
     const ppZBWUserAgreements = (count: number) => {
