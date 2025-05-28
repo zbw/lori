@@ -34,7 +34,7 @@ export default defineComponent({
     const groupLoadErrorMsg = ref("");
     const getGroupList = () => {
       api
-        .getGroupList(0, 100 )
+        .getGroupList(0, 500 )
         .then((r: Array<GroupRest>) => {
           groupItems.value = r;
         })

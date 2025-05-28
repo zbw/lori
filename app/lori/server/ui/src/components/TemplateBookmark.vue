@@ -32,7 +32,7 @@ export default defineComponent({
     const selectedBookmarks: Ref<Array<BookmarkRest>> = ref([]);
     const getBookmarkList = () => {
       bookmarkApi
-        .getBookmarkList(0, 100) // TODO: simplification for now
+        .getBookmarkList(0, 500) // TODO: simplification for now
         .then((r: Array<BookmarkRest>) => {
           bookmarkItems.value = r;
         })
