@@ -30,25 +30,40 @@ class QueryParameterParserTest {
             arrayOf(
                 "2000-2022",
                 PublicationYearFilter(2000, 2022),
+                "both years",
             ),
             arrayOf(
                 "2000-",
                 PublicationYearFilter(2000, null),
+                "only fromYear",
             ),
             arrayOf(
                 "-2000",
                 PublicationYearFilter(null, 2000),
+                "only toYear",
             ),
             arrayOf(
                 "foobar",
                 null,
+                "invalid term",
+            ),
+            arrayOf(
+                null,
+                null,
+                "null",
+            ),
+            arrayOf(
+                "",
+                null,
+                "empty term",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_PARSE_PUBLICATION_YEAR)
     fun testParsePublicationYearFilter(
-        input: String,
+        input: String?,
         expectedFilter: PublicationYearFilter?,
+        reason: String,
     ) {
         // when
         val received = QueryParameterParser.parsePublicationYearFilter(input)
@@ -58,12 +73,14 @@ class QueryParameterParserTest {
             assertNull(received)
         } else {
             assertThat(
+                reason,
                 received!!.fromYear,
                 `is`(
                     expectedFilter.fromYear,
                 ),
             )
             assertThat(
+                reason,
                 received.toYear,
                 `is`(
                     expectedFilter.toYear,

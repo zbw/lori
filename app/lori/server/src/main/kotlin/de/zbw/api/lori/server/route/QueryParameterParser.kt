@@ -45,13 +45,22 @@ object QueryParameterParser {
         val noFromYear = s.matches("-\\d+".toRegex())
         val both = s.matches("\\d+-\\d+".toRegex())
         return if (noFromYear || noToYear || both) {
+            val fromYear =
+                runCatching {
+                    if (noToYear || both) s.substringBefore("-").toInt() else null
+                }.getOrNull()
+
+            val toYear =
+                runCatching {
+                    if (noFromYear || both) s.substringAfter("-").toInt() else null
+                }.getOrNull()
+
+            if (toYear == null && fromYear == null) {
+                return null
+            }
             PublicationYearFilter(
-                noFromYear
-                    .takeIf { !it }
-                    ?.let { s.substringBefore("-").toInt() },
-                noToYear
-                    .takeIf { !it }
-                    ?.let { s.substringAfter("-").toInt() },
+                fromYear,
+                toYear,
             )
         } else {
             null
