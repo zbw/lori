@@ -524,6 +524,7 @@ export default defineComponent({
         <template v-slot:item.actions="{ item }">
           <v-tooltip location="bottom" text="Kopieren">
             <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-inline-block">
               <v-icon
                   class="tooltip-btn"
                   small
@@ -531,12 +532,14 @@ export default defineComponent({
                   @click="copyTemplate(item)"
                   :disabled="!userStore.isLoggedIn"
               >
-                mdi-content-copy
+                  mdi-content-copy
               </v-icon>
+              </div>
             </template>
             <span v-if="!userStore.isLoggedIn">
               Kopieren
             </span>
+            <span v-else>Kopieren</span>
           </v-tooltip>
           <v-tooltip location="bottom" :text="tooltipEditText">
             <template v-slot:activator="{ props }">

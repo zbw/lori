@@ -699,7 +699,7 @@ export default defineComponent({
                 .filter((id): id is string => id != null)
                 .join(",")
         tmpRight.value.isTemplate = true;
-        if (tmpRight.value.successorId != undefined && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
+        if (tmpRight.value.successorId != undefined && tmpRight.value.successorId != "" && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
           errorMsg.value = "Fehler beim Speichern des Templates. Vorgänger und Nachfolger Template sind gleich!";
           errorSources.value = getErrorSources();
           errorMsgIsActive.value = true;
@@ -2159,7 +2159,7 @@ export default defineComponent({
                       color="blue darken-1"
                       :disabled="formState.successors.length != 0"
                       @click="openDialogSuccessor"
-                  >Vorgänger verknüpfen
+                  >Nachfolger verknüpfen
                   </v-btn>
                   <v-dialog
                       v-model="dialogConnectSuccessor"
