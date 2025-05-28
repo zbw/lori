@@ -699,7 +699,7 @@ export default defineComponent({
                 .filter((id): id is string => id != null)
                 .join(",")
         tmpRight.value.isTemplate = true;
-        if (tmpRight.value.successorId != undefined && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
+        if (tmpRight.value.successorId != undefined && tmpRight.value.successorId != "" && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
           errorMsg.value = "Fehler beim Speichern des Templates. Vorgänger und Nachfolger Template sind gleich!";
           errorSources.value = getErrorSources();
           errorMsgIsActive.value = true;
