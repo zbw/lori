@@ -360,7 +360,13 @@ class PublicationYearFilter(
         return "${getFilterType().keyAlias}:$fromYearString-$toYearString"
     }
 
-    override fun toSQLString(): String = "$fromYear-$toYear"
+    override fun toSQLString(): String {
+        val fromYearString =
+            fromYear?.toString() ?: ""
+        val toYearString =
+            toYear?.toString() ?: ""
+        return "$fromYearString-$toYearString"
+    }
 
     override fun getFilterType(): FilterType = FilterType.PUBLICATION_YEAR
 
