@@ -534,6 +534,9 @@ export default defineComponent({
                 mdi-content-copy
               </v-icon>
             </template>
+            <span v-if="!userStore.isLoggedIn">
+              Kopieren
+            </span>
           </v-tooltip>
           <v-tooltip location="bottom" :text="tooltipEditText">
             <template v-slot:activator="{ props }">

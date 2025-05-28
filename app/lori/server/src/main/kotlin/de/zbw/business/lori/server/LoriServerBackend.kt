@@ -27,6 +27,7 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.DashboardUtil
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.RightErrorDB
@@ -120,6 +121,7 @@ class LoriServerBackend(
                 groupId = id,
             )
         }
+        createRelationshipsByRight(right)
         return generatedRightId
     }
 
@@ -161,7 +163,12 @@ class LoriServerBackend(
             )
         }
 
-        return Either.Right(dbConnector.rightDB.upsertRight(right))
+        val insertedRows = dbConnector.rightDB.upsertRight(right)
+        if (insertedRows == 1) {
+            createRelationshipsByRight(right)
+        }
+
+        return Either.Right(insertedRows)
     }
 
     suspend fun upsertMetadataElements(metadataElems: List<ItemMetadata>): IntArray =
@@ -796,7 +803,7 @@ class LoriServerBackend(
             }
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
-                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList<String>(),
+                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList(),
             )
         val bookmarksExceptions: List<Bookmark> =
             dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
@@ -949,6 +956,70 @@ class LoriServerBackend(
                 results = results.await(),
             )
         }
+
+    suspend fun createRelationshipsByRight(right: ItemRight) {
+        if (right.rightId == null) {
+            return
+        }
+        if (right.predecessorId != null) {
+            addRelationship(
+                relationship =
+                    RelationshipRest(
+                        relationship = RelationshipRest.Relationship.predecessor,
+                        sourceRightId = right.rightId,
+                        targetRightId = right.predecessorId,
+                    ),
+            )
+        }
+        if (right.successorId != null) {
+            addRelationship(
+                relationship =
+                    RelationshipRest(
+                        relationship = RelationshipRest.Relationship.successor,
+                        sourceRightId = right.rightId,
+                        targetRightId = right.successorId,
+                    ),
+            )
+        }
+    }
+
+    suspend fun addRelationship(relationship: RelationshipRest) {
+        val rights =
+            dbConnector.rightDB.getRightsByIds(
+                listOf(
+                    relationship.sourceRightId,
+                    relationship.targetRightId,
+                ),
+            )
+
+        if (rights.size != 2) {
+            /**
+             * If either of the given Right-IDs does not exist, do nothing.
+             */
+            return
+        }
+        if (relationship.relationship == RelationshipRest.Relationship.predecessor) {
+            dbConnector.rightDB.setPredecessor(
+                sourceRightId = relationship.sourceRightId,
+                targetRightId = relationship.targetRightId,
+            )
+            dbConnector.rightDB.setSuccessor(
+                sourceRightId = relationship.targetRightId,
+                targetRightId = relationship.sourceRightId,
+            )
+        }
+
+        if (relationship.relationship == RelationshipRest.Relationship.successor) {
+            dbConnector.rightDB.setSuccessor(
+                sourceRightId = relationship.sourceRightId,
+                targetRightId = relationship.targetRightId,
+            )
+            dbConnector.rightDB.setPredecessor(
+                sourceRightId = relationship.targetRightId,
+                targetRightId = relationship.sourceRightId,
+            )
+        }
+    }
 
     companion object {
         /**

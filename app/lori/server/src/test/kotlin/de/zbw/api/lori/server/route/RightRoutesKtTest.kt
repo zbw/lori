@@ -12,6 +12,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.lori.model.AccessStateRest
+import de.zbw.lori.model.RelationshipRest
 import de.zbw.lori.model.RightRest
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -395,6 +396,68 @@ class RightRoutesKtTest {
                 response.status,
                 `is`(HttpStatusCode.InternalServerError),
             )
+        }
+    }
+
+    @Test
+    fun testPostRelationShipOK() {
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { addRelationship(any()) } returns Unit
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/right/relationship") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(
+                        jsonAsString(
+                            RelationshipRest(
+                                relationship = RelationshipRest.Relationship.successor,
+                                sourceRightId = "1",
+                                targetRightId = "2",
+                            ),
+                        ),
+                    )
+                }
+            assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
+        }
+    }
+
+    @Test
+    fun testPostRelationShipBadRequest() {
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { addRelationship(any()) } returns Unit
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/right/relationship") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(
+                        jsonAsString(
+                            RelationshipRest(
+                                relationship = RelationshipRest.Relationship.successor,
+                                sourceRightId = "1",
+                                targetRightId = "1",
+                            ),
+                        ),
+                    )
+                }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
         }
     }
 

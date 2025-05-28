@@ -58,6 +58,7 @@ object ApiError {
         )
 
     const val BAD_REQUEST_END_DATE = "Enddatum muss nach dem Startdatum liegen."
+    const val BAD_REQUEST_RELATIONSHIP = "Ein Template kann nicht Vorgänger/Nachfolger von sich selbst sein."
     const val CONFLICT_RIGHTS = "Es gibt einen Start- und/oder Enddatum Konflikt mit bereits bestehenden Rechten"
     const val INVALID_JSON = "Das JSON Format ist ungültig und konnte nicht gelesen werden."
     const val NO_VALID_ID = "Die URL enthält keine gültige Id."

@@ -37,6 +37,7 @@ import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
+import RelationshipConnect from "@/components/RelationshipConnect.vue";
 
 export default defineComponent({
   computed: {
@@ -107,6 +108,7 @@ export default defineComponent({
 
   // Components
   components: {
+    RelationshipConnect,
     ExceptionConnect,
     Dashboard,
     TemplateBookmark,
@@ -142,6 +144,8 @@ export default defineComponent({
       selectedGroups: [] as Array<GroupRest>,
       exceptionTemplates: [] as Array<RightRest>,
       selectedBookmarks: [] as Array<BookmarkRest>,
+      predecessors: [] as Array<RightRest>,
+      successors: [] as Array<RightRest>,
     });
 
     const isStartDateMenuOpen = ref(false);
@@ -186,7 +190,9 @@ export default defineComponent({
               formState.templateName != "" ||
               formState.templateDescription != "" ||
               formState.selectedBookmarks.length != 0 ||
-              formState.exceptionTemplates.length != 0
+              formState.exceptionTemplates.length != 0 ||
+              formState.predecessors.length != 0 ||
+              formState.successors.length != 0
           )
       ))
     });
@@ -202,7 +208,9 @@ export default defineComponent({
                   formState.templateName != lastSavedRight.value.templateName ||
                   formState.templateDescription != (lastSavedRight.value.templateDescription == undefined ? "" : lastSavedRight.value.templateDescription) ||
                   JSON.stringify(formState.selectedBookmarks) != JSON.stringify(lastSavedBookmarkItems.value) ||
-                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value)
+                  JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value) ||
+                  JSON.stringify(formState.predecessors) != JSON.stringify(lastSavedPredecessors.value) ||
+                  JSON.stringify(formState.successors) != JSON.stringify(lastSavedSuccessors.value)
                 )
           )
       )
@@ -368,6 +376,8 @@ export default defineComponent({
     };
     const closeUnsavedChangesDialog = () => {
       unsavedChangesDialog.value = false;
+      unsavedChangesDialogSucc.value = false;
+      unsavedChangesDialogPred.value = false;
     };
 
     const cancelConfirm = () => {
@@ -467,9 +477,6 @@ export default defineComponent({
      */
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
-      tmpRight.value.isTemplate = true;
-      tmpRight.value.templateName = formState.templateName;
-      tmpRight.value.templateDescription = formState.templateDescription;
       templateApi
         .addTemplate(tmpRight.value)
         .then((r: RightIdCreated) => {
@@ -500,8 +507,6 @@ export default defineComponent({
     };
 
     const updateTemplate = () => {
-      tmpRight.value.templateName = formState.templateName;
-      tmpRight.value.templateDescription = formState.templateDescription;
       templateApi
         .updateTemplate(tmpRight.value)
         .then(() => {
@@ -636,8 +641,10 @@ export default defineComponent({
         errorMsg.value = "Fehler beim Speichern des Templates wegen unvollständiger oder fehlerhafter Angaben:";
         errorSources.value = getErrorSources();
         errorMsgIsActive.value = true;
+        updateInProgress.value = false;
         return;
       }
+
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
       tmpRight.value.basisStorage = stringToBasisStorage(
         formState.basisStorage,
@@ -677,6 +684,29 @@ export default defineComponent({
       tmpRight.value.startDate.setUTCDate(
           formState.startDate.getDate()
       );
+
+      if (isTemplate.value){
+        tmpRight.value.templateName = formState.templateName;
+        tmpRight.value.templateDescription = formState.templateDescription;
+        tmpRight.value.predecessorId =
+            formState.predecessors
+                .map((e) => e.rightId)
+                .filter((id): id is string => id != null)
+                .join(",")
+        tmpRight.value.successorId =
+            formState.successors
+                .map((e) => e.rightId)
+                .filter((id): id is string => id != null)
+                .join(",")
+        tmpRight.value.isTemplate = true;
+        if (tmpRight.value.successorId != undefined && (tmpRight.value.successorId == tmpRight.value.predecessorId)){
+          errorMsg.value = "Fehler beim Speichern des Templates. Vorgänger und Nachfolger Template sind gleich!";
+          errorSources.value = getErrorSources();
+          errorMsgIsActive.value = true;
+          updateInProgress.value = false;
+          return;
+        }
+      }
       if (props.isNewTemplate) {
         createTemplate();
       } else if (isTemplate.value) {
@@ -818,10 +848,13 @@ export default defineComponent({
     onMounted(() => {
       reinitializeRight();
     });
+    const manualRightId = ref("");
     const computedRightId = computed(() => {
       // The check for undefined is required here!
         if (props.rightId == undefined) {
           return "";
+        } else if (manualRightId.value != ""){
+          return manualRightId.value;
         } else {
           return props.rightId;
         }
@@ -937,7 +970,14 @@ export default defineComponent({
       formState.templateName = "";
       formState.templateDescription = "";
       formState.accessState = "";
+      formState.selectedGroups = [];
       formState.selectedBookmarks = [];
+      formState.exceptionTemplates = [];
+      formState.predecessors = [];
+      formState.successors = [];
+      lastSavedSuccessors.value = [];
+      lastSavedPredecessors.value = [];
+      lastSavedExceptionTemplateItems.value = [];
     };
 
     const getRightsData = (callback: () => void) => {
@@ -945,7 +985,7 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(props.rightId)
+          .getRightById(computedRightId.value)
           .then((r: RightRest) => {
             lastSavedRight.value = r;
             callback();
@@ -967,6 +1007,8 @@ export default defineComponent({
           if (isTemplate.value) {
             loadBookmarks();
             loadExceptions();
+            loadPredecessor();
+            loadSuccessor();
           }
         });
       } else {
@@ -1106,7 +1148,7 @@ export default defineComponent({
       const editedIndex = formState.exceptionTemplates.indexOf(entry);
       formState.exceptionTemplates.splice(editedIndex, 1);
       if (entry.rightId != undefined && props.rightId != undefined) {
-        templateApi.removeExceptionToTemplate(props.rightId, entry.rightId).catch((e) => {
+        templateApi.removeExceptionToTemplate(computedRightId.value, entry.rightId).catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
             errorMsgIsActive.value = true;
@@ -1162,6 +1204,54 @@ export default defineComponent({
       }
     };
 
+    const loadPredecessor = () => {
+      if (computedRightId.value == undefined) {
+        errorMsg.value =
+            "Error while loading predecessor. Invalid Template ID.";
+        errorMsgIsActive.value = true;
+        return;
+      }
+      if(lastSavedRight.value.predecessorId == undefined){
+        return;
+      }
+      rightApi
+        .getRightById(lastSavedRight.value.predecessorId)
+        .then((predecessor: RightRest) => {
+          formState.predecessors = [predecessor];
+          lastSavedPredecessors.value = [predecessor];
+        })
+        .catch((e: ResponseError) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+        });
+    };
+
+    const loadSuccessor = () => {
+      if (computedRightId.value == undefined) {
+        errorMsg.value =
+            "Error while loading successor. Invalid Template ID.";
+        errorMsgIsActive.value = true;
+        return;
+      }
+      if(lastSavedRight.value.successorId == undefined){
+        return;
+      }
+      rightApi
+          .getRightById(lastSavedRight.value.successorId)
+          .then((successor: RightRest) => {
+            formState.successors = [successor];
+            lastSavedSuccessors.value = [successor];
+          })
+          .catch((e: ResponseError) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
       formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
@@ -1192,6 +1282,81 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+    };
+
+    // Predecessor
+    const renderPredecessorKey = ref(0);
+    const dialogConnectPredecessor = ref(false);
+    const dialogConnectPredecessorCounter = ref(0);
+    const lastSavedPredecessors: Ref<Array<RightRest>> = ref([]);
+    const unsavedChangesDialogPred = ref(false);
+
+    const openDialogPredecessor = () => {
+      dialogConnectPredecessor.value = true;
+    };
+
+    const closeDialogPredecessor = () => {
+      dialogConnectPredecessor.value = false;
+    };
+
+    const connectPredecessorRelationship = (rights: Array<RightRest>) => {
+      formState.predecessors = rights;
+      renderTemplateKey.value += 1;
+    };
+
+    const setRightToPredecessor = (force: boolean) => {
+      if (tmpRight.value.predecessorId == undefined){
+        return;
+      }
+
+      if(formWasChanged.value && !force){
+        unsavedChangesDialogPred.value = true;
+        return;
+      }
+
+      if(force){
+        unsavedChangesDialogPred.value = false;
+      }
+
+      manualRightId.value = tmpRight.value.predecessorId;
+      resetAllValues();
+      reinitializeRight();
+    };
+
+    // Successor
+    const renderSuccessorKey = ref(0);
+    const dialogConnectSuccessor = ref(false);
+    const dialogConnectSuccessorCounter = ref(0);
+    const lastSavedSuccessors: Ref<Array<RightRest>> = ref([]);
+    const unsavedChangesDialogSucc = ref(false);
+
+    const openDialogSuccessor = () => {
+      dialogConnectSuccessor.value = true;
+    };
+
+    const closeDialogSuccessor = () => {
+      dialogConnectSuccessor.value = false;
+    };
+
+    const connectSuccessorRelationship = (rights: Array<RightRest>) => {
+      formState.successors = rights;
+      renderTemplateKey.value += 1;
+    };
+
+    const setRightToSuccessor = (force: boolean) => {
+      if (tmpRight.value.successorId == undefined){
+        return;
+      }
+      if(formWasChanged.value && !force){
+        unsavedChangesDialogSucc.value = true;
+        return;
+      }
+      if(force){
+        unsavedChangesDialogSucc.value = false;
+      }
+      manualRightId.value = tmpRight.value.successorId;
+      resetAllValues();
+      reinitializeRight();
     };
 
     // DryRun + Dashboard
@@ -1303,6 +1468,10 @@ export default defineComponent({
       currentTemplateApplicationResult,
       dashboardViewActivated,
       dialogConnectException,
+      dialogConnectPredecessor,
+      dialogConnectPredecessorCounter,
+      dialogConnectSuccessor,
+      dialogConnectSuccessorCounter,
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
@@ -1337,11 +1506,15 @@ export default defineComponent({
       openBookmarkSearch,
       openDialogException,
       renderBookmarkKey,
+      renderPredecessorKey,
+      renderSuccessorKey,
       renderTemplateKey,
       startDateFormatted,
       exceptionTemplateHeaders,
       readOnlyProps,
       unsavedChangesDialog,
+      unsavedChangesDialogPred,
+      unsavedChangesDialogSucc,
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
@@ -1357,8 +1530,12 @@ export default defineComponent({
       closeCreateExceptionDialog,
       closeDashboard,
       closeDialogExceptionConnect,
+      closeDialogPredecessor,
+      closeDialogSuccessor,
       closeDialogSimulationResult,
       closeUnsavedChangesDialog,
+      connectPredecessorRelationship,
+      connectSuccessorRelationship,
       createRight,
       initiateDeleteDialog,
       deleteBookmarkEntry,
@@ -1370,9 +1547,13 @@ export default defineComponent({
       openCreateExceptionDialog,
       openDashboard,
       openDialogExceptionConnect,
+      openDialogPredecessor,
+      openDialogSuccessor,
+      save,
       selectBookmark,
       setSelectedBookmarks,
-      save,
+      setRightToPredecessor,
+      setRightToSuccessor,
       templateBookmarkClosed,
       updateEndDate,
       updateRight,
@@ -1408,7 +1589,6 @@ export default defineComponent({
     v-model="dialogSimulationResults"
     >
       <v-card>
-
         <div class="d-flex align-center justify-space-between">
           <v-card-title>Ergebnisse Simulation
             <v-spacer></v-spacer>
@@ -1470,6 +1650,51 @@ export default defineComponent({
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="unsavedChangesDialogSucc" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="setRightToSuccessor(true)">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="unsavedChangesDialogPred" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="setRightToPredecessor(true)">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-card-title>
       <v-row>
         <v-col>
@@ -1553,6 +1778,7 @@ export default defineComponent({
             <v-btn
               :disabled="!isEditable || !userStore.isLoggedIn"
               @click="initiateDeleteDialog"
+              class="mr-9"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
@@ -1598,6 +1824,33 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
+    <v-row>
+      <v-col cols="8" class="ml-5">
+        <v-btn
+            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+            icon="mdi-arrow-left-bold-box-outline"
+            @click="setRightToPredecessor(false)"
+        >
+        </v-btn>
+        <span
+            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+            class="ml-3"
+        >Vorgänger</span>
+      </v-col>
+      <v-spacer></v-spacer>
+      <v-col class="mr-2">
+        <span
+            v-if="tmpRight.successorId != undefined && !isTabEntry"
+            class="mr-3"
+        >Nachfolger</span>
+        <v-btn
+            v-if="tmpRight.successorId != undefined && !isTabEntry"
+            icon="mdi-arrow-right-bold-box-outline"
+            @click="setRightToSuccessor(false)"
+        >
+        </v-btn>
+      </v-col>
+    </v-row>
     <v-card-text style="height:1100px;">
     <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
       <v-expansion-panel v-if="isTemplate" value="0">
@@ -1849,6 +2102,77 @@ export default defineComponent({
                       v-on:editRightClosed="closeCreateExceptionDialog"
                       v-on:addTemplateSuccessful="addNewException"
                     ></RightsEditDialog>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  Vorgänger
+                </v-col>
+                <v-col cols="8">
+                  <v-data-table
+                      :key="renderPredecessorKey"
+                      :headers="exceptionTemplateHeaders"
+                      :items="formState.predecessors"
+                      item-value="rightId"
+                      loading-text="Daten werden geladen... Bitte warten."
+                  >
+                    <template #bottom></template>
+                  </v-data-table>
+                  <v-btn
+                      color="blue darken-1"
+                      :disabled="formState.predecessors.length != 0"
+                      @click="openDialogPredecessor"
+                  >Vorgänger verknüpfen
+                  </v-btn>
+                  <v-dialog
+                      v-model="dialogConnectPredecessor"
+                      :retain-focus="false"
+                      max-width="500px"
+                  >
+                    <RelationshipConnect
+                        :reinit-counter="dialogConnectPredecessorCounter"
+                        :rightId="rightId"
+                        :relationship="'predecessor'"
+                        v-on:predecessorSelected="connectPredecessorRelationship"
+                        v-on:successorSelected="connectPredecessorRelationship"
+                        v-on:relationshipConnectClosed="closeDialogPredecessor"
+                    ></RelationshipConnect>
+                  </v-dialog>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">
+                  Nachfolger
+                </v-col>
+                <v-col cols="8">
+                  <v-data-table
+                      :key="renderSuccessorKey"
+                      :headers="exceptionTemplateHeaders"
+                      :items="formState.successors"
+                      item-value="rightId"
+                      loading-text="Daten werden geladen... Bitte warten."
+                  >
+                    <template #bottom></template>
+                  </v-data-table>
+                  <v-btn
+                      color="blue darken-1"
+                      :disabled="formState.successors.length != 0"
+                      @click="openDialogSuccessor"
+                  >Vorgänger verknüpfen
+                  </v-btn>
+                  <v-dialog
+                      v-model="dialogConnectSuccessor"
+                      :retain-focus="false"
+                      max-width="500px"
+                  >
+                    <RelationshipConnect
+                        :reinit-counter="dialogConnectSuccessorCounter"
+                        :rightId="rightId"
+                        :relationship="'successor'"
+                        v-on:successorSelected="connectSuccessorRelationship"
+                        v-on:relationshipConnectClosed="closeDialogSuccessor"
+                    ></RelationshipConnect>
                   </v-dialog>
                 </v-col>
               </v-row>
