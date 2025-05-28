@@ -2159,7 +2159,7 @@ export default defineComponent({
                       color="blue darken-1"
                       :disabled="formState.successors.length != 0"
                       @click="openDialogSuccessor"
-                  >Vorgänger verknüpfen
+                  >Nachfolger verknüpfen
                   </v-btn>
                   <v-dialog
                       v-model="dialogConnectSuccessor"
