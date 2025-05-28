@@ -233,10 +233,20 @@ fun RightRest.toBusiness(): ItemRight =
         notesFormalRules = notesFormalRules,
         notesProcessDocumentation = notesProcessDocumentation,
         notesManagementRelated = notesManagementRelated,
-        predecessorId = predecessorId,
+        predecessorId =
+            predecessorId?.let {
+                it.ifBlank {
+                    null
+                }
+            },
         restrictedOpenContentLicence = restrictedOpenContentLicence,
         startDate = startDate,
-        successorId = successorId,
+        successorId =
+            successorId?.let {
+                it.ifBlank {
+                    null
+                }
+            },
         templateDescription = templateDescription,
         templateName = templateName?.trim(),
         zbwUserAgreement = zbwUserAgreement,

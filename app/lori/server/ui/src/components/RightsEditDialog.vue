@@ -376,6 +376,8 @@ export default defineComponent({
     };
     const closeUnsavedChangesDialog = () => {
       unsavedChangesDialog.value = false;
+      unsavedChangesDialogSucc.value = false;
+      unsavedChangesDialogPred.value = false;
     };
 
     const cancelConfirm = () => {
@@ -846,10 +848,13 @@ export default defineComponent({
     onMounted(() => {
       reinitializeRight();
     });
+    const manualRightId = ref("");
     const computedRightId = computed(() => {
       // The check for undefined is required here!
         if (props.rightId == undefined) {
           return "";
+        } else if (manualRightId.value != ""){
+          return manualRightId.value;
         } else {
           return props.rightId;
         }
@@ -965,7 +970,14 @@ export default defineComponent({
       formState.templateName = "";
       formState.templateDescription = "";
       formState.accessState = "";
+      formState.selectedGroups = [];
       formState.selectedBookmarks = [];
+      formState.exceptionTemplates = [];
+      formState.predecessors = [];
+      formState.successors = [];
+      lastSavedSuccessors.value = [];
+      lastSavedPredecessors.value = [];
+      lastSavedExceptionTemplateItems.value = [];
     };
 
     const getRightsData = (callback: () => void) => {
@@ -973,7 +985,7 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(props.rightId)
+          .getRightById(computedRightId.value)
           .then((r: RightRest) => {
             lastSavedRight.value = r;
             callback();
@@ -1136,7 +1148,7 @@ export default defineComponent({
       const editedIndex = formState.exceptionTemplates.indexOf(entry);
       formState.exceptionTemplates.splice(editedIndex, 1);
       if (entry.rightId != undefined && props.rightId != undefined) {
-        templateApi.removeExceptionToTemplate(props.rightId, entry.rightId).catch((e) => {
+        templateApi.removeExceptionToTemplate(computedRightId.value, entry.rightId).catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
             errorMsg.value = errMsg;
             errorMsgIsActive.value = true;
@@ -1277,6 +1289,7 @@ export default defineComponent({
     const dialogConnectPredecessor = ref(false);
     const dialogConnectPredecessorCounter = ref(0);
     const lastSavedPredecessors: Ref<Array<RightRest>> = ref([]);
+    const unsavedChangesDialogPred = ref(false);
 
     const openDialogPredecessor = () => {
       dialogConnectPredecessor.value = true;
@@ -1291,11 +1304,31 @@ export default defineComponent({
       renderTemplateKey.value += 1;
     };
 
+    const setRightToPredecessor = (force: boolean) => {
+      if (tmpRight.value.predecessorId == undefined){
+        return;
+      }
+
+      if(formWasChanged.value && !force){
+        unsavedChangesDialogPred.value = true;
+        return;
+      }
+
+      if(force){
+        unsavedChangesDialogPred.value = false;
+      }
+
+      manualRightId.value = tmpRight.value.predecessorId;
+      resetAllValues();
+      reinitializeRight();
+    };
+
     // Successor
     const renderSuccessorKey = ref(0);
     const dialogConnectSuccessor = ref(false);
     const dialogConnectSuccessorCounter = ref(0);
     const lastSavedSuccessors: Ref<Array<RightRest>> = ref([]);
+    const unsavedChangesDialogSucc = ref(false);
 
     const openDialogSuccessor = () => {
       dialogConnectSuccessor.value = true;
@@ -1308,6 +1341,22 @@ export default defineComponent({
     const connectSuccessorRelationship = (rights: Array<RightRest>) => {
       formState.successors = rights;
       renderTemplateKey.value += 1;
+    };
+
+    const setRightToSuccessor = (force: boolean) => {
+      if (tmpRight.value.successorId == undefined){
+        return;
+      }
+      if(formWasChanged.value && !force){
+        unsavedChangesDialogSucc.value = true;
+        return;
+      }
+      if(force){
+        unsavedChangesDialogSucc.value = false;
+      }
+      manualRightId.value = tmpRight.value.successorId;
+      resetAllValues();
+      reinitializeRight();
     };
 
     // DryRun + Dashboard
@@ -1464,6 +1513,8 @@ export default defineComponent({
       exceptionTemplateHeaders,
       readOnlyProps,
       unsavedChangesDialog,
+      unsavedChangesDialogPred,
+      unsavedChangesDialogSucc,
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
@@ -1498,9 +1549,11 @@ export default defineComponent({
       openDialogExceptionConnect,
       openDialogPredecessor,
       openDialogSuccessor,
+      save,
       selectBookmark,
       setSelectedBookmarks,
-      save,
+      setRightToPredecessor,
+      setRightToSuccessor,
       templateBookmarkClosed,
       updateEndDate,
       updateRight,
@@ -1597,6 +1650,51 @@ export default defineComponent({
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="unsavedChangesDialogSucc" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="setRightToSuccessor(true)">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="unsavedChangesDialogPred" max-width="500px">
+      <v-card>
+        <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
+        <v-card-text class="text-center">
+          Änderungen wurden noch nicht gespeichert!
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+              @click="closeUnsavedChangesDialog"
+              color="blue darken-1"
+          >Abbrechen
+          </v-btn>
+          <v-btn
+              color="error"
+              @click="setRightToPredecessor(true)">
+            Änderungen verwerfen
+          </v-btn>
+          <v-spacer></v-spacer>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <v-card-title>
       <v-row>
         <v-col>
@@ -1680,6 +1778,7 @@ export default defineComponent({
             <v-btn
               :disabled="!isEditable || !userStore.isLoggedIn"
               @click="initiateDeleteDialog"
+              class="mr-9"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
@@ -1725,6 +1824,33 @@ export default defineComponent({
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
+    <v-row>
+      <v-col cols="8" class="ml-5">
+        <v-btn
+            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+            icon="mdi-arrow-left-bold-box-outline"
+            @click="setRightToPredecessor(false)"
+        >
+        </v-btn>
+        <span
+            v-if="tmpRight.predecessorId != undefined && !isTabEntry"
+            class="ml-3"
+        >Vorgänger</span>
+      </v-col>
+      <v-spacer></v-spacer>
+      <v-col class="mr-2">
+        <span
+            v-if="tmpRight.successorId != undefined && !isTabEntry"
+            class="mr-3"
+        >Nachfolger</span>
+        <v-btn
+            v-if="tmpRight.successorId != undefined && !isTabEntry"
+            icon="mdi-arrow-right-bold-box-outline"
+            @click="setRightToSuccessor(false)"
+        >
+        </v-btn>
+      </v-col>
+    </v-row>
     <v-card-text style="height:1100px;">
     <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
       <v-expansion-panel v-if="isTemplate" value="0">
