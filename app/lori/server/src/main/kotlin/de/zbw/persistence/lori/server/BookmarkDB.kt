@@ -53,11 +53,11 @@ class BookmarkDB(
             }
         }
 
-    suspend fun insertBookmark(bookmarkRest: Bookmark): Int =
+    suspend fun insertBookmark(bookmark: Bookmark): Int =
         connectionPool.useConnection("insertBookmark") { connection ->
             val prepStmt =
                 insertUpdateSetParameters(
-                    bookmarkRest,
+                    bookmark,
                     connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS),
                 )
             val span = tracer.spanBuilder("insertBookmark").startSpan()
