@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.exception.InvalidIPAddressException
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.type.RestConverter.LOG
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
@@ -861,25 +862,46 @@ object RestConverter {
                     .setQuote(Character.valueOf('"'))
                     .setRecordSeparator("\r\n")
                     .build()
-            CSVFormat.Builder
-                .create(csvFormat)
-                .apply {
-                    setIgnoreSurroundingSpaces(true)
-                }.build()
-                .let { CSVParser.parse(ipAddressesCSV, it) }
-                .let {
-                    if (hasCSVHeader) {
-                        it.drop(1)
-                    } else {
-                        it
+            val groupEntries =
+                CSVFormat.Builder
+                    .create(csvFormat)
+                    .apply {
+                        setIgnoreSurroundingSpaces(true)
+                    }.build()
+                    .let { CSVParser.parse(ipAddressesCSV, it) }
+                    .let {
+                        if (hasCSVHeader) {
+                            it.drop(1)
+                        } else {
+                            it
+                        }
+                    } // Dropping the header
+                    .map {
+                        GroupEntry(
+                            organisationName = it[0],
+                            ipAddresses = it[1],
+                        )
                     }
-                } // Dropping the header
-                .map {
-                    GroupEntry(
-                        organisationName = it[0],
-                        ipAddresses = it[1],
-                    )
-                }
+            var invalidIPAddresses = mutableListOf<String>()
+            val allValidIps =
+                groupEntries
+                    .map { entry ->
+                        entry.ipAddresses.split(",").map { ipAddress ->
+                            ipAddress.matches(IP_PATTERN_REGEX).also {
+                                if (!it) {
+                                    invalidIPAddresses.add(ipAddress)
+                                }
+                            }
+                        }
+                    }.flatten()
+                    .all { it }
+            if (!allValidIps) {
+                throw InvalidIPAddressException("Folgende ungültige IP-Adressen wurden gefunden: $invalidIPAddresses")
+            } else {
+                groupEntries
+            }
+        } catch (e: InvalidIPAddressException) {
+            throw e
         } catch (e: Exception) {
             throw IllegalArgumentException(e)
         }
@@ -888,4 +910,8 @@ object RestConverter {
 
     val LOG = LogManager.getLogger(RestConverter::class.java)
     const val CSV_DELIMITER = ";"
+    val IP_PATTERN_REGEX =
+        Regex(
+            """^(\d{1,3}|\*)(-(\d{1,3}))?\.(\d{1,3}|\*)(-(\d{1,3}))?\.(\d{1,3}|\*)(-(\d{1,3}))?\.((\d{1,3}|\*)(-(\d{1,3}))?)(/(\d{1,2}))?$""",
+        )
 }
