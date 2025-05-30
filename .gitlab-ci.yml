@@ -73,14 +73,24 @@ test:
 pushLoriAppImage:
   stage: push
   needs: ["test"]
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - app/lori/**/*
   dependencies:
     - test
   tags:
     - dockersocket
+  rules:
+    # Run automatically after merge on default branch
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      changes:
+        - app/lori/**/*
+      when: on_success
+
+    # Show as manual during merge request pipeline
+    - if: $CI_OPEN_MERGE_REQUESTS
+      when: manual
+      allow_failure: true
+
+    # Default fallback: don’t run
+    - when: never
   script:
     - ./gradlew :app:lori:server:jibBuildTar
     - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
@@ -146,12 +156,21 @@ deployToQs:
   stage: deploy
   needs: ["pushLoriAppImage"]
   environment: qs
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - app/lori/**/*
   image:
     name: $ALPINE
+  rules:
+    # Manual step only on main branch after merge
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+      allow_failure: true
+
+    # Manual step during merge request pipeline
+    - if: $CI_OPEN_MERGE_REQUESTS
+      when: manual
+      allow_failure: true
+
+    # Default fallback: don’t run
+    - when: never
   script:
     - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
     - eval $(ssh-agent -s)
