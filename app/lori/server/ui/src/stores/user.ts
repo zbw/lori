@@ -8,8 +8,10 @@ export const useUserStore = defineStore("user", () => {
   const isLoggedIn = ref(false);
   const signInURL = ref( "");
   const signOutURL = ref("");
+  const commitHash = ref("");
 
   return {
+    commitHash,
     emailAddress,
     isLoggedIn,
     signInURL,

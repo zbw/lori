@@ -6,6 +6,7 @@ import de.gfelbing.konfig.core.definition.KonfigDeclaration.int
 import de.gfelbing.konfig.core.definition.KonfigDeclaration.required
 import de.gfelbing.konfig.core.definition.KonfigDeclaration.secret
 import de.gfelbing.konfig.core.source.KonfigurationSource
+import java.util.Properties
 
 /**
  * Configurations for the Microservice.
@@ -34,6 +35,7 @@ data class LoriConfiguration(
     val sessionEncryptKey: String,
     val stage: String,
     val handleURL: String,
+    val commitHash: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -77,6 +79,8 @@ data class LoriConfiguration(
             val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
             val stage = KonfigDeclaration.string(prefix, "stage").required()
             val handleURL = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "handleurl").required()
+            val props = Thread.currentThread().contextClassLoader.getResourceAsStream("git.properties")
+
             return LoriConfiguration(
                 httpPort = source[httpPort],
                 grpcPort = source[grpcPort],
@@ -98,7 +102,18 @@ data class LoriConfiguration(
                 handleURL = source[handleURL],
                 duoUrlSLO = source[duoUrlSLO],
                 duoUrlSSO = source[duoUrlSSO],
+                commitHash = loadGitHash(),
             )
+        }
+
+        fun loadGitHash(): String {
+            val props = Properties()
+            val stream = Thread.currentThread().contextClassLoader.getResourceAsStream("git.properties")
+            if (stream != null) {
+                props.load(stream)
+                return props.getProperty("git.hash") ?: "unknown"
+            }
+            return "unknown"
         }
     }
 }

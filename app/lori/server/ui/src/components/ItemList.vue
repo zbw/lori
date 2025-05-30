@@ -277,6 +277,7 @@ export default defineComponent({
           searchStore.handleURLResolver = response.handleURL;
           userStore.signInURL = response.duoSSO;
           userStore.signOutURL = response.duoSLO;
+          userStore.commitHash = response.commitHash;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -850,6 +851,7 @@ export default defineComponent({
       selectedItems,
       searchHelpDialog,
       tableContentLoading,
+      userStore,
       rightEditActivated,
       templateLoadError,
       templateLoadErrorMsg,
@@ -1333,6 +1335,9 @@ table.special, th.special, td.special {
               </v-col>
             </v-row>
           </v-col>
+          <v-row>
+            <v-footer>Lori-Version: {{userStore.commitHash}}</v-footer>
+          </v-row>
         </v-card>
   </v-main>
   <VResizeDrawer location="right" width="400px" permanent>

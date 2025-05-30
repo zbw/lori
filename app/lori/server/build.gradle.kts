@@ -77,3 +77,32 @@ tasks.test {
     // See https://github.com/mockk/mockk/issues/681 for more information
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
+
+tasks.register("generateGitProperties") {
+    group = "build"
+    description = "Generates git.properties containing the current Git commit hash."
+
+    val outputDir = file("src/main/resources")
+    val outputFile = file("$outputDir/git.properties")
+
+    doLast {
+        val gitHash = "git rev-parse --short HEAD".runCommand()
+        outputDir.mkdirs()
+        outputFile.writeText("git.hash=$gitHash\n")
+        println("Wrote git hash $gitHash to git.properties")
+    }
+}
+
+// Helper function to run shell commands
+fun String.runCommand(): String =
+    ProcessBuilder(*split(" ").toTypedArray())
+        .redirectErrorStream(true)
+        .start()
+        .inputStream
+        .bufferedReader()
+        .readText()
+        .trim()
+
+tasks.named("processResources") {
+    dependsOn("generateGitProperties")
+}
