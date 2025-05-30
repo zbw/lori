@@ -102,7 +102,14 @@ pushLoriAppImage:
     - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
     - scp app/lori/server/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        scp app/lori/server/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
+      else
+        echo "Skipping production deploy: commit not merged to default branch"
+      fi
     - scp app/lori/server/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
+    - ssh-agent -k
 
 pushLoriImportJobImage:
   stage: push
