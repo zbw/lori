@@ -240,12 +240,12 @@ class RestConverterTest {
         arrayOf(
             arrayOf(
                 false,
-                "organisation1;192.168.82.1/22,192.168.82.7\norganisation2;192.68.254.*," +
+                "192.168.82.1/22,192.168.82.7;organisation1;\n192.68.254.*," +
                     "195.37.13.*," +
                     "195.37.209.160-191," +
                     "195.37.234.33-46," +
                     "192.68.*.*," +
-                    "194.94.110-111.*",
+                    "194.94.110-111.*;organisation2;",
                 false,
                 listOf(
                     GroupEntry(
@@ -261,14 +261,14 @@ class RestConverterTest {
             ),
             arrayOf(
                 true,
-                "\"Organisation\",\"IP-Address\",\"Foobar\"\n\"organisation1\",\"192.168.82.1.124\"",
+                "\"IP-Address\",\"Organisation\",\"Foobar\"\n\"192.168.82.1.124\",\"organisation1\"",
                 true,
                 emptyList<GroupEntry>(),
                 "wrong delimiter with headers leads to error",
             ),
             arrayOf(
                 false,
-                "organisation1;192.168.82.1",
+                "192.168.82.1;organisation1;",
                 false,
                 listOf(
                     GroupEntry(
@@ -280,7 +280,7 @@ class RestConverterTest {
             ),
             arrayOf(
                 false,
-                "\n\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
+                "\n\n192.168.82.1;organisation1\n192.168.82.1;organisation2;\n\n",
                 false,
                 listOf(
                     GroupEntry(
@@ -296,7 +296,7 @@ class RestConverterTest {
             ),
             arrayOf(
                 false,
-                "organisation1;",
+                ";organisation1;",
                 true,
                 listOf(
                     GroupEntry(
@@ -315,7 +315,7 @@ class RestConverterTest {
             ),
             arrayOf(
                 false,
-                "organisation1;192.168.82.1\norganisation2;192.168.82.1;",
+                "192.168.82.1;organisation1;\n192.168.82.1;organisation2;",
                 false,
                 listOf(
                     GroupEntry(
@@ -331,7 +331,7 @@ class RestConverterTest {
             ),
             arrayOf(
                 true,
-                "\nOrganisation;IP-Address\norganisation1;192.168.82.1\norganisation2;192.168.82.1\n\n",
+                "\nIP-Address;Organisation;\n192.168.82.1;organisation1;\n192.168.82.1;organisation2;\n\n",
                 false,
                 listOf(
                     GroupEntry(
@@ -347,14 +347,14 @@ class RestConverterTest {
             ),
             arrayOf(
                 true,
-                "\nOrganisation,IP-Address\norganisation1,192.168.82.1\norganisation2,192.168.82.1\n\n",
+                "\nIP-Address,Organisation,\n192.168.82.1,organisation1,\n192.168.82.1,organisation2,\n\n",
                 true,
                 emptyList<GroupEntry>(),
                 "error due to wrong separator",
             ),
             arrayOf(
                 true,
-                "\nOrganisation;IP-Address;Foobar\norganisation1;192.168.82.1;124\norganisation2;192.168.82.1;1234\n\n",
+                "\nIP-Address;Organisation;Foobar\n192.168.82.1;organisation1;124\n192.168.82.1;organisation2;1234\n\n",
                 false,
                 listOf(
                     GroupEntry(

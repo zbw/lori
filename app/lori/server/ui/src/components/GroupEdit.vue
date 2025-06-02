@@ -560,7 +560,7 @@ export default defineComponent({
           hier eingegeben werden oder indem die entsprechenden IP-Bereiche per
           CSV-Datei hochgeladen werden. Beides gleichzeitig ist nicht möglich. Der
           Freitext hat höhere Priorität. Das erwartete CSV Format ist:
-          "organisation;IPAdresse1,IPAdresse2,...,IPAdresseN"
+          "IPAdresse1,IPAdresse2,...,IPAdresseN;Organisation;"
         </v-card-text>
       </v-card>
       <v-row>

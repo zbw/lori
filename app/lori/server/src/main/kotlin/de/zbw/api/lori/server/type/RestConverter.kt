@@ -93,7 +93,7 @@ fun Group.toRest() =
         description = this.description,
         allowedAddressesRaw =
             this.entries.joinToString(separator = "\n") {
-                "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
+                "${it.ipAddresses}${RestConverter.CSV_DELIMITER}${it.organisationName}"
             },
         hasCSVHeader = false,
         title = title,
@@ -848,7 +848,7 @@ object RestConverter {
     /**
      * Parse CSV formatted string.
      * The expected format is as following:
-     * organisation_name,ipAddress
+     * ipAddress1,ipAddress2,ipAdress3;organisationName;
      */
     fun parseToGroup(
         hasCSVHeader: Boolean,
@@ -858,7 +858,7 @@ object RestConverter {
             val csvFormat: CSVFormat =
                 CSVFormat.Builder
                     .create()
-                    .setDelimiter(';')
+                    .setDelimiter(CSV_DELIMITER)
                     .setQuote(Character.valueOf('"'))
                     .setRecordSeparator("\r\n")
                     .build()
@@ -878,11 +878,15 @@ object RestConverter {
                     } // Dropping the header
                     .map {
                         GroupEntry(
-                            organisationName = it[0],
-                            ipAddresses = it[1],
-                        )
+                            organisationName = it[1],
+                            ipAddresses = it[0],
+                        ).also { ge ->
+                            if (ge.ipAddresses == "" || ge.organisationName == "") {
+                                throw IllegalArgumentException("Both, organisation name and ip addresses must be not null")
+                            }
+                        }
                     }
-            var invalidIPAddresses = mutableListOf<String>()
+            val invalidIPAddresses = mutableListOf<String>()
             val allValidIps =
                 groupEntries
                     .map { entry ->
@@ -909,7 +913,7 @@ object RestConverter {
     fun parseHandle(given: String): String = given.replace("^[\\D]*".toRegex(), "")
 
     val LOG = LogManager.getLogger(RestConverter::class.java)
-    const val CSV_DELIMITER = ";"
+    const val CSV_DELIMITER = ';'
     val IP_PATTERN_REGEX =
         Regex(
             """

@@ -336,6 +336,43 @@ class GroupRoutesKtTest {
     }
 
     @Test
+    fun testPutGroupBadRequestInvalidIPAddresses() {
+        // given
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { updateGroup(any(), any()) } returns 1
+            }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.put("/api/v1/group") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(
+                        jsonAsString(
+                            TEST_GROUP
+                                .copy(
+                                    entries =
+                                        listOf(
+                                            GroupEntry(
+                                                ipAddresses = "555nase",
+                                                organisationName = "foobar",
+                                            ),
+                                        ),
+                                ).toRest(),
+                        ),
+                    )
+                }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+    }
+
+    @Test
     fun testPutNoChanges() {
         // given
         val backend =
