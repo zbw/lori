@@ -1,16 +1,19 @@
 AboutRest:
   required:
-    - stage
-    - handleURL
+    - commitHash
     - duoSLO
     - duoSSO
+    - handleURL
+    - stage
   type: object
   properties:
-    stage:
-      type: string
-    handleURL:
+    commitHash:
       type: string
     duoSLO:
       type: string
     duoSSO:
+      type: string
+    stage:
+      type: string
+    handleURL:
       type: string

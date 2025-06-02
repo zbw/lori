@@ -77,3 +77,51 @@ tasks.test {
     // See https://github.com/mockk/mockk/issues/681 for more information
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
+
+fun getGitHash(): String {
+    val gitDir = File(".git")
+
+    // Get the HEAD file content
+    val headFile = File(gitDir, "HEAD")
+    if (!headFile.exists()) return "unknown"
+
+    val headContent = headFile.readText().trim()
+
+    // If HEAD points to a ref (normal case)
+    return if (headContent.startsWith("ref:")) {
+        val refPath = headContent.removePrefix("ref: ").trim()
+        val refFile = File(gitDir, refPath)
+        if (refFile.exists()) {
+            refFile.readText().trim().take(7) // Short hash
+        } else {
+            // fallback to packed-refs
+            val packedRefs = File(gitDir, "packed-refs")
+            val match =
+                packedRefs
+                    .takeIf { it.exists() }
+                    ?.readLines()
+                    ?.find { it.endsWith(refPath) }
+            match?.substring(0, 7) ?: "unknown"
+        }
+    } else {
+        // Detached HEAD
+        headContent.take(7)
+    }
+}
+
+tasks.register("generateGitProperties") {
+    group = "build"
+    description = "Generates git.properties containing the current Git commit hash without using git CLI."
+
+    val outputFile = file("src/main/resources/git.properties")
+
+    doLast {
+        val gitHash = getGitHash()
+        outputFile.writeText("git.hash=$gitHash\n")
+        println("Wrote git hash $gitHash to git.properties")
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn("generateGitProperties")
+}

@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.exception.InvalidIPAddressException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
@@ -113,6 +114,16 @@ fun Routing.groupRoutes(
                                 ),
                             )
                         }
+                    } catch (iie: InvalidIPAddressException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${iie.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail =
+                                    iie.message + "; Das erwartete Format ist:" +
+                                        " \"organisation;IP-Adresse1,IP-Adresse2,...IP-AdresseN\" ",
+                            ),
+                        )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -151,11 +162,10 @@ fun Routing.groupRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) //
-                        val pk =
-                            backend.updateGroup(
-                                group.copy().toBusiness(),
-                                userSession.email,
-                            )
+                        backend.updateGroup(
+                            group.toBusiness(),
+                            userSession.email,
+                        )
                         span.setStatus(StatusCode.OK)
                         call.respond(
                             HttpStatusCode.NoContent,
@@ -192,6 +202,16 @@ fun Routing.groupRoutes(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
                                 detail = "Das JSON Format ist ungültig und konnte nicht gelesen werden.",
+                            ),
+                        )
+                    } catch (iie: InvalidIPAddressException) {
+                        span.setStatus(StatusCode.ERROR, "BadRequest: ${iie.message}")
+                        call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(
+                                detail =
+                                    iie.message + "; Das erwartete Format ist:" +
+                                        " \"organisation;IP-Adresse1,IP-Adresse2,...IP-AdresseN\" ",
                             ),
                         )
                     } catch (e: Exception) {

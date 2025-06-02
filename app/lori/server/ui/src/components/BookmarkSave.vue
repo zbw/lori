@@ -1,5 +1,5 @@
 <script lang="ts">
-import {computed, defineComponent, PropType, reactive, ref, watch} from "vue";
+import {computed, defineComponent, PropType, reactive, Ref, ref, watch} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
@@ -42,6 +42,8 @@ export default defineComponent({
      */
     const updateInProgress = ref(false);
     const description = ref("");
+    const createdBy = ref("");
+    const createdOn: Ref<Date | undefined> = ref(undefined);
     const filterQuery = ref("");
     const tmpBookmark = ref({} as BookmarkRest);
     /**
@@ -201,6 +203,8 @@ export default defineComponent({
         description.value = props.bookmark?.description ?? '';
         formState.name = props.bookmark?.bookmarkName ?? '';
         filterQuery.value = props.bookmark?.filtersAsQuery ?? '';
+        createdBy.value = props.bookmark?.createdBy ?? '';
+        createdOn.value = props.bookmark?.createdOn;
       }
     };
 
@@ -237,6 +241,8 @@ export default defineComponent({
 
     return {
       cardTitle,
+      createdBy,
+      createdOn,
       description,
       dialogStore,
       errorName,
@@ -342,6 +348,28 @@ export default defineComponent({
               icon="mdi-content-copy"
           >
           </v-btn>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="4"> Erstellt am</v-col>
+        <v-col cols="8">
+          <v-text-field
+              v-model="createdOn"
+              variant="outlined"
+              readonly
+              bg-color="grey-lighten-2"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-row>
+        <v-col cols="4"> Erstellt von</v-col>
+        <v-col cols="8">
+          <v-text-field
+              v-model="createdBy"
+              variant="outlined"
+              readonly
+              bg-color="grey-lighten-2"
+          ></v-text-field>
         </v-col>
       </v-row>
       <v-card-actions>

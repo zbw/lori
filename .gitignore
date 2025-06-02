@@ -20,3 +20,5 @@ LOGIN_SOURCES.sh
 LOGIN_SOURCES_PROD.sh
 .kotlin
 kls_database.db
+# Generated Git-Hash file on Build
+app/lori/server/src/main/resources/git.properties

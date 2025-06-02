@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.type
 
+import de.zbw.api.lori.server.exception.InvalidIPAddressException
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.type.RestConverter.LOG
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
@@ -92,7 +93,7 @@ fun Group.toRest() =
         description = this.description,
         allowedAddressesRaw =
             this.entries.joinToString(separator = "\n") {
-                "${it.organisationName}${RestConverter.CSV_DELIMITER}${it.ipAddresses}"
+                "${it.ipAddresses}${RestConverter.CSV_DELIMITER}${it.organisationName}"
             },
         hasCSVHeader = false,
         title = title,
@@ -847,7 +848,7 @@ object RestConverter {
     /**
      * Parse CSV formatted string.
      * The expected format is as following:
-     * organisation_name,ipAddress
+     * ipAddress1,ipAddress2,ipAdress3;organisationName;
      */
     fun parseToGroup(
         hasCSVHeader: Boolean,
@@ -857,29 +858,54 @@ object RestConverter {
             val csvFormat: CSVFormat =
                 CSVFormat.Builder
                     .create()
-                    .setDelimiter(';')
+                    .setDelimiter(CSV_DELIMITER)
                     .setQuote(Character.valueOf('"'))
                     .setRecordSeparator("\r\n")
                     .build()
-            CSVFormat.Builder
-                .create(csvFormat)
-                .apply {
-                    setIgnoreSurroundingSpaces(true)
-                }.build()
-                .let { CSVParser.parse(ipAddressesCSV, it) }
-                .let {
-                    if (hasCSVHeader) {
-                        it.drop(1)
-                    } else {
-                        it
+            val groupEntries =
+                CSVFormat.Builder
+                    .create(csvFormat)
+                    .apply {
+                        setIgnoreSurroundingSpaces(true)
+                    }.build()
+                    .let { CSVParser.parse(ipAddressesCSV, it) }
+                    .let {
+                        if (hasCSVHeader) {
+                            it.drop(1)
+                        } else {
+                            it
+                        }
+                    } // Dropping the header
+                    .map {
+                        GroupEntry(
+                            organisationName = it[1],
+                            ipAddresses = it[0],
+                        ).also { ge ->
+                            if (ge.ipAddresses == "" || ge.organisationName == "") {
+                                throw IllegalArgumentException("Both, organisation name and ip addresses must be not null")
+                            }
+                        }
                     }
-                } // Dropping the header
-                .map {
-                    GroupEntry(
-                        organisationName = it[0],
-                        ipAddresses = it[1],
-                    )
-                }
+            val invalidIPAddresses = mutableListOf<String>()
+            val allValidIps =
+                groupEntries
+                    .map { entry ->
+                        entry.ipAddresses.split(",").map { ipAddress ->
+                            ipAddress.matches(IP_PATTERN_REGEX).also {
+                                if (!it) {
+                                    invalidIPAddresses.add(ipAddress)
+                                }
+                            }
+                        }
+                    }.flatten()
+                    .all { it }
+            if (!allValidIps) {
+                throw InvalidIPAddressException("Folgende ungültige IP-Adressen wurden gefunden: $invalidIPAddresses")
+            } else {
+                groupEntries
+            }
+        } catch (e: InvalidIPAddressException) {
+            throw e
         } catch (e: Exception) {
             throw IllegalArgumentException(e)
         }
@@ -887,5 +913,11 @@ object RestConverter {
     fun parseHandle(given: String): String = given.replace("^[\\D]*".toRegex(), "")
 
     val LOG = LogManager.getLogger(RestConverter::class.java)
-    const val CSV_DELIMITER = ";"
+    const val CSV_DELIMITER = ';'
+    val IP_PATTERN_REGEX =
+        Regex(
+            """
+            ^(\d{1,3}|\*)(-(\d{1,3}))?\.(\d{1,3}|\*)(-(\d{1,3}))?\.(\d{1,3}|\*)(-(\d{1,3}))?\.((\d{1,3}|\*)(-(\d{1,3}))?)(/(\d{1,2}))?$
+            """.trimIndent(),
+        )
 }

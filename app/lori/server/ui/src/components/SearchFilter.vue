@@ -1023,4 +1023,7 @@ export default defineComponent({
       </v-row>
     </v-container>
   </v-card>
+  <v-row>
+    <v-footer>Version: {{userStore.commitHash}}</v-footer>
+  </v-row>
 </template>

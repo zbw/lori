@@ -2,6 +2,8 @@ package de.zbw.api.lori.server.config
 
 import de.gfelbing.konfig.core.source.ChainedKonfiguration
 import de.gfelbing.konfig.core.source.SystemPropertiesKonfiguration
+import io.mockk.every
+import io.mockk.mockkObject
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.testng.annotations.DataProvider
@@ -18,6 +20,8 @@ class LoriConfigurationTest {
 
     @Test(dataProvider = DATA_FOR_LORI_CONFIGURATION)
     fun testLoriConfiguration(expectedConfig: LoriConfiguration) {
+        mockkObject(LoriConfiguration.Companion)
+        every { LoriConfiguration.loadGitHash() } returns "1234"
         System.setProperty("lori.grpc.port", expectedConfig.grpcPort.toString())
         System.setProperty("lori.http.port", expectedConfig.httpPort.toString())
         System.setProperty("lori.sql.url", expectedConfig.sqlUrl)
@@ -74,6 +78,7 @@ class LoriConfigurationTest {
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
+                commitHash = "1234",
             )
     }
 }

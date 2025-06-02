@@ -59,7 +59,19 @@ fun Routing.bookmarkRoutes(
                                 .takeIf { it.bookmarkName != null && it.bookmarkName != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
                         span.setAttribute("bookmark", bookmark.toString())
-                        val pk = backend.insertBookmark(bookmark.toBusiness())
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                ) // This should never happen
+                        val pk =
+                            backend.insertBookmark(
+                                bookmark.toBusiness().copy(
+                                    createdBy = userSession.email,
+                                    lastUpdatedBy = userSession.email,
+                                ),
+                            )
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
                     } catch (pe: PSQLException) {
@@ -118,7 +130,20 @@ fun Routing.bookmarkRoutes(
                     try {
                         val bookmark: BookmarkRawRest = call.receive(BookmarkRawRest::class)
                         span.setAttribute("bookmark", bookmark.toString())
-                        val insertedRows = backend.updateBookmark(bookmark.bookmarkId, bookmark.toBusiness())
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                ) // This should never happen
+                        val insertedRows =
+                            backend.updateBookmark(
+                                bookmarkId = bookmark.bookmarkId,
+                                bookmark =
+                                    bookmark.toBusiness().copy(
+                                        lastUpdatedBy = userSession.email,
+                                    ),
+                            )
                         if (insertedRows == 1) {
                             span.setStatus(StatusCode.OK)
                             call.respond(HttpStatusCode.NoContent)

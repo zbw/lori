@@ -486,6 +486,7 @@ class RightRoutesKtTest {
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
+                commitHash = "1234",
             )
 
         val TEST_RIGHT =

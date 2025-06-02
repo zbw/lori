@@ -277,6 +277,7 @@ export default defineComponent({
           searchStore.handleURLResolver = response.handleURL;
           userStore.signInURL = response.duoSSO;
           userStore.signOutURL = response.duoSLO;
+          userStore.commitHash = response.commitHash;
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -850,6 +851,7 @@ export default defineComponent({
       selectedItems,
       searchHelpDialog,
       tableContentLoading,
+      userStore,
       rightEditActivated,
       templateLoadError,
       templateLoadErrorMsg,

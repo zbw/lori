@@ -137,6 +137,7 @@ class ServicePoolWithProbesTest {
                 handleURL = "https://testdarch.zbw.eu/econis-archiv/handle/",
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
+                commitHash = "foobar",
             )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")

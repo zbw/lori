@@ -40,6 +40,7 @@ fun Routing.aboutRoutes(
                             handleURL = backend.config.handleURL,
                             duoSLO = backend.config.duoUrlSLO,
                             duoSSO = backend.config.duoUrlSSO,
+                            commitHash = backend.config.commitHash,
                         ),
                     )
                 } catch (e: Exception) {
