@@ -323,11 +323,11 @@ export default defineComponent({
           @click="close"
       ></v-btn>
     </v-toolbar>
-    <v-card-title class="text-h5"
-    >Dashboard</v-card-title
+    <v-card-title class="text-h5">
+      Dashboard
+    </v-card-title
     >
-    <v-container>
-
+    <v-card-text>
       <v-snackbar
           contained
           multi-line
@@ -505,7 +505,7 @@ export default defineComponent({
         </template>
         <template #bottom></template>
       </v-data-table>
-    </v-container>
+    </v-card-text>
     <v-col cols="14" sm="12">
       <v-row>
         <v-col cols="2" sm="2">
