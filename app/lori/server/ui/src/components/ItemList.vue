@@ -1335,9 +1335,6 @@ table.special, th.special, td.special {
               </v-col>
             </v-row>
           </v-col>
-          <v-row>
-            <v-footer>Lori-Version: {{userStore.commitHash}}</v-footer>
-          </v-row>
         </v-card>
   </v-main>
   <VResizeDrawer location="right" width="400px" permanent>
