@@ -231,6 +231,40 @@ class SearchExpressionTest {
         )
     }
 
+    @Test
+    fun testParseSearchTermToFiltersRoundTrip() {
+        val allFilters =
+            "acc:\"OPEN,RESTRICTED\"" +
+                " & col:\"coLLection\"" +
+                " & hdlcol:\"12345/nAse\"" +
+                " & com:\"coMMunity\"" +
+                " & hdlcom:\"12345/hUt\"" +
+                " & zge:\"2022-06-01\"" +
+                " & zgb:\"2022-06-01\"" +
+                " & tit:\"some title\"" +
+                " & tit:\"anoTHer\"" +
+                " & jAH:2000-2020" +
+                " & nor:ON" +
+                " & ser:\"serIEs1,series2\"" +
+                " & typ:\"PROCEEDING,BOOK_PART\"" +
+                " & reg:\"LICENCE_conTRACT,ZBW_USER_AGREemENT,CC_LICENCE_NO_REStrICTION\"" +
+                " & TPl:\"555nase\"" +
+                " & acd:\"RESTRICTED+2025-01-21\"" +
+                " & man:on" +
+                " & luk:\"bYNcsa\"" +
+                " & hdl:\"11159/123,11159/456\""
+
+        val parsed =
+            SearchGrammar.parseSearchTermToFilters(
+                allFilters,
+            )
+
+        assertThat(
+            parsed.joinToString(separator = " & ") { it.toString() }.lowercase(),
+            `is`(allFilters.lowercase()),
+        )
+    }
+
     companion object {
         const val DATA_FOR_HAS_RIGHT_QUERIES = "DATA_FOR_HAS_RIGHT_QUERIES"
         const val DATA_FOR_PARSING_SEARCH_QUERY = "DATA_FOR_PARSING_SEARCH_QUERY"

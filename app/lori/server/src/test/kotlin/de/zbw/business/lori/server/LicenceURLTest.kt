@@ -108,6 +108,10 @@ class LicenceURLTest : DatabaseTest() {
                 setOf(exampleWWW),
             ),
             arrayOf(
+                "luk:\"creativecommons\" & luk:\"by\"",
+                emptySet<ItemMetadata>(),
+            ),
+            arrayOf(
                 "luk:\"17811\" & luk:\"ebl\"",
                 setOf(exampleNoProtocol),
             ),

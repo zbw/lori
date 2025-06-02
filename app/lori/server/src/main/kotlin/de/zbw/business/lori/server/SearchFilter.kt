@@ -52,7 +52,7 @@ abstract class SearchFilter(
             searchValue: String,
         ): SearchFilter? =
             try {
-                when (searchKey) {
+                when (searchKey.lowercase()) {
                     "acc" -> QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
                     "com" ->
                         CommunityNameFilter(searchValue)
@@ -81,10 +81,7 @@ abstract class SearchFilter(
                         )
                     "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
                     "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
-                    "luk" ->
-                        LicenceUrlFilterLUK(
-                            searchValue,
-                        )
+                    "luk" -> QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
                     "subcom" ->
                         SubcommunityNameFilter(
                             searchValue,
@@ -106,14 +103,14 @@ abstract class SearchFilter(
                         )
                     "nor" ->
                         QueryParameterParser.parseNoRightInformationFilter(
-                            when (searchValue.lowercase()) {
+                            when (searchValue) {
                                 "on" -> "true"
                                 else -> null
                             },
                         )
                     "man" ->
                         QueryParameterParser.parseManualRightFilter(
-                            when (searchValue.lowercase()) {
+                            when (searchValue) {
                                 "on" -> "true"
                                 else -> null
                             },
@@ -545,7 +542,7 @@ class HandlesFilter(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun toSQLString(): String = handles.joinToString(prefix = "(", postfix = ")", separator = ",") { it }
+    override fun toSQLString(): String = handles.joinToString(separator = ",") { it }
 
     override fun getFilterType(): FilterType = FilterType.HANDLE
 }
