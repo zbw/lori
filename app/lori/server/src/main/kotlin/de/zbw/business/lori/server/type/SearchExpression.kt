@@ -85,10 +85,11 @@ object SearchGrammar : Grammar<SearchExpression>() {
     fun parseSearchTermToFilters(s: String?): List<SearchFilter> =
         s?.let { tokenizeSearchInput(it) }?.mapNotNull {
             SearchFilter.toSearchFilter(
-                it.substringBefore(":"),
+                it.substringBefore(":").lowercase(),
                 it
                     .substringAfter(":")
-                    .trim(),
+                    .trim()
+                    .lowercase(),
             )
         }
             ?: emptyList()

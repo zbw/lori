@@ -341,6 +341,55 @@ class SearchFilterTest : DatabaseTest() {
     fun createDataForToString() =
         arrayOf(
             arrayOf(
+                listOf(
+                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED)),
+                    CollectionNameFilter("collection"),
+                    CollectionHandleFilter("12345/nase"),
+                    CommunityNameFilter("community"),
+                    CommunityHandleFilter("12345/hut"),
+                    QueryParameterParser.parseEndDateFilter("2022-06-01"),
+                    QueryParameterParser.parseStartDateFilter("2022-06-01"),
+                    TitleFilter("some title"),
+                    TitleFilter("another"),
+                    PublicationYearFilter(2000, 2020),
+                    NoRightInformationFilter(),
+                    SeriesFilter(listOf("series1", "series2")),
+                    PublicationTypeFilter(listOf(PublicationType.PROCEEDING, PublicationType.BOOK_PART)),
+                    FormalRuleFilter(
+                        listOf(
+                            FormalRule.LICENCE_CONTRACT,
+                            FormalRule.ZBW_USER_AGREEMENT,
+                            FormalRule.CC_LICENCE_NO_RESTRICTION,
+                        ),
+                    ),
+                    TemplateNameFilter(listOf("555nase")),
+                    QueryParameterParser.parseAccessStateOnDate("RESTRICTED+2025-01-21"),
+                    QueryParameterParser.parseManualRightFilter("true"),
+                    QueryParameterParser.parseLicenceUrlLUKFilter("by-nc_sa"),
+                    HandlesFilter(listOf("11159/123", "11159/456")),
+                ),
+                "acc:\"OPEN,RESTRICTED\"" +
+                    " & col:\"collection\"" +
+                    " & hdlcol:\"12345/nase\"" +
+                    " & com:\"community\"" +
+                    " & hdlcom:\"12345/hut\"" +
+                    " & zge:\"2022-06-01\"" +
+                    " & zgb:\"2022-06-01\"" +
+                    " & tit:\"some title\"" +
+                    " & tit:\"another\"" +
+                    " & jah:2000-2020" +
+                    " & nor:on" +
+                    " & ser:\"series1,series2\"" +
+                    " & typ:\"PROCEEDING,BOOK_PART\"" +
+                    " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,CC_LICENCE_NO_RESTRICTION\"" +
+                    " & tpl:\"555nase\"" +
+                    " & acd:\"RESTRICTED+2025-01-21\"" +
+                    " & man:on" +
+                    " & luk:\"byncsa\"" +
+                    " & hdl:\"11159/123,11159/456\"",
+                "All filters",
+            ),
+            arrayOf(
                 listOf(QueryParameterParser.parseAccessStateOnDate("OPEN+2025-01-02")),
                 "acd:\"OPEN+2025-01-02\"",
                 "ACD",
@@ -367,51 +416,6 @@ class SearchFilterTest : DatabaseTest() {
                 "",
                 "List with nulls",
             ),
-            arrayOf(
-                listOf(
-                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED)),
-                    CollectionNameFilter("collection"),
-                    CollectionHandleFilter("12345/nase"),
-                    CommunityNameFilter("community"),
-                    CommunityHandleFilter("12345/hut"),
-                    QueryParameterParser.parseEndDateFilter("2022-06-01"),
-                    QueryParameterParser.parseStartDateFilter("2022-06-01"),
-                    TitleFilter("some title"),
-                    TitleFilter("another"),
-                    PublicationYearFilter(2000, 2020),
-                    NoRightInformationFilter(),
-                    SeriesFilter(listOf("series1", "series2")),
-                    PublicationTypeFilter(listOf(PublicationType.PROCEEDING, PublicationType.BOOK_PART)),
-                    FormalRuleFilter(
-                        listOf(
-                            FormalRule.LICENCE_CONTRACT,
-                            FormalRule.ZBW_USER_AGREEMENT,
-                            FormalRule.CC_LICENCE_NO_RESTRICTION,
-                        ),
-                    ),
-                    TemplateNameFilter(listOf("555nase")),
-                    QueryParameterParser.parseAccessStateOnDate("RESTRICTED+2025-01-21"),
-                    QueryParameterParser.parseManualRightFilter("true"),
-                ),
-                "acc:\"OPEN,RESTRICTED\"" +
-                    " & col:\"collection\"" +
-                    " & hdlcol:\"12345/nase\"" +
-                    " & com:\"community\"" +
-                    " & hdlcom:\"12345/hut\"" +
-                    " & zge:\"2022-06-01\"" +
-                    " & zgb:\"2022-06-01\"" +
-                    " & tit:\"some title\"" +
-                    " & tit:\"another\"" +
-                    " & jah:2000-2020" +
-                    " & nor:on" +
-                    " & ser:\"series1,series2\"" +
-                    " & typ:\"PROCEEDING,BOOK_PART\"" +
-                    " & reg:\"LICENCE_CONTRACT,ZBW_USER_AGREEMENT,CC_LICENCE_NO_RESTRICTION\"" +
-                    " & tpl:\"555nase\"" +
-                    " & acd:\"RESTRICTED+2025-01-21\"" +
-                    " & man:on",
-                "All filters",
-            ),
         )
 
     @Test(dataProvider = DATA_FOR_TO_STRING)
@@ -427,7 +431,7 @@ class SearchFilterTest : DatabaseTest() {
             `is`(expected),
         )
 
-        val roundTripFilters =
+        val roundTripFilters: List<SearchFilter> =
             SearchGrammar.parseSearchTermToFilters(
                 searchTermReceived.replace(" & ", " "),
             )

@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
+import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PaketSigelFilter
@@ -31,7 +32,7 @@ import kotlin.text.dropLast
 import kotlin.text.last
 
 /**
- * Helper object for parsing all sort of query parameters.
+ * Helper object for parsing all sorts of query parameters.
  *
  * Created on 09-27-2022.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -74,7 +75,7 @@ object QueryParameterParser {
         val receivedPubTypes: List<PublicationType> =
             s.split(",".toRegex()).mapNotNull {
                 try {
-                    PublicationType.valueOf(it)
+                    PublicationType.valueOf(it.uppercase())
                 } catch (_: IllegalArgumentException) {
                     null
                 }
@@ -128,7 +129,7 @@ object QueryParameterParser {
         val accessStates: List<AccessState> =
             s.split(",".toRegex()).mapNotNull {
                 try {
-                    AccessState.valueOf(it)
+                    AccessState.valueOf(it.uppercase())
                 } catch (_: IllegalArgumentException) {
                     null
                 }
@@ -273,6 +274,13 @@ object QueryParameterParser {
             ?.let { DashboardTimeIntervalEndFilter(it) }
 
     fun parseLicenceUrlFilter(s: String?): LicenceUrlFilter? = s?.let { LicenceUrlFilter(escapeWildcards(it)) }
+
+    fun parseLicenceUrlLUKFilter(s: String?): LicenceUrlFilterLUK? =
+        s?.let {
+            LicenceUrlFilterLUK(
+                it.replace(Regex("[-_]"), ""),
+            )
+        }
 
     fun escapeWildcards(s: String): String {
         val escaped =
