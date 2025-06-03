@@ -1022,8 +1022,8 @@ export default defineComponent({
         </v-col>
       </v-row>
     </v-container>
+    <div class="pa-2 text-caption text-grey">
+      Version: {{ userStore.commitHash }}
+    </div>
   </v-card>
-  <v-row>
-    <v-footer>Version: {{userStore.commitHash}}</v-footer>
-  </v-row>
 </template>

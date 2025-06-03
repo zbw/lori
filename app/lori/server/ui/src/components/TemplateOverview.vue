@@ -61,9 +61,9 @@ export default defineComponent({
         title: "Aktionen",
         value: "actions",
         sortable: false,
-        width: "100px",
-        minWidth: "100px",
-        maxWidth: "100px",
+        width: "120px",
+        minWidth: "120px",
+        maxWidth: "120px",
       },
       {
         title: "Gültigkeit Startdatum",
@@ -301,6 +301,43 @@ export default defineComponent({
     };
 
     /**
+     * Delete Template
+     */
+    const confirmationDialog = ref(false);
+    const editIndex = ref(-1);
+    const openDeleteDialog = (template: RightRest) => {
+      currentTemplate.value = Object.assign({}, template);
+      editIndex.value = templateItems.value.indexOf(template);
+      confirmationDialog.value = true;
+    };
+    const closeDeleteDialog = () => {
+      confirmationDialog.value = false;
+    };
+
+    const deleteTemplateEntry = () => {
+      if (currentTemplate.value.rightId == undefined){
+        return;
+      }
+      templateApi
+          .deleteTemplateById(currentTemplate.value.rightId)
+          .then(() => {
+            templateItems.value.splice(editIndex.value, 1);
+            renderKey.value += 1;
+            closeDeleteDialog();
+            successMsgIsActive.value = true;
+            successMsg.value =
+                "Template '" + currentTemplate.value.templateName + "' wurde erfolgreich gelöscht.";
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+            closeDeleteDialog();
+          });
+    };
+
+    /**
      * Closing:
      */
     const close = () => {
@@ -320,6 +357,7 @@ export default defineComponent({
     onMounted(() => getTemplateList());
 
     return {
+      confirmationDialog,
       currentTemplate,
       headers,
       headersValueVSelect,
@@ -347,15 +385,18 @@ export default defineComponent({
       childTemplateDeleted,
       childTemplateUpdated,
       close,
+      closeDeleteDialog,
       closeApplyErrorMsg,
       closeTemplateEditDialog,
       copyTemplate,
       createNewTemplate,
       datePrettyPrint,
+      deleteTemplateEntry,
       editTemplate,
       emitGetItemsByRightId,
       isTemplateValid,
       getTemplateList,
+      openDeleteDialog,
       updateTemplateOverview,
     };
   },
@@ -367,13 +408,32 @@ export default defineComponent({
   white-space: pre-line;
 }
 .tooltip-btn {
-  margin-right: 10px; /* Adds space between the two buttons */
+  margin-right: 8px; /* Adds space between the two buttons */
 }
 .invisible {
   visibility: hidden;
 }
 </style>
 <template>
+  <v-dialog v-model="confirmationDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn
+            color="blue darken-1"
+            text="Abbrechen"
+            @click="closeDeleteDialog"
+        ></v-btn>
+        <v-btn
+            color="error"
+            text="Löschen"
+            @click="deleteTemplateEntry"
+        ></v-btn>
+        <v-spacer></v-spacer>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
@@ -562,6 +622,23 @@ export default defineComponent({
                 mdi-eye
               </v-icon>
             </template>
+          </v-tooltip>
+          <v-tooltip
+              location="bottom"
+          >
+            <template v-slot:activator="{ props }" text="Löschen">
+              <div v-bind="props" class="d-inline-block">
+                <v-icon
+                    class="tooltip-btn"
+                    variant="text"
+                    @click="openDeleteDialog(item)"
+                    :disabled="!userStore.isLoggedIn"
+                >
+                  mdi-delete
+                </v-icon>
+              </div>
+            </template>
+            <span>Löschen</span>
           </v-tooltip>
         </template>
         <template v-slot:item.startDate="{ item }">
