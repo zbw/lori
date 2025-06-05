@@ -12,9 +12,16 @@ import {
 } from "@/generated-sources/openapi";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import {useUserStore} from "@/stores/user";
+import rightErrorApi from "@/api/rightErrorApi";
+import Dashboard from "@/components/Dashboard.vue";
 
 export default defineComponent({
-  components: { RightsEditDialog },
+  computed: {
+    info() {
+      return info;
+    },
+  },
+  components: {Dashboard, RightsEditDialog },
   props: {},
   emits: [
       "getItemsByRightId",
@@ -61,9 +68,9 @@ export default defineComponent({
         title: "Aktionen",
         value: "actions",
         sortable: false,
-        width: "100px",
-        minWidth: "100px",
-        maxWidth: "100px",
+        width: "120px",
+        minWidth: "120px",
+        maxWidth: "120px",
       },
       {
         title: "Gültigkeit Startdatum",
@@ -301,6 +308,52 @@ export default defineComponent({
     };
 
     /**
+     * Test Template application
+     */
+    const currentTemplateApplicationResult = ref({} as TemplateApplicationRest)
+    const dashboardViewActivated = ref(false);
+    const testId: Ref<string | undefined> = ref(undefined);
+
+    const openDashboard = () => {
+      dashboardViewActivated.value = true;
+    };
+    const closeDashboard = () => {
+      dashboardViewActivated.value = false;
+    };
+    const dialogSimulationResults = ref(false);
+    const dryRunTemplate = (template: RightRest) => {
+      if (template.rightId == undefined){
+        return;
+      }
+
+      templateApi
+          .applyTemplates(
+              [template.rightId],
+              false,
+              false,
+              true,
+          )
+          .then((r: TemplateApplicationsRest) => {
+            if (r.templateApplication.length == 0){
+              return;
+            }
+            testId.value = r.templateApplication[0].testId;
+            currentTemplateApplicationResult.value = r.templateApplication[0];
+            dialogSimulationResults.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+    };
+
+    const closeDialogSimulationResult = () => {
+      dialogSimulationResults.value = false;
+    };
+
+    /**
      * Closing:
      */
     const close = () => {
@@ -314,6 +367,12 @@ export default defineComponent({
       selectedHeaders.value = currentValue;
     });
 
+    watch(dashboardViewActivated, (currentValue) => {
+      if(!currentValue && testId.value != undefined){
+        rightErrorApi.deleteRightErrorsByTestId(testId.value)
+      }
+    });
+
     /**
      * Mounting:
      */
@@ -321,6 +380,9 @@ export default defineComponent({
 
     return {
       currentTemplate,
+      currentTemplateApplicationResult,
+      dashboardViewActivated,
+      dialogSimulationResults,
       headers,
       headersValueVSelect,
       lastModifiedTemplateName,
@@ -342,20 +404,25 @@ export default defineComponent({
       userStore,
       templateDraft,
       templateItems,
+      testId,
       applyTemplate,
       childTemplateAdded,
       childTemplateDeleted,
       childTemplateUpdated,
       close,
       closeApplyErrorMsg,
+      closeDashboard,
+      closeDialogSimulationResult,
       closeTemplateEditDialog,
       copyTemplate,
       createNewTemplate,
       datePrettyPrint,
+      dryRunTemplate,
       editTemplate,
       emitGetItemsByRightId,
       isTemplateValid,
       getTemplateList,
+      openDashboard,
       updateTemplateOverview,
     };
   },
@@ -374,6 +441,51 @@ export default defineComponent({
 }
 </style>
 <template>
+  <v-dialog
+      max-width="500px"
+      :retain-focus="false"
+      v-model="dialogSimulationResults"
+  >
+    <v-card>
+      <div class="d-flex align-center justify-space-between">
+        <v-card-title>Ergebnisse Simulation
+          <v-spacer></v-spacer>
+        </v-card-title>
+        <v-btn @click="closeDialogSimulationResult" icon="mdi-close"></v-btn>
+      </div>
+      <v-card-text>
+        <v-row>
+          <v-col>
+            {{info.constructApplicationInfoText(currentTemplateApplicationResult)}}
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>Anzahl Fehler: {{currentTemplateApplicationResult.numberOfErrors}}</v-col>
+        </v-row>
+        <v-row v-if="currentTemplateApplicationResult.numberOfErrors != 0">
+          <v-col>
+            Fehler in Dashboard ansehen:
+            <v-btn
+                @click="openDashboard"
+                color="blue darken-1"
+            >
+              Hier klicken
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+  <v-dialog
+      v-model="dashboardViewActivated"
+      :retain-focus="false"
+      max-width="1000px"
+  >
+    <Dashboard
+        :test-id="testId"
+        v-on:dashboardClosed="closeDashboard"
+    ></Dashboard>
+  </v-dialog>
   <v-card position="relative">
     <v-toolbar>
       <v-spacer></v-spacer>
@@ -562,6 +674,24 @@ export default defineComponent({
                 mdi-eye
               </v-icon>
             </template>
+          </v-tooltip>
+          <v-tooltip
+              location="bottom"
+              text="Testen"
+          >
+            <template v-slot:activator="{ props }" >
+              <div v-bind="props" class="d-inline-block">
+                <v-icon
+                    class="tooltip-btn"
+                    variant="text"
+                    @click="dryRunTemplate(item)"
+                    :disabled="!userStore.isLoggedIn"
+                >
+                  mdi-alpha-t-box-outline
+                </v-icon>
+              </div>
+            </template>
+            <span>Testen</span>
           </v-tooltip>
         </template>
         <template v-slot:item.startDate="{ item }">

@@ -1359,48 +1359,6 @@ export default defineComponent({
       reinitializeRight();
     };
 
-    // DryRun + Dashboard
-    const currentTemplateApplicationResult = ref({} as TemplateApplicationRest)
-    const dashboardViewActivated = ref(false);
-    const dialogSimulationResults = ref(false);
-    const testId: Ref<string | undefined> = ref(undefined);
-
-    const dryRunTemplate = () => {
-      if (tmpRight.value.rightId == undefined){
-        return;
-      }
-      templateApi
-          .applyTemplates(
-              [tmpRight.value.rightId],
-              false,
-              false,
-              true,
-          )
-          .then((r: TemplateApplicationsRest) => {
-            if (r.templateApplication.length == 0){
-              return;
-            }
-            testId.value = r.templateApplication[0].testId;
-            currentTemplateApplicationResult.value = r.templateApplication[0];
-            dialogSimulationResults.value = true;
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
-            });
-          });
-    };
-    const openDashboard = () => {
-      dashboardViewActivated.value = true;
-    };
-    const closeDashboard = () => {
-      dashboardViewActivated.value = false;
-    };
-    const closeDialogSimulationResult = () => {
-      dialogSimulationResults.value = false;
-    };
-
     const labelModelToString = (mValue: boolean | undefined) => {
       if (mValue == true){
         return "Ja";
@@ -1445,13 +1403,6 @@ export default defineComponent({
       }
     });
 
-    watch(dashboardViewActivated, (currentValue) => {
-      if(!currentValue && testId.value != undefined){
-        dialogSimulationResults.value = false;
-        rightErrorApi.deleteRightErrorsByTestId(testId.value)
-      }
-    });
-
     return {
       formState,
       v$,
@@ -1465,8 +1416,6 @@ export default defineComponent({
       connectException,
       computedLicenceUrl,
       computedRightId,
-      currentTemplateApplicationResult,
-      dashboardViewActivated,
       dialogConnectException,
       dialogConnectPredecessor,
       dialogConnectPredecessorCounter,
@@ -1475,7 +1424,6 @@ export default defineComponent({
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
-      dialogSimulationResults,
       endDateFormatted,
       errorAccessState,
       errorEndDate,
@@ -1518,7 +1466,6 @@ export default defineComponent({
       updateConfirmDialog,
       successMsgIsActive,
       successMsg,
-      testId,
       tmpRight,
       updateInProgress,
       userStore,
@@ -1528,11 +1475,9 @@ export default defineComponent({
       cancelConfirm,
       checkForChangesAndClose,
       closeCreateExceptionDialog,
-      closeDashboard,
       closeDialogExceptionConnect,
       closeDialogPredecessor,
       closeDialogSuccessor,
-      closeDialogSimulationResult,
       closeUnsavedChangesDialog,
       connectPredecessorRelationship,
       connectSuccessorRelationship,
@@ -1542,10 +1487,8 @@ export default defineComponent({
       deleteDialogClosed,
       deleteExceptionEntry,
       deleteSuccessful,
-      dryRunTemplate,
       labelModelToString,
       openCreateExceptionDialog,
-      openDashboard,
       openDialogExceptionConnect,
       openDialogPredecessor,
       openDialogSuccessor,
@@ -1583,51 +1526,7 @@ export default defineComponent({
           @click="checkForChangesAndClose"
       ></v-btn>
     </v-toolbar>
-    <v-dialog
-    max-width="500px"
-    :retain-focus="false"
-    v-model="dialogSimulationResults"
-    >
-      <v-card>
-        <div class="d-flex align-center justify-space-between">
-          <v-card-title>Ergebnisse Simulation
-            <v-spacer></v-spacer>
-          </v-card-title>
-          <v-btn @click="closeDialogSimulationResult" icon="mdi-close"></v-btn>
-        </div>
-        <v-card-text>
-          <v-row>
-            <v-col>
-              {{info.constructApplicationInfoText(currentTemplateApplicationResult)}}
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>Anzahl Fehler: {{currentTemplateApplicationResult.numberOfErrors}}</v-col>
-          </v-row>
-          <v-row v-if="currentTemplateApplicationResult.numberOfErrors != 0">
-            <v-col>
-            Fehler in Dashboard ansehen:
-            <v-btn
-                @click="openDashboard"
-                color="blue darken-1"
-            >
-              Hier klicken
-            </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-    <v-dialog
-        v-model="dashboardViewActivated"
-        :retain-focus="false"
-        max-width="1000px"
-        v-on:close="closeDashboard"
-    >
-      <Dashboard
-          :test-id="testId"
-      ></Dashboard>
-    </v-dialog>
+
     <v-dialog v-model="unsavedChangesDialog" max-width="500px">
       <v-card>
         <v-card-title class="text-h5 text-center">Hinweis</v-card-title>
@@ -2543,23 +2442,6 @@ export default defineComponent({
           @click="save"
         >Speichern
       </v-btn>
-      <v-tooltip location="bottom">
-        <template v-slot:activator="{ props }">
-          <div v-bind="props" class="d-inline-block">
-            <v-btn
-                v-if="isTemplate"
-                color="blue darken-1"
-                v-bind="props"
-                @click="dryRunTemplate"
-                :readonly="isNewTemplate || formWasChanged"
-                :disabled="!userStore.isLoggedIn"
-            >Testen</v-btn>
-          </div>
-        </template>
-        <span v-if="formWasChanged">
-            Nur auswählbar für gespeicherte Templates.
-        </span>
-      </v-tooltip>
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
       <v-card>
