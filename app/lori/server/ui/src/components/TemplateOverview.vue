@@ -68,9 +68,9 @@ export default defineComponent({
         title: "Aktionen",
         value: "actions",
         sortable: false,
-        width: "120px",
-        minWidth: "120px",
-        maxWidth: "120px",
+        width: "130px",
+        minWidth: "130px",
+        maxWidth: "130px",
       },
       {
         title: "Gültigkeit Startdatum",
@@ -434,7 +434,7 @@ export default defineComponent({
   white-space: pre-line;
 }
 .tooltip-btn {
-  margin-right: 10px; /* Adds space between the two buttons */
+  margin-right: 6px; /* Adds space between the two buttons */
 }
 .invisible {
   visibility: hidden;
