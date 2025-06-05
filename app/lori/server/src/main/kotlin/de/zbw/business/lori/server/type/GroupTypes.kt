@@ -34,4 +34,5 @@ data class GroupVersion(
     val createdOn: OffsetDateTime?,
     val description: String?,
     val version: Int,
+    val title: String,
 )

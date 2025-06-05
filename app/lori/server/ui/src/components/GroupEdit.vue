@@ -127,6 +127,12 @@ export default defineComponent({
         sortable: true,
       },
       {
+        title: "Name",
+        key: "title",
+        align: "start",
+        sortable: true,
+      },
+      {
         title: "Erstellt am",
         key: "createdOn",
         align: "start",
@@ -484,20 +490,10 @@ export default defineComponent({
         <v-col cols="4">Name</v-col>
         <v-col cols="8">
           <v-text-field
-              v-if="isNew"
               variant="outlined"
               hint="Name der Berechtigungsgruppe"
               v-model="formState.title"
-              bg-color="white"
-              :error-messages="errorName"
-          ></v-text-field>
-          <v-text-field
-              v-if="!isNew"
-              bg-color="grey-lighten-2"
-              readonly
-              variant="outlined"
-              hint="Name der Berechtigungsgruppe"
-              v-model="formState.title"
+              v-bind="{...$attrs, ...loginStatusProps}"
               :error-messages="errorName"
           ></v-text-field>
         </v-col>

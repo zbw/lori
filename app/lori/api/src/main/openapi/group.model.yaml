@@ -41,12 +41,15 @@ GroupRest:
 OldGroupVersionRest:
   required:
     - version
+    - title
   type: object
   properties:
     createdOn:
       type: string
       format: date-time
     createdBy:
+      type: string
+    title:
       type: string
     description:
       type: string
