@@ -1154,6 +1154,21 @@ table.special, th.special, td.special {
                         <td class=special>acd</td>
                         <td class=special>STATUS+YYYY-MM-DD</td>
                       </tr>
+                      <tr class=special>
+                        <td class=special>ISBN</td>
+                        <td class=special>isb</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>DOI</td>
+                        <td class=special>doi</td>
+                        <td class=special></td>
+                      </tr>
+                      <tr class=special>
+                        <td class=special>PPN</td>
+                        <td class=special>ppn</td>
+                        <td class=special></td>
+                      </tr>
                     </tbody>
                   </table>
 
