@@ -609,6 +609,10 @@ export default defineComponent({
                   :items="oldVersions"
                   loading-text="Daten werden geladen... Bitte warten."
               >
+
+                <template v-slot:item.version="{ item }">
+                  {{ item.version + 1}}
+                </template>
                 <template v-slot:item.viewVersion="{ item }">
                   <v-btn
                       variant="text"
