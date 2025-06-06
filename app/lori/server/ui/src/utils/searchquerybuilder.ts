@@ -535,4 +535,12 @@ export default {
         return PublicationTypeRest.WorkingPaper;
     }
   },
+  createTemplateHref(rightId: string | undefined) : string {
+    if(rightId == undefined){
+      return "";
+    } else {
+      return window.location.origin + window.location.pathname + "?" +
+          QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
+    }
+  },
 };

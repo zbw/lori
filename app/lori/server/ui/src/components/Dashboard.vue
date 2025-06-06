@@ -9,6 +9,11 @@ import searchquerybuilder from "@/utils/searchquerybuilder";
 import date_utils from "@/utils/date_utils";
 
 export default defineComponent({
+  computed: {
+    searchquerybuilder() {
+      return searchquerybuilder;
+    },
+  },
   components: {},
   props: {
     testId: {
@@ -200,14 +205,6 @@ export default defineComponent({
           searchquerybuilder.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };
 
-    const createTemplateHref: (rightId: string | undefined) => string = (rightId : string | undefined) => {
-      if(rightId == undefined){
-        return "";
-      } else {
-        return window.location.origin + window.location.pathname + "?" +
-            searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
-      }
-    };
     /**
      * Alerts:
      */
@@ -301,7 +298,6 @@ export default defineComponent({
       close,
       createHandleHref,
       createRightHref,
-      createTemplateHref,
       endDateEntered,
       getErrorList,
       prettyPrintConflict,
@@ -469,7 +465,7 @@ export default defineComponent({
         <td v-if="item.conflictType == 'date_overlap'">
           <a
               v-bind:href="
-                  createTemplateHref(item.conflictByRightId)
+                  searchquerybuilder.createTemplateHref(item.conflictByRightId)
                   "
               target="_blank"
           > Template '{{item.conflictByContext}}'</a>

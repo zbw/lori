@@ -1,6 +1,7 @@
 <script lang="ts">
 import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
+import searchquerybuilder from "@/utils/searchquerybuilder";
 import {
   AccessStateRest,
   BookmarkRest,
@@ -46,6 +47,9 @@ export default defineComponent({
     },
     navigator_utils() {
       return navigator_utils;
+    },
+    searchquerybuilder() {
+      return searchquerybuilder;
     },
   },
   props: {
@@ -2016,6 +2020,15 @@ export default defineComponent({
                       item-value="rightId"
                       loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template v-slot:item.templateName="{ item }">
+                      <td>
+                        <a
+                            v-bind:href="
+                              searchquerybuilder.createTemplateHref(item.rightId)"
+                            target="_blank"
+                        > {{item.templateName}}'</a>
+                      </td>
+                    </template>
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
@@ -2052,6 +2065,15 @@ export default defineComponent({
                       item-value="rightId"
                       loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template v-slot:item.templateName="{ item }">
+                      <td>
+                        <a
+                            v-bind:href="
+                              searchquerybuilder.createTemplateHref(item.rightId)"
+                            target="_blank"
+                        > {{item.templateName}}'</a>
+                      </td>
+                    </template>
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
