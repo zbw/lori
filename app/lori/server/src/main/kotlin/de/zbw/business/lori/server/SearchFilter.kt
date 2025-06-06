@@ -320,8 +320,8 @@ class LicenceUrlFilter(
 class PPNFilter(
     val ppn: String,
 ) : MetadataSearchFilter(
-    MetadataDB.COLUMN_METADATA_PPN,
-) {
+        MetadataDB.COLUMN_METADATA_PPN,
+    ) {
     override fun toWhereClause(): String = "(LOWER($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
 
     override fun setSQLParameter(
@@ -346,17 +346,17 @@ class PPNFilter(
 class DOIFilter(
     val dois: List<String>,
 ) : MetadataSearchFilter(
-    MetadataDB.COLUMN_METADATA_DOI,
-) {
+        MetadataDB.COLUMN_METADATA_DOI,
+    ) {
     override fun toWhereClause(): String =
         dois.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
             "(" +
-                    "EXISTS (" +
-                    "SELECT 1" +
-                    " FROM unnest($dbColumnName) AS element" +
-                    " WHERE (lower(element) ILIKE ?)" +
-                    ")" +
-                    ")"
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
         }
 
     override fun setSQLParameter(
@@ -384,17 +384,17 @@ class DOIFilter(
 class ISBNFilter(
     val isbns: List<String>,
 ) : MetadataSearchFilter(
-    MetadataDB.COLUMN_METADATA_ISBN,
-) {
+        MetadataDB.COLUMN_METADATA_ISBN,
+    ) {
     override fun toWhereClause(): String =
         isbns.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
             "(" +
-                    "EXISTS (" +
-                    "SELECT 1" +
-                    " FROM unnest($dbColumnName) AS element" +
-                    " WHERE (lower(element) ILIKE ?)" +
-                    ")" +
-                    ")"
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
         }
 
     override fun setSQLParameter(
