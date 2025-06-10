@@ -168,6 +168,7 @@ class GroupDB(
                         createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
                         description = rs.getString(localCounter++),
                         version = rs.getInt(localCounter++),
+                        title = rs.getString(localCounter++),
                     )
                 } else {
                     null
@@ -450,7 +451,7 @@ class GroupDB(
 
         const val STATEMENT_GET_GROUPS_BY_ID =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_CREATED_BY,$COLUMN_CREATED_ON," +
-                "$COLUMN_DESCRIPTION,$COLUMN_VERSION" +
+                "$COLUMN_DESCRIPTION,$COLUMN_VERSION,$COLUMN_TITLE" +
                 " FROM $TABLE_NAME_RIGHT_GROUP" +
                 " WHERE $COLUMN_GROUP_ID = ?;"
 

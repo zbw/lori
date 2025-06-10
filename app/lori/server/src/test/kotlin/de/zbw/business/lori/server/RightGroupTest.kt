@@ -124,6 +124,7 @@ class RightGroupTest : DatabaseTest() {
                                     createdOn = expectedGroup1.createdOn!!,
                                     description = expectedGroup1.description,
                                     version = 0,
+                                    title = expectedGroup1.title,
                                 ),
                             ),
                     ),

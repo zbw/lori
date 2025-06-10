@@ -118,6 +118,7 @@ fun GroupVersion.toRest() =
         createdBy = createdBy,
         version = version,
         description = description,
+        title = title,
     )
 
 /**

@@ -121,7 +121,7 @@ fun Routing.errorRoutes(
                                 )
                             } else {
                                 val entriesDeleted = backend.deleteErrorsByTestId(testId)
-                                if (entriesDeleted == 1) {
+                                if (entriesDeleted > 0) {
                                     span.setStatus(StatusCode.OK)
                                     call.respond(HttpStatusCode.OK)
                                 } else {

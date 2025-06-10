@@ -58,6 +58,8 @@ abstract class SearchFilter(
                         CommunityNameFilter(searchValue)
                     "col" ->
                         CollectionNameFilter(searchValue)
+                    "doi" -> QueryParameterParser.parseDoiFilter(searchValue)
+                    "isb" -> QueryParameterParser.parseISBNFilter(searchValue)
                     "hdl" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             HandlesFilter(searchValue.split(",".toRegex()))
@@ -82,6 +84,7 @@ abstract class SearchFilter(
                     "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
                     "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
                     "luk" -> QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
+                    "ppn" -> QueryParameterParser.parsePPNFilter(searchValue)
                     "subcom" ->
                         SubcommunityNameFilter(
                             searchValue,
@@ -311,6 +314,108 @@ class LicenceUrlFilter(
 
     companion object {
         fun fromString(s: String?): LicenceUrlFilter? = s?.let { QueryParameterParser.parseLicenceUrlFilter(it) }
+    }
+}
+
+class PPNFilter(
+    val ppn: String,
+) : MetadataSearchFilter(
+        MetadataDB.COLUMN_METADATA_PPN,
+    ) {
+    override fun toWhereClause(): String = "(LOWER($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, ppn)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = ppn
+
+    override fun getFilterType(): FilterType = FilterType.PPN
+
+    companion object {
+        fun fromString(s: String?): PPNFilter? = s?.let { QueryParameterParser.parsePPNFilter(it) }
+    }
+}
+
+class DOIFilter(
+    val dois: List<String>,
+) : MetadataSearchFilter(
+        MetadataDB.COLUMN_METADATA_DOI,
+    ) {
+    override fun toWhereClause(): String =
+        dois.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
+            "(" +
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
+        }
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        dois.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+
+    override fun toSQLString(): String = dois.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun getFilterType(): FilterType = FilterType.DOI
+
+    companion object {
+        fun fromString(s: String?): DOIFilter? = QueryParameterParser.parseDoiFilter(s)
+    }
+}
+
+class ISBNFilter(
+    val isbns: List<String>,
+) : MetadataSearchFilter(
+        MetadataDB.COLUMN_METADATA_ISBN,
+    ) {
+    override fun toWhereClause(): String =
+        isbns.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
+            "(" +
+                "EXISTS (" +
+                "SELECT 1" +
+                " FROM unnest($dbColumnName) AS element" +
+                " WHERE (lower(element) ILIKE ?)" +
+                ")" +
+                ")"
+        }
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        isbns.forEach {
+            preparedStatement.setString(localCounter++, it)
+        }
+        return localCounter
+    }
+
+    override fun toSQLString(): String = isbns.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun getFilterType(): FilterType = FilterType.ISBN
+
+    companion object {
+        fun fromString(s: String?): ISBNFilter? = QueryParameterParser.parseISBNFilter(s)
     }
 }
 
@@ -859,9 +964,11 @@ enum class FilterType(
     COLLECTION_NAME("col"),
     COMMUNITY_HANDLE("hdlcom"),
     COMMUNITY_NAME("com"),
+    DOI("doi"),
     END_DATE("zge"),
     FORMAL_RULE("reg"),
     HANDLE("hdl"),
+    ISBN("isb"),
     LICENCE_URL("lur"),
     LICENCE_URL_LUK("luk"),
     MANUAL_RIGHTS("man"),
@@ -869,6 +976,7 @@ enum class FilterType(
     PUBLICATION_YEAR("jah"),
     PUBLICATION_TYPE("typ"),
     PAKET_SIGEL("sig"),
+    PPN("ppn"),
     TEMPLATE_NAME("tpl"),
     RIGHT_ID("rightid"),
     RIGHT_VALID_ON("zgp"),

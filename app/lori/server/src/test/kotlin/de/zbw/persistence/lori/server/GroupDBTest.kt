@@ -93,6 +93,7 @@ class GroupDBTest : DatabaseTest() {
                                     createdBy = expectedGroup.createdBy!!,
                                     createdOn = expectedGroup.createdOn!!,
                                     description = expectedGroup.description,
+                                    title = expectedGroup.title,
                                     version = 0,
                                 ),
                             ),

@@ -2,16 +2,19 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
+import de.zbw.business.lori.server.DOIFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardTemplateNameFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
+import de.zbw.business.lori.server.ISBNFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
+import de.zbw.business.lori.server.PPNFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
@@ -107,6 +110,32 @@ object QueryParameterParser {
                     escapeWildcards(it)
                 }
         return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilter(it) }
+    }
+
+    fun parseISBNFilter(s: String?): ISBNFilter? {
+        if (s == null) {
+            return null
+        }
+        val isbns: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
+        return isbns.takeIf { it.isNotEmpty() }?.let { ISBNFilter(it) }
+    }
+
+    fun parseDoiFilter(s: String?): DOIFilter? {
+        if (s == null) {
+            return null
+        }
+        val dois: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
+        return dois.takeIf { it.isNotEmpty() }?.let { DOIFilter(it) }
     }
 
     fun parseSeriesFilter(s: String?): SeriesFilter? {
@@ -281,6 +310,8 @@ object QueryParameterParser {
                 it.replace(Regex("[-_]"), ""),
             )
         }
+
+    fun parsePPNFilter(s: String?): PPNFilter? = s?.let { PPNFilter(escapeWildcards(it)) }
 
     fun escapeWildcards(s: String): String {
         val escaped =

@@ -1,14 +1,17 @@
 package de.zbw.api.lori.server.route
 
 import com.google.gson.reflect.TypeToken
+import de.zbw.api.lori.server.route.ItemRoutesKtTest.Companion.getServicePool
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.lori.model.RightErrorInformationRest
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -16,6 +19,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.Test
 import java.lang.reflect.Type
+import java.sql.SQLException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -55,6 +59,66 @@ class ErrorRoutesKtTest {
             val rightErrorResultType: Type = object : TypeToken<RightErrorInformationRest>() {}.type
             val received: RightErrorInformationRest = ItemRoutesKtTest.GSON.fromJson(content, rightErrorResultType)
             assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testDeleteByTestIdOk() {
+        // given
+        val testId = "1"
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { deleteErrorsByTestId(testId) } returns 1
+            }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response = client.delete("/api/v1/errors/rights/$testId")
+            assertThat(response.status, `is`(HttpStatusCode.OK))
+        }
+    }
+
+    @Test
+    fun testDeleteByTestIdNotFound() {
+        // given
+        val testId = "1"
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { deleteErrorsByTestId(testId) } returns 0
+            }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response = client.delete("/api/v1/errors/rights/$testId")
+            assertThat(response.status, `is`(HttpStatusCode.NotFound))
+        }
+    }
+
+    @Test
+    fun testDeleteByTestIdInternalError() {
+        // given
+        val testId = "1"
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { deleteErrorsByTestId(testId) } throws SQLException()
+            }
+        val servicePool = getServicePool(backend)
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response = client.delete("/api/v1/errors/rights/$testId")
+            assertThat(response.status, `is`(HttpStatusCode.InternalServerError))
         }
     }
 

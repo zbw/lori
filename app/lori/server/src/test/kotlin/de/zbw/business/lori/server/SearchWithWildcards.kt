@@ -143,6 +143,27 @@ class SearchWithWildcards : DatabaseTest() {
                 emptySet<ItemMetadata>(),
                 "ignore wildcard at the start",
             ),
+            arrayOf(
+                "${FilterType.PPN.keyAlias}:EBP107*",
+                setOf(
+                    item2,
+                ),
+                "find ppn with wildcard",
+            ),
+            arrayOf(
+                "${FilterType.ISBN.keyAlias}:978-1-84*",
+                setOf(
+                    item2,
+                ),
+                "find isbn with wildcard",
+            ),
+            arrayOf(
+                "${FilterType.DOI.keyAlias}:10.1108/S05*",
+                setOf(
+                    item2,
+                ),
+                "find doi with wildcard",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_WILDCARD_TESTS)
@@ -181,6 +202,9 @@ class SearchWithWildcards : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "paket sigel array wildcards",
                 paketSigel = listOf("blub%", "wild_card"),
+                ppn = "EBP107179776",
+                doi = listOf("10.1108/S0573-8555(2004)0000262002"),
+                isbn = listOf("978-1-84950-841-4"),
             )
     }
 }
