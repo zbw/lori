@@ -183,6 +183,9 @@ export default defineComponent({
       alertSuccessful.value = true;
       alertSuccessfulMsg.value =
         "Template '" + template.templateName + "' wurde erfolgreich erstellt.";
+      templateDialogActivated.value = false;
+      dialogStore.templateOverviewActivated = true;
+      close();
     };
 
     /**
