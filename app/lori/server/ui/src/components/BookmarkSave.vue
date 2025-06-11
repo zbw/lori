@@ -35,6 +35,10 @@ export default defineComponent({
       type: Number,
       required: false,
     },
+    searchTerm: {
+      type: String,
+      required: false,
+    },
   },
   setup(props, { emit }) {
     /**
@@ -210,7 +214,7 @@ export default defineComponent({
 
     const resetAllValues = () => {
       description.value = '';
-      formState.name = '';
+      formState.name = props.searchTerm ?? '';
     };
 
     const loginStatusProps = computed(() => {

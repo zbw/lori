@@ -922,6 +922,7 @@ table.special, th.special, td.special {
     >
       <BookmarkSave
         :isNew="true"
+        :searchTerm="searchStore.searchTerm"
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>

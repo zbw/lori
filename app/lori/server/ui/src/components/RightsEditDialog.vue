@@ -941,6 +941,7 @@ export default defineComponent({
     const addInitialBookmark = () => {
       if (props.initialBookmark != undefined) {
         formState.selectedBookmarks = Array(props.initialBookmark);
+        formState.templateName = props.initialBookmark.bookmarkName ?? '';
       }
     };
 
