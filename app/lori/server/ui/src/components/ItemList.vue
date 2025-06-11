@@ -25,6 +25,7 @@ import metadata_utils from "@/utils/metadata_utils";
 import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
 import Dashboard from "@/components/Dashboard.vue";
 import {useUserStore} from "@/stores/user";
+import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 
 export default defineComponent({
@@ -35,6 +36,7 @@ export default defineComponent({
   },
   components: {
     TopNavigationBar,
+    ResizableDialog,
     Dashboard,
     VResizeDrawer,
     RightsEditDialog,
@@ -812,6 +814,10 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
     };
 
+    const closeGroupDialog = () => {
+      dialogStore.groupOverviewActivated = false;
+    };
+
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
@@ -836,10 +842,16 @@ export default defineComponent({
       }
     };
     const renderKey = ref(0);
+    const dialog = ref(false);
+
+    const openDialog = () => {
+      dialog.value = true;
+    };
 
     return {
       successMsgIsActive,
       successMsg,
+      dialog,
       errorMsgIsActive,
       errorMsg,
       currentItem,
@@ -871,6 +883,7 @@ export default defineComponent({
       closeBookmarkOverview,
       closeBookmarkSaveDialog,
       closeDashboard,
+      closeGroupDialog,
       closeTemplateEditDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
@@ -879,6 +892,7 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loadTemplateView,
+      openDialog,
       parsePublicationType,
       addRightSuccessful,
       searchQuery,
@@ -926,42 +940,53 @@ table.special, th.special, td.special {
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>
-    <v-dialog
-      v-model="dialogStore.templateOverviewActivated"
-      :retain-focus="false"
-      max-width="1500px"
-      max-height="800px"
-      v-on:close="closeTemplateOverview"
-      persistent
+    <ResizableDialog
+        v-model="dialogStore.templateOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeTemplateOverview"
     >
       <TemplateOverview
-        v-on:getItemsByRightId="initSearchByRightId"
-        v-on:templateOverviewClosed="closeTemplateOverview"
+          @getItemsByRightId="initSearchByRightId"
+          @templateOverviewClosed="closeTemplateOverview"
       ></TemplateOverview>
-    </v-dialog>
-    <v-dialog
-      v-model="dialogStore.bookmarkOverviewActivated"
-      :retain-focus="false"
-      max-width="1000px"
-      v-on:close="closeBookmarkOverview"
-      persistent
+    </ResizableDialog>
+
+    <ResizableDialog
+        v-model="dialogStore.bookmarkOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeBookmarkOverview"
     >
       <BookmarkOverview
-        v-on:executeBookmarkSearch="executeBookmarkSearch"
-        v-on:bookmarkOverviewClosed="closeBookmarkOverview"
-      ></BookmarkOverview>
-    </v-dialog>
-    <v-dialog
+          @executeBookmarkSearch="executeBookmarkSearch"
+          @bookmarkOverviewClosed="closeBookmarkOverview"
+      />
+    </ResizableDialog>
+    <ResizableDialog
         v-model="dialogStore.dashboardViewActivated"
-        :retain-focus="false"
-        max-width="1500px"
-        v-on:close="closeDashboard"
+        :initial-width="1800"
+        :initial-height="900"
         persistent
+        @close="closeDashboard"
     >
       <Dashboard
           v-on:dashboardClosed="closeDashboard"
       ></Dashboard>
-    </v-dialog>
+    </ResizableDialog>
+    <ResizableDialog
+        v-model="dialogStore.groupOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeDashboard"
+    >
+      <GroupOverview
+          v-on:groupOverviewClosed="closeGroupDialog">
+      </GroupOverview>
+    </ResizableDialog>
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>
         <v-card-title class="text-h5"

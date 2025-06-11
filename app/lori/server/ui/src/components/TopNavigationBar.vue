@@ -107,10 +107,6 @@ export default defineComponent({
       logoutDialog.value = false;
     };
 
-    const closeGroupDialog = () => {
-      dialogStore.groupOverviewActivated = false;
-    };
-
     const appBarColor = computed(() => {
       switch (searchStore.stage) {
         case 'prod':
@@ -142,7 +138,6 @@ export default defineComponent({
       activateDashboardDialog,
       activateGroupDialog,
       activateTemplateDialog,
-      closeGroupDialog,
       deactivateLoginDialog,
       deactivateLogoutDialog,
       login,
@@ -155,17 +150,6 @@ export default defineComponent({
 <style scoped>
 </style>
 <template>
-  <v-dialog
-      v-model="dialogStore.groupOverviewActivated"
-      :retain-focus="false"
-      max-width="1000px"
-      v-on:close="closeGroupDialog"
-      persistent
-  >
-    <GroupOverview
-        v-on:groupOverviewClosed="closeGroupDialog">
-    </GroupOverview>
-  </v-dialog>
   <v-app-bar
       app
       :color="appBarColor"
