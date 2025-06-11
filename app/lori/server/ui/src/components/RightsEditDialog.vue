@@ -710,6 +710,13 @@ export default defineComponent({
           updateInProgress.value = false;
           return;
         }
+        if(tmpRight.value.templateName.startsWith("KOPIE ")){
+          errorMsg.value = "Fehler beim Speichern des Templates. Der Templatename darf nicht mit KOPIE beginnen.";
+          errorSources.value = getErrorSources();
+          errorMsgIsActive.value = true;
+          updateInProgress.value = false;
+          return;
+        }
       }
       if (props.isNewTemplate) {
         createTemplate();

@@ -153,6 +153,7 @@ export default defineComponent({
     const copyTemplate = (templateRight: RightRest) => {
       isNew.value = true;
       templateDraft.value = Object.assign({}, templateRight);
+      // Some properties should not be copied.
       templateDraft.value.rightId = undefined;
       templateDraft.value.exceptionOfId = undefined;
       templateDraft.value.createdBy = undefined;
@@ -160,6 +161,8 @@ export default defineComponent({
       templateDraft.value.lastAppliedOn = undefined;
       templateDraft.value.lastUpdatedOn = undefined;
       templateDraft.value.lastUpdatedBy = undefined;
+      templateDraft.value.successorId = undefined;
+      templateDraft.value.predecessorId = undefined;
       templateDraft.value.templateName = "KOPIE - " + templateDraft.value.templateName;
       reinitCounter.value = reinitCounter.value + 1;
       activateTemplateEditDialog();
