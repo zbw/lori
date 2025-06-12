@@ -135,6 +135,40 @@ class SearchExpressionTest {
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negate term before paranthesis",
             ),
+            arrayOf(
+                "sig:\"sig\" | sig:\"sig1,sig2\"",
+                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
+                    " OR (EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE lower(element) = ANY (?)) AND paket_sigel is" +
+                    " not null)",
+                "single and multiple paket sigels",
+            ),
+            arrayOf(
+                "zdb:\"zdb\" | zdb:\"zdb1,zdb2\"",
+                "((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
+                    " OR (EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)",
+                "single and multiple zdbIds",
+            ),
+            arrayOf(
+                "doi:\"doi\" | doi:\"doi1,doi2\"",
+                """
+                (EXISTS (SELECT 1 FROM unnest(doi) AS element WHERE (lower(element) ILIKE ?)) AND doi is not null) OR (EXISTS (SELECT 1 FROM unnest(doi) AS element WHERE lower(element) = ANY (?)) AND doi is not null)
+                """.trimIndent(),
+                "single and multiple dois",
+            ),
+            arrayOf(
+                "ppn:\"ppn\" | ppn:\"ppn1,ppn2\"",
+                """
+                (lower(ppn) ILIKE ? AND ppn is not null) OR lower(im.ppn) IN (?,?)
+                """.trimIndent(),
+                "single and multiple ppns",
+            ),
+            arrayOf(
+                "isb:\"isb\" | isb:\"isbn1,isbn2\"",
+                """
+                (EXISTS (SELECT 1 FROM unnest(isbn) AS element WHERE (lower(element) ILIKE ?)) AND isbn is not null) OR (EXISTS (SELECT 1 FROM unnest(isbn) AS element WHERE lower(element) = ANY (?)) AND isbn is not null)
+                """.trimIndent(),
+                "single and multiple isbns",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_RESOLVE_SEARCH_EXPRESSION)

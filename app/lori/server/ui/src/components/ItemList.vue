@@ -1221,7 +1221,7 @@ table.special, th.special, td.special {
                   </p>
 
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
+                    col:"subject1" | (hdl:"handle" & !com:"community")
                   </p>
                   <p class="text-left text-body-1 mt-4 font-weight-bold">Sonderzeichen</p>
 
@@ -1235,11 +1235,19 @@ table.special, th.special, td.special {
                   <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Es ist möglich für den Suchschlüssel <b>hdl</b> mehrere Werte auf einmal zu suchen:
+                    Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
+                    <br>
+                    <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
                   </p>
 
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    hdl:'11159/1234,11159/5678'
+                    hdl:"11159/1234,11159/5678"
+                  </p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Beispiel mit Wildcard:
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    hdl:"11159/1234,11159/5678" | hdl:"11159/555*"
                   </p>
                 </v-card-text>
               </v-card>

@@ -563,8 +563,8 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         searchTerm = this.searchTerm,
         publicationYearFilter = QueryParameterParser.parsePublicationYearFilter(this.filterPublicationYear),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
-        zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND(this.filterPaketSigel),
+        zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule),
         startDateFilter = QueryParameterParser.parseStartDateFilter(this.filterStartDate),
@@ -600,8 +600,8 @@ fun BookmarkRest.toBusiness(): Bookmark =
                     separator = ",",
                 ),
             ),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
-        zdbIdFilter = QueryParameterParser.parseZDBIdFilter(this.filterZDBId?.joinToString(separator = ",")),
+        paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND(this.filterPaketSigel?.joinToString(separator = ",")),
+        zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND(this.filterZDBId?.joinToString(separator = ",")),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
@@ -862,13 +862,13 @@ object RestConverter {
                     .setDelimiter(CSV_DELIMITER)
                     .setQuote(Character.valueOf('"'))
                     .setRecordSeparator("\r\n")
-                    .build()
+                    .get()
             val groupEntries =
                 CSVFormat.Builder
                     .create(csvFormat)
                     .apply {
                         setIgnoreSurroundingSpaces(true)
-                    }.build()
+                    }.get()
                     .let { CSVParser.parse(ipAddressesCSV, it) }
                     .let {
                         if (hasCSVHeader) {

@@ -15,7 +15,8 @@ import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PPNFilter
-import de.zbw.business.lori.server.PaketSigelFilter
+import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilterOR
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
@@ -23,7 +24,8 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
-import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.ZDBIdFilterOR
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.FormalRule
@@ -86,7 +88,7 @@ object QueryParameterParser {
         return receivedPubTypes.takeIf { it.isNotEmpty() }?.let { PublicationTypeFilter(it) }
     }
 
-    fun parsePaketSigelFilter(s: String?): PaketSigelFilter? {
+    fun parsePaketSigelFilterOR(s: String?): PaketSigelFilterOR? {
         if (s == null) {
             return null
         }
@@ -96,10 +98,23 @@ object QueryParameterParser {
                 .map {
                     escapeWildcards(it)
                 }
-        return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilter(it) }
+        return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilterOR(it) }
     }
 
-    fun parseZDBIdFilter(s: String?): ZDBIdFilter? {
+    fun parsePaketSigelFilterAND(s: String?): PaketSigelFilterAND? {
+        if (s == null) {
+            return null
+        }
+        val paketSigelIds: List<String> =
+            s
+                .split(",".toRegex())
+                .map {
+                    escapeWildcards(it)
+                }
+        return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilterAND(it) }
+    }
+
+    fun parseZDBIdFilterOR(s: String?): ZDBIdFilterOR? {
         if (s == null) {
             return null
         }
@@ -109,34 +124,25 @@ object QueryParameterParser {
                 .map {
                     escapeWildcards(it)
                 }
-        return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilter(it) }
+        return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilterOR(it) }
     }
 
-    fun parseISBNFilter(s: String?): ISBNFilter? {
+    fun parseZDBIdFilterAND(s: String?): ZDBIdFilterAND? {
         if (s == null) {
             return null
         }
-        val isbns: List<String> =
+        val zdbIds: List<String> =
             s
                 .split(",".toRegex())
                 .map {
                     escapeWildcards(it)
                 }
-        return isbns.takeIf { it.isNotEmpty() }?.let { ISBNFilter(it) }
+        return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilterAND(it) }
     }
 
-    fun parseDoiFilter(s: String?): DOIFilter? {
-        if (s == null) {
-            return null
-        }
-        val dois: List<String> =
-            s
-                .split(",".toRegex())
-                .map {
-                    escapeWildcards(it)
-                }
-        return dois.takeIf { it.isNotEmpty() }?.let { DOIFilter(it) }
-    }
+    fun parseISBNFilter(s: String?): ISBNFilter? = s?.let { ISBNFilter(escapeWildcards(it)) }
+
+    fun parseDoiFilter(s: String?): DOIFilter? = s?.let { DOIFilter(escapeWildcards(it)) }
 
     fun parseSeriesFilter(s: String?): SeriesFilter? {
         if (s == null) {

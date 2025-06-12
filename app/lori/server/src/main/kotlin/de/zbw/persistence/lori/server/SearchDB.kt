@@ -317,13 +317,28 @@ class SearchDB(
                                 searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) }
                                     ?: emptyList()
                             searchPairs.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             metadataSearchFilters.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             rightSearchFilters.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                         }
                 val span = tracer.spanBuilder("searchForOccurrence").startSpan()
@@ -377,13 +392,28 @@ class SearchDB(
                             val searchPairs =
                                 searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) } ?: emptyList()
                             rightSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             searchPairs.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             metadataSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                         }
                 val span = tracer.spanBuilder("countMetadataSearch").startSpan()
@@ -431,13 +461,28 @@ class SearchDB(
                                     ?.let { SearchExpressionResolution.getSearchPairs(it) }
                                     ?: emptyList()
                             rightSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             searchPairs.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             metadataSearchFilter.forEach { f ->
-                                counter = f.setSQLParameter(counter, this)
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = this,
+                                        connection = connection,
+                                    )
                             }
                             if (handlesToIgnore.isNotEmpty()) {
                                 this.setArray(

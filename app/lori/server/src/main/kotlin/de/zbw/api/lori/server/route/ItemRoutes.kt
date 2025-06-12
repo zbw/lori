@@ -9,14 +9,14 @@ import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilter
+import de.zbw.business.lori.server.PaketSigelFilterAND
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.lori.model.ItemCountByRight
@@ -384,10 +384,10 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parsePublicationYearFilter(call.request.queryParameters["filterPublicationYear"])
                     val publicationTypeFilter: PublicationTypeFilter? =
                         QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
-                    val paketSigelFilter: PaketSigelFilter? =
-                        QueryParameterParser.parsePaketSigelFilter(call.request.queryParameters["filterPaketSigel"])
-                    val zdbIdFilter: ZDBIdFilter? =
-                        QueryParameterParser.parseZDBIdFilter(call.request.queryParameters["filterZDBId"])
+                    val paketSigelFilter: PaketSigelFilterAND? =
+                        QueryParameterParser.parsePaketSigelFilterAND(call.request.queryParameters["filterPaketSigel"])
+                    val zdbIdFilter: ZDBIdFilterAND? =
+                        QueryParameterParser.parseZDBIdFilterAND(call.request.queryParameters["filterZDBId"])
                     val seriesFilter: SeriesFilter? =
                         QueryParameterParser.parseSeriesFilter(call.request.queryParameters["filterSeries"])
                     val licenceUrlFilter: LicenceUrlFilter? =

@@ -39,7 +39,7 @@ class TemplateExceptionTest : DatabaseTest() {
                         bookmarkName = "allZDB2",
                         bookmarkId = 10,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_2,
@@ -54,7 +54,7 @@ class TemplateExceptionTest : DatabaseTest() {
                         bookmarkName = "zdb2AndHandle",
                         bookmarkId = 20,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_2,

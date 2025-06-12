@@ -6,11 +6,11 @@ import de.zbw.business.lori.server.CommunityNameFilter
 import de.zbw.business.lori.server.HandleFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilter
+import de.zbw.business.lori.server.PaketSigelFilterAND
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightSearchFilter
-import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.ZDBIdFilterOR
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SEAnd
@@ -76,13 +76,13 @@ class SearchDBTest : DatabaseTest() {
     fun searchMetadata() =
         runBlocking {
             // given
-            val testZDB = TEST_Metadata.copy(handle = "searchZBD", zdbIds = listOf("zbdId"))
+            val testZDB = TEST_Metadata.copy(handle = "searchZBD", zdbIds = listOf("zdbid"))
             dbConnector.metadataDB.insertMetadata(testZDB)
 
             // when
             val searchPairsZDB =
                 SEVariable(
-                    ZDBIdFilter(testZDB.zdbIds!!),
+                    ZDBIdFilterOR(zdbIds = testZDB.zdbIds!!),
                 )
             val resultZDB =
                 dbConnector.searchDB.searchMetadataItems(
@@ -110,9 +110,9 @@ class SearchDBTest : DatabaseTest() {
                         SEVariable(CommunityNameFilter(testZDB.communityName!!)),
                         SEAnd(
                             SEVariable(
-                                PaketSigelFilter(testZDB.paketSigel!!),
+                                PaketSigelFilterAND(testZDB.paketSigel!!),
                             ),
-                            SEVariable(ZDBIdFilter(testZDB.zdbIds)),
+                            SEVariable(ZDBIdFilterOR(testZDB.zdbIds)),
                         ),
                     ),
                 )
@@ -136,7 +136,7 @@ class SearchDBTest : DatabaseTest() {
             assertThat(numberResultAll, `is`(1))
 
             // Add second metadata with same zbdID
-            val testZDB2 = TEST_Metadata.copy(handle = "searchZBD2", zdbIds = listOf("zbdId"))
+            val testZDB2 = TEST_Metadata.copy(handle = "searchZBD2", zdbIds = listOf("zdbid"))
             dbConnector.metadataDB.insertMetadata(testZDB2)
             // when
             val resultZBD2 =
@@ -189,15 +189,15 @@ class SearchDBTest : DatabaseTest() {
             ),
             arrayOf(
                 SEAnd(
-                    SEVariable(ZDBIdFilter(listOf("foo & bar"))),
-                    SEVariable(PaketSigelFilter(listOf("bar"))),
+                    SEVariable(ZDBIdFilterOR(listOf("foo & bar"))),
+                    SEVariable(PaketSigelFilterAND(listOf("bar"))),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationYearFilter(fromYear = 2016, toYear = 2022),
                 ),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
+                    " WHERE (EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
                     " AND ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
@@ -208,16 +208,16 @@ class SearchDBTest : DatabaseTest() {
                 SEOr(
                     SEPar(
                         SEAnd(
-                            SEVariable(ZDBIdFilter(listOf("foo & bar"))),
+                            SEVariable(ZDBIdFilterOR(listOf("foo & bar"))),
                             SEVariable(HandleFilter("bar")),
                         ),
                     ),
-                    SEVariable(PaketSigelFilter(listOf("bar"))),
+                    SEVariable(PaketSigelFilterAND(listOf("bar"))),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
+                    " WHERE ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
                     " OR ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
@@ -300,7 +300,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
                     " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND" +
-                    " (LOWER(publication_type) = LOWER(?) OR LOWER(publication_type) = LOWER(?))" +
+                    " (lower(publication_type) = lower(?) OR lower(publication_type) = lower(?))" +
                     " AND $ALIAS_ITEM_RIGHT.right_id IS NULL)" +
                     " as sub" +
                     " WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)" +
@@ -416,7 +416,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item_right as ir" +
                     " ON item.right_id = $ALIAS_ITEM_RIGHT.right_id" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
-                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
+                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (lower(publication_type) = lower(?))" +
                     " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     ") as countsearch",
                 "search bar filter metadata and right",
@@ -478,7 +478,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " $LEFT_JOIN_RIGHT" +
                     " WHERE (((access_state = ? AND access_state is not null) OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)" +
-                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (LOWER(publication_type) = LOWER(?))" +
+                    " AND ($COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND $COLUMN_METADATA_PUBLICATION_YEAR is not null) AND (lower(publication_type) = lower(?))" +
                     " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE ASC" +
                     " LIMIT ? OFFSET ?",
                 "query with both filters",
@@ -522,7 +522,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE $ALIAS_ITEM_METADATA.publication_type IS NOT NULL" +
                     " AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " AND (lower(publication_type) = lower(?)) AND (((access_state = ? AND access_state is not null)" +
                     " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))," +
                     "metadata_unique AS (" +
                     " SELECT handle, publication_type" +
@@ -546,7 +546,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
                     " WHERE $ALIAS_ITEM_METADATA.zdb_ids IS NOT NULL AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " AND (lower(publication_type) = lower(?)) AND (((access_state = ? AND access_state is not null)" +
                     " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))," +
                     "metadata_unique AS (" +
                     " SELECT handle, zdb_ids" +
@@ -601,7 +601,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE $ALIAS_ITEM_RIGHT.access_state IS NOT NULL AND" +
                     " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " AND (lower(publication_type) = lower(?)) AND (((access_state = ? AND access_state is not null)" +
                     " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))" +
                     " SELECT mw.access_state, COUNT(*)" +
                     " FROM metadata_with_rights mw" +
@@ -622,7 +622,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE $ALIAS_ITEM_RIGHT.template_name IS NOT NULL AND" +
                     " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " AND (LOWER(publication_type) = LOWER(?)) AND (((access_state = ? AND access_state is not null)" +
+                    " AND (lower(publication_type) = lower(?)) AND (((access_state = ? AND access_state is not null)" +
                     " OR (access_state = ? AND access_state is not null)) AND $ALIAS_ITEM_RIGHT.right_id IS NOT NULL)))" +
                     " SELECT mw.template_name, COUNT(*)" +
                     " FROM metadata_with_rights mw" +

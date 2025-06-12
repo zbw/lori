@@ -20,7 +20,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import java.time.Instant
 
-class SearchMultipleHandlesTest : DatabaseTest() {
+class SearchMultipleValuesTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
@@ -35,14 +35,26 @@ class SearchMultipleHandlesTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "11159/12345",
                 zdbIds = listOf("555nase"),
+                doi = listOf("doi555"),
+                isbn = listOf("isbn1"),
+                ppn = "ppn1",
+                paketSigel = listOf("sigel1", "sigel2"),
             ),
             TEST_Metadata.copy(
                 handle = "11159/67832",
                 zdbIds = listOf("444nase"),
+                doi = listOf("doi444"),
+                isbn = listOf("isbn2"),
+                ppn = "ppn2",
+                paketSigel = listOf("sigel3"),
             ),
             TEST_Metadata.copy(
                 handle = "11159/90813",
                 zdbIds = listOf("444nase", "333nase"),
+                doi = listOf("doi333"),
+                isbn = listOf("isbn3", "isbn4"),
+                ppn = "ppn3",
+                paketSigel = listOf("sigel4"),
             ),
         )
 
@@ -104,7 +116,84 @@ class SearchMultipleHandlesTest : DatabaseTest() {
         )
     }
 
+    @DataProvider(name = DATA_FOR_MULTIPLE_VALUES_QUERY)
+    fun createDataForMultipleDois() =
+        arrayOf(
+            arrayOf(
+                "ppn:" +
+                    zdbIdFilterItems.joinToString(
+                        separator = ",",
+                        prefix = "\"",
+                        postfix = "\"",
+                    ) { it.ppn!! },
+                zdbIdFilterItems.toSet(),
+                "all ppns",
+            ),
+            arrayOf(
+                "doi:" +
+                    zdbIdFilterItems.joinToString(
+                        separator = ",",
+                        prefix = "\"",
+                        postfix = "\"",
+                    ) { it.doi!!.joinToString(separator = ",") },
+                zdbIdFilterItems.toSet(),
+                "all dois",
+            ),
+            arrayOf(
+                "isb:" +
+                    zdbIdFilterItems.joinToString(
+                        separator = ",",
+                        prefix = "\"",
+                        postfix = "\"",
+                    ) { it.isbn!!.joinToString(separator = ",") },
+                zdbIdFilterItems.toSet(),
+                "all isbns",
+            ),
+            arrayOf(
+                "zdb:" +
+                    zdbIdFilterItems.joinToString(
+                        separator = ",",
+                        prefix = "\"",
+                        postfix = "\"",
+                    ) { it.zdbIds!!.joinToString(separator = ",") },
+                zdbIdFilterItems.toSet(),
+                "all zdb ids",
+            ),
+            arrayOf(
+                "sig:" +
+                    zdbIdFilterItems.joinToString(
+                        separator = ",",
+                        prefix = "\"",
+                        postfix = "\"",
+                    ) { it.paketSigel!!.joinToString(separator = ",") },
+                zdbIdFilterItems.toSet(),
+                "all paket sigels",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_MULTIPLE_VALUES_QUERY)
+    fun queryMultipleDOIs(
+        searchTerm: String,
+        expectedMetadata: Set<ItemMetadata>,
+        reason: String,
+    ) {
+        val searchResult =
+            runBlocking {
+                backend.searchQuery(
+                    searchTerm,
+                    10,
+                    0,
+                )
+            }
+        assertThat(
+            reason,
+            searchResult.results.map { it.metadata }.toSet(),
+            `is`(expectedMetadata),
+        )
+    }
+
     companion object {
+        const val DATA_FOR_MULTIPLE_VALUES_QUERY = "DATA_FOR_MULTIPLE_VALUES_QUERY "
         const val DATA_FOR_MULTIPLE_HANDLES_QUERY = "DATA_FOR_MULTIPLE_HANDLES_QUERY "
     }
 }
