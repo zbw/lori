@@ -280,6 +280,12 @@ export default defineComponent({
           userStore.signInURL = response.duoSSO;
           userStore.signOutURL = response.duoSLO;
           userStore.commitHash = response.commitHash;
+          if(response.stage == "dev"){
+            document.title = "lori-dev";
+          }
+          if(response.stage == "qs"){
+            document.title = "lori-qs";
+          }
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {

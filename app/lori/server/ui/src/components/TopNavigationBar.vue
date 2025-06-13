@@ -115,6 +115,8 @@ export default defineComponent({
       switch (searchStore.stage) {
         case 'prod':
           return "#1565C0";
+        case 'qs':
+          return "#EB6B05";
         case 'dev':
           return "#EB6B05";
         default:
@@ -207,7 +209,7 @@ export default defineComponent({
         </v-list-item>
       </v-list>
     </v-menu>
-    <div v-if="searchStore.stage == 'dev'">
+    <div v-if="searchStore.stage == 'dev' || searchStore.stage == 'qs'">
       Testsystem
     </div>
     <v-spacer></v-spacer>
