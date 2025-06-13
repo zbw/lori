@@ -10,7 +10,6 @@ export default defineComponent({
 <template>
   <v-app>
     <v-layout class="rounded rounded-md">
-      <TopNavigationBar></TopNavigationBar>
       <router-view />
     </v-layout>
   </v-app>

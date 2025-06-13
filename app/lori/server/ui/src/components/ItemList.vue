@@ -25,6 +25,7 @@ import metadata_utils from "@/utils/metadata_utils";
 import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
 import Dashboard from "@/components/Dashboard.vue";
 import {useUserStore} from "@/stores/user";
+import TopNavigationBar from "@/components/TopNavigationBar.vue";
 
 export default defineComponent({
   computed: {
@@ -33,6 +34,7 @@ export default defineComponent({
     },
   },
   components: {
+    TopNavigationBar,
     Dashboard,
     VResizeDrawer,
     RightsEditDialog,
@@ -896,6 +898,7 @@ table.special, th.special, td.special {
 }
 </style>
 <template>
+  <TopNavigationBar></TopNavigationBar>
   <VResizeDrawer permanent width="300px">
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
