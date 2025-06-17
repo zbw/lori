@@ -226,7 +226,7 @@ export default defineComponent({
             templateApplyError.value = true;
             templateApplyErrorMsg.value = errors
               .map((err) => err.message)
-              .join("\n");
+              .join("\n-----------------------------------\n");
             templateApplyErrorNumber.value = errors.length;
           }
           updateTemplateOverview();
@@ -542,7 +542,10 @@ export default defineComponent({
       >
         {{ errorMsg }}
       </v-snackbar>
-      <v-dialog v-model="templateApplyError" max-width="500px">
+      <v-dialog
+        v-model="templateApplyError"
+        width="850px"
+        height="550px">
         <v-card>
           <v-card-title class="text-h5"
             >Template Anwendung (teilweise) fehlgeschlagen</v-card-title
@@ -553,9 +556,11 @@ export default defineComponent({
             Details zu den Fehlern:
             <v-textarea
               :value="templateApplyErrorMsg"
+              rows="12"
               readonly
               background-color="red lighten-4"
               color="black"
+              variant="outlined"
             >
             </v-textarea>
           </v-card-text>
