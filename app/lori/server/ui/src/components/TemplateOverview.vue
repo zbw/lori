@@ -14,6 +14,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import {useUserStore} from "@/stores/user";
 import rightErrorApi from "@/api/rightErrorApi";
 import Dashboard from "@/components/Dashboard.vue";
+import {SortItem} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -65,6 +66,11 @@ export default defineComponent({
         sortable: true,
       },
       {
+        title: "Erstellt am",
+        value: "createdOn",
+        sortable: true,
+      },
+      {
         title: "Aktionen",
         value: "actions",
         sortable: false,
@@ -83,10 +89,25 @@ export default defineComponent({
         sortable: false,
       },
     ];
-    const selectedHeaders = ref(headers.slice(0, 6));
+    const selectedHeaders = ref(headers.slice(0, 7));
     const headersValueVSelect = ref(selectedHeaders.value);
     const templateItems: Ref<Array<RightRest>> = ref([]);
     const searchTerm = ref("");
+
+    /**
+     * Sorting (default by 'createdOn', when filtered by 'templateName')
+     */
+    const sortBy = ref<SortItem[]>([
+      { key: 'createdOn', order: 'desc' }
+    ]);
+
+    watch(searchTerm, (val) => {
+      if (val) {
+        sortBy.value = [{ key: "templateName", order: "asc" }];
+      } else {
+        sortBy.value = [{ key: "createdOn", order: "desc" }];
+      }
+    });
 
     /**
      * Error messages.
@@ -404,6 +425,7 @@ export default defineComponent({
       tooltipEditText,
       errorMsgIsActive,
       errorMsg,
+      sortBy,
       userStore,
       templateDraft,
       templateItems,
@@ -585,6 +607,7 @@ export default defineComponent({
         :headers="selectedHeaders"
         :items="templateItems"
         :search="searchTerm"
+        :sort-by.sync="sortBy"
         item-value="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >
