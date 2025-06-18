@@ -39,6 +39,7 @@ import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   computed: {
@@ -1021,6 +1022,7 @@ export default defineComponent({
             loadExceptions();
             loadPredecessor();
             loadSuccessor();
+            setPageParameter();
           }
         });
       } else {
@@ -1262,6 +1264,16 @@ export default defineComponent({
               errorMsgIsActive.value = true;
             });
           });
+    };
+
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
+
+    const setPageParameter = () => {
+      const newQuery = { ...route.query, templateId: props.rightId };
+
+      // This modifies the URL without pushing a new history entry
+      router.replace({ query: newQuery });
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
