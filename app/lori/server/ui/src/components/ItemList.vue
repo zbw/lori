@@ -129,7 +129,7 @@ export default defineComponent({
         value: "titleSeries",
       },
       {
-        title: "ZDB-IDs (Journal + Serie)",
+        title: "ZDB-ID (Journal + Serie)",
         value: "zdbIds",
       },
       {
