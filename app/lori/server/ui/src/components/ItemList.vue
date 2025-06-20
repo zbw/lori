@@ -1270,7 +1270,7 @@ table.special, th.special, td.special {
                     hdl:"11159/1234,11159/5678"
                   </p>
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Beispiel mit Wildcard:
+                    Alternative Suche, die Wildcard-Verwendung ermöglicht:
                   </p>
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
                     hdl:"11159/1234,11159/5678" | hdl:"11159/555*"
