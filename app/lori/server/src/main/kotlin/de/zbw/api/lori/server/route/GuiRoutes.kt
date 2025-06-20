@@ -88,6 +88,7 @@ fun Routing.guiRoutes(
                                         lastName = null,
                                         sessionID = null,
                                         validUntil = Instant.now().plus(1, ChronoUnit.DAYS),
+                                        createdOn = null,
                                     ),
                                 ),
                         ),

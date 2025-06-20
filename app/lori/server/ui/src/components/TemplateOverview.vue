@@ -14,6 +14,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import {useUserStore} from "@/stores/user";
 import rightErrorApi from "@/api/rightErrorApi";
 import Dashboard from "@/components/Dashboard.vue";
+import {SortItem} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -65,6 +66,11 @@ export default defineComponent({
         sortable: true,
       },
       {
+        title: "Erstellt am",
+        value: "createdOn",
+        sortable: true,
+      },
+      {
         title: "Aktionen",
         value: "actions",
         sortable: false,
@@ -83,10 +89,25 @@ export default defineComponent({
         sortable: false,
       },
     ];
-    const selectedHeaders = ref(headers.slice(0, 6));
+    const selectedHeaders = ref(headers.slice(0, 7));
     const headersValueVSelect = ref(selectedHeaders.value);
     const templateItems: Ref<Array<RightRest>> = ref([]);
     const searchTerm = ref("");
+
+    /**
+     * Sorting (default by 'createdOn', when filtered by 'templateName')
+     */
+    const sortBy = ref<SortItem[]>([
+      { key: 'createdOn', order: 'desc' }
+    ]);
+
+    watch(searchTerm, (val) => {
+      if (val) {
+        sortBy.value = [{ key: "templateName", order: "asc" }];
+      } else {
+        sortBy.value = [{ key: "createdOn", order: "desc" }];
+      }
+    });
 
     /**
      * Error messages.
@@ -153,6 +174,7 @@ export default defineComponent({
     const copyTemplate = (templateRight: RightRest) => {
       isNew.value = true;
       templateDraft.value = Object.assign({}, templateRight);
+      // Some properties should not be copied.
       templateDraft.value.rightId = undefined;
       templateDraft.value.exceptionOfId = undefined;
       templateDraft.value.createdBy = undefined;
@@ -160,6 +182,8 @@ export default defineComponent({
       templateDraft.value.lastAppliedOn = undefined;
       templateDraft.value.lastUpdatedOn = undefined;
       templateDraft.value.lastUpdatedBy = undefined;
+      templateDraft.value.successorId = undefined;
+      templateDraft.value.predecessorId = undefined;
       templateDraft.value.templateName = "KOPIE - " + templateDraft.value.templateName;
       reinitCounter.value = reinitCounter.value + 1;
       activateTemplateEditDialog();
@@ -202,7 +226,7 @@ export default defineComponent({
             templateApplyError.value = true;
             templateApplyErrorMsg.value = errors
               .map((err) => err.message)
-              .join("\n");
+              .join("\n-----------------------------------\n");
             templateApplyErrorNumber.value = errors.length;
           }
           updateTemplateOverview();
@@ -401,6 +425,7 @@ export default defineComponent({
       tooltipEditText,
       errorMsgIsActive,
       errorMsg,
+      sortBy,
       userStore,
       templateDraft,
       templateItems,
@@ -517,7 +542,10 @@ export default defineComponent({
       >
         {{ errorMsg }}
       </v-snackbar>
-      <v-dialog v-model="templateApplyError" max-width="500px">
+      <v-dialog
+        v-model="templateApplyError"
+        width="850px"
+        height="550px">
         <v-card>
           <v-card-title class="text-h5"
             >Template Anwendung (teilweise) fehlgeschlagen</v-card-title
@@ -528,9 +556,11 @@ export default defineComponent({
             Details zu den Fehlern:
             <v-textarea
               :value="templateApplyErrorMsg"
+              rows="12"
               readonly
               background-color="red lighten-4"
               color="black"
+              variant="outlined"
             >
             </v-textarea>
           </v-card-text>
@@ -582,6 +612,7 @@ export default defineComponent({
         :headers="selectedHeaders"
         :items="templateItems"
         :search="searchTerm"
+        :sort-by.sync="sortBy"
         item-value="templateName"
         loading-text="Daten werden geladen... Bitte warten."
       >

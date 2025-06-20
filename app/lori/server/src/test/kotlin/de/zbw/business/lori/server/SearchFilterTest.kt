@@ -243,7 +243,7 @@ class SearchFilterTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 listOf(
-                    ZDBIdFilter(
+                    ZDBIdFilterOR(
                         listOf(
                             "555nase",
                         ),
@@ -254,7 +254,31 @@ class SearchFilterTest : DatabaseTest() {
             ),
             arrayOf(
                 listOf(
-                    ZDBIdFilter(
+                    ZDBIdFilterOR(
+                        listOf(
+                            "333nase",
+                            "444nase",
+                        ),
+                    ),
+                ),
+                setOf(zdbIdFilterItems[1], zdbIdFilterItems[2]),
+                "Search multiple values",
+            ),
+            arrayOf(
+                listOf(
+                    ZDBIdFilterAND(
+                        listOf(
+                            "333nase",
+                            "444nase",
+                        ),
+                    ),
+                ),
+                setOf(zdbIdFilterItems[2]),
+                "Search multiple values",
+            ),
+            arrayOf(
+                listOf(
+                    ZDBIdFilterAND(
                         listOf(
                             "444nase",
                         ),
@@ -265,7 +289,7 @@ class SearchFilterTest : DatabaseTest() {
             ),
             arrayOf(
                 listOf(
-                    ZDBIdFilter(
+                    ZDBIdFilterOR(
                         listOf(
                             "333nase",
                         ),

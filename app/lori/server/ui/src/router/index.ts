@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import RestApi from "@/views/RestApi.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -9,6 +10,11 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
     redirect: "/ui",
+  },
+  {
+    path: '/rest',
+    name: 'RestApi',
+    component: RestApi,
   },
 ];
 

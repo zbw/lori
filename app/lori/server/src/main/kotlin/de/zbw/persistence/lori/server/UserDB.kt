@@ -9,6 +9,7 @@ import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
+import java.time.Instant
 import java.util.UUID
 
 /**
@@ -38,6 +39,7 @@ class UserDB(
 
     suspend fun insertSession(session: Session): String =
         connectionPool.useConnection("insertSession") { connection ->
+            val now = Instant.now()
             val prepStmt =
                 connection.prepareStatement(STATEMENT_INSERT_SESSION, Statement.RETURN_GENERATED_KEYS).apply {
                     this.setString(1, UUID.randomUUID().toString())
@@ -52,6 +54,7 @@ class UserDB(
                         prepStmt.setArray(idx, connection.createArrayOf("permission_enum", value.toTypedArray()))
                     }
                     this.setTimestamp(6, Timestamp.from(session.validUntil))
+                    this.setTimestamp(7, Timestamp.from(now))
                 }
 
             val span = tracer.spanBuilder("insertSession").startSpan()
@@ -96,6 +99,7 @@ class UserDB(
                             ?.map { UserPermission.valueOf(it) }
                             ?: emptyList(),
                     validUntil = rs.getTimestamp(6).toInstant(),
+                    createdOn = rs.getTimestamp(7).toInstant(),
                 )
             } else {
                 null
@@ -106,19 +110,20 @@ class UserDB(
         const val STATEMENT_INSERT_SESSION =
             "INSERT INTO $TABLE_NAME_SESSIONS" +
                 "(session_id,authenticated,first_name," +
-                "last_name,permissions,valid_until) " +
-                "VALUES(?,?,?," +
-                "?,?,?)"
+                "last_name,permissions,valid_until, created_on)" +
+                " VALUES(?,?,?," +
+                "?,?,?," +
+                "?)"
 
         const val STATEMENT_GET_SESSION_BY_ID =
             "SELECT session_id,authenticated,first_name," +
-                "last_name,permissions,valid_until " +
-                "FROM $TABLE_NAME_SESSIONS " +
-                "WHERE session_id=?"
+                "last_name,permissions,valid_until,created_on" +
+                " FROM $TABLE_NAME_SESSIONS" +
+                " WHERE session_id=?"
 
         const val STATEMENT_DELETE_SESSION_BY_ID =
-            "DELETE " +
-                "FROM $TABLE_NAME_SESSIONS i " +
-                "WHERE i.session_id = ?"
+            "DELETE" +
+                " FROM $TABLE_NAME_SESSIONS i" +
+                " WHERE i.session_id = ?"
     }
 }

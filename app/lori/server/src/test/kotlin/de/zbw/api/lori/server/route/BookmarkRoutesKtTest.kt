@@ -586,8 +586,8 @@ class BookmarkRoutesKtTest {
                 endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
                 licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter("http://creativecommons.org/licenses/by/3.0/au"),
                 formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
-                paketSigelFilter = QueryParameterParser.parsePaketSigelFilter("sigel"),
-                zdbIdFilter = QueryParameterParser.parseZDBIdFilter("zdbId1,zdbId2"),
+                paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND("sigel"),
+                zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
                 lastUpdatedOn =
                     OffsetDateTime.of(

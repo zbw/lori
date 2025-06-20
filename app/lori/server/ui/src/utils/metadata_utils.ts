@@ -56,4 +56,12 @@ export default {
         return "Unbekannter Pubikationstyp: " + pubType;
     }
   },
+  extractValues(input: string): string {
+    const matches = [...input.matchAll(/(?:\w+):(?:(["'])(.*?)\1|([^&|()!\s]+))/g)];
+    const values = matches.map(match => {
+      // match[2] contains the quoted value (if any), match[3] contains the unquoted value
+      return match[2] ?? match[3];
+    });
+    return values.join(' ');
+}
 };

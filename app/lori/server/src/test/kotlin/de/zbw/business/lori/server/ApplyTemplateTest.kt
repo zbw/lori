@@ -88,7 +88,7 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkName = "applyBookmark",
                         bookmarkId = 0,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_1,
@@ -245,7 +245,7 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkName = "allZDB2",
                         bookmarkId = 10,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_2,
@@ -260,7 +260,7 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkName = "zdb2AndHandle",
                         bookmarkId = 20,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_2,
@@ -333,7 +333,7 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkId = 0,
                         searchTerm = "col:'common zdb'",
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_1,
@@ -396,7 +396,7 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkName = "applyBookmarkForDryRun",
                         bookmarkId = 99,
                         zdbIdFilter =
-                            ZDBIdFilter(
+                            ZDBIdFilterAND(
                                 zdbIds =
                                     listOf(
                                         ZDB_3,

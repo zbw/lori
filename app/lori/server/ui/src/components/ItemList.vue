@@ -25,6 +25,8 @@ import metadata_utils from "@/utils/metadata_utils";
 import {VResizeDrawer} from "@wdns/vuetify-resize-drawer";
 import Dashboard from "@/components/Dashboard.vue";
 import {useUserStore} from "@/stores/user";
+import ResizableDialog from "@/components/ResizableDialog.vue";
+import TopNavigationBar from "@/components/TopNavigationBar.vue";
 
 export default defineComponent({
   computed: {
@@ -33,6 +35,8 @@ export default defineComponent({
     },
   },
   components: {
+    TopNavigationBar,
+    ResizableDialog,
     Dashboard,
     VResizeDrawer,
     RightsEditDialog,
@@ -125,7 +129,7 @@ export default defineComponent({
         value: "titleSeries",
       },
       {
-        title: "ZDB-IDs (Journal + Serie)",
+        title: "ZDB-ID (Journal + Serie)",
         value: "zdbIds",
       },
       {
@@ -278,6 +282,12 @@ export default defineComponent({
           userStore.signInURL = response.duoSSO;
           userStore.signOutURL = response.duoSLO;
           userStore.commitHash = response.commitHash;
+          if(response.stage == "dev"){
+            document.title = "lori-dev";
+          }
+          if(response.stage == "qs"){
+            document.title = "lori-qs";
+          }
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -804,6 +814,10 @@ export default defineComponent({
       dialogStore.bookmarkSaveActivated = false;
     };
 
+    const closeGroupDialog = () => {
+      dialogStore.groupOverviewActivated = false;
+    };
+
     const newBookmarkId = ref(-1);
     const addBookmarkSuccessful = (bookmarkId: number, bookmarkName: string) => {
       newBookmarkId.value = bookmarkId;
@@ -828,10 +842,16 @@ export default defineComponent({
       }
     };
     const renderKey = ref(0);
+    const dialog = ref(false);
+
+    const openDialog = () => {
+      dialog.value = true;
+    };
 
     return {
       successMsgIsActive,
       successMsg,
+      dialog,
       errorMsgIsActive,
       errorMsg,
       currentItem,
@@ -863,6 +883,7 @@ export default defineComponent({
       closeBookmarkOverview,
       closeBookmarkSaveDialog,
       closeDashboard,
+      closeGroupDialog,
       closeTemplateEditDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
@@ -871,6 +892,7 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loadTemplateView,
+      openDialog,
       parsePublicationType,
       addRightSuccessful,
       searchQuery,
@@ -896,6 +918,7 @@ table.special, th.special, td.special {
 }
 </style>
 <template>
+  <TopNavigationBar></TopNavigationBar>
   <VResizeDrawer permanent width="300px">
         <SearchFilter
             v-on:startEmptySearch="startEmptySearch"
@@ -913,45 +936,57 @@ table.special, th.special, td.special {
     >
       <BookmarkSave
         :isNew="true"
+        :searchTerm="searchStore.searchTerm"
         v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>
-    <v-dialog
-      v-model="dialogStore.templateOverviewActivated"
-      :retain-focus="false"
-      max-width="1500px"
-      max-height="800px"
-      v-on:close="closeTemplateOverview"
-      persistent
+    <ResizableDialog
+        v-model="dialogStore.templateOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeTemplateOverview"
     >
       <TemplateOverview
-        v-on:getItemsByRightId="initSearchByRightId"
-        v-on:templateOverviewClosed="closeTemplateOverview"
+          @getItemsByRightId="initSearchByRightId"
+          @templateOverviewClosed="closeTemplateOverview"
       ></TemplateOverview>
-    </v-dialog>
-    <v-dialog
-      v-model="dialogStore.bookmarkOverviewActivated"
-      :retain-focus="false"
-      max-width="1000px"
-      v-on:close="closeBookmarkOverview"
-      persistent
+    </ResizableDialog>
+
+    <ResizableDialog
+        v-model="dialogStore.bookmarkOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeBookmarkOverview"
     >
       <BookmarkOverview
-        v-on:executeBookmarkSearch="executeBookmarkSearch"
-        v-on:bookmarkOverviewClosed="closeBookmarkOverview"
-      ></BookmarkOverview>
-    </v-dialog>
-    <v-dialog
+          @executeBookmarkSearch="executeBookmarkSearch"
+          @bookmarkOverviewClosed="closeBookmarkOverview"
+      />
+    </ResizableDialog>
+    <ResizableDialog
         v-model="dialogStore.dashboardViewActivated"
-        :retain-focus="false"
-        max-width="1500px"
-        v-on:close="closeDashboard"
+        :initial-width="1800"
+        :initial-height="900"
         persistent
+        @close="closeDashboard"
     >
       <Dashboard
           v-on:dashboardClosed="closeDashboard"
       ></Dashboard>
-    </v-dialog>
+    </ResizableDialog>
+    <ResizableDialog
+        v-model="dialogStore.groupOverviewActivated"
+        :initial-width="1800"
+        :initial-height="900"
+        persistent
+        @close="closeDashboard"
+    >
+      <GroupOverview
+          v-on:groupOverviewClosed="closeGroupDialog">
+      </GroupOverview>
+    </ResizableDialog>
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>
         <v-card-title class="text-h5"
@@ -1212,7 +1247,7 @@ table.special, th.special, td.special {
                   </p>
 
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    Beispiel: col:"subject1" | (hdl:"handle" & !com:"community")
+                    col:"subject1" | (hdl:"handle" & !com:"community")
                   </p>
                   <p class="text-left text-body-1 mt-4 font-weight-bold">Sonderzeichen</p>
 
@@ -1226,11 +1261,19 @@ table.special, th.special, td.special {
                   <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
 
                   <p class="text-left text-body-2 mt-1 mb-1">
-                    Es ist möglich für den Suchschlüssel <b>hdl</b> mehrere Werte auf einmal zu suchen:
+                    Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
+                    <br>
+                    <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
                   </p>
 
                   <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    hdl:'11159/1234,11159/5678'
+                    hdl:"11159/1234,11159/5678"
+                  </p>
+                  <p class="text-left text-body-2 mt-1 mb-1">
+                    Alternative Suche, die Wildcard-Verwendung ermöglicht:
+                  </p>
+                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                    hdl:"11159/1234,11159/5678" | hdl:"11159/555*"
                   </p>
                 </v-card-text>
               </v-card>

@@ -39,6 +39,7 @@ import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   computed: {
@@ -348,6 +349,7 @@ export default defineComponent({
     const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
+      removePageParameter();
       emit("editRightClosed");
     };
 
@@ -710,6 +712,13 @@ export default defineComponent({
           updateInProgress.value = false;
           return;
         }
+        if(tmpRight.value.templateName.startsWith("KOPIE ")){
+          errorMsg.value = "Fehler beim Speichern des Templates. Der Template Name darf nicht mit KOPIE beginnen.";
+          errorSources.value = getErrorSources();
+          errorMsgIsActive.value = true;
+          updateInProgress.value = false;
+          return;
+        }
       }
       if (props.isNewTemplate) {
         createTemplate();
@@ -941,6 +950,7 @@ export default defineComponent({
     const addInitialBookmark = () => {
       if (props.initialBookmark != undefined) {
         formState.selectedBookmarks = Array(props.initialBookmark);
+        formState.templateName = props.initialBookmark.bookmarkName ?? '';
       }
     };
 
@@ -1013,6 +1023,7 @@ export default defineComponent({
             loadExceptions();
             loadPredecessor();
             loadSuccessor();
+            setPageParameter();
           }
         });
       } else {
@@ -1254,6 +1265,23 @@ export default defineComponent({
               errorMsgIsActive.value = true;
             });
           });
+    };
+
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
+
+    const setPageParameter = () => {
+      const newQuery = { ...route.query, templateId: props.rightId };
+
+      // This modifies the URL without pushing a new history entry
+      router.replace({ query: newQuery });
+    };
+
+    const removePageParameter = () => {
+      if (!("templateId" in route.query)) return;
+      const { templateId, ...restQuery } = route.query;
+
+      router.replace({ query: restQuery });
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {

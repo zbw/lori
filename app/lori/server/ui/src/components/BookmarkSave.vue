@@ -10,6 +10,7 @@ import { required } from "@vuelidate/validators";
 import { useVuelidate } from "@vuelidate/core";
 import {BookmarkIdCreated, BookmarkRest} from "@/generated-sources/openapi";
 import {useUserStore} from "@/stores/user";
+import metadata_utils from "@/utils/metadata_utils";
 
 export default defineComponent({
   emits: [
@@ -33,6 +34,10 @@ export default defineComponent({
     },
     reinitCounter: {
       type: Number,
+      required: false,
+    },
+    searchTerm: {
+      type: String,
       required: false,
     },
   },
@@ -210,7 +215,11 @@ export default defineComponent({
 
     const resetAllValues = () => {
       description.value = '';
-      formState.name = '';
+      if (props.searchTerm == undefined || props.searchTerm == ''){
+        formState.name = '';
+      } else {
+        formState.name  = metadata_utils.extractValues(props.searchTerm);
+      }
     };
 
     const loginStatusProps = computed(() => {

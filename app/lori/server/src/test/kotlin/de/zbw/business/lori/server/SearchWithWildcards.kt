@@ -106,13 +106,6 @@ class SearchWithWildcards : DatabaseTest() {
                 "one entry in array with wildcard",
             ),
             arrayOf(
-                "sig:'fo*,ba*'",
-                setOf(
-                    item1,
-                ),
-                "multiple values with wildcard",
-            ),
-            arrayOf(
                 "sig:fo* & sig:ba*",
                 setOf(
                     item1,

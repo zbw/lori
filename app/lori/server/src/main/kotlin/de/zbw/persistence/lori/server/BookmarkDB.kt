@@ -7,14 +7,14 @@ import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilter
+import de.zbw.business.lori.server.PaketSigelFilterAND
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.ZDBIdFilter
+import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -294,8 +294,8 @@ class BookmarkDB(
                 endDateFilter = EndDateFilter.fromString(rs.getString(localCounter++)),
                 formalRuleFilter = FormalRuleFilter.fromString(rs.getString(localCounter++)),
                 validOnFilter = RightValidOnFilter.fromString(rs.getString(localCounter++)),
-                paketSigelFilter = PaketSigelFilter.fromString(rs.getString(localCounter++)),
-                zdbIdFilter = ZDBIdFilter.fromString(rs.getString(localCounter++)),
+                paketSigelFilter = PaketSigelFilterAND.fromString(rs.getString(localCounter++)),
+                zdbIdFilter = ZDBIdFilterAND.fromString(rs.getString(localCounter++)),
                 noRightInformationFilter =
                     NoRightInformationFilter.fromString(
                         rs.getBoolean(localCounter++).toString(),

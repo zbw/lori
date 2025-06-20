@@ -642,7 +642,7 @@ export default defineComponent({
             </v-list-group>
             <v-list-group sub-group>
               <template v-slot:activator="{ props }">
-                <v-list-item v-bind="props" title="ZDB-IDs"></v-list-item>
+                <v-list-item v-bind="props" title="ZDB-ID"></v-list-item>
               </template>
               <h6></h6>
               <v-expand-transition>
