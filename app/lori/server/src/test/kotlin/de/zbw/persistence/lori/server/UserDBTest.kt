@@ -2,11 +2,16 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserPermission
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import io.mockk.every
+import io.mockk.mockkStatic
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
+import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.test.assertNull
@@ -24,13 +29,24 @@ class UserDBTest : DatabaseTest() {
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
 
+    @BeforeMethod
+    fun beforeTest() {
+        mockkStatic(Instant::class)
+        every { Instant.now() } returns NOW.toInstant()
+    }
+
     @Test
-    fun testRoundtripSessions() =
+    fun testRoundTripSessions() =
         runBlocking {
             val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
             assertThat(
                 dbConnector.userDB.getSessionById(sessionId),
-                `is`(TEST_SESSION.copy(sessionID = sessionId)),
+                `is`(
+                    TEST_SESSION.copy(
+                        sessionID = sessionId,
+                        createdOn = NOW.toInstant(),
+                    ),
+                ),
             )
             dbConnector.userDB.deleteSessionById(sessionId)
             assertNull(
@@ -58,6 +74,7 @@ class UserDBTest : DatabaseTest() {
                             0,
                             ZoneOffset.UTC,
                         ).toInstant(),
+                createdOn = NOW.toInstant(),
             )
     }
 }

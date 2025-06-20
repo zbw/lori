@@ -21,4 +21,5 @@ data class Session(
     val lastName: String?,
     val permissions: List<UserPermission>,
     val validUntil: Instant,
+    val createdOn: Instant?,
 )
