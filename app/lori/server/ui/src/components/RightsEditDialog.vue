@@ -712,7 +712,7 @@ export default defineComponent({
           return;
         }
         if(tmpRight.value.templateName.startsWith("KOPIE ")){
-          errorMsg.value = "Fehler beim Speichern des Templates. Der Templatename darf nicht mit KOPIE beginnen.";
+          errorMsg.value = "Fehler beim Speichern des Templates. Der Template Name darf nicht mit KOPIE beginnen.";
           errorSources.value = getErrorSources();
           errorMsgIsActive.value = true;
           updateInProgress.value = false;
