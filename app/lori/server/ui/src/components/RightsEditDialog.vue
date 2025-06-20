@@ -349,6 +349,7 @@ export default defineComponent({
     const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
+      removePageParameter();
       emit("editRightClosed");
     };
 
@@ -1274,6 +1275,13 @@ export default defineComponent({
 
       // This modifies the URL without pushing a new history entry
       router.replace({ query: newQuery });
+    };
+
+    const removePageParameter = () => {
+      if (!("templateId" in route.query)) return;
+      const { templateId, ...restQuery } = route.query;
+
+      router.replace({ query: restQuery });
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
