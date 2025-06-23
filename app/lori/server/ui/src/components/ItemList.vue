@@ -1000,7 +1000,8 @@ table.special, th.special, td.special {
     <v-dialog
       v-model="rightEditActivated"
       :retain-focus="false"
-      max-width="1000px"
+      max-width="1500px"
+      max-height="850px"
       v-on:close="closeTemplateEditDialog"
       persistent
     >
