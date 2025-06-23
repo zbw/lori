@@ -1980,6 +1980,15 @@ export default defineComponent({
                     item-value="rightId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template v-slot:item.templateName="{ item }">
+                      <td>
+                        <a
+                            v-bind:href="
+                              searchquerybuilder.createTemplateHref(item.rightId)"
+                            target="_blank"
+                        > {{item.templateName}}</a>
+                      </td>
+                    </template>
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
                       <v-tooltip
@@ -2064,7 +2073,7 @@ export default defineComponent({
                             v-bind:href="
                               searchquerybuilder.createTemplateHref(item.rightId)"
                             target="_blank"
-                        > {{item.templateName}}'</a>
+                        > {{item.templateName}}</a>
                       </td>
                     </template>
                     <template #bottom></template>
@@ -2109,7 +2118,7 @@ export default defineComponent({
                             v-bind:href="
                               searchquerybuilder.createTemplateHref(item.rightId)"
                             target="_blank"
-                        > {{item.templateName}}'</a>
+                        > {{item.templateName}}</a>
                       </td>
                     </template>
                     <template #bottom></template>
