@@ -918,7 +918,17 @@ export default defineComponent({
         let description: string;
         if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
           description = "(Ausnahme und Entwurf)"
-        } else if (props.isExceptionTemplate){
+        } else if (
+          lastSavedRight.value?.exceptionOfId != undefined &&
+          lastSavedRight.value?.exceptionOfId != '' &&
+          lastSavedRight.value?.lastAppliedOn == undefined
+        ){
+          description = "(Ausnahme und Entwurf)"
+        } else if (
+          props.isExceptionTemplate ||
+            (lastSavedRight.value?.exceptionOfId != undefined &&
+            lastSavedRight.value?.exceptionOfId != '')
+        ){
           description = "(Ausnahme)"
         } else if (lastSavedRight.value?.lastAppliedOn == undefined) {
           description = "(Entwurf)"
