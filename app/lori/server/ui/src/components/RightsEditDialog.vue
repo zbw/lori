@@ -32,6 +32,7 @@ import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
+import container_utils from "@/utils/container_utils";
 import Dashboard from "@/components/Dashboard.vue";
 import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
@@ -601,7 +602,6 @@ export default defineComponent({
           // Handle errors
           return;
         } else {
-          console.debug("Call callback;")
           callback();
         }
       });
@@ -1186,7 +1186,9 @@ export default defineComponent({
       renderTemplateKey.value += 1;
     };
 
+    const showDialogExceptionWarning = ref(false);
     const openDialogExceptionConnect = () => {
+      showDialogExceptionWarning.value = !container_utils.haveSameKeys(lastSavedExceptionTemplateItems.value, formState.exceptionTemplates, 'rightId');
       openDialogException.value += 1;
       dialogConnectException.value = true;
     };
@@ -1246,7 +1248,8 @@ export default defineComponent({
           })
           .catch((e: ResponseError) => {
             if(e.response && e.response.status == 404){
-              // Do nothing. This is expected.
+              // This is expected.
+              lastSavedExceptionTemplateItems.value = [];
             } else {
               error.errorHandling(e, (errMsg: string) => {
                 errorMsg.value = errMsg;
@@ -1526,6 +1529,7 @@ export default defineComponent({
       renderPredecessorKey,
       renderSuccessorKey,
       renderTemplateKey,
+      showDialogExceptionWarning,
       startDateFormatted,
       exceptionTemplateHeaders,
       readOnlyProps,
@@ -2063,6 +2067,7 @@ export default defineComponent({
                     <ExceptionConnect
                         :reinit-counter="openDialogException"
                         :rightId="rightId"
+                        :show-warning="showDialogExceptionWarning"
                         v-on:exceptionSelected="connectException"
                         v-on:exceptionConnectClosed="closeDialogExceptionConnect"
                     ></ExceptionConnect>
@@ -2126,7 +2131,7 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="formState.predecessors.length != 0"
+                      :disabled="!isEditable || formState.predecessors.length != 0"
                       @click="openDialogPredecessor"
                   >Vorgänger verknüpfen
                   </v-btn>
@@ -2187,7 +2192,7 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="formState.successors.length != 0"
+                      :disabled="!isEditable || formState.successors.length != 0"
                       @click="openDialogSuccessor"
                   >Nachfolger verknüpfen
                   </v-btn>
