@@ -10,7 +10,7 @@ import {
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
-  RightRestBasisStorageEnum, type TemplateApplicationRest, TemplateApplicationsRest,
+  RightRestBasisStorageEnum,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -33,7 +33,6 @@ import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
 import Dashboard from "@/components/Dashboard.vue";
-import rightErrorApi from "@/api/rightErrorApi";
 import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
@@ -520,24 +519,16 @@ export default defineComponent({
             errorMsg.value =
               "No RightId found when updating. This should NOT happen.";
             errorMsgIsActive.value = true;
-          } else {
-            const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
-            if(exceptionId == undefined){
-              updateBookmarks(tmpRight.value.rightId, () => {
-                successMsg.value =
-                    "Template " +
-                    tmpRight.value.templateName +
-                    " erfolgreich geupdated";
-                successMsgIsActive.value = true;
-                emit("updateTemplateSuccessful", formState.templateName);
-                reinitializeRight();
-              });
-            } else {
-              addExceptionsToTemplate(
-                  tmpRight.value.rightId,
-                  exceptionId,
-                  () => {
-                    updateBookmarks(tmpRight.value.rightId, () => {
+            return;
+          }
+          updateBookmarks(tmpRight.value.rightId, () => {
+            removeExceptionsToTemplate(
+              tmpRight.value.rightId!!,
+              () => {
+                addExceptionsToTemplate(
+                    tmpRight.value.rightId!!,
+                    formState.exceptionTemplates[0]?.rightId,
+                    () => {
                       successMsg.value =
                           "Template " +
                           tmpRight.value.templateName +
@@ -545,12 +536,11 @@ export default defineComponent({
                       successMsgIsActive.value = true;
                       emit("updateTemplateSuccessful", formState.templateName);
                       reinitializeRight();
-                    });
-                  },
-              );
-            }
-          }
-        })
+                    }
+                );
+              });
+          });
+          })
         .catch((e) => {
           updateInProgress.value = false;
           error.errorHandling(e, (errMsg: string) => {
@@ -560,15 +550,18 @@ export default defineComponent({
         });
     };
 
-
     /**
      * Add exceptions.
      */
     const addExceptionsToTemplate = (
       rightId: string,
-      exceptionId: string,
+      exceptionId: string | undefined,
       callback: () => void,
     ) => {
+      if (exceptionId == undefined){
+        callback();
+        return;
+      }
       templateApi
         .addExceptionToTemplate(rightId, exceptionId)
         .then(() => {
@@ -581,6 +574,39 @@ export default defineComponent({
           });
         });
     };
+
+    /**
+     * Remove exceptions.
+     */
+    const removeExceptionsToTemplate = (
+        rightId: string,
+        callback: () => void,
+    ) => {
+      // Figure out which exceptions were deleted
+      const deletedTemplates: RightRest[] = lastSavedExceptionTemplateItems.value.filter((exception: RightRest) => !formState.exceptionTemplates.includes(exception));
+      const results: Promise<void>[] = deletedTemplates.map(async function (template: RightRest) {
+        try {
+          return await templateApi
+              .removeExceptionToTemplate(rightId, template.rightId!!);
+        } catch (e) {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        }
+      });
+      Promise.allSettled(results).then(settledResults => {
+        const hasError = settledResults.some(r => r.status === 'rejected');
+        if (hasError) {
+          // Handle errors
+          return;
+        } else {
+          console.debug("Call callback;")
+          callback();
+        }
+      });
+    };
+
 
     /**
      * Refresh bookmarks.
@@ -1172,14 +1198,16 @@ export default defineComponent({
     const deleteExceptionEntry = (entry: RightRest) => {
       const editedIndex = formState.exceptionTemplates.indexOf(entry);
       formState.exceptionTemplates.splice(editedIndex, 1);
-      if (entry.rightId != undefined && props.rightId != undefined) {
-        templateApi.removeExceptionToTemplate(computedRightId.value, entry.rightId).catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
-          });
-        });
-      }
+    };
+
+    const deletePredecessorEntry = (entry: RightRest) => {
+      const editedIndex = formState.predecessors.indexOf(entry);
+      formState.predecessors.splice(editedIndex, 1);
+    };
+
+    const deleteSuccessorEntry = (entry: RightRest) => {
+      const editedIndex = formState.successors.indexOf(entry);
+      formState.successors.splice(editedIndex, 1);
     };
 
     // Load Bookmarks
@@ -1455,7 +1483,6 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkHeaders,
       cardTitle,
-      connectException,
       computedLicenceUrl,
       computedRightId,
       dialogConnectException,
@@ -1521,6 +1548,7 @@ export default defineComponent({
       closeDialogPredecessor,
       closeDialogSuccessor,
       closeUnsavedChangesDialog,
+      connectException,
       connectPredecessorRelationship,
       connectSuccessorRelationship,
       createRight,
@@ -1529,6 +1557,8 @@ export default defineComponent({
       deleteDialogClosed,
       deleteExceptionEntry,
       deleteSuccessful,
+      deletePredecessorEntry,
+      deleteSuccessorEntry,
       labelModelToString,
       openCreateExceptionDialog,
       openDialogExceptionConnect,
@@ -2076,6 +2106,22 @@ export default defineComponent({
                         > {{item.templateName}}</a>
                       </td>
                     </template>
+                    <template v-slot:item.actions="{ item }">
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                @click="deletePredecessorEntry(item)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span> Löschen</span>
+                      </v-tooltip>
+                    </template>
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
@@ -2120,6 +2166,22 @@ export default defineComponent({
                             target="_blank"
                         > {{item.templateName}}</a>
                       </td>
+                    </template>
+                    <template v-slot:item.actions="{ item }">
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                @click="deleteSuccessorEntry(item)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span> Löschen</span>
+                      </v-tooltip>
                     </template>
                     <template #bottom></template>
                   </v-data-table>
