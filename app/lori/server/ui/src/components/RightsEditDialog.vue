@@ -2118,6 +2118,7 @@ export default defineComponent({
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
+                                :disabled="!userStore.isLoggedIn"
                                 @click="deletePredecessorEntry(item)"
                             >
                               mdi-delete
@@ -2131,7 +2132,7 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="!isEditable || formState.predecessors.length != 0"
+                      :disabled="!userStore.isLoggedIn || formState.predecessors.length != 0"
                       @click="openDialogPredecessor"
                   >Vorgänger verknüpfen
                   </v-btn>
@@ -2179,6 +2180,7 @@ export default defineComponent({
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
                             <v-icon
+                                :disabled="!userStore.isLoggedIn"
                                 @click="deleteSuccessorEntry(item)"
                             >
                               mdi-delete
@@ -2192,7 +2194,7 @@ export default defineComponent({
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="!isEditable || formState.successors.length != 0"
+                      :disabled="!userStore.isLoggedIn || formState.successors.length != 0"
                       @click="openDialogSuccessor"
                   >Nachfolger verknüpfen
                   </v-btn>
