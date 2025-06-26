@@ -11,7 +11,7 @@ import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
 import SearchFilter from "@/components/SearchFilter.vue";
-import { defineComponent, onMounted, Ref, ref, watch } from "vue";
+import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useDialogsStore } from "@/stores/dialogs";
 import searchquerybuilder from "@/utils/searchquerybuilder";
@@ -143,10 +143,18 @@ export default defineComponent({
 
     const currentPage = ref(1);
     const currentRightId = ref("");
-    const pageSize = ref(10); // initial page size
-    const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
+    const pageSize = ref("10"); // initial page size
+    const pageSizes = ref<Array<string>>(["5", "10", "25", "50", "Alle"]);
     const totalPages = ref(0);
     const numberOfResults = ref(0);
+
+    const pageSizeComputed = computed(() => {
+      if (pageSize.value == "Alle"){
+        return -1;
+      } else {
+        return parseInt(pageSize.value);
+      }
+    });
 
     // Page changes
     const handlePageChange = () => {
@@ -385,9 +393,9 @@ export default defineComponent({
       api
         .searchQuery(
           "",
-          (currentPage.value - 1) * pageSize.value, // offset
-          pageSize.value, // limit
-          pageSize.value,
+          (currentPage.value - 1) * pageSizeComputed.value, // offset
+          pageSizeComputed.value, // limit
+          pageSizeComputed.value,
             false,
           true,
           undefined,
@@ -419,9 +427,9 @@ export default defineComponent({
       api
         .searchQuery(
             "",
-            (currentPage.value - 1) * pageSize.value, // offset
-            pageSize.value, // limit
-            pageSize.value,
+            (currentPage.value - 1) * pageSizeComputed.value, // offset
+            pageSizeComputed.value, // limit
+            pageSizeComputed.value,
             false,
             true,
             undefined,
@@ -470,8 +478,8 @@ export default defineComponent({
       api
         .searchQuery(
           searchTerm,
-          (currentPage.value - 1) * pageSize.value, // offset
-          pageSize.value, // limit
+          (currentPage.value - 1) * pageSizeComputed.value, // offset
+          pageSizeComputed.value, // limit
           currentPage.value,
             false,
           true,
@@ -504,8 +512,8 @@ export default defineComponent({
       api
           .searchQuery(
               searchTerm,
-              (currentPage.value - 1) * pageSize.value, // offset
-              pageSize.value, // limit
+              (currentPage.value - 1) * pageSizeComputed.value, // offset
+              pageSizeComputed.value, // limit
               currentPage.value,
               true,
               false,
@@ -572,6 +580,7 @@ export default defineComponent({
 
     const startSearch = () => {
       currentPage.value = 1;
+      pageSize.value = "25";
       if (searchStore.searchTerm == undefined) {
         searchStore.searchTerm = "";
       }
@@ -587,9 +596,9 @@ export default defineComponent({
       api
         .searchQuery(
           searchStore.searchTerm,
-          (currentPage.value - 1) * pageSize.value,
-          pageSize.value,
-          pageSize.value,
+          (currentPage.value - 1) * pageSizeComputed.value,
+          pageSizeComputed.value,
+          pageSizeComputed.value,
             false,
           true,
           searchquerybuilder.buildPublicationYearFilter(searchStore),
@@ -621,9 +630,9 @@ export default defineComponent({
       api
           .searchQuery(
               searchStore.searchTerm,
-              (currentPage.value - 1) * pageSize.value,
-              pageSize.value,
-              pageSize.value,
+              (currentPage.value - 1) * pageSizeComputed.value,
+              pageSizeComputed.value,
+              pageSizeComputed.value,
               true,
               false,
               searchquerybuilder.buildPublicationYearFilter(searchStore),

@@ -307,10 +307,10 @@ item-search:
           default: 0
       - name: limit
         in: query
-        description: The number of items to return.
+        description: The number of items to return. Special case -1 will return all results (use with caution!)
         schema:
           type: integer
-          minimum: 1
+          minimum: -1
           maximum: 100
           default: 25
         required: false
