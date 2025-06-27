@@ -7,7 +7,10 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
@@ -59,8 +62,10 @@ abstract class SearchFilter(
                     "acc" -> QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
                     "com" ->
                         CommunityNameFilter(searchValue)
+
                     "col" ->
                         CollectionNameFilter(searchValue)
+
                     "doi" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             DOIsFilter(
@@ -71,6 +76,7 @@ abstract class SearchFilter(
                             QueryParameterParser.parseDoiFilter(searchValue)
                         }
                     }
+
                     "isb" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             ISBNsFilter(
@@ -81,6 +87,7 @@ abstract class SearchFilter(
                             QueryParameterParser.parseISBNFilter(searchValue)
                         }
                     }
+
                     "hdl" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             HandlesFilter(searchValue.split(",".toRegex()))
@@ -88,6 +95,7 @@ abstract class SearchFilter(
                             HandleFilter(searchValue)
                         }
                     }
+
                     "sig" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             QueryParameterParser.parsePaketSigelFilterOR(searchValue)
@@ -95,8 +103,10 @@ abstract class SearchFilter(
                             QueryParameterParser.parsePaketSigelFilterAND(searchValue)
                         }
                     }
+
                     "tit" ->
                         TitleFilter(searchValue)
+
                     "zdb" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             QueryParameterParser.parseZDBIdFilterOR(searchValue)
@@ -105,16 +115,20 @@ abstract class SearchFilter(
                             QueryParameterParser.parseZDBIdFilterAND(searchValue)
                         }
                     }
+
                     "hdlcol" ->
                         CollectionHandleFilter(searchValue)
+
                     "hdlcom" ->
                         CommunityHandleFilter(
                             searchValue,
                         )
+
                     "hdlsubcom" ->
                         SubcommunityHandleFilter(
                             searchValue,
                         )
+
                     "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
                     "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
                     "luk" -> QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
@@ -125,13 +139,16 @@ abstract class SearchFilter(
                             QueryParameterParser.parsePPNFilter(searchValue)
                         }
                     }
+
                     "subcom" ->
                         SubcommunityNameFilter(
                             searchValue,
                         )
+
                     "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
                     "typ" ->
                         QueryParameterParser.parsePublicationTypeFilter(searchValue)
+
                     "jah" -> QueryParameterParser.parsePublicationYearFilter(searchValue)
                     "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
                     "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
@@ -141,9 +158,12 @@ abstract class SearchFilter(
                             searchValue
                                 .uppercase()
                                 .replace("LIZENZVERTRAG", FormalRule.LICENCE_CONTRACT.toString())
-                                .replace("CC-LIZENZ OHNE EINSCHRÄNKUNG", FormalRule.CC_LICENCE_NO_RESTRICTION.toString())
-                                .replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
+                                .replace(
+                                    "CC-LIZENZ OHNE EINSCHRÄNKUNG",
+                                    FormalRule.CC_LICENCE_NO_RESTRICTION.toString(),
+                                ).replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
                         )
+
                     "nor" ->
                         QueryParameterParser.parseNoRightInformationFilter(
                             when (searchValue) {
@@ -151,6 +171,7 @@ abstract class SearchFilter(
                                 else -> null
                             },
                         )
+
                     "man" ->
                         QueryParameterParser.parseManualRightFilter(
                             when (searchValue) {
@@ -158,14 +179,17 @@ abstract class SearchFilter(
                                 else -> null
                             },
                         )
+
                     "tpl" ->
                         QueryParameterParser.parseTemplateNameFilter(
                             searchValue,
                         )
+
                     "acd" ->
                         QueryParameterParser.parseAccessStateOnDate(
                             searchValue,
                         )
+
                     else -> null
                 }
             } catch (iae: IllegalArgumentException) {
@@ -852,7 +876,15 @@ abstract class RightSearchFilter(
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
-        const val WHERE_REQUIRE_RIGHT_ID = "${ALIAS_ITEM_RIGHT}.${DatabaseConnector.COLUMN_RIGHT_ID} IS NOT NULL"
+        const val WHERE_CLAUSE_SKELETON_PREFIX =
+            "EXISTS " +
+                "(SELECT 1" +
+                " FROM $TABLE_NAME_ITEM" +
+                " JOIN $TABLE_NAME_ITEM_RIGHT $ALIAS_ITEM_RIGHT" +
+                " ON $TABLE_NAME_ITEM.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
+                " WHERE" +
+                " $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE AND ("
+        const val WHERE_CLAUSE_SKELETON_POSTFIX = "))"
     }
 }
 
@@ -860,11 +892,13 @@ class AccessStateFilter(
     val accessStates: List<AccessState>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
-        "(" +
-            accessStates.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-                "($dbColumnName = ? AND $dbColumnName is not null)"
-            } +
-            " AND $WHERE_REQUIRE_RIGHT_ID)"
+        accessStates.joinToString(
+            prefix = WHERE_CLAUSE_SKELETON_PREFIX,
+            postfix = WHERE_CLAUSE_SKELETON_POSTFIX,
+            separator = " OR ",
+        ) {
+            "($dbColumnName = ? AND $dbColumnName is not null)"
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -893,21 +927,25 @@ class AccessStateOnDateFilter(
     val date: LocalDate,
     val accessState: AccessState?,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
-    override fun toWhereClause(): String =
-        if (accessState != null) {
-            "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
-                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))" +
-                " AND ($dbColumnName = ? AND $dbColumnName is not null))"
-        } else {
-            "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-                " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
-                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))"
-        }
+    override fun toWhereClause(): String {
+        val clause =
+            if (accessState != null) {
+                "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                    " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                    " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
+                    " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                    " $COLUMN_RIGHT_START_DATE IS NOT NULL))" +
+                    " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+            } else {
+                "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                    " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                    " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
+                    " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                    " $COLUMN_RIGHT_START_DATE IS NOT NULL))"
+            }
+
+        return WHERE_CLAUSE_SKELETON_PREFIX + clause + WHERE_CLAUSE_SKELETON_POSTFIX
+    }
 
     override fun setSQLParameter(
         counter: Int,
@@ -946,11 +984,13 @@ class RightValidOnFilter(
     val date: LocalDate,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+        WHERE_CLAUSE_SKELETON_PREFIX +
+            "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
             " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-            " $COLUMN_RIGHT_END_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID) OR" +
+            " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
             " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND $WHERE_REQUIRE_RIGHT_ID))"
+            " $COLUMN_RIGHT_START_DATE IS NOT NULL))" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -976,7 +1016,10 @@ class RightValidOnFilter(
 class StartDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(COLUMN_RIGHT_START_DATE) {
-    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null AND $WHERE_REQUIRE_RIGHT_ID)"
+    override fun toWhereClause(): String =
+        WHERE_CLAUSE_SKELETON_PREFIX +
+            "($dbColumnName = ? AND $dbColumnName is not null)" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -999,7 +1042,10 @@ class StartDateFilter(
 class EndDateFilter(
     val date: LocalDate,
 ) : RightSearchFilter(COLUMN_RIGHT_END_DATE) {
-    override fun toWhereClause(): String = "($dbColumnName = ? AND $dbColumnName is not null AND $WHERE_REQUIRE_RIGHT_ID)"
+    override fun toWhereClause(): String =
+        WHERE_CLAUSE_SKELETON_PREFIX +
+            "($dbColumnName = ? AND $dbColumnName is not null)" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -1023,12 +1069,13 @@ class EndDateFilter(
 
 class RightIdFilter(
     val rightIds: List<String>,
-) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
+) : RightSearchFilter(COLUMN_RIGHT_ID) {
     override fun toWhereClause(): String =
-        "(" +
+        WHERE_CLAUSE_SKELETON_PREFIX +
             rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
                 "($ALIAS_ITEM_RIGHT.$dbColumnName = ? AND $ALIAS_ITEM_RIGHT.$dbColumnName is not null)"
-            } + " AND $WHERE_REQUIRE_RIGHT_ID)"
+            } +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -1055,12 +1102,13 @@ class TemplateNameFilter(
     val templateNames: List<String>,
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_TEMPLATE_NAME) {
     override fun toWhereClause(): String =
-        "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true" +
+        WHERE_CLAUSE_SKELETON_PREFIX +
+            "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true" +
             " AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null" +
-            " AND $WHERE_REQUIRE_RIGHT_ID" +
             templateNames.joinToString(prefix = " AND (", postfix = ")", separator = " AND ") {
                 "lower($ALIAS_ITEM_RIGHT.$dbColumnName) ILIKE ?"
-            } + ")"
+            } + ")" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -1087,7 +1135,11 @@ class FormalRuleFilter(
     val formalRules: List<FormalRule>,
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
-        formalRules.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+        formalRules.joinToString(
+            prefix = WHERE_CLAUSE_SKELETON_PREFIX,
+            postfix = WHERE_CLAUSE_SKELETON_POSTFIX,
+            separator = " OR ",
+        ) {
             when (it) {
                 FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
                 FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
@@ -1099,7 +1151,7 @@ class FormalRuleFilter(
 
                 FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
             }
-        } + " AND $WHERE_REQUIRE_RIGHT_ID"
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -1116,8 +1168,12 @@ class FormalRuleFilter(
     }
 }
 
-class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ID) {
-    override fun toWhereClause(): String = "${ALIAS_ITEM_RIGHT}.${DatabaseConnector.COLUMN_RIGHT_ID} IS NULL"
+class NoRightInformationFilter : RightSearchFilter(COLUMN_RIGHT_ID) {
+    override fun toWhereClause(): String =
+        "NOT " +
+            WHERE_CLAUSE_SKELETON_PREFIX +
+            "TRUE" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,
@@ -1137,7 +1193,10 @@ class NoRightInformationFilter : RightSearchFilter(DatabaseConnector.COLUMN_RIGH
 }
 
 class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_IS_TEMPLATE) {
-    override fun toWhereClause(): String = "${ALIAS_ITEM_RIGHT}.$dbColumnName = false AND $WHERE_REQUIRE_RIGHT_ID"
+    override fun toWhereClause(): String =
+        WHERE_CLAUSE_SKELETON_PREFIX +
+            "${ALIAS_ITEM_RIGHT}.$dbColumnName = false" +
+            WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
         counter: Int,

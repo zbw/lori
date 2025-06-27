@@ -37,6 +37,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.lang.Integer.MAX_VALUE
 import java.lang.reflect.Type
 import java.sql.SQLException
 

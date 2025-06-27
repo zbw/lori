@@ -677,6 +677,12 @@ class RightFilterTest : DatabaseTest() {
                 listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
                 "Negation search bar",
             ),
+            arrayOf(
+                "",
+                listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
+                listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
+                "Display OPEN OR RESTRICTED",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_ACCESS_STATE)
