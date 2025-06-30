@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.RestConverterTest
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -107,8 +108,43 @@ class RightFilterTest : DatabaseTest() {
             collectionName = "ocl formal",
         )
 
+    private val formalRuleAll =
+        TEST_Metadata.copy(
+            handle = "result all",
+            collectionName = "alllll",
+        )
+
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
+            formalRuleAll to
+                listOf(
+                    TEST_RIGHT.copy(
+                        licenceContract = null,
+                        zbwUserAgreement = false,
+                        isTemplate = false,
+                        templateName = null,
+                        restrictedOpenContentLicence = false,
+                        startDate = LocalDate.of(2024, 6, 1),
+                        endDate = LocalDate.of(2024, 9, 1),
+                    ),
+                    TEST_RIGHT.copy(
+                        zbwUserAgreement = true,
+                        licenceContract = null,
+                        isTemplate = false,
+                        templateName = null,
+                        restrictedOpenContentLicence = false,
+                        startDate = LocalDate.of(2023, 6, 1),
+                        endDate = LocalDate.of(2023, 9, 1),
+                    ),
+                    TEST_RIGHT.copy(
+                        licenceContract = "licence",
+                        zbwUserAgreement = false,
+                        isTemplate = false,
+                        templateName = null,
+                        startDate = LocalDate.of(2022, 6, 1),
+                        endDate = LocalDate.of(2022, 9, 1),
+                    ),
+                ),
             itemRightRestricted to
                 listOf(
                     TEST_RIGHT.copy(
@@ -219,7 +255,12 @@ class RightFilterTest : DatabaseTest() {
                 backend.insertMetadataElement(entry.key)
                 entry.value.forEach { right ->
                     val r = backend.insertRight(right)
-                    backend.insertItemEntry(entry.key.handle, r)
+                    when (val ret = backend.insertItemEntry(entry.key.handle, r)) {
+                        is Either.Left -> {
+                            error("Error on inserting a right information: ${ret.value}")
+                        }
+                        is Either.Right<*> -> {}
+                    }
                 }
             }
         }
@@ -369,9 +410,9 @@ class RightFilterTest : DatabaseTest() {
                     ),
                 ),
                 listOf(
-                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.CLOSED, AccessState.RESTRICTED)),
+                    AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED)),
                 ),
-                setOf(itemRightRestricted, itemRightRestrictedOpen),
+                setOf(itemRightRestrictedOpen),
                 "Filter for all access states",
             ),
             arrayOf(
@@ -529,6 +570,23 @@ class RightFilterTest : DatabaseTest() {
     fun createDataForFormalRuleFilterTest() =
         arrayOf(
             arrayOf(
+                "col:alllll",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    FormalRuleFilter(
+                        formalRules =
+                            listOf(
+                                FormalRule.LICENCE_CONTRACT,
+                                FormalRule.ZBW_USER_AGREEMENT,
+                                FormalRule.CC_LICENCE_NO_RESTRICTION,
+                            ),
+                    ),
+                ),
+                1,
+                setOf(formalRuleAll),
+                "formal rule all",
+            ),
+            arrayOf(
                 "col:formalRuleLicence",
                 emptyList<MetadataSearchFilter>(),
                 listOf(
@@ -587,23 +645,6 @@ class RightFilterTest : DatabaseTest() {
                 1,
                 setOf(formalRuleNoRestrictedOCL),
                 "formal rule ocl with upper search bar",
-            ),
-            arrayOf(
-                "col:formal",
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    FormalRuleFilter(
-                        formalRules =
-                            listOf(
-                                FormalRule.CC_LICENCE_NO_RESTRICTION,
-                                FormalRule.LICENCE_CONTRACT,
-                                FormalRule.ZBW_USER_AGREEMENT,
-                            ),
-                    ),
-                ),
-                3,
-                setOf(formalRuleNoRestrictedOCL, formalRuleUserAgreement, formalRuleLicenceContract),
-                "formal rule all",
             ),
             arrayOf(
                 "col:formal & (reg:cc_licence_no_restriction | reg:ZBW-Nutzungsvereinbarung | reg:Lizenzvertrag)",
@@ -680,7 +721,7 @@ class RightFilterTest : DatabaseTest() {
             arrayOf(
                 "",
                 listOf(AccessStateFilter(listOf(AccessState.OPEN, AccessState.RESTRICTED))),
-                listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
+                listOf(itemRightRestrictedOpen).toSet(),
                 "Display OPEN OR RESTRICTED",
             ),
         )

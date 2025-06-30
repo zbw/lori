@@ -893,11 +893,9 @@ class AccessStateFilter(
 ) : RightSearchFilter(DatabaseConnector.COLUMN_RIGHT_ACCESS_STATE) {
     override fun toWhereClause(): String =
         accessStates.joinToString(
-            prefix = WHERE_CLAUSE_SKELETON_PREFIX,
-            postfix = WHERE_CLAUSE_SKELETON_POSTFIX,
-            separator = " OR ",
+            separator = " AND ",
         ) {
-            "($dbColumnName = ? AND $dbColumnName is not null)"
+            "$WHERE_CLAUSE_SKELETON_PREFIX$dbColumnName = ? AND $dbColumnName is not null$WHERE_CLAUSE_SKELETON_POSTFIX"
         }
 
     override fun setSQLParameter(
@@ -1136,21 +1134,21 @@ class FormalRuleFilter(
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
         formalRules.joinToString(
-            prefix = WHERE_CLAUSE_SKELETON_PREFIX,
-            postfix = WHERE_CLAUSE_SKELETON_POSTFIX,
-            separator = " OR ",
+            separator = " AND ",
         ) {
-            when (it) {
-                FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
-                FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
-                FormalRule.CC_LICENCE_NO_RESTRICTION ->
-                    "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
-                        "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +
-                        "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'licenses') AND " +
-                        "${MetadataDB.TS_LICENCE_URL} is not null"
+            val clause =
+                when (it) {
+                    FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                    FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
+                    FormalRule.CC_LICENCE_NO_RESTRICTION ->
+                        "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
+                            "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +
+                            "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'licenses') AND " +
+                            "${MetadataDB.TS_LICENCE_URL} is not null"
 
-                FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
-            }
+                    FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
+                }
+            "($WHERE_CLAUSE_SKELETON_PREFIX $clause $WHERE_CLAUSE_SKELETON_POSTFIX)"
         }
 
     override fun setSQLParameter(

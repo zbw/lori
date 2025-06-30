@@ -263,9 +263,9 @@ class SearchDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE EXISTS" +
                     " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " ORDER BY im.storage_date DESC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
@@ -279,9 +279,10 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null))) AND (ts_collection @@ to_tsquery(?)" +
-                    " AND ts_collection is not null)" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null)) AND" +
+                    " (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
                     " ORDER BY im.storage_date DESC" +
                     " LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
@@ -303,16 +304,18 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL +
                     " FROM ($SELECT_ALL_WITH_TS FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND NOT EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND (TRUE))" +
-                    " AND (ts_collection @@ to_tsquery(?) AND ts_collection is not null) AND (publication_year >= ?" +
-                    " AND publication_year <= ? AND publication_year is not null) AND" +
-                    " (lower(publication_type) = lower(?) OR lower(publication_type) = lower(?)))" +
-                    " as sub WHERE NOT handle = ANY(?)" +
-                    " ORDER BY storage_date DESC" +
-                    " LIMIT ? OFFSET ?",
+                    " WHERE item.handle = im.handle AND (TRUE)) AND (ts_collection @@ to_tsquery(?)" +
+                    " AND ts_collection is not null) AND (publication_year >= ? AND publication_year <= ?" +
+                    " AND publication_year is not null) AND (lower(publication_type) = lower(?)" +
+                    " OR lower(publication_type) = lower(?)))" +
+                    " as sub" +
+                    " WHERE NOT handle = ANY(?)" +
+                    " ORDER BY storage_date" +
+                    " DESC LIMIT ? OFFSET ?",
                 "all the filters",
             ),
         )
@@ -423,10 +426,11 @@ class SearchDBTest : DatabaseTest() {
                     " JOIN item_right ir" +
                     " ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle" +
-                    " AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))" +
-                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " AND (lower(publication_type) = lower(?)) ORDER BY im.storage_date DESC) as countsearch",
+                    " AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
+                    " AND (access_state = ? AND access_state is not null)) AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null) AND (lower(publication_type) = lower(?))" +
+                    " ORDER BY im.storage_date DESC)" +
+                    " as countsearch",
                 "search bar filter metadata and right",
             ),
             arrayOf(
@@ -437,8 +441,9 @@ class SearchDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE EXISTS" +
                     " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " ORDER BY im.storage_date DESC) as countsearch",
                 "only right filter",
             ),
@@ -476,8 +481,9 @@ class SearchDBTest : DatabaseTest() {
                     " (SELECT 1 FROM item" +
                     " JOIN item_right ir" +
                     " ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " ORDER BY im.storage_date DESC" +
                     " LIMIT ? OFFSET ?",
                 "query only right filter",
@@ -489,9 +495,10 @@ class SearchDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE EXISTS" +
                     " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null))) AND (publication_year >= ?" +
-                    " AND publication_year <= ? AND publication_year is not null)" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?))" +
                     " ORDER BY im.storage_date DESC" +
                     " LIMIT ? OFFSET ?",
@@ -538,8 +545,10 @@ class SearchDBTest : DatabaseTest() {
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))))," +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS" +
+                    " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
+                    " AND (access_state = ? AND access_state is not null))))," +
                     "metadata_unique AS (" +
                     " SELECT handle, publication_type" +
                     " FROM metadata_with_rights" +
@@ -564,8 +573,10 @@ class SearchDBTest : DatabaseTest() {
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))))," +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS" +
+                    " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
+                    " AND (access_state = ? AND access_state is not null))))," +
                     "metadata_unique AS (" +
                     " SELECT handle, zdb_ids" +
                     " FROM metadata_with_rights" +
@@ -621,8 +632,10 @@ class SearchDBTest : DatabaseTest() {
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS" +
+                    " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
+                    " AND (access_state = ? AND access_state is not null))))" +
                     " SELECT mw.access_state, COUNT(*)" +
                     " FROM metadata_with_rights mw" +
                     " GROUP BY mw.access_state;",
@@ -644,8 +657,10 @@ class SearchDBTest : DatabaseTest() {
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND ((access_state = ? AND access_state is not null)" +
-                    " OR (access_state = ? AND access_state is not null)))))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " AND EXISTS" +
+                    " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
+                    " AND (access_state = ? AND access_state is not null))))" +
                     " SELECT mw.template_name, COUNT(*)" +
                     " FROM metadata_with_rights mw" +
                     " GROUP BY mw.template_name;",
