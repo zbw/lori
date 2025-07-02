@@ -27,6 +27,7 @@ import Dashboard from "@/components/Dashboard.vue";
 import {useUserStore} from "@/stores/user";
 import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
+import bookmarkApi from "@/api/bookmarkApi";
 
 export default defineComponent({
   computed: {
@@ -207,9 +208,11 @@ export default defineComponent({
       loadTemplateView()
       const hasMetadataParameter = loadMetadataView();
       const hasInitSearch = loadInitSearchQuery();
-      if (!hasMetadataParameter && !hasInitSearch) {
+      const hasInitBookmarkId = loadInitBookmarkId();
+      if (!hasMetadataParameter && !hasInitSearch && !hasInitBookmarkId) {
         startSearch();
       }
+      // Always load about information from backend
       loadBackendParameters();
     });
 
@@ -259,6 +262,27 @@ export default defineComponent({
       } else {
         return rightId;
       }
+    };
+
+    const loadInitBookmarkId: () => boolean = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookmarkId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID);
+      if (bookmarkId == null || bookmarkId == "") {
+        return false;
+      }
+
+      const bookmarkIdParsed = parseInt(bookmarkId);
+      bookmarkApi.getBookmarkById(bookmarkIdParsed)
+          .then((bookmark: BookmarkRest) => {
+            executeBookmarkSearch(bookmark)
+          }).catch((e) => {
+        error.errorHandling(e, (errMsg: string) => {
+          tableContentLoading.value = false;
+          errorMsg.value = "Laden der bibliographischen Daten war nicht erfolgreich: " + errMsg;
+          errorMsgIsActive.value = true;
+        });
+      });
+      return true;
     };
 
     const loadMetadataView: () => boolean = () => {

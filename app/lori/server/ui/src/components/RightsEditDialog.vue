@@ -40,6 +40,7 @@ import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import BookmarkSave from "@/components/BookmarkSave.vue";
 
 export default defineComponent({
   computed: {
@@ -113,6 +114,7 @@ export default defineComponent({
 
   // Components
   components: {
+    BookmarkSave,
     RelationshipConnect,
     ExceptionConnect,
     Dashboard,
@@ -633,6 +635,17 @@ export default defineComponent({
           });
         });
     };
+    const editDialogActivated = ref(false);
+    const editBookmark = ref({} as BookmarkRest);
+
+    const openBookmarkEditDialog = (bookmark: BookmarkRest) => {
+      editBookmark.value = Object.assign({}, bookmark);
+      editDialogActivated.value = true;
+    };
+
+    const closeBookmarkEditDialog = () => {
+      editDialogActivated.value = false;
+    };
 
     const errorSources = ref([] as string[]);
     const hasMissingBookmark = computed(() =>{
@@ -1124,6 +1137,11 @@ export default defineComponent({
       },
     ];
 
+    const executeBookmarkNewTab = (bookmarkId: number) => {
+      const url = searchquerybuilder.createExecuteBookmarkHref(bookmarkId);
+      window.open(url, '_blank');
+    };
+
     // Template Exceptions
     const dialogCreateException = ref(false);
     const dialogConnectException = ref(false);
@@ -1496,6 +1514,8 @@ export default defineComponent({
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
+      editBookmark,
+      editDialogActivated,
       endDateFormatted,
       errorAccessState,
       errorEndDate,
@@ -1547,6 +1567,7 @@ export default defineComponent({
       cancel,
       cancelConfirm,
       checkForChangesAndClose,
+      closeBookmarkEditDialog,
       closeCreateExceptionDialog,
       closeDialogExceptionConnect,
       closeDialogPredecessor,
@@ -1556,6 +1577,7 @@ export default defineComponent({
       connectPredecessorRelationship,
       connectSuccessorRelationship,
       createRight,
+      executeBookmarkNewTab,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
@@ -1564,6 +1586,7 @@ export default defineComponent({
       deletePredecessorEntry,
       deleteSuccessorEntry,
       labelModelToString,
+      openBookmarkEditDialog,
       openCreateExceptionDialog,
       openDialogExceptionConnect,
       openDialogPredecessor,
@@ -1668,6 +1691,18 @@ export default defineComponent({
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
+    </v-dialog>
+    <v-dialog
+        v-model="editDialogActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        persistent
+    >
+      <BookmarkSave
+          :isNew="false"
+          :bookmark="editBookmark"
+          v-on:closeEditDialog="closeBookmarkEditDialog"
+      ></BookmarkSave>
     </v-dialog>
 
     <v-card-title>
@@ -1938,30 +1973,28 @@ export default defineComponent({
                       >
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
-                            <v-btn
-                                variant="text"
-                                icon="mdi-eye"
+                            <v-icon
+                                @click="openBookmarkEditDialog(item)"
                             >
-                              <v-icon small>
-                                mdi-eye
-                              </v-icon>
-                              <v-overlay
-                                  activator="parent"
-                                  location="top center"
-                                  location-strategy="connected">
-                                <v-card class="pa-2">
-                                  {{item.filtersAsQuery}}
-                                  <v-btn
-                                      @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
-                                      icon="mdi-content-copy"
-                                  >
-                                  </v-btn>
-                                </v-card>
-                              </v-overlay>
-                            </v-btn>
+                              mdi-eye
+                            </v-icon>
                           </div>
                         </template>
-                        <span>Suchstring anzeigen und kopieren</span>
+                        <span>Anzeigen</span>
+                      </v-tooltip>
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                @click="executeBookmarkNewTab(item.bookmarkId)"
+                            >
+                              mdi-play
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span>Ausführen</span>
                       </v-tooltip>
 
                       <v-tooltip
