@@ -120,7 +120,7 @@ export default defineComponent({
       <v-card-title>Auswahl Ausnahme</v-card-title>
       <span
           v-if="computedShowWarning"
-          class="text-red">Hinweis: Es können Ausnahmen fehlen, da das Template nicht gespeichert wurde!</span>
+          class="text-red">Hinweis: Es können Einträge fehlen, da das aktuelle Template nicht gespeichert wurde!</span>
       <v-snackbar
           contained
           multi-line
