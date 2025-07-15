@@ -15,6 +15,7 @@ import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
 import { useSearchStore } from "@/stores/search";
 import { useDialogsStore } from "@/stores/dialogs";
 import searchquerybuilder from "@/utils/searchquerybuilder";
+import url from "@/utils/url";
 import error from "@/utils/error";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import TemplateOverview from "@/components/TemplateOverview.vue";
@@ -235,7 +236,7 @@ export default defineComponent({
     const rightEditActivated = ref(false);
     const loadTemplateView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const templateId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_TEMPLATE_ID);
+      const templateId: string | null = urlParams.get(url.QUERY_PARAMETER_TEMPLATE_ID);
       if (templateId == null || templateId == "") {
         return false;
       }
@@ -256,7 +257,7 @@ export default defineComponent({
 
     const getRightPP: () => string | null = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const rightId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_RIGHT_ID);
+      const rightId: string | null = urlParams.get(url.QUERY_PARAMETER_RIGHT_ID);
       if (rightId == null || rightId == "") {
         return null;
       } else {
@@ -266,7 +267,7 @@ export default defineComponent({
 
     const loadInitBookmarkId: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const bookmarkId: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID);
+      const bookmarkId: string | null = urlParams.get(url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID);
       if (bookmarkId == null || bookmarkId == "") {
         return false;
       }
@@ -287,7 +288,7 @@ export default defineComponent({
 
     const loadMetadataView: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const handle: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_HANDLE);
+      const handle: string | null = urlParams.get(url.QUERY_PARAMETER_HANDLE);
       if (handle == null || handle == "") {
         return false;
       }
@@ -297,7 +298,7 @@ export default defineComponent({
 
     const loadInitSearchQuery: () => boolean = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const searchQuery: string | null = urlParams.get(searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
+      const searchQuery: string | null = urlParams.get(url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
       if (searchQuery == null || searchQuery == "") {
         return false;
       }

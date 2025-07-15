@@ -1,7 +1,7 @@
 <script lang="ts">
 import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
-import searchquerybuilder from "@/utils/searchquerybuilder";
+import url from "@/utils/url";
 import {
   AccessStateRest,
   BookmarkRest,
@@ -50,8 +50,8 @@ export default defineComponent({
     navigator_utils() {
       return navigator_utils;
     },
-    searchquerybuilder() {
-      return searchquerybuilder;
+    url() {
+      return url;
     },
   },
   props: {
@@ -351,7 +351,11 @@ export default defineComponent({
     const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
-      removePageParameter();
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_TEMPLATE_ID]
+      );
       emit("editRightClosed");
     };
 
@@ -644,6 +648,7 @@ export default defineComponent({
     };
 
     const closeBookmarkEditDialog = () => {
+      loadBookmarks();
       editDialogActivated.value = false;
     };
 
@@ -1138,8 +1143,8 @@ export default defineComponent({
     ];
 
     const executeBookmarkNewTab = (bookmarkId: number) => {
-      const url = searchquerybuilder.createExecuteBookmarkHref(bookmarkId);
-      window.open(url, '_blank');
+      const hrefURL = url.createExecuteBookmarkHref(bookmarkId);
+      window.open(hrefURL, '_blank');
     };
 
     // Template Exceptions
@@ -1334,13 +1339,6 @@ export default defineComponent({
 
       // This modifies the URL without pushing a new history entry
       router.replace({ query: newQuery });
-    };
-
-    const removePageParameter = () => {
-      if (!("templateId" in route.query)) return;
-      const { templateId, ...restQuery } = route.query;
-
-      router.replace({ query: restQuery });
     };
 
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
@@ -2051,7 +2049,7 @@ export default defineComponent({
                       <td>
                         <a
                             v-bind:href="
-                              searchquerybuilder.createTemplateHref(item.rightId)"
+                              url.createTemplateHref(item.rightId)"
                             target="_blank"
                         > {{item.templateName}}</a>
                       </td>
@@ -2139,7 +2137,7 @@ export default defineComponent({
                       <td>
                         <a
                             v-bind:href="
-                              searchquerybuilder.createTemplateHref(item.rightId)"
+                              url.createTemplateHref(item.rightId)"
                             target="_blank"
                         > {{item.templateName}}</a>
                       </td>
@@ -2201,7 +2199,7 @@ export default defineComponent({
                       <td>
                         <a
                             v-bind:href="
-                              searchquerybuilder.createTemplateHref(item.rightId)"
+                              url.createTemplateHref(item.rightId)"
                             target="_blank"
                         > {{item.templateName}}</a>
                       </td>

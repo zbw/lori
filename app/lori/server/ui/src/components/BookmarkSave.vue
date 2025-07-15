@@ -343,7 +343,7 @@ export default defineComponent({
           ></v-textarea>
         </v-col>
       </v-row>
-      <v-row v-if="!userStore.isLoggedIn">
+      <v-row>
         <v-col cols="4"> Suchstring</v-col>
         <v-col cols="6">
           <v-text-field

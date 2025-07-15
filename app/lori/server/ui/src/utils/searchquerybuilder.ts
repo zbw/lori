@@ -10,18 +10,7 @@ import {
 } from "@/generated-sources/openapi";
 import date_utils from "@/utils/date_utils";
 
-const QUERY_PARAMETER_TEMPLATE_ID = "templateId";
-const QUERY_PARAMETER_EXECUTE_BOOKMARK_ID = "executeBookmarkId";
-const QUERY_PARAMETER_RIGHT_ID = "rightId";
-const QUERY_PARAMETER_HANDLE = "handle";
-const QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH = "dashboardHandleSearch";
 export default {
-  QUERY_PARAMETER_EXECUTE_BOOKMARK_ID,
-  QUERY_PARAMETER_RIGHT_ID,
-  QUERY_PARAMETER_HANDLE,
-  QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
-  QUERY_PARAMETER_TEMPLATE_ID,
-
   setPublicationYearFilter(searchStore: any, bookmark: BookmarkRest): void {
     if (bookmark.filterPublicationYear == undefined) {
       searchStore.publicationYearFrom = "";
@@ -536,17 +525,5 @@ export default {
       default:
         return PublicationTypeRest.WorkingPaper;
     }
-  },
-  createTemplateHref(rightId: string | undefined) : string {
-    if(rightId == undefined){
-      return "";
-    } else {
-      return window.location.origin + window.location.pathname + "?" +
-          QUERY_PARAMETER_TEMPLATE_ID + "=" + rightId;
-    }
-  },
-  createExecuteBookmarkHref(bookmarkId: number) : string {
-    return window.location.origin + window.location.pathname + "?" +
-          QUERY_PARAMETER_EXECUTE_BOOKMARK_ID + "=" + bookmarkId;
   },
 };
