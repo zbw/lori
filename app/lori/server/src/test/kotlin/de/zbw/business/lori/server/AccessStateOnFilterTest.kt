@@ -60,6 +60,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
                         isTemplate = false,
                         templateName = null,
                     ),
+                    TEST_RIGHT.copy(
+                        accessState = AccessState.OPEN,
+                        startDate = LocalDate.of(2022, 1, 1),
+                        endDate = LocalDate.of(2022, 3, 31),
+                        isTemplate = true,
+                        templateName = "2022",
+                    ),
                 ),
         )
 
@@ -156,6 +163,56 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
         assertThat(
             searchResult3.results.map { it.metadata }.toSet(),
+            `is`(setOf(itemWithRight)),
+        )
+
+        // Valid on before created on
+        val rightSearchFilterBefore =
+            listOf(
+                AccessStateOnDateFilter(
+                    date = LocalDate.of(2022, 1, 4),
+                    accessState = AccessState.OPEN,
+                ),
+            )
+        val searchResultBefore: SearchQueryResult =
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    emptyList(),
+                    rightSearchFilterBefore,
+                    null,
+                )
+            }
+
+        assertThat(
+            searchResultBefore.results.map { it.metadata }.toSet(),
+            `is`(emptySet()),
+        )
+
+        // Valid on before created on
+        val rightSearchFilterInBetween =
+            listOf(
+                AccessStateOnDateFilter(
+                    date = LocalDate.of(2022, 3, 4),
+                    accessState = AccessState.OPEN,
+                ),
+            )
+        val searchResultInBetween: SearchQueryResult =
+            runBlocking {
+                backend.searchQuery(
+                    null,
+                    10,
+                    0,
+                    emptyList(),
+                    rightSearchFilterInBetween,
+                    null,
+                )
+            }
+
+        assertThat(
+            searchResultInBetween.results.map { it.metadata }.toSet(),
             `is`(setOf(itemWithRight)),
         )
     }

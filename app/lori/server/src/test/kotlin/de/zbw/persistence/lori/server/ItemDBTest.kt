@@ -58,18 +58,19 @@ class ItemDBTest : DatabaseTest() {
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItemBatch(
+            dbConnector.itemDB.upsertItemBatch(
                 listOf(
                     ItemId(
                         handle = expectedMetadata.handle,
                         rightId = generatedRightId,
                     ),
                 ),
+                createdBy = "testUser",
             )
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -95,18 +96,19 @@ class ItemDBTest : DatabaseTest() {
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItemBatch(
+            dbConnector.itemDB.upsertItemBatch(
                 listOf(
                     ItemId(
                         handle = expectedMetadata.handle,
                         rightId = generatedRightId,
                     ),
                 ),
+                createdBy = "testUser",
             )
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -127,10 +129,11 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata.handle,
                     rightId = generatedRightId,
                 ),
+                createdBy = "testUser",
             )
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -164,6 +167,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata.handle,
                     rightId = generatedRightId,
                 ),
+                createdBy = "testUser",
             )
 
             // then
@@ -192,6 +196,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata1.handle,
                     rightId = generatedRightId1,
                 ),
+                createdBy = "testUser",
             )
 
             dbConnector.itemDB.insertItem(
@@ -199,6 +204,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata2.handle,
                     rightId = generatedRightId2,
                 ),
+                createdBy = "testUser",
             )
 
             // then

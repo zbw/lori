@@ -73,7 +73,12 @@ class LoriServerBackendTest : DatabaseTest() {
 
             // when
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
+            val generatedRightId =
+                backend.insertRightForHandles(
+                    right = rightAssignments.first,
+                    handles = rightAssignments.second,
+                    createdBy = "testUser",
+                )
             val received = backend.getItemByHandle(givenMetadataEntries[0].handle)!!
 
             // then
@@ -309,7 +314,12 @@ class LoriServerBackendTest : DatabaseTest() {
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
+            val generatedRightId =
+                backend.insertRightForHandles(
+                    right = rightAssignments.first,
+                    handles = rightAssignments.second,
+                    createdBy = "testUser",
+                )
 
             // when
             val (number, items) =
@@ -329,7 +339,13 @@ class LoriServerBackendTest : DatabaseTest() {
                     setOf(
                         Item(
                             metadata = givenMetadataEntries[0],
-                            rights = listOf(TEST_RIGHT.copy(rightId = generatedRightId)),
+                            rights =
+                                listOf(
+                                    TEST_RIGHT.copy(
+                                        rightId = generatedRightId,
+                                        startDate = TEST_RIGHT.createdOn!!.toLocalDate(),
+                                    ),
+                                ),
                         ),
                         Item(
                             metadata = givenMetadataEntries[1],

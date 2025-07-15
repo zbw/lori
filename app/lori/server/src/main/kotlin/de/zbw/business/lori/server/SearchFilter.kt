@@ -11,6 +11,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_I
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
@@ -21,7 +22,9 @@ import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
+import java.sql.Timestamp
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * Search filters.
@@ -885,6 +888,27 @@ abstract class RightSearchFilter(
                 " WHERE" +
                 " $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE AND ("
         const val WHERE_CLAUSE_SKELETON_POSTFIX = "))"
+
+        const val WHERE_CLAUSE_BETWEEN_START_AND_END_DATE =
+            "(" +
+                "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL)" +
+                " OR" +
+                "($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL)" +
+                " OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz)" +
+                " OR" +
+                " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
+                ")"
     }
 }
 
@@ -928,18 +952,12 @@ class AccessStateOnDateFilter(
     override fun toWhereClause(): String {
         val clause =
             if (accessState != null) {
-                "((($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                    " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-                    " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
-                    " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                    " $COLUMN_RIGHT_START_DATE IS NOT NULL))" +
-                    " AND ($dbColumnName = ? AND $dbColumnName is not null))"
+                "(" +
+                    WHERE_CLAUSE_BETWEEN_START_AND_END_DATE +
+                    " AND ($dbColumnName = ? AND $dbColumnName is not null)" +
+                    ")"
             } else {
-                "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                    " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-                    " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
-                    " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                    " $COLUMN_RIGHT_START_DATE IS NOT NULL))"
+                WHERE_CLAUSE_BETWEEN_START_AND_END_DATE
             }
 
         return WHERE_CLAUSE_SKELETON_PREFIX + clause + WHERE_CLAUSE_SKELETON_POSTFIX
@@ -953,7 +971,23 @@ class AccessStateOnDateFilter(
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
         if (accessState != null) {
             preparedStatement.setString(localCounter++, accessState.toString())
         }
@@ -983,11 +1017,7 @@ class RightValidOnFilter(
 ) : RightSearchFilter("") {
     override fun toWhereClause(): String =
         WHERE_CLAUSE_SKELETON_PREFIX +
-            "(($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-            " $COLUMN_RIGHT_END_DATE IS NOT NULL) OR" +
-            " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-            " $COLUMN_RIGHT_START_DATE IS NOT NULL))" +
+            WHERE_CLAUSE_BETWEEN_START_AND_END_DATE +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
@@ -998,7 +1028,23 @@ class RightValidOnFilter(
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
         return localCounter
     }
 
@@ -1016,7 +1062,16 @@ class StartDateFilter(
 ) : RightSearchFilter(COLUMN_RIGHT_START_DATE) {
     override fun toWhereClause(): String =
         WHERE_CLAUSE_SKELETON_PREFIX +
-            "($dbColumnName = ? AND $dbColumnName is not null)" +
+            "(" +
+            "($dbColumnName = ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            " OR" +
+            " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON >= ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON < ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            ")" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
@@ -1024,8 +1079,21 @@ class StartDateFilter(
         preparedStatement: PreparedStatement,
         connection: Connection,
     ): Int {
-        preparedStatement.setDate(counter, Date.valueOf(date))
-        return counter + 1
+        var localCounter = counter
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
+        return localCounter
     }
 
     override fun toSQLString(): String = date.toString()
@@ -1042,7 +1110,16 @@ class EndDateFilter(
 ) : RightSearchFilter(COLUMN_RIGHT_END_DATE) {
     override fun toWhereClause(): String =
         WHERE_CLAUSE_SKELETON_PREFIX +
-            "($dbColumnName = ? AND $dbColumnName is not null)" +
+            "(" +
+            "($dbColumnName = ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            " OR" +
+            " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON >= ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON < ? AND" +
+            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            ")" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
@@ -1050,8 +1127,21 @@ class EndDateFilter(
         preparedStatement: PreparedStatement,
         connection: Connection,
     ): Int {
-        preparedStatement.setDate(counter, Date.valueOf(date))
-        return counter + 1
+        var localCounter = counter
+        preparedStatement.setDate(localCounter++, Date.valueOf(date))
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
+        preparedStatement.setTimestamp(
+            localCounter++,
+            Timestamp.from(
+                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+            ),
+        )
+        return localCounter
     }
 
     override fun toSQLString(): String = date.toString()

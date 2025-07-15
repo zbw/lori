@@ -56,8 +56,20 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenHandle, givenRightId) } returns false
-                coEvery { insertItemEntry(givenHandle, givenRightId, any()) } returns Either.Right("foo")
+                coEvery {
+                    itemContainsEntry(
+                        handle = givenHandle,
+                        rightId = givenRightId,
+                    )
+                } returns false
+                coEvery {
+                    insertItemEntry(
+                        handle = givenHandle,
+                        rightId = givenRightId,
+                        deleteOnConflict = any(),
+                        createdBy = any(),
+                    )
+                } returns Either.Right("foo")
             }
         val servicePool = getServicePool(backend)
 

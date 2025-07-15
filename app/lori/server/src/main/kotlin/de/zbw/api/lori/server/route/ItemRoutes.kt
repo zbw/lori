@@ -1,6 +1,7 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.Either
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
@@ -26,6 +27,7 @@ import de.zbw.lori.model.ItemSearch
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -68,6 +70,12 @@ fun Routing.itemRoutes(
                                 .receive(ItemEntry::class)
                                 .takeIf { it.handle != null && it.rightId != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                ) // This should never happen
                         span.setAttribute("item", item.toString())
                         if (backend.itemContainsEntry(item.handle, item.rightId)) {
                             span.setStatus(StatusCode.ERROR, "Conflict: Resource with this primary key already exists.")
@@ -80,7 +88,15 @@ fun Routing.itemRoutes(
                         } else {
                             val deleteOnConflict: Boolean =
                                 call.request.queryParameters["deleteRightOnConflict"]?.toBoolean() == true
-                            when (val ret = backend.insertItemEntry(item.handle, item.rightId, deleteOnConflict)) {
+                            when (
+                                val ret =
+                                    backend.insertItemEntry(
+                                        handle = item.handle,
+                                        rightId = item.rightId,
+                                        deleteOnConflict = deleteOnConflict,
+                                        createdBy = userSession.email,
+                                    )
+                            ) {
                                 is Either.Left -> {
                                     call.respond(ret.value.first, ret.value.second)
                                 }

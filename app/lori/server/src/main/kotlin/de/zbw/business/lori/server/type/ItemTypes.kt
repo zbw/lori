@@ -117,6 +117,15 @@ data class ItemRight(
     val zbwUserAgreement: Boolean?,
 )
 
+data class ItemRow(
+    val rightId: String,
+    val handle: String,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
+    val lastUpdatedBy: String?,
+    val lastUpdatedOn: OffsetDateTime?,
+)
+
 enum class FormalRule {
     CC_LICENCE_NO_RESTRICTION,
     COPYRIGHT_EXCEPTION_RISKFREE,

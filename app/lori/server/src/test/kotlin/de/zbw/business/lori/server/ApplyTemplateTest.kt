@@ -50,8 +50,8 @@ class ApplyTemplateTest : DatabaseTest() {
             item1ZDB1 to
                 listOf(
                     TEST_RIGHT.copy(
-                        startDate = LocalDate.of(2000, 1, 1),
-                        endDate = LocalDate.of(2000, 12, 31),
+                        startDate = LocalDate.of(2024, 1, 1),
+                        endDate = LocalDate.of(2024, 12, 31),
                     ),
                 ),
             item1ZDB2 to emptyList(),
@@ -194,7 +194,7 @@ class ApplyTemplateTest : DatabaseTest() {
             // Verify that only the new items are connected to template
             assertThat(
                 backend.dbConnector.itemDB.countItemByRightId(rightId),
-                `is`(2),
+                `is`(3),
             )
 
             val applyAllReceived: List<TemplateApplicationResult> =

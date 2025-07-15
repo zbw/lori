@@ -4,6 +4,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
@@ -14,6 +15,12 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_BY
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_HANDLE
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_LAST_UPDATED_BY
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_LAST_UPDATED_ON
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_RIGHT_ID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Date
@@ -296,10 +303,10 @@ class RightDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun getRightIdsByHandle(handle: String): List<String> =
+    suspend fun getRightIdsByHandle(handle: String): List<ItemRow> =
         connectionPool.useConnection("getRightIdsByHandle") { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
+                connection.prepareStatement(STATEMENT_GET_RIGHTS_IDS_FOR_METADATA).apply {
                     this.setString(1, handle)
                 }
             val span = tracer.spanBuilder("getRightIdsByHandle").startSpan()
@@ -312,7 +319,26 @@ class RightDB(
                 }
             return@useConnection generateSequence {
                 if (rs.next()) {
-                    rs.getString(1)
+                    ItemRow(
+                        rightId = rs.getString(1),
+                        handle = rs.getString(2),
+                        createdBy = rs.getString(3),
+                        createdOn =
+                            rs.getTimestamp(4)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    ZoneId.of("UTC+00:00"),
+                                )
+                            },
+                        lastUpdatedBy = rs.getString(5),
+                        lastUpdatedOn =
+                            rs.getTimestamp(6)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    ZoneId.of("UTC+00:00"),
+                                )
+                            },
+                    )
                 } else {
                     null
                 }
@@ -677,8 +703,9 @@ class RightDB(
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
-        const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA =
-            "SELECT right_id" +
+        const val STATEMENT_GET_RIGHTS_IDS_FOR_METADATA =
+            "SELECT $COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_HANDLE,$COLUMN_ITEM_CREATED_BY," +
+                "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON" +
                 " FROM $TABLE_NAME_ITEM" +
                 " WHERE $COLUMN_METADATA_HANDLE = ?"
 
