@@ -18,6 +18,8 @@ import error from "@/utils/error";
 import {GroupIdCreated, OldGroupVersionRest} from "@/generated-sources/openapi";
 import {unparse} from "papaparse";
 import {useUserStore} from "@/stores/user";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import url from "@/utils/url";
 
 export default defineComponent({
   components: {GroupDeleteDialog},
@@ -38,6 +40,10 @@ export default defineComponent({
     "groupEditClosed",
   ],
   setup(props, {emit}) {
+    // Router + Route
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
+
     /**
      * Vuelidate.
      */
@@ -113,6 +119,11 @@ export default defineComponent({
       v$.value.$reset();
       saveAlertError.value = false;
       saveAlertErrorMessage.value = "";
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_GROUP_ID],
+      );
       emit("groupEditClosed");
     };
 
@@ -238,6 +249,9 @@ export default defineComponent({
         if (groupTmp.value.oldVersions != undefined) {
           oldVersions.value = groupTmp.value.oldVersions;
         }
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_GROUP_ID]: props.group.groupId,
+        });
       }
     };
 

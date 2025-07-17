@@ -1,12 +1,13 @@
 <script lang="ts">
 import {
   AboutRest,
-  BookmarkRest,
+  BookmarkRest, GroupRest,
   ItemInformation,
   ItemRest,
   RightRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
+import GroupEdit from "@/components/GroupEdit.vue";
 import GroupOverview from "@/components/GroupOverview.vue";
 import MetadataView from "@/components/MetadataView.vue";
 import RightsView from "@/components/RightsView.vue";
@@ -32,11 +33,15 @@ import bookmarkApi from "@/api/bookmarkApi";
 
 export default defineComponent({
   computed: {
+    bookmarkSave() {
+      return bookmarkSave
+    },
     metadata_utils() {
       return metadata_utils;
     },
   },
   components: {
+    GroupEdit,
     TopNavigationBar,
     ResizableDialog,
     Dashboard,
@@ -206,7 +211,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      loadTemplateView()
+      loadTemplateView();
+      loadGroupView();
+      loadBookmarkView();
       const hasMetadataParameter = loadMetadataView();
       const hasInitSearch = loadInitSearchQuery();
       const hasInitBookmarkId = loadInitBookmarkId();
@@ -228,6 +235,62 @@ export default defineComponent({
     watch(pageSize, () => {
       handlePageSizeChange();
     });
+
+    // Initial Group View
+    const queryParameterBookmark = ref({} as BookmarkRest);
+    const bookmarkSaveQueryParameterDialog = ref(false);
+
+    const loadBookmarkView: () => boolean = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const bookmarkId: string | null = urlParams.get(url.QUERY_PARAMETER_BOOKMARK_ID);
+      if (bookmarkId == null || bookmarkId == "") {
+        return false;
+      }
+      bookmarkApi
+          .getBookmarkById(parseInt(bookmarkId))
+          .then((response: BookmarkRest) => {
+            queryParameterBookmark.value = response;
+            bookmarkSaveQueryParameterDialog.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+      return true;
+    };
+
+    // Initial Group View
+    const queryParameterGroup = ref({} as GroupRest);
+    const groupEditActivated = ref(false);
+    const loadGroupView: () => boolean = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const groupId: string | null = urlParams.get(url.QUERY_PARAMETER_GROUP_ID);
+      if (groupId == null || groupId == "") {
+        return false;
+      }
+      api
+          .getGroupById(
+              parseInt(groupId),
+              undefined,
+          )
+          .then((response: GroupRest) => {
+            queryParameterGroup.value = response;
+            groupEditActivated.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          });
+      return true;
+    };
+
+    const closeGroupEditDialog = () => {
+      groupEditActivated.value = false;
+    };
 
     // Initial Template View
     const templateLoadError = ref(false);
@@ -333,6 +396,7 @@ export default defineComponent({
 
     const startDashboardSearch = (searchTerm: string) => {
       dialogStore.dashboardViewActivated = false;
+      searchStore.searchTerm = searchTerm;
       searchQueryByTerm(searchTerm, () => {
         if (items.value.length > 0){
           currentItem.value = items.value[0]
@@ -526,6 +590,7 @@ export default defineComponent({
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
+          callback();
         })
         .catch((e) => {
           error.errorHandling(e, (errMsg: string) => {
@@ -560,7 +625,6 @@ export default defineComponent({
           )
           .then((response: ItemInformation) => {
             processFacets(response);
-            callback();
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
@@ -846,6 +910,7 @@ export default defineComponent({
 
     const closeBookmarkSaveDialog = () => {
       dialogStore.bookmarkSaveActivated = false;
+      bookmarkSaveQueryParameterDialog.value = false;
     };
 
     const closeGroupDialog = () => {
@@ -885,13 +950,14 @@ export default defineComponent({
     return {
       successMsgIsActive,
       successMsg,
+      bookmarkSaveQueryParameterDialog,
       dialog,
       errorMsgIsActive,
       errorMsg,
       currentItem,
       currentPage,
-      queryParameterRight,
       dialogStore,
+      groupEditActivated,
       headers,
       headersValueVSelect,
       filtersAsQuery,
@@ -900,6 +966,9 @@ export default defineComponent({
       numberOfResults,
       pageSize,
       pageSizes,
+      queryParameterBookmark,
+      queryParameterGroup,
+      queryParameterRight,
       searchStore,
       selectedHeaders,
       selectedItems,
@@ -918,6 +987,7 @@ export default defineComponent({
       closeBookmarkSaveDialog,
       closeDashboard,
       closeGroupDialog,
+      closeGroupEditDialog,
       closeTemplateEditDialog,
       closeTemplateOverview,
       executeBookmarkSearch,
@@ -954,24 +1024,24 @@ table.special, th.special, td.special {
 <template>
   <TopNavigationBar></TopNavigationBar>
   <VResizeDrawer permanent width="300px">
-        <SearchFilter
-            v-on:startEmptySearch="startEmptySearch"
-            v-on:startSearch="startSearch"
-            v-on:getAccessStatesOnDate="getAccessStatesForDate"
-        ></SearchFilter>
+    <SearchFilter
+        v-on:startEmptySearch="startEmptySearch"
+        v-on:startSearch="startSearch"
+        v-on:getAccessStatesOnDate="getAccessStatesForDate"
+    ></SearchFilter>
   </VResizeDrawer>
   <v-main class="d-flex align-center justify-center">
     <v-dialog
-      v-model="dialogStore.bookmarkSaveActivated"
-      :retain-focus="false"
-      max-width="1000px"
-      v-on:close="closeBookmarkSaveDialog"
-      persistent
+        v-model="dialogStore.bookmarkSaveActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        v-on:close="closeBookmarkSaveDialog"
+        persistent
     >
       <BookmarkSave
-        :isNew="true"
-        :searchTerm="searchStore.searchTerm"
-        v-on:addBookmarkSuccessful="addBookmarkSuccessful"
+          :isNew="true"
+          :searchTerm="searchStore.searchTerm"
+          v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>
     <ResizableDialog
@@ -1024,7 +1094,7 @@ table.special, th.special, td.special {
     <v-dialog v-model="templateLoadError" max-width="1000">
       <v-card>
         <v-card-title class="text-h5"
-          >Laden von Template fehlgeschlagen</v-card-title
+        >Laden von Template fehlgeschlagen</v-card-title
         >
         <v-card-text>
           Informationen zum Fehler: {{ templateLoadErrorMsg }}
@@ -1032,416 +1102,444 @@ table.special, th.special, td.special {
       </v-card>
     </v-dialog>
     <v-dialog
-      v-model="rightEditActivated"
-      :retain-focus="false"
-      max-width="1500px"
-      max-height="850px"
-      v-on:close="closeTemplateEditDialog"
-      persistent
+        v-model="rightEditActivated"
+        :retain-focus="false"
+        max-width="1500px"
+        max-height="850px"
+        v-on:close="closeTemplateEditDialog"
+        persistent
     >
       <RightsEditDialog
-        :index="-1"
-        :isNewRight="false"
-        :isNewTemplate="false"
-        :rightId="queryParameterRight.rightId"
-        v-on:editRightClosed="closeTemplateEditDialog"
+          :index="-1"
+          :isNewRight="false"
+          :isNewTemplate="false"
+          :rightId="queryParameterRight.rightId"
+          v-on:editRightClosed="closeTemplateEditDialog"
       ></RightsEditDialog>
     </v-dialog>
-        <v-card position="relative">
-          <v-card-title>
-            <v-text-field
-              v-model="searchStore.searchTerm"
-              append-icon="mdi-magnify"
-              clearable
-              label="Suche"
-              variant="outlined"
-              single-line
-              @click:append="startSearch"
-              @keydown.enter.prevent="startSearch"
-            ></v-text-field>
-          </v-card-title>
-          <v-row
-              no-gutters
-              justify="space-around"
-          >
-            <v-col
-                cols="10"
-                offset="0"
-            >
-              <b>Aktive Filter:</b> {{ filtersAsQuery }}
-            </v-col>
-            <v-col
-              cols="1"
-            >
-            <v-dialog v-model="searchHelpDialog" max-width="600px">
-                <template v-slot:activator="{ props: activatorProps }">
-                  <v-tooltip location="bottom" text="Syntax der Sucheingabe">
-                    <template v-slot:activator="{ props }">
-                      <v-btn
-                        density="compact"
-                        icon="mdi-help"
-                        v-bind="{...activatorProps, ...props}"
-                        class="mb-4"
-                      >
-                      </v-btn>
-                    </template>
-                  </v-tooltip>
+    <v-dialog
+        v-model="groupEditActivated"
+        :retain-focus="false"
+        v-on:close="closeGroupEditDialog"
+        max-width="1500px"
+        max-height="850px"
+        scrollable
+        persistent
+    >
+      <GroupEdit
+          :isNew="false"
+          :group="queryParameterGroup"
+          v-on:groupEditClosed="closeGroupEditDialog"
+      ></GroupEdit>
+    </v-dialog>
+    <v-dialog
+        v-model="bookmarkSaveQueryParameterDialog"
+        :retain-focus="false"
+        v-on:close="closeBookmarkSaveDialog"
+        max-width="1000px"
+        persistent
+    >
+      <BookmarkSave
+          :isNew="false"
+          :bookmark="queryParameterBookmark"
+          v-on:closeEditDialog="closeBookmarkSaveDialog"
+      ></BookmarkSave>
+    </v-dialog>
+    <v-card position="relative">
+      <v-card-title>
+        <v-text-field
+            v-model="searchStore.searchTerm"
+            append-icon="mdi-magnify"
+            clearable
+            label="Suche"
+            variant="outlined"
+            single-line
+            @click:append="startSearch"
+            @keydown.enter.prevent="startSearch"
+        ></v-text-field>
+      </v-card-title>
+      <v-row
+          no-gutters
+          justify="space-around"
+      >
+        <v-col
+            cols="10"
+            offset="0"
+        >
+          <b>Aktive Filter:</b> {{ filtersAsQuery }}
+        </v-col>
+        <v-col
+            cols="1"
+        >
+          <v-dialog v-model="searchHelpDialog" max-width="600px">
+            <template v-slot:activator="{ props: activatorProps }">
+              <v-tooltip location="bottom" text="Syntax der Sucheingabe">
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                      density="compact"
+                      icon="mdi-help"
+                      v-bind="{...activatorProps, ...props}"
+                      class="mb-4"
+                  >
+                  </v-btn>
                 </template>
-              <v-card
-              >
-                <template v-slot:actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" @click="searchHelpDialog = false"> Zurück </v-btn>
-                </template>
-                <v-card-title class="text-h5">
-                  Syntax der Sucheingabe
-                </v-card-title>
-                <v-card-text>
-                  <p class="text-left text-body-1 font-weight-bold">Genereller Aufbau:</p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2">
-                    suchschluessel1:"wert1" & suchschluessel2:"wert2"
-                  </p>
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Das " kann auch durch ' ersetzt werden. Beides kann man
-                    weglassen wenn nur ein Wort gesucht wird.
-                  </p>
-                  <table class="special">
-                    <thead>
-                      <tr class=special>
-                        <th class=special>Suche</th>
-                        <th class=special>Suchschlüssel</th>
-                        <th class=special>Format</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr class=special>
-                        <td class=special>Titel</td>
-                        <td class=special>tit</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Handle des Items</td>
-                        <td class=special>hdl</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Community</td>
-                        <td class=special>com</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Handle Community</td>
-                        <td class=special>hdlcom</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Handle Subommunity</td>
-                        <td class=special>hdlsubcom</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Collection</td>
-                        <td class=special>col</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Handle Collection</td>
-                        <td class=special>hdlcol</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>ZDB-Id</td>
-                        <td class=special>zdb</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Paket-Sigel</td>
-                        <td class=special>sig</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Lizenz URL</td>
-                        <td class=special>lur</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Lizenz URL ohne Protokolle, Punkte und Slashes</td>
-                        <td class=special>luk</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Series</td>
-                        <td class=special>ser</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Template Namen</td>
-                        <td class=special>tpl</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Publikationsjahr</td>
-                        <td class=special>jah</td>
-                        <td class=special>Beginn-Ende</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Publikationstyp</td>
-                        <td class=special>typ</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Access</td>
-                        <td class=special>acc</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Zeitliche Gültigkeit am</td>
-                        <td class=special>zgp</td>
-                        <td class=special>YYYY-MM-DD</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Zeitliche Gültigkeit Beginn</td>
-                        <td class=special>zgb</td>
-                        <td class=special>YYYY-MM-DD</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Zeitliche Gültigkeit Ende</td>
-                        <td class=special>zge</td>
-                        <td class=special>YYYY-MM-DD</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Formale Regelungen</td>
-                        <td class=special>reg</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Keine Rechteeinträge</td>
-                        <td class=special>nor</td>
-                        <td class=special>nor:on</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Access-Status am</td>
-                        <td class=special>acd</td>
-                        <td class=special>STATUS+YYYY-MM-DD</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>ISBN</td>
-                        <td class=special>isb</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>DOI</td>
-                        <td class=special>doi</td>
-                        <td class=special></td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>PPN</td>
-                        <td class=special>ppn</td>
-                        <td class=special></td>
-                      </tr>
-                    </tbody>
-                  </table>
+              </v-tooltip>
+            </template>
+            <v-card
+            >
+              <template v-slot:actions>
+                <v-spacer></v-spacer>
+                <v-btn color="blue darken-1" @click="searchHelpDialog = false"> Zurück </v-btn>
+              </template>
+              <v-card-title class="text-h5">
+                Syntax der Sucheingabe
+              </v-card-title>
+              <v-card-text>
+                <p class="text-left text-body-1 font-weight-bold">Genereller Aufbau:</p>
+                <p class="text-center text-body-2 bg-grey-lighten-2">
+                  suchschluessel1:"wert1" & suchschluessel2:"wert2"
+                </p>
+                <p class="text-left text-body-2 mt-1 mb-1">
+                  Das " kann auch durch ' ersetzt werden. Beides kann man
+                  weglassen wenn nur ein Wort gesucht wird.
+                </p>
+                <table class="special">
+                  <thead>
+                  <tr class=special>
+                    <th class=special>Suche</th>
+                    <th class=special>Suchschlüssel</th>
+                    <th class=special>Format</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr class=special>
+                    <td class=special>Titel</td>
+                    <td class=special>tit</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Handle des Items</td>
+                    <td class=special>hdl</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Community</td>
+                    <td class=special>com</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Handle Community</td>
+                    <td class=special>hdlcom</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Handle Subommunity</td>
+                    <td class=special>hdlsubcom</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Collection</td>
+                    <td class=special>col</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Handle Collection</td>
+                    <td class=special>hdlcol</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>ZDB-Id</td>
+                    <td class=special>zdb</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Paket-Sigel</td>
+                    <td class=special>sig</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Lizenz URL</td>
+                    <td class=special>lur</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Lizenz URL ohne Protokolle, Punkte und Slashes</td>
+                    <td class=special>luk</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Series</td>
+                    <td class=special>ser</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Template Namen</td>
+                    <td class=special>tpl</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Publikationsjahr</td>
+                    <td class=special>jah</td>
+                    <td class=special>Beginn-Ende</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Publikationstyp</td>
+                    <td class=special>typ</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Access</td>
+                    <td class=special>acc</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Zeitliche Gültigkeit am</td>
+                    <td class=special>zgp</td>
+                    <td class=special>YYYY-MM-DD</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Zeitliche Gültigkeit Beginn</td>
+                    <td class=special>zgb</td>
+                    <td class=special>YYYY-MM-DD</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Zeitliche Gültigkeit Ende</td>
+                    <td class=special>zge</td>
+                    <td class=special>YYYY-MM-DD</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Formale Regelungen</td>
+                    <td class=special>reg</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Keine Rechteeinträge</td>
+                    <td class=special>nor</td>
+                    <td class=special>nor:on</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Access-Status am</td>
+                    <td class=special>acd</td>
+                    <td class=special>STATUS+YYYY-MM-DD</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>ISBN</td>
+                    <td class=special>isb</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>DOI</td>
+                    <td class=special>doi</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>PPN</td>
+                    <td class=special>ppn</td>
+                    <td class=special></td>
+                  </tr>
+                  </tbody>
+                </table>
 
-                  <p class="text-left text-body-1 mt-4 font-weight-bold">
-                    Bool'sche Operatoren
-                  </p>
-                  <table class="special">
-                    <thead>
-                      <tr class=special>
-                        <th class=special> </th>
-                        <th class=special> </th>
-                        <th class=special>Beispiele</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr class=special>
-                        <td class=special>Und</td>
-                        <td class=special>&</td>
-                        <td class=special>col:'Economics & series'</td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Nicht</td>
-                        <td class=special>!</td>
-                        <td class=special>
-                          !hdl:'1234' <br>
-                          !(hdl:'1234' | tit:'geopolitical') <br>
-                          col:'department' & !tit:'geopolitical'
-                        </td>
-                      </tr>
-                      <tr class=special>
-                        <td class=special>Oder</td>
-                        <td class=special>|</td>
-                        <td class=special>col:'Economics' | ser:'some series'</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <p class="text-left text-body-1 mt-4 font-weight-bold">
+                  Bool'sche Operatoren
+                </p>
+                <table class="special">
+                  <thead>
+                  <tr class=special>
+                    <th class=special> </th>
+                    <th class=special> </th>
+                    <th class=special>Beispiele</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr class=special>
+                    <td class=special>Und</td>
+                    <td class=special>&</td>
+                    <td class=special>col:'Economics & series'</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Nicht</td>
+                    <td class=special>!</td>
+                    <td class=special>
+                      !hdl:'1234' <br>
+                      !(hdl:'1234' | tit:'geopolitical') <br>
+                      col:'department' & !tit:'geopolitical'
+                    </td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Oder</td>
+                    <td class=special>|</td>
+                    <td class=special>col:'Economics' | ser:'some series'</td>
+                  </tr>
+                  </tbody>
+                </table>
 
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Es ist möglich die verschiedenen Operatoren in einem Term
-                    zu verwenden und mittels Klammern zu strukturieren.
-                  </p>
+                <p class="text-left text-body-2 mt-1 mb-1">
+                  Es ist möglich die verschiedenen Operatoren in einem Term
+                  zu verwenden und mittels Klammern zu strukturieren.
+                </p>
 
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    col:"subject1" | (hdl:"handle" & !com:"community")
-                  </p>
-                  <p class="text-left text-body-1 mt-4 font-weight-bold">Sonderzeichen</p>
+                <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                  col:"subject1" | (hdl:"handle" & !com:"community")
+                </p>
+                <p class="text-left text-body-1 mt-4 font-weight-bold">Sonderzeichen</p>
 
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Rechtstrunkierung ist möglich für alle Textbasierten Suchwerte mit *, z.B:
-                  </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    lur:'by-nc-nd*'
-                  </p>
+                <p class="text-left text-body-2 mt-1 mb-1">
+                  Rechtstrunkierung ist möglich für alle Textbasierten Suchwerte mit *, z.B:
+                </p>
+                <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                  lur:'by-nc-nd*'
+                </p>
 
-                  <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
+                <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
 
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
-                    <br>
-                    <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
-                  </p>
+                <p class="text-left text-body-2 mt-1 mb-1">
+                  Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
+                  <br>
+                  <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
+                </p>
 
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    hdl:"11159/1234,11159/5678"
-                  </p>
-                  <p class="text-left text-body-2 mt-1 mb-1">
-                    Alternative Suche, die Wildcard-Verwendung ermöglicht:
-                  </p>
-                  <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
-                    hdl:"11159/1234,11159/5678" | hdl:"11159/555*"
-                  </p>
-                </v-card-text>
-              </v-card>
-            </v-dialog>
-            </v-col>
-          </v-row>
-          <v-spacer></v-spacer>
-          <v-snackbar
-            multi-line
-            location="bottom"
-            timer="true"
-            timeout="5000"
-            v-model="errorMsgIsActive"
-            color="error"
+                <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                  hdl:"11159/1234,11159/5678"
+                </p>
+                <p class="text-left text-body-2 mt-1 mb-1">
+                  Alternative Suche, die Wildcard-Verwendung ermöglicht:
+                </p>
+                <p class="text-center text-body-2 bg-grey-lighten-2 mt-1 mb-1">
+                  hdl:"11159/1234,11159/5678" | hdl:"11159/555*"
+                </p>
+              </v-card-text>
+            </v-card>
+          </v-dialog>
+        </v-col>
+      </v-row>
+      <v-spacer></v-spacer>
+      <v-snackbar
+          multi-line
+          location="bottom"
+          timer="true"
+          timeout="5000"
+          v-model="errorMsgIsActive"
+          color="error"
+      >
+        {{ errorMsg }}
+      </v-snackbar>
+      <v-snackbar
+          multi-line
+          location="bottom"
+          timer="true"
+          timeout="5000"
+          v-model="successMsgIsActive"
+          color="success"
+      >
+        {{ successMsg }}
+      </v-snackbar>
+
+      <v-select
+          v-model="headersValueVSelect"
+          :items="headers"
+          label="Spaltenauswahl"
+          multiple
+          return-object
+      >
+        <template v-slot:selection="{ item, index }">
+          <v-chip v-if="index === 0">
+            <span>{{ item.title }}</span>
+          </v-chip>
+          <span v-if="index === 1" class="grey--text caption"
+          >(+{{ headersValueVSelect.length - 1 }} weitere)</span
           >
-            {{ errorMsg }}
-          </v-snackbar>
-          <v-snackbar
-              multi-line
-              location="bottom"
-              timer="true"
-              timeout="5000"
-              v-model="successMsgIsActive"
-              color="success"
-          >
-            {{ successMsg }}
-          </v-snackbar>
+        </template>
+      </v-select>
 
-          <v-select
-            v-model="headersValueVSelect"
-            :items="headers"
-            label="Spaltenauswahl"
-            multiple
-            return-object
-          >
-            <template v-slot:selection="{ item, index }">
-              <v-chip v-if="index === 0">
-                <span>{{ item.title }}</span>
-              </v-chip>
-              <span v-if="index === 1" class="grey--text caption"
-                >(+{{ headersValueVSelect.length - 1 }} weitere)</span
-              >
-            </template>
-          </v-select>
-
-          <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }}</v-col>
-          <v-data-table
-            v-model="selectedItems"
-            :headers="selectedHeaders"
-            :items="items.map((value) => value.metadata)"
-            :items-per-page="0"
-            item-value="handle"
-            :loading="tableContentLoading"
-            :key="renderKey"
-            :row-props="selectedRowColor"
-            loading-text="Daten werden geladen... Bitte warten."
-            select-strategy="single"
-            height="550px"
-            @click:row="addActiveItem"
-            @dblclick:row="setActiveItem"
-          >
-            <template v-slot:item.title="{ item }">
-             <td v-if="item.deleted">❌{{item.title}} </td>
-              <td v-else>{{item.title}} </td>
-            </template>
-            <template v-slot:item.paketSigel="{ item }">
-              <td>
-                {{ item.paketSigel?.join() }}
-              </td>
-            </template>
-            <template v-slot:item.isPartOfSeries="{ item }">
-              <td>
-                {{ item.isPartOfSeries?.join() }}
-              </td>
-            </template>
-            <template v-slot:item.isbn="{ item }">
-              <td>
-                {{ item.isbn?.join() }}
-              </td>
-            </template>
-            <template v-slot:item.handle="{ item }">
-              <td>
-                <a
-                  v-bind:href="
+      <v-col cols="5" sm="5"> Suchergebnisse: {{ numberOfResults }}</v-col>
+      <v-data-table
+          v-model="selectedItems"
+          :headers="selectedHeaders"
+          :items="items.map((value) => value.metadata)"
+          :items-per-page="0"
+          item-value="handle"
+          :loading="tableContentLoading"
+          :key="renderKey"
+          :row-props="selectedRowColor"
+          loading-text="Daten werden geladen... Bitte warten."
+          select-strategy="single"
+          height="550px"
+          @click:row="addActiveItem"
+          @dblclick:row="setActiveItem"
+      >
+        <template v-slot:item.title="{ item }">
+          <td v-if="item.deleted">❌{{item.title}} </td>
+          <td v-else>{{item.title}} </td>
+        </template>
+        <template v-slot:item.paketSigel="{ item }">
+          <td>
+            {{ item.paketSigel?.join() }}
+          </td>
+        </template>
+        <template v-slot:item.isPartOfSeries="{ item }">
+          <td>
+            {{ item.isPartOfSeries?.join() }}
+          </td>
+        </template>
+        <template v-slot:item.isbn="{ item }">
+          <td>
+            {{ item.isbn?.join() }}
+          </td>
+        </template>
+        <template v-slot:item.handle="{ item }">
+          <td>
+            <a
+                v-bind:href="
                     metadata_utils.hrefHandle(
                       item.handle,
                       searchStore.handleURLResolver,
                     )
                   "
-                  target="_blank"
-                  >{{ metadata_utils.shortenHandle(item.handle) }}</a
-                >
-              </td>
-            </template>
-            <template v-slot:item.publicationType="{ item }">
-              <td>{{ parsePublicationType(item.publicationType) }}</td>
-            </template>
-            <template #bottom></template>
-          </v-data-table>
-          <v-col cols="14" sm="12">
-            <v-row>
-              <v-col cols="2" sm="2">
-                <v-select
-                  v-model="pageSize"
-                  :items="pageSizes"
-                  label="Einträge pro Seite"
-                ></v-select>
-              </v-col>
-              <v-col cols="10" sm="9">
-                <v-pagination
-                  v-model="currentPage"
-                  :length="totalPages"
-                  next-icon="mdi-menu-right"
-                  prev-icon="mdi-menu-left"
-                  total-visible="7"
-                ></v-pagination>
-              </v-col>
-            </v-row>
+                target="_blank"
+            >{{ metadata_utils.shortenHandle(item.handle) }}</a
+            >
+          </td>
+        </template>
+        <template v-slot:item.publicationType="{ item }">
+          <td>{{ parsePublicationType(item.publicationType) }}</td>
+        </template>
+        <template #bottom></template>
+      </v-data-table>
+      <v-col cols="14" sm="12">
+        <v-row>
+          <v-col cols="2" sm="2">
+            <v-select
+                v-model="pageSize"
+                :items="pageSizes"
+                label="Einträge pro Seite"
+            ></v-select>
           </v-col>
-        </v-card>
+          <v-col cols="10" sm="9">
+            <v-pagination
+                v-model="currentPage"
+                :length="totalPages"
+                next-icon="mdi-menu-right"
+                prev-icon="mdi-menu-left"
+                total-visible="7"
+            ></v-pagination>
+          </v-col>
+        </v-row>
+      </v-col>
+    </v-card>
   </v-main>
   <VResizeDrawer location="right" width="400px" permanent>
-      <v-card v-if="currentItem.metadata" class="mx-auto" tile>
-        <RightsView
-            :handle="currentItem.metadata.handle"
-            :rights="currentItem.rights"
-            :title="currentItem.metadata.title"
-            :licenceUrl="currentItem.metadata.licenceUrl"
-            v-on:addRightSuccessful="addRightSuccessful"
-        ></RightsView>
-        <MetadataView
-            :metadata="Object.assign({}, currentItem.metadata)"
-        ></MetadataView>
-      </v-card>
+    <v-card v-if="currentItem.metadata" class="mx-auto" tile>
+      <RightsView
+          :handle="currentItem.metadata.handle"
+          :rights="currentItem.rights"
+          :title="currentItem.metadata.title"
+          :licenceUrl="currentItem.metadata.licenceUrl"
+          v-on:addRightSuccessful="addRightSuccessful"
+      ></RightsView>
+      <MetadataView
+          :metadata="Object.assign({}, currentItem.metadata)"
+      ></MetadataView>
+    </v-card>
   </VResizeDrawer>
 </template>

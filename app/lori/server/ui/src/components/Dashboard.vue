@@ -194,13 +194,8 @@ export default defineComponent({
       getErrorList();
     };
 
-    const createHandleHref = (handleId : string) => {
-      return window.location.origin + window.location.pathname + "?" +
-          url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
-    };
-
     const createRightHref = (handleId : string, rightId: string | undefined) => {
-      const handlePP = createHandleHref(handleId);
+      const handlePP = url.createHandleHref(handleId);
       return handlePP + "&" +
           url.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };

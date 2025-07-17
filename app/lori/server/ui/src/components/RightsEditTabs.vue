@@ -3,6 +3,8 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import { RightRest } from "@/generated-sources/openapi";
 import {computed, ComputedRef, defineComponent, onMounted, PropType, Ref, ref, watch} from "vue";
 import {useUserStore} from "@/stores/user";
+import url from "@/utils/url";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   props: {
@@ -37,6 +39,10 @@ export default defineComponent({
     const formStatus: Ref<Record<string, boolean>> = ref({});
     const unsavedChangesDialog = ref(false);
 
+    // Router + Route
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
+
     // Methods
     const deleteSuccessful = (
       index: number,
@@ -61,6 +67,11 @@ export default defineComponent({
     const closeTabDisregardChanges = () => {
       formStatus.value = Object.assign({} as Ref<Record<string, boolean>>);
       unsavedChangesDialog.value = false;
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_RIGHT_ID, url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH],
+      );
       emit("tabDialogClosed");
     };
 
@@ -68,6 +79,11 @@ export default defineComponent({
       if(Object.values(formStatus.value).includes(true)){
         unsavedChangesDialog.value = true;
       } else {
+        url.removeQueryParameters(
+            route,
+            router,
+            [url.QUERY_PARAMETER_RIGHT_ID, url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH],
+        );
         emit("tabDialogClosed");
       }
     };
@@ -114,6 +130,17 @@ export default defineComponent({
       }
     });
 
+    function onTabClick(right: RightRest, index: number) {
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_RIGHT_ID],
+      );
+      url.addQueryParameters(route, router, {
+        [url.QUERY_PARAMETER_RIGHT_ID]: right?.rightId,
+      });
+    }
+
     const tab = ref(0);
     watch(() => props.selectedRight, (currentValue: string, oldValue: string) => {
       const preselectedIdx = props.rights.findIndex(
@@ -121,8 +148,16 @@ export default defineComponent({
       );
       if (preselectedIdx == -1){
         tab.value = 0;
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[0].rightId,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+        });
       } else {
         tab.value = preselectedIdx;
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[preselectedIdx].rightId,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+        });
       }
     });
 
@@ -132,8 +167,16 @@ export default defineComponent({
       );
       if (preselectedIdx == -1){
         tab.value = 0;
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[0].rightId,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+        });
       } else {
         tab.value = preselectedIdx;
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_RIGHT_ID]: props.rights[preselectedIdx].rightId,
+          [url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH]: 'hdl:' + props.handle,
+        });
       }
     });
 
@@ -151,6 +194,7 @@ export default defineComponent({
       closeUnsavedChangesDialog,
       closeTabDisregardChanges,
       deleteSuccessful,
+      onTabClick,
       parseDate,
       resetLastDeletionSuccessful,
       resetLastUpdateSuccessful,
@@ -179,7 +223,11 @@ export default defineComponent({
           show-arrows
           slider-color="yellow"
         >
-          <v-tab v-for="r in currentRights" :key="r.rightId">
+          <v-tab
+              v-for="(r, index) in currentRights"
+              :key="r.rightId"
+              @click="onTabClick(r, index)"
+          >
             <v-icon v-if="r.isTemplate">mdi-note-multiple</v-icon>
             <v-icon v-else>mdi-note-outline</v-icon>
             Id:'{{ r.rightId }}'; {{ parseDate(r.startDate) }} -

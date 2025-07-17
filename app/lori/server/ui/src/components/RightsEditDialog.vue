@@ -354,7 +354,7 @@ export default defineComponent({
       url.removeQueryParameters(
           route,
           router,
-          [url.QUERY_PARAMETER_TEMPLATE_ID]
+          [url.QUERY_PARAMETER_TEMPLATE_ID],
       );
       emit("editRightClosed");
     };
@@ -1077,7 +1077,11 @@ export default defineComponent({
             loadExceptions();
             loadPredecessor();
             loadSuccessor();
-            setPageParameter();
+            if(!props.isTabEntry) {
+              url.addQueryParameters(route, router, {
+                [url.QUERY_PARAMETER_TEMPLATE_ID]: props.rightId,
+              });
+            }
           }
         });
       } else {
@@ -1331,16 +1335,6 @@ export default defineComponent({
           });
     };
 
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
-
-    const setPageParameter = () => {
-      const newQuery = { ...route.query, templateId: props.rightId };
-
-      // This modifies the URL without pushing a new history entry
-      router.replace({ query: newQuery });
-    };
-
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
       formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
@@ -1354,6 +1348,10 @@ export default defineComponent({
       const editedIndex = formState.selectedBookmarks.indexOf(bookmark);
       formState.selectedBookmarks.splice(editedIndex, 1);
     };
+
+    // Router + Route
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
 
     // Groups
     const errorMsgIsActive = ref(false);

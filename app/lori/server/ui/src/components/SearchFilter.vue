@@ -141,7 +141,14 @@ export default defineComponent({
       url.removeQueryParameters(
           route,
           router,
-          [url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID, url.QUERY_PARAMETER_TEMPLATE_ID]
+          [
+            url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID,
+            url.QUERY_PARAMETER_TEMPLATE_ID,
+            url.QUERY_PARAMETER_BOOKMARK_ID,
+            url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+            url.QUERY_PARAMETER_GROUP_ID,
+            url.QUERY_PARAMETER_RIGHT_ID,
+          ]
       );
       emit("startEmptySearch");
     };
