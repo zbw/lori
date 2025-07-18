@@ -1,5 +1,5 @@
 <script lang="ts">
-import {computed, defineComponent, PropType, reactive, Ref, ref, watch} from "vue";
+import {computed, defineComponent, onMounted, PropType, reactive, Ref, ref, watch} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
@@ -11,6 +11,8 @@ import { useVuelidate } from "@vuelidate/core";
 import {BookmarkIdCreated, BookmarkRest} from "@/generated-sources/openapi";
 import {useUserStore} from "@/stores/user";
 import metadata_utils from "@/utils/metadata_utils";
+import url from "@/utils/url";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   emits: [
@@ -42,6 +44,9 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
+    // Router + Route
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
     /**
      * Constants:
      */
@@ -89,6 +94,11 @@ export default defineComponent({
       formState.name = "";
       description.value = "";
       filterQuery.value = "";
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_BOOKMARK_ID],
+      );
       emit("closeEditDialog");
     };
 
@@ -248,6 +258,12 @@ export default defineComponent({
     { immediate: true }
     );
 
+    onMounted(() => {
+      url.addQueryParameters(route, router, {
+        [url.QUERY_PARAMETER_BOOKMARK_ID]: props.bookmark?.bookmarkId
+      });
+    });
+
     return {
       cardTitle,
       createdBy,
@@ -343,7 +359,7 @@ export default defineComponent({
           ></v-textarea>
         </v-col>
       </v-row>
-      <v-row v-if="!userStore.isLoggedIn">
+      <v-row>
         <v-col cols="4"> Suchstring</v-col>
         <v-col cols="6">
           <v-text-field

@@ -13,7 +13,11 @@ export default defineComponent({
     rightId: {
       type: String,
       required: false,
-    }
+    },
+    showWarning: {
+      type: Boolean,
+      required: false,
+    },
   },
   emits: ["exceptionSelected", "exceptionConnectClosed"],
   setup(props, { emit }) {
@@ -84,6 +88,7 @@ export default defineComponent({
     const errorMsg = ref("");
 
     onMounted(() => getTemplateList());
+    const computedShowWarning = computed(() => props.showWarning);
     const computedReinitCounter = computed(() => props.reinitCounter);
     watch(computedReinitCounter, () => {
       // Actions executed when the window is displayed:
@@ -92,6 +97,7 @@ export default defineComponent({
     });
 
     return {
+      computedShowWarning,
       headers,
       errorMsgIsActive,
       errorMsg,
@@ -112,6 +118,9 @@ export default defineComponent({
   <v-card position="relative">
     <v-container>
       <v-card-title>Auswahl Ausnahme</v-card-title>
+      <span
+          v-if="computedShowWarning"
+          class="text-red">Hinweis: Es können Einträge fehlen, da das aktuelle Template nicht gespeichert wurde!</span>
       <v-snackbar
           contained
           multi-line

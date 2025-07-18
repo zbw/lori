@@ -6,6 +6,8 @@ import { useDialogsStore } from "@/stores/dialogs";
 import date_utils from "@/utils/date_utils";
 import metadata_utils from "@/utils/metadata_utils";
 import {useUserStore} from "@/stores/user";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import url from "@/utils/url";
 
 export default defineComponent({
   emits: ["startEmptySearch", "startSearch", "getAccessStatesOnDate"],
@@ -136,8 +138,23 @@ export default defineComponent({
       searchStore.accessStateOnDateState.dateValueFormatted = "";
       searchStore.accessStateOnDateState.accessState = "";
       searchStore.accessStateOnDateIdx = [] as Array<string>;
+      url.removeQueryParameters(
+          route,
+          router,
+          [
+            url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID,
+            url.QUERY_PARAMETER_TEMPLATE_ID,
+            url.QUERY_PARAMETER_BOOKMARK_ID,
+            url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+            url.QUERY_PARAMETER_GROUP_ID,
+            url.QUERY_PARAMETER_RIGHT_ID,
+          ]
+      );
       emit("startEmptySearch");
     };
+
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
 
     const parseAccessState = (accessState: string, count: number) => {
       switch (accessState.toLowerCase()) {

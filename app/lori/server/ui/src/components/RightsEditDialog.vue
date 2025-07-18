@@ -1,7 +1,7 @@
 <script lang="ts">
 import api from "@/api/api";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
-import searchquerybuilder from "@/utils/searchquerybuilder";
+import url from "@/utils/url";
 import {
   AccessStateRest,
   BookmarkRest,
@@ -10,7 +10,7 @@ import {
   RightIdCreated,
   RightRest,
   RightRestBasisAccessStateEnum,
-  RightRestBasisStorageEnum, type TemplateApplicationRest, TemplateApplicationsRest,
+  RightRestBasisStorageEnum,
 } from "@/generated-sources/openapi";
 import {
   computed,
@@ -32,14 +32,15 @@ import TemplateBookmark from "@/components/TemplateBookmark.vue";
 import isEqual from "lodash.isequal";
 import { uniqWith } from "lodash";
 import date_utils from "@/utils/date_utils";
+import container_utils from "@/utils/container_utils";
 import Dashboard from "@/components/Dashboard.vue";
-import rightErrorApi from "@/api/rightErrorApi";
 import rightApi from "@/api/rightApi";
 import {useUserStore} from "@/stores/user";
 import navigator_utils from "@/utils/navigator_utils";
 import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import BookmarkSave from "@/components/BookmarkSave.vue";
 
 export default defineComponent({
   computed: {
@@ -49,8 +50,8 @@ export default defineComponent({
     navigator_utils() {
       return navigator_utils;
     },
-    searchquerybuilder() {
-      return searchquerybuilder;
+    url() {
+      return url;
     },
   },
   props: {
@@ -113,6 +114,7 @@ export default defineComponent({
 
   // Components
   components: {
+    BookmarkSave,
     RelationshipConnect,
     ExceptionConnect,
     Dashboard,
@@ -349,7 +351,11 @@ export default defineComponent({
     const lastSavedRight = ref({} as RightRest);
 
     const emitClosedDialog = () => {
-      removePageParameter();
+      url.removeQueryParameters(
+          route,
+          router,
+          [url.QUERY_PARAMETER_TEMPLATE_ID],
+      );
       emit("editRightClosed");
     };
 
@@ -520,24 +526,16 @@ export default defineComponent({
             errorMsg.value =
               "No RightId found when updating. This should NOT happen.";
             errorMsgIsActive.value = true;
-          } else {
-            const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
-            if(exceptionId == undefined){
-              updateBookmarks(tmpRight.value.rightId, () => {
-                successMsg.value =
-                    "Template " +
-                    tmpRight.value.templateName +
-                    " erfolgreich geupdated";
-                successMsgIsActive.value = true;
-                emit("updateTemplateSuccessful", formState.templateName);
-                reinitializeRight();
-              });
-            } else {
-              addExceptionsToTemplate(
-                  tmpRight.value.rightId,
-                  exceptionId,
-                  () => {
-                    updateBookmarks(tmpRight.value.rightId, () => {
+            return;
+          }
+          updateBookmarks(tmpRight.value.rightId, () => {
+            removeExceptionsToTemplate(
+              tmpRight.value.rightId!!,
+              () => {
+                addExceptionsToTemplate(
+                    tmpRight.value.rightId!!,
+                    formState.exceptionTemplates[0]?.rightId,
+                    () => {
                       successMsg.value =
                           "Template " +
                           tmpRight.value.templateName +
@@ -545,12 +543,11 @@ export default defineComponent({
                       successMsgIsActive.value = true;
                       emit("updateTemplateSuccessful", formState.templateName);
                       reinitializeRight();
-                    });
-                  },
-              );
-            }
-          }
-        })
+                    }
+                );
+              });
+          });
+          })
         .catch((e) => {
           updateInProgress.value = false;
           error.errorHandling(e, (errMsg: string) => {
@@ -560,15 +557,18 @@ export default defineComponent({
         });
     };
 
-
     /**
      * Add exceptions.
      */
     const addExceptionsToTemplate = (
       rightId: string,
-      exceptionId: string,
+      exceptionId: string | undefined,
       callback: () => void,
     ) => {
+      if (exceptionId == undefined){
+        callback();
+        return;
+      }
       templateApi
         .addExceptionToTemplate(rightId, exceptionId)
         .then(() => {
@@ -581,6 +581,38 @@ export default defineComponent({
           });
         });
     };
+
+    /**
+     * Remove exceptions.
+     */
+    const removeExceptionsToTemplate = (
+        rightId: string,
+        callback: () => void,
+    ) => {
+      // Figure out which exceptions were deleted
+      const deletedTemplates: RightRest[] = lastSavedExceptionTemplateItems.value.filter((exception: RightRest) => !formState.exceptionTemplates.includes(exception));
+      const results: Promise<void>[] = deletedTemplates.map(async function (template: RightRest) {
+        try {
+          return await templateApi
+              .removeExceptionToTemplate(rightId, template.rightId!!);
+        } catch (e) {
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        }
+      });
+      Promise.allSettled(results).then(settledResults => {
+        const hasError = settledResults.some(r => r.status === 'rejected');
+        if (hasError) {
+          // Handle errors
+          return;
+        } else {
+          callback();
+        }
+      });
+    };
+
 
     /**
      * Refresh bookmarks.
@@ -606,6 +638,18 @@ export default defineComponent({
             errorMsgIsActive.value = true;
           });
         });
+    };
+    const editDialogActivated = ref(false);
+    const editBookmark = ref({} as BookmarkRest);
+
+    const openBookmarkEditDialog = (bookmark: BookmarkRest) => {
+      editBookmark.value = Object.assign({}, bookmark);
+      editDialogActivated.value = true;
+    };
+
+    const closeBookmarkEditDialog = () => {
+      loadBookmarks();
+      editDialogActivated.value = false;
     };
 
     const errorSources = ref([] as string[]);
@@ -918,7 +962,17 @@ export default defineComponent({
         let description: string;
         if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
           description = "(Ausnahme und Entwurf)"
-        } else if (props.isExceptionTemplate){
+        } else if (
+          lastSavedRight.value?.exceptionOfId != undefined &&
+          lastSavedRight.value?.exceptionOfId != '' &&
+          lastSavedRight.value?.lastAppliedOn == undefined
+        ){
+          description = "(Ausnahme und Entwurf)"
+        } else if (
+          props.isExceptionTemplate ||
+            (lastSavedRight.value?.exceptionOfId != undefined &&
+            lastSavedRight.value?.exceptionOfId != '')
+        ){
           description = "(Ausnahme)"
         } else if (lastSavedRight.value?.lastAppliedOn == undefined) {
           description = "(Entwurf)"
@@ -1023,7 +1077,11 @@ export default defineComponent({
             loadExceptions();
             loadPredecessor();
             loadSuccessor();
-            setPageParameter();
+            if(!props.isTabEntry) {
+              url.addQueryParameters(route, router, {
+                [url.QUERY_PARAMETER_TEMPLATE_ID]: props.rightId,
+              });
+            }
           }
         });
       } else {
@@ -1088,6 +1146,11 @@ export default defineComponent({
       },
     ];
 
+    const executeBookmarkNewTab = (bookmarkId: number) => {
+      const hrefURL = url.createExecuteBookmarkHref(bookmarkId);
+      window.open(hrefURL, '_blank');
+    };
+
     // Template Exceptions
     const dialogCreateException = ref(false);
     const dialogConnectException = ref(false);
@@ -1150,7 +1213,9 @@ export default defineComponent({
       renderTemplateKey.value += 1;
     };
 
+    const showDialogExceptionWarning = ref(false);
     const openDialogExceptionConnect = () => {
+      showDialogExceptionWarning.value = !container_utils.haveSameKeys(lastSavedExceptionTemplateItems.value, formState.exceptionTemplates, 'rightId');
       openDialogException.value += 1;
       dialogConnectException.value = true;
     };
@@ -1162,14 +1227,16 @@ export default defineComponent({
     const deleteExceptionEntry = (entry: RightRest) => {
       const editedIndex = formState.exceptionTemplates.indexOf(entry);
       formState.exceptionTemplates.splice(editedIndex, 1);
-      if (entry.rightId != undefined && props.rightId != undefined) {
-        templateApi.removeExceptionToTemplate(computedRightId.value, entry.rightId).catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
-          });
-        });
-      }
+    };
+
+    const deletePredecessorEntry = (entry: RightRest) => {
+      const editedIndex = formState.predecessors.indexOf(entry);
+      formState.predecessors.splice(editedIndex, 1);
+    };
+
+    const deleteSuccessorEntry = (entry: RightRest) => {
+      const editedIndex = formState.successors.indexOf(entry);
+      formState.successors.splice(editedIndex, 1);
     };
 
     // Load Bookmarks
@@ -1208,7 +1275,8 @@ export default defineComponent({
           })
           .catch((e: ResponseError) => {
             if(e.response && e.response.status == 404){
-              // Do nothing. This is expected.
+              // This is expected.
+              lastSavedExceptionTemplateItems.value = [];
             } else {
               error.errorHandling(e, (errMsg: string) => {
                 errorMsg.value = errMsg;
@@ -1267,23 +1335,6 @@ export default defineComponent({
           });
     };
 
-    const router: Router = useRouter()
-    const route: RouteLocationNormalizedLoaded = useRoute()
-
-    const setPageParameter = () => {
-      const newQuery = { ...route.query, templateId: props.rightId };
-
-      // This modifies the URL without pushing a new history entry
-      router.replace({ query: newQuery });
-    };
-
-    const removePageParameter = () => {
-      if (!("templateId" in route.query)) return;
-      const { templateId, ...restQuery } = route.query;
-
-      router.replace({ query: restQuery });
-    };
-
     const setSelectedBookmarks = (bookmarks: Array<BookmarkRest>) => {
       // Unionise
       formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
@@ -1297,6 +1348,10 @@ export default defineComponent({
       const editedIndex = formState.selectedBookmarks.indexOf(bookmark);
       formState.selectedBookmarks.splice(editedIndex, 1);
     };
+
+    // Router + Route
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
 
     // Groups
     const errorMsgIsActive = ref(false);
@@ -1445,7 +1500,6 @@ export default defineComponent({
       bookmarkDialogOn,
       bookmarkHeaders,
       cardTitle,
-      connectException,
       computedLicenceUrl,
       computedRightId,
       dialogConnectException,
@@ -1456,6 +1510,8 @@ export default defineComponent({
       dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
+      editBookmark,
+      editDialogActivated,
       endDateFormatted,
       errorAccessState,
       errorEndDate,
@@ -1489,6 +1545,7 @@ export default defineComponent({
       renderPredecessorKey,
       renderSuccessorKey,
       renderTemplateKey,
+      showDialogExceptionWarning,
       startDateFormatted,
       exceptionTemplateHeaders,
       readOnlyProps,
@@ -1506,20 +1563,26 @@ export default defineComponent({
       cancel,
       cancelConfirm,
       checkForChangesAndClose,
+      closeBookmarkEditDialog,
       closeCreateExceptionDialog,
       closeDialogExceptionConnect,
       closeDialogPredecessor,
       closeDialogSuccessor,
       closeUnsavedChangesDialog,
+      connectException,
       connectPredecessorRelationship,
       connectSuccessorRelationship,
       createRight,
+      executeBookmarkNewTab,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
       deleteExceptionEntry,
       deleteSuccessful,
+      deletePredecessorEntry,
+      deleteSuccessorEntry,
       labelModelToString,
+      openBookmarkEditDialog,
       openCreateExceptionDialog,
       openDialogExceptionConnect,
       openDialogPredecessor,
@@ -1624,6 +1687,18 @@ export default defineComponent({
           <v-spacer></v-spacer>
         </v-card-actions>
       </v-card>
+    </v-dialog>
+    <v-dialog
+        v-model="editDialogActivated"
+        :retain-focus="false"
+        max-width="1000px"
+        persistent
+    >
+      <BookmarkSave
+          :isNew="false"
+          :bookmark="editBookmark"
+          v-on:closeEditDialog="closeBookmarkEditDialog"
+      ></BookmarkSave>
     </v-dialog>
 
     <v-card-title>
@@ -1894,30 +1969,28 @@ export default defineComponent({
                       >
                         <template v-slot:activator="{ props }">
                           <div v-bind="props" class="d-inline-block">
-                            <v-btn
-                                variant="text"
-                                icon="mdi-eye"
+                            <v-icon
+                                @click="openBookmarkEditDialog(item)"
                             >
-                              <v-icon small>
-                                mdi-eye
-                              </v-icon>
-                              <v-overlay
-                                  activator="parent"
-                                  location="top center"
-                                  location-strategy="connected">
-                                <v-card class="pa-2">
-                                  {{item.filtersAsQuery}}
-                                  <v-btn
-                                      @click="navigator_utils.copyToClipboard(item.filtersAsQuery)"
-                                      icon="mdi-content-copy"
-                                  >
-                                  </v-btn>
-                                </v-card>
-                              </v-overlay>
-                            </v-btn>
+                              mdi-eye
+                            </v-icon>
                           </div>
                         </template>
-                        <span>Suchstring anzeigen und kopieren</span>
+                        <span>Anzeigen</span>
+                      </v-tooltip>
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                @click="executeBookmarkNewTab(item.bookmarkId)"
+                            >
+                              mdi-play
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span>Ausführen</span>
                       </v-tooltip>
 
                       <v-tooltip
@@ -1970,6 +2043,15 @@ export default defineComponent({
                     item-value="rightId"
                     loading-text="Daten werden geladen... Bitte warten."
                   >
+                    <template v-slot:item.templateName="{ item }">
+                      <td>
+                        <a
+                            v-bind:href="
+                              url.createTemplateHref(item.rightId)"
+                            target="_blank"
+                        > {{item.templateName}}</a>
+                      </td>
+                    </template>
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
                       <v-tooltip
@@ -2014,6 +2096,7 @@ export default defineComponent({
                     <ExceptionConnect
                         :reinit-counter="openDialogException"
                         :rightId="rightId"
+                        :show-warning="showDialogExceptionWarning"
                         v-on:exceptionSelected="connectException"
                         v-on:exceptionConnectClosed="closeDialogExceptionConnect"
                     ></ExceptionConnect>
@@ -2052,16 +2135,33 @@ export default defineComponent({
                       <td>
                         <a
                             v-bind:href="
-                              searchquerybuilder.createTemplateHref(item.rightId)"
+                              url.createTemplateHref(item.rightId)"
                             target="_blank"
-                        > {{item.templateName}}'</a>
+                        > {{item.templateName}}</a>
                       </td>
+                    </template>
+                    <template v-slot:item.actions="{ item }">
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                :disabled="!userStore.isLoggedIn"
+                                @click="deletePredecessorEntry(item)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span> Löschen</span>
+                      </v-tooltip>
                     </template>
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="formState.predecessors.length != 0"
+                      :disabled="!userStore.isLoggedIn || formState.predecessors.length != 0"
                       @click="openDialogPredecessor"
                   >Vorgänger verknüpfen
                   </v-btn>
@@ -2097,16 +2197,33 @@ export default defineComponent({
                       <td>
                         <a
                             v-bind:href="
-                              searchquerybuilder.createTemplateHref(item.rightId)"
+                              url.createTemplateHref(item.rightId)"
                             target="_blank"
-                        > {{item.templateName}}'</a>
+                        > {{item.templateName}}</a>
                       </td>
+                    </template>
+                    <template v-slot:item.actions="{ item }">
+                      <v-tooltip
+                          location="bottom"
+                      >
+                        <template v-slot:activator="{ props }">
+                          <div v-bind="props" class="d-inline-block">
+                            <v-icon
+                                :disabled="!userStore.isLoggedIn"
+                                @click="deleteSuccessorEntry(item)"
+                            >
+                              mdi-delete
+                            </v-icon>
+                          </div>
+                        </template>
+                        <span> Löschen</span>
+                      </v-tooltip>
                     </template>
                     <template #bottom></template>
                   </v-data-table>
                   <v-btn
                       color="blue darken-1"
-                      :disabled="formState.successors.length != 0"
+                      :disabled="!userStore.isLoggedIn || formState.successors.length != 0"
                       @click="openDialogSuccessor"
                   >Nachfolger verknüpfen
                   </v-btn>

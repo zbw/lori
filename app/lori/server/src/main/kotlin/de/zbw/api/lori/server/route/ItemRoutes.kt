@@ -39,6 +39,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import kotlin.Int.Companion.MAX_VALUE
 import kotlin.math.ceil
 
 /**
@@ -375,11 +376,11 @@ fun Routing.itemRoutes(
                             .takeIf { it.searchTerm != null }
                             ?.searchTerm
                             ?: throw BadRequestException("Invalid Json has been provided")
-                    val limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
-                    val offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                    var limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
+                    var offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
                     val noFacets: Boolean = call.request.queryParameters["noFacets"]?.toBoolean() == true
-                    val pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
+                    var pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
                     val publicationYearFilter: PublicationYearFilter? =
                         QueryParameterParser.parsePublicationYearFilter(call.request.queryParameters["filterPublicationYear"])
                     val publicationTypeFilter: PublicationTypeFilter? =
@@ -435,19 +436,26 @@ fun Routing.itemRoutes(
                     span.setAttribute("offset", offset.toString())
                     span.setAttribute("pageSize", pageSize.toString())
 
-                    if (limit < 1 || limit > 100) {
+                    if (limit < -1 || limit > 100) {
                         span.setStatus(
                             StatusCode.ERROR,
-                            "BadRequest: Limit parameter is expected to be between (0,100]",
+                            "BadRequest: Limit parameter is expected to be between -1 and 100 (inclusive)",
                         )
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
-                                "Limit parameter is expected to be between 1 and 100",
+                                "Limit parameter is expected to be between -1 and 100 (inclusive)",
                             ),
                         )
                         return@withContext
                     }
+                    // Handle special case: No limit
+                    if (limit == -1) {
+                        limit = MAX_VALUE
+                        offset = 0
+                        pageSize = MAX_VALUE
+                    }
+
                     if (offset < 0) {
                         span.setStatus(
                             StatusCode.ERROR,

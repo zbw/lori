@@ -601,10 +601,10 @@ class SearchDB(
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
                 "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "${MetadataDB.TS_COLLECTION},${MetadataDB.TS_COMMUNITY}," +
-                "${MetadataDB.TS_TITLE}," +
-                "${MetadataDB.TS_COLLECTION_HANDLE},${MetadataDB.TS_COMMUNITY_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_HANDLE}," +
-                "${MetadataDB.TS_HANDLE},${MetadataDB.TS_SUBCOMMUNITY_NAME}"
+                "${TS_COLLECTION},${TS_COMMUNITY}," +
+                "${TS_TITLE}," +
+                "${TS_COLLECTION_HANDLE},${TS_COMMUNITY_HANDLE},${TS_SUBCOMMUNITY_HANDLE}," +
+                "${TS_HANDLE},${TS_SUBCOMMUNITY_NAME}"
 
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,
@@ -672,9 +672,9 @@ class SearchDB(
                 val filterHandles = "WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
                     " FROM ($subquery) as $SUBQUERY_NAME" +
-                    " $filterHandles ORDER BY $COLUMN_METADATA_HANDLE ASC$limit$offset"
+                    " $filterHandles ORDER BY $COLUMN_METADATA_STORAGE_DATE DESC$limit$offset"
             } else {
-                "$subquery ORDER BY ${ALIAS_ITEM_METADATA}.$COLUMN_METADATA_HANDLE ASC$limit$offset"
+                "$subquery ORDER BY ${ALIAS_ITEM_METADATA}.$COLUMN_METADATA_STORAGE_DATE DESC$limit$offset"
             }
         }
 
@@ -758,7 +758,7 @@ class SearchDB(
 
             val withStatement =
                 "WITH metadata_with_rights AS (" +
-                    " $selectInWith" +
+                    selectInWith +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " LEFT JOIN $TABLE_NAME_ITEM i ON i.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
                     " LEFT JOIN $TABLE_NAME_ITEM_RIGHT $ALIAS_ITEM_RIGHT ON i.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
@@ -805,7 +805,7 @@ class SearchDB(
 
             val withStatement =
                 "WITH metadata_with_rights AS (" +
-                    " $selectInWith" +
+                    "$selectInWith" +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right $ALIAS_ITEM_RIGHT ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
@@ -895,22 +895,14 @@ class SearchDB(
                 if (searchExprUsesRights) {
                     listOf(
                         metadataFilters,
-                        noRightInformationFilterClause,
                     )
                 } else {
                     listOf(
                         searchExpressionFilters,
                         metadataFilters,
-                        noRightInformationFilterClause,
                     )
                 }
 
-            /**
-             * metadataFilter: String?
-             * metadataExceptionFilter: String?
-             * noRightFilter: String?
-             * noRightExceptionFilter: String?
-             */
             val rightFilters =
                 rightSearchFilter.joinToString(separator = " AND ") { f ->
                     f.toWhereClause()
@@ -928,39 +920,19 @@ class SearchDB(
                 rightFilterClause
                     .filter { it.isNotBlank() }
                     .joinToString(separator = " AND ")
-                    .takeIf { it.isNotBlank() }
-                    ?.let {
-                        " WHERE $it"
-                    }
-                    ?: ""
 
-            val whereClause =
+            val metadataClause =
                 whereClauseList
                     .filter { it.isNotBlank() }
                     .joinToString(separator = " AND ")
-                    .takeIf { it.isNotBlank() }
-                    ?.let {
-                        if (extendedRightFilter.isNotBlank()) {
-                            " AND $it"
-                        } else {
-                            " WHERE $it"
-                        }
-                    }
-                    ?: ""
+            val finalClause =
+                listOf(extendedRightFilter, noRightInformationFilterClause, metadataClause)
+                    .filter { it.isNotBlank() }
+                    .joinToString(separator = " AND ", prefix = " WHERE ") { it }
 
-            return " LEFT JOIN $TABLE_NAME_ITEM" +
-                " ON $TABLE_NAME_ITEM.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                " LEFT JOIN $TABLE_NAME_ITEM_RIGHT as $ALIAS_ITEM_RIGHT" +
-                " ON $TABLE_NAME_ITEM.right_id = ${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ID" +
-                extendedRightFilter +
-                whereClause
+            return finalClause
         }
 
-        private fun buildSearchQuerySelect(hasRightSearchFilter: Boolean = false): String =
-            if (!hasRightSearchFilter) {
-                STATEMENT_SELECT_ALL_METADATA
-            } else {
-                STATEMENT_SELECT_ALL_METADATA_DISTINCT
-            }
+        private fun buildSearchQuerySelect(hasRightSearchFilter: Boolean = false): String = STATEMENT_SELECT_ALL_METADATA
     }
 }

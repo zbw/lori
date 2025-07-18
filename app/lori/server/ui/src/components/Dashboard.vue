@@ -5,13 +5,13 @@ import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
 import {RightErrorInformationRest, RightErrorRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
-import searchquerybuilder from "@/utils/searchquerybuilder";
+import url from "@/utils/url";
 import date_utils from "@/utils/date_utils";
 
 export default defineComponent({
   computed: {
-    searchquerybuilder() {
-      return searchquerybuilder;
+    url() {
+      return url;
     },
   },
   components: {},
@@ -194,15 +194,10 @@ export default defineComponent({
       getErrorList();
     };
 
-    const createHandleHref = (handleId : string) => {
-      return window.location.origin + window.location.pathname + "?" +
-          searchquerybuilder.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
-    };
-
     const createRightHref = (handleId : string, rightId: string | undefined) => {
-      const handlePP = createHandleHref(handleId);
+      const handlePP = url.createHandleHref(handleId);
       return handlePP + "&" +
-          searchquerybuilder.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
+          url.QUERY_PARAMETER_RIGHT_ID + "=" + rightId;
     };
 
     /**
@@ -465,7 +460,7 @@ export default defineComponent({
         <td v-if="item.conflictType == 'date_overlap'">
           <a
               v-bind:href="
-                  searchquerybuilder.createTemplateHref(item.conflictByRightId)
+                  url.createTemplateHref(item.conflictByRightId)
                   "
               target="_blank"
           > Template '{{item.conflictByContext}}'</a>

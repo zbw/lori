@@ -72,6 +72,12 @@ export default {
     });
   },
 
+  getBookmarkById(bookmarkId: number): Promise<BookmarkRest> {
+    return bookmarkApi.getBookmarkById({
+      id: bookmarkId,
+    });
+  },
+
   updateBookmark(bookmark: BookmarkRest): Promise<void> {
     return bookmarkApi.updateBookmark({
       body: bookmark,

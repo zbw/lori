@@ -8,6 +8,7 @@ import error from "@/utils/error";
 import {useUserStore} from "@/stores/user";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   components: {GroupDeleteDialog, RightsDeleteDialog, GroupEdit },

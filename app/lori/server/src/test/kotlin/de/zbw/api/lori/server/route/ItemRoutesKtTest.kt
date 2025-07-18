@@ -37,6 +37,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.lang.Integer.MAX_VALUE
 import java.lang.reflect.Type
 import java.sql.SQLException
 
@@ -593,7 +594,7 @@ class ItemRoutesKtTest {
     }
 
     @Test
-    fun testMetadataGetSearchResult() {
+    fun testMetadataPostSearchResult() {
         // given
         val searchTerm = "com:foobar"
         val offset = 2
@@ -684,7 +685,7 @@ class ItemRoutesKtTest {
     }
 
     @Test
-    fun testItemGetSearchResultNoSearchTerm() {
+    fun testItemPostSearchResultNoSearchTerm() {
         // given
         val defaultLimit = 25
         val defaultOffset = 0
@@ -766,8 +767,98 @@ class ItemRoutesKtTest {
         }
     }
 
+    @Test
+    fun testItemPostSearchResultNoLimit() {
+        // given
+        val expectedInformation =
+            ItemInformation(
+                totalPages = 1,
+                itemArray =
+                    listOf(
+                        ItemRest(
+                            metadata = ITEM_METADATA,
+                            rights = emptyList(),
+                        ),
+                    ),
+                accessStateWithCount = emptyList(),
+                numberOfResults = 1,
+                paketSigelWithCount = emptyList(),
+                zdbIdWithCount = emptyList(),
+                publicationTypeWithCount = emptyList(),
+                ccLicenceNoRestrictions = 0,
+                noLegalRisks = 0,
+                licenceContracts = 0,
+                zbwUserAgreements = 0,
+                templateNameWithCount = emptyList(),
+                isPartOfSeriesCount = emptyList(),
+                licenceUrlCount = emptyList(),
+                filtersAsQuery = "",
+            )
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery {
+                    searchQuery(
+                        any(),
+                        any(),
+                        any(),
+                        emptyList(),
+                        emptyList(),
+                    )
+                } returns (
+                    SearchQueryResult(
+                        results =
+                            expectedInformation
+                                .itemArray
+                                .map { it.toBusiness() },
+                        numberOfResults = 1,
+                        paketSigels = emptyMap(),
+                        publicationType = emptyMap(),
+                        zdbIds = emptyMap(),
+                        accessState = emptyMap(),
+                        ccLicenceNoRestrictions = 0,
+                        licenceContracts = 0,
+                        zbwUserAgreements = 0,
+                        templateNamesToOcc = emptyMap(),
+                        isPartOfSeries = emptyMap(),
+                        licenceUrl = emptyMap(),
+                        noLegalRisks = 0,
+                        filtersAsQuery = "",
+                    )
+                )
+                coEvery { countMetadataEntries() } returns expectedInformation.numberOfResults
+            }
+        val servicePool = getServicePool(backend)
+
+        // when + then
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/item/search?limit=-1") {
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(ItemSearch("")))
+                }
+            val content: String = response.bodyAsText()
+            val groupListType: Type = object : TypeToken<ItemInformation>() {}.type
+            val received: ItemInformation = RightRoutesKtTest.GSON.fromJson(content, groupListType)
+            assertThat(received, `is`(expectedInformation))
+            assertThat(response.status, `is`(HttpStatusCode.OK))
+            coVerify(exactly = 1) {
+                backend.searchQuery(
+                    any(),
+                    MAX_VALUE,
+                    0,
+                    emptyList(),
+                    emptyList(),
+                )
+            }
+        }
+    }
+
     @DataProvider(name = DATA_FOR_SEARCH_BAD_REQUEST)
-    fun createrDataForSearchBadRequest() =
+    fun createDataForSearchBadRequest() =
         arrayOf(
             arrayOf(
                 "200",
@@ -787,7 +878,7 @@ class ItemRoutesKtTest {
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_BAD_REQUEST)
-    fun testItemGetSearchResultBadRequest(
+    fun testItemPostSearchResultBadRequest(
         limit: String,
         offset: String,
         pageSize: String,
@@ -812,7 +903,7 @@ class ItemRoutesKtTest {
     }
 
     @Test
-    fun testItemGetSearchResultInternal() {
+    fun testItemPostSearchResultInternal() {
         // given
         val searchTerm = "com:foobar"
         val backend =
@@ -837,7 +928,7 @@ class ItemRoutesKtTest {
     }
 
     @Test
-    fun testItemGetSearchResultParseError() {
+    fun testItemPostSearchResultParseError() {
         // given
         val searchTerm = "com:foobar"
         val backend =
