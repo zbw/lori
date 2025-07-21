@@ -291,7 +291,6 @@ export default defineComponent({
       successMsgIsActive,
       totalPages,
       close,
-      createHandleHref,
       createRightHref,
       endDateEntered,
       getErrorList,
@@ -478,7 +477,7 @@ export default defineComponent({
           <td>
             <a
                 v-bind:href="
-                  createHandleHref(item.handle)
+                  url.createHandleHref(item.handle)
                   "
                 target="_blank"
             > {{ item.handle}}</a>
