@@ -204,6 +204,14 @@ class LoriServerBackend(
 
     suspend fun getMetadataElementsByIds(handles: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
 
+    suspend fun getItemRowsByHandleAndRightId(
+        handle: String,
+        rightId: String,
+    ): ItemRow? {
+        val rows: List<ItemRow> = dbConnector.rightDB.getItemRowsByHandle(handle)
+        return rows.firstOrNull { it.rightId == rightId }
+    }
+
     suspend fun metadataContainsHandle(handle: String): Boolean = dbConnector.metadataDB.metadataContainsHandle(handle)
 
     suspend fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
@@ -215,7 +223,7 @@ class LoriServerBackend(
             ?.first()
             ?.let { meta ->
                 val rights =
-                    dbConnector.rightDB.getRightIdsByHandle(handle).let {
+                    dbConnector.rightDB.getItemRowsByHandle(handle).let {
                         dbConnector.rightDB.getRightsByIds(it.map { item -> item.rightId })
                     }
                 Item(
@@ -262,7 +270,7 @@ class LoriServerBackend(
         coroutineScope {
             val metadataToRights: List<Pair<ItemMetadata, Deferred<List<ItemRow>>>> =
                 metadataList.map { metadata ->
-                    metadata to async { dbConnector.rightDB.getRightIdsByHandle(metadata.handle) }
+                    metadata to async { dbConnector.rightDB.getItemRowsByHandle(metadata.handle) }
                 }
 
             return@coroutineScope metadataToRights.map { p ->
@@ -360,7 +368,7 @@ class LoriServerBackend(
     }
 
     suspend fun getRightEntriesByHandle(handle: String): List<ItemRight> {
-        val itemTables = dbConnector.rightDB.getRightIdsByHandle(handle)
+        val itemTables = dbConnector.rightDB.getItemRowsByHandle(handle)
         val rightIdToItemTable = itemTables.associateBy { it.rightId }
         val rights = dbConnector.rightDB.getRightsByIds(itemTables.map { itemTable -> itemTable.rightId })
         val (templates, nonTemplates) = rights.partition { it.isTemplate }
@@ -779,7 +787,7 @@ class LoriServerBackend(
         val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
         val items =
             metadata.map { m ->
-                val items = dbConnector.rightDB.getRightIdsByHandle(m.handle)
+                val items = dbConnector.rightDB.getItemRowsByHandle(m.handle)
                 Item(
                     metadata = m,
                     rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),

@@ -61,7 +61,19 @@ fun Routing.rightRoutes(
                     val right: ItemRight? = backend.getRightsByIds(listOf(rightId)).firstOrNull()
                     right?.let {
                         span.setStatus(StatusCode.OK)
-                        call.respond(it.toRest())
+                        val firstAppliedForHandle =
+                            call.request.queryParameters["handle"]
+                                ?.let { handle ->
+                                    backend.getItemRowsByHandleAndRightId(
+                                        handle = handle,
+                                        rightId = rightId,
+                                    )
+                                }?.createdOn
+                        call.respond(
+                            it
+                                .toRest()
+                                .copy(firstAppliedForHandleOn = firstAppliedForHandle?.toLocalDate()),
+                        )
                     } ?: let {
                         span.setStatus(StatusCode.ERROR)
                         call.respond(

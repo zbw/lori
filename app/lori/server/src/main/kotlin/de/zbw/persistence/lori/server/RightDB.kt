@@ -303,7 +303,7 @@ class RightDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun getRightIdsByHandle(handle: String): List<ItemRow> =
+    suspend fun getItemRowsByHandle(handle: String): List<ItemRow> =
         connectionPool.useConnection("getRightIdsByHandle") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_RIGHTS_IDS_FOR_METADATA).apply {

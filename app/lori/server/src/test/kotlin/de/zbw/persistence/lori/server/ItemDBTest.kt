@@ -70,7 +70,7 @@ class ItemDBTest : DatabaseTest() {
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -81,7 +81,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }
@@ -108,7 +108,7 @@ class ItemDBTest : DatabaseTest() {
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -119,7 +119,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
 
@@ -133,7 +133,7 @@ class ItemDBTest : DatabaseTest() {
             )
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle).map { it.rightId },
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -144,7 +144,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }

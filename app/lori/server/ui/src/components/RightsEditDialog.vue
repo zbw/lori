@@ -180,6 +180,17 @@ export default defineComponent({
       }
     });
 
+    const firstAppliedForHandleFormatted = computed(() => {
+      if (
+          date_utils.isEmptyObject(lastSavedRight.value.firstAppliedForHandleOn) ||
+          lastSavedRight.value.firstAppliedForHandleOn == undefined
+      ) {
+        return "";
+      } else {
+        return date_utils.dateToIso8601(lastSavedRight.value.firstAppliedForHandleOn);
+      }
+    });
+
    const updateEndDate = (newValue : string | undefined) => {
      if (newValue == '' || newValue == undefined){
        formState.endDate = undefined;
@@ -1053,7 +1064,10 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(computedRightId.value)
+          .getRightById(
+              computedRightId.value,
+              props.handle,
+          )
           .then((r: RightRest) => {
             lastSavedRight.value = r;
             callback();
@@ -1298,7 +1312,10 @@ export default defineComponent({
         return;
       }
       rightApi
-        .getRightById(lastSavedRight.value.predecessorId)
+        .getRightById(
+            lastSavedRight.value.predecessorId,
+            undefined,
+        )
         .then((predecessor: RightRest) => {
           formState.predecessors = [predecessor];
           lastSavedPredecessors.value = [predecessor];
@@ -1322,7 +1339,10 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(lastSavedRight.value.successorId)
+          .getRightById(
+              lastSavedRight.value.successorId,
+              undefined,
+          )
           .then((successor: RightRest) => {
             formState.successors = [successor];
             lastSavedSuccessors.value = [successor];
@@ -1529,6 +1549,7 @@ export default defineComponent({
       errorIPGroup,
       errorMsgIsActive,
       errorMsg,
+      firstAppliedForHandleFormatted,
       groupItems,
       hasMissingBookmark,
       isStartDateMenuOpen,
@@ -2315,6 +2336,17 @@ export default defineComponent({
                     <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>
+              </v-col>
+            </v-row>
+            <v-row v-if="isTabEntry && isTemplate">
+              <v-col cols="4">
+                Datum der ersten Template-Anwendung auf das Objekt
+              </v-col>
+              <v-col cols="8">
+                {{ firstAppliedForHandleFormatted }}
+                <div class="text-caption text-grey-darken-1 mt-1">
+                  Datum der ersten Anwendung des Objekts.
+                </div>
               </v-col>
             </v-row>
             <v-row>

@@ -91,6 +91,9 @@ RightRest:
       type: string
     zbwUserAgreement:
       type: boolean
+    firstAppliedForHandleOn:
+      type: string
+      format: date
 
 RightIdCreated:
   required:
