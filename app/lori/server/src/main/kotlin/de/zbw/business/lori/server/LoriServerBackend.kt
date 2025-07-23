@@ -381,7 +381,7 @@ class LoriServerBackend(
                     }
                     filterAndAdjustTemplatesByDate(
                         templates = listOf(t),
-                        localDate = itemTable.createdOn!!.toLocalDate(), // TODO: get rid of !!
+                        localDate = itemTable.createdOn?.toLocalDate() ?: FALLBACK_DATE,
                     )
                 }.flatten()
         return adjustedTemplates + nonTemplates
@@ -1075,6 +1075,8 @@ class LoriServerBackend(
     }
 
     companion object {
+        val FALLBACK_DATE = LocalDate.of(2000, 1, 1)
+
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
