@@ -1032,7 +1032,7 @@ class RightValidOnFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
             ),
         )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1042,7 +1042,7 @@ class RightValidOnFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
             ),
         )
         return localCounter
