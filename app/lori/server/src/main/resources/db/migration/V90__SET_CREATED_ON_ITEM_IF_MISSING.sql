@@ -1,0 +1,1 @@
+UPDATE item T SET created_on = (SELECT created_on FROM item_right WHERE right_id = T.right_id);
