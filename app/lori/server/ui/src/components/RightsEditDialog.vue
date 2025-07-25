@@ -2357,7 +2357,7 @@ export default defineComponent({
               <v-col cols="8">
                 {{ firstAppliedForHandleFormatted }}
                 <div class="text-caption text-grey-darken-1 mt-1">
-                  Datum der ersten Anwendung des Objekts.
+                  Datum der ersten Template-Anwendung auf das Objekt
                 </div>
               </v-col>
             </v-row>
