@@ -1,3 +1,6 @@
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
     application
     id("com.google.cloud.tools.jib")
@@ -26,12 +29,26 @@ fun getCheckedOutGitCommitHash(): String {
 
 jib {
     val tag = getCheckedOutGitCommitHash()
+    val fullSha = System.getenv("CI_COMMIT_SHA") ?: "unknown"
+    val buildDate = ZonedDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
     from {
         image = "gcr.io/distroless/java17:latest"
     }
     to {
         val imageName = project.path.substringAfter(':').replace(':', '-')
-        image = "${imageName}"
-        tags = setOf(tag, "latest") as MutableSet<String>
+        image = imageName
+        tags = mutableSetOf(tag, "latest")
+    }
+
+    container {
+        labels =
+            mapOf(
+                "org.opencontainers.image.created" to buildDate,
+                "org.opencontainers.image.version" to tag,
+                "org.opencontainers.image.revision" to fullSha,
+                "org.opencontainers.image.title" to project.name,
+                "org.opencontainers.image.description" to "Built from commit $fullSha on $buildDate",
+            )
     }
 }
