@@ -274,6 +274,7 @@ class ItemDBTest : DatabaseTest() {
                 exceptionOfId = null,
                 hasExceptionId = null,
                 hasLegalRisk = true,
+                firstAppliedOn = NOW.minusYears(1L),
                 groups = emptyList(),
                 groupIds = emptyList(),
                 isTemplate = false,

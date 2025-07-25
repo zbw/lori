@@ -851,6 +851,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 endDate = TODAY,
                 exceptionOfId = null,
+                firstAppliedOn = null,
                 hasExceptionId = null,
                 hasLegalRisk = true,
                 groups = emptyList(),

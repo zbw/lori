@@ -97,6 +97,7 @@ class RestConverterTest {
                             createdBy = TEST_RIGHT.createdBy,
                             createdOn = TEST_RIGHT.createdOn,
                             endDate = TEST_RIGHT.endDate,
+                            firstAppliedOn = TEST_RIGHT.firstAppliedOn,
                             hasLegalRisk = TEST_RIGHT.hasLegalRisk,
                             hasExceptionId = TEST_RIGHT.hasExceptionId,
                             groupIds = TEST_RIGHT.groupIds,
@@ -674,6 +675,17 @@ class RestConverterTest {
                     ),
                 endDate = TODAY,
                 exceptionOfId = null,
+                firstAppliedOn =
+                    OffsetDateTime.of(
+                        2021,
+                        3,
+                        2,
+                        1,
+                        1,
+                        0,
+                        0,
+                        ZoneOffset.UTC,
+                    ),
                 groups =
                     listOf(
                         Group(

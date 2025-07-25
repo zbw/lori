@@ -897,6 +897,17 @@ class RightFilterTest : DatabaseTest() {
                 exceptionOfId = null,
                 hasExceptionId = null,
                 isTemplate = false,
+                firstAppliedOn =
+                    OffsetDateTime.of(
+                        2021,
+                        3,
+                        2,
+                        1,
+                        1,
+                        0,
+                        0,
+                        ZoneOffset.UTC,
+                    ),
                 lastAppliedOn =
                     OffsetDateTime.of(
                         2022,
