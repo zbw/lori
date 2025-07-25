@@ -96,6 +96,7 @@ data class ItemRight(
     val endDate: LocalDate?,
     val exceptionOfId: String?,
     val hasExceptionId: String?,
+    val firstAppliedOn: OffsetDateTime?,
     val groupIds: List<Int>?,
     val groups: List<Group>?,
     val isTemplate: Boolean,

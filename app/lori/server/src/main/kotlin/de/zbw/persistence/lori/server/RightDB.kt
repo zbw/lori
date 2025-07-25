@@ -458,7 +458,8 @@ class RightDB(
             val prepStmt =
                 connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
                     this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
-                    this.setString(2, rightId)
+                    this.setTimestamp(2, Timestamp.from(now)) // first_applied_on
+                    this.setString(3, rightId)
                 }
             val span = tracer.spanBuilder("updateTemplateById").startSpan()
             return@useConnection try {
@@ -677,6 +678,7 @@ class RightDB(
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
+        private const val COLUMN_FIRST_APPLIED_ON = "first_applied_on"
         private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
         const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
         private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
@@ -691,7 +693,7 @@ class RightDB(
                 "basis_access_state,notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
                 "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID," +
-                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID"
+                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID,$COLUMN_FIRST_APPLIED_ON"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -800,7 +802,11 @@ class RightDB(
 
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_LAST_APPLIED_ON=?" +
+                " SET $COLUMN_LAST_APPLIED_ON=?," +
+                " $COLUMN_FIRST_APPLIED_ON = CASE" +
+                " WHEN $COLUMN_FIRST_APPLIED_ON IS NULL THEN ?" +
+                " ELSE $COLUMN_FIRST_APPLIED_ON" +
+                " END" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_IS_EXCEPTION =
@@ -876,6 +882,13 @@ class RightDB(
                 hasExceptionId = rs.getString(localCounter++),
                 predecessorId = rs.getString(localCounter++),
                 successorId = rs.getString(localCounter++),
+                firstAppliedOn =
+                    rs.getTimestamp(localCounter++)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            ZoneId.of("UTC+00:00"),
+                        )
+                    },
                 groups = null,
                 groupIds = null,
             )

@@ -45,8 +45,9 @@ RightRest:
       format: date
     exceptionOfId:
       type: string
-    hasExceptionId:
+    firstAppliedOn:
       type: string
+      format: date-time
     groups:
       type: array
       description: 'Only read only. Modify groups via its own path .'
@@ -56,6 +57,8 @@ RightRest:
       type: array
       items:
         type: integer
+    hasExceptionId:
+      type: string
     isTemplate:
       type: boolean
     lastAppliedOn:

@@ -1955,6 +1955,18 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
+                <v-col cols="4"> Erstmals angewendet am</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-model="tmpRight.firstAppliedOn"
+                      variant="outlined"
+                      readonly
+                      bg-color="grey-lighten-2"
+                      hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
                 <v-col cols="4"> Zuletzt angewendet am</v-col>
                 <v-col cols="8">
                   <v-text-field
