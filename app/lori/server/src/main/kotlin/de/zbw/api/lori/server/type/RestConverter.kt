@@ -30,6 +30,8 @@ import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.RightIdTemplateName
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortByField
+import de.zbw.business.lori.server.type.SortOrder
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
@@ -55,6 +57,8 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorInformationRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.SortByRest
+import de.zbw.lori.model.SortOrderRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
@@ -816,6 +820,17 @@ fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
                 )
             },
     )
+
+fun SortOrderRest.toBusiness(): SortOrder =
+    when (this) {
+        SortOrderRest.asc -> SortOrder.ASC
+        SortOrderRest.desc -> SortOrder.DESC
+    }
+
+fun SortByRest.toBusiness(): SortByField =
+    when (this) {
+        SortByRest.handle -> SortByField.HANDLE
+    }
 
 /**
  * Utility functions helping to convert

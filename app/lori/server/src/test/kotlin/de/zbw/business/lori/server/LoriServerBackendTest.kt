@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchGrammar
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -325,9 +326,10 @@ class LoriServerBackendTest : DatabaseTest() {
             val (number, items) =
                 runBlocking {
                     backend.searchQuery(
-                        "zdb:${givenMetadataEntries[0].zdbIds?.get(0)}",
-                        5,
-                        0,
+                        searchTerm = "zdb:${givenMetadataEntries[0].zdbIds?.get(0)}",
+                        limit = 5,
+                        offset = 0,
+                        sortInformation = SortInformation.DEFAULT,
                     )
                 }
 
@@ -359,9 +361,10 @@ class LoriServerBackendTest : DatabaseTest() {
             val (numberNoItem, itemsNoItem) =
                 runBlocking {
                     backend.searchQuery(
-                        "zdb:NOT_IN_DATABASE_ID",
-                        5,
-                        0,
+                        searchTerm = "zdb:NOT_IN_DATABASE_ID",
+                        limit = 5,
+                        offset = 0,
+                        sortInformation = SortInformation.DEFAULT,
                     )
                 }
             assertThat(numberNoItem, `is`(0))

@@ -2,6 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.UserSession
+import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
@@ -20,10 +21,16 @@ import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortByField
+import de.zbw.business.lori.server.type.SortInformation
+import de.zbw.business.lori.server.type.SortOrder
+import de.zbw.business.lori.server.utils.enumOrNull
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemSearch
+import de.zbw.lori.model.SortByRest
+import de.zbw.lori.model.SortOrderRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -394,6 +401,14 @@ fun Routing.itemRoutes(
                             ?: throw BadRequestException("Invalid Json has been provided")
                     var limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                     var offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                    val sortOrder: SortOrder? =
+                        call.request.queryParameters
+                            .enumOrNull<SortOrderRest>("sortOrder")
+                            ?.toBusiness()
+                    val sortByField: SortByField? =
+                        call.request.queryParameters
+                            .enumOrNull<SortByRest>("sortBy")
+                            ?.toBusiness()
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
                     val noFacets: Boolean = call.request.queryParameters["noFacets"]?.toBoolean() == true
                     var pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
@@ -530,6 +545,10 @@ fun Routing.itemRoutes(
                             emptyList(),
                             facetsOnly,
                             noFacets,
+                            SortInformation(
+                                sortByField = sortByField ?: SortByField.DEFAULT_SORT_BY_FIELD,
+                                sortOrder = sortOrder ?: SortOrder.DEFAULT_SORT_ORDER,
+                            ),
                         )
                     span.setStatus(StatusCode.OK)
                     call.respond(

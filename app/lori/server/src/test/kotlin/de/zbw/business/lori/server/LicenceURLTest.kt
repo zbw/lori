@@ -3,6 +3,7 @@ package de.zbw.business.lori.server
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -125,12 +126,13 @@ class LicenceURLTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
-                    emptyList(),
-                    emptyList(),
-                    null,
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(

@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -103,12 +104,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
         val searchResult1: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilterWithResult,
-                    null,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterWithResult,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -127,12 +129,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
         val searchResult2: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilterWithoutResult,
-                    null,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterWithoutResult,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -152,12 +155,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
         val searchResult3: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilterNoAccessState,
-                    null,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterNoAccessState,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -177,12 +181,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
         val searchResultBefore: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilterBefore,
-                    null,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterBefore,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -202,12 +207,13 @@ class AccessStateOnFilterTest : DatabaseTest() {
         val searchResultInBetween: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilterInBetween,
-                    null,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterInBetween,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 

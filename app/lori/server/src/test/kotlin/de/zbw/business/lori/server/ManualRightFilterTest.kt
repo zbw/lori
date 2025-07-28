@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -125,12 +126,13 @@ class ManualRightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilter,
-                    null,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilter,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(

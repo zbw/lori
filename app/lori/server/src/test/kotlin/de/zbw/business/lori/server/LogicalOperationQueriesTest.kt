@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -112,9 +113,10 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         val (numberOfResults, searchResult) =
             runBlocking {
                 backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 

@@ -178,3 +178,15 @@ ItemSearch:
   properties:
     searchTerm:
       type: string
+
+components:
+  schemas:
+    SortByRest:
+      type: string
+      enum:
+        - handle
+    SortOrderRest:
+      type: string
+      enum:
+        - asc
+        - desc

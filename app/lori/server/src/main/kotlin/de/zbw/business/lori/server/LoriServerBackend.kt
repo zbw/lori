@@ -25,6 +25,7 @@ import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.DashboardUtil
 import de.zbw.lori.model.ErrorRest
@@ -440,6 +441,7 @@ class LoriServerBackend(
         handlesToIgnore: List<String> = emptyList(),
         facetsOnly: Boolean = false,
         noFacets: Boolean = false,
+        sortInformation: SortInformation = SortInformation.DEFAULT,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -464,6 +466,7 @@ class LoriServerBackend(
                             rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                             noRightInformationFilter,
                             handlesToIgnore,
+                            sortInformation,
                         )
                     } else {
                         return@async emptyList()
@@ -761,6 +764,7 @@ class LoriServerBackend(
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = NoRightInformationFilter(),
+                sortInformation = SortInformation.DEFAULT,
             )
         val errors =
             metadataWithoutRights.map { metadata ->
@@ -885,6 +889,7 @@ class LoriServerBackend(
                         rightSearchFilter = b.getAllRightFilter(),
                         noRightInformationFilter = b.noRightInformationFilter,
                         handlesToIgnore = emptyList(),
+                        sortInformation = SortInformation.DEFAULT,
                     )
                 }.toSet()
 
@@ -893,6 +898,7 @@ class LoriServerBackend(
         val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
 
         // Get search results for each bookmark
+        // TODO: Asking for trouble here -> This has to be reworked ASAP. Can't save all results parallel in RAM
         val searchResults: Set<Item> =
             bookmarks
                 .asSequence()
@@ -906,6 +912,7 @@ class LoriServerBackend(
                             rightSearchFilter = b.getAllRightFilter(),
                             noRightInformationFilter = b.noRightInformationFilter,
                             handlesToIgnore = searchResultsExceptions.toList(),
+                            sortInformation = SortInformation.DEFAULT,
                         )
                     }.results
                 }.toSet()
@@ -1075,7 +1082,7 @@ class LoriServerBackend(
     }
 
     companion object {
-        val FALLBACK_DATE = LocalDate.of(2000, 1, 1)
+        val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)
 
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.

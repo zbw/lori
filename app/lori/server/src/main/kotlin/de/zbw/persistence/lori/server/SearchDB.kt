@@ -9,6 +9,7 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearchExpression
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
@@ -439,6 +440,7 @@ class SearchDB(
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
+        sortInformation: SortInformation,
     ): List<ItemMetadata> =
         connectionPool
             .useConnection("searchMetadata") { connection ->
@@ -453,6 +455,7 @@ class SearchDB(
                                 hasHandlesToIgnore = handlesToIgnore.isNotEmpty(),
                                 withLimit = limit != null,
                                 withOffset = offset != null,
+                                sortInformation = sortInformation,
                             ),
                         ).apply {
                             var counter = 1
@@ -521,6 +524,7 @@ class SearchDB(
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String> = emptyList(),
+        sortInformation: SortInformation,
     ): List<ItemMetadata> =
         searchMetadata(
             searchExpression = searchExpression,
@@ -530,6 +534,7 @@ class SearchDB(
             rightSearchFilter = rightSearchFilter,
             noRightInformationFilter = noRightInformationFilter,
             handlesToIgnore = handlesToIgnore,
+            sortInformation = sortInformation,
         )
 
     suspend fun searchForHandles(
@@ -540,6 +545,7 @@ class SearchDB(
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
+        sortInformation: SortInformation,
     ): List<String> {
         val rs: List<ItemMetadata> =
             searchMetadata(
@@ -550,6 +556,7 @@ class SearchDB(
                 rightSearchFilter = rightSearchFilter,
                 noRightInformationFilter = noRightInformationFilter,
                 handlesToIgnore = handlesToIgnore,
+                sortInformation = sortInformation,
             )
         return rs.map { it.handle }
     }
@@ -584,28 +591,6 @@ class SearchDB(
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED"
 
-        const val STATEMENT_SELECT_ALL_METADATA_DISTINCT =
-            "SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE) $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE," +
-                "$COLUMN_METADATA_PPN,$COLUMN_METADATA_TITLE," +
-                "$COLUMN_METADATA_TITLE_JOURNAL,$COLUMN_METADATA_TITLE_SERIES,$COLUMN_METADATA_PUBLICATION_YEAR," +
-                "$COLUMN_METADATA_BAND,$COLUMN_METADATA_PUBLICATION_TYPE,$COLUMN_METADATA_DOI,$COLUMN_METADATA_ISBN," +
-                "$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,$COLUMN_METADATA_ISSN," +
-                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_CREATED_ON,$ALIAS_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_ON," +
-                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_CREATED_BY," +
-                "$ALIAS_ITEM_METADATA.$COLUMN_METADATA_LAST_UPDATED_BY,$COLUMN_METADATA_AUTHOR,$COLUMN_METADATA_COLLECTION_NAME," +
-                "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
-                "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
-                "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ACCESS_STATE," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_LICENCE_CONTRACT," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE," +
-                "${ALIAS_ITEM_RIGHT}.$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
-                "${TS_COLLECTION},${TS_COMMUNITY}," +
-                "${TS_TITLE}," +
-                "${TS_COLLECTION_HANDLE},${TS_COMMUNITY_HANDLE},${TS_SUBCOMMUNITY_HANDLE}," +
-                "${TS_HANDLE},${TS_SUBCOMMUNITY_NAME}"
-
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,
             metadataSearchFilters: List<MetadataSearchFilter>,
@@ -614,16 +599,17 @@ class SearchDB(
             hasHandlesToIgnore: Boolean,
             withLimit: Boolean = true,
             withOffset: Boolean = true,
+            sortInformation: SortInformation,
         ): String {
             val limit =
                 if (withLimit) {
-                    " LIMIT ?"
+                    "LIMIT ?"
                 } else {
                     ""
                 }
             val offset =
                 if (withOffset) {
-                    " OFFSET ?"
+                    "OFFSET ?"
                 } else {
                     ""
                 }
@@ -635,7 +621,7 @@ class SearchDB(
                     noRightInformationFilter == null &&
                     metadataSearchFilters.isEmpty()
                 ) {
-                    buildSearchQuerySelect(hasRightSearchFilter = false) + " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
+                    buildSearchQuerySelect() + " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             null,
                             metadataSearchFilters,
@@ -645,20 +631,14 @@ class SearchDB(
                     noRightInformationFilter == null &&
                     SearchExpressionResolution.hasRightQueries(searchExpression).not()
                 ) {
-                    buildSearchQuerySelect(hasRightSearchFilter = false) +
+                    buildSearchQuerySelect() +
                         " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             searchExpression,
                             metadataSearchFilters,
                         )
                 } else {
-                    buildSearchQuerySelect(
-                        hasRightSearchFilter =
-                            rightSearchFilters.isNotEmpty() ||
-                                SearchExpressionResolution.hasRightQueries(
-                                    searchExpression,
-                                ),
-                    ) +
+                    buildSearchQuerySelect() +
                         " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                         buildSearchQueryHelper(
                             searchExpression,
@@ -668,13 +648,23 @@ class SearchDB(
                         )
                 }
 
+            val limitOffset =
+                "$limit $offset"
+                    .trim()
+                    .takeIf { it.isNotBlank() }
+                    ?.let { " $it" }
+                    ?: ""
             return if (hasHandlesToIgnore) {
                 val filterHandles = "WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
                     " FROM ($subquery) as $SUBQUERY_NAME" +
-                    " $filterHandles ORDER BY $COLUMN_METADATA_STORAGE_DATE DESC$limit$offset"
+                    " $filterHandles" +
+                    " ORDER BY ${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    limitOffset
             } else {
-                "$subquery ORDER BY ${ALIAS_ITEM_METADATA}.$COLUMN_METADATA_STORAGE_DATE DESC$limit$offset"
+                subquery +
+                    " ORDER BY ${ALIAS_ITEM_METADATA}.${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    limitOffset
             }
         }
 
@@ -694,6 +684,7 @@ class SearchDB(
                     hasHandlesToIgnore,
                     false,
                     false,
+                    SortInformation.DEFAULT,
                 ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(
@@ -805,7 +796,7 @@ class SearchDB(
 
             val withStatement =
                 "WITH metadata_with_rights AS (" +
-                    "$selectInWith" +
+                    selectInWith +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right $ALIAS_ITEM_RIGHT ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
@@ -933,6 +924,6 @@ class SearchDB(
             return finalClause
         }
 
-        private fun buildSearchQuerySelect(hasRightSearchFilter: Boolean = false): String = STATEMENT_SELECT_ALL_METADATA
+        private fun buildSearchQuerySelect(): String = STATEMENT_SELECT_ALL_METADATA
     }
 }
