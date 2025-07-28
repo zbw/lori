@@ -659,7 +659,9 @@ export default defineComponent({
     };
 
     const closeBookmarkEditDialog = () => {
-      loadBookmarks();
+      if(!props.isNewTemplate) {
+        loadBookmarks();
+      }
       editDialogActivated.value = false;
     };
 
