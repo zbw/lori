@@ -44,21 +44,21 @@ class ManualRightFilterTest : DatabaseTest() {
         )
     private val itemRightManual =
         TEST_Metadata.copy(
-            handle = "item with manual right",
+            handle = "11159/81",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
 
     private val itemWithTemplate =
         TEST_Metadata.copy(
-            handle = "item only with template",
+            handle = "11159/82",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
 
     private val itemNoRight =
         TEST_Metadata.copy(
-            handle = "no rights",
+            handle = "11159/83",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )

@@ -40,12 +40,12 @@ class TemplateRightFilterTest : DatabaseTest() {
 
     private val itemRightWithTemplate =
         TEST_Metadata.copy(
-            handle = "withTemplate",
+            handle = "11159/17223",
             collectionName = "subject3",
         )
     private val itemRightWithoutTemplate =
         TEST_Metadata.copy(
-            handle = "withoutTemplate",
+            handle = "11159/17224",
             collectionName = "subject3",
         )
 

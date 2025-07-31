@@ -186,14 +186,14 @@ class SearchWithWildcards : DatabaseTest() {
         val item1 =
             TEST_Metadata.copy(
                 title = "Innovations Title",
-                handle = "paket sigel array",
+                handle = "11159/7921",
                 paketSigel = listOf("fooo", "bar", "baz"),
                 isPartOfSeries = listOf("bigseries"),
                 licenceUrlFilter = "by-nc-nd/4.0/",
             )
         val item2 =
             TEST_Metadata.copy(
-                handle = "paket sigel array wildcards",
+                handle = "11159/7922",
                 paketSigel = listOf("blub%", "wild_card"),
                 ppn = "EBP107179776",
                 doi = listOf("10.1108/S0573-8555(2004)0000262002"),

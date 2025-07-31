@@ -44,14 +44,14 @@ class FormalRuleFilterTest : DatabaseTest() {
 
     private val ccLicenceMetadata =
         TEST_Metadata.copy(
-            handle = "CC licence",
+            handle = "11159/3001",
             licenceUrlFilter = "by/3.0/igo/",
             licenceUrl = "https://creativecommons.org/licenses/by/3.0/igo/",
         )
 
     private val noLegalRiskMetadata =
         TEST_Metadata.copy(
-            handle = "no legal risk",
+            handle = "11159/3002",
             licenceUrlFilter = "blub",
             licenceUrl = "blub",
         )

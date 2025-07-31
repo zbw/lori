@@ -271,7 +271,7 @@ class ApplyTemplateTest : DatabaseTest() {
                                         ZDB_2,
                                     ),
                             ),
-                        searchTerm = "hdl:bar",
+                        searchTerm = "hdl:${item2ZDB2.handle}",
                     ),
                 )
 
@@ -479,7 +479,7 @@ class ApplyTemplateTest : DatabaseTest() {
         val TEST_RIGHT = RightFilterTest.TEST_RIGHT
         val item1ZDB1 =
             TEST_METADATA.copy(
-                handle = "item1_zdb1",
+                handle = "11159/1",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
@@ -487,7 +487,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item2ZDB1 =
             TEST_METADATA.copy(
-                handle = "item2_zdb2",
+                handle = "11159/2",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
@@ -495,7 +495,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item3ZDB1 =
             TEST_METADATA.copy(
-                handle = "item3_zdb3",
+                handle = "11159/3",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
@@ -503,17 +503,17 @@ class ApplyTemplateTest : DatabaseTest() {
             )
         val item1ZDB2 =
             TEST_METADATA.copy(
-                handle = "foo-zdb2",
+                handle = "11159/4",
                 zdbIds = listOf(ZDB_2),
             )
         val item2ZDB2 =
             TEST_METADATA.copy(
-                handle = "bar-zdb2",
+                handle = "11159/5",
                 zdbIds = listOf(ZDB_2),
             )
         val item1ZDB3 =
             TEST_METADATA.copy(
-                handle = "item1_zdb3",
+                handle = "11159/6",
                 zdbIds = listOf(ZDB_3),
             )
     }

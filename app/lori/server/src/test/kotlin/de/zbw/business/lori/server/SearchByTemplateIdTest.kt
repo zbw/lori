@@ -145,13 +145,13 @@ class SearchByTemplateIdTest : DatabaseTest() {
         val initialItems =
             mapOf(
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "1",
+                    handle = "11159/7580",
                 ) to listOf(0, 1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "2",
+                    handle = "11159/7581",
                 ) to listOf(1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "3",
+                    handle = "11159/7582",
                 ) to listOf(2),
             )
     }

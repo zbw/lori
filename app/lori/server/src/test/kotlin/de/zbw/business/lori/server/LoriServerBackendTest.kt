@@ -67,8 +67,8 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "roundtrip"),
-                    TEST_METADATA.copy(handle = "no_rights"),
+                    TEST_METADATA.copy(handle = "11159/222"),
+                    TEST_METADATA.copy(handle = "11159/223"),
                 )
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
@@ -97,11 +97,11 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadata =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "zzz", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "zzz2", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "aaa"),
-                    TEST_METADATA.copy(handle = "abb"),
-                    TEST_METADATA.copy(handle = "acc"),
+                    TEST_METADATA.copy(handle = "11159/818", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/819", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/820"),
+                    TEST_METADATA.copy(handle = "11159/821"),
+                    TEST_METADATA.copy(handle = "11159/822"),
                 )
 
             backend.insertMetadataElements(givenMetadata.toList())
@@ -110,9 +110,9 @@ class LoriServerBackendTest : DatabaseTest() {
             // then
             assertThat(
                 "Not equal",
-                receivedItems,
+                receivedItems.toSet(),
                 `is`(
-                    listOf(
+                    setOf(
                         Item(
                             givenMetadata[2],
                             emptyList(),
@@ -309,8 +309,8 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "search_test_1", zdbIds = listOf("zbdTest")),
-                    TEST_METADATA.copy(handle = "search_test_2", zdbIds = listOf("zbdTest")),
+                    TEST_METADATA.copy(handle = "11159/801", zdbIds = listOf("zbdTest")),
+                    TEST_METADATA.copy(handle = "11159/802", zdbIds = listOf("zbdTest")),
                 )
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
@@ -725,7 +725,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         rights = listOf(TEST_RIGHT),
                     ),
                     Item(
-                        metadata = TEST_METADATA.copy(handle = "metadata2"),
+                        metadata = TEST_METADATA.copy(handle = "11158/804"),
                         rights = listOf(TEST_RIGHT, TEST_RIGHT.copy(rightId = "right2")),
                     ),
                 ),
@@ -823,7 +823,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("doi:example.org"),
-                handle = "hdl:example.handle.net",
+                handle = "11159/810",
                 isbn = listOf("1234567890123"),
                 issn = "123456",
                 isPartOfSeries = listOf("series"),

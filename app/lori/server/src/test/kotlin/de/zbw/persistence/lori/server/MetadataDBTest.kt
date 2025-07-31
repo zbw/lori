@@ -46,7 +46,7 @@ class MetadataDBTest : DatabaseTest() {
     fun testInsertHeaderException() =
         runBlocking {
             // given
-            val testHeaderId = "double_entry"
+            val testHeaderId = "11159/1023"
             val testMetadata = TEST_Metadata.copy(handle = testHeaderId)
 
             // when
@@ -60,7 +60,7 @@ class MetadataDBTest : DatabaseTest() {
     fun testMetadataRoundtrip() =
         runBlocking {
             // given
-            val testId = "id_test"
+            val testId = "11159/1024"
             val testMetadata = TEST_Metadata.copy(handle = testId, title = "foo")
 
             // when
@@ -96,8 +96,8 @@ class MetadataDBTest : DatabaseTest() {
     fun testBatchUpsert() =
         runBlocking {
             // given
-            val id1 = "upsert1"
-            val id2 = "upsert2"
+            val id1 = "11159/31"
+            val id2 = "11159/32"
             val m1 = TEST_Metadata.copy(handle = id1, title = "foo")
             val m2 = TEST_Metadata.copy(handle = id2, title = "bar")
 
@@ -159,7 +159,7 @@ class MetadataDBTest : DatabaseTest() {
     fun testContainsMetadata() =
         runBlocking {
             // given
-            val handle = "handleContainCheck"
+            val handle = "11159/45"
             val expectedMetadata = TEST_Metadata.copy(handle = handle)
 
             // when
@@ -178,9 +178,9 @@ class MetadataDBTest : DatabaseTest() {
             // given
             val givenMetadata =
                 listOf(
-                    TEST_Metadata.copy(handle = "aaaa"),
-                    TEST_Metadata.copy(handle = "aaab"),
-                    TEST_Metadata.copy(handle = "aaac"),
+                    TEST_Metadata.copy(handle = "11159/1017"),
+                    TEST_Metadata.copy(handle = "11159/1018"),
+                    TEST_Metadata.copy(handle = "11159/1019"),
                 )
             // when
             givenMetadata.map {
@@ -194,7 +194,7 @@ class MetadataDBTest : DatabaseTest() {
             )
             assertThat(
                 dbConnector.metadataDB.getMetadataRange(limit = 2, offset = 1).toSet(),
-                `is`(givenMetadata.subList(1, 3).toSet()),
+                `is`(givenMetadata.subList(0, 2).toSet()),
             )
         }
 }

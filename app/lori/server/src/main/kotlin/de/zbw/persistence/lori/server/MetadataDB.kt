@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -68,7 +69,8 @@ class MetadataDB(
                 connection
                     .prepareStatement(
                         STATEMENT_SELECT_ALL_METADATA_FROM +
-                            " ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
+                            " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
+                            " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
                     ).apply {
                         this.setInt(1, limit)
                         this.setInt(2, offset)
@@ -252,6 +254,7 @@ class MetadataDB(
         const val COLUMN_METADATA_ISSN = "issn"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
         const val COLUMN_METADATA_HANDLE = "handle"
+        const val COLUMN_METADATA_HANDLE_POSTFIX = "handle_postfix"
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
         const val COLUMN_METADATA_LAST_UPDATED_ON = "last_updated_on"
         const val COLUMN_METADATA_LICENCE_URL = "licence_url"

@@ -62,7 +62,7 @@ class FindErrorsTest : DatabaseTest() {
                     ),
                 ),
             item2ZDB2 to emptyList(),
-            item2ZDB2.copy(handle = "no_right2") to emptyList(),
+            item2ZDB2.copy(handle = "11159/200") to emptyList(),
         )
 
     @BeforeClass

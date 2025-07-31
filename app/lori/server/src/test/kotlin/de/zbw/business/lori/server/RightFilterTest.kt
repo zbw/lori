@@ -50,7 +50,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            handle = "restricted right",
+            handle = "11159/7480",
             collectionName = "subject1 subject2",
             publicationType = PublicationType.PROCEEDING,
             createdOn = NOW,
@@ -58,7 +58,7 @@ class RightFilterTest : DatabaseTest() {
         )
     private val itemRightRestrictedOpen =
         TEST_Metadata.copy(
-            handle = "restricted and open right",
+            handle = "11159/7481",
             collectionName = "subject3",
             publicationType = PublicationType.PROCEEDING,
             createdOn = NOW,
@@ -66,7 +66,7 @@ class RightFilterTest : DatabaseTest() {
         )
     private val tempValFilterPresent =
         TEST_Metadata.copy(
-            handle = "validity filter present",
+            handle = "11159/7482",
             collectionName = "validity",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -74,7 +74,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val tempValFilterPast =
         TEST_Metadata.copy(
-            handle = "validity filter post",
+            handle = "11159/7483",
             collectionName = "validity",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -82,7 +82,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val tempValFilterFuture =
         TEST_Metadata.copy(
-            handle = "validity filter future",
+            handle = "11159/7484",
             collectionName = "validity",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -90,7 +90,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val tempValFilterPastNoEnd =
         TEST_Metadata.copy(
-            handle = "validity filter future no end",
+            handle = "11159/7485",
             collectionName = "validity",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -98,7 +98,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val startEndDateFilter =
         TEST_Metadata.copy(
-            handle = "start and end date At",
+            handle = "11159/7486",
             collectionName = "startAndEnd",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -106,7 +106,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val formalRuleLicenceContract =
         TEST_Metadata.copy(
-            handle = "formal rule filter licence contract",
+            handle = "11159/7487",
             collectionName = "formalRuleLicence formal",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -114,7 +114,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val formalRuleUserAgreement =
         TEST_Metadata.copy(
-            handle = "formal rule filter user agreement",
+            handle = "11159/7488",
             collectionName = "formalRuleUserAgreement formal",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -122,7 +122,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val formalRuleNoRestrictedOCL =
         TEST_Metadata.copy(
-            handle = "formal rule filter ocl",
+            handle = "11159/7489",
             collectionName = "ocl formal",
             createdOn = NOW,
             lastUpdatedOn = NOW,
@@ -130,7 +130,7 @@ class RightFilterTest : DatabaseTest() {
 
     private val formalRuleAll =
         TEST_Metadata.copy(
-            handle = "result all",
+            handle = "11159/7490",
             collectionName = "alllll",
             createdOn = NOW,
             lastUpdatedOn = NOW,

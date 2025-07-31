@@ -45,13 +45,13 @@ class NoRightFilterTest : DatabaseTest() {
         )
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            handle = "restricted right",
+            handle = "11159/7381",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
     private val itemNoRight =
         TEST_Metadata.copy(
-            handle = "no rights",
+            handle = "11159/7382",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )

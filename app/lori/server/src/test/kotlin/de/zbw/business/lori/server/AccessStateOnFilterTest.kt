@@ -45,7 +45,7 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
     private val itemWithRight =
         TEST_Metadata.copy(
-            handle = "item with manual right",
+            handle = "111159/74",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )

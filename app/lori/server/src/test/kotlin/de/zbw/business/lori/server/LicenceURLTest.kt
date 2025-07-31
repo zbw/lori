@@ -42,25 +42,25 @@ class LicenceURLTest : DatabaseTest() {
 
     private val exampleHttps =
         TEST_Metadata.copy(
-            handle = "https",
+            handle = "11159/606",
             licenceUrl = "https://creativecommons.org/licenses/by-nc-nd/3.0/",
         )
 
     private val exampleHttp =
         TEST_Metadata.copy(
-            handle = "http",
+            handle = "11159/607",
             licenceUrl = "http://creativecommons.org/licenses/by-nc-sa/4.0/legalcode",
         )
 
     private val exampleWWW =
         TEST_Metadata.copy(
-            handle = "www",
+            handle = "11159/608",
             licenceUrl = "https://www.creativecommons.org/licenses/by-nc/4.0/",
         )
 
     private val exampleNoProtocol =
         TEST_Metadata.copy(
-            handle = "noProtocol",
+            handle = "11159/609",
             licenceUrl = "dx.doi.org/10.17811/ebl.5.4.2016.145-151",
         )
 

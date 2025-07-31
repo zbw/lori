@@ -28,7 +28,7 @@ enum class SortOrder(
 enum class SortByField(
     val columnName: String,
 ) {
-    HANDLE(MetadataDB.COLUMN_METADATA_HANDLE),
+    HANDLE(MetadataDB.COLUMN_METADATA_HANDLE_POSTFIX),
     ;
 
     companion object {
