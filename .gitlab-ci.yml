@@ -103,6 +103,11 @@ pushLoriAppImage:
     - chmod 644 ~/.ssh/known_hosts
     - scp app/lori/server/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
     - |
+      echo CI_COMMIT_BRANCH: $CI_COMMIT_BRANCH
+      echo CI_DEFAULT_BRANCH: $CI_DEFAULT_BRANCH
+      echo CI_MERGE_REQUEST_SOURCE_BRANCH_NAME: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
+      echo CI_MERGE_REQUEST_TARGET_BRANCH_NAME: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+      echo CI_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
       if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
         scp app/lori/server/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
       else
