@@ -44,6 +44,11 @@ class ApplyTemplateTest : DatabaseTest() {
             ),
             mockk(),
         )
+    private val templateApplication =
+        TemplateApplication(
+            dbConnector = backend.dbConnector,
+            backend = backend,
+        )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
@@ -131,7 +136,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             val received =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -153,7 +158,7 @@ class ApplyTemplateTest : DatabaseTest() {
 
             // Repeat Apply Operation without duplicate entries errors
             val received2: TemplateApplicationResult? =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -176,7 +181,7 @@ class ApplyTemplateTest : DatabaseTest() {
 
             // Apply Template
             val received3: TemplateApplicationResult? =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -223,7 +228,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightIdConflict,
             )
             val receivedConflict =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightIdConflict,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -296,7 +301,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             val receivedUpperWithExc =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightIdUpper,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -311,7 +316,7 @@ class ApplyTemplateTest : DatabaseTest() {
                 `is`(setOf(item2ZDB2.handle)),
             )
             val receivedException =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightIdException,
                     skipTemplateDrafts = false,
                     dryRun = false,
@@ -377,7 +382,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             assertNull(
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = true,
                     dryRun = false,
@@ -447,7 +452,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             val received =
-                backend.applyTemplate(
+                templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
                     dryRun = true,

@@ -45,7 +45,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.UUID
 import kotlin.collections.filter
 
 /**
@@ -382,7 +381,7 @@ class LoriServerBackend(
                     }
                     filterAndAdjustTemplatesByDate(
                         templates = listOf(t),
-                        localDate = itemTable.createdOn?.toLocalDate() ?: FALLBACK_DATE,
+                        firstApplicationDate = itemTable.createdOn?.toLocalDate() ?: FALLBACK_DATE,
                     )
                 }.flatten()
         return adjustedTemplates + nonTemplates
@@ -817,7 +816,7 @@ class LoriServerBackend(
                     dryRun,
                     createdBy,
                 )
-            }
+            }.sortedBy { it.rightId }
     }
 
     suspend fun applyTemplates(
@@ -825,142 +824,18 @@ class LoriServerBackend(
         skipTemplateDrafts: Boolean,
         dryRun: Boolean,
         createdBy: String,
-    ): List<TemplateApplicationResult> =
-        rightIds.mapNotNull { rightId ->
-            applyTemplate(
+    ): List<TemplateApplicationResult> {
+        val templateApplication =
+            TemplateApplication(
+                dbConnector = dbConnector,
+                backend = this,
+            )
+        return rightIds.mapNotNull { rightId ->
+            templateApplication.applyTemplate(
                 rightId,
                 skipTemplateDrafts,
                 dryRun,
                 createdBy,
-            )
-        }
-
-    internal suspend fun applyTemplate(
-        rightId: String,
-        skipTemplateDrafts: Boolean,
-        dryRun: Boolean,
-        createdBy: String,
-    ): TemplateApplicationResult? {
-        // Get Right object
-        val right: ItemRight =
-            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
-        if (skipTemplateDrafts && right.lastAppliedOn == null) {
-            // Draft will be skipped for now.
-            return null
-        }
-        // Exceptions
-        val exceptionTemplate: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
-        val exceptionTemplateApplicationResult: TemplateApplicationResult? =
-            exceptionTemplate?.let { excTemp ->
-                excTemp.rightId?.let {
-                    applyTemplate(
-                        it,
-                        false,
-                        dryRun,
-                        createdBy,
-                    )
-                }
-            }
-        val bookmarksIdsExceptions: Set<Int> =
-            dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
-                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList(),
-            )
-        val bookmarksExceptions: List<Bookmark> =
-            dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
-
-        val searchResultsExceptions: Set<String> =
-            bookmarksExceptions
-                .flatMap { b ->
-                    val searchExpression: SearchExpression? =
-                        b.searchTerm
-                            ?.takeIf { it.isNotBlank() }
-                            ?.let { SearchGrammar.tryParseToEnd(it) }
-                            ?.let {
-                                when (it) {
-                                    is Parsed -> it.value
-                                    is ErrorResult -> throw ParsingException("Parsing error in query: $it")
-                                }
-                            }
-                    dbConnector.searchDB.searchForHandles(
-                        searchExpression = searchExpression,
-                        limit = null,
-                        offset = null,
-                        metadataSearchFilter = b.getAllMetadataFilter(),
-                        rightSearchFilter = b.getAllRightFilter(),
-                        noRightInformationFilter = b.noRightInformationFilter,
-                        handlesToIgnore = emptyList(),
-                        sortInformation = SortInformation.DEFAULT,
-                    )
-                }.toSet()
-
-        // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
-        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-
-        // Get search results for each bookmark
-        // TODO: Asking for trouble here -> This has to be reworked ASAP. Can't save all results parallel in RAM
-        val searchResults: Set<Item> =
-            bookmarks
-                .asSequence()
-                .flatMap { b ->
-                    runBlocking {
-                        searchQuery(
-                            searchTerm = b.searchTerm,
-                            limit = null,
-                            offset = null,
-                            metadataSearchFilter = b.getAllMetadataFilter(),
-                            rightSearchFilter = b.getAllRightFilter(),
-                            noRightInformationFilter = b.noRightInformationFilter,
-                            handlesToIgnore = searchResultsExceptions.toList(),
-                            sortInformation = SortInformation.DEFAULT,
-                        )
-                    }.results
-                }.toSet()
-
-        if (!dryRun) {
-            // Update last_applied_on field
-            dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
-
-            // Connect Template to all results
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, null, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-            dbConnector.rightErrorDB.deleteByCausingRightId(right.rightId!!)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
-            dbConnector.itemDB.upsertItemBatch(
-                createdBy = createdBy,
-                itemIds =
-                    searchResultsWithoutConflict.map {
-                        ItemId(
-                            handle = it.metadata.handle,
-                            rightId = rightId,
-                        )
-                    },
-            )
-            return TemplateApplicationResult(
-                rightId = rightId,
-                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-                errors = itemsWithConflicts.values.flatten(),
-                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
-                templateName = right.templateName ?: "Missing Template Name",
-                testId = null,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
-            )
-        } else {
-            val testId = UUID.randomUUID().toString()
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, testId, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
-            return TemplateApplicationResult(
-                rightId = rightId,
-                // TODO(CB): Don't send back thousands of errors for now
-                errors = emptyList(),
-                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
-                templateName = right.templateName ?: "Missing Template Name",
-                testId = testId,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
             )
         }
     }
@@ -1217,15 +1092,15 @@ class LoriServerBackend(
          */
         fun filterAndAdjustTemplatesByDate(
             templates: List<ItemRight>,
-            localDate: LocalDate,
+            firstApplicationDate: LocalDate,
         ): List<ItemRight> {
             val fs =
-                templates.filter { right -> right.endDate == null || right.endDate >= localDate }
+                templates.filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
             val rightsCorrectStart =
                 fs.map { right ->
-                    if (localDate > right.startDate) {
+                    if (firstApplicationDate > right.startDate) {
                         right.copy(
-                            startDate = localDate,
+                            startDate = firstApplicationDate,
                         )
                     } else {
                         right

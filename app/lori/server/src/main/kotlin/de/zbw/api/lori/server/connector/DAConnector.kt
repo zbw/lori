@@ -336,7 +336,7 @@ class DAConnector(
         private const val HANDLE_URL = "http://hdl.handle.net/"
         internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
 
-        private val MAX_PARALLEL_CONNECTIONS = 5
+        private const val MAX_PARALLEL_CONNECTIONS = 5
         private val semaphore = Semaphore(MAX_PARALLEL_CONNECTIONS)
 
         internal fun shortenHandle(item: ItemMetadata) =
