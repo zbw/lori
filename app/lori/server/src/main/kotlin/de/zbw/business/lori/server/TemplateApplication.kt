@@ -116,7 +116,7 @@ class TemplateApplication(
             initial =
                 TemplateApplicationResult(
                     rightId = right.rightId!!,
-                    templateName = "",
+                    templateName = right.templateName ?: "",
                     testId = null,
                     appliedMetadataHandles = emptyList(),
                     errors = emptyList(),
@@ -149,6 +149,11 @@ class TemplateApplication(
                     facetsOnly = true,
                     sortInformation = SortInformation.DEFAULT,
                 )
+
+            if (!dryRun) {
+                // Update last_applied_on field
+                dbConnector.rightDB.updateAppliedOnByTemplateId(right.rightId!!)
+            }
 
             val deferredResults = mutableListOf<Deferred<TemplateApplicationResult>>()
             for (offset in 0..ceil(facetsResult.numberOfResults.toDouble() / LIMIT).toInt() - 1) {
@@ -214,9 +219,6 @@ class TemplateApplication(
 
         val rightId = right.rightId!!
         if (!dryRun) {
-            // Update last_applied_on field
-            dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
-
             // Connect Template to all results
             val itemsWithConflicts: Map<Item, List<RightError>> =
                 findItemsWithConflicts(searchResults, right, null, createdBy)
