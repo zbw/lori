@@ -16,6 +16,7 @@ import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
@@ -26,7 +27,6 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
 
 /**
  * Execute SQL queries strongly related to bookmarks.
@@ -305,14 +305,14 @@ class BookmarkDB(
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 lastUpdatedOn =
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 createdBy = rs.getString(localCounter++),

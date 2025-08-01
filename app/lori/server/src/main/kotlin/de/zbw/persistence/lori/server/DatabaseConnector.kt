@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import com.google.gson.Gson
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.runBlocking
 import java.sql.Connection
@@ -9,7 +10,6 @@ import java.sql.PreparedStatement
 import java.sql.Timestamp
 import java.sql.Types
 import java.time.OffsetDateTime
-import java.time.ZoneId
 import java.util.function.BiFunction
 
 /**
@@ -89,7 +89,7 @@ class DatabaseConnector(
         fun Timestamp.toOffsetDateTime(): OffsetDateTime =
             OffsetDateTime.ofInstant(
                 this.toInstant(),
-                ZoneId.of("UTC+00:00"),
+                TimezoneUtil.TIME_ZONE_UTC,
             )
 
         fun <T> runInTransaction(

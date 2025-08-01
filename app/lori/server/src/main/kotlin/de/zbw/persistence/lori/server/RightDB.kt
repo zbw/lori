@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ItemRow
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
@@ -30,7 +31,6 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
 
 /**
  * Execute SQL queries strongly related to rights.
@@ -327,7 +327,7 @@ class RightDB(
                             rs.getTimestamp(4)?.let {
                                 OffsetDateTime.ofInstant(
                                     it.toInstant(),
-                                    ZoneId.of("UTC+00:00"),
+                                    TimezoneUtil.TIME_ZONE_UTC,
                                 )
                             },
                         lastUpdatedBy = rs.getString(5),
@@ -335,7 +335,7 @@ class RightDB(
                             rs.getTimestamp(6)?.let {
                                 OffsetDateTime.ofInstant(
                                     it.toInstant(),
-                                    ZoneId.of("UTC+00:00"),
+                                    TimezoneUtil.TIME_ZONE_UTC,
                                 )
                             },
                     )
@@ -843,14 +843,14 @@ class RightDB(
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 lastUpdatedOn =
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 createdBy = rs.getString(localCounter++),
@@ -874,7 +874,7 @@ class RightDB(
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 exceptionOfId = rs.getString(localCounter++),
@@ -886,7 +886,7 @@ class RightDB(
                     rs.getTimestamp(localCounter++)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 groups = null,

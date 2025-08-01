@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.TSVectorMetadataSearchFilter.Companion.SQL_FU
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
@@ -24,7 +25,6 @@ import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.Timestamp
 import java.time.LocalDate
-import java.time.ZoneId
 
 /**
  * Search filters.
@@ -975,7 +975,10 @@ class AccessStateOnDateFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -985,7 +988,10 @@ class AccessStateOnDateFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         if (accessState != null) {
@@ -1032,7 +1038,11 @@ class RightValidOnFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .plusDays(1)
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1042,7 +1052,11 @@ class RightValidOnFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .plusDays(1)
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         return localCounter
@@ -1084,13 +1098,20 @@ class StartDateFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .plusDays(1)
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         return localCounter
@@ -1132,13 +1153,20 @@ class EndDateFilter(
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         preparedStatement.setTimestamp(
             localCounter++,
             Timestamp.from(
-                date.plusDays(1).atStartOfDay(ZoneId.of("UTC+00:00")).toInstant(),
+                date
+                    .plusDays(1)
+                    .atStartOfDay(
+                        TimezoneUtil.TIME_ZONE_UTC,
+                    ).toInstant(),
             ),
         )
         return localCounter

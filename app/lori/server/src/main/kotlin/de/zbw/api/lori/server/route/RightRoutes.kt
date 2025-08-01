@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import de.zbw.lori.model.RelationshipRest
 import de.zbw.lori.model.RightIdCreated
 import de.zbw.lori.model.RightRest
@@ -27,6 +28,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import java.time.OffsetDateTime
 
 /**
  * REST-API routes for rights.
@@ -61,7 +63,7 @@ fun Routing.rightRoutes(
                     val right: ItemRight? = backend.getRightsByIds(listOf(rightId)).firstOrNull()
                     right?.let {
                         span.setStatus(StatusCode.OK)
-                        val firstAppliedForHandle =
+                        val firstAppliedForHandle: OffsetDateTime? =
                             call.request.queryParameters["handle"]
                                 ?.let { handle ->
                                     backend.getItemRowsByHandleAndRightId(
@@ -72,7 +74,11 @@ fun Routing.rightRoutes(
                         call.respond(
                             it
                                 .toRest()
-                                .copy(firstAppliedForHandleOn = firstAppliedForHandle?.toLocalDate()),
+                                .copy(
+                                    firstAppliedForHandleOn =
+                                        firstAppliedForHandle
+                                            ?.let { odT -> utcOffsetDateTimeToBerlinDate(odT) },
+                                ),
                         )
                     } ?: let {
                         span.setStatus(StatusCode.ERROR)

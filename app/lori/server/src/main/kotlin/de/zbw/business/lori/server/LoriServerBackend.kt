@@ -28,6 +28,8 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.DashboardUtil
+import de.zbw.business.lori.server.utils.TimezoneUtil
+import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
@@ -288,7 +290,7 @@ class LoriServerBackend(
                                     ?.let {
                                         rightIdToItemRow[it]
                                     }?.createdOn
-                                    ?.toLocalDate()
+                                    ?.let { utcOffsetDateTimeToBerlinDate(it) }
 
                             if (firstApplicationDate == null) {
                                 return@map listOf(r)
@@ -381,7 +383,11 @@ class LoriServerBackend(
                     }
                     filterAndAdjustTemplatesByDate(
                         templates = listOf(t),
-                        firstApplicationDate = itemTable.createdOn?.toLocalDate() ?: FALLBACK_DATE,
+                        firstApplicationDate =
+                            itemTable
+                                .createdOn
+                                ?.let { utcOffsetDateTimeToBerlinDate(it) }
+                                ?: FALLBACK_DATE,
                     )
                 }.flatten()
         return adjustedTemplates + nonTemplates
@@ -739,7 +745,7 @@ class LoriServerBackend(
                     handle = metadata.handle,
                     message = "Handle ist gelöscht worden",
                     errorId = null,
-                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
                     conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
                     conflictByRightId = null,
                     conflictType = ConflictType.DELETION,
@@ -771,7 +777,10 @@ class LoriServerBackend(
                     handle = metadata.handle,
                     message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",
                     errorId = null,
-                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    createdOn =
+                        OffsetDateTime.now(
+                            TimezoneUtil.TIME_ZONE_UTC,
+                        ),
                     conflictingWithRightId = null,
                     conflictByRightId = null,
                     conflictType = ConflictType.NO_RIGHT,
