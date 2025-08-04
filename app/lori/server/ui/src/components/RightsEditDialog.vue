@@ -2346,7 +2346,10 @@ export default defineComponent({
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.startDate" color="primary">
+                  <v-date-picker
+                      first-day-of-week="1"
+                      v-model="formState.startDate"
+                      color="primary">
                     <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>
@@ -2387,7 +2390,10 @@ export default defineComponent({
                       v-bind="{...$attrs, ...props, ...loginStatusProps}"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.endDate" color="primary">
+                  <v-date-picker
+                      first-day-of-week="1"
+                      v-model="formState.endDate"
+                      color="primary">
                     <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>

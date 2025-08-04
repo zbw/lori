@@ -405,6 +405,7 @@ export default defineComponent({
               ></v-text-field>
             </template>
             <v-date-picker
+                first-day-of-week="1"
                 v-model="startDate"
                 color="primary"
                 @update:modelValue="startDateEntered"
@@ -432,6 +433,7 @@ export default defineComponent({
               ></v-text-field>
             </template>
             <v-date-picker
+                first-day-of-week="1"
                 v-model="endDate"
                 color="primary"
                 @update:modelValue="endDateEntered"

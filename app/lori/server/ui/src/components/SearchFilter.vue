@@ -795,6 +795,7 @@ export default defineComponent({
                 <v-date-picker
                     v-model="accessStateDate"
                     color="primary"
+                    first-day-of-week="1"
                     @update:modelValue="accessStateDateEntered"
                 ><template v-slot:header></template>
                 </v-date-picker>
@@ -850,6 +851,7 @@ export default defineComponent({
                 <v-date-picker
                   v-model="temporalValidOn"
                   color="primary"
+                  first-day-of-week="1"
                   @update:modelValue="temporalValidOnEntered"
                   ><template v-slot:header></template>
                 </v-date-picker>
@@ -884,6 +886,7 @@ export default defineComponent({
                 </template>
                 <v-date-picker
                   v-model="startDateOrEndDate"
+                  first-day-of-week="1"
                   color="primary"
                   @update:modelValue="startDateOrEndDateEntered"
                   ><template v-slot:header></template>
