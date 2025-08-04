@@ -835,6 +835,15 @@ fun SortByRest.toBusiness(): SortByField =
         SortByRest.publication_type -> SortByField.PUBLICATION_TYPE
         SortByRest.publication_year -> SortByField.PUBLICATION_YEAR
         SortByRest.title -> SortByField.TITLE
+        SortByRest.band -> SortByField.BAND
+        SortByRest.doi -> SortByField.DOI
+        SortByRest.isbn -> SortByField.ISBN
+        SortByRest.issn -> SortByField.ISSN
+        SortByRest.paketSigel -> SortByField.PAKET_SIGEL
+        SortByRest.ppn -> SortByField.PPN
+        SortByRest.series -> SortByField.IS_PART_OF_SERIES
+        SortByRest.titleJournal -> SortByField.TITLE_JOURNAL
+        SortByRest.titleSeries -> SortByField.TITLE_SERIES
     }
 
 /**

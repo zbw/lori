@@ -533,18 +533,36 @@ export default {
       return SortByRest.Handle;
     }
     switch(s.sortBy[0].key) {
+      case "band":
+        return SortByRest.Band
       case "collectionName":
         return SortByRest.CollectionName;
       case "communityName":
         return SortByRest.CommunityName;
+      case "doi":
+        return SortByRest.Doi
+      case "isbn":
+        return SortByRest.Isbn
+      case "issn":
+        return SortByRest.Issn
+      case "isPartOfSeries":
+        return SortByRest.Series;
       case "handle":
         return SortByRest.Handle;
+      case "paketSigel":
+        return SortByRest.PaketSigel;
+      case "ppn":
+        return SortByRest.Ppn;
       case "publicationType":
         return SortByRest.PublicationType;
       case "publicationYear":
         return SortByRest.PublicationYear;
       case "title":
         return SortByRest.Title;
+      case "titleJournal":
+        return SortByRest.TitleJournal;
+      case "titleSeries":
+        return SortByRest.TitleSeries;
       default:
         return SortByRest.Handle;
     }

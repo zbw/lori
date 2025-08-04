@@ -103,42 +103,52 @@ export default defineComponent({
       },
       {
         title: "Band",
+        sortable: true,
         value: "band",
       },
       {
         title: "DOI",
+        sortable: true,
         value: "doi",
       },
       {
         title: "ISBN",
+        sortable: true,
         value: "isbn",
       },
       {
         title: "ISSN",
+        sortable: true,
         value: "issn",
       },
       {
         title: "Paket-Sigel",
+        sortable: true,
         value: "paketSigel",
       },
       {
         title: "PPN",
+        sortable: true,
         value: "ppn",
       },
       {
         title: "Titel Journal",
+        sortable: true,
         value: "titleJournal",
       },
       {
         title: "Titel Serie",
+        sortable: true,
         value: "titleSeries",
       },
       {
         title: "ZDB-ID (Journal + Serie)",
+        sortable: true,
         value: "zdbIds",
       },
       {
         title: "Serie",
+        sortable: true,
         value: "isPartOfSeries",
       },
     ];

@@ -184,12 +184,21 @@ components:
     SortByRest:
       type: string
       enum:
-        - handle
-        - title
+        - band
         - community_name
         - collection_name
+        - doi
+        - handle
+        - isbn
+        - issn
+        - paketSigel
+        - ppn
         - publication_type
         - publication_year
+        - series
+        - title
+        - titleJournal
+        - titleSeries
     SortOrderRest:
       type: string
       enum:
