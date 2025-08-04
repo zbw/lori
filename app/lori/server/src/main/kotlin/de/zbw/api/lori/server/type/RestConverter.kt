@@ -829,7 +829,12 @@ fun SortOrderRest.toBusiness(): SortOrder =
 
 fun SortByRest.toBusiness(): SortByField =
     when (this) {
+        SortByRest.collection_name -> SortByField.COLLECTION_NAME
+        SortByRest.community_name -> SortByField.COMMUNITY_NAME
         SortByRest.handle -> SortByField.HANDLE
+        SortByRest.publication_type -> SortByField.PUBLICATION_TYPE
+        SortByRest.publication_year -> SortByField.PUBLICATION_YEAR
+        SortByRest.title -> SortByField.TITLE
     }
 
 /**

@@ -30,12 +30,15 @@ import {useUserStore} from "@/stores/user";
 import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
+import type { VDataTable } from 'vuetify/components'
+import {DataTableOptions} from "@/types/vuetify";
+type ReadonlyHeaders = VDataTable['$props']['headers']
+type UnwrapReadonlyArray<A> = A extends Readonly<Array<infer I>> ? I : never;
+type ReadonlyDataTableHeader = UnwrapReadonlyArray<ReadonlyHeaders>;
+
 
 export default defineComponent({
   computed: {
-    bookmarkSave() {
-      return bookmarkSave
-    },
     metadata_utils() {
       return metadata_utils;
     },
@@ -71,7 +74,7 @@ export default defineComponent({
     const selectedItems: Ref<Array<string>> = ref([]);
     const tableContentLoading = ref(true);
 
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Titel",
         sortable: true,
@@ -464,6 +467,8 @@ export default defineComponent({
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
+              searchquerybuilder.buildSortBy(options.value),
+              searchquerybuilder.buildOrderBy(options.value),
           ).then((response: ItemInformation) => {
         if (response.accessStateWithCount != undefined) {
           searchStore.accessStateOnDateReceived = response.accessStateWithCount;
@@ -502,6 +507,8 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(options.value),
+            searchquerybuilder.buildOrderBy(options.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -536,6 +543,9 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(options.value),
+            searchquerybuilder.buildOrderBy(options.value),
+
         )
         .then((response: ItemInformation) => {
           const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
@@ -587,6 +597,8 @@ export default defineComponent({
           undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(options.value),
+            searchquerybuilder.buildOrderBy(options.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -622,6 +634,8 @@ export default defineComponent({
               undefined,
               undefined,
               undefined,
+              searchquerybuilder.buildSortBy(options.value),
+              searchquerybuilder.buildOrderBy(options.value),
           )
           .then((response: ItemInformation) => {
             processFacets(response);
@@ -705,6 +719,8 @@ export default defineComponent({
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
           searchquerybuilder.buildManualRightFilter(searchStore),
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
+          searchquerybuilder.buildSortBy(options.value),
+          searchquerybuilder.buildOrderBy(options.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -947,6 +963,41 @@ export default defineComponent({
       dialog.value = true;
     };
 
+    /**
+     * Intercept Sortorder
+     */
+    const options = ref<DataTableOptions>({
+      page: 1,
+      itemsPerPage: 25,
+      sortBy: [
+        {
+          key: 'handle',
+          order: 'desc',
+        },
+      ],
+    });
+
+    const onOptionsUpdate = (newOptions: DataTableOptions) => {
+      if (newOptions.sortBy.length == 0){
+        // When we end here it is probably the initial load of the site
+        return;
+      }
+      const oldSort = options.value.sortBy[0]
+      const newSort = newOptions.sortBy[0]
+
+      const sortChanged =
+          !oldSort ||
+          !newSort ||
+          oldSort.key !== newSort.key ||
+          oldSort.order !== newSort.order
+
+      options.value = newOptions
+
+      if (sortChanged) {
+        searchQuery();
+      }
+    }
+
     return {
       successMsgIsActive,
       successMsg,
@@ -996,6 +1047,7 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loadTemplateView,
+      onOptionsUpdate,
       openDialog,
       parsePublicationType,
       addRightSuccessful,
@@ -1467,6 +1519,7 @@ table.special, th.special, td.special {
           height="550px"
           @click:row="addActiveItem"
           @dblclick:row="setActiveItem"
+          @update:options="onOptionsUpdate"
       >
         <template v-slot:item.title="{ item }">
           <td v-if="item.deleted">❌{{item.title}} </td>

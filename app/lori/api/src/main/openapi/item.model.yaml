@@ -185,6 +185,11 @@ components:
       type: string
       enum:
         - handle
+        - title
+        - community_name
+        - collection_name
+        - publication_type
+        - publication_year
     SortOrderRest:
       type: string
       enum:

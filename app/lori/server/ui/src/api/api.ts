@@ -11,7 +11,7 @@ import {
   ItemInformation, ItemSearch,
   RightApi,
   RightIdCreated,
-  RightRest,
+  RightRest, SortByRest, SortOrderRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -106,6 +106,8 @@ export default {
     filterLicenceUrl: string | undefined,
     filterManualRight: string | undefined,
     filterAccessStateOn: string | undefined,
+    sortBy: SortByRest,
+    sortOrder: SortOrderRest,
   ): Promise<ItemInformation> {
     return loriItem.getSearchResult({
       itemSearch: { searchTerm: searchTerm} as ItemSearch,
@@ -129,6 +131,8 @@ export default {
       filterManualRight: filterManualRight,
       facetsOnly: facetsOnly,
       filterAccessStateOn: filterAccessStateOn,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
     });
   },
 };

@@ -4,11 +4,12 @@ import {
   BookmarkRest, FilterRightIdRest, IsPartOfSeriesCountRest, LicenceUrlCountRest,
   PaketSigelWithCountRest,
   PublicationTypeRest,
-  PublicationTypeWithCountRest,
+  PublicationTypeWithCountRest, SortByRest, SortOrderRest,
   TemplateNameWithCountRest,
   ZdbIdWithCountRest,
 } from "@/generated-sources/openapi";
 import date_utils from "@/utils/date_utils";
+import {DataTableOptions} from "@/types/vuetify";
 
 export default {
   setPublicationYearFilter(searchStore: any, bookmark: BookmarkRest): void {
@@ -525,5 +526,37 @@ export default {
       default:
         return PublicationTypeRest.WorkingPaper;
     }
+  },
+
+  buildSortBy(s: DataTableOptions): SortByRest {
+    if (s.sortBy.length == 0){
+      return SortByRest.Handle;
+    }
+    switch(s.sortBy[0].key) {
+      case "collectionName":
+        return SortByRest.CollectionName;
+      case "communityName":
+        return SortByRest.CommunityName;
+      case "handle":
+        return SortByRest.Handle;
+      case "publicationType":
+        return SortByRest.PublicationType;
+      case "publicationYear":
+        return SortByRest.PublicationYear;
+      case "title":
+        return SortByRest.Title;
+      default:
+        return SortByRest.Handle;
+    }
+  },
+
+  buildOrderBy(s: DataTableOptions): SortOrderRest {
+    if (s.sortBy.length == 0 || s.sortBy[0].order == undefined) {
+      return SortOrderRest.Desc;
+    }
+    if (s.sortBy[0].order == 'asc'){
+      return SortOrderRest.Asc;
+    }
+    return SortOrderRest.Desc;
   },
 };
