@@ -20,6 +20,7 @@ import {unparse} from "papaparse";
 import {useUserStore} from "@/stores/user";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import url from "@/utils/url";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   components: {GroupDeleteDialog},
@@ -130,7 +131,7 @@ export default defineComponent({
     /**
      * Version history.
      */
-    const headersVersion = [
+    const headersVersion: ReadonlyDataTableHeader[] = [
       {
         title: "Version",
         key: "version",

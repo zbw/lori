@@ -3,6 +3,7 @@ import { computed, defineComponent, onMounted, Ref, ref, watch } from "vue";
 import bookmarkApi from "@/api/bookmarkApi";
 import {BookmarkRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   props: {
@@ -13,7 +14,7 @@ export default defineComponent({
   },
   emits: ["bookmarksSelected", "templateBookmarkClosed"],
   setup(props, { emit }) {
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Name",
         align: "start",

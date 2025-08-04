@@ -30,12 +30,7 @@ import {useUserStore} from "@/stores/user";
 import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
-import type { VDataTable } from 'vuetify/components'
-import {DataTableOptions} from "@/types/vuetify";
-type ReadonlyHeaders = VDataTable['$props']['headers']
-type UnwrapReadonlyArray<A> = A extends Readonly<Array<infer I>> ? I : never;
-type ReadonlyDataTableHeader = UnwrapReadonlyArray<ReadonlyHeaders>;
-
+import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -467,8 +462,8 @@ export default defineComponent({
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
-              searchquerybuilder.buildSortBy(options.value),
-              searchquerybuilder.buildOrderBy(options.value),
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           ).then((response: ItemInformation) => {
         if (response.accessStateWithCount != undefined) {
           searchStore.accessStateOnDateReceived = response.accessStateWithCount;
@@ -507,8 +502,8 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
-            searchquerybuilder.buildSortBy(options.value),
-            searchquerybuilder.buildOrderBy(options.value),
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -543,8 +538,8 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
-            searchquerybuilder.buildSortBy(options.value),
-            searchquerybuilder.buildOrderBy(options.value),
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
 
         )
         .then((response: ItemInformation) => {
@@ -597,8 +592,8 @@ export default defineComponent({
           undefined,
             undefined,
             undefined,
-            searchquerybuilder.buildSortBy(options.value),
-            searchquerybuilder.buildOrderBy(options.value),
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -634,8 +629,8 @@ export default defineComponent({
               undefined,
               undefined,
               undefined,
-              searchquerybuilder.buildSortBy(options.value),
-              searchquerybuilder.buildOrderBy(options.value),
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
             processFacets(response);
@@ -719,8 +714,8 @@ export default defineComponent({
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
           searchquerybuilder.buildManualRightFilter(searchStore),
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
-          searchquerybuilder.buildSortBy(options.value),
-          searchquerybuilder.buildOrderBy(options.value),
+          searchquerybuilder.buildSortBy(datatableOptions.value),
+          searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -755,6 +750,8 @@ export default defineComponent({
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
             const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
@@ -966,7 +963,7 @@ export default defineComponent({
     /**
      * Intercept Sortorder
      */
-    const options = ref<DataTableOptions>({
+    const datatableOptions = ref<DataTableOptions>({
       page: 1,
       itemsPerPage: 25,
       sortBy: [
@@ -982,7 +979,7 @@ export default defineComponent({
         // When we end here it is probably the initial load of the site
         return;
       }
-      const oldSort = options.value.sortBy[0]
+      const oldSort = datatableOptions.value.sortBy[0]
       const newSort = newOptions.sortBy[0]
 
       const sortChanged =
@@ -991,7 +988,7 @@ export default defineComponent({
           oldSort.key !== newSort.key ||
           oldSort.order !== newSort.order
 
-      options.value = newOptions
+      datatableOptions.value = newOptions
 
       if (sortChanged) {
         searchQuery();

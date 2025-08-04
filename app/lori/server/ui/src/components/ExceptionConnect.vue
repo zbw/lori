@@ -3,6 +3,7 @@ import {computed, defineComponent, onMounted, ref, Ref, watch} from "vue";
 import {RightRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   props: {
@@ -21,7 +22,7 @@ export default defineComponent({
   },
   emits: ["exceptionSelected", "exceptionConnectClosed"],
   setup(props, { emit }) {
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Name",
         align: "start",

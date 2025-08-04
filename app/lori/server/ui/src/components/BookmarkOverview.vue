@@ -8,6 +8,7 @@ import { useDialogsStore } from "@/stores/dialogs";
 import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import {useUserStore} from "@/stores/user";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   components: {BookmarkSave, RightsEditDialog },
@@ -38,7 +39,7 @@ export default defineComponent({
      * Data-Table related.
      */
     const renderKey = ref(0);
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Name",
         key: "bookmarkName",

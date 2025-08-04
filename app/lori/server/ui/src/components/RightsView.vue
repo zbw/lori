@@ -7,6 +7,7 @@ import { useDialogsStore } from "@/stores/dialogs";
 import metadata_utils from "@/utils/metadata_utils";
 import { useSearchStore } from "@/stores/search";
 import {useUserStore} from "@/stores/user";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -46,7 +47,7 @@ export default defineComponent({
     const userStore = useUserStore();
     const currentRight = ref({} as RightRest);
     const currentIndex = ref(0);
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "AccessState",
         value: "accessState",

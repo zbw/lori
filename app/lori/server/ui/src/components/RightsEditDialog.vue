@@ -41,6 +41,7 @@ import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -1125,7 +1126,7 @@ export default defineComponent({
     };
 
     const lastSavedBookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
-    const bookmarkHeaders = [
+    const bookmarkHeaders: ReadonlyDataTableHeader[] = [
       {
         title: "Id",
         align: "start",
@@ -1181,7 +1182,7 @@ export default defineComponent({
     };
 
     const lastSavedExceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
-    const exceptionTemplateHeaders = [
+    const exceptionTemplateHeaders: ReadonlyDataTableHeader[] = [
       {
         title: "Id",
         align: "start",

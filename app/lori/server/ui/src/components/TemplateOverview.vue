@@ -14,7 +14,7 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import {useUserStore} from "@/stores/user";
 import rightErrorApi from "@/api/rightErrorApi";
 import Dashboard from "@/components/Dashboard.vue";
-import {SortItem} from "@/types/vuetify";
+import {ReadonlyDataTableHeader, SortItem} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -37,7 +37,7 @@ export default defineComponent({
      *  Data-Table related.
      */
     const renderKey = ref(0);
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Template Name",
         align: "start",

@@ -7,6 +7,7 @@ import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import url from "@/utils/url";
 import date_utils from "@/utils/date_utils";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -30,7 +31,7 @@ export default defineComponent({
      */
     const renderKey = ref(0);
     const errorItems: Ref<Array<RightErrorRest>> = ref([]);
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Handle",
         align: "start",
