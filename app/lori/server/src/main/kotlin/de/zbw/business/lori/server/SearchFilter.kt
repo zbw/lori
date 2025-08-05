@@ -1100,7 +1100,7 @@ class StartDateFilter(
             Timestamp.from(
                 date
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
@@ -1110,7 +1110,7 @@ class StartDateFilter(
                 date
                     .plusDays(1)
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
@@ -1155,7 +1155,7 @@ class EndDateFilter(
             Timestamp.from(
                 date
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
@@ -1165,7 +1165,7 @@ class EndDateFilter(
                 date
                     .plusDays(1)
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
