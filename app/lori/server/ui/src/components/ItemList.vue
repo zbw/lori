@@ -1001,7 +1001,7 @@ export default defineComponent({
       datatableOptions.value = newOptions
 
       if (sortChanged) {
-        searchQuery();
+        startSearch();
       }
     }
 
