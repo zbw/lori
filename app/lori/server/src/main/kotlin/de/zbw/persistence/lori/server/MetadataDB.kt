@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SortInformation
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -16,6 +17,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to metadata.
@@ -271,6 +274,8 @@ class MetadataDB(
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
 
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_METADATA_CONTAINS_HANDLE =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE handle=?)"
 
@@ -288,7 +293,7 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED" +
+                COLUMN_METADATA_DELETED +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -370,7 +375,7 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED" +
+                COLUMN_METADATA_DELETED +
                 ") " +
                 "VALUES(" +
                 "?,?,?,?," +
@@ -396,8 +401,8 @@ class MetadataDB(
                 paketSigel = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIds = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 issn = rs.getString(localCounter++),
-                createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
-                lastUpdatedOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                createdOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
+                lastUpdatedOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
                 createdBy = rs.getString(localCounter++),
                 lastUpdatedBy = rs.getString(localCounter++),
                 author = rs.getString(localCounter++),
@@ -457,8 +462,8 @@ class MetadataDB(
                 this.setIfNotNull(localCounter++, itemMetadata.issn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setTimestamp(localCounter++, Timestamp.from(now))
-                this.setTimestamp(localCounter++, Timestamp.from(now))
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 this.setIfNotNull(localCounter++, itemMetadata.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }

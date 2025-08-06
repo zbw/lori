@@ -1,6 +1,7 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemId
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
@@ -8,6 +9,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to items.
@@ -140,9 +143,9 @@ class ItemDB(
                     this.setString(localCounter++, itemId.handle)
                     this.setString(localCounter++, itemId.rightId)
                     this.setString(localCounter++, createdBy)
-                    this.setTimestamp(localCounter++, Timestamp.from(now))
+                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                     this.setString(localCounter++, createdBy)
-                    this.setTimestamp(localCounter++, Timestamp.from(now))
+                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 }
 
             val span = tracer.spanBuilder("insertItem").startSpan()
@@ -173,9 +176,9 @@ class ItemDB(
                         this.setString(localCounter++, it.handle)
                         this.setString(localCounter++, it.rightId)
                         this.setString(localCounter++, createdBy)
-                        this.setTimestamp(localCounter++, Timestamp.from(now))
+                        this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                         this.setString(localCounter++, createdBy)
-                        this.setTimestamp(localCounter, Timestamp.from(now))
+                        this.setTimestamp(localCounter, Timestamp.from(now), utcCalendar)
                     }
                 p.addBatch()
                 localCounter = 1
@@ -269,6 +272,8 @@ class ItemDB(
         const val COLUMN_ITEM_CREATED_ON = "created_on"
         const val COLUMN_ITEM_LAST_UPDATED_BY = "last_updated_by"
         const val COLUMN_ITEM_LAST_UPDATED_ON = "last_updated_on"
+
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID =
             "SELECT COUNT(*) " +

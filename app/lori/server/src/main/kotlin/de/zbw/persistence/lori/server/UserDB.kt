@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserPermission
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_SESSIONS
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
@@ -10,6 +11,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 import java.util.UUID
 
 /**
@@ -53,8 +56,8 @@ class UserDB(
                     this.setIfNotNull(5, session.permissions) { value, idx, prepStmt ->
                         prepStmt.setArray(idx, connection.createArrayOf("permission_enum", value.toTypedArray()))
                     }
-                    this.setTimestamp(6, Timestamp.from(session.validUntil))
-                    this.setTimestamp(7, Timestamp.from(now))
+                    this.setTimestamp(6, Timestamp.from(session.validUntil), utcCalendar)
+                    this.setTimestamp(7, Timestamp.from(now), utcCalendar)
                 }
 
             val span = tracer.spanBuilder("insertSession").startSpan()
@@ -98,8 +101,8 @@ class UserDB(
                             ?.filterIsInstance<String>()
                             ?.map { UserPermission.valueOf(it) }
                             ?: emptyList(),
-                    validUntil = rs.getTimestamp(6).toInstant(),
-                    createdOn = rs.getTimestamp(7).toInstant(),
+                    validUntil = rs.getTimestamp(6, utcCalendar).toInstant(),
+                    createdOn = rs.getTimestamp(7, utcCalendar).toInstant(),
                 )
             } else {
                 null
@@ -107,6 +110,8 @@ class UserDB(
         }
 
     companion object {
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_INSERT_SESSION =
             "INSERT INTO $TABLE_NAME_SESSIONS" +
                 "(session_id,authenticated,first_name," +

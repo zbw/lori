@@ -31,6 +31,8 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to rights.
@@ -88,11 +90,10 @@ class RightDB(
     ): PreparedStatement {
         val now = Instant.now()
         var localCounter = 1
-
         return prep.apply {
             this.setString(localCounter++, right.rightId)
-            this.setTimestamp(localCounter++, Timestamp.from(now))
-            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
             this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -166,10 +167,9 @@ class RightDB(
     ): PreparedStatement {
         val now = Instant.now()
         var localCounter = 1
-
         return prep.apply {
-            this.setTimestamp(localCounter++, Timestamp.from(now))
-            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
             this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -324,7 +324,7 @@ class RightDB(
                         handle = rs.getString(2),
                         createdBy = rs.getString(3),
                         createdOn =
-                            rs.getTimestamp(4)?.let {
+                            rs.getTimestamp(4, utcCalendar)?.let {
                                 OffsetDateTime.ofInstant(
                                     it.toInstant(),
                                     TimezoneUtil.TIME_ZONE_UTC,
@@ -332,7 +332,7 @@ class RightDB(
                             },
                         lastUpdatedBy = rs.getString(5),
                         lastUpdatedOn =
-                            rs.getTimestamp(6)?.let {
+                            rs.getTimestamp(6, utcCalendar)?.let {
                                 OffsetDateTime.ofInstant(
                                     it.toInstant(),
                                     TimezoneUtil.TIME_ZONE_UTC,
@@ -457,8 +457,8 @@ class RightDB(
             val now = Instant.now()
             val prepStmt =
                 connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
-                    this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
-                    this.setTimestamp(2, Timestamp.from(now)) // first_applied_on
+                    this.setTimestamp(1, Timestamp.from(now), utcCalendar) // last_applied_on
+                    this.setTimestamp(2, Timestamp.from(now), utcCalendar) // first_applied_on
                     this.setString(3, rightId)
                 }
             val span = tracer.spanBuilder("updateTemplateById").startSpan()
@@ -685,6 +685,8 @@ class RightDB(
         private const val COLUMN_PREDECESSOR_ID = "predecessor_id"
         private const val COLUMN_SUCCESSOR_ID = "successor_id"
 
+        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_SELECT_ALL =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
                 "last_updated_by,$COLUMN_RIGHT_ACCESS_STATE,start_date,end_date,notes_general," +
@@ -840,14 +842,14 @@ class RightDB(
             return ItemRight(
                 rightId = currentRightId,
                 createdOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 lastUpdatedOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             TimezoneUtil.TIME_ZONE_UTC,
@@ -871,7 +873,7 @@ class RightDB(
                 templateName = rs.getString(localCounter++),
                 templateDescription = rs.getString(localCounter++),
                 lastAppliedOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             TimezoneUtil.TIME_ZONE_UTC,

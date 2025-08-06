@@ -27,6 +27,8 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to bookmarks.
@@ -182,6 +184,8 @@ class BookmarkDB(
         const val COLUMN_FILTER_ACCESS_STATE_ON = "filter_access_state_on"
         const val COLUMN_QUERYSTRING = "querystring"
 
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_GET_BOOKMARKS =
             "SELECT " +
                 "$COLUMN_BOOKMARK_ID,$COLUMN_BOOKMARK_NAME,description,search_term," +
@@ -302,14 +306,14 @@ class BookmarkDB(
                     ),
                 publicationTypeFilter = PublicationTypeFilter.fromString(rs.getString(localCounter++)),
                 createdOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 lastUpdatedOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
                             TimezoneUtil.TIME_ZONE_UTC,
@@ -370,8 +374,8 @@ class BookmarkDB(
                 this.setIfNotNull(localCounter++, bookmark.publicationTypeFilter?.toSQLString()) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setTimestamp(localCounter++, Timestamp.from(now))
-                this.setTimestamp(localCounter++, Timestamp.from(now))
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 this.setIfNotNull(localCounter++, bookmark.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }

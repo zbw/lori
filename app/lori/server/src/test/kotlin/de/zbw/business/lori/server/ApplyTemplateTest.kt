@@ -147,6 +147,39 @@ class ApplyTemplateTest : DatabaseTest() {
                 `is`(listOf(item1ZDB1.handle)),
             )
 
+            // Template ending in the past does not apply at all
+            val rightIdEndPast =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "Do not apply",
+                        isTemplate = true,
+                        endDate = ItemDBTest.NOW.minusYears(1).toLocalDate(),
+                        startDate =
+                            ItemDBTest.NOW
+                                .minusYears(1)
+                                .minusDays(30L)
+                                .toLocalDate(),
+                    ),
+                )
+
+            // Connect Bookmark and Template
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = rightIdEndPast,
+            )
+
+            val receivedEndPast =
+                templateApplication.applyTemplate(
+                    rightIdEndPast,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )
+            assertThat(
+                receivedEndPast!!.appliedMetadataHandles,
+                `is`(emptyList()),
+            )
+
             // Verify that new right is assigned to metadata id
             val rightIds = backend.getRightEntriesByHandle(item1ZDB1.handle).map { it.rightId }
             assertTrue(rightIds.contains(rightId))

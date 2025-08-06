@@ -3,6 +3,7 @@ package de.zbw.business.lori.server
 import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.business.lori.server.TSVectorMetadataSearchFilter.Companion.SQL_FUNC_TO_TS_QUERY
 import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.ComparisonOperator
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -24,7 +25,10 @@ import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Search filters.
@@ -723,6 +727,32 @@ class PaketSigelFilterOR(
     }
 }
 
+class CreatedOnFilter(
+    val createdOn: Instant,
+    val comparisonOp: ComparisonOperator,
+) : MetadataSearchFilter(
+        dbColumnName = MetadataDB.COLUMN_METADATA_CREATED_ON,
+    ) {
+    override fun toWhereClause(): String = "(${ALIAS_ITEM_METADATA}.$dbColumnName ${comparisonOp.toSQL()} ?)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+        connection: Connection,
+    ): Int {
+        var localCounter = counter
+        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+        preparedStatement.setTimestamp(localCounter++, Timestamp.from(createdOn), utcCalendar)
+        return localCounter
+    }
+
+    override fun toString(): String = ""
+
+    override fun toSQLString(): String = ""
+
+    override fun getFilterType(): FilterType = FilterType.CREATED_ON
+}
+
 /**
  * Represents the zdb:"zdbId1,zdbId2,...,zdbId3" key. Returns all entries matching at least one.
  */
@@ -1131,16 +1161,7 @@ class EndDateFilter(
 ) : RightSearchFilter(COLUMN_RIGHT_END_DATE) {
     override fun toWhereClause(): String =
         WHERE_CLAUSE_SKELETON_PREFIX +
-            "(" +
-            "($dbColumnName = ? AND" +
-            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $dbColumnName::timestamptz AND" +
-            " $dbColumnName is not null)" +
-            " OR" +
-            " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON >= ? AND" +
-            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON < ? AND" +
-            " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $dbColumnName::timestamptz AND" +
-            " $dbColumnName is not null)" +
-            ")" +
+            "($dbColumnName = ? AND $dbColumnName is not null)" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
     override fun setSQLParameter(
@@ -1150,25 +1171,6 @@ class EndDateFilter(
     ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
-        preparedStatement.setTimestamp(
-            localCounter++,
-            Timestamp.from(
-                date
-                    .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_BERLIN,
-                    ).toInstant(),
-            ),
-        )
-        preparedStatement.setTimestamp(
-            localCounter++,
-            Timestamp.from(
-                date
-                    .plusDays(1)
-                    .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_BERLIN,
-                    ).toInstant(),
-            ),
-        )
         return localCounter
     }
 
@@ -1340,6 +1342,7 @@ enum class FilterType(
     COLLECTION_NAME("col"),
     COMMUNITY_HANDLE("hdlcom"),
     COMMUNITY_NAME("com"),
+    CREATED_ON("cro"),
     DOI("doi"),
     END_DATE("zge"),
     FORMAL_RULE("reg"),

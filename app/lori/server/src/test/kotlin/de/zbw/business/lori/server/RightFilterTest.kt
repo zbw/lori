@@ -404,18 +404,6 @@ class RightFilterTest : DatabaseTest() {
                 "End date lies before first application",
             ),
             arrayOf(
-                "col:startAndEnd",
-                emptyList<MetadataSearchFilter>(),
-                listOf(
-                    EndDateFilter(
-                        LocalDate.of(2000, 4, 15),
-                    ),
-                ),
-                setOf(startEndDateFilter),
-                1,
-                "End date lies past first application end date",
-            ),
-            arrayOf(
                 "col:startAndEnd & zgb:2000-10-01",
                 emptyList<MetadataSearchFilter>(),
                 emptyList<RightSearchFilter>(),

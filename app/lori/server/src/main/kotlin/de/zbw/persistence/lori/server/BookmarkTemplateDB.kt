@@ -8,7 +8,6 @@ import java.sql.Statement
 
 /**
  * Execute SQL queries related to templates.
- * // TODO(CB): Decide if this class should be merged into [RightDB].
  *
  * Created on 04-19-2023.
  * @author Christian Bay (c.bay@zbw.eu)

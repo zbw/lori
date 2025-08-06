@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.DashboardSearchFilter
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIGHT_ERROR
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
@@ -13,6 +14,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to [RightError].
@@ -58,7 +61,7 @@ class RightErrorDB(
         connectionPool.useConnection { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_AGE).apply {
-                    this.setTimestamp(1, Timestamp.from(isOlderThan))
+                    this.setTimestamp(1, Timestamp.from(isOlderThan), utcCalendar)
                 }
             val span = tracer.spanBuilder("deleteRightErrorByAge").startSpan()
             return@useConnection try {
@@ -136,7 +139,7 @@ class RightErrorDB(
                         conflictByRightId = rs.getString(3),
                         conflictingWithRightId = rs.getString(4),
                         message = rs.getString(5),
-                        createdOn = rs.getTimestamp(6).toOffsetDateTime(),
+                        createdOn = rs.getTimestamp(6, utcCalendar).toOffsetDateTime(),
                         conflictType = ConflictType.valueOf(rs.getString(7)),
                         conflictByContext = rs.getString(8),
                         testId = rs.getString(9),
@@ -277,6 +280,8 @@ class RightErrorDB(
         const val COLUMN_TEST_ID = "test_id"
         private const val COLUMN_MESSAGE = "message"
 
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_GET_RIGHT_LIST_SELECT =
             "SELECT" +
                 " $COLUMN_ERROR_ID,$COLUMN_HANDLE_ID,$COLUMN_CONFLICT_BY_RIGHT_ID," +
@@ -377,7 +382,7 @@ class RightErrorDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setString(4, rightError.message)
-                this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()))
+                this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()), utcCalendar)
                 this.setString(6, rightError.conflictType.toString())
                 this.setIfNotNull(7, rightError.conflictByContext) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)

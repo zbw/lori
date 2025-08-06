@@ -5,6 +5,7 @@ import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
 import de.zbw.business.lori.server.LoriServerBackend.Companion.findItemsWithConflicts
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.ComparisonOperator
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemRight
@@ -14,6 +15,7 @@ import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -137,12 +139,23 @@ class TemplateApplication(
         testId: String?,
     ): TemplateApplicationResult =
         coroutineScope {
+            val endDateTemplateAfterCreatedOnFilter: CreatedOnFilter? =
+                right.endDate?.let { end ->
+                    CreatedOnFilter(
+                        comparisonOp = ComparisonOperator.LESS_OR_EQUAL,
+                        createdOn =
+                            end
+                                .atStartOfDay(
+                                    TimezoneUtil.TIME_ZONE_UTC,
+                                ).toInstant(),
+                    )
+                }
             val facetsResult =
                 backend.searchQuery(
                     searchTerm = bookmark.searchTerm,
                     limit = null,
                     offset = null,
-                    metadataSearchFilter = bookmark.getAllMetadataFilter(),
+                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + endDateTemplateAfterCreatedOnFilter).filterNotNull(),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
@@ -169,6 +182,7 @@ class TemplateApplication(
                                 right = right,
                                 createdBy = createdBy,
                                 testId = testId,
+                                createdOnFilter = endDateTemplateAfterCreatedOnFilter,
                             )
                         }
                     }
@@ -201,6 +215,7 @@ class TemplateApplication(
         searchResultsExceptionIds: Set<String>,
         createdBy: String,
         testId: String?,
+        createdOnFilter: CreatedOnFilter?,
     ): TemplateApplicationResult {
         val searchResults: Set<Item> =
             runBlocking {
@@ -209,7 +224,7 @@ class TemplateApplication(
                         searchTerm = bookmark.searchTerm,
                         limit = LIMIT,
                         offset = offset,
-                        metadataSearchFilter = bookmark.getAllMetadataFilter(),
+                        metadataSearchFilter = (bookmark.getAllMetadataFilter() + createdOnFilter).filterNotNull(),
                         rightSearchFilter = bookmark.getAllRightFilter(),
                         noRightInformationFilter = bookmark.noRightInformationFilter,
                         handlesToIgnore = searchResultsExceptionIds.toList(),
