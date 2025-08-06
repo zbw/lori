@@ -419,7 +419,10 @@ fun DAItem.toBusiness(
                 } else {
                     publicationDate.year
                 }
-            }
+            } ?: let {
+            LOG.warn("Item misses the required dc.date.issued field: Handle: ${this.handle}")
+            null
+        }
 
     val title =
         RestConverter.extractMetadata("dc.title", metadata)?.let {
