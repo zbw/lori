@@ -419,6 +419,10 @@ export default defineComponent({
       }, 500); // Simulate API delay (adjust as needed)
     };
 
+    const isSearchEmpty = computed(() => {
+      return searchStore.filtersAsQuery == "" && searchStore.searchTerm == ""
+    });
+
     return {
       accessStateDate,
       canReset,
@@ -427,6 +431,7 @@ export default defineComponent({
       errorTempEventInput,
       temporalValidOn,
       isAccessStateOnDateMenuOpen,
+      isSearchEmpty,
       isStartEndDateMenuOpen,
       isValidOnMenuOpen,
       startDateOrEndDate,
@@ -513,7 +518,7 @@ export default defineComponent({
           class="ml-8"
           color="blue darken-1"
           @click="activateBookmarkSaveDialog"
-          :disabled="!userStore.isLoggedIn"
+          :disabled="!userStore.isLoggedIn || isSearchEmpty"
         >
           Suche speichern
         </v-btn>

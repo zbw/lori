@@ -396,12 +396,12 @@ class RightFilterTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 listOf(
                     EndDateFilter(
-                        LocalDate.of(1999, 2, 1),
+                        LocalDate.of(2000, 4, 15),
                     ),
                 ),
-                emptySet<ItemMetadata>(),
-                0,
-                "End date lies before first application",
+                setOf(startEndDateFilter),
+                1,
+                "End date lies past first application end date",
             ),
             arrayOf(
                 "col:startAndEnd & zgb:2000-10-01",

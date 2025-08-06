@@ -432,7 +432,6 @@ export default defineComponent({
 
     // Search
     const templateSearchIsActive = ref(false);
-    const filtersAsQuery = ref("");
     const initSearchByRightId = (rightId: string, templateName: string) => {
       searchStore.searchTerm = "";
       templateSearchIsActive.value = true;
@@ -797,7 +796,7 @@ export default defineComponent({
     };
 
     const processSearchResult = (response: ItemInformation) => {
-      filtersAsQuery.value = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
+      searchStore.filtersAsQuery = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
       items.value = response.itemArray;
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
@@ -1018,7 +1017,6 @@ export default defineComponent({
       groupEditActivated,
       headers,
       headersValueVSelect,
-      filtersAsQuery,
       items,
       newBookmarkId,
       numberOfResults,
@@ -1225,7 +1223,7 @@ table.special, th.special, td.special {
             cols="10"
             offset="0"
         >
-          <b>Aktive Filter:</b> {{ filtersAsQuery }}
+          <b>Aktive Filter:</b> {{ searchStore.filtersAsQuery }}
         </v-col>
         <v-col
             cols="1"
