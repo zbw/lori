@@ -22,7 +22,6 @@ RightRest:
       enum:
         - authorrightexception
         - licencecontract
-        - licencecontractoa
         - opencontentlicence
         - useragreement
         - zbwpolicy

@@ -337,7 +337,6 @@ export default defineComponent({
     const basisAccessState = ref([
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
-      "OA-Rechte aus Lizenzvertrag",
       "Open Content",
       "Urheberrechtschranke",
       "ZBW-Policy",
@@ -882,8 +881,6 @@ export default defineComponent({
             return "Lizenzvertrag";
           case RightRestBasisAccessStateEnum.Zbwpolicy:
             return "ZBW-Policy";
-          case RightRestBasisAccessStateEnum.Licencecontractoa:
-            return "OA-Rechte aus Lizenzvertrag";
           case RightRestBasisStorageEnum.Opencontentlicence:
             return "Open Content";
           default:
@@ -901,8 +898,6 @@ export default defineComponent({
             return RightRestBasisAccessStateEnum.Licencecontract;
           case "Nutzungsvereinbarung":
             return RightRestBasisAccessStateEnum.Useragreement;
-          case "OA-Rechte aus Lizenzvertrag":
-            return RightRestBasisAccessStateEnum.Licencecontractoa;
           case "Urheberrechtschranke":
             return RightRestBasisAccessStateEnum.Authorrightexception;
           case "ZBW-Policy":

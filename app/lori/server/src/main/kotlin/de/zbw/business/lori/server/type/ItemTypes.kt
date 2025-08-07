@@ -80,7 +80,6 @@ enum class BasisStorage {
 enum class BasisAccessState {
     AUTHOR_RIGHT_EXCEPTION,
     LICENCE_CONTRACT,
-    LICENCE_CONTRACT_OA,
     OPEN_CONTENT_LICENCE,
     USER_AGREEMENT,
     ZBW_POLICY,

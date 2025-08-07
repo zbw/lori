@@ -310,7 +310,6 @@ internal fun RightRest.BasisAccessState.toBusiness(): BasisAccessState =
     when (this) {
         RightRest.BasisAccessState.authorrightexception -> BasisAccessState.AUTHOR_RIGHT_EXCEPTION
         RightRest.BasisAccessState.licencecontract -> BasisAccessState.LICENCE_CONTRACT
-        RightRest.BasisAccessState.licencecontractoa -> BasisAccessState.LICENCE_CONTRACT_OA
         RightRest.BasisAccessState.opencontentlicence -> BasisAccessState.OPEN_CONTENT_LICENCE
         RightRest.BasisAccessState.useragreement -> BasisAccessState.USER_AGREEMENT
         RightRest.BasisAccessState.zbwpolicy -> BasisAccessState.ZBW_POLICY
@@ -320,7 +319,6 @@ internal fun BasisAccessState.toRest(): RightRest.BasisAccessState =
     when (this) {
         BasisAccessState.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisAccessState.authorrightexception
         BasisAccessState.LICENCE_CONTRACT -> RightRest.BasisAccessState.licencecontract
-        BasisAccessState.LICENCE_CONTRACT_OA -> RightRest.BasisAccessState.licencecontractoa
         BasisAccessState.OPEN_CONTENT_LICENCE -> RightRest.BasisAccessState.opencontentlicence
         BasisAccessState.USER_AGREEMENT -> RightRest.BasisAccessState.useragreement
         BasisAccessState.ZBW_POLICY -> RightRest.BasisAccessState.zbwpolicy
