@@ -1071,7 +1071,7 @@ class RightValidOnFilter(
                 date
                     .plusDays(1)
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
@@ -1085,7 +1085,7 @@ class RightValidOnFilter(
                 date
                     .plusDays(1)
                     .atStartOfDay(
-                        TimezoneUtil.TIME_ZONE_UTC,
+                        TimezoneUtil.TIME_ZONE_BERLIN,
                     ).toInstant(),
             ),
         )
