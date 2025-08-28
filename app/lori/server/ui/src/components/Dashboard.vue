@@ -2,12 +2,13 @@
 
 
 import {computed, defineComponent, onMounted, Ref, ref, watch} from "vue";
-import {RightErrorInformationRest, RightErrorRest} from "@/generated-sources/openapi";
+import {RightErrorInformationRest, RightErrorRecomputationRest, RightErrorRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import rightErrorApi from "@/api/rightErrorApi";
 import url from "@/utils/url";
 import date_utils from "@/utils/date_utils";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import {useUserStore} from "@/stores/user";
 
 export default defineComponent({
   computed: {
@@ -26,6 +27,7 @@ export default defineComponent({
       "dashboardClosed"
   ],
   setup(props, {emit}) {
+    const userStore = useUserStore();
     /**
      * Table:
      */
@@ -184,7 +186,33 @@ export default defineComponent({
     });
 
     /**
-     * Pageinator:
+     * Recomputing errors:
+     */
+    const recomputationIsRunning = ref(false);
+    const recomputeErrors = () => {
+      recomputationIsRunning.value = true;
+      rightErrorApi
+          .recomputeRightErrors()
+          .then((r: RightErrorRecomputationRest) => {
+            successMsgIsActive.value = true;
+            successMsg.value = "Aktualisierung erfolgreich: " + r.numberOfErrors + " Fehler wurden gefunden.";
+            currentPage.value = 1;
+            pageSize.value = 10;
+            getErrorList();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
+          })
+          .finally(() => {
+            recomputationIsRunning.value = false;
+          });
+    }
+
+    /**
+     * Pagination:
      */
     const handlePageChange = () => {
       getErrorList();
@@ -282,6 +310,7 @@ export default defineComponent({
       pageSizes,
       receivedConflictTypes,
       receivedContextNames,
+      recomputationIsRunning,
       renderKey,
       searchTerm,
       selectedConflictTypes,
@@ -291,11 +320,13 @@ export default defineComponent({
       successMsg,
       successMsgIsActive,
       totalPages,
+      userStore,
       close,
       createRightHref,
       endDateEntered,
       getErrorList,
       prettyPrintConflict,
+      recomputeErrors,
       resetFilter,
       startDateEntered,
     };
@@ -341,6 +372,18 @@ export default defineComponent({
       >
         {{ errorMsg }}
       </v-snackbar>
+      <v-row>
+        <v-col cols="auto" class="pa-1">
+          <v-btn
+              color="blue darken-1"
+              @click="recomputeErrors"
+              :disabled="!userStore.isLoggedIn"
+              :loading="recomputationIsRunning"
+          >
+            Aktualisieren
+          </v-btn>
+        </v-col>
+      </v-row>
       <v-row>
         <v-col>
           <b>Art</b>

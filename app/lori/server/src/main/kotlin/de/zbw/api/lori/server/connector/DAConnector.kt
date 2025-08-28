@@ -276,7 +276,7 @@ class DAConnector(
             val numberItems: Int = collection.numberItems ?: 0
             LOG.info("Collection Handle ${collection.handle}: Start importing $numberItems items")
             val deferredResults = mutableListOf<Deferred<Int>>()
-            for (offset in 0..ceil(numberItems.toDouble() / 100).toInt() - 1) {
+            for (offset in 0..<ceil(numberItems.toDouble() / 100).toInt()) {
                 deferredResults +=
                     async {
                         semaphore.withPermit {

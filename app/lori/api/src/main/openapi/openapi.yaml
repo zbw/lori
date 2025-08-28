@@ -34,6 +34,8 @@ paths:
     $ref: 'error.api.yaml#/right-test-id'
   /errors/rights/list:
     $ref: 'error.api.yaml#/right-errors'
+  /errors/rights/recompute:
+    $ref: 'error.api.yaml#/recompute-errors'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:
