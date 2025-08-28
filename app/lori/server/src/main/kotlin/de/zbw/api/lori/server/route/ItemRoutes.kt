@@ -62,7 +62,7 @@ fun Routing.itemRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/item") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span =
                     tracer
@@ -131,7 +131,7 @@ fun Routing.itemRoutes(
         }
 
         route("/metadata") {
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete {
                     val span =
                         tracer
@@ -201,7 +201,7 @@ fun Routing.itemRoutes(
         }
 
         route("/right") {
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete("{rightId}") {
                     val span =
                         tracer
@@ -271,7 +271,7 @@ fun Routing.itemRoutes(
             }
         }
 
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             delete {
                 val span =
                     tracer

@@ -27,6 +27,6 @@ class DummyConfig(
 
 fun ApplicationTestBuilder.moduleAuthForTests() {
     install(Authentication) {
-        register(MockAuthProvider(DummyConfig("auth-login")))
+        register(MockAuthProvider(DummyConfig("auth-session")))
     }
 }

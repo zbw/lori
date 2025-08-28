@@ -180,37 +180,24 @@ class ServicePoolWithProbes(
         install(Authentication) {
             session<UserSession>("auth-session") {
                 validate { session: UserSession ->
-                    backend
-                        .getSessionById(session.sessionId)
-                        ?.takeIf { s ->
-                            s.validUntil > Instant.now() &&
-                                (
-                                    s.permissions.contains(UserPermission.WRITE) ||
-                                        s.permissions.contains(
-                                            UserPermission.ADMIN,
-                                        )
-                                )
-                        }?.let { session }
+                    when {
+                        session.sessionId.isBlank() -> {
+                            null
+                        }
+                        else ->
+                            backend
+                                .getSessionById(session.sessionId)
+                                ?.takeIf { s ->
+                                    s.validUntil > Instant.now().minusMillis(500) &&
+                                        s.permissions.any { it == UserPermission.WRITE || it == UserPermission.ADMIN }
+                                }?.let { session }
+                    }
                 }
                 challenge {
+                    call.response.headers.append("WWW-Authenticate", "Session")
                     call.respond(
                         HttpStatusCode.Unauthorized,
-                    )
-                }
-            }
-            session<UserSession>("auth-login") {
-                validate { session: UserSession ->
-                    backend
-                        .getSessionById(session.sessionId)
-                        ?.takeIf { s ->
-                            s.validUntil > Instant.now() &&
-                                s.firstName == session.email
-                        }?.let { session }
-                }
-                challenge {
-                    call.respond(
-                        HttpStatusCode.Unauthorized,
-                        ApiError.unauthorizedError(ApiError.USER_MISSING_RIGHTS),
+                        ApiError.unauthorizedError("Authentication required"),
                     )
                 }
             }

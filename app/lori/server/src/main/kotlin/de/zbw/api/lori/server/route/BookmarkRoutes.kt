@@ -43,7 +43,7 @@ fun Routing.bookmarkRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/bookmarkraw") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span: Span =
                     tracer
@@ -287,7 +287,7 @@ fun Routing.bookmarkRoutes(
             }
         }
 
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span: Span =
                     tracer

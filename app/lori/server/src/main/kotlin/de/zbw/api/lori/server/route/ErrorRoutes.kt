@@ -100,7 +100,7 @@ fun Routing.errorRoutes(
                     }
                 }
             }
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete("{testId}") {
                     val span =
                         tracer

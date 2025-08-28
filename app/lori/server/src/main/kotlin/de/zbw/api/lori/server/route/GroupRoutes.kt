@@ -41,7 +41,7 @@ fun Routing.groupRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/group") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             /**
              * Insert a new Group.
              */

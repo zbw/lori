@@ -99,7 +99,7 @@ fun Routing.rightRoutes(
             }
         }
 
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span =
                     tracer
