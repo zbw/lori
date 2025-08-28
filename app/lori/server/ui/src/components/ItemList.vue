@@ -693,6 +693,7 @@ export default defineComponent({
       }
       searchStore.lastSearchTerm = searchStore.searchTerm;
       searchStore.isLastSearchForTemplates = false;
+      searchStore.isLastSearchNonTrivialAndSuccessful = false;
       templateSearchIsActive.value = false;
       currentRightId.value = "";
       currentItem.value = {} as ItemRest;
@@ -801,6 +802,9 @@ export default defineComponent({
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
       numberOfResults.value = response.numberOfResults;
+      if(searchStore.filtersAsQuery != "" || searchStore.searchTerm.trim() != ""){
+        searchStore.isLastSearchNonTrivialAndSuccessful = true;
+      }
     };
 
     const resetAllDynamicFilter = (response: ItemInformation) => {

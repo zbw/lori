@@ -13,6 +13,7 @@ export const useSearchStore = defineStore("search", () => {
   const lastSearchTerm = ref("");
   const isLastSearchForTemplates = ref(false);
   const filtersAsQuery = ref("");
+  const isLastSearchNonTrivialAndSuccessful = ref(false);
 
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
   const accessStateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
@@ -106,6 +107,7 @@ export const useSearchStore = defineStore("search", () => {
     manualRight,
     noRightInformation,
     isLastSearchForTemplates,
+    isLastSearchNonTrivialAndSuccessful,
     licenceUrlIdx,
     licenceUrlReceived,
     licenceUrlSelectedLastSearch,
