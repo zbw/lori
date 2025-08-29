@@ -519,7 +519,7 @@ class LoriServerBackend(
             val numberOfResults =
                 async {
                     items
-                        .takeIf { it.isNotEmpty() || offset != 0 }
+                        .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
                         ?.let {
                             dbConnector.searchDB.countSearchMetadata(
                                 searchExpression,

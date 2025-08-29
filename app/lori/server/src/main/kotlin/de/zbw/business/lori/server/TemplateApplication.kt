@@ -169,7 +169,7 @@ class TemplateApplication(
             }
 
             val deferredResults = mutableListOf<Deferred<TemplateApplicationResult>>()
-            for (offset in 0..ceil(facetsResult.numberOfResults.toDouble() / LIMIT).toInt() - 1) {
+            for (offset in 0..<ceil(facetsResult.numberOfResults.toDouble() / LIMIT).toInt()) {
                 deferredResults +=
                     async {
                         semaphore.withPermit {
