@@ -58,7 +58,16 @@ class RightDBTest : DatabaseTest() {
             val receivedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
 
             // then
-            assertThat(receivedRights.first(), `is`(initialRight.copy(rightId = generatedRightId, lastAppliedOn = null)))
+            assertThat(
+                receivedRights.first(),
+                `is`(
+                    initialRight.copy(
+                        firstAppliedOn = null,
+                        rightId = generatedRightId,
+                        lastAppliedOn = null,
+                    ),
+                ),
+            )
             assertTrue(dbConnector.rightDB.rightContainsId(generatedRightId))
 
             // upsert
@@ -79,7 +88,13 @@ class RightDBTest : DatabaseTest() {
             val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
             assertThat(
                 receivedUpdatedRights.first(),
-                `is`(updatedRight.copy(lastUpdatedOn = NOW.plusDays(1), lastAppliedOn = null)),
+                `is`(
+                    updatedRight.copy(
+                        lastUpdatedOn = NOW.plusDays(1),
+                        firstAppliedOn = null,
+                        lastAppliedOn = null,
+                    ),
+                ),
             )
 
             // delete
@@ -169,13 +184,19 @@ class RightDBTest : DatabaseTest() {
                 dbConnector.rightDB.insertRight(
                     TEST_RIGHT.copy(
                         isTemplate = true,
+                        firstAppliedOn = null,
                         lastAppliedOn = null,
                         templateName = templateNameUpper,
                     ),
                 )
             val templateNameException = "exception"
             val exceptionTemplate1 =
-                TEST_RIGHT.copy(isTemplate = true, lastAppliedOn = null, templateName = templateNameException)
+                TEST_RIGHT.copy(
+                    isTemplate = true,
+                    firstAppliedOn = null,
+                    lastAppliedOn = null,
+                    templateName = templateNameException,
+                )
             val excID1 = dbConnector.rightDB.insertRight(exceptionTemplate1)
 
             assertFalse(
@@ -220,6 +241,7 @@ class RightDBTest : DatabaseTest() {
             val draftRight =
                 TEST_RIGHT.copy(
                     rightId = "draft",
+                    firstAppliedOn = null,
                     lastAppliedOn = null,
                     templateName = "draft",
                     isTemplate = true,
@@ -228,6 +250,7 @@ class RightDBTest : DatabaseTest() {
             val exceptionRight =
                 TEST_RIGHT.copy(
                     rightId = "exception2",
+                    firstAppliedOn = null,
                     lastAppliedOn = null,
                     exceptionOfId = draftRightId,
                     templateName = "exception2",
@@ -273,6 +296,7 @@ class RightDBTest : DatabaseTest() {
             val draftRight2 =
                 TEST_RIGHT.copy(
                     rightId = "draft2",
+                    firstAppliedOn = null,
                     lastAppliedOn = null,
                     templateName = "draft2",
                     isTemplate = true,
@@ -339,6 +363,7 @@ class RightDBTest : DatabaseTest() {
             val draftRight =
                 TEST_RIGHT.copy(
                     rightId = "upper_remove_draft",
+                    firstAppliedOn = null,
                     lastAppliedOn = null,
                     templateName = "UPPER REMOVE EXCEPTION",
                     isTemplate = true,
@@ -348,6 +373,7 @@ class RightDBTest : DatabaseTest() {
             val exceptionRight =
                 TEST_RIGHT.copy(
                     rightId = "exception_remove_exception",
+                    firstAppliedOn = null,
                     lastAppliedOn = null,
                     exceptionOfId = null,
                     hasExceptionId = null,
@@ -387,6 +413,7 @@ class RightDBTest : DatabaseTest() {
                 exceptionOfId = null,
                 hasExceptionId = null,
                 hasLegalRisk = true,
+                firstAppliedOn = TEST_RIGHT.firstAppliedOn,
                 groups = TEST_RIGHT.groups,
                 groupIds = TEST_RIGHT.groups?.map { it.groupId },
                 isTemplate = true,

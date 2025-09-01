@@ -49,10 +49,10 @@ class LoriGrpcServer(
         return withContext(span.asContextElement()) {
             try {
                 val errors =
-                    daConnector.backend.checkForRightErrors(GPRC_USER).size
+                    daConnector.backend.checkForRightErrors(GPRC_USER)
                 CheckForRightErrorsResponse
                     .newBuilder()
-                    .setNumberOfErrors(errors)
+                    .setNumberOfErrors(errors.size)
                     .build()
             } catch (e: Throwable) {
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())

@@ -3,6 +3,7 @@ import {computed, defineComponent, onMounted, PropType, ref, Ref, watch} from "v
 import {RelationshipRest, RelationshipRestRelationshipEnum, RightRest} from "@/generated-sources/openapi";
 import error from "@/utils/error";
 import templateApi from "@/api/templateApi";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   props: {
@@ -20,7 +21,7 @@ export default defineComponent({
   },
   emits: ["predecessorSelected", "successorSelected", "relationshipConnectClosed"],
   setup(props, { emit }) {
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Name",
         align: "start",

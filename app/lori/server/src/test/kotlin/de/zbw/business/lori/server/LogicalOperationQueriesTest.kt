@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -40,19 +41,19 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         listOf(
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject1",
-                handle = "subject1",
+                handle = "11159/708",
                 publicationType = PublicationType.PROCEEDING,
                 publicationYear = 2022,
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject2 subject3",
-                handle = "subject2&3",
+                handle = "11159/709",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationYear = 2020,
             ),
             ItemDBTest.TEST_Metadata.copy(
                 collectionName = "subject4",
-                handle = "subject4",
+                handle = "11159/710",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationYear = 2020,
             ),
@@ -112,9 +113,10 @@ class LogicalOperationQueriesTest : DatabaseTest() {
         val (numberOfResults, searchResult) =
             runBlocking {
                 backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 

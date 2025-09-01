@@ -56,8 +56,20 @@ class ItemRoutesKtTest {
 
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { itemContainsEntry(givenHandle, givenRightId) } returns false
-                coEvery { insertItemEntry(givenHandle, givenRightId, any()) } returns Either.Right("foo")
+                coEvery {
+                    itemContainsEntry(
+                        handle = givenHandle,
+                        rightId = givenRightId,
+                    )
+                } returns false
+                coEvery {
+                    insertItemEntry(
+                        handle = givenHandle,
+                        rightId = givenRightId,
+                        deleteOnConflict = any(),
+                        createdBy = any(),
+                    )
+                } returns Either.Right("foo")
             }
         val servicePool = getServicePool(backend)
 
@@ -631,11 +643,13 @@ class ItemRoutesKtTest {
                 coEvery {
                     searchQuery(
                         searchTerm,
-                        any(),
-                        any(),
-                        any(),
-                        any(),
-                        any(),
+                        limit = any(),
+                        offset = any(),
+                        metadataSearchFilter = any(),
+                        rightSearchFilter = any(),
+                        noRightInformationFilter = any(),
+                        handlesToIgnore = any(),
+                        sortInformation = any(),
                     )
                 } returns (
                     SearchQueryResult(
@@ -717,11 +731,13 @@ class ItemRoutesKtTest {
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
                     searchQuery(
-                        any(),
-                        defaultLimit,
-                        defaultOffset,
-                        emptyList(),
-                        emptyList(),
+                        searchTerm = any(),
+                        limit = defaultLimit,
+                        offset = defaultOffset,
+                        metadataSearchFilter = emptyList(),
+                        rightSearchFilter = emptyList(),
+                        noRightInformationFilter = any(),
+                        sortInformation = any(),
                     )
                 } returns (
                     SearchQueryResult(
@@ -798,11 +814,13 @@ class ItemRoutesKtTest {
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
                     searchQuery(
-                        any(),
-                        any(),
-                        any(),
-                        emptyList(),
-                        emptyList(),
+                        searchTerm = any(),
+                        limit = any(),
+                        offset = any(),
+                        metadataSearchFilter = emptyList(),
+                        rightSearchFilter = emptyList(),
+                        noRightInformationFilter = any(),
+                        sortInformation = any(),
                     )
                 } returns (
                     SearchQueryResult(
@@ -847,11 +865,13 @@ class ItemRoutesKtTest {
             assertThat(response.status, `is`(HttpStatusCode.OK))
             coVerify(exactly = 1) {
                 backend.searchQuery(
-                    any(),
-                    MAX_VALUE,
-                    0,
-                    emptyList(),
-                    emptyList(),
+                    searchTerm = any(),
+                    limit = MAX_VALUE,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = any(),
+                    sortInformation = any(),
                 )
             }
         }
@@ -908,7 +928,14 @@ class ItemRoutesKtTest {
         val searchTerm = "com:foobar"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { searchQuery(searchTerm, any(), any()) } throws SQLException()
+                coEvery {
+                    searchQuery(
+                        searchTerm = searchTerm,
+                        limit = any(),
+                        offset = any(),
+                        sortInformation = any(),
+                    )
+                } throws SQLException()
             }
         val servicePool = getServicePool(backend)
 
@@ -933,7 +960,14 @@ class ItemRoutesKtTest {
         val searchTerm = "com:foobar"
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
-                coEvery { searchQuery(searchTerm, any(), any()) } throws ParsingException("some parsing error")
+                coEvery {
+                    searchQuery(
+                        searchTerm = searchTerm,
+                        limit = any(),
+                        offset = any(),
+                        sortInformation = any(),
+                    )
+                } throws ParsingException("some parsing error")
             }
         val servicePool = getServicePool(backend)
 

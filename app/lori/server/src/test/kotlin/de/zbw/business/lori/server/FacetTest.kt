@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -256,11 +257,12 @@ class FacetTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = rightsSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -318,7 +320,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB1 =
             TEST_Metadata.copy(
-                handle = "zdb1",
+                handle = "11159/104",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_1),
                 publicationYear = 2010,
@@ -326,7 +328,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel1 =
             TEST_Metadata.copy(
-                handle = "sigel1",
+                handle = "11159/105",
                 collectionName = "common sigel",
                 paketSigel = listOf(SIGEL_1, "foobar"),
                 publicationYear = 2011,
@@ -335,7 +337,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB2 =
             TEST_Metadata.copy(
-                handle = "zdb2",
+                handle = "11159/106",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_2),
                 publicationYear = 2012,
@@ -343,7 +345,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel2 =
             TEST_Metadata.copy(
-                handle = "sigel2",
+                handle = "11159/107",
                 collectionName = "common sigel",
                 paketSigel = listOf(SIGEL_2),
                 publicationYear = 2013,
@@ -352,7 +354,7 @@ class FacetTest : DatabaseTest() {
 
         val itemZDB3 =
             TEST_Metadata.copy(
-                handle = "zdb3",
+                handle = "11159/108",
                 collectionName = "common zdb",
                 zdbIds = listOf(ZDB_3),
                 publicationYear = 2014,
@@ -360,7 +362,7 @@ class FacetTest : DatabaseTest() {
             )
         val itemSigel3 =
             TEST_Metadata.copy(
-                handle = "sigel3",
+                handle = "11159/109",
                 collectionName = "common sigel",
                 paketSigel = listOf(SIGEL_3),
                 publicationYear = 2015,

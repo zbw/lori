@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.route
 
+import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardTemplateNameFilter
@@ -8,19 +9,23 @@ import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.RightErrorRecomputationRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Routing
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.http.client.methods.RequestBuilder.post
 
 /**
  * REST-API routes for errors.
@@ -100,7 +105,7 @@ fun Routing.errorRoutes(
                     }
                 }
             }
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete("{testId}") {
                     val span =
                         tracer
@@ -136,6 +141,42 @@ fun Routing.errorRoutes(
                         } catch (e: Exception) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
+                                HttpStatusCode.InternalServerError,
+                                ApiError.internalServerError(
+                                    detail = "Ein interner Datenbankfehler ist aufgetreten.",
+                                ),
+                            )
+                        } finally {
+                            span.end()
+                        }
+                    }
+                }
+            }
+
+            authenticate("auth-session") {
+                post("/recompute") {
+                    val span =
+                        tracer
+                            .spanBuilder("lori.LoriService.POST/api/v1/errors/rights/recompute")
+                            .setSpanKind(SpanKind.SERVER)
+                            .startSpan()
+                    withContext(span.asContextElement()) {
+                        try {
+                            val userSession: UserSession =
+                                call.principal<UserSession>()
+                                    ?: return@withContext call.respond(
+                                        HttpStatusCode.Unauthorized,
+                                        ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                    ) // This should never happen
+                            val errors = backend.checkForRightErrors(userSession.email)
+                            span.setStatus(StatusCode.OK)
+                            return@withContext call.respond(
+                                HttpStatusCode.OK,
+                                RightErrorRecomputationRest(errors.size),
+                            )
+                        } catch (e: Exception) {
+                            span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            return@withContext call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
                                     detail = "Ein interner Datenbankfehler ist aufgetreten.",

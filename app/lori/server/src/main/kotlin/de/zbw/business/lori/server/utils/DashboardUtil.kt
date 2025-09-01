@@ -39,35 +39,32 @@ object DashboardUtil {
                 )
             }
         // Check for gaps between rights
-        var gapRightErrors: List<RightError> = emptyList()
+        val gapRightErrors: MutableList<RightError> = mutableListOf()
         val sortedRights = item.rights.sortedBy { it.startDate }
         for ((index, value) in sortedRights.withIndex()) {
             if (index == 0) {
                 continue
             }
             if (sortedRights[index - 1].endDate == null) {
-                LOG.warn("Unexpected undefined end date for RightId: ${sortedRights[index - 1].rightId}")
-
+                LOG.warn("Unexpected undefined end date for RightId: ${sortedRights[index - 1].rightId} for Handle ${item.metadata.handle}")
                 continue
             }
             if (value.startDate != sortedRights[index - 1].endDate!!.plusDays(1)) {
-                (
-                    gapRightErrors +
-                        RightError(
-                            handle = item.metadata.handle,
-                            message =
-                                "Dem Handle ${item.metadata.handle} fehlt eine Rechteinformation zwischen" +
-                                    " ${sortedRights[index - 1].endDate} und ${value.startDate}.",
-                            errorId = null,
-                            createdOn = OffsetDateTime.now(ZoneOffset.UTC),
-                            conflictingWithRightId = null,
-                            conflictByRightId = null,
-                            conflictType = ConflictType.GAP,
-                            conflictByContext = item.metadata.paketSigel?.joinToString(separator = ",") ?: item.metadata.collectionName,
-                            testId = null,
-                            createdBy = createdBy,
-                        )
-                ).also { gapRightErrors = it }
+                gapRightErrors +=
+                    RightError(
+                        handle = item.metadata.handle,
+                        message =
+                            "Dem Handle ${item.metadata.handle} fehlt eine Rechteinformation zwischen" +
+                                " ${sortedRights[index - 1].endDate} und ${value.startDate}.",
+                        errorId = null,
+                        createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                        conflictingWithRightId = null,
+                        conflictByRightId = null,
+                        conflictType = ConflictType.GAP,
+                        conflictByContext = item.metadata.paketSigel?.joinToString(separator = ",") ?: item.metadata.collectionName,
+                        testId = null,
+                        createdBy = createdBy,
+                    )
             }
         }
         return (gapRightErrors + unlimitedEndMissing).filterNotNull()

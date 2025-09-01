@@ -34,7 +34,7 @@ fun Routing.bookmarkTemplateRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/bookmarktemplates") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span: Span =
                     tracer

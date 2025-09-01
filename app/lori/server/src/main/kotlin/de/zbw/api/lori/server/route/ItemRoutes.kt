@@ -1,6 +1,8 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.Either
+import de.zbw.api.lori.server.type.UserSession
+import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.EndDateFilter
@@ -19,13 +21,20 @@ import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortByField
+import de.zbw.business.lori.server.type.SortInformation
+import de.zbw.business.lori.server.type.SortOrder
+import de.zbw.business.lori.server.utils.enumOrNull
 import de.zbw.lori.model.ItemCountByRight
 import de.zbw.lori.model.ItemEntry
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemSearch
+import de.zbw.lori.model.SortByRest
+import de.zbw.lori.model.SortOrderRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -53,7 +62,7 @@ fun Routing.itemRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/item") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span =
                     tracer
@@ -68,6 +77,12 @@ fun Routing.itemRoutes(
                                 .receive(ItemEntry::class)
                                 .takeIf { it.handle != null && it.rightId != null }
                                 ?: throw BadRequestException("Invalid Json has been provided")
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                ) // This should never happen
                         span.setAttribute("item", item.toString())
                         if (backend.itemContainsEntry(item.handle, item.rightId)) {
                             span.setStatus(StatusCode.ERROR, "Conflict: Resource with this primary key already exists.")
@@ -80,7 +95,15 @@ fun Routing.itemRoutes(
                         } else {
                             val deleteOnConflict: Boolean =
                                 call.request.queryParameters["deleteRightOnConflict"]?.toBoolean() == true
-                            when (val ret = backend.insertItemEntry(item.handle, item.rightId, deleteOnConflict)) {
+                            when (
+                                val ret =
+                                    backend.insertItemEntry(
+                                        handle = item.handle,
+                                        rightId = item.rightId,
+                                        deleteOnConflict = deleteOnConflict,
+                                        createdBy = userSession.email,
+                                    )
+                            ) {
                                 is Either.Left -> {
                                     call.respond(ret.value.first, ret.value.second)
                                 }
@@ -108,7 +131,7 @@ fun Routing.itemRoutes(
         }
 
         route("/metadata") {
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete {
                     val span =
                         tracer
@@ -178,7 +201,7 @@ fun Routing.itemRoutes(
         }
 
         route("/right") {
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete("{rightId}") {
                     val span =
                         tracer
@@ -248,7 +271,7 @@ fun Routing.itemRoutes(
             }
         }
 
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             delete {
                 val span =
                     tracer
@@ -378,6 +401,14 @@ fun Routing.itemRoutes(
                             ?: throw BadRequestException("Invalid Json has been provided")
                     var limit: Int = call.request.queryParameters["limit"]?.toInt() ?: 25
                     var offset: Int = call.request.queryParameters["offset"]?.toInt() ?: 0
+                    val sortOrder: SortOrder? =
+                        call.request.queryParameters
+                            .enumOrNull<SortOrderRest>("sortOrder")
+                            ?.toBusiness()
+                    val sortByField: SortByField? =
+                        call.request.queryParameters
+                            .enumOrNull<SortByRest>("sortBy")
+                            ?.toBusiness()
                     val facetsOnly: Boolean = call.request.queryParameters["facetsOnly"]?.toBoolean() == true
                     val noFacets: Boolean = call.request.queryParameters["noFacets"]?.toBoolean() == true
                     var pageSize: Int = call.request.queryParameters["pageSize"]?.toInt() ?: 1
@@ -514,6 +545,10 @@ fun Routing.itemRoutes(
                             emptyList(),
                             facetsOnly,
                             noFacets,
+                            SortInformation(
+                                sortByField = sortByField ?: SortByField.DEFAULT_SORT_BY_FIELD,
+                                sortOrder = sortOrder ?: SortOrder.DEFAULT_SORT_ORDER,
+                            ),
                         )
                     span.setStatus(StatusCode.OK)
                     call.respond(

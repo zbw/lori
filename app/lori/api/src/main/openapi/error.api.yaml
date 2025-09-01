@@ -107,3 +107,38 @@ right-test-id:
           application/json:
             schema:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
+
+recompute-errors:
+  post:
+    security:
+      - cookieAuth: [ ]
+    tags:
+      - rightError
+    summary: Recompute all logic errors of existing rights synchronous.
+    operationId: recomputeRightErrors
+    responses:
+      200:
+        description: Recomputation successfully executed
+        content:
+          application/json:
+            schema:
+              $ref: 'error.model.yaml#/RightErrorRecomputationRest'
+      400:
+        description: Bad request
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+    x-codegen-request-body-name: body

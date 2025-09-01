@@ -10,6 +10,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchGrammar
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -66,14 +67,19 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "roundtrip"),
-                    TEST_METADATA.copy(handle = "no_rights"),
+                    TEST_METADATA.copy(handle = "11159/222"),
+                    TEST_METADATA.copy(handle = "11159/223"),
                 )
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
             // when
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
+            val generatedRightId =
+                backend.insertRightForHandles(
+                    right = rightAssignments.first,
+                    handles = rightAssignments.second,
+                    createdBy = "testUser",
+                )
             val received = backend.getItemByHandle(givenMetadataEntries[0].handle)!!
 
             // then
@@ -91,11 +97,11 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadata =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "zzz", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "zzz2", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "aaa"),
-                    TEST_METADATA.copy(handle = "abb"),
-                    TEST_METADATA.copy(handle = "acc"),
+                    TEST_METADATA.copy(handle = "11159/818", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/819", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/820"),
+                    TEST_METADATA.copy(handle = "11159/821"),
+                    TEST_METADATA.copy(handle = "11159/822"),
                 )
 
             backend.insertMetadataElements(givenMetadata.toList())
@@ -104,9 +110,9 @@ class LoriServerBackendTest : DatabaseTest() {
             // then
             assertThat(
                 "Not equal",
-                receivedItems,
+                receivedItems.toSet(),
                 `is`(
-                    listOf(
+                    setOf(
                         Item(
                             givenMetadata[2],
                             emptyList(),
@@ -303,21 +309,27 @@ class LoriServerBackendTest : DatabaseTest() {
             // given
             val givenMetadataEntries =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "search_test_1", zdbIds = listOf("zbdTest")),
-                    TEST_METADATA.copy(handle = "search_test_2", zdbIds = listOf("zbdTest")),
+                    TEST_METADATA.copy(handle = "11159/801", zdbIds = listOf("zbdTest")),
+                    TEST_METADATA.copy(handle = "11159/802", zdbIds = listOf("zbdTest")),
                 )
             val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
 
             backend.insertMetadataElements(givenMetadataEntries.toList())
-            val generatedRightId = backend.insertRightForHandles(rightAssignments.first, rightAssignments.second)
+            val generatedRightId =
+                backend.insertRightForHandles(
+                    right = rightAssignments.first,
+                    handles = rightAssignments.second,
+                    createdBy = "testUser",
+                )
 
             // when
             val (number, items) =
                 runBlocking {
                     backend.searchQuery(
-                        "zdb:${givenMetadataEntries[0].zdbIds?.get(0)}",
-                        5,
-                        0,
+                        searchTerm = "zdb:${givenMetadataEntries[0].zdbIds?.get(0)}",
+                        limit = 5,
+                        offset = 0,
+                        sortInformation = SortInformation.DEFAULT,
                     )
                 }
 
@@ -329,7 +341,13 @@ class LoriServerBackendTest : DatabaseTest() {
                     setOf(
                         Item(
                             metadata = givenMetadataEntries[0],
-                            rights = listOf(TEST_RIGHT.copy(rightId = generatedRightId)),
+                            rights =
+                                listOf(
+                                    TEST_RIGHT.copy(
+                                        rightId = generatedRightId,
+                                        startDate = TEST_RIGHT.createdOn!!.toLocalDate(),
+                                    ),
+                                ),
                         ),
                         Item(
                             metadata = givenMetadataEntries[1],
@@ -343,9 +361,10 @@ class LoriServerBackendTest : DatabaseTest() {
             val (numberNoItem, itemsNoItem) =
                 runBlocking {
                     backend.searchQuery(
-                        "zdb:NOT_IN_DATABASE_ID",
-                        5,
-                        0,
+                        searchTerm = "zdb:NOT_IN_DATABASE_ID",
+                        limit = 5,
+                        offset = 0,
+                        sortInformation = SortInformation.DEFAULT,
                     )
                 }
             assertThat(numberNoItem, `is`(0))
@@ -706,7 +725,7 @@ class LoriServerBackendTest : DatabaseTest() {
                         rights = listOf(TEST_RIGHT),
                     ),
                     Item(
-                        metadata = TEST_METADATA.copy(handle = "metadata2"),
+                        metadata = TEST_METADATA.copy(handle = "11158/804"),
                         rights = listOf(TEST_RIGHT, TEST_RIGHT.copy(rightId = "right2")),
                     ),
                 ),
@@ -784,8 +803,8 @@ class LoriServerBackendTest : DatabaseTest() {
                 2022,
                 3,
                 1,
-                1,
-                1,
+                0,
+                0,
                 0,
                 0,
                 ZoneOffset.UTC,
@@ -804,7 +823,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("doi:example.org"),
-                handle = "hdl:example.handle.net",
+                handle = "11159/810",
                 isbn = listOf("1234567890123"),
                 issn = "123456",
                 isPartOfSeries = listOf("series"),
@@ -835,6 +854,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 endDate = TODAY,
                 exceptionOfId = null,
+                firstAppliedOn = null,
                 hasExceptionId = null,
                 hasLegalRisk = true,
                 groups = emptyList(),

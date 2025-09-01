@@ -140,6 +140,12 @@ right-id:
         required: true
         schema:
           type: string
+      - name: handle
+        in: query
+        description: Handle this right is related to
+        required: false
+        schema:
+          type: string
     responses:
       200:
         description: Successful operation

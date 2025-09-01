@@ -4,6 +4,8 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.ItemRow
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
@@ -14,6 +16,12 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_BY
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_HANDLE
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_LAST_UPDATED_BY
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_LAST_UPDATED_ON
+import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_RIGHT_ID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import io.opentelemetry.api.trace.Tracer
 import java.sql.Date
@@ -23,7 +31,8 @@ import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneId
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to rights.
@@ -81,11 +90,10 @@ class RightDB(
     ): PreparedStatement {
         val now = Instant.now()
         var localCounter = 1
-
         return prep.apply {
             this.setString(localCounter++, right.rightId)
-            this.setTimestamp(localCounter++, Timestamp.from(now))
-            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
             this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -159,10 +167,9 @@ class RightDB(
     ): PreparedStatement {
         val now = Instant.now()
         var localCounter = 1
-
         return prep.apply {
-            this.setTimestamp(localCounter++, Timestamp.from(now))
-            this.setTimestamp(localCounter++, Timestamp.from(now))
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
             this.setIfNotNull(localCounter++, right.createdBy) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -296,10 +303,10 @@ class RightDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun getRightIdsByHandle(handle: String): List<String> =
+    suspend fun getItemRowsByHandle(handle: String): List<ItemRow> =
         connectionPool.useConnection("getRightIdsByHandle") { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_RIGHTSIDS_FOR_METADATA).apply {
+                connection.prepareStatement(STATEMENT_GET_RIGHTS_IDS_FOR_METADATA).apply {
                     this.setString(1, handle)
                 }
             val span = tracer.spanBuilder("getRightIdsByHandle").startSpan()
@@ -312,7 +319,26 @@ class RightDB(
                 }
             return@useConnection generateSequence {
                 if (rs.next()) {
-                    rs.getString(1)
+                    ItemRow(
+                        rightId = rs.getString(1),
+                        handle = rs.getString(2),
+                        createdBy = rs.getString(3),
+                        createdOn =
+                            rs.getTimestamp(4, utcCalendar)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    TimezoneUtil.TIME_ZONE_UTC,
+                                )
+                            },
+                        lastUpdatedBy = rs.getString(5),
+                        lastUpdatedOn =
+                            rs.getTimestamp(6, utcCalendar)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    TimezoneUtil.TIME_ZONE_UTC,
+                                )
+                            },
+                    )
                 } else {
                     null
                 }
@@ -431,8 +457,9 @@ class RightDB(
             val now = Instant.now()
             val prepStmt =
                 connection.prepareStatement(STATEMENT_UPDATE_TEMPLATE_APPLIED_ON).apply {
-                    this.setTimestamp(1, Timestamp.from(now)) // last_applied_on
-                    this.setString(2, rightId)
+                    this.setTimestamp(1, Timestamp.from(now), utcCalendar) // last_applied_on
+                    this.setTimestamp(2, Timestamp.from(now), utcCalendar) // first_applied_on
+                    this.setString(3, rightId)
                 }
             val span = tracer.spanBuilder("updateTemplateById").startSpan()
             return@useConnection try {
@@ -651,11 +678,14 @@ class RightDB(
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"
         private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
+        private const val COLUMN_FIRST_APPLIED_ON = "first_applied_on"
         private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
         const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
         private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
         private const val COLUMN_PREDECESSOR_ID = "predecessor_id"
         private const val COLUMN_SUCCESSOR_ID = "successor_id"
+
+        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 
         const val STATEMENT_SELECT_ALL =
             "SELECT $COLUMN_RIGHT_ID,created_on,last_updated_on,created_by," +
@@ -665,7 +695,7 @@ class RightDB(
                 "basis_access_state,notes_process_documentation, notes_management_related," +
                 "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
                 "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID," +
-                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID"
+                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID,$COLUMN_FIRST_APPLIED_ON"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
@@ -677,8 +707,9 @@ class RightDB(
                 " FROM $TABLE_NAME_ITEM_RIGHT " +
                 " WHERE $COLUMN_RIGHT_ID = ANY(?)"
 
-        const val STATEMENT_GET_RIGHTSIDS_FOR_METADATA =
-            "SELECT right_id" +
+        const val STATEMENT_GET_RIGHTS_IDS_FOR_METADATA =
+            "SELECT $COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_HANDLE,$COLUMN_ITEM_CREATED_BY," +
+                "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON" +
                 " FROM $TABLE_NAME_ITEM" +
                 " WHERE $COLUMN_METADATA_HANDLE = ?"
 
@@ -773,7 +804,11 @@ class RightDB(
 
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_LAST_APPLIED_ON=?" +
+                " SET $COLUMN_LAST_APPLIED_ON=?," +
+                " $COLUMN_FIRST_APPLIED_ON = CASE" +
+                " WHEN $COLUMN_FIRST_APPLIED_ON IS NULL THEN ?" +
+                " ELSE $COLUMN_FIRST_APPLIED_ON" +
+                " END" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_IS_EXCEPTION =
@@ -807,17 +842,17 @@ class RightDB(
             return ItemRight(
                 rightId = currentRightId,
                 createdOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 lastUpdatedOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 createdBy = rs.getString(localCounter++),
@@ -838,10 +873,10 @@ class RightDB(
                 templateName = rs.getString(localCounter++),
                 templateDescription = rs.getString(localCounter++),
                 lastAppliedOn =
-                    rs.getTimestamp(localCounter++)?.let {
+                    rs.getTimestamp(localCounter++, utcCalendar)?.let {
                         OffsetDateTime.ofInstant(
                             it.toInstant(),
-                            ZoneId.of("UTC+00:00"),
+                            TimezoneUtil.TIME_ZONE_UTC,
                         )
                     },
                 exceptionOfId = rs.getString(localCounter++),
@@ -849,6 +884,13 @@ class RightDB(
                 hasExceptionId = rs.getString(localCounter++),
                 predecessorId = rs.getString(localCounter++),
                 successorId = rs.getString(localCounter++),
+                firstAppliedOn =
+                    rs.getTimestamp(localCounter++)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            TimezoneUtil.TIME_ZONE_UTC,
+                        )
+                    },
                 groups = null,
                 groupIds = null,
             )

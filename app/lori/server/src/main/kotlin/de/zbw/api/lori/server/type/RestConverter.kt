@@ -30,6 +30,8 @@ import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.RightIdTemplateName
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortByField
+import de.zbw.business.lori.server.type.SortOrder
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.lori.model.AccessStateRest
@@ -55,6 +57,8 @@ import de.zbw.lori.model.PublicationTypeWithCountRest
 import de.zbw.lori.model.RightErrorInformationRest
 import de.zbw.lori.model.RightErrorRest
 import de.zbw.lori.model.RightRest
+import de.zbw.lori.model.SortByRest
+import de.zbw.lori.model.SortOrderRest
 import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
@@ -222,6 +226,7 @@ fun RightRest.toBusiness(): ItemRight =
         createdOn = createdOn,
         endDate = endDate,
         exceptionOfId = exceptionOfId,
+        firstAppliedOn = firstAppliedOn,
         hasExceptionId = hasExceptionId,
         groups = groups?.map { it.toBusiness() },
         groupIds = groupIds,
@@ -264,10 +269,11 @@ fun ItemRight.toRest(): RightRest =
         createdOn = createdOn,
         endDate = endDate,
         exceptionOfId = exceptionOfId,
-        hasExceptionId = hasExceptionId,
-        hasLegalRisk = hasLegalRisk,
+        firstAppliedOn = firstAppliedOn,
         groupIds = groups?.map { it.groupId },
         groups = groups?.map { it.toRest() },
+        hasExceptionId = hasExceptionId,
+        hasLegalRisk = hasLegalRisk,
         isTemplate = isTemplate,
         lastAppliedOn = lastAppliedOn,
         lastUpdatedBy = lastUpdatedBy,
@@ -304,7 +310,6 @@ internal fun RightRest.BasisAccessState.toBusiness(): BasisAccessState =
     when (this) {
         RightRest.BasisAccessState.authorrightexception -> BasisAccessState.AUTHOR_RIGHT_EXCEPTION
         RightRest.BasisAccessState.licencecontract -> BasisAccessState.LICENCE_CONTRACT
-        RightRest.BasisAccessState.licencecontractoa -> BasisAccessState.LICENCE_CONTRACT_OA
         RightRest.BasisAccessState.opencontentlicence -> BasisAccessState.OPEN_CONTENT_LICENCE
         RightRest.BasisAccessState.useragreement -> BasisAccessState.USER_AGREEMENT
         RightRest.BasisAccessState.zbwpolicy -> BasisAccessState.ZBW_POLICY
@@ -314,7 +319,6 @@ internal fun BasisAccessState.toRest(): RightRest.BasisAccessState =
     when (this) {
         BasisAccessState.AUTHOR_RIGHT_EXCEPTION -> RightRest.BasisAccessState.authorrightexception
         BasisAccessState.LICENCE_CONTRACT -> RightRest.BasisAccessState.licencecontract
-        BasisAccessState.LICENCE_CONTRACT_OA -> RightRest.BasisAccessState.licencecontractoa
         BasisAccessState.OPEN_CONTENT_LICENCE -> RightRest.BasisAccessState.opencontentlicence
         BasisAccessState.USER_AGREEMENT -> RightRest.BasisAccessState.useragreement
         BasisAccessState.ZBW_POLICY -> RightRest.BasisAccessState.zbwpolicy
@@ -413,7 +417,10 @@ fun DAItem.toBusiness(
                 } else {
                     publicationDate.year
                 }
-            }
+            } ?: let {
+            LOG.warn("Item misses the required dc.date.issued field: Handle: ${this.handle}")
+            null
+        }
 
     val title =
         RestConverter.extractMetadata("dc.title", metadata)?.let {
@@ -814,6 +821,31 @@ fun TemplateApplicationResult.toRest(): TemplateApplicationRest =
                 )
             },
     )
+
+fun SortOrderRest.toBusiness(): SortOrder =
+    when (this) {
+        SortOrderRest.asc -> SortOrder.ASC
+        SortOrderRest.desc -> SortOrder.DESC
+    }
+
+fun SortByRest.toBusiness(): SortByField =
+    when (this) {
+        SortByRest.collection_name -> SortByField.COLLECTION_NAME
+        SortByRest.community_name -> SortByField.COMMUNITY_NAME
+        SortByRest.handle -> SortByField.HANDLE
+        SortByRest.publication_type -> SortByField.PUBLICATION_TYPE
+        SortByRest.publication_year -> SortByField.PUBLICATION_YEAR
+        SortByRest.title -> SortByField.TITLE
+        SortByRest.band -> SortByField.BAND
+        SortByRest.doi -> SortByField.DOI
+        SortByRest.isbn -> SortByField.ISBN
+        SortByRest.issn -> SortByField.ISSN
+        SortByRest.paketSigel -> SortByField.PAKET_SIGEL
+        SortByRest.ppn -> SortByField.PPN
+        SortByRest.series -> SortByField.IS_PART_OF_SERIES
+        SortByRest.titleJournal -> SortByField.TITLE_JOURNAL
+        SortByRest.titleSeries -> SortByField.TITLE_SERIES
+    }
 
 /**
  * Utility functions helping to convert

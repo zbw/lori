@@ -30,7 +30,7 @@ fun Routing.usersRoutes(
 ) {
     route("/api/v1/users") {
         route("/sessions") {
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 get {
                     val span =
                         tracer

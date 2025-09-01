@@ -9,6 +9,7 @@ import {useUserStore} from "@/stores/user";
 import RightsDeleteDialog from "@/components/RightsDeleteDialog.vue";
 import GroupDeleteDialog from "@/components/GroupDeleteDialog.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   components: {GroupDeleteDialog, RightsDeleteDialog, GroupEdit },
@@ -17,7 +18,7 @@ export default defineComponent({
   ],
   setup(props, {emit}) {
     const renderKey = ref(0);
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Name",
         align: "start",

@@ -80,7 +80,6 @@ enum class BasisStorage {
 enum class BasisAccessState {
     AUTHOR_RIGHT_EXCEPTION,
     LICENCE_CONTRACT,
-    LICENCE_CONTRACT_OA,
     OPEN_CONTENT_LICENCE,
     USER_AGREEMENT,
     ZBW_POLICY,
@@ -96,6 +95,7 @@ data class ItemRight(
     val endDate: LocalDate?,
     val exceptionOfId: String?,
     val hasExceptionId: String?,
+    val firstAppliedOn: OffsetDateTime?,
     val groupIds: List<Int>?,
     val groups: List<Group>?,
     val isTemplate: Boolean,
@@ -115,6 +115,15 @@ data class ItemRight(
     val templateDescription: String?,
     val templateName: String?,
     val zbwUserAgreement: Boolean?,
+)
+
+data class ItemRow(
+    val rightId: String,
+    val handle: String,
+    val createdBy: String?,
+    val createdOn: OffsetDateTime?,
+    val lastUpdatedBy: String?,
+    val lastUpdatedOn: OffsetDateTime?,
 )
 
 enum class FormalRule {

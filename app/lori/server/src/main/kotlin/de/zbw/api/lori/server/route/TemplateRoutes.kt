@@ -49,7 +49,7 @@ fun Routing.templateRoutes(
     tracer: Tracer,
 ) {
     route("/api/v1/template") {
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             post {
                 val span: Span =
                     tracer.spanBuilder("lori.LoriService.POST/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
@@ -276,7 +276,7 @@ fun Routing.templateRoutes(
             }
         }
 
-        authenticate("auth-login") {
+        authenticate("auth-session") {
             /**
              * Apply given templates.
              */
@@ -476,7 +476,7 @@ fun Routing.templateRoutes(
                 }
             }
 
-            authenticate("auth-login") {
+            authenticate("auth-session") {
                 delete {
                     val span =
                         tracer

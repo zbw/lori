@@ -10,9 +10,13 @@ const configuration = new Configuration({
 const rightApi = new RightApi(configuration);
 
 export default {
-  getRightById(rightId: string): Promise<RightRest> {
+  getRightById(
+      rightId: string,
+      handle: string | undefined,
+      ): Promise<RightRest> {
     return rightApi.getRightById({
       id: rightId,
+      handle: handle,
     });
   },
 };

@@ -2,6 +2,8 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.PublicationType
+import de.zbw.business.lori.server.type.SortInformation
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
@@ -15,6 +17,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to metadata.
@@ -68,7 +72,8 @@ class MetadataDB(
                 connection
                     .prepareStatement(
                         STATEMENT_SELECT_ALL_METADATA_FROM +
-                            " ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
+                            " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
+                            " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
                     ).apply {
                         this.setInt(1, limit)
                         this.setInt(2, offset)
@@ -252,6 +257,7 @@ class MetadataDB(
         const val COLUMN_METADATA_ISSN = "issn"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
         const val COLUMN_METADATA_HANDLE = "handle"
+        const val COLUMN_METADATA_HANDLE_POSTFIX = "handle_postfix"
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
         const val COLUMN_METADATA_LAST_UPDATED_ON = "last_updated_on"
         const val COLUMN_METADATA_LICENCE_URL = "licence_url"
@@ -267,6 +273,8 @@ class MetadataDB(
         const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
+
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 
         const val STATEMENT_METADATA_CONTAINS_HANDLE =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM_METADATA WHERE handle=?)"
@@ -285,7 +293,7 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED" +
+                COLUMN_METADATA_DELETED +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -367,7 +375,7 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED" +
+                COLUMN_METADATA_DELETED +
                 ") " +
                 "VALUES(" +
                 "?,?,?,?," +
@@ -393,8 +401,8 @@ class MetadataDB(
                 paketSigel = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIds = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 issn = rs.getString(localCounter++),
-                createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
-                lastUpdatedOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                createdOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
+                lastUpdatedOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
                 createdBy = rs.getString(localCounter++),
                 lastUpdatedBy = rs.getString(localCounter++),
                 author = rs.getString(localCounter++),
@@ -454,8 +462,8 @@ class MetadataDB(
                 this.setIfNotNull(localCounter++, itemMetadata.issn) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setTimestamp(localCounter++, Timestamp.from(now))
-                this.setTimestamp(localCounter++, Timestamp.from(now))
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 this.setIfNotNull(localCounter++, itemMetadata.createdBy) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }

@@ -41,6 +41,7 @@ import ExceptionConnect from "@/components/ExceptionConnect.vue";
 import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
+import {ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
@@ -177,6 +178,17 @@ export default defineComponent({
         return "";
       } else {
         return date_utils.dateToIso8601(formState.endDate);
+      }
+    });
+
+    const firstAppliedForHandleFormatted = computed(() => {
+      if (
+          date_utils.isEmptyObject(lastSavedRight.value.firstAppliedForHandleOn) ||
+          lastSavedRight.value.firstAppliedForHandleOn == undefined
+      ) {
+        return "";
+      } else {
+        return date_utils.dateToIso8601(lastSavedRight.value.firstAppliedForHandleOn);
       }
     });
 
@@ -325,7 +337,6 @@ export default defineComponent({
     const basisAccessState = ref([
       "Lizenzvertrag",
       "Nutzungsvereinbarung",
-      "OA-Rechte aus Lizenzvertrag",
       "Open Content",
       "Urheberrechtschranke",
       "ZBW-Policy",
@@ -648,7 +659,9 @@ export default defineComponent({
     };
 
     const closeBookmarkEditDialog = () => {
-      loadBookmarks();
+      if(!props.isNewTemplate) {
+        loadBookmarks();
+      }
       editDialogActivated.value = false;
     };
 
@@ -868,8 +881,6 @@ export default defineComponent({
             return "Lizenzvertrag";
           case RightRestBasisAccessStateEnum.Zbwpolicy:
             return "ZBW-Policy";
-          case RightRestBasisAccessStateEnum.Licencecontractoa:
-            return "OA-Rechte aus Lizenzvertrag";
           case RightRestBasisStorageEnum.Opencontentlicence:
             return "Open Content";
           default:
@@ -887,8 +898,6 @@ export default defineComponent({
             return RightRestBasisAccessStateEnum.Licencecontract;
           case "Nutzungsvereinbarung":
             return RightRestBasisAccessStateEnum.Useragreement;
-          case "OA-Rechte aus Lizenzvertrag":
-            return RightRestBasisAccessStateEnum.Licencecontractoa;
           case "Urheberrechtschranke":
             return RightRestBasisAccessStateEnum.Authorrightexception;
           case "ZBW-Policy":
@@ -1053,7 +1062,10 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(computedRightId.value)
+          .getRightById(
+              computedRightId.value,
+              props.handle,
+          )
           .then((r: RightRest) => {
             lastSavedRight.value = r;
             callback();
@@ -1109,7 +1121,7 @@ export default defineComponent({
     };
 
     const lastSavedBookmarkItems: Ref<Array<BookmarkRest>> = ref([]);
-    const bookmarkHeaders = [
+    const bookmarkHeaders: ReadonlyDataTableHeader[] = [
       {
         title: "Id",
         align: "start",
@@ -1165,7 +1177,7 @@ export default defineComponent({
     };
 
     const lastSavedExceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
-    const exceptionTemplateHeaders = [
+    const exceptionTemplateHeaders: ReadonlyDataTableHeader[] = [
       {
         title: "Id",
         align: "start",
@@ -1298,7 +1310,10 @@ export default defineComponent({
         return;
       }
       rightApi
-        .getRightById(lastSavedRight.value.predecessorId)
+        .getRightById(
+            lastSavedRight.value.predecessorId,
+            undefined,
+        )
         .then((predecessor: RightRest) => {
           formState.predecessors = [predecessor];
           lastSavedPredecessors.value = [predecessor];
@@ -1322,7 +1337,10 @@ export default defineComponent({
         return;
       }
       rightApi
-          .getRightById(lastSavedRight.value.successorId)
+          .getRightById(
+              lastSavedRight.value.successorId,
+              undefined,
+          )
           .then((successor: RightRest) => {
             formState.successors = [successor];
             lastSavedSuccessors.value = [successor];
@@ -1529,6 +1547,7 @@ export default defineComponent({
       errorIPGroup,
       errorMsgIsActive,
       errorMsg,
+      firstAppliedForHandleFormatted,
       groupItems,
       hasMissingBookmark,
       isStartDateMenuOpen,
@@ -1934,6 +1953,18 @@ export default defineComponent({
                 </v-col>
               </v-row>
               <v-row>
+                <v-col cols="4"> Erstmals angewendet am</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-model="tmpRight.firstAppliedOn"
+                      variant="outlined"
+                      readonly
+                      bg-color="grey-lighten-2"
+                      hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
                 <v-col cols="4"> Zuletzt angewendet am</v-col>
                 <v-col cols="8">
                   <v-text-field
@@ -2311,10 +2342,24 @@ export default defineComponent({
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.startDate" color="primary">
+                  <v-date-picker
+                      first-day-of-week="1"
+                      v-model="formState.startDate"
+                      color="primary">
                     <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>
+              </v-col>
+            </v-row>
+            <v-row v-if="isTabEntry && isTemplate">
+              <v-col cols="4">
+                Datum der ersten Template-Anwendung auf das Objekt
+              </v-col>
+              <v-col cols="8">
+                {{ firstAppliedForHandleFormatted }}
+                <div class="text-caption text-grey-darken-1 mt-1">
+                  Datum der ersten Template-Anwendung auf das Objekt
+                </div>
               </v-col>
             </v-row>
             <v-row>
@@ -2341,7 +2386,10 @@ export default defineComponent({
                       v-bind="{...$attrs, ...props, ...loginStatusProps}"
                     ></v-text-field>
                   </template>
-                  <v-date-picker v-model="formState.endDate" color="primary">
+                  <v-date-picker
+                      first-day-of-week="1"
+                      v-model="formState.endDate"
+                      color="primary">
                     <template v-slot:header></template>
                   </v-date-picker>
                 </v-menu>

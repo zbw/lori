@@ -395,6 +395,15 @@ item-search:
         in: query
         schema:
           type: string
+      - name: sortBy
+        in: query
+        schema:
+          $ref: 'item.model.yaml#/components/schemas/SortByRest'
+      - name: sortOrder
+        in: query
+        schema:
+          $ref: 'item.model.yaml#/components/schemas/SortOrderRest'
+
     responses:
       200:
         description: Successful operation

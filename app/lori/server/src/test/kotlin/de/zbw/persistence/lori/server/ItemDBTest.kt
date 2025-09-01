@@ -52,24 +52,25 @@ class ItemDBTest : DatabaseTest() {
     fun testDeleteItem() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(handle = "item_roundtrip_meta")
+            val expectedMetadata = TEST_Metadata.copy(handle = "11159/505")
             val expectedRight = TEST_RIGHT
 
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItemBatch(
+            dbConnector.itemDB.upsertItemBatch(
                 listOf(
                     ItemId(
                         handle = expectedMetadata.handle,
                         rightId = generatedRightId,
                     ),
                 ),
+                createdBy = "testUser",
             )
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -80,7 +81,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }
@@ -89,24 +90,25 @@ class ItemDBTest : DatabaseTest() {
     fun testDeleteItemBy() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(handle = "delete_item_meta")
+            val expectedMetadata = TEST_Metadata.copy(handle = "11159/4000")
             val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
             // when
             dbConnector.metadataDB.insertMetadata(expectedMetadata)
             val generatedRightId = dbConnector.rightDB.insertRight(expectedRight)
-            dbConnector.itemDB.insertItemBatch(
+            dbConnector.itemDB.upsertItemBatch(
                 listOf(
                     ItemId(
                         handle = expectedMetadata.handle,
                         rightId = generatedRightId,
                     ),
                 ),
+                createdBy = "testUser",
             )
 
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -117,7 +119,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
 
@@ -127,10 +129,11 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata.handle,
                     rightId = generatedRightId,
                 ),
+                createdBy = "testUser",
             )
             // then
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle).map { it.rightId },
                 `is`(listOf(generatedRightId)),
             )
 
@@ -141,7 +144,7 @@ class ItemDBTest : DatabaseTest() {
             )
 
             assertThat(
-                dbConnector.rightDB.getRightIdsByHandle(expectedMetadata.handle),
+                dbConnector.rightDB.getItemRowsByHandle(expectedMetadata.handle),
                 `is`(emptyList()),
             )
         }
@@ -150,7 +153,7 @@ class ItemDBTest : DatabaseTest() {
     fun testItemExists() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_Metadata.copy(handle = "item_exists_metadata")
+            val expectedMetadata = TEST_Metadata.copy(handle = "11159/1815")
             val expectedRight = TEST_RIGHT.copy(templateName = null, isTemplate = false)
 
             assertFalse(dbConnector.itemDB.itemContainsRightId(expectedRight.rightId!!))
@@ -164,6 +167,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata.handle,
                     rightId = generatedRightId,
                 ),
+                createdBy = "testUser",
             )
 
             // then
@@ -177,8 +181,8 @@ class ItemDBTest : DatabaseTest() {
     fun testItemBatchInsert() =
         runBlocking {
             // Given
-            val expectedMetadata1 = TEST_Metadata.copy(handle = "item_1")
-            val expectedMetadata2 = TEST_Metadata.copy(handle = "item_2")
+            val expectedMetadata1 = TEST_Metadata.copy(handle = "11159/1817")
+            val expectedMetadata2 = TEST_Metadata.copy(handle = "11159/1818")
             val expectedRight1 = TEST_RIGHT.copy(rightId = "right1", templateName = null, isTemplate = false)
             val expectedRight2 = TEST_RIGHT.copy(rightId = "right2", templateName = null, isTemplate = false)
             dbConnector.metadataDB.insertMetadata(expectedMetadata1)
@@ -192,6 +196,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata1.handle,
                     rightId = generatedRightId1,
                 ),
+                createdBy = "testUser",
             )
 
             dbConnector.itemDB.insertItem(
@@ -199,6 +204,7 @@ class ItemDBTest : DatabaseTest() {
                     handle = expectedMetadata2.handle,
                     rightId = generatedRightId2,
                 ),
+                createdBy = "testUser",
             )
 
             // then
@@ -214,8 +220,8 @@ class ItemDBTest : DatabaseTest() {
                 2022,
                 3,
                 1,
-                1,
-                1,
+                0,
+                0,
                 0,
                 0,
                 ZoneOffset.UTC,
@@ -235,7 +241,7 @@ class ItemDBTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("10.992", "10.001"),
-                handle = "hdl:example.handle.net",
+                handle = "11159/101",
                 isbn = listOf("12345", "67890123"),
                 issn = "123456",
                 isPartOfSeries = listOf("series123"),
@@ -268,6 +274,7 @@ class ItemDBTest : DatabaseTest() {
                 exceptionOfId = null,
                 hasExceptionId = null,
                 hasLegalRisk = true,
+                firstAppliedOn = NOW.minusYears(1L),
                 groups = emptyList(),
                 groupIds = emptyList(),
                 isTemplate = false,

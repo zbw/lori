@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -43,14 +44,14 @@ class FormalRuleFilterTest : DatabaseTest() {
 
     private val ccLicenceMetadata =
         TEST_Metadata.copy(
-            handle = "CC licence",
+            handle = "11159/3001",
             licenceUrlFilter = "by/3.0/igo/",
             licenceUrl = "https://creativecommons.org/licenses/by/3.0/igo/",
         )
 
     private val noLegalRiskMetadata =
         TEST_Metadata.copy(
-            handle = "no legal risk",
+            handle = "11159/3002",
             licenceUrlFilter = "blub",
             licenceUrl = "blub",
         )
@@ -131,12 +132,13 @@ class FormalRuleFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
-                    emptyList(),
-                    rightFilters,
-                    null,
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightFilters,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(
@@ -174,12 +176,13 @@ class FormalRuleFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    searchTerm,
-                    10,
-                    0,
-                    emptyList(),
-                    rightFilters,
-                    null,
+                    searchTerm = searchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightFilters,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(

@@ -18,6 +18,7 @@ import de.zbw.business.lori.server.type.SEOr
 import de.zbw.business.lori.server.type.SEPar
 import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ACCESS_STATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_TEMPLATE_NAME
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
@@ -25,11 +26,11 @@ import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_TYPE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_YEAR
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORAGE_DATE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
@@ -77,7 +78,11 @@ class SearchDBTest : DatabaseTest() {
     fun searchMetadata() =
         runBlocking {
             // given
-            val testZDB = TEST_Metadata.copy(handle = "searchZBD", zdbIds = listOf("zdbid"))
+            val testZDB =
+                TEST_Metadata.copy(
+                    handle = "11159/7630",
+                    zdbIds = listOf("zdbid"),
+                )
             dbConnector.metadataDB.insertMetadata(testZDB)
 
             // when
@@ -93,6 +98,7 @@ class SearchDBTest : DatabaseTest() {
                     metadataSearchFilter = emptyList(),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             val numberResultZDB =
                 dbConnector.searchDB.countSearchMetadata(
@@ -125,6 +131,7 @@ class SearchDBTest : DatabaseTest() {
                     metadataSearchFilter = emptyList(),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             val numberResultAll =
                 dbConnector.searchDB.countSearchMetadata(
@@ -137,7 +144,11 @@ class SearchDBTest : DatabaseTest() {
             assertThat(numberResultAll, `is`(1))
 
             // Add second metadata with same zbdID
-            val testZDB2 = TEST_Metadata.copy(handle = "searchZBD2", zdbIds = listOf("zdbid"))
+            val testZDB2 =
+                TEST_Metadata.copy(
+                    handle = "11159/7631",
+                    zdbIds = listOf("zdbid"),
+                )
             dbConnector.metadataDB.insertMetadata(testZDB2)
             // when
             val resultZBD2 =
@@ -148,6 +159,7 @@ class SearchDBTest : DatabaseTest() {
                     metadataSearchFilter = emptyList(),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             val numberResultZDB2 =
                 dbConnector.searchDB.countSearchMetadata(
@@ -168,6 +180,7 @@ class SearchDBTest : DatabaseTest() {
                     metadataSearchFilter = emptyList(),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             assertThat(
                 resultZDB2Offset.size,
@@ -184,7 +197,7 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_STORAGE_DATE DESC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
                     " LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
             ),
@@ -201,7 +214,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE (EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
                     " AND ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_STORAGE_DATE DESC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date filter",
             ),
@@ -221,7 +234,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
                     " OR ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_STORAGE_DATE DESC" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
                     " LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),
@@ -242,6 +255,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList(),
                 null,
                 hasHandlesToIgnore = false,
+                sortInformation = SortInformation.DEFAULT,
             ),
             `is`(expectedWhereClause),
         )
@@ -266,7 +280,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
-                    " ORDER BY im.storage_date DESC" +
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
             ),
@@ -283,7 +297,7 @@ class SearchDBTest : DatabaseTest() {
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null)) AND" +
                     " (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY im.storage_date DESC" +
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
             ),
@@ -314,8 +328,8 @@ class SearchDBTest : DatabaseTest() {
                     " OR lower(publication_type) = lower(?)))" +
                     " as sub" +
                     " WHERE NOT handle = ANY(?)" +
-                    " ORDER BY storage_date" +
-                    " DESC LIMIT ? OFFSET ?",
+                    " ORDER BY $COLUMN_METADATA_HANDLE_POSTFIX DESC" +
+                    " LIMIT ? OFFSET ?",
                 "all the filters",
             ),
         )
@@ -338,6 +352,7 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter,
                 noRightInformationFilter,
                 hasMetadataItemToIgnore,
+                sortInformation = SortInformation.DEFAULT,
             ),
             `is`(expectedWhereClause),
         )
@@ -355,7 +370,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM ($SELECT_ALL_WITH_TS" +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_STORAGE_DATE DESC)" +
+                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC)" +
                     " as countsearch",
                 "count query filter with one searchkey",
             ),
@@ -388,12 +403,14 @@ class SearchDBTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 emptyList<MetadataSearchFilter>(),
-                "$STATEMENT_GET_METADATA_RANGE ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
+                "$STATEMENT_GET_METADATA_RANGE ORDER BY $COLUMN_METADATA_HANDLE_POSTFIX DESC LIMIT ? OFFSET ?;",
                 "metasearch query without filter",
             ),
             arrayOf(
                 listOf(PublicationYearFilter(2000, 2019)),
-                "$STATEMENT_GET_METADATA_RANGE WHERE $COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
+                STATEMENT_GET_METADATA_RANGE +
+                    " WHERE $COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ?" +
+                    " ORDER BY $COLUMN_METADATA_HANDLE_POSTFIX DESC LIMIT ? OFFSET ?;",
                 "metasearch query with one filter",
             ),
             arrayOf(
@@ -408,7 +425,7 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 STATEMENT_GET_METADATA_RANGE +
                     " WHERE $COLUMN_METADATA_PUBLICATION_YEAR >= ? AND $COLUMN_METADATA_PUBLICATION_YEAR <= ? AND" +
-                    " (publication_type = ? OR publication_type = ?) ORDER BY $COLUMN_METADATA_HANDLE ASC LIMIT ? OFFSET ?;",
+                    " (publication_type = ? OR publication_type = ?) ORDER BY $COLUMN_METADATA_HANDLE_POSTFIX DESC LIMIT ? OFFSET ?;",
                 "metasearch query with multiple filter",
             ),
         )
@@ -429,7 +446,7 @@ class SearchDBTest : DatabaseTest() {
                     " AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
                     " AND (access_state = ? AND access_state is not null)) AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null) AND (lower(publication_type) = lower(?))" +
-                    " ORDER BY im.storage_date DESC)" +
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC)" +
                     " as countsearch",
                 "search bar filter metadata and right",
             ),
@@ -444,7 +461,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
-                    " ORDER BY im.storage_date DESC) as countsearch",
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC) as countsearch",
                 "only right filter",
             ),
         )
@@ -484,7 +501,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
-                    " ORDER BY im.storage_date DESC" +
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "query only right filter",
             ),
@@ -500,7 +517,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?))" +
-                    " ORDER BY im.storage_date DESC" +
+                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "query with both filters",
             ),
@@ -521,6 +538,7 @@ class SearchDBTest : DatabaseTest() {
                 rightSearchFilter,
                 null,
                 hasHandlesToIgnore = false,
+                sortInformation = SortInformation.DEFAULT,
             ),
             `is`(expectedSQLQuery),
         )
@@ -704,8 +722,6 @@ class SearchDBTest : DatabaseTest() {
         const val DATA_FOR_METASEARCH_QUERY = "DATA_FOR_METASEARCH_QUERY"
         const val DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY "
 
-        const val DATA_FOR_BUILD_SIGEL_AND_ZDB = "DATA_FOR_BUILD_SIGEL_AND_ZDB"
-
         const val STATEMENT_GET_METADATA_RANGE =
             "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal," +
                 "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
@@ -721,17 +737,12 @@ class SearchDBTest : DatabaseTest() {
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
-                "ts_hdl,ts_subcom_name"
+                "ts_hdl,ts_subcom_name,${COLUMN_METADATA_HANDLE_POSTFIX}"
         const val SELECT_ALL =
             "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band," +
                 "publication_type,doi,isbn,paket_sigel,zdb_ids,issn,created_on,last_updated_on," +
                 "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
-                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED"
-
-        const val LEFT_JOIN_RIGHT =
-            "LEFT JOIN item" +
-                " ON item.$COLUMN_METADATA_HANDLE = $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE" +
-                " LEFT JOIN item_right as ir ON item.right_id = $ALIAS_ITEM_RIGHT.right_id"
+                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_HANDLE_POSTFIX"
     }
 }

@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -39,7 +40,7 @@ class MultipleWordSearchTest : DatabaseTest() {
 
     private val multipleWords =
         TEST_Metadata.copy(
-            handle = "multiple word",
+            handle = "11159/7181",
             collectionName = "subject1 subject2 subject3",
         )
 
@@ -96,7 +97,12 @@ class MultipleWordSearchTest : DatabaseTest() {
         // when
         val searchQueryResult: SearchQueryResult =
             runBlocking {
-                backend.searchQuery(searchTerm, limit, offset)
+                backend.searchQuery(
+                    searchTerm = searchTerm,
+                    limit = limit,
+                    offset = offset,
+                    sortInformation = SortInformation.DEFAULT,
+                )
             }
 
         // then

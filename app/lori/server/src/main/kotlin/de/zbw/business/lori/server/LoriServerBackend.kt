@@ -17,6 +17,7 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.RightIdTemplateName
@@ -24,8 +25,11 @@ import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.Session
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.DashboardUtil
+import de.zbw.business.lori.server.utils.TimezoneUtil
+import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import de.zbw.lori.model.ErrorRest
 import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
@@ -40,9 +44,10 @@ import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.util.UUID
+import kotlin.collections.filter
 
 /**
  * Backend for the Lori-Server.
@@ -68,15 +73,18 @@ class LoriServerBackend(
     internal suspend fun insertRightForHandles(
         right: ItemRight,
         handles: List<String>,
+        createdBy: String,
     ): String {
         val pkRight = dbConnector.rightDB.insertRight(right.copy(isTemplate = false, templateName = null))
-        dbConnector.itemDB.insertItemBatch(
-            handles.map {
-                ItemId(
-                    handle = it,
-                    rightId = pkRight,
-                )
-            },
+        dbConnector.itemDB.upsertItemBatch(
+            createdBy = createdBy,
+            itemIds =
+                handles.map {
+                    ItemId(
+                        handle = it,
+                        rightId = pkRight,
+                    )
+                },
         )
         return pkRight
     }
@@ -85,6 +93,7 @@ class LoriServerBackend(
         handle: String,
         rightId: String,
         deleteOnConflict: Boolean = false,
+        createdBy: String = "",
     ): Either<Pair<HttpStatusCode, ErrorRest>, String> =
         if (checkRightConflicts(handle, rightId)) {
             if (deleteOnConflict) {
@@ -99,10 +108,12 @@ class LoriServerBackend(
         } else {
             dbConnector.itemDB
                 .insertItem(
-                    ItemId(
-                        handle = handle,
-                        rightId = rightId,
-                    ),
+                    itemId =
+                        ItemId(
+                            handle = handle,
+                            rightId = rightId,
+                        ),
+                    createdBy = createdBy,
                 )?.let { Either.Right(it) }
                 ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
         }
@@ -195,6 +206,14 @@ class LoriServerBackend(
 
     suspend fun getMetadataElementsByIds(handles: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
 
+    suspend fun getItemRowsByHandleAndRightId(
+        handle: String,
+        rightId: String,
+    ): ItemRow? {
+        val rows: List<ItemRow> = dbConnector.rightDB.getItemRowsByHandle(handle)
+        return rows.firstOrNull { it.rightId == rightId }
+    }
+
     suspend fun metadataContainsHandle(handle: String): Boolean = dbConnector.metadataDB.metadataContainsHandle(handle)
 
     suspend fun rightContainsId(rightId: String): Boolean = dbConnector.rightDB.rightContainsId(rightId)
@@ -206,8 +225,8 @@ class LoriServerBackend(
             ?.first()
             ?.let { meta ->
                 val rights =
-                    dbConnector.rightDB.getRightIdsByHandle(handle).let {
-                        dbConnector.rightDB.getRightsByIds(it)
+                    dbConnector.rightDB.getItemRowsByHandle(handle).let {
+                        dbConnector.rightDB.getRightsByIds(it.map { item -> item.rightId })
                     }
                 Item(
                     meta,
@@ -251,15 +270,39 @@ class LoriServerBackend(
 
     private suspend fun getRightsForMetadata(metadataList: List<ItemMetadata>): List<Item> =
         coroutineScope {
-            val metadataToRights =
+            val metadataToRights: List<Pair<ItemMetadata, Deferred<List<ItemRow>>>> =
                 metadataList.map { metadata ->
-                    metadata to async { dbConnector.rightDB.getRightIdsByHandle(metadata.handle) }
+                    metadata to async { dbConnector.rightDB.getItemRowsByHandle(metadata.handle) }
                 }
 
             return@coroutineScope metadataToRights.map { p ->
+                val itemRows: List<ItemRow> = p.second.await()
+                val rightIdToItemRow: Map<String, ItemRow> = itemRows.associateBy { it.rightId }
+                val rights: List<ItemRight> =
+                    dbConnector.rightDB
+                        .getRightsByIds(itemRows.map { it.rightId })
+
+                val adjustedRights: List<ItemRight> =
+                    rights
+                        .map { r ->
+                            val firstApplicationDate =
+                                r.rightId
+                                    ?.let {
+                                        rightIdToItemRow[it]
+                                    }?.createdOn
+                                    ?.let { utcOffsetDateTimeToBerlinDate(it) }
+
+                            if (firstApplicationDate == null) {
+                                return@map listOf(r)
+                            }
+                            filterAndAdjustTemplatesByDate(
+                                listOf(r),
+                                firstApplicationDate,
+                            )
+                        }.flatten()
                 Item(
                     p.first,
-                    dbConnector.rightDB.getRightsByIds(p.second.await()),
+                    adjustedRights,
                 )
             }
         }
@@ -326,10 +369,29 @@ class LoriServerBackend(
         return dbConnector.rightDB.deleteRightsByIds(listOf(rightId))
     }
 
-    suspend fun getRightEntriesByHandle(handle: String): List<ItemRight> =
-        dbConnector.rightDB.getRightIdsByHandle(handle).let {
-            dbConnector.rightDB.getRightsByIds(it)
-        }
+    suspend fun getRightEntriesByHandle(handle: String): List<ItemRight> {
+        val itemTables = dbConnector.rightDB.getItemRowsByHandle(handle)
+        val rightIdToItemTable = itemTables.associateBy { it.rightId }
+        val rights = dbConnector.rightDB.getRightsByIds(itemTables.map { itemTable -> itemTable.rightId })
+        val (templates, nonTemplates) = rights.partition { it.isTemplate }
+        val adjustedTemplates =
+            templates
+                .map { t ->
+                    val itemTable = rightIdToItemTable[t.rightId]
+                    if (itemTable == null) {
+                        return emptyList()
+                    }
+                    filterAndAdjustTemplatesByDate(
+                        templates = listOf(t),
+                        firstApplicationDate =
+                            itemTable
+                                .createdOn
+                                ?.let { utcOffsetDateTimeToBerlinDate(it) }
+                                ?: FALLBACK_DATE,
+                    )
+                }.flatten()
+        return adjustedTemplates + nonTemplates
+    }
 
     suspend fun deleteSessionById(sessionID: String) = dbConnector.userDB.deleteSessionById(sessionID)
 
@@ -384,6 +446,7 @@ class LoriServerBackend(
         handlesToIgnore: List<String> = emptyList(),
         facetsOnly: Boolean = false,
         noFacets: Boolean = false,
+        sortInformation: SortInformation = SortInformation.DEFAULT,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -408,6 +471,7 @@ class LoriServerBackend(
                             rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
                             noRightInformationFilter,
                             handlesToIgnore,
+                            sortInformation,
                         )
                     } else {
                         return@async emptyList()
@@ -455,7 +519,7 @@ class LoriServerBackend(
             val numberOfResults =
                 async {
                     items
-                        .takeIf { it.isNotEmpty() || offset != 0 }
+                        .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
                         ?.let {
                             dbConnector.searchDB.countSearchMetadata(
                                 searchExpression,
@@ -681,7 +745,7 @@ class LoriServerBackend(
                     handle = metadata.handle,
                     message = "Handle ist gelöscht worden",
                     errorId = null,
-                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
                     conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
                     conflictByRightId = null,
                     conflictType = ConflictType.DELETION,
@@ -705,6 +769,7 @@ class LoriServerBackend(
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = NoRightInformationFilter(),
+                sortInformation = SortInformation.DEFAULT,
             )
         val errors =
             metadataWithoutRights.map { metadata ->
@@ -712,7 +777,10 @@ class LoriServerBackend(
                     handle = metadata.handle,
                     message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",
                     errorId = null,
-                    createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                    createdOn =
+                        OffsetDateTime.now(
+                            TimezoneUtil.TIME_ZONE_UTC,
+                        ),
                     conflictingWithRightId = null,
                     conflictByRightId = null,
                     conflictType = ConflictType.NO_RIGHT,
@@ -731,10 +799,10 @@ class LoriServerBackend(
         val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
         val items =
             metadata.map { m ->
-                val rightIds = dbConnector.rightDB.getRightIdsByHandle(m.handle)
+                val items = dbConnector.rightDB.getItemRowsByHandle(m.handle)
                 Item(
                     metadata = m,
-                    rights = dbConnector.rightDB.getRightsByIds(rightIds),
+                    rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),
                 )
             }
         val errors = items.map { DashboardUtil.checkForGapErrors(it, createdBy) }.flatten()
@@ -757,7 +825,7 @@ class LoriServerBackend(
                     dryRun,
                     createdBy,
                 )
-            }
+            }.sortedBy { it.rightId }
     }
 
     suspend fun applyTemplates(
@@ -765,142 +833,18 @@ class LoriServerBackend(
         skipTemplateDrafts: Boolean,
         dryRun: Boolean,
         createdBy: String,
-    ): List<TemplateApplicationResult> =
-        rightIds.mapNotNull { rightId ->
-            applyTemplate(
+    ): List<TemplateApplicationResult> {
+        val templateApplication =
+            TemplateApplication(
+                dbConnector = dbConnector,
+                backend = this,
+            )
+        return rightIds.mapNotNull { rightId ->
+            templateApplication.applyTemplate(
                 rightId,
                 skipTemplateDrafts,
                 dryRun,
                 createdBy,
-            )
-        }
-
-    internal suspend fun applyTemplate(
-        rightId: String,
-        skipTemplateDrafts: Boolean,
-        dryRun: Boolean,
-        createdBy: String,
-    ): TemplateApplicationResult? {
-        // Get Right object
-        val right: ItemRight =
-            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
-        if (skipTemplateDrafts && right.lastAppliedOn == null) {
-            // Draft will be skipped for now.
-            return null
-        }
-        // Exceptions
-        val exceptionTemplate: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
-        val exceptionTemplateApplicationResult: TemplateApplicationResult? =
-            exceptionTemplate?.let { excTemp ->
-                excTemp.rightId?.let {
-                    applyTemplate(
-                        it,
-                        false,
-                        dryRun,
-                        createdBy,
-                    )
-                }
-            }
-        val bookmarksIdsExceptions: Set<Int> =
-            dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
-                exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList(),
-            )
-        val bookmarksExceptions: List<Bookmark> =
-            dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
-
-        val searchResultsExceptions: Set<String> =
-            bookmarksExceptions
-                .flatMap { b ->
-                    val searchExpression: SearchExpression? =
-                        b.searchTerm
-                            ?.takeIf { it.isNotBlank() }
-                            ?.let { SearchGrammar.tryParseToEnd(it) }
-                            ?.let {
-                                when (it) {
-                                    is Parsed -> it.value
-                                    is ErrorResult -> throw ParsingException("Parsing error in query: $it")
-                                }
-                            }
-                    dbConnector.searchDB.searchForHandles(
-                        searchExpression = searchExpression,
-                        limit = null,
-                        offset = null,
-                        metadataSearchFilter = b.getAllMetadataFilter(),
-                        rightSearchFilter = b.getAllRightFilter(),
-                        noRightInformationFilter = b.noRightInformationFilter,
-                        handlesToIgnore = emptyList(),
-                    )
-                }.toSet()
-
-        // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
-        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
-
-        // Get search results for each bookmark
-        val searchResults: Set<Item> =
-            bookmarks
-                .asSequence()
-                .flatMap { b ->
-                    runBlocking {
-                        searchQuery(
-                            searchTerm = b.searchTerm,
-                            limit = null,
-                            offset = null,
-                            metadataSearchFilter = b.getAllMetadataFilter(),
-                            rightSearchFilter = b.getAllRightFilter(),
-                            noRightInformationFilter = b.noRightInformationFilter,
-                            handlesToIgnore = searchResultsExceptions.toList(),
-                        )
-                    }.results
-                }.toSet()
-
-        if (!dryRun) {
-            // Delete all template connections
-            dbConnector.itemDB.deleteItemByRightId(rightId)
-
-            // Update last_applied_on field
-            dbConnector.rightDB.updateAppliedOnByTemplateId(rightId)
-        }
-
-        // Connect Template to all results
-        if (!dryRun) {
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, null, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-            dbConnector.rightErrorDB.deleteByCausingRightId(right.rightId!!)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
-            dbConnector.itemDB.insertItemBatch(
-                searchResultsWithoutConflict.map {
-                    ItemId(
-                        handle = it.metadata.handle,
-                        rightId = rightId,
-                    )
-                },
-            )
-            return TemplateApplicationResult(
-                rightId = rightId,
-                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-                errors = itemsWithConflicts.values.flatten(),
-                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
-                templateName = right.templateName ?: "Missing Template Name",
-                testId = null,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
-            )
-        } else {
-            val testId = UUID.randomUUID().toString()
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, testId, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
-            return TemplateApplicationResult(
-                rightId = rightId,
-                // TODO(CB): Don't send back thousands of errors for now
-                errors = emptyList(),
-                appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-                exceptionTemplateApplicationResult = exceptionTemplateApplicationResult,
-                templateName = right.templateName ?: "Missing Template Name",
-                testId = testId,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
             )
         }
     }
@@ -1022,6 +966,8 @@ class LoriServerBackend(
     }
 
     companion object {
+        val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)
+
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.
          * Valid special characters: '-:;'
@@ -1144,6 +1090,32 @@ class LoriServerBackend(
                     }
                     acc
                 }.toMap()
+        }
+
+        /**
+         * Right information whose end date lies before the given date will be discarded.
+         * If only the start date lies before the date then the start date will be set to the date.
+         *
+         * Templates may have ranges which end and/or start before the lifetime of the metadata it has
+         * been applied to. Therefore, the start date for this metadata will be adjusted.
+         */
+        fun filterAndAdjustTemplatesByDate(
+            templates: List<ItemRight>,
+            firstApplicationDate: LocalDate,
+        ): List<ItemRight> {
+            val fs =
+                templates.filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
+            val rightsCorrectStart =
+                fs.map { right ->
+                    if (firstApplicationDate > right.startDate) {
+                        right.copy(
+                            startDate = firstApplicationDate,
+                        )
+                    } else {
+                        right
+                    }
+                }
+            return rightsCorrectStart
         }
     }
 }

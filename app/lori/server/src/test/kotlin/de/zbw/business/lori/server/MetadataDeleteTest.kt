@@ -38,7 +38,7 @@ class MetadataDeleteTest : DatabaseTest() {
             every { Instant.now() } returns NOW.minusDays(14L).toInstant()
             val deletedMetadata =
                 TEST_Metadata.copy(
-                    handle = "two-weeks-old",
+                    handle = "11159/7080",
                     deleted = false,
                 )
             backend.insertMetadataElement(deletedMetadata)
@@ -46,7 +46,7 @@ class MetadataDeleteTest : DatabaseTest() {
             every { Instant.now() } returns NOW.toInstant()
             val upToDateMetadata =
                 TEST_Metadata.copy(
-                    handle = "up-to-date",
+                    handle = "11159/7081",
                     deleted = false,
                 )
             backend.insertMetadataElement(upToDateMetadata)

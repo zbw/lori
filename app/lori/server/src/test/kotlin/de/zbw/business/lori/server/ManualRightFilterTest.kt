@@ -5,6 +5,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -43,21 +44,21 @@ class ManualRightFilterTest : DatabaseTest() {
         )
     private val itemRightManual =
         TEST_Metadata.copy(
-            handle = "item with manual right",
+            handle = "11159/81",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
 
     private val itemWithTemplate =
         TEST_Metadata.copy(
-            handle = "item only with template",
+            handle = "11159/82",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
 
     private val itemNoRight =
         TEST_Metadata.copy(
-            handle = "no rights",
+            handle = "11159/83",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
@@ -125,12 +126,13 @@ class ManualRightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    emptyList(),
-                    rightSearchFilter,
-                    null,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilter,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(

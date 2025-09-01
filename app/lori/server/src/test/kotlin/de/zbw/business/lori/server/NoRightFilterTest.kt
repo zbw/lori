@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -44,13 +45,13 @@ class NoRightFilterTest : DatabaseTest() {
         )
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            handle = "restricted right",
+            handle = "11159/7381",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
     private val itemNoRight =
         TEST_Metadata.copy(
-            handle = "no rights",
+            handle = "11159/7382",
             collectionName = "subject1",
             publicationType = PublicationType.PROCEEDING,
         )
@@ -163,12 +164,13 @@ class NoRightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    emptyList(),
-                    noRightInformationFilter,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = noRightInformationFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
         assertThat(

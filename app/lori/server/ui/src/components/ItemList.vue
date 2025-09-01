@@ -30,12 +30,10 @@ import {useUserStore} from "@/stores/user";
 import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
+import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
 
 export default defineComponent({
   computed: {
-    bookmarkSave() {
-      return bookmarkSave
-    },
     metadata_utils() {
       return metadata_utils;
     },
@@ -71,7 +69,7 @@ export default defineComponent({
     const selectedItems: Ref<Array<string>> = ref([]);
     const tableContentLoading = ref(true);
 
-    const headers = [
+    const headers: ReadonlyDataTableHeader[] = [
       {
         title: "Titel",
         sortable: true,
@@ -105,42 +103,52 @@ export default defineComponent({
       },
       {
         title: "Band",
+        sortable: true,
         value: "band",
       },
       {
         title: "DOI",
+        sortable: true,
         value: "doi",
       },
       {
         title: "ISBN",
+        sortable: true,
         value: "isbn",
       },
       {
         title: "ISSN",
+        sortable: true,
         value: "issn",
       },
       {
         title: "Paket-Sigel",
+        sortable: true,
         value: "paketSigel",
       },
       {
         title: "PPN",
+        sortable: true,
         value: "ppn",
       },
       {
         title: "Titel Journal",
+        sortable: true,
         value: "titleJournal",
       },
       {
         title: "Titel Serie",
+        sortable: true,
         value: "titleSeries",
       },
       {
         title: "ZDB-ID (Journal + Serie)",
+        sortable: true,
         value: "zdbIds",
       },
       {
         title: "Serie",
+        sortable: true,
         value: "isPartOfSeries",
       },
     ];
@@ -424,7 +432,6 @@ export default defineComponent({
 
     // Search
     const templateSearchIsActive = ref(false);
-    const filtersAsQuery = ref("");
     const initSearchByRightId = (rightId: string, templateName: string) => {
       searchStore.searchTerm = "";
       templateSearchIsActive.value = true;
@@ -464,6 +471,8 @@ export default defineComponent({
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           ).then((response: ItemInformation) => {
         if (response.accessStateWithCount != undefined) {
           searchStore.accessStateOnDateReceived = response.accessStateWithCount;
@@ -502,6 +511,8 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -536,6 +547,9 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
+
         )
         .then((response: ItemInformation) => {
           const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
@@ -587,6 +601,8 @@ export default defineComponent({
           undefined,
             undefined,
             undefined,
+            searchquerybuilder.buildSortBy(datatableOptions.value),
+            searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -622,6 +638,8 @@ export default defineComponent({
               undefined,
               undefined,
               undefined,
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
             processFacets(response);
@@ -675,6 +693,7 @@ export default defineComponent({
       }
       searchStore.lastSearchTerm = searchStore.searchTerm;
       searchStore.isLastSearchForTemplates = false;
+      searchStore.isLastSearchNonTrivialAndSuccessful = false;
       templateSearchIsActive.value = false;
       currentRightId.value = "";
       currentItem.value = {} as ItemRest;
@@ -705,6 +724,8 @@ export default defineComponent({
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
           searchquerybuilder.buildManualRightFilter(searchStore),
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
+          searchquerybuilder.buildSortBy(datatableOptions.value),
+          searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
         .then((response: ItemInformation) => {
           processSearchResult(response);
@@ -739,6 +760,8 @@ export default defineComponent({
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
             const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
@@ -774,11 +797,14 @@ export default defineComponent({
     };
 
     const processSearchResult = (response: ItemInformation) => {
-      filtersAsQuery.value = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
+      searchStore.filtersAsQuery = response.filtersAsQuery != undefined ? response.filtersAsQuery : "";
       items.value = response.itemArray;
       tableContentLoading.value = false;
       totalPages.value = response.totalPages;
       numberOfResults.value = response.numberOfResults;
+      if(searchStore.filtersAsQuery != "" || searchStore.searchTerm.trim() != ""){
+        searchStore.isLastSearchNonTrivialAndSuccessful = true;
+      }
     };
 
     const resetAllDynamicFilter = (response: ItemInformation) => {
@@ -947,6 +973,41 @@ export default defineComponent({
       dialog.value = true;
     };
 
+    /**
+     * Intercept Sortorder
+     */
+    const datatableOptions = ref<DataTableOptions>({
+      page: 1,
+      itemsPerPage: 25,
+      sortBy: [
+        {
+          key: 'handle',
+          order: 'desc',
+        },
+      ],
+    });
+
+    const onOptionsUpdate = (newOptions: DataTableOptions) => {
+      if (newOptions.sortBy.length == 0){
+        // When we end here it is probably the initial load of the site
+        return;
+      }
+      const oldSort = datatableOptions.value.sortBy[0]
+      const newSort = newOptions.sortBy[0]
+
+      const sortChanged =
+          !oldSort ||
+          !newSort ||
+          oldSort.key !== newSort.key ||
+          oldSort.order !== newSort.order
+
+      datatableOptions.value = newOptions
+
+      if (sortChanged) {
+        startSearch();
+      }
+    }
+
     return {
       successMsgIsActive,
       successMsg,
@@ -960,7 +1021,6 @@ export default defineComponent({
       groupEditActivated,
       headers,
       headersValueVSelect,
-      filtersAsQuery,
       items,
       newBookmarkId,
       numberOfResults,
@@ -996,6 +1056,7 @@ export default defineComponent({
       handlePageChange,
       handlePageSizeChange,
       loadTemplateView,
+      onOptionsUpdate,
       openDialog,
       parsePublicationType,
       addRightSuccessful,
@@ -1166,7 +1227,7 @@ table.special, th.special, td.special {
             cols="10"
             offset="0"
         >
-          <b>Aktive Filter:</b> {{ filtersAsQuery }}
+          <b>Aktive Filter:</b> {{ searchStore.filtersAsQuery }}
         </v-col>
         <v-col
             cols="1"
@@ -1467,6 +1528,7 @@ table.special, th.special, td.special {
           height="550px"
           @click:row="addActiveItem"
           @dblclick:row="setActiveItem"
+          @update:options="onOptionsUpdate"
       >
         <template v-slot:item.title="{ item }">
           <td v-if="item.deleted">❌{{item.title}} </td>

@@ -159,7 +159,7 @@ class SearchKeyTest : DatabaseTest() {
     companion object {
         const val DATA_FOR_SEARCH_QUERY = "DATA_FOR_SEARCH_QUERY"
         const val NO_VALID_HANDLE = "INVALID"
-        private const val TEST_HANDLE = "some handle"
+        private const val TEST_HANDLE = "11159/7826"
         val METADATA_TEST =
             TEST_Metadata.copy(
                 handle = TEST_HANDLE,
@@ -167,7 +167,7 @@ class SearchKeyTest : DatabaseTest() {
             )
         val METADATA_TEST_2 =
             TEST_Metadata.copy(
-                handle = "second",
+                handle = "11159/7827",
                 zdbIds = null,
                 licenceUrl = "foobar.baz",
                 licenceUrlFilter = "other",
@@ -175,7 +175,7 @@ class SearchKeyTest : DatabaseTest() {
             )
         val METADATA_TEST_3 =
             TEST_Metadata.copy(
-                handle = "third",
+                handle = "11159/7828",
                 zdbIds = listOf("someotherzdbid"),
                 licenceUrl = "foobar",
                 licenceUrlFilter = "other",

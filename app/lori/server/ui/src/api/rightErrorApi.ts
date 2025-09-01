@@ -1,5 +1,5 @@
 import {
-    Configuration, RightErrorApi, RightErrorInformationRest, RightErrorRest, RightRest,
+    Configuration, RightErrorApi, RightErrorInformationRest, RightErrorRecomputationRest, RightErrorRest, RightRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
@@ -28,11 +28,16 @@ export default {
             testId: testId,
         });
     },
+
     deleteRightErrorsByTestId(
         testId: string,
     ): Promise<void> {
         return rightErrorApi.deleteErrorsByTestId({
             testId: testId
         })
+    },
+
+    recomputeRightErrors(): Promise<RightErrorRecomputationRest> {
+        return rightErrorApi.recomputeRightErrors();
     }
 };

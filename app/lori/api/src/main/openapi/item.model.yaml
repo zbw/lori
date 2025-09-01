@@ -178,3 +178,29 @@ ItemSearch:
   properties:
     searchTerm:
       type: string
+
+components:
+  schemas:
+    SortByRest:
+      type: string
+      enum:
+        - band
+        - community_name
+        - collection_name
+        - doi
+        - handle
+        - isbn
+        - issn
+        - paketSigel
+        - ppn
+        - publication_type
+        - publication_year
+        - series
+        - title
+        - titleJournal
+        - titleSeries
+    SortOrderRest:
+      type: string
+      enum:
+        - asc
+        - desc

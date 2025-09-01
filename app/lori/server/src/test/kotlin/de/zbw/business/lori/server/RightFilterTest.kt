@@ -10,10 +10,10 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
-import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
@@ -50,68 +50,90 @@ class RightFilterTest : DatabaseTest() {
 
     private val itemRightRestricted =
         TEST_Metadata.copy(
-            handle = "restricted right",
+            handle = "11159/7480",
             collectionName = "subject1 subject2",
             publicationType = PublicationType.PROCEEDING,
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
     private val itemRightRestrictedOpen =
         TEST_Metadata.copy(
-            handle = "restricted and open right",
+            handle = "11159/7481",
             collectionName = "subject3",
             publicationType = PublicationType.PROCEEDING,
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
     private val tempValFilterPresent =
         TEST_Metadata.copy(
-            handle = "validity filter present",
+            handle = "11159/7482",
             collectionName = "validity",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val tempValFilterPast =
         TEST_Metadata.copy(
-            handle = "validity filter post",
+            handle = "11159/7483",
             collectionName = "validity",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val tempValFilterFuture =
         TEST_Metadata.copy(
-            handle = "validity filter future",
+            handle = "11159/7484",
             collectionName = "validity",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val tempValFilterPastNoEnd =
         TEST_Metadata.copy(
-            handle = "validity filter future no end",
+            handle = "11159/7485",
             collectionName = "validity",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val startEndDateFilter =
         TEST_Metadata.copy(
-            handle = "start and end date At",
+            handle = "11159/7486",
             collectionName = "startAndEnd",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val formalRuleLicenceContract =
         TEST_Metadata.copy(
-            handle = "formal rule filter licence contract",
+            handle = "11159/7487",
             collectionName = "formalRuleLicence formal",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val formalRuleUserAgreement =
         TEST_Metadata.copy(
-            handle = "formal rule filter user agreement",
+            handle = "11159/7488",
             collectionName = "formalRuleUserAgreement formal",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val formalRuleNoRestrictedOCL =
         TEST_Metadata.copy(
-            handle = "formal rule filter ocl",
+            handle = "11159/7489",
             collectionName = "ocl formal",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private val formalRuleAll =
         TEST_Metadata.copy(
-            handle = "result all",
+            handle = "11159/7490",
             collectionName = "alllll",
+            createdOn = NOW,
+            lastUpdatedOn = NOW,
         )
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
@@ -211,6 +233,18 @@ class RightFilterTest : DatabaseTest() {
                         endDate = LocalDate.of(2000, 12, 1),
                         isTemplate = false,
                         templateName = null,
+                    ),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2000, 2, 1),
+                        endDate = LocalDate.of(2000, 4, 15),
+                        isTemplate = true,
+                        templateName = "2000",
+                    ),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(1999, 1, 15),
+                        endDate = LocalDate.of(1999, 2, 1),
+                        isTemplate = true,
+                        templateName = "1999",
                     ),
                 ),
             formalRuleLicenceContract to
@@ -331,7 +365,43 @@ class RightFilterTest : DatabaseTest() {
                 ),
                 setOf(startEndDateFilter),
                 1,
-                "Filter for Start Date",
+                "Filter for Start Date (after created)",
+            ),
+            arrayOf(
+                "col:startAndEnd",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    StartDateFilter(
+                        LocalDate.of(2000, 2, 1),
+                    ),
+                ),
+                emptySet<ItemMetadata>(),
+                0,
+                "Filter for template Start Date",
+            ),
+            arrayOf(
+                "col:startAndEnd",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    StartDateFilter(
+                        LocalDate.of(2000, 3, 1),
+                    ),
+                ),
+                setOf(startEndDateFilter),
+                1,
+                "Filter for first application Start Date",
+            ),
+            arrayOf(
+                "col:startAndEnd",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    EndDateFilter(
+                        LocalDate.of(2000, 4, 15),
+                    ),
+                ),
+                setOf(startEndDateFilter),
+                1,
+                "End date lies past first application end date",
             ),
             arrayOf(
                 "col:startAndEnd & zgb:2000-10-01",
@@ -376,11 +446,12 @@ class RightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = rightsSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -476,11 +547,12 @@ class RightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    null,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = rightsSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -530,6 +602,28 @@ class RightFilterTest : DatabaseTest() {
                 setOf(tempValFilterFuture, tempValFilterPastNoEnd),
                 "use filter in upper search bar",
             ),
+            arrayOf(
+                "",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    RightValidOnFilter(
+                        date = LocalDate.of(1999, 1, 20),
+                    ),
+                ),
+                emptySet<ItemMetadata>(),
+                "No results because template starts and ends before first application date",
+            ),
+            arrayOf(
+                "",
+                emptyList<MetadataSearchFilter>(),
+                listOf(
+                    RightValidOnFilter(
+                        date = LocalDate.of(2000, 4, 1),
+                    ),
+                ),
+                setOf(startEndDateFilter),
+                "One results because template only starts before first application date and ends later",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_SEARCH_TEMP_VAL_FILTER)
@@ -544,11 +638,12 @@ class RightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = rightsSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -669,11 +764,12 @@ class RightFilterTest : DatabaseTest() {
         val searchResult: SearchQueryResult =
             runBlocking {
                 backend.searchQuery(
-                    givenSearchTerm,
-                    10,
-                    0,
-                    metadataSearchFilter,
-                    rightsSearchFilter,
+                    searchTerm = givenSearchTerm,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = metadataSearchFilter,
+                    rightSearchFilter = rightsSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -729,7 +825,7 @@ class RightFilterTest : DatabaseTest() {
     @Test(dataProvider = DATA_FOR_ACCESS_STATE)
     fun testFilterAccess(
         searchTerm: String,
-        searchFilter: List<RightSearchFilter>,
+        rightSearchFilter: List<RightSearchFilter>,
         expectedResult: Set<ItemMetadata>,
         description: String,
     ) {
@@ -740,7 +836,9 @@ class RightFilterTest : DatabaseTest() {
                     searchTerm = searchTerm,
                     limit = 10,
                     offset = 0,
-                    rightSearchFilter = searchFilter,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilter,
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -758,6 +856,18 @@ class RightFilterTest : DatabaseTest() {
         const val DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER = "DATA_FOR_GET_ITEM_WITH_RIGHT_FILTER"
         const val DATA_FOR_SEARCH_TEMP_VAL_FILTER = "DATA_FOR_SEARCH_TEMP_VAL_FILTER"
         const val DATA_FOR_SEARCH_FORMAL_RULE_FILTER = "DATA_FOR_SEARCH_FORMAL_RULE_FILTER"
+
+        val NOW: OffsetDateTime =
+            OffsetDateTime.of(
+                2000,
+                3,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
 
         val TEST_RIGHT =
             ItemRight(
@@ -782,6 +892,17 @@ class RightFilterTest : DatabaseTest() {
                 exceptionOfId = null,
                 hasExceptionId = null,
                 isTemplate = false,
+                firstAppliedOn =
+                    OffsetDateTime.of(
+                        2021,
+                        3,
+                        2,
+                        1,
+                        1,
+                        0,
+                        0,
+                        ZoneOffset.UTC,
+                    ),
                 lastAppliedOn =
                     OffsetDateTime.of(
                         2022,

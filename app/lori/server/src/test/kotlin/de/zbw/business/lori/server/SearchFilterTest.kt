@@ -49,7 +49,7 @@ class SearchFilterTest : DatabaseTest() {
         listOf(
             TEST_Metadata.copy(
                 collectionName = "subject1 subject2 subject3",
-                handle = "publicationYear2022",
+                handle = "11159/7731",
                 publicationYear = 2022,
             ),
         )
@@ -58,13 +58,13 @@ class SearchFilterTest : DatabaseTest() {
         listOf(
             TEST_Metadata.copy(
                 collectionName = "subject4",
-                handle = "publicationTypeArticle",
+                handle = "11159/7732",
                 publicationType = PublicationType.PROCEEDING,
                 publicationYear = 2022,
             ),
             TEST_Metadata.copy(
                 collectionName = "subject4",
-                handle = "publicationTypeWorkingPaper",
+                handle = "11159/7733",
                 publicationType = PublicationType.WORKING_PAPER,
                 publicationYear = 2020,
             ),
@@ -73,15 +73,15 @@ class SearchFilterTest : DatabaseTest() {
     private val zdbIdFilterItems =
         listOf(
             TEST_Metadata.copy(
-                handle = "journalId only",
+                handle = "11159/7734",
                 zdbIds = listOf("555nase"),
             ),
             TEST_Metadata.copy(
-                handle = "seriesId only",
+                handle = "11159/7735",
                 zdbIds = listOf("444nase"),
             ),
             TEST_Metadata.copy(
-                handle = "both zdb ids",
+                handle = "11159/7736",
                 zdbIds = listOf("444nase", "333nase"),
             ),
         )

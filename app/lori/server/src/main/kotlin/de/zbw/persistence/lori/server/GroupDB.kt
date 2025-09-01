@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.GroupVersion
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
@@ -16,6 +17,8 @@ import java.sql.ResultSet
 import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to groups.
@@ -55,11 +58,11 @@ class GroupDB(
                         this.setIfNotNull(4, group.createdBy) { value, idx, prepStmt ->
                             prepStmt.setString(idx, value)
                         }
-                        this.setTimestamp(5, Timestamp.from(now))
+                        this.setTimestamp(5, Timestamp.from(now), utcCalendar)
                         this.setIfNotNull(6, group.createdBy) { value, idx, prepStmt ->
                             prepStmt.setString(idx, value)
                         }
-                        this.setTimestamp(7, Timestamp.from(now))
+                        this.setTimestamp(7, Timestamp.from(now), utcCalendar)
                         this.setInt(8, group.version)
                         if (useGivenId) {
                             this.setInt(9, group.groupId)
@@ -165,7 +168,7 @@ class GroupDB(
                     GroupVersion(
                         groupId = rs.getInt(localCounter++),
                         createdBy = rs.getString(localCounter++),
-                        createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
+                        createdOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
                         description = rs.getString(localCounter++),
                         version = rs.getInt(localCounter++),
                         title = rs.getString(localCounter++),
@@ -422,6 +425,9 @@ class GroupDB(
         const val COLUMN_RIGHT_ID = "right_id"
         const val COLUMN_TITLE = "title"
         const val COLUMN_VERSION = "version"
+
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_INSERT_GROUP =
             "INSERT INTO $TABLE_NAME_RIGHT_GROUP" +
                 " ($COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +
@@ -531,7 +537,7 @@ class GroupDB(
             val createdBy = rs.getString(localCounter++)
             val createdOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime()
             val lastUpdatedBy = rs.getString(localCounter++)
-            val lastUpdatedOn = rs.getTimestamp(localCounter++)?.toOffsetDateTime()
+            val lastUpdatedOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime()
             val version = rs.getInt(localCounter++)
 
             return Group(

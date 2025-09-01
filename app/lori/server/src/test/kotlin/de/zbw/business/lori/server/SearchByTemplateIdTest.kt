@@ -2,6 +2,7 @@ package de.zbw.business.lori.server
 
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.SearchQueryResult
+import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.persistence.lori.server.ConnectionPool
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseTest
@@ -97,6 +98,7 @@ class SearchByTemplateIdTest : DatabaseTest() {
                                 ),
                             ),
                         ),
+                    sortInformation = SortInformation.DEFAULT,
                 )
             }
 
@@ -143,13 +145,13 @@ class SearchByTemplateIdTest : DatabaseTest() {
         val initialItems =
             mapOf(
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "1",
+                    handle = "11159/7580",
                 ) to listOf(0, 1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "2",
+                    handle = "11159/7581",
                 ) to listOf(1),
                 LoriServerBackendTest.TEST_METADATA.copy(
-                    handle = "3",
+                    handle = "11159/7582",
                 ) to listOf(2),
             )
     }

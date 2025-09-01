@@ -59,3 +59,9 @@ ConflictTypeRest:
     - gap
     - no_right
     - unspecified
+
+RightErrorRecomputationRest:
+  type: object
+  properties:
+    numberOfErrors:
+      type: integer

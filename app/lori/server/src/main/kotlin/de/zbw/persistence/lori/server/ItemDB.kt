@@ -1,12 +1,16 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemId
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
 import java.sql.Statement
+import java.sql.Timestamp
+import java.time.Instant
+import java.util.Calendar
+import java.util.TimeZone
 
 /**
  * Execute SQL queries strongly related to items.
@@ -127,12 +131,21 @@ class ItemDB(
             return@useConnection rs.getBoolean(1)
         }
 
-    suspend fun insertItem(itemId: ItemId): String? =
+    suspend fun insertItem(
+        itemId: ItemId,
+        createdBy: String,
+    ): String? =
         connectionPool.useConnection { connection ->
+            val now = Instant.now()
+            var localCounter = 1
             val prepStmt =
                 connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(1, itemId.handle)
-                    this.setString(2, itemId.rightId)
+                    this.setString(localCounter++, itemId.handle)
+                    this.setString(localCounter++, itemId.rightId)
+                    this.setString(localCounter++, createdBy)
+                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                    this.setString(localCounter++, createdBy)
+                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 }
 
             val span = tracer.spanBuilder("insertItem").startSpan()
@@ -149,16 +162,26 @@ class ItemDB(
             }
         }
 
-    suspend fun insertItemBatch(itemIds: List<ItemId>): IntArray =
+    suspend fun upsertItemBatch(
+        itemIds: List<ItemId>,
+        createdBy: String,
+    ): IntArray =
         connectionPool.useConnection { connection ->
+            val now = Instant.now()
+            var localCounter = 1
             val prep = connection.prepareStatement(STATEMENT_INSERT_ITEM)
             itemIds.map {
                 val p =
                     prep.apply {
-                        this.setString(1, it.handle)
-                        this.setString(2, it.rightId)
+                        this.setString(localCounter++, it.handle)
+                        this.setString(localCounter++, it.rightId)
+                        this.setString(localCounter++, createdBy)
+                        this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                        this.setString(localCounter++, createdBy)
+                        this.setTimestamp(localCounter, Timestamp.from(now), utcCalendar)
                     }
                 p.addBatch()
+                localCounter = 1
             }
             val span = tracer.spanBuilder("insertItemBatch").startSpan()
             try {
@@ -243,53 +266,65 @@ class ItemDB(
 
     companion object {
         private const val CONSTRAINT_ITEM_PKEY = "item_pkey"
-        const val COLUMN_HANDLE = "handle"
+        const val COLUMN_ITEM_HANDLE = "handle"
+        const val COLUMN_ITEM_RIGHT_ID = "right_id"
+        const val COLUMN_ITEM_CREATED_BY = "created_by"
+        const val COLUMN_ITEM_CREATED_ON = "created_on"
+        const val COLUMN_ITEM_LAST_UPDATED_BY = "last_updated_by"
+        const val COLUMN_ITEM_LAST_UPDATED_ON = "last_updated_on"
+
+        val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+
         const val STATEMENT_COUNT_ITEM_BY_RIGHTID =
             "SELECT COUNT(*) " +
                 "FROM $TABLE_NAME_ITEM " +
-                "WHERE $COLUMN_RIGHT_ID = ?;"
+                "WHERE $COLUMN_ITEM_RIGHT_ID = ?;"
 
         const val STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID =
-            "SELECT $COLUMN_RIGHT_ID" +
+            "SELECT $COLUMN_ITEM_RIGHT_ID" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE $COLUMN_HANDLE = ?"
+                " WHERE $COLUMN_ITEM_HANDLE = ?"
 
         const val STATEMENT_GET_HANDLES_BY_RIGHT_ID =
-            "SELECT $COLUMN_HANDLE" +
+            "SELECT $COLUMN_ITEM_HANDLE" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE $COLUMN_RIGHT_ID = ?"
+                " WHERE $COLUMN_ITEM_RIGHT_ID = ?"
 
         const val STATEMENT_SELECT_DISTINCT_HANDLE =
-            "SELECT DISTINCT ($COLUMN_HANDLE)" +
+            "SELECT DISTINCT ($COLUMN_ITEM_HANDLE)" +
                 "FROM $TABLE_NAME_ITEM;"
 
         const val STATEMENT_INSERT_ITEM =
             "INSERT INTO $TABLE_NAME_ITEM" +
-                "($COLUMN_HANDLE, $COLUMN_RIGHT_ID)" +
-                " VALUES(?,?)" +
+                "($COLUMN_ITEM_HANDLE,$COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_CREATED_BY," +
+                "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON)" +
+                " VALUES(?,?,?," +
+                "?,?,?)" +
                 " ON CONFLICT ON CONSTRAINT $CONSTRAINT_ITEM_PKEY" +
-                " DO NOTHING;"
+                " DO UPDATE SET " +
+                "$COLUMN_ITEM_LAST_UPDATED_BY = EXCLUDED.$COLUMN_ITEM_LAST_UPDATED_BY," +
+                "$COLUMN_ITEM_LAST_UPDATED_ON = EXCLUDED.$COLUMN_ITEM_LAST_UPDATED_ON;"
 
         const val STATEMENT_DELETE_ITEM =
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
-                "WHERE i.$COLUMN_RIGHT_ID = ? " +
-                "AND i.$COLUMN_HANDLE = ?"
+                "WHERE i.$COLUMN_ITEM_RIGHT_ID = ? " +
+                "AND i.$COLUMN_ITEM_HANDLE = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_HANDLE =
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
-                "WHERE i.$COLUMN_HANDLE = ?"
+                "WHERE i.$COLUMN_ITEM_HANDLE = ?"
 
         const val STATEMENT_DELETE_ITEM_BY_RIGHT =
             "DELETE " +
                 "FROM $TABLE_NAME_ITEM i " +
-                "WHERE i.$COLUMN_RIGHT_ID = ?"
+                "WHERE i.$COLUMN_ITEM_RIGHT_ID = ?"
 
         const val STATEMENT_ITEM_CONTAINS_ENTRY =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_HANDLE=? AND $COLUMN_RIGHT_ID=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_ITEM_HANDLE=? AND $COLUMN_ITEM_RIGHT_ID=?)"
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
-            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_RIGHT_ID=?)"
+            "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_ITEM_RIGHT_ID=?)"
     }
 }
