@@ -88,6 +88,7 @@ fun Routing.rightRoutes(
                         )
                     }
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(
                         HttpStatusCode.InternalServerError,
@@ -137,6 +138,7 @@ fun Routing.rightRoutes(
                         span.setStatus(StatusCode.OK)
                         call.respond(RightIdCreated(pk))
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -145,6 +147,7 @@ fun Routing.rightRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -208,6 +211,7 @@ fun Routing.rightRoutes(
                             }
                         }
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -216,6 +220,7 @@ fun Routing.rightRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -253,6 +258,7 @@ fun Routing.rightRoutes(
                             }
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -288,6 +294,7 @@ fun Routing.rightRoutes(
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created)
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {

@@ -64,6 +64,7 @@ fun Routing.bookmarkTemplateRoutes(
                             )
                         }
                     } catch (pe: PSQLException) {
+                        span.recordException(pe)
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                             call.respond(
@@ -82,6 +83,7 @@ fun Routing.bookmarkTemplateRoutes(
                             )
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -140,6 +142,7 @@ fun Routing.bookmarkTemplateRoutes(
                             }
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -172,6 +175,7 @@ fun Routing.bookmarkTemplateRoutes(
                                 )
                             call.respond(HttpStatusCode.OK, deletedItems)
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.InternalServerError,
@@ -201,6 +205,7 @@ fun Routing.bookmarkTemplateRoutes(
                                 )
                             call.respond(HttpStatusCode.Created, createdEntries.map { it.toRest() })
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.InternalServerError,

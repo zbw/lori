@@ -97,6 +97,7 @@ fun Routing.guiRoutes(
                         "/ui?login=success",
                     )
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     when (e) {
                         is SecurityException,

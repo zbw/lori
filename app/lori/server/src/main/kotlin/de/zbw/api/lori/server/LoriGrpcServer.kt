@@ -55,6 +55,7 @@ class LoriGrpcServer(
                     .setNumberOfErrors(errors.size)
                     .build()
             } catch (e: Throwable) {
+                span.recordException(e)
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
                     Status.INTERNAL
@@ -89,6 +90,7 @@ class LoriGrpcServer(
                     .setItemsDeleted(deleted)
                     .build()
             } catch (e: Throwable) {
+                span.recordException(e)
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
                     Status.INTERNAL
@@ -151,6 +153,7 @@ class LoriGrpcServer(
                     .addAllTemplateApplications(templateApplications)
                     .build()
             } catch (e: Throwable) {
+                span.recordException(e)
                 span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
                 throw StatusRuntimeException(
                     Status.INTERNAL
