@@ -56,6 +56,7 @@ fun Routing.metadataRoutes(
                         }
                     }
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
@@ -96,9 +97,11 @@ fun Routing.metadataRoutes(
                     call.respond(metadataElements.map { it.toRest() })
                 }
             } catch (e: NumberFormatException) {
+                span.recordException(e)
                 span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
                 call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("Parameters have a bad format"))
             } catch (e: Exception) {
+                span.recordException(e)
                 span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                 call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
             } finally {

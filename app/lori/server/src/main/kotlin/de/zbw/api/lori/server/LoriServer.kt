@@ -4,8 +4,10 @@ import de.zbw.api.lori.server.config.LoriConfigurations
 import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.persistence.lori.server.FlywayMigrator
+import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -22,7 +24,9 @@ object LoriServer {
         LOG.info("Starting LoriServer :)")
 
         val tracer: Tracer =
-            OpenTelemetry.noop().getTracer("foo")
+            GlobalOpenTelemetry.getTracer(
+                "de.zbw.api.lori.server",
+            )
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)

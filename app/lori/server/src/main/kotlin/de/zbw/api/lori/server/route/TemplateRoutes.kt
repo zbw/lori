@@ -77,6 +77,7 @@ fun Routing.templateRoutes(
                             RightIdCreated(rightId = pk),
                         )
                     } catch (pe: PSQLException) {
+                        span.recordException(pe)
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                             call.respond(
@@ -95,6 +96,7 @@ fun Routing.templateRoutes(
                             )
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -154,6 +156,7 @@ fun Routing.templateRoutes(
                             }
                         }
                     } catch (pe: PSQLException) {
+                        span.recordException(pe)
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                             call.respond(
@@ -172,6 +175,7 @@ fun Routing.templateRoutes(
                             )
                         }
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -180,6 +184,7 @@ fun Routing.templateRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -222,6 +227,7 @@ fun Routing.templateRoutes(
                         )
                     }
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(
                         HttpStatusCode.InternalServerError,
@@ -265,6 +271,7 @@ fun Routing.templateRoutes(
                         }
                     }
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(
                         HttpStatusCode.InternalServerError,
@@ -315,6 +322,7 @@ fun Routing.templateRoutes(
                             )
                         call.respond(result)
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -323,6 +331,7 @@ fun Routing.templateRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -370,6 +379,7 @@ fun Routing.templateRoutes(
                             )
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -419,6 +429,7 @@ fun Routing.templateRoutes(
                             }
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -463,6 +474,7 @@ fun Routing.templateRoutes(
                             call.respond(exception.toRest())
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -502,12 +514,14 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.OK,
                             )
                         } catch (e: ResourceConflictException) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.Conflict,
                                 ApiError.conflictError(e.message),
                             )
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.InternalServerError,
@@ -559,6 +573,7 @@ fun Routing.templateRoutes(
                                 HttpStatusCode.OK,
                             )
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.InternalServerError,
@@ -618,6 +633,7 @@ fun Routing.templateRoutes(
                         span.setStatus(StatusCode.OK)
                         call.respond(receivedTemplates.map { it.toRest() })
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,

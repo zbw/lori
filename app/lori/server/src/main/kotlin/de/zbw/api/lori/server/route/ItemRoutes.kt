@@ -115,12 +115,14 @@ fun Routing.itemRoutes(
                             }
                         }
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(ApiError.INVALID_JSON),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -154,6 +156,7 @@ fun Routing.itemRoutes(
                                 call.respond(HttpStatusCode.OK)
                             }
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
@@ -191,6 +194,7 @@ fun Routing.itemRoutes(
                             }
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -224,6 +228,7 @@ fun Routing.itemRoutes(
                                 call.respond(HttpStatusCode.OK)
                             }
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
@@ -262,6 +267,7 @@ fun Routing.itemRoutes(
                             )
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -297,6 +303,7 @@ fun Routing.itemRoutes(
                             call.respond(HttpStatusCode.OK)
                         }
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -367,6 +374,7 @@ fun Routing.itemRoutes(
                             )
                         }
                     } catch (e: NumberFormatException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -375,6 +383,7 @@ fun Routing.itemRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
@@ -555,15 +564,18 @@ fun Routing.itemRoutes(
                         queryResult.toRest(pageSize),
                     )
                 } catch (e: NumberFormatException) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "NumberFormatException: ${e.message}")
                     call.respond(HttpStatusCode.BadRequest, ApiError.badRequestError("Parameters have a bad format"))
                 } catch (pe: ParsingException) {
+                    span.recordException(pe)
                     span.setStatus(StatusCode.ERROR, "ParsingException: ${pe.message}")
                     call.respond(
                         HttpStatusCode.BadRequest,
                         ApiError.badRequestError("Such-Anfrage ist ungültig. Siehe ?-Icon für mehr Informationen"),
                     )
                 } catch (e: Exception) {
+                    span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {

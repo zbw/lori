@@ -81,6 +81,7 @@ fun Routing.groupRoutes(
                             GroupIdCreated(pk),
                         )
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -89,6 +90,7 @@ fun Routing.groupRoutes(
                             ),
                         )
                     } catch (iae: IllegalArgumentException) {
+                        span.recordException(iae)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${iae.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -97,6 +99,7 @@ fun Routing.groupRoutes(
                             ),
                         )
                     } catch (pe: PSQLException) {
+                        span.recordException(pe)
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                             call.respond(
@@ -115,6 +118,7 @@ fun Routing.groupRoutes(
                             )
                         }
                     } catch (iie: InvalidIPAddressException) {
+                        span.recordException(iie)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${iie.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -125,6 +129,7 @@ fun Routing.groupRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,

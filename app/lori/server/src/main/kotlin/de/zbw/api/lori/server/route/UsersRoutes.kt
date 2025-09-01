@@ -50,6 +50,7 @@ fun Routing.usersRoutes(
                                 )
                             }
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
@@ -77,6 +78,7 @@ fun Routing.usersRoutes(
                                 call.respond(HttpStatusCode.OK, userSession.toRest())
                             }
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {

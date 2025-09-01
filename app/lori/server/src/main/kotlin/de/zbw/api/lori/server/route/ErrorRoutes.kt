@@ -90,6 +90,7 @@ fun Routing.errorRoutes(
                         span.setStatus(StatusCode.OK)
                         call.respond(receivedErrors.toRest(pageSize))
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -139,6 +140,7 @@ fun Routing.errorRoutes(
                                 }
                             }
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             call.respond(
                                 HttpStatusCode.InternalServerError,
@@ -175,6 +177,7 @@ fun Routing.errorRoutes(
                                 RightErrorRecomputationRest(errors.size),
                             )
                         } catch (e: Exception) {
+                            span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                             return@withContext call.respond(
                                 HttpStatusCode.InternalServerError,

@@ -314,6 +314,7 @@ fun Routing.bookmarkRoutes(
                         span.setStatus(StatusCode.OK)
                         call.respond(HttpStatusCode.Created, BookmarkIdCreated(pk))
                     } catch (pe: PSQLException) {
+                        span.recordException(pe)
                         if (pe.sqlState == ApiError.PSQL_CONFLICT_ERR_CODE) {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
                             call.respond(
@@ -332,12 +333,14 @@ fun Routing.bookmarkRoutes(
                             )
                         }
                     } catch (e: ResourceConflictException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.Conflict,
                             ApiError.conflictError(e.message),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -390,6 +393,7 @@ fun Routing.bookmarkRoutes(
                             )
                         }
                     } catch (e: BadRequestException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
                         call.respond(
                             HttpStatusCode.BadRequest,
@@ -398,12 +402,14 @@ fun Routing.bookmarkRoutes(
                             ),
                         )
                     } catch (e: ResourceConflictException) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.Conflict,
                             ApiError.conflictError(e.message),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -452,6 +458,7 @@ fun Routing.bookmarkRoutes(
                             }
                         }
                     } catch (re: ResourceStillInUseException) {
+                        span.recordException(re)
                         span.setStatus(StatusCode.ERROR, "Exception: ${re.message}")
                         call.respond(
                             HttpStatusCode.Conflict,
@@ -460,6 +467,7 @@ fun Routing.bookmarkRoutes(
                             ),
                         )
                     } catch (e: Exception) {
+                        span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
