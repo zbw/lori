@@ -49,7 +49,7 @@ object DashboardUtil {
                 LOG.warn("Unexpected undefined end date for RightId: ${sortedRights[index - 1].rightId} for Handle ${item.metadata.handle}")
                 continue
             }
-            if (value.startDate != sortedRights[index - 1].endDate!!.plusDays(1)) {
+            if (value.startDate.toString() != sortedRights[index - 1].endDate!!.plusDays(1).toString()) {
                 gapRightErrors +=
                     RightError(
                         handle = item.metadata.handle,

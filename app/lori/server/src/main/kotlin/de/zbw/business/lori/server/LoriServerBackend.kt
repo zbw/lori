@@ -796,6 +796,7 @@ class LoriServerBackend(
     internal suspend fun checkForGAPErrors(createdBy: String): List<RightError> {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.GAP)
         val handles: List<String> = dbConnector.itemDB.getAllHandles()
+        // TODO: Dont load all handles and metadata in memory at once, like wtf
         val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
         val items =
             metadata.map { m ->
@@ -895,7 +896,12 @@ class LoriServerBackend(
                 }
             return@coroutineScope ErrorQueryResult(
                 totalNumberOfResults = totalNumber.await(),
-                contextNames = occurrenceContextNames.await().toSet(),
+                contextNames =
+                    occurrenceContextNames
+                        .await()
+                        .toSet()
+                        .toList()
+                        .sorted(),
                 conflictTypes = occurrenceConflictTypes.await().toSet(),
                 results = results.await(),
             )

@@ -88,15 +88,13 @@ class RightErrorFilterTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 listOf(
-                    DashboardTemplateNameFilter(
-                        listOf(
-                            CAUSED_BY_TEMPLATE_NAME,
-                        ),
+                    DashboardContextFilter(
+                        CAUSED_BY_TEMPLATE_NAME,
                     ),
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = setOf(CAUSED_BY_TEMPLATE_NAME),
+                    contextNames = listOf(CAUSED_BY_TEMPLATE_NAME),
                     conflictTypes = setOf(ConflictType.DATE_OVERLAP),
                     results = getErrorsCausedByTemplateName(),
                 ),
@@ -112,7 +110,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = setOf("foo"),
+                    contextNames = listOf("foo"),
                     conflictTypes = setOf(ConflictType.UNSPECIFIED),
                     results = getErrorsConflictType(),
                 ),
@@ -129,7 +127,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = setOf(RIGHT_ERROR_PAST.conflictByContext!!),
+                    contextNames = listOf(RIGHT_ERROR_PAST.conflictByContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),
@@ -146,7 +144,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = setOf(RIGHT_ERROR_PAST.conflictByContext!!),
+                    contextNames = listOf(RIGHT_ERROR_PAST.conflictByContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),

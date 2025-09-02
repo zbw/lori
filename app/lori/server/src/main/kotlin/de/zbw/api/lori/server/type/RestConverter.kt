@@ -700,7 +700,7 @@ fun ErrorQueryResult.toRest(pageSize: Int): RightErrorInformationRest {
         numberOfResults = totalNumberOfResults,
         totalPages = totalPages,
         errors = this.results.map { it.toRest() },
-        contextNames = this.contextNames.toList(),
+        contextNames = this.contextNames,
         conflictTypes = this.conflictTypes.map { it.toRest() },
     )
 }

@@ -4,7 +4,7 @@ import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.DOIFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
-import de.zbw.business.lori.server.DashboardTemplateNameFilter
+import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.EndDateFilter
@@ -274,13 +274,12 @@ object QueryParameterParser {
                 RightIdFilter(it)
             }
 
-    fun parseDashboardTemplateNameFilter(s: String?): DashboardTemplateNameFilter? =
+    fun parseDashboardContextFilter(s: String?): DashboardContextFilter? =
         s
-            ?.split(",".toRegex())
             ?.takeIf {
                 it.isNotEmpty()
             }?.let {
-                DashboardTemplateNameFilter(it)
+                DashboardContextFilter(it)
             }
 
     fun parseDashboardConflictTypeFilter(s: String?): DashboardConflictTypeFilter? {

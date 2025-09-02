@@ -31,7 +31,7 @@ right-errors:
           minimum: 1
           maximum: 100
           default: 25
-      - name: filterTemplateName
+      - name: filterContext
         in: query
         schema:
           type: string

@@ -3,7 +3,7 @@ package de.zbw.api.lori.server.route
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
-import de.zbw.business.lori.server.DashboardTemplateNameFilter
+import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.LoriServerBackend
@@ -25,7 +25,6 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
-import org.apache.http.client.methods.RequestBuilder.post
 
 /**
  * REST-API routes for errors.
@@ -66,8 +65,8 @@ fun Routing.errorRoutes(
                             )
                             return@withContext
                         }
-                        val dashboardTemplateNameFilter: DashboardTemplateNameFilter? =
-                            QueryParameterParser.parseDashboardTemplateNameFilter(call.request.queryParameters["filterTemplateName"])
+                        val dashboardContextFilter: DashboardContextFilter? =
+                            QueryParameterParser.parseDashboardContextFilter(call.request.queryParameters["filterContext"])
                         val dashboardConflictTypeFilter: DashboardConflictTypeFilter? =
                             QueryParameterParser.parseDashboardConflictTypeFilter(call.request.queryParameters["filterConflictType"])
                         val dashboardTimeIntervalStartFilter: DashboardTimeIntervalStartFilter? =
@@ -80,7 +79,7 @@ fun Routing.errorRoutes(
                                 limit,
                                 offset,
                                 listOfNotNull(
-                                    dashboardTemplateNameFilter,
+                                    dashboardContextFilter,
                                     dashboardConflictTypeFilter,
                                     dashboardTimeIntervalStartFilter,
                                     dashboardTimeIntervalEndFilter,

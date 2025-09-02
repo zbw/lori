@@ -11,7 +11,7 @@ export default {
     getRightErrorList(
         offset: number,
         limit: number,
-        filterTemplateName: string | undefined,
+        filterContext: string | undefined,
         filterTimeIntervalStart: string | undefined,
         filterTimeIntervalEnd: string | undefined,
         filterConflictType: string | undefined,
@@ -21,7 +21,7 @@ export default {
             pageSize: limit,
             offset: offset,
             limit: limit,
-            filterTemplateName: filterTemplateName,
+            filterContext: filterContext,
             filterTimeIntervalStart: filterTimeIntervalStart,
             filterTimeIntervalEnd: filterTimeIntervalEnd,
             filterConflictType: filterConflictType,
