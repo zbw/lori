@@ -187,6 +187,14 @@ abstract class SearchFilter(
                             },
                         )
 
+                    "del" ->
+                        QueryParameterParser.parseDeletionsFilter(
+                            when (searchValue) {
+                                "on" -> "true"
+                                else -> null
+                            },
+                        )
+
                     "tpl" ->
                         QueryParameterParser.parseTemplateNameFilter(
                             searchValue,
@@ -900,6 +908,29 @@ class HandlesFilter(
     override fun getFilterType(): FilterType = FilterType.HANDLE
 }
 
+class DeletionsFilter :
+    MetadataSearchFilter(
+        dbColumnName = MetadataDB.COLUMN_METADATA_DELETED,
+    ) {
+    override fun toWhereClause(): String = "${ALIAS_ITEM_METADATA}.$dbColumnName = true"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+        connection: Connection,
+    ): Int = counter
+
+    override fun toSQLString(): String = "true"
+
+    override fun toString(): String = "${getFilterType().keyAlias}:on"
+
+    override fun getFilterType(): FilterType = FilterType.DELETIONS
+
+    companion object {
+        fun fromString(s: String?): DeletionsFilter? = QueryParameterParser.parseDeletionsFilter(s)
+    }
+}
+
 /**
  * All right related filter options.
  */
@@ -1343,6 +1374,7 @@ enum class FilterType(
     COMMUNITY_HANDLE("hdlcom"),
     COMMUNITY_NAME("com"),
     CREATED_ON("cro"),
+    DELETIONS("del"),
     DOI("doi"),
     END_DATE("zge"),
     FORMAL_RULE("reg"),

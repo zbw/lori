@@ -105,6 +105,7 @@ export default {
     filterSeries: string | undefined,
     filterLicenceUrl: string | undefined,
     filterManualRight: string | undefined,
+    filterDeletions: string | undefined,
     filterAccessStateOn: string | undefined,
     sortBy: SortByRest,
     sortOrder: SortOrderRest,
@@ -131,6 +132,7 @@ export default {
       filterManualRight: filterManualRight,
       facetsOnly: facetsOnly,
       filterAccessStateOn: filterAccessStateOn,
+      filterDeletions: filterDeletions,
       sortBy: sortBy,
       sortOrder: sortOrder,
     });

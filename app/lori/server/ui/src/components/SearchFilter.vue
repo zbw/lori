@@ -94,6 +94,7 @@ export default defineComponent({
         searchStore.searchTerm ||
         searchStore.isLastSearchForTemplates ||
         searchStore.manualRight ||
+        searchStore.deletions ||
         searchStore.accessStateOnDateState.dateValueFormatted ||
         searchStore.accessStateOnDateState.accessState
       );
@@ -135,6 +136,7 @@ export default defineComponent({
       searchStore.licenceUrlIdx = searchStore.licenceUrlIdx.map(() => false);
       searchStore.noRightInformation = false;
       searchStore.manualRight = false;
+      searchStore.deletions = false;
       searchStore.accessStateOnDateState.dateValueFormatted = "";
       searchStore.accessStateOnDateState.accessState = "";
       searchStore.accessStateOnDateIdx = [] as Array<string>;
@@ -1004,6 +1006,18 @@ export default defineComponent({
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.manualRight"
+                  @update:modelValue="emitSearchStart"
+              ></v-checkbox>
+              <v-divider
+                  :thickness="1"
+                  class="border-opacity-100"
+                  color="grey-lighten-1"
+              ></v-divider>
+              <v-checkbox
+                  label="Löschungen"
+                  hide-details
+                  class="pl-9 ml-4"
+                  v-model="searchStore.deletions"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
             </v-list-group>

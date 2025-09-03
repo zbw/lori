@@ -7,6 +7,7 @@ import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
+import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.ISBNFilter
@@ -249,6 +250,15 @@ object QueryParameterParser {
         s?.let { input ->
             if (input.lowercase().toBoolean()) {
                 ManualRightFilter()
+            } else {
+                null
+            }
+        }
+
+    fun parseDeletionsFilter(s: String?): DeletionsFilter? =
+        s?.let { input ->
+            if (input.lowercase().toBoolean()) {
+                DeletionsFilter()
             } else {
                 null
             }

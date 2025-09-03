@@ -39,6 +39,8 @@ BookmarkRawRest:
       type: string
     filterManualRight:
       type: string
+    filterDeletions:
+      type: string
     filterNoRightInformation:
       type: string
     filterRightId:
@@ -116,6 +118,8 @@ BookmarkRest:
       items:
         type: string
     filterManualRight:
+      type: boolean
+    filterDeletions:
       type: boolean
     filterNoRightInformation:
       type: boolean

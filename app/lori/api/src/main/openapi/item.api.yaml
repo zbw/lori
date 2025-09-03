@@ -395,6 +395,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterDeletions
+        in: query
+        schema:
+          type: string
       - name: sortBy
         in: query
         schema:

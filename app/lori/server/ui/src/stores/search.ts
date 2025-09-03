@@ -30,6 +30,7 @@ export const useSearchStore = defineStore("search", () => {
 
   const manualRight = ref(false);
   const noRightInformation = ref(false);
+  const deletions = ref(false);
 
   const formalRuleLicenceContract = ref(false);
   const formalRuleCCNoRestriction = ref(false);
@@ -87,30 +88,30 @@ export const useSearchStore = defineStore("search", () => {
     accessStateOnDateIdx,
     accessStateOnDateReceived,
     accessStateOnDateState,
-    lastSearchTerm,
     accessStateIdx,
     accessStateSelectedLastSearch,
     accessStateClosed,
     accessStateRestricted,
     accessStateOpen,
     accessStateReceived,
+    ccLicenceNoRestrictions,
+    deletions,
     filtersAsQuery,
     formalRuleNoLegalRisk,
     formalRuleCCNoRestriction,
     formalRuleLicenceContract,
     formalRuleUserAgreement,
     handleURLResolver,
-    ccLicenceNoRestrictions,
+    lastSearchTerm,
     licenceContracts,
-    noLegalRisks,
-    zbwUserAgreements,
-    manualRight,
-    noRightInformation,
     isLastSearchForTemplates,
     isLastSearchNonTrivialAndSuccessful,
     licenceUrlIdx,
     licenceUrlReceived,
     licenceUrlSelectedLastSearch,
+    manualRight,
+    noLegalRisks,
+    noRightInformation,
     paketSigelIdIdx,
     paketSigelIdReceived,
     paketSigelSelectedLastSearch,
@@ -129,6 +130,7 @@ export const useSearchStore = defineStore("search", () => {
     templateNameSelectedLastSearch,
     temporalEventState,
     temporalValidOnFormatted,
+    zbwUserAgreements,
     zdbIdIdx,
     zdbIdReceived,
     zdbIdSelectedLastSearch,

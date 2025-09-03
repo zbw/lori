@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.AccessStateFilter
+import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
@@ -461,6 +462,11 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterManualRight"],
                         )
 
+                    val deletionsFilter: DeletionsFilter? =
+                        QueryParameterParser.parseDeletionsFilter(
+                            call.request.queryParameters["filterDeletions"],
+                        )
+
                     val rightIdsFilter: RightIdFilter? =
                         QueryParameterParser.parseRightIdFilter(
                             call.request.queryParameters["filterRightId"],
@@ -524,6 +530,7 @@ fun Routing.itemRoutes(
                     }
                     val metadataFilters =
                         listOfNotNull(
+                            deletionsFilter,
                             licenceUrlFilter,
                             paketSigelFilter,
                             publicationYearFilter,

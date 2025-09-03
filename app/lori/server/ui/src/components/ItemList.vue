@@ -470,6 +470,7 @@ export default defineComponent({
               searchquerybuilder.buildSeriesFilter(searchStore),
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
+              searchquerybuilder.buildDeletionsFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
@@ -511,6 +512,7 @@ export default defineComponent({
             undefined,
             undefined,
             undefined,
+            undefined,
             searchquerybuilder.buildSortBy(datatableOptions.value),
             searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
@@ -543,6 +545,7 @@ export default defineComponent({
             undefined,
             undefined,
             rightId,
+            undefined,
             undefined,
             undefined,
             undefined,
@@ -601,6 +604,7 @@ export default defineComponent({
           undefined,
             undefined,
             undefined,
+            undefined,
             searchquerybuilder.buildSortBy(datatableOptions.value),
             searchquerybuilder.buildOrderBy(datatableOptions.value),
         )
@@ -623,6 +627,7 @@ export default defineComponent({
               currentPage.value,
               true,
               false,
+              undefined,
               undefined,
               undefined,
               undefined,
@@ -668,6 +673,7 @@ export default defineComponent({
       searchquerybuilder.setSeriesFilter(searchStore, bookmark);
       searchquerybuilder.setLicenceUrlFilter(searchStore, bookmark);
       searchquerybuilder.setManualRightFilter(searchStore, bookmark);
+      searchquerybuilder.setDeletionsFilter(searchStore, bookmark);
       searchquerybuilder.setAccessStateOnDateFilter(searchStore, bookmark);
       searchStore.searchTerm =
         bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
@@ -723,6 +729,7 @@ export default defineComponent({
           searchquerybuilder.buildSeriesFilter(searchStore),
           searchquerybuilder.buildLicenceUrlFilter(searchStore),
           searchquerybuilder.buildManualRightFilter(searchStore),
+          searchquerybuilder.buildDeletionsFilter(searchStore),
           searchquerybuilder.buildAccessOnDateFilter(searchStore),
           searchquerybuilder.buildSortBy(datatableOptions.value),
           searchquerybuilder.buildOrderBy(datatableOptions.value),
@@ -759,6 +766,7 @@ export default defineComponent({
               searchquerybuilder.buildSeriesFilter(searchStore),
               searchquerybuilder.buildLicenceUrlFilter(searchStore),
               searchquerybuilder.buildManualRightFilter(searchStore),
+              searchquerybuilder.buildDeletionsFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
@@ -1397,6 +1405,16 @@ table.special, th.special, td.special {
                     <td class=special>PPN</td>
                     <td class=special>ppn</td>
                     <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Manuell erstellte Rechteeinträge</td>
+                    <td class=special>man</td>
+                    <td class=special>man:on</td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Löschungen</td>
+                    <td class=special>del</td>
+                    <td class=special>del:on</td>
                   </tr>
                   </tbody>
                 </table>

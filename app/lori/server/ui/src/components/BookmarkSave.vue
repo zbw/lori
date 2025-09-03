@@ -162,6 +162,7 @@ export default defineComponent({
             searchquerybuilder.buildLicenceUrlFilter(searchStore),
             searchquerybuilder.buildManualRightFilter(searchStore),
             searchquerybuilder.buildAccessOnDateFilter(searchStore),
+            searchquerybuilder.buildDeletionsFilter(searchStore),
         )
         .then((r: BookmarkIdCreated) => {
           emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
