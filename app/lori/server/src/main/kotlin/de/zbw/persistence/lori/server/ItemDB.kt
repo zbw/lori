@@ -68,10 +68,35 @@ class ItemDB(
             }.takeWhile { true }.toList()
         }
 
-    suspend fun getAllHandles(): List<String> =
+    suspend fun getHandlesCount(): Int =
         connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getAllHandles").startSpan()
-            val prepStmt = connection.prepareStatement(STATEMENT_SELECT_DISTINCT_HANDLE)
+            val span = tracer.spanBuilder("getHandlesCount").startSpan()
+            val prepStmt = connection.prepareStatement(STATEMENT_COUNT_DISTINCT_HANDLE)
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            if (rs.next()) {
+                return@useConnection rs.getInt(1)
+            } else {
+                throw IllegalStateException("No count found.")
+            }
+        }
+
+    suspend fun getDistinctHandlesByOffset(
+        limit: Int,
+        offset: Int,
+    ): List<String> =
+        connectionPool.useConnection { connection ->
+            val span = tracer.spanBuilder("getDistinctHandlesByOffset").startSpan()
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_SELECT_DISTINCT_HANDLE).apply {
+                    this.setInt(1, limit)
+                    this.setInt(2, offset)
+                }
             val rs =
                 try {
                     span.makeCurrent()
@@ -292,7 +317,13 @@ class ItemDB(
 
         const val STATEMENT_SELECT_DISTINCT_HANDLE =
             "SELECT DISTINCT ($COLUMN_ITEM_HANDLE)" +
-                "FROM $TABLE_NAME_ITEM;"
+                " FROM $TABLE_NAME_ITEM" +
+                " ORDER BY $COLUMN_ITEM_HANDLE" +
+                " LIMIT ? OFFSET ?;"
+
+        const val STATEMENT_COUNT_DISTINCT_HANDLE =
+            "SELECT COUNT(DISTINCT ($COLUMN_ITEM_HANDLE))" +
+                " FROM $TABLE_NAME_ITEM;"
 
         const val STATEMENT_INSERT_ITEM =
             "INSERT INTO $TABLE_NAME_ITEM" +

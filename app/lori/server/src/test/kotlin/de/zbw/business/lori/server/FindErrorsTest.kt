@@ -84,22 +84,18 @@ class FindErrorsTest : DatabaseTest() {
         runBlocking {
             val receivedErrors = backend.checkForRightErrors("user1")
             assertThat(
-                receivedErrors.size,
+                receivedErrors,
                 `is`(5),
             )
             assertThat(
-                backend.checkForGAPErrors("user1").size,
+                backend.checkForGAPErrors("user1"),
                 `is`(3),
             )
             assertThat(
-                backend.checkForNoRightErrors("user1").size,
+                backend.checkForNoRightErrors("user1"),
                 `is`(2),
             )
-            assertThat(
-                "Ensure error ids are non zero and unique",
-                receivedErrors.map { it.errorId }.toSet().size,
-                `is`(5),
-            )
+
             val dbErrors =
                 backend.getRightErrorList(
                     limit = 10,

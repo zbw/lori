@@ -4,6 +4,7 @@ import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.connector.DAConnector.Companion.DEFAULT_IMPORT_CHUNK_SIZE
 import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
@@ -48,6 +49,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.collections.filter
+import kotlin.math.ceil
 
 /**
  * Backend for the Lori-Server.
@@ -727,88 +729,117 @@ class LoriServerBackend(
 
     suspend fun deleteBookmarkTemplatePairsByRightId(rightId: String): Int = dbConnector.bookmarkTemplateDB.deletePairsByRightId(rightId)
 
-    suspend fun checkForRightErrors(createdBy: String): List<RightError> {
-        val gapErrors = checkForGAPErrors(createdBy)
-        val noRightErrors = checkForNoRightErrors(createdBy)
-        val deletionErrors = checkForDeletionErrors(createdBy)
-        return gapErrors + noRightErrors + deletionErrors
+    suspend fun checkForRightErrors(createdBy: String): Int {
+        val gapErrorsCount = checkForGAPErrors(createdBy)
+        val noRightErrorsCount = checkForNoRightErrors(createdBy)
+        val deletionErrorsCount = checkForDeletionErrors(createdBy)
+        return gapErrorsCount + noRightErrorsCount + deletionErrorsCount
     }
 
     suspend fun deleteErrorsByTestId(testId: String): Int = dbConnector.rightErrorDB.deleteErrorByTestId(testId)
 
-    internal suspend fun checkForDeletionErrors(createdBy: String): List<RightError> {
+    internal suspend fun checkForDeletionErrors(createdBy: String): Int {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.DELETION)
-        val deletedMetadata = dbConnector.metadataDB.getDeletedMetadata()
-        val errors =
-            deletedMetadata.map { metadata ->
-                RightError(
-                    handle = metadata.handle,
-                    message = "Handle ist gelöscht worden",
-                    errorId = null,
-                    createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
-                    conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
-                    conflictByRightId = null,
-                    conflictType = ConflictType.DELETION,
-                    // TODO(CB): Clarify with Jana how to present multiple values
-                    conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
-                    testId = null,
-                    createdBy = createdBy,
+        var errorCount = 0
+        val deletedMetadataCount = dbConnector.metadataDB.getDeletedMetadataCount()
+        for (offsetCounter in 0..<ceil(deletedMetadataCount.toDouble() / DEFAULT_CHUNK_SIZE).toInt()) {
+            val deletedMetadata =
+                dbConnector.metadataDB.getDeletedMetadata(
+                    offset = offsetCounter * DEFAULT_IMPORT_CHUNK_SIZE,
+                    limit = DEFAULT_CHUNK_SIZE,
                 )
-            }
-        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
-        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+            val errors =
+                deletedMetadata.map { metadata ->
+                    RightError(
+                        handle = metadata.handle,
+                        message = "Handle ist gelöscht worden",
+                        errorId = null,
+                        createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
+                        conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
+                        conflictByRightId = null,
+                        conflictType = ConflictType.DELETION,
+                        // TODO(CB): Clarify with Jana how to present multiple values
+                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        testId = null,
+                        createdBy = createdBy,
+                    )
+                }
+            dbConnector.rightErrorDB.insertErrorsBatch(errors)
+            errorCount += errors.size
+        }
+        return errorCount
     }
 
-    internal suspend fun checkForNoRightErrors(createdBy: String): List<RightError> {
+    internal suspend fun checkForNoRightErrors(createdBy: String): Int {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.NO_RIGHT)
-        val metadataWithoutRights =
-            dbConnector.searchDB.searchMetadataItems(
+        val handlesWithoutRightsCount =
+            dbConnector.searchDB.countSearchMetadata(
                 searchExpression = null,
-                limit = null,
-                offset = null,
                 metadataSearchFilter = emptyList(),
                 rightSearchFilter = emptyList(),
                 noRightInformationFilter = NoRightInformationFilter(),
-                sortInformation = SortInformation.DEFAULT,
             )
-        val errors =
-            metadataWithoutRights.map { metadata ->
-                RightError(
-                    handle = metadata.handle,
-                    message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",
-                    errorId = null,
-                    createdOn =
-                        OffsetDateTime.now(
-                            TimezoneUtil.TIME_ZONE_UTC,
-                        ),
-                    conflictingWithRightId = null,
-                    conflictByRightId = null,
-                    conflictType = ConflictType.NO_RIGHT,
-                    conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
-                    testId = null,
-                    createdBy = createdBy,
+        var errorCount = 0
+        for (offsetCounter in 0..<ceil(handlesWithoutRightsCount.toDouble() / DEFAULT_CHUNK_SIZE).toInt()) {
+            val metadataWithoutRights =
+                dbConnector.searchDB.searchMetadataItems(
+                    searchExpression = null,
+                    limit = DEFAULT_CHUNK_SIZE,
+                    offset = offsetCounter * DEFAULT_CHUNK_SIZE,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = emptyList(),
+                    noRightInformationFilter = NoRightInformationFilter(),
+                    sortInformation = SortInformation.DEFAULT,
                 )
-            }
-        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
-        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+            val errors =
+                metadataWithoutRights.map { metadata ->
+                    RightError(
+                        handle = metadata.handle,
+                        message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",
+                        errorId = null,
+                        createdOn =
+                            OffsetDateTime.now(
+                                TimezoneUtil.TIME_ZONE_UTC,
+                            ),
+                        conflictingWithRightId = null,
+                        conflictByRightId = null,
+                        conflictType = ConflictType.NO_RIGHT,
+                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        testId = null,
+                        createdBy = createdBy,
+                    )
+                }
+            dbConnector.rightErrorDB.insertErrorsBatch(errors)
+            errorCount += errors.size
+        }
+        return errorCount
     }
 
-    internal suspend fun checkForGAPErrors(createdBy: String): List<RightError> {
+    internal suspend fun checkForGAPErrors(createdBy: String): Int {
         dbConnector.rightErrorDB.deleteErrorsByType(ConflictType.GAP)
-        val handles: List<String> = dbConnector.itemDB.getAllHandles()
-        // TODO: Dont load all handles and metadata in memory at once, like wtf
-        val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
-        val items =
-            metadata.map { m ->
-                val items = dbConnector.rightDB.getItemRowsByHandle(m.handle)
-                Item(
-                    metadata = m,
-                    rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),
+        val handlesCount = dbConnector.itemDB.getHandlesCount()
+        var errorCount = 0
+
+        for (offsetCounter in 0..<ceil(handlesCount.toDouble() / DEFAULT_CHUNK_SIZE).toInt()) {
+            val handles: List<String> =
+                dbConnector.itemDB.getDistinctHandlesByOffset(
+                    limit = DEFAULT_CHUNK_SIZE,
+                    offset = offsetCounter * DEFAULT_CHUNK_SIZE,
                 )
-            }
-        val errors = items.map { DashboardUtil.checkForGapErrors(it, createdBy) }.flatten()
-        val errorIds = dbConnector.rightErrorDB.insertErrorsBatch(errors)
-        return errors.mapIndexed { index, rightError -> rightError.copy(errorId = errorIds[index]) }
+            val metadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
+            val items =
+                metadata.map { m ->
+                    val items = dbConnector.rightDB.getItemRowsByHandle(m.handle)
+                    Item(
+                        metadata = m,
+                        rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),
+                    )
+                }
+            val errors = items.map { DashboardUtil.checkForGapErrors(it, createdBy) }.flatten()
+            dbConnector.rightErrorDB.insertErrorsBatch(errors)
+            errorCount += errors.size
+        }
+        return errorCount
     }
 
     suspend fun applyAllTemplates(
@@ -973,6 +1004,9 @@ class LoriServerBackend(
 
     companion object {
         val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)
+
+        // Default chunk size when iterating over a huge dataset
+        const val DEFAULT_CHUNK_SIZE: Int = 5000
 
         /**
          * Valid patterns: key:value or key:'value1 value2 ...'.

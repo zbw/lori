@@ -169,11 +169,11 @@ fun Routing.errorRoutes(
                                         HttpStatusCode.Unauthorized,
                                         ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                     ) // This should never happen
-                            val errors = backend.checkForRightErrors(userSession.email)
+                            val errorsCount = backend.checkForRightErrors(userSession.email)
                             span.setStatus(StatusCode.OK)
                             return@withContext call.respond(
                                 HttpStatusCode.OK,
-                                RightErrorRecomputationRest(errors.size),
+                                RightErrorRecomputationRest(errorsCount),
                             )
                         } catch (e: Exception) {
                             span.recordException(e)

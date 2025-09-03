@@ -165,10 +165,11 @@ class DAConnector(
         loginToken: String,
         collectionId: Int,
         offset: Int,
+        limit: Int,
         collection: DACollection,
         community: DACommunity,
     ): Int {
-        LOG.debug("Collection Handle ${collection.handle}: Offset ${offset * 100}")
+        LOG.info("Collection Handle ${collection.handle}: Offset $offset")
 
         val response: ApiResponse<List<DAItem>, String> =
             client.safeRequest(2, 2000L) {
@@ -182,8 +183,8 @@ class DAConnector(
                     append(DSPACE_TOKEN, loginToken)
                 }
                 parameter("expand", "metadata")
-                parameter("offset", "${offset * 100}")
-                parameter("limit", "100")
+                parameter("offset", offset.toString())
+                parameter("limit", limit.toString())
             }
         return when (response) {
             is ApiResponse.Error.HttpError<*> -> {
@@ -276,14 +277,15 @@ class DAConnector(
             val numberItems: Int = collection.numberItems ?: 0
             LOG.info("Collection Handle ${collection.handle}: Start importing $numberItems items")
             val deferredResults = mutableListOf<Deferred<Int>>()
-            for (offset in 0..<ceil(numberItems.toDouble() / 100).toInt()) {
+            for (offsetCounter in 0..<ceil(numberItems.toDouble() / DEFAULT_IMPORT_CHUNK_SIZE).toInt()) {
                 deferredResults +=
                     async {
                         semaphore.withPermit {
                             importCollectionPart(
                                 loginToken = loginToken,
                                 collectionId = collectionId,
-                                offset = offset,
+                                offset = offsetCounter * DEFAULT_IMPORT_CHUNK_SIZE,
+                                limit = DEFAULT_IMPORT_CHUNK_SIZE,
                                 collection = collection,
                                 community = community,
                             )
@@ -333,6 +335,7 @@ class DAConnector(
 
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
+        const val DEFAULT_IMPORT_CHUNK_SIZE = 100
         private const val HANDLE_URL = "http://hdl.handle.net/"
         internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
 

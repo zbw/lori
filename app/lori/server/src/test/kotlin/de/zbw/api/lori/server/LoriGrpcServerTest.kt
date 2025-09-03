@@ -282,7 +282,7 @@ class LoriGrpcServerTest {
                 mockk<LoriServerBackend> {
                     coEvery {
                         checkForRightErrors(any())
-                    } returns expectedResult
+                    } returns expectedResult.size
                 }
             // when
             val grpcServer =
