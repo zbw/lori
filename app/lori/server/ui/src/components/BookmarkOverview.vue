@@ -59,15 +59,6 @@ export default defineComponent({
         maxWidth: "100px",
       },
       {
-        title: "Suche ausführen",
-        key: "executeSearch",
-        align: "start",
-        sortable: false,
-        width: "100px",
-        minWidth: "100px",
-        maxWidth: "100px",
-      },
-      {
         title: "Aktionen",
         key: "actions",
         align: "start",
@@ -319,11 +310,6 @@ export default defineComponent({
             :disabled="!userStore.isLoggedIn"
           ></v-btn>
         </template>
-        <template v-slot:item.executeSearch="{ item }">
-          <v-btn color="blue darken-1" @click="executeBookmarkSearch(item)"
-            >Suche ausführen</v-btn
-          >
-        </template>
         <template v-slot:item.actions="{ item }">
           <v-tooltip
               location="bottom"
@@ -354,6 +340,21 @@ export default defineComponent({
               </div>
             </template>
             <span>Suchstring anzeigen und kopieren</span>
+          </v-tooltip>
+          <v-tooltip
+              location="bottom"
+          >
+            <template v-slot:activator="{ props }">
+              <div v-bind="props" class="d-inline-block">
+                <v-btn
+                    variant="text"
+                    @click="executeBookmarkSearch(item)"
+                    icon="mdi-play"
+                >
+                </v-btn>
+              </div>
+            </template>
+            <span>Suche ausführen</span>
           </v-tooltip>
           <v-tooltip
               location="bottom"

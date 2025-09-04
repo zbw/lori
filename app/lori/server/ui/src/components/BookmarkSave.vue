@@ -44,7 +44,9 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    // Router + Route
+    /**
+     * Router + Route
+     */
     const router: Router = useRouter()
     const route: RouteLocationNormalizedLoaded = useRoute()
     /**

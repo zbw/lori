@@ -31,6 +31,7 @@ import ResizableDialog from "@/components/ResizableDialog.vue";
 import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
 import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
+import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 
 export default defineComponent({
   computed: {
@@ -55,6 +56,11 @@ export default defineComponent({
   },
 
   setup() {
+    /**
+     * Router + Route
+     */
+    const router: Router = useRouter()
+    const route: RouteLocationNormalizedLoaded = useRoute()
     /**
      * Stores:
      */
@@ -683,6 +689,9 @@ export default defineComponent({
         "'" + bookmark.bookmarkName + " (" + bookmark.bookmarkId + ")'" +
         " wurde erfolgreich ausgeführt.";
       successMsgIsActive.value = true;
+      url.addQueryParameters(route, router, {
+        [url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID]: bookmark?.bookmarkId
+      });
       startSearch();
     };
 
