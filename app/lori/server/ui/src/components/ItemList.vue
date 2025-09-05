@@ -951,6 +951,10 @@ export default defineComponent({
       dialogStore.templateOverviewActivated = false;
     };
 
+    const openBookmarkSaveDialog = () => {
+      dialogStore.bookmarkSaveActivated = true;
+    };
+
     const closeBookmarkSaveDialog = () => {
       dialogStore.bookmarkSaveActivated = false;
       bookmarkSaveQueryParameterDialog.value = false;
@@ -1025,6 +1029,95 @@ export default defineComponent({
       }
     }
 
+    // Reset the search filter
+    const resetFilter: () => void = () => {
+      searchStore.publicationYearFrom = "";
+      searchStore.publicationYearTo = "";
+
+      searchStore.accessStateOpen = false;
+      searchStore.accessStateRestricted = false;
+      searchStore.accessStateClosed = false;
+
+      searchStore.accessStateClosed = false;
+      searchStore.accessStateOpen = false;
+      searchStore.accessStateRestricted = false;
+
+      searchStore.formalRuleLicenceContract = false;
+      searchStore.formalRuleCCNoRestriction = false;
+      searchStore.formalRuleNoLegalRisk = false;
+      searchStore.formalRuleUserAgreement = false;
+
+      searchStore.temporalValidOnFormatted = "";
+      searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
+      searchStore.temporalEventState.startDateOrEndDateOption = "";
+
+      searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
+      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
+          () => false,
+      );
+      searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
+          () => false,
+      );
+      searchStore.templateNameIdx = searchStore.templateNameIdx.map(
+          () => false,
+      );
+      searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
+      searchStore.seriesIdx = searchStore.seriesIdx.map(() => false);
+      searchStore.licenceUrlIdx = searchStore.licenceUrlIdx.map(() => false);
+      searchStore.noRightInformation = false;
+      searchStore.manualRight = false;
+      searchStore.deletions = false;
+      searchStore.accessStateOnDateState.dateValueFormatted = "";
+      searchStore.accessStateOnDateState.accessState = "";
+      searchStore.accessStateOnDateIdx = [] as Array<string>;
+      url.removeQueryParameters(
+          route,
+          router,
+          [
+            url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID,
+            url.QUERY_PARAMETER_TEMPLATE_ID,
+            url.QUERY_PARAMETER_BOOKMARK_ID,
+            url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
+            url.QUERY_PARAMETER_GROUP_ID,
+            url.QUERY_PARAMETER_RIGHT_ID,
+          ]
+      );
+      startEmptySearch();
+    };
+    const canReset = computed(() => {
+      return (
+          searchStore.publicationYearFrom != "" ||
+          searchStore.publicationYearTo != "" ||
+          searchStore.accessStateOpen ||
+          searchStore.accessStateRestricted ||
+          searchStore.accessStateClosed ||
+          searchStore.temporalEventState.startDateOrEndDateFormattedValue != "" ||
+          searchStore.temporalEventState.startDateOrEndDateOption != "" ||
+          searchStore.accessStateClosed ||
+          searchStore.accessStateOpen ||
+          searchStore.accessStateRestricted ||
+          searchStore.formalRuleLicenceContract ||
+          searchStore.formalRuleCCNoRestriction ||
+          searchStore.formalRuleNoLegalRisk ||
+          searchStore.formalRuleUserAgreement ||
+          searchStore.temporalValidOnFormatted != "" ||
+          searchStore.accessStateIdx.filter((element) => element).length > 0 ||
+          searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
+          searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
+          searchStore.seriesIdx.filter((element) => element).length > 0 ||
+          searchStore.templateNameIdx.filter((element) => element).length > 0 ||
+          searchStore.publicationTypeIdx.filter((element) => element).length > 0 ||
+          searchStore.licenceUrlIdx.filter((element) => element).length > 0 ||
+          searchStore.noRightInformation ||
+          searchStore.searchTerm ||
+          searchStore.isLastSearchForTemplates ||
+          searchStore.manualRight ||
+          searchStore.deletions ||
+          searchStore.accessStateOnDateState.dateValueFormatted ||
+          searchStore.accessStateOnDateState.accessState
+      );
+    });
+
     return {
       successMsgIsActive,
       successMsg,
@@ -1060,6 +1153,7 @@ export default defineComponent({
       // Methods
       addActiveItem,
       addBookmarkSuccessful,
+      canReset,
       closeBookmarkOverview,
       closeBookmarkSaveDialog,
       closeDashboard,
@@ -1074,8 +1168,10 @@ export default defineComponent({
       handlePageSizeChange,
       loadTemplateView,
       onOptionsUpdate,
+      openBookmarkSaveDialog,
       openDialog,
       parsePublicationType,
+      resetFilter,
       addRightSuccessful,
       searchQuery,
       startDashboardSearch,
@@ -1103,7 +1199,6 @@ table.special, th.special, td.special {
   <TopNavigationBar></TopNavigationBar>
   <VResizeDrawer permanent width="300px">
     <SearchFilter
-        v-on:startEmptySearch="startEmptySearch"
         v-on:startSearch="startSearch"
         v-on:getAccessStatesOnDate="getAccessStatesForDate"
     ></SearchFilter>
@@ -1241,13 +1336,13 @@ table.special, th.special, td.special {
           justify="space-around"
       >
         <v-col
-            cols="10"
-            offset="0"
         >
           <b>Aktive Filter:</b> {{ searchStore.filtersAsQuery }}
         </v-col>
+      </v-row>
+      <v-row justify="end" align="center" class="ga-0">
         <v-col
-            cols="1"
+            cols="auto"
         >
           <v-dialog v-model="searchHelpDialog" max-width="600px">
             <template v-slot:activator="{ props: activatorProps }">
@@ -1257,7 +1352,6 @@ table.special, th.special, td.special {
                       density="compact"
                       icon="mdi-help"
                       v-bind="{...activatorProps, ...props}"
-                      class="mb-4"
                   >
                   </v-btn>
                 </template>
@@ -1499,6 +1593,34 @@ table.special, th.special, td.special {
               </v-card-text>
             </v-card>
           </v-dialog>
+        </v-col>
+        <v-col
+            cols="auto">
+          <v-btn
+              color="blue darken-1"
+          >
+            Exportieren
+          </v-btn>
+        </v-col>
+        <v-col
+          cols="auto">
+          <v-btn
+              color="blue darken-1"
+              @click="openBookmarkSaveDialog"
+              :disabled="!userStore.isLoggedIn || !searchStore.isLastSearchNonTrivialAndSuccessful"
+          >
+            Speichern
+          </v-btn>
+        </v-col>
+        <v-col
+          cols="auto">
+          <v-btn
+              color="blue darken-1"
+              :disabled="!canReset"
+              @click="resetFilter"
+          >
+            Resetten</v-btn
+          >
         </v-col>
       </v-row>
       <v-spacer></v-spacer>

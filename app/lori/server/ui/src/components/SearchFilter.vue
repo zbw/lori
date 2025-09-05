@@ -10,7 +10,7 @@ import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-ro
 import url from "@/utils/url";
 
 export default defineComponent({
-  emits: ["startEmptySearch", "startSearch", "getAccessStatesOnDate"],
+  emits: ["startSearch", "getAccessStatesOnDate"],
   setup(props, { emit }) {
     const searchStore = useSearchStore();
     const userStore = useUserStore();
@@ -65,95 +65,7 @@ export default defineComponent({
       return errors;
     });
 
-    // Reset the search filter
-    const canReset = computed(() => {
-      return (
-        searchStore.publicationYearFrom != "" ||
-        searchStore.publicationYearTo != "" ||
-        searchStore.accessStateOpen ||
-        searchStore.accessStateRestricted ||
-        searchStore.accessStateClosed ||
-        searchStore.temporalEventState.startDateOrEndDateFormattedValue != "" ||
-        searchStore.temporalEventState.startDateOrEndDateOption != "" ||
-        searchStore.accessStateClosed ||
-        searchStore.accessStateOpen ||
-        searchStore.accessStateRestricted ||
-        searchStore.formalRuleLicenceContract ||
-        searchStore.formalRuleCCNoRestriction ||
-        searchStore.formalRuleNoLegalRisk ||
-        searchStore.formalRuleUserAgreement ||
-        searchStore.temporalValidOnFormatted != "" ||
-        searchStore.accessStateIdx.filter((element) => element).length > 0 ||
-        searchStore.paketSigelIdIdx.filter((element) => element).length > 0 ||
-        searchStore.zdbIdIdx.filter((element) => element).length > 0 ||
-        searchStore.seriesIdx.filter((element) => element).length > 0 ||
-        searchStore.templateNameIdx.filter((element) => element).length > 0 ||
-        searchStore.publicationTypeIdx.filter((element) => element).length > 0 ||
-        searchStore.licenceUrlIdx.filter((element) => element).length > 0 ||
-        searchStore.noRightInformation ||
-        searchStore.searchTerm ||
-        searchStore.isLastSearchForTemplates ||
-        searchStore.manualRight ||
-        searchStore.deletions ||
-        searchStore.accessStateOnDateState.dateValueFormatted ||
-        searchStore.accessStateOnDateState.accessState
-      );
-    });
 
-    const resetFilter: () => void = () => {
-      searchStore.publicationYearFrom = "";
-      searchStore.publicationYearTo = "";
-
-      searchStore.accessStateOpen = false;
-      searchStore.accessStateRestricted = false;
-      searchStore.accessStateClosed = false;
-
-      searchStore.accessStateClosed = false;
-      searchStore.accessStateOpen = false;
-      searchStore.accessStateRestricted = false;
-
-      searchStore.formalRuleLicenceContract = false;
-      searchStore.formalRuleCCNoRestriction = false;
-      searchStore.formalRuleNoLegalRisk = false;
-      searchStore.formalRuleUserAgreement = false;
-
-      searchStore.temporalValidOnFormatted = "";
-      searchStore.temporalEventState.startDateOrEndDateFormattedValue = "";
-      searchStore.temporalEventState.startDateOrEndDateOption = "";
-
-      searchStore.accessStateIdx = searchStore.accessStateIdx.map(() => false);
-      searchStore.paketSigelIdIdx = searchStore.paketSigelIdIdx.map(
-        () => false,
-      );
-      searchStore.publicationTypeIdx = searchStore.publicationTypeIdx.map(
-        () => false,
-      );
-      searchStore.templateNameIdx = searchStore.templateNameIdx.map(
-        () => false,
-      );
-      searchStore.zdbIdIdx = searchStore.zdbIdIdx.map(() => false);
-      searchStore.seriesIdx = searchStore.seriesIdx.map(() => false);
-      searchStore.licenceUrlIdx = searchStore.licenceUrlIdx.map(() => false);
-      searchStore.noRightInformation = false;
-      searchStore.manualRight = false;
-      searchStore.deletions = false;
-      searchStore.accessStateOnDateState.dateValueFormatted = "";
-      searchStore.accessStateOnDateState.accessState = "";
-      searchStore.accessStateOnDateIdx = [] as Array<string>;
-      url.removeQueryParameters(
-          route,
-          router,
-          [
-            url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID,
-            url.QUERY_PARAMETER_TEMPLATE_ID,
-            url.QUERY_PARAMETER_BOOKMARK_ID,
-            url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH,
-            url.QUERY_PARAMETER_GROUP_ID,
-            url.QUERY_PARAMETER_RIGHT_ID,
-          ]
-      );
-      emit("startEmptySearch");
-    };
 
     const router: Router = useRouter()
     const route: RouteLocationNormalizedLoaded = useRoute()
@@ -423,7 +335,6 @@ export default defineComponent({
 
     return {
       accessStateDate,
-      canReset,
       errorFetchBackendData,
       errorTempEventStartEnd,
       errorTempEventInput,
@@ -482,7 +393,6 @@ export default defineComponent({
       ppPaketSigel,
       ppZBWUserAgreements,
       ppZDBId,
-      resetFilter,
       singleSelectionAccessStateOnDate,
       startDateOrEndDateEntered,
       temporalValidOnEntered,
@@ -497,30 +407,6 @@ export default defineComponent({
 </style>
 <template>
   <v-card height="100%" class="scroll">
-    <v-row>
-      <v-col cols="auto">
-        <v-btn
-          class="ml-8 mt-6"
-          color="warning"
-          :disabled="!canReset"
-          @click="resetFilter"
-        >
-          Suche resetten</v-btn
-        >
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="auto">
-        <v-btn
-          class="ml-8"
-          color="blue darken-1"
-          @click="activateBookmarkSaveDialog"
-          :disabled="!userStore.isLoggedIn || !searchStore.isLastSearchNonTrivialAndSuccessful"
-        >
-          Suche speichern
-        </v-btn>
-      </v-col>
-    </v-row>
     <v-row>
       <v-col>
         <v-card-title>Publikationsfilter</v-card-title>
