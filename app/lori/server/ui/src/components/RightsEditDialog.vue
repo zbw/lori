@@ -1508,7 +1508,10 @@ export default defineComponent({
       }
     });
 
+    const expandTemplateMetadata = ref(false);
+
     return {
+      expandTemplateMetadata,
       formState,
       v$,
       // variables
@@ -1623,6 +1626,10 @@ export default defineComponent({
 .v-expansion-panel-text__wrapper {
   max-height: calc(700px - 64px - (4 * 48px));
   overflow: scroll;
+}
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
 }
 
 .my-scroll {
@@ -1907,76 +1914,87 @@ export default defineComponent({
                   ></v-textarea>
                 </v-col>
               </v-row>
-              <v-row>
-                <v-col cols="4"> Erstellt am</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.createdOn"
-                    variant="outlined"
-                    readonly
-                    bg-color="grey-lighten-2"
-                    hint="Erstellungsdatum des Templates"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4"> Erstellt von</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.createdBy"
-                    variant="outlined"
-                    readonly
-                    bg-color="grey-lighten-2"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4"> Zuletzt editiert am</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.lastUpdatedOn"
-                    variant="outlined"
-                    readonly
-                    bg-color="grey-lighten-2"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4"> Zuletzt editiert von</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.lastUpdatedBy"
-                    variant="outlined"
-                    readonly
-                    bg-color="grey-lighten-2"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4"> Erstmals angewendet am</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                      v-model="tmpRight.firstAppliedOn"
-                      variant="outlined"
-                      readonly
-                      bg-color="grey-lighten-2"
-                      hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
-                <v-col cols="4"> Zuletzt angewendet am</v-col>
-                <v-col cols="8">
-                  <v-text-field
-                    v-model="tmpRight.lastAppliedOn"
-                    variant="outlined"
-                    readonly
-                    bg-color="grey-lighten-2"
-                    hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-              <v-row>
+              <div @click="expandTemplateMetadata = !expandTemplateMetadata" class="d-flex align-center cursor-pointer">
+                <v-icon :class="{ 'rotate-180': expandTemplateMetadata }">mdi-chevron-down</v-icon>
+                <span class="ms-2">Template Metadaten</span>
+              </div>
+
+              <v-expand-transition>
+                <div v-show="expandTemplateMetadata" class="mt-2">
+                  <v-row>
+                    <v-col cols="4"> Erstellt am</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.createdOn"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                          hint="Erstellungsdatum des Templates"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="4"> Erstellt von</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.createdBy"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="4"> Zuletzt editiert am</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.lastUpdatedOn"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="4"> Zuletzt editiert von</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.lastUpdatedBy"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="4"> Erstmals angewendet am</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.firstAppliedOn"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                          hint="Datum, wann das erste Mal das Template angewendet wurde bzw. der automatische Job"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                  <v-row>
+                    <v-col cols="4"> Zuletzt angewendet am</v-col>
+                    <v-col cols="8">
+                      <v-text-field
+                          v-model="tmpRight.lastAppliedOn"
+                          variant="outlined"
+                          readonly
+                          bg-color="grey-lighten-2"
+                          hint="Datum, wann das letzte Mal das Template angewendet wurde bzw. der automatische Job"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-expand-transition>
+
+
+              <v-row class="mt-4">
                 <v-col cols="4">
                   <div>
                     Verknüpfte Suche
