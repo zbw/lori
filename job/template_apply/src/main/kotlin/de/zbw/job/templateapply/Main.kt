@@ -36,7 +36,7 @@ object Main {
                 configuration =
                     LoriClientConfiguration(
                         9092,
-                        "localhost",
+                        "lori",
                         // Wait for one hour max. Anything above that is at least worth investigating.
                         3600000,
                     ),
