@@ -72,7 +72,9 @@ test:
 
 pushLoriAppImage:
   stage: push
-  needs: ["test"]
+  needs:
+    - job: test
+      optional: true
   dependencies:
     - test
   tags:
