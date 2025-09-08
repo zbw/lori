@@ -168,7 +168,9 @@ pushTemplateApplyJobImage:
 
 deployToQs:
   stage: deploy
-  needs: ["pushLoriAppImage"]
+  needs:
+    - job : "pushLoriAppImage"
+      optional: true
   environment: qs
   image:
     name: $ALPINE
@@ -207,7 +209,9 @@ deployToQs:
 deployToProd:
   stage: deploy
   when: manual
-  needs: ["pushLoriAppImage"]
+  needs:
+    - job : "pushLoriAppImage"
+      optional: true
   environment: production
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
