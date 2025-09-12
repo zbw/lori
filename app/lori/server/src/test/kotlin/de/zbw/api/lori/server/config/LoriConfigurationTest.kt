@@ -79,6 +79,7 @@ class LoriConfigurationTest {
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "1234",
+                downloadDir = "path/to/downloads",
             )
     }
 }

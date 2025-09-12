@@ -36,6 +36,7 @@ data class LoriConfiguration(
     val stage: String,
     val handleURL: String,
     val commitHash: String,
+    val downloadDir: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -79,7 +80,7 @@ data class LoriConfiguration(
             val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
             val stage = KonfigDeclaration.string(prefix, "stage").required()
             val handleURL = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "handleurl").required()
-            val props = Thread.currentThread().contextClassLoader.getResourceAsStream("git.properties")
+            val downloadDir = KonfigDeclaration.string(prefix, "downloadDir").required()
 
             return LoriConfiguration(
                 httpPort = source[httpPort],
@@ -103,6 +104,7 @@ data class LoriConfiguration(
                 duoUrlSLO = source[duoUrlSLO],
                 duoUrlSSO = source[duoUrlSSO],
                 commitHash = loadGitHash(),
+                downloadDir = source[downloadDir],
             )
         }
 

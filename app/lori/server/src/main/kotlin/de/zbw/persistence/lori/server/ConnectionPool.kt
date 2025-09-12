@@ -19,7 +19,7 @@ class ConnectionPool(
     )
 
     suspend fun <T> useConnection(
-        methodName: String = "unkown",
+        methodName: String = "unknown",
         block: suspend (Connection) -> T,
     ): T =
         jdbcSemaphore.withPermit {

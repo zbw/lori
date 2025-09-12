@@ -43,7 +43,57 @@ data class ItemMetadata(
     val titleJournal: String?,
     val titleSeries: String?,
     val zdbIds: List<String>?,
-)
+) {
+    fun toCSV(): String {
+        fun listToString(list: List<String>?): String? = list?.joinToString(";")
+
+        fun dateToString(date: OffsetDateTime?): String? = date?.toString()
+
+        val fields =
+            listOf(
+                author,
+                band,
+                collectionHandle,
+                collectionName,
+                communityHandle,
+                communityName,
+                createdBy,
+                dateToString(createdOn),
+                deleted.toString(),
+                listToString(doi),
+                handle,
+                listToString(isbn),
+                issn,
+                listToString(isPartOfSeries),
+                lastUpdatedBy,
+                dateToString(lastUpdatedOn),
+                licenceUrl,
+                licenceUrlFilter,
+                listToString(paketSigel),
+                ppn,
+                publicationType.name,
+                publicationYear?.toString(),
+                subCommunityHandle,
+                subCommunityName,
+                dateToString(storageDate),
+                title,
+                titleJournal,
+                titleSeries,
+                listToString(zdbIds),
+            )
+
+        return fields.joinToString(",") { csvEscape(it) }
+    }
+
+    private fun csvEscape(value: String?): String {
+        if (value == null) return ""
+        val needsQuoting =
+            value.contains(',') || value.contains('"') ||
+                value.contains('\n') || value.contains('\r')
+        val escaped = value.replace("\"", "\"\"")
+        return if (needsQuoting) "\"$escaped\"" else escaped
+    }
+}
 
 enum class AccessState(
     val priority: Int,

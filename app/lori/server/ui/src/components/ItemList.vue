@@ -3,7 +3,7 @@ import {
   AboutRest,
   BookmarkRest, GroupRest,
   ItemInformation,
-  ItemRest,
+  ItemRest, JobCreatedRest,
   RightRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
@@ -32,6 +32,7 @@ import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
 import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import jobApi from "@/api/jobApi";
 
 export default defineComponent({
   computed: {
@@ -1118,6 +1119,35 @@ export default defineComponent({
       );
     });
 
+    /**
+     * Export
+     */
+    const exportInProgress = ref(false);
+    const startExport: () => void = () => {
+      exportInProgress.value = true;
+
+      let exportSearchQuery;
+      if(searchStore.filtersAsQuery.length > 0 &&
+          searchStore.searchTerm.length > 0
+      ){
+        exportSearchQuery = searchStore.filtersAsQuery + " & " + searchStore.searchTerm;
+      } else {
+        exportSearchQuery = searchStore.filtersAsQuery + searchStore.searchTerm;
+      }
+      jobApi.createJob(
+          exportSearchQuery
+      ).then((created: JobCreatedRest) => {
+        // Use created.statusUrl to poll for a result
+      }).catch((e) => {
+        error.errorHandling(e, (errMsg: string) => {
+          errorMsg.value = errMsg;
+          errorMsgIsActive.value = true;
+        });
+        exportInProgress.value = false;
+      })
+
+    };
+
     return {
       successMsgIsActive,
       successMsg,
@@ -1128,6 +1158,7 @@ export default defineComponent({
       currentItem,
       currentPage,
       dialogStore,
+      exportInProgress,
       groupEditActivated,
       headers,
       headersValueVSelect,
@@ -1178,6 +1209,7 @@ export default defineComponent({
       selectedRowColor,
       setActiveItem,
       startEmptySearch,
+      startExport,
       startSearch,
     };
   },
@@ -1598,6 +1630,8 @@ table.special, th.special, td.special {
             cols="auto">
           <v-btn
               color="blue darken-1"
+              @click="startExport"
+              :loading="exportInProgress"
           >
             Exportieren
           </v-btn>

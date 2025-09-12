@@ -9,10 +9,13 @@ import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.type.Either
+import de.zbw.business.lori.server.export.ExportJobService
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
+import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
@@ -48,6 +51,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.collections.filter
 import kotlin.math.ceil
 
@@ -322,7 +326,7 @@ class LoriServerBackend(
             null,
         )
 
-    suspend fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
+    suspend fun countItemByRightId(rightId: String): Int = dbConnector.itemDB.countItemByRightId(rightId)
 
     suspend fun deleteItemEntry(
         handle: String,
@@ -1001,6 +1005,15 @@ class LoriServerBackend(
             )
         }
     }
+
+    suspend fun insertExportJob(exportJob: ExportJob): UUID = UUID.fromString(dbConnector.jobDB.insertJob(exportJob))
+
+    suspend fun getJobById(jobId: UUID): ExportJob? = dbConnector.jobDB.getJobById(jobId)
+
+    suspend fun updateJobById(exportJob: ExportJob): Int =
+        dbConnector.jobDB.updateJobStatusById(
+            exportJob,
+        )
 
     companion object {
         val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)

@@ -1,0 +1,48 @@
+download-job-id:
+  get:
+    summary: Download an exported file
+    description: >
+      Returns the exported CSV file corresponding to the given job ID.
+      The file is only available if the export job has completed successfully.
+    tags:
+      - download
+    operationId: downloadExport
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: UUID of the export job
+        schema:
+          type: string
+          format: uuid
+    responses:
+      200:
+        description: The exported CSV file
+        headers:
+          Content-Disposition:
+            description: Suggests a default filename for download
+            schema:
+              type: string
+        content:
+          text/csv:
+            schema:
+              type: string
+              format: binary
+      401:
+        description: Unauthorized to perform this action
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      403:
+        description: Forbidden (user not allowed to access this file)
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      500:
+        description: Internal error
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
