@@ -133,13 +133,47 @@ class MetadataDB(
             return@useConnection runMetadataStatement(prepStmt, span, connection)
         }
 
-    suspend fun getDeletedMetadata(): List<ItemMetadata> =
+    suspend fun getDeletedMetadata(
+        limit: Int,
+        offset: Int,
+    ): List<ItemMetadata> =
         connectionPool.useConnection { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_DELETED_METADATA)
+                connection
+                    .prepareStatement(
+                        STATEMENT_GET_DELETED_METADATA +
+                            " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
+                            " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
+                    ).apply {
+                        this.setInt(1, limit)
+                        this.setInt(2, offset)
+                    }
 
             val span = tracer.spanBuilder("getDeletedMetadata").startSpan()
             return@useConnection runMetadataStatement(prepStmt, span, connection)
+        }
+
+    suspend fun getDeletedMetadataCount(): Int =
+        connectionPool.useConnection { connection ->
+            val span = tracer.spanBuilder("getDeletedMetadata").startSpan()
+            val prepStmt =
+                connection
+                    .prepareStatement(
+                        STATEMENT_GET_DELETED_METADATA_COUNT,
+                    )
+
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            if (rs.next()) {
+                return@useConnection rs.getInt(1)
+            } else {
+                throw IllegalStateException("No count found.")
+            }
         }
 
     suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
@@ -313,6 +347,11 @@ class MetadataDB(
         const val STATEMENT_GET_DELETED_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
                 " WHERE $COLUMN_METADATA_DELETED = true"
+
+        const val STATEMENT_GET_DELETED_METADATA_COUNT =
+            "SELECT COUNT(*)" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
+                " WHERE $COLUMN_METADATA_DELETED = true;"
 
         const val STATEMENT_LOCK_METADATA_ROW =
             "SELECT * FROM $TABLE_NAME_ITEM_METADATA WHERE $COLUMN_METADATA_HANDLE = ? FOR UPDATE;"

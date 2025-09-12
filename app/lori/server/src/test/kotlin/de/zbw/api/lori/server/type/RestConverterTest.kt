@@ -939,6 +939,7 @@ class RestConverterTest {
                 zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
                 manualRightFilter = QueryParameterParser.parseManualRightFilter("true"),
+                deletionsFilter = QueryParameterParser.parseDeletionsFilter("true"),
                 accessStateOnFilter = QueryParameterParser.parseAccessStateOnDate("OPEN+2024-09-17"),
                 lastUpdatedOn =
                     OffsetDateTime.of(

@@ -44,7 +44,9 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    // Router + Route
+    /**
+     * Router + Route
+     */
     const router: Router = useRouter()
     const route: RouteLocationNormalizedLoaded = useRoute()
     /**
@@ -162,6 +164,7 @@ export default defineComponent({
             searchquerybuilder.buildLicenceUrlFilter(searchStore),
             searchquerybuilder.buildManualRightFilter(searchStore),
             searchquerybuilder.buildAccessOnDateFilter(searchStore),
+            searchquerybuilder.buildDeletionsFilter(searchStore),
         )
         .then((r: BookmarkIdCreated) => {
           emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);

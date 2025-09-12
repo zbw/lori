@@ -48,11 +48,11 @@ class LoriGrpcServer(
                 .startSpan()
         return withContext(span.asContextElement()) {
             try {
-                val errors =
+                val errorsCount =
                     daConnector.backend.checkForRightErrors(GPRC_USER)
                 CheckForRightErrorsResponse
                     .newBuilder()
-                    .setNumberOfErrors(errors.size)
+                    .setNumberOfErrors(errorsCount)
                     .build()
             } catch (e: Throwable) {
                 span.recordException(e)

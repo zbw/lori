@@ -150,7 +150,7 @@ class ErrorRoutesKtTest {
         val TEST_ERROR_RESULT =
             ErrorQueryResult(
                 totalNumberOfResults = 1,
-                contextNames = setOf(TEST_ERROR.conflictByContext!!),
+                contextNames = listOf(TEST_ERROR.conflictByContext!!),
                 conflictTypes = setOf(ConflictType.DATE_OVERLAP),
                 results = listOf(TEST_ERROR),
             )

@@ -2,6 +2,7 @@ package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
+import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
@@ -112,7 +113,8 @@ class BookmarkDB(
                     bookmark,
                     connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
                 ).apply {
-                    this.setInt(24, bookmarkId)
+                    // Important: Adjust this number when adding a new parameter!
+                    this.setInt(25, bookmarkId)
                 }
             val span = tracer.spanBuilder("updateBookmarkById").startSpan()
             try {
@@ -179,6 +181,7 @@ class BookmarkDB(
     companion object {
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"
         private const val COLUMN_BOOKMARK_NAME = "bookmark_name"
+        const val COLUMN_FILTER_DELETIONS = "filter_deletions"
         const val COLUMN_FILTER_LICENCE_URL = "filter_licence_url"
         const val COLUMN_FILTER_MANUAL_RIGHT = "filter_manual_right"
         const val COLUMN_FILTER_ACCESS_STATE_ON = "filter_access_state_on"
@@ -195,7 +198,8 @@ class BookmarkDB(
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON," +
+                "$COLUMN_QUERYSTRING,$COLUMN_FILTER_DELETIONS" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " WHERE $COLUMN_BOOKMARK_ID = ANY(?)"
 
@@ -207,8 +211,8 @@ class BookmarkDB(
                 "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on,created_by," +
                 "last_updated_by,filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
-                ")" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING," +
+                "$COLUMN_FILTER_DELETIONS)" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -216,7 +220,7 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
-                "?,?)"
+                "?,?,?)"
 
         const val STATEMENT_DELETE_BOOKMARK_BY_ID =
             "DELETE" +
@@ -233,7 +237,8 @@ class BookmarkDB(
                 "created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
                 "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON," +
-                "$COLUMN_QUERYSTRING,$COLUMN_BOOKMARK_ID)" +
+                // Important: COLUMN_BOOKMARK_ID always needs to be the last parameter!
+                "$COLUMN_QUERYSTRING,$COLUMN_FILTER_DELETIONS,$COLUMN_BOOKMARK_ID)" +
                 " VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -242,7 +247,7 @@ class BookmarkDB(
                 "?,?,?," +
                 "?,?,?," +
                 "?,?," +
-                "?)" +
+                "?,?)" +
                 " ON CONFLICT ($COLUMN_BOOKMARK_ID)" +
                 " DO UPDATE SET" +
                 " $COLUMN_BOOKMARK_NAME = EXCLUDED.$COLUMN_BOOKMARK_NAME," +
@@ -264,6 +269,7 @@ class BookmarkDB(
                 " filter_template_name = EXCLUDED.filter_template_name," +
                 " $COLUMN_FILTER_LICENCE_URL = EXCLUDED.$COLUMN_FILTER_LICENCE_URL," +
                 " $COLUMN_FILTER_MANUAL_RIGHT = EXCLUDED.$COLUMN_FILTER_MANUAL_RIGHT," +
+                " $COLUMN_FILTER_DELETIONS = EXCLUDED.$COLUMN_FILTER_DELETIONS," +
                 " $COLUMN_QUERYSTRING = EXCLUDED.$COLUMN_QUERYSTRING," +
                 " $COLUMN_FILTER_ACCESS_STATE_ON = EXCLUDED.$COLUMN_FILTER_ACCESS_STATE_ON;"
 
@@ -276,7 +282,8 @@ class BookmarkDB(
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
-                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING" +
+                "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON," +
+                "$COLUMN_QUERYSTRING,$COLUMN_FILTER_DELETIONS" +
                 " FROM $TABLE_NAME_BOOKMARK" +
                 " ORDER BY created_on DESC LIMIT ? OFFSET ?;"
 
@@ -327,6 +334,7 @@ class BookmarkDB(
                 manualRightFilter = ManualRightFilter.fromString(rs.getBoolean(localCounter++).toString()),
                 accessStateOnFilter = AccessStateOnDateFilter.fromString(rs.getString(localCounter++)),
                 queryString = rs.getString(localCounter++),
+                deletionsFilter = DeletionsFilter.fromString(rs.getBoolean(localCounter++).toString()),
             )
         }
 
@@ -398,6 +406,9 @@ class BookmarkDB(
                     prepStmt.setString(idx, value.toSQLString())
                 }
                 this.setString(localCounter++, bookmark.computeQueryString())
+                this.setIfNotNull(localCounter++, bookmark.deletionsFilter) { _, idx, prepStmt ->
+                    prepStmt.setBoolean(idx, true)
+                }
             }
         }
     }

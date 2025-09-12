@@ -1,8 +1,8 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
+import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardSearchFilter
-import de.zbw.business.lori.server.DashboardTemplateNameFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.type.ConflictType
@@ -150,13 +150,13 @@ class RightErrorDBTest : DatabaseTest() {
             ),
             arrayOf(
                 listOf(
-                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardContextFilter("context"),
                     DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
                     DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
                 RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
-                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " WHERE $COLUMN_CONFLICT_BY_CONTEXT = ?" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " AND $COLUMN_TEST_ID IS NULL" +
                     " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;",
@@ -165,13 +165,13 @@ class RightErrorDBTest : DatabaseTest() {
             ),
             arrayOf(
                 listOf(
-                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardContextFilter("context"),
                     DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
                     DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
                 RightErrorDB.STATEMENT_GET_RIGHT_LIST_SELECT +
-                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " WHERE $COLUMN_CONFLICT_BY_CONTEXT = ?" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " AND $COLUMN_TEST_ID = ?" +
                     " ORDER BY $COLUMN_ERROR_ID LIMIT ? OFFSET ?;",
@@ -210,14 +210,14 @@ class RightErrorDBTest : DatabaseTest() {
             arrayOf(
                 COLUMN_CONFLICT_BY_CONTEXT,
                 listOf(
-                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardContextFilter("context"),
                     DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
                     DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
                 "SELECT $COLUMN_CONFLICT_BY_CONTEXT" +
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
-                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " WHERE $COLUMN_CONFLICT_BY_CONTEXT = ?" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " AND $COLUMN_TEST_ID IS NULL" +
                     " GROUP BY $COLUMN_CONFLICT_BY_CONTEXT;",
@@ -227,14 +227,14 @@ class RightErrorDBTest : DatabaseTest() {
             arrayOf(
                 COLUMN_CONFLICT_BY_CONTEXT,
                 listOf(
-                    DashboardTemplateNameFilter(listOf("templateName1", "templateName2")),
+                    DashboardContextFilter("context"),
                     DashboardConflictTypeFilter(listOf(ConflictType.DATE_OVERLAP)),
                     DashboardTimeIntervalStartFilter(EXAMPLE_DATE),
                     DashboardTimeIntervalEndFilter(EXAMPLE_DATE.plusDays(30)),
                 ),
                 "SELECT $COLUMN_CONFLICT_BY_CONTEXT" +
                     " FROM $TABLE_NAME_RIGHT_ERROR" +
-                    " WHERE ($COLUMN_CONFLICT_BY_CONTEXT = ? OR $COLUMN_CONFLICT_BY_CONTEXT = ?)" +
+                    " WHERE $COLUMN_CONFLICT_BY_CONTEXT = ?" +
                     " AND ($COLUMN_CONFLICTING_TYPE = ?) AND ($COLUMN_CREATED_ON >= ?) AND ($COLUMN_CREATED_ON < ?)" +
                     " AND $COLUMN_TEST_ID = ?" +
                     " GROUP BY $COLUMN_CONFLICT_BY_CONTEXT;",

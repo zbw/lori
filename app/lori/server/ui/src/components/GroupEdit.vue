@@ -474,15 +474,6 @@ export default defineComponent({
     </v-dialog>
     <v-card-title>{{ dialogTitle }}
     </v-card-title>
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn
-          density="compact"
-          icon="mdi-help"
-          href="https://zbwintern/wiki/display/stba/03_IP-Gruppen"
-          target="_blank"
-      ></v-btn>
-    </v-card-actions>
     <v-card-text style="height:1100px;">
       <v-snackbar
           v-model="saveAlertError"
@@ -561,23 +552,10 @@ export default defineComponent({
       <v-row>
         Berechtigte IP-Adress-Bereiche
       </v-row>
-      <v-card
-          class="mb-12 mt-6"
-          color="surface-variant"
-          variant="tonal"
-      >
-        <v-card-text class="text-medium-emphasis text-caption">
-          Eine Neue Gruppe kann angelegt werden, indem die IP-Bereiche manuell
-          hier eingegeben werden oder indem die entsprechenden IP-Bereiche per
-          CSV-Datei hochgeladen werden. Beides gleichzeitig ist nicht möglich. Der
-          Freitext hat höhere Priorität. Das erwartete CSV Format ist:
-          "IPAdresse1,IPAdresse2,...,IPAdresseN;Organisation;"
-        </v-card-text>
-      </v-card>
       <v-row>
         <v-col cols="5">
           <v-textarea
-              label="IP-Adressen"
+              label="IP-Adressen, Direkteingabe"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
               v-bind="{...$attrs, ...loginStatusProps}"
@@ -588,19 +566,27 @@ export default defineComponent({
               v-model="hasNoCSVHeader"
           ></v-checkbox>
         </v-col>
-        <v-col cols="2"> oder</v-col>
+        <v-col cols="1"> oder</v-col>
         <v-col cols="5">
           <v-file-input
               chips
               bg-color="white"
               accept=".csv"
-              label="CSV-Datei"
+              label="CSV-Datei Import"
               v-model="formState.ipAddressesFile"
               :error-messages="errorIpAddresses"
               v-bind="{...$attrs, ...loginStatusProps}"
               variant="outlined"
           ></v-file-input>
           Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
+        </v-col>
+        <v-col cols="1" class="pl-4">
+          <v-btn
+              density="compact"
+              icon="mdi-help"
+              href="https://zbwintern/wiki/display/stba/03_IP-Gruppen"
+              target="_blank"
+          ></v-btn>
         </v-col>
       </v-row>
       <v-row>

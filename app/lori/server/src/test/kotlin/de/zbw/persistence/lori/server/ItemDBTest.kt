@@ -209,7 +209,7 @@ class ItemDBTest : DatabaseTest() {
 
             // then
             assertThat(
-                dbConnector.itemDB.getAllHandles().size,
+                dbConnector.itemDB.getHandlesCount(),
                 `is`(2),
             )
         }

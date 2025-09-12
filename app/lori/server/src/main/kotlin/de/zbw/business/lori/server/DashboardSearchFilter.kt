@@ -23,22 +23,17 @@ abstract class DashboardSearchFilter(
     ): Int
 }
 
-class DashboardTemplateNameFilter(
-    private val templateNames: List<String>,
+class DashboardContextFilter(
+    private val context: String,
 ) : DashboardSearchFilter(RightErrorDB.COLUMN_CONFLICT_BY_CONTEXT) {
-    override fun toWhereClause(): String =
-        templateNames.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
-            "$dbColumnName = ?"
-        }
+    override fun toWhereClause(): String = "$dbColumnName = ?"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        templateNames.forEach {
-            preparedStatement.setString(localCounter++, it)
-        }
+        preparedStatement.setString(localCounter++, context)
         return localCounter
     }
 }

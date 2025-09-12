@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.type.RestConverter.LOG
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
+import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
@@ -580,6 +581,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter(this.filterNoRightInformation),
         seriesFilter = QueryParameterParser.parseSeriesFilter(this.filterSeries),
         manualRightFilter = QueryParameterParser.parseManualRightFilter(this.filterManualRight),
+        deletionsFilter = QueryParameterParser.parseDeletionsFilter(this.filterDeletions),
         licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter(this.filterLicenceUrl),
         accessStateOnFilter = QueryParameterParser.parseAccessStateOnDate(this.filterAccessOnDate),
         rightIdFilter = QueryParameterParser.parseRightIdFilter(this.filterRightId),
@@ -616,6 +618,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
         noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
         manualRightFilter = this.filterManualRight?.takeIf { it }?.let { ManualRightFilter() },
+        deletionsFilter = this.filterDeletions?.takeIf { it }?.let { DeletionsFilter() },
         accessStateOnFilter =
             this.filterAccessOnDate?.let {
                 AccessStateOnDateFilter(
@@ -659,6 +662,7 @@ fun Bookmark.toRest(
         filterZDBId = this.zdbIdFilter?.zdbIds,
         filterNoRightInformation = this.noRightInformationFilter?.let { true } == true,
         filterManualRight = this.manualRightFilter?.let { true } == true,
+        filterDeletions = this.deletionsFilter?.let { true } == true,
         createdBy = this.createdBy,
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
@@ -700,7 +704,7 @@ fun ErrorQueryResult.toRest(pageSize: Int): RightErrorInformationRest {
         numberOfResults = totalNumberOfResults,
         totalPages = totalPages,
         errors = this.results.map { it.toRest() },
-        contextNames = this.contextNames.toList(),
+        contextNames = this.contextNames,
         conflictTypes = this.conflictTypes.map { it.toRest() },
     )
 }

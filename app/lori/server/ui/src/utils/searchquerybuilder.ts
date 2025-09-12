@@ -494,6 +494,22 @@ export default {
     }
   },
 
+  setDeletionsFilter(searchStore: any, bookmark: BookmarkRest): void {
+      if (bookmark.filterDeletions == undefined) {
+          searchStore.deletions = false;
+          return;
+      }
+      searchStore.deletions = bookmark.filterDeletions;
+  },
+
+  buildDeletionsFilter(searchStore: any): string | undefined {
+      if (searchStore.deletions) {
+          return "true";
+      } else {
+          return undefined;
+      }
+  },
+
   accessStateToType(a: string): AccessStateRest {
     switch (a) {
       case "open":

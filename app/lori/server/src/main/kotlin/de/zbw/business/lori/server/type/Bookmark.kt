@@ -2,6 +2,7 @@ package de.zbw.business.lori.server.type
 
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
+import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
@@ -50,10 +51,12 @@ data class Bookmark(
     val licenceURLFilter: LicenceUrlFilter? = null,
     val manualRightFilter: ManualRightFilter? = null,
     val accessStateOnFilter: AccessStateOnDateFilter? = null,
+    val deletionsFilter: DeletionsFilter? = null,
     private var queryString: String? = null,
 ) {
     fun getAllMetadataFilter(): List<MetadataSearchFilter> =
         listOfNotNull(
+            deletionsFilter,
             licenceURLFilter,
             paketSigelFilter,
             publicationYearFilter,
