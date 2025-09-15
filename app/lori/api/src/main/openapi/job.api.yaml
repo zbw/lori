@@ -12,6 +12,11 @@ jobs-create:
         application/json:
           schema:
             $ref: 'item.model.yaml#/ItemSearch'
+    parameters:
+      - name: format
+        in: query
+        schema:
+          $ref: 'job.model.yaml#/components/schemas/ExportFormatRest'
     responses:
       201:
         description: Created
@@ -45,6 +50,7 @@ jobs-status:
     tags:
       - job
     summary: Get status a job
+    operationId: getJobStatus
     parameters:
       - name: job-id
         in: path

@@ -13,6 +13,7 @@ data class ExportJob(
     var errorMessage: String?,
     var filePath: String?,
     val searchTerm: String,
+    val format: ExportFormat,
 ) {
     fun getFile(): File? = filePath?.let { File(it) }
 }
@@ -22,4 +23,14 @@ enum class ExportJobStatus {
     RUNNING,
     FINISHED,
     FAILED,
+}
+
+enum class ExportFormat {
+    CSV,
+    JSON,
+    ;
+
+    companion object {
+        val DEFAULT = CSV
+    }
 }

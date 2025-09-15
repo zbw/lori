@@ -1,12 +1,16 @@
 package de.zbw.api.lori.server.route
 
 import de.zbw.api.lori.server.type.UserSession
+import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.api.lori.server.type.toUpdateRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.export.ExportJobService
+import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.utils.enumOrNull
 import de.zbw.lori.model.ErrorRest
+import de.zbw.lori.model.ExportFormatRest
 import de.zbw.lori.model.ItemSearch
 import de.zbw.lori.model.JobCreatedRest
 import io.ktor.http.HttpStatusCode
@@ -63,10 +67,18 @@ fun Routing.jobRoutes(
                                     HttpStatusCode.Unauthorized,
                                     ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
                                 ) // This should never happen
+
+                        val format: ExportFormat =
+                            call.request.queryParameters
+                                .enumOrNull<ExportFormatRest>("format")
+                                ?.toBusiness()
+                                ?: ExportFormat.DEFAULT
+
                         val exportJob =
                             exportJobService.createJob(
                                 createdBy = userSession.email,
                                 searchTerm = searchTerm,
+                                format = format,
                             )
                         span.setStatus(StatusCode.OK)
                         call.respond(

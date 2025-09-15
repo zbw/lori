@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
@@ -104,6 +105,7 @@ class JobDBTest : DatabaseTest() {
                 createdBy = "user",
                 filePath = null,
                 errorMessage = null,
+                format = ExportFormat.CSV,
             )
     }
 }

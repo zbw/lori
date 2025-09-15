@@ -1,5 +1,12 @@
 package de.zbw.business.lori.server.type
 
+import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_AUTHOR
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_BAND
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_NAME
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -13,6 +20,7 @@ data class ItemId(
     val rightId: String,
 )
 
+@Serializable
 data class ItemMetadata(
     val author: String?,
     val band: String?,
@@ -21,6 +29,7 @@ data class ItemMetadata(
     val communityHandle: String?,
     val communityName: String?,
     val createdBy: String?,
+    @Serializable(with = OffsetDateTimeSerializer::class)
     val createdOn: OffsetDateTime?,
     val deleted: Boolean,
     val doi: List<String>?,
@@ -29,6 +38,7 @@ data class ItemMetadata(
     val issn: String?,
     val isPartOfSeries: List<String>?,
     val lastUpdatedBy: String?,
+    @Serializable(with = OffsetDateTimeSerializer::class)
     val lastUpdatedOn: OffsetDateTime?,
     val licenceUrl: String?,
     val licenceUrlFilter: String?,
@@ -38,6 +48,7 @@ data class ItemMetadata(
     val publicationYear: Int?,
     val subCommunityHandle: String?,
     val subCommunityName: String?,
+    @Serializable(with = OffsetDateTimeSerializer::class)
     val storageDate: OffsetDateTime?,
     val title: String,
     val titleJournal: String?,
@@ -51,10 +62,10 @@ data class ItemMetadata(
 
         val fields =
             listOf(
-                author,
-                band,
-                collectionHandle,
-                collectionName,
+                COLUMN_METADATA_AUTHOR,
+                COLUMN_METADATA_BAND,
+                COLUMN_METADATA_COLLECTION_HANDLE,
+                COLUMN_METADATA_COLLECTION_NAME,
                 communityHandle,
                 communityName,
                 createdBy,
@@ -92,6 +103,47 @@ data class ItemMetadata(
                 value.contains('\n') || value.contains('\r')
         val escaped = value.replace("\"", "\"\"")
         return if (needsQuoting) "\"$escaped\"" else escaped
+    }
+
+    fun ItemMetadata.toJson(): String = JSON_ENCODER.encodeToString(this)
+
+    companion object {
+        val JSON_ENCODER =
+            Json {
+                prettyPrint = false
+                encodeDefaults = true
+            }
+
+        fun csvFileHeader(): String =
+            "author, " +
+                "band," +
+                "collectionHandle," +
+                "collectionName," +
+                "communityHandle," +
+                "communityName," +
+                "createdBy," +
+                "createdOn," +
+                "deleted," +
+                "doi," +
+                "handle," +
+                "isbn," +
+                "issn," +
+                "isPartOfSeries," +
+                "lastUpdatedBy," +
+                "lastUpdatedOn," +
+                "licenceUrl," +
+                "licenceUrlFilter," +
+                "paketSigel," +
+                "ppn," +
+                "publicationType.name," +
+                "publicationYear," +
+                "subCommunityHandle," +
+                "subCommunityName," +
+                "storageDate," +
+                "title," +
+                "titleJournal," +
+                "titleSeries," +
+                "zdbIds"
     }
 }
 

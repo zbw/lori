@@ -21,6 +21,7 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
+import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.business.lori.server.type.Group
@@ -43,6 +44,7 @@ import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
+import de.zbw.lori.model.ExportFormatRest
 import de.zbw.lori.model.FilterAccessStateOnRest
 import de.zbw.lori.model.FilterPublicationYearRest
 import de.zbw.lori.model.FilterRightIdRest
@@ -872,6 +874,12 @@ fun ExportJobStatus.toRest(): JobStatusRest =
         ExportJobStatus.RUNNING -> JobStatusRest.running
         ExportJobStatus.FINISHED -> JobStatusRest.finished
         ExportJobStatus.FAILED -> JobStatusRest.failed
+    }
+
+fun ExportFormatRest.toBusiness(): ExportFormat =
+    when (this) {
+        ExportFormatRest.csv -> ExportFormat.CSV
+        ExportFormatRest.json -> ExportFormat.JSON
     }
 
 /**

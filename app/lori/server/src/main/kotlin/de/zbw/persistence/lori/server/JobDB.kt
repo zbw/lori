@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_JOBS
@@ -35,6 +36,7 @@ class JobDB(
                     this.setTimestamp(5, Timestamp.from(now), utcCalendar)
                     this.setString(6, exportJob.filePath)
                     this.setString(7, exportJob.searchTerm)
+                    this.setString(8, exportJob.format.toString())
                 }
             try {
                 span.makeCurrent()
@@ -77,6 +79,7 @@ class JobDB(
                     errorMessage = rs.getString(6),
                     filePath = rs.getString(7),
                     searchTerm = rs.getString(8),
+                    format = ExportFormat.valueOf(rs.getString(9)),
                 )
             } else {
                 null
@@ -112,20 +115,21 @@ class JobDB(
         const val COLUMN_JOB_ERROR_MESSAGE = "error_message"
         const val COLUMN_JOB_FILE_PATH = "file_path"
         const val COLUMN_JOB_SEARCH_TERM = "search_term"
+        const val COLUMN_JOB_EXPORT_FORMAT = "export_format"
 
         const val STATEMENT_INSERT_JOB =
             "INSERT INTO $TABLE_NAME_JOBS" +
                 " ($COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
                 "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_FILE_PATH," +
-                "$COLUMN_JOB_SEARCH_TERM)" +
+                "$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT)" +
                 " VALUES (?,?,?," +
                 "?,?,?," +
-                "?);"
+                "?,?);"
 
         const val STATEMENT_GET_JOB_BY_ID =
             "SELECT $COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
                 "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_ERROR_MESSAGE," +
-                "$COLUMN_JOB_FILE_PATH,$COLUMN_JOB_SEARCH_TERM" +
+                "$COLUMN_JOB_FILE_PATH,$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT" +
                 " FROM $TABLE_NAME_JOBS" +
                 " WHERE $COLUMN_JOB_ID=?;"
 

@@ -34,3 +34,11 @@ JobStatusUpdateRest:
       type: string
     rows:
       type: integer
+
+components:
+  schemas:
+    ExportFormatRest:
+      type: string
+      enum:
+        - csv
+        - json

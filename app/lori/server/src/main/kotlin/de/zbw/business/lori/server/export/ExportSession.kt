@@ -1,5 +1,8 @@
 package de.zbw.business.lori.server.export
 
+import de.zbw.business.lori.server.type.ExportFormat
+import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.type.ItemMetadata
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.BufferedWriter
@@ -54,10 +57,17 @@ class ExportSession(
         fun create(
             exportDir: Path,
             jobUUID: UUID,
+            format: ExportFormat,
         ): ExportSession {
             Files.createDirectories(exportDir)
 
-            val fileName = "${LocalDate.now().format(dateFormatter)}-$jobUUID.csv"
+            val fileSuffix =
+                when (format) {
+                    ExportFormat.CSV -> "csv"
+                    ExportFormat.JSON -> "ndjson"
+                }
+
+            val fileName = "${LocalDate.now().format(dateFormatter)}-$jobUUID.$fileSuffix"
             val filePath = exportDir.resolve(fileName)
 
             val writer =
@@ -68,6 +78,42 @@ class ExportSession(
                 )
 
             return ExportSession(filePath.toFile(), writer)
+        }
+
+        fun convertNDJsonToJson(
+            exportDir: Path,
+            job: ExportJob,
+        ): File? {
+            val fileName = "${LocalDate.now().format(dateFormatter)}-${job.id}.json"
+            val filePath = exportDir.resolve(fileName)
+
+            val inputFile = job.getFile() ?: return null
+            val outputFile = filePath.toFile()
+
+            ndjsonToJsonArray(
+                inputFile = inputFile,
+                outputFile = filePath.toFile(),
+            )
+            return outputFile
+        }
+
+        private fun ndjsonToJsonArray(
+            inputFile: File,
+            outputFile: File,
+        ) {
+            outputFile.bufferedWriter().use { writer ->
+                writer.write("[\n")
+
+                val lines = inputFile.readLines()
+                lines.forEachIndexed { index, line ->
+                    writer.write(line)
+                    if (index != lines.lastIndex) {
+                        writer.write(",\n") // add commas between objects
+                    }
+                }
+
+                writer.write("\n]")
+            }
         }
     }
 }

@@ -6,5 +6,6 @@ CREATE TABLE export_jobs (
     last_updated_on TEXT NOT NULL,
     error_message TEXT,
     file_path TEXT,
-    search_term TEXT NOT NULL
+    search_term TEXT NOT NULL,
+    export_format TEXT NOT NULL
 );

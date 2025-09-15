@@ -1,9 +1,9 @@
 <script lang="ts">
 import {
   AboutRest,
-  BookmarkRest, GroupRest,
+  BookmarkRest, ExportFormatRest, GroupRest,
   ItemInformation,
-  ItemRest, JobCreatedRest,
+  ItemRest, JobCreatedRest, JobStatusRest, JobStatusUpdateRest,
   RightRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
@@ -36,6 +36,9 @@ import jobApi from "@/api/jobApi";
 
 export default defineComponent({
   computed: {
+    ExportFormatRest() {
+      return ExportFormatRest
+    },
     metadata_utils() {
       return metadata_utils;
     },
@@ -1123,7 +1126,7 @@ export default defineComponent({
      * Export
      */
     const exportInProgress = ref(false);
-    const startExport: () => void = () => {
+    const startExport = (format: ExportFormatRest) => {
       exportInProgress.value = true;
 
       let exportSearchQuery;
@@ -1135,9 +1138,11 @@ export default defineComponent({
         exportSearchQuery = searchStore.filtersAsQuery + searchStore.searchTerm;
       }
       jobApi.createJob(
-          exportSearchQuery
+          exportSearchQuery,
+          format,
       ).then((created: JobCreatedRest) => {
         // Use created.statusUrl to poll for a result
+        pollStatus(created.jobId)
       }).catch((e) => {
         error.errorHandling(e, (errMsg: string) => {
           errorMsg.value = errMsg;
@@ -1145,6 +1150,31 @@ export default defineComponent({
         });
         exportInProgress.value = false;
       })
+    };
+
+
+    const isPolling = ref(false);
+    let pollTimeout = 5000;
+
+    const pollStatus = async (jobId: string) => {
+      while(isPolling.value){
+        try{
+          const response: JobStatusUpdateRest = await jobApi.getJobStatus(jobId)
+          if(response.status == JobStatusRest.Finished){
+            // TODO Show window with url
+            exportInProgress.value = false;
+            break;
+          }
+        } catch(e){
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        }
+        await new Promise(resolve => setTimeout(resolve, pollTimeout))
+      }
+
+
 
     };
 
@@ -1630,10 +1660,23 @@ table.special, th.special, td.special {
             cols="auto">
           <v-btn
               color="blue darken-1"
-              @click="startExport"
               :loading="exportInProgress"
           >
             Exportieren
+            <v-menu activator="parent">
+              <v-list>
+                <v-list-item link>
+                  <v-list-item-title
+                      @click="startExport(ExportFormatRest.Csv)"
+                  >CSV</v-list-item-title>
+                </v-list-item>
+                <v-list-item link>
+                  <v-list-item-title
+                      @click="startExport(ExportFormatRest.Json)"
+                  >JSON</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-menu>
           </v-btn>
         </v-col>
         <v-col

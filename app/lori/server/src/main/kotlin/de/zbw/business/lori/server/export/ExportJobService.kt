@@ -1,13 +1,18 @@
 package de.zbw.business.lori.server.export
 
 import de.zbw.business.lori.server.LoriServerBackend
-import de.zbw.business.lori.server.TemplateApplication
+import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
+import de.zbw.business.lori.server.type.ItemMetadata
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
@@ -17,6 +22,7 @@ import org.apache.logging.log4j.Logger
 import java.nio.file.Path
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.plusAssign
 import kotlin.math.ceil
 
 class ExportJobService(
@@ -29,6 +35,7 @@ class ExportJobService(
     fun createJob(
         createdBy: String,
         searchTerm: String,
+        format: ExportFormat,
     ): ExportJob {
         val job =
             ExportJob(
@@ -38,6 +45,7 @@ class ExportJobService(
                 createdBy = createdBy,
                 errorMessage = null,
                 filePath = null,
+                format = format,
             )
 
         runBlocking {
@@ -62,6 +70,7 @@ class ExportJobService(
                 ExportSession.create(
                     exportDir = Path.of(exportDir),
                     jobUUID = job.id,
+                    format = job.format,
                 )
             job.filePath = session.getFile().path
             backend.updateJobById(job)
@@ -74,22 +83,53 @@ class ExportJobService(
                             offset = null,
                             facetsOnly = true,
                         )
-                    for (offset in 0..<ceil(facetsResult.numberOfResults.toDouble() / BATCH_SIZE).toInt()) {
-                        launch {
-                            semaphore.withPermit {
-                                LOG.info(
-                                    "For JobId ${job.id}: " +
-                                        "Export results ${offset * BATCH_SIZE} to ${offset * BATCH_SIZE + BATCH_SIZE}",
-                                )
-                                val results =
-                                    backend.searchQuery(
-                                        searchTerm = job.searchTerm,
-                                        offset = offset * BATCH_SIZE,
-                                        limit = BATCH_SIZE,
-                                    )
+
+                    val deferHeader =
+                        async {
+                            if (job.format == ExportFormat.CSV) {
                                 exportSession.writeBatch(
-                                    results.results.map { it.metadata.toCSV() },
+                                    listOf(ItemMetadata.csvFileHeader()),
                                 )
+                            }
+                        }
+                    deferHeader.await()
+
+                    val jobs = mutableListOf<Job>()
+                    for (offset in 0..<ceil(facetsResult.numberOfResults.toDouble() / BATCH_SIZE).toInt()) {
+                        jobs +=
+                            launch {
+                                semaphore.withPermit {
+                                    LOG.info(
+                                        "For JobId ${job.id}: " +
+                                            "Export results ${offset * BATCH_SIZE} to ${offset * BATCH_SIZE + BATCH_SIZE}",
+                                    )
+                                    val results =
+                                        backend.searchQuery(
+                                            searchTerm = job.searchTerm,
+                                            offset = offset * BATCH_SIZE,
+                                            limit = BATCH_SIZE,
+                                        )
+                                    if (job.format == ExportFormat.CSV) {
+                                        exportSession.writeBatch(
+                                            results.results.map { it.metadata.toCSV() },
+                                        )
+                                    } else if (job.format == ExportFormat.JSON) {
+                                        exportSession.writeBatch(
+                                            results.results.map { ItemMetadata.JSON_ENCODER.encodeToString(it.metadata) },
+                                        )
+                                    }
+                                }
+                            }
+                        jobs.joinAll()
+                        if (job.format == ExportFormat.JSON) {
+                            val newFile =
+                                ExportSession.convertNDJsonToJson(
+                                    exportDir = Path.of(exportDir),
+                                    job = job,
+                                )
+                            if (newFile != null) {
+                                session.getFile().delete()
+                                job.filePath = newFile.path
                             }
                         }
                     }
