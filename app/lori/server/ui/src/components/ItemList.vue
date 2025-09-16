@@ -1126,6 +1126,11 @@ export default defineComponent({
      * Export
      */
     const exportInProgress = ref(false);
+    let isPolling = false;
+    let pollTimeout = 5000;
+    const showDownloadCard = ref(false);
+    const downloadUrl = ref("");
+
     const startExport = (format: ExportFormatRest) => {
       exportInProgress.value = true;
 
@@ -1141,7 +1146,7 @@ export default defineComponent({
           exportSearchQuery,
           format,
       ).then((created: JobCreatedRest) => {
-        // Use created.statusUrl to poll for a result
+        isPolling = true;
         pollStatus(created.jobId)
       }).catch((e) => {
         error.errorHandling(e, (errMsg: string) => {
@@ -1152,17 +1157,19 @@ export default defineComponent({
       })
     };
 
-
-    const isPolling = ref(false);
-    let pollTimeout = 5000;
-
     const pollStatus = async (jobId: string) => {
-      while(isPolling.value){
+      while(isPolling){
         try{
           const response: JobStatusUpdateRest = await jobApi.getJobStatus(jobId)
           if(response.status == JobStatusRest.Finished){
-            // TODO Show window with url
+            openDownloadWindow(response)
             exportInProgress.value = false;
+            break;
+          }
+          if(response.status == JobStatusRest.Failed){
+            exportInProgress.value = false;
+            errorMsg.value = "Export ist fehlgeschlagen!";
+            errorMsgIsActive.value = true;
             break;
           }
         } catch(e){
@@ -1173,10 +1180,22 @@ export default defineComponent({
         }
         await new Promise(resolve => setTimeout(resolve, pollTimeout))
       }
-
-
-
     };
+
+    const openDownloadWindow = (status: JobStatusUpdateRest) => {
+      if (status.jobId != null) {
+        showDownloadCard.value = true;
+        downloadUrl.value = url.createDownloadHref(status.jobId);
+      } else {
+        errorMsg.value = "Keine Job Id gefunden";
+        errorMsgIsActive.value = true;
+      }
+    }
+
+    const openDownloadLink = () => {
+      window.open(downloadUrl.value, "_blank")
+      showDownloadCard.value = false;
+    }
 
     return {
       successMsgIsActive,
@@ -1204,6 +1223,7 @@ export default defineComponent({
       selectedHeaders,
       selectedItems,
       searchHelpDialog,
+      showDownloadCard,
       tableContentLoading,
       userStore,
       rightEditActivated,
@@ -1230,6 +1250,7 @@ export default defineComponent({
       loadTemplateView,
       onOptionsUpdate,
       openBookmarkSaveDialog,
+      openDownloadLink,
       openDialog,
       parsePublicationType,
       resetFilter,
@@ -1661,6 +1682,7 @@ table.special, th.special, td.special {
           <v-btn
               color="blue darken-1"
               :loading="exportInProgress"
+              :disabled="!userStore.isLoggedIn || !searchStore.isLastSearchNonTrivialAndSuccessful"
           >
             Exportieren
             <v-menu activator="parent">
@@ -1678,6 +1700,25 @@ table.special, th.special, td.special {
               </v-list>
             </v-menu>
           </v-btn>
+          <!-- Popup Window -->
+          <v-card
+              v-if="showDownloadCard"
+              class="pa-3 mt-2"
+              elevation="4"
+              width="280"
+          >
+            <div class="text-body-2">
+              Download ist abgeschlossen:
+              <v-btn
+                  variant="text"
+                  size="small"
+                  class="ml-1"
+                  @click="openDownloadLink"
+              >
+                Hier klicken
+              </v-btn>
+            </div>
+          </v-card>
         </v-col>
         <v-col
           cols="auto">

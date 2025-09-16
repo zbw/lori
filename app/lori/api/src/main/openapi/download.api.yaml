@@ -17,14 +17,18 @@ download-job-id:
           format: uuid
     responses:
       200:
-        description: The exported CSV file
+        description: The exported CSV or JSON file
         headers:
           Content-Disposition:
-            description: Suggests a default filename for download
+            description: export
             schema:
               type: string
         content:
           text/csv:
+            schema:
+              type: string
+              format: binary
+          application/json:
             schema:
               type: string
               format: binary
@@ -36,6 +40,12 @@ download-job-id:
               $ref: 'errorhandling.model.yaml#/ErrorRest'
       403:
         description: Forbidden (user not allowed to access this file)
+        content:
+          application/json:
+            schema:
+              $ref: 'errorhandling.model.yaml#/ErrorRest'
+      404:
+        description: Relation does not exist
         content:
           application/json:
             schema:

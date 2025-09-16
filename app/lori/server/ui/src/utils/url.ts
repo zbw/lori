@@ -7,6 +7,8 @@ const QUERY_PARAMETER_GROUP_ID = "groupId";
 const QUERY_PARAMETER_HANDLE = "handle";
 const QUERY_PARAMETER_RIGHT_ID = "rightId";
 const QUERY_PARAMETER_TEMPLATE_ID = "templateId";
+const REST_API_BASE_PATH = "/api/v1";
+const REST_API_DOWNLOAD_PATH = "/download";
 
 export default {
     QUERY_PARAMETER_BOOKMARK_ID,
@@ -16,6 +18,8 @@ export default {
     QUERY_PARAMETER_HANDLE,
     QUERY_PARAMETER_RIGHT_ID,
     QUERY_PARAMETER_TEMPLATE_ID,
+    REST_API_BASE_PATH,
+    REST_API_DOWNLOAD_PATH,
 
     addQueryParameters(
         route: RouteLocationNormalizedLoaded,
@@ -81,4 +85,7 @@ export default {
         return window.location.origin + window.location.pathname + "?" +
             QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH + "=hdl:" + handleId;
     },
+    createDownloadHref(downloadId: string) : string {
+        return window.location.origin + REST_API_BASE_PATH + REST_API_DOWNLOAD_PATH + "/" + downloadId;
+    }
 }

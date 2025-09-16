@@ -8,6 +8,7 @@ import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.route.aboutRoutes
 import de.zbw.api.lori.server.route.bookmarkRoutes
 import de.zbw.api.lori.server.route.bookmarkTemplateRoutes
+import de.zbw.api.lori.server.route.downloadRoutes
 import de.zbw.api.lori.server.route.errorRoutes
 import de.zbw.api.lori.server.route.groupRoutes
 import de.zbw.api.lori.server.route.guiRoutes
@@ -176,6 +177,7 @@ class ServicePoolWithProbes(
             guiRoutes(backend, tracer, samlUtils)
             itemRoutes(backend, tracer)
             jobRoutes(backend, tracer, exportJobService)
+            downloadRoutes(backend, tracer)
             metadataRoutes(backend, tracer)
             rightRoutes(backend, tracer)
             usersRoutes(backend, tracer)

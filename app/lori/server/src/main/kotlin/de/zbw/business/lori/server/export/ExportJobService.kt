@@ -115,24 +115,24 @@ class ExportJobService(
                                         )
                                     } else if (job.format == ExportFormat.JSON) {
                                         exportSession.writeBatch(
-                                            results.results.map { ItemMetadata.JSON_ENCODER.encodeToString(it.metadata) },
+                                            results.results.map { it.metadata.toJson() },
                                         )
                                     }
                                 }
                             }
                         jobs.joinAll()
-                        if (job.format == ExportFormat.JSON) {
-                            val newFile =
-                                ExportSession.convertNDJsonToJson(
-                                    exportDir = Path.of(exportDir),
-                                    job = job,
-                                )
-                            if (newFile != null) {
-                                session.getFile().delete()
-                                job.filePath = newFile.path
-                            }
-                        }
                     }
+                }
+            }
+            if (job.format == ExportFormat.JSON) {
+                val newFile =
+                    ExportSession.convertNDJsonToJson(
+                        exportDir = Path.of(exportDir),
+                        job = job,
+                    )
+                if (newFile != null) {
+                    session.getFile().delete()
+                    job.filePath = newFile.path
                 }
             }
             job.status = ExportJobStatus.FINISHED

@@ -45,7 +45,7 @@ fun Routing.jobRoutes(
     route("/api/v1/export/jobs") {
         authenticate("auth-session") {
             /**
-             * Create a new Group.
+             * Create a new Job.
              */
             post {
                 val span =
@@ -61,18 +61,19 @@ fun Routing.jobRoutes(
                                 .takeIf { it.searchTerm != null }
                                 ?.searchTerm
                                 ?: throw BadRequestException("Invalid Json has been provided")
-                        val userSession: UserSession =
-                            call.principal<UserSession>()
-                                ?: return@withContext call.respond(
-                                    HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
-                                ) // This should never happen
 
                         val format: ExportFormat =
                             call.request.queryParameters
                                 .enumOrNull<ExportFormatRest>("format")
                                 ?.toBusiness()
                                 ?: ExportFormat.DEFAULT
+
+                        val userSession: UserSession =
+                            call.principal<UserSession>()
+                                ?: return@withContext call.respond(
+                                    HttpStatusCode.Unauthorized,
+                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
+                                ) // This should never happen
 
                         val exportJob =
                             exportJobService.createJob(
@@ -113,45 +114,45 @@ fun Routing.jobRoutes(
                     }
                 }
             }
-            /**
-             * Create a new Group.
-             */
-            get("{jobId}") {
-                val span =
-                    tracer
-                        .spanBuilder("lori.LoriService.GET/api/v1/export/jobs")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val jobId = call.parameters["jobId"]?.let { UUID.fromString(it) }
-                        span.setAttribute("jobId", jobId ?.toString() ?: "null")
-                        if (jobId == null) {
-                            span.setStatus(
-                                StatusCode.ERROR,
-                                "BadRequest: No valid id has been provided in the url.",
-                            )
-                            return@withContext call.respond(
-                                HttpStatusCode.BadRequest,
-                                ApiError.badRequestError(ApiError.NO_VALID_ID),
-                            )
-                        }
-                        val exportJobStatus: ExportJob =
-                            backend.getJobById(jobId) ?: return@withContext call.respond(
-                                HttpStatusCode.NotFound,
-                                ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
-                            )
-                        return@withContext call.respond(
-                            HttpStatusCode.OK,
-                            exportJobStatus.toUpdateRest(),
+        }
+        /**
+         * Receive status of a job.
+         */
+        get("{jobId}") {
+            val span =
+                tracer
+                    .spanBuilder("lori.LoriService.GET/api/v1/export/jobs")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val jobId = call.parameters["jobId"]?.let { UUID.fromString(it) }
+                    span.setAttribute("jobId", jobId ?.toString() ?: "null")
+                    if (jobId == null) {
+                        span.setStatus(
+                            StatusCode.ERROR,
+                            "BadRequest: No valid id has been provided in the url.",
                         )
-                    } catch (e: Exception) {
-                        span.recordException(e)
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
-                    } finally {
-                        span.end()
+                        return@withContext call.respond(
+                            HttpStatusCode.BadRequest,
+                            ApiError.badRequestError(ApiError.NO_VALID_ID),
+                        )
                     }
+                    val exportJobStatus: ExportJob =
+                        backend.getJobById(jobId) ?: return@withContext call.respond(
+                            HttpStatusCode.NotFound,
+                            ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
+                        )
+                    return@withContext call.respond(
+                        HttpStatusCode.OK,
+                        exportJobStatus.toUpdateRest(),
+                    )
+                } catch (e: Exception) {
+                    span.recordException(e)
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
+                } finally {
+                    span.end()
                 }
             }
         }

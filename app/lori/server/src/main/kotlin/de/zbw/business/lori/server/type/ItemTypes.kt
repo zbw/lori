@@ -5,6 +5,14 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_AUTHO
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_BAND
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_NAME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COMMUNITY_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COMMUNITY_NAME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_BY
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_ON
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -62,10 +70,10 @@ data class ItemMetadata(
 
         val fields =
             listOf(
-                COLUMN_METADATA_AUTHOR,
-                COLUMN_METADATA_BAND,
-                COLUMN_METADATA_COLLECTION_HANDLE,
-                COLUMN_METADATA_COLLECTION_NAME,
+                author,
+                band,
+                collectionHandle,
+                collectionName,
                 communityHandle,
                 communityName,
                 createdBy,
@@ -105,28 +113,28 @@ data class ItemMetadata(
         return if (needsQuoting) "\"$escaped\"" else escaped
     }
 
-    fun ItemMetadata.toJson(): String = JSON_ENCODER.encodeToString(this)
+    fun toJson(): String = JSON_ENCODER.encodeToString(this)
 
     companion object {
-        val JSON_ENCODER =
+        private val JSON_ENCODER =
             Json {
                 prettyPrint = false
                 encodeDefaults = true
             }
 
         fun csvFileHeader(): String =
-            "author, " +
-                "band," +
-                "collectionHandle," +
-                "collectionName," +
-                "communityHandle," +
-                "communityName," +
-                "createdBy," +
-                "createdOn," +
-                "deleted," +
-                "doi," +
-                "handle," +
-                "isbn," +
+            "$COLUMN_METADATA_AUTHOR, " +
+                "$COLUMN_METADATA_BAND, ," +
+                "$COLUMN_METADATA_COLLECTION_HANDLE," +
+                "$COLUMN_METADATA_COLLECTION_NAME," +
+                "$COLUMN_METADATA_COMMUNITY_HANDLE," +
+                "$COLUMN_METADATA_COMMUNITY_NAME," +
+                "$COLUMN_METADATA_CREATED_BY," +
+                "$COLUMN_METADATA_CREATED_ON," +
+                "$COLUMN_METADATA_DELETED," +
+                "$COLUMN_METADATA_DOI," +
+                "$COLUMN_METADATA_HANDLE," +
+                "$COLUMN_METADATA_ISBN," +
                 "issn," +
                 "isPartOfSeries," +
                 "lastUpdatedBy," +
