@@ -14,7 +14,8 @@ allprojects {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0")
+    val kotlinVersion by System.getProperties()
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     implementation("org.jlleitschuh.gradle:ktlint-gradle:12.1.1")
     implementation("build.buf:buf-gradle-plugin:0.10.0")
     implementation("com.google.protobuf:protobuf-gradle-plugin:0.9.4")
