@@ -2,7 +2,6 @@ package de.zbw.business.lori.server.export
 
 import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
-import de.zbw.business.lori.server.type.ItemMetadata
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.BufferedWriter

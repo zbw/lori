@@ -94,6 +94,33 @@ class JobDBTest : DatabaseTest() {
                         ).toString(),
                 ),
             )
+
+            val ids =
+                jobDB.getJobsOlderThan(NOW.plusDays(2L).toInstant())
+            assertThat(
+                ids.size,
+                `is`(1),
+            )
+            assertThat(
+                ids[0].id,
+                `is`(jobUUID),
+            )
+
+            val deletions =
+                jobDB.deleteJobsByIds(
+                    listOf(jobUUID),
+                )
+            assertThat(
+                deletions,
+                `is`(1),
+            )
+            assertThat(
+                jobDB
+                    .getJobsOlderThan(
+                        NOW.plusDays(2L).toInstant(),
+                    ).size,
+                `is`(0),
+            )
         }
 
     companion object {

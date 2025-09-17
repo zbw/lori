@@ -6,11 +6,9 @@ import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.business.lori.server.type.ItemMetadata
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch

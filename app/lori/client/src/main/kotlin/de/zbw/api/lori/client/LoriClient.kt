@@ -5,6 +5,8 @@ import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
+import de.zbw.lori.api.CleanDownloadsRequest
+import de.zbw.lori.api.CleanDownloadsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
@@ -49,6 +51,11 @@ class LoriClient(
     suspend fun checkForErrors(request: CheckForRightErrorsRequest): CheckForRightErrorsResponse =
         runWithTracing("client_checkForErrors") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
             s.checkForRightErrors(request)
+        }
+
+    suspend fun cleanDownloads(request: CleanDownloadsRequest): CleanDownloadsResponse =
+        runWithTracing("client_cleanDownloads") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
+            s.cleanDownloads(request)
         }
 
     private suspend fun <T> runWithTracing(

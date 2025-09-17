@@ -324,7 +324,8 @@ class MetadataDB(
                 "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "$COLUMN_METADATA_AUTHOR,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
+                "$COLUMN_METADATA_AUTHOR,collection_name,community_name,storage_date," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 COLUMN_METADATA_DELETED +

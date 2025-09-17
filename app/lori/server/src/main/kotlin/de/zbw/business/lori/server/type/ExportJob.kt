@@ -1,6 +1,7 @@
 package de.zbw.business.lori.server.type
 
 import java.io.File
+import java.io.InputStream
 import java.time.Instant
 import java.util.UUID
 
@@ -16,6 +17,8 @@ data class ExportJob(
     val format: ExportFormat,
 ) {
     fun getFile(): File? = filePath?.let { File(it) }
+
+    fun getInputStream(): InputStream? = getFile()?.inputStream()
 }
 
 enum class ExportJobStatus {

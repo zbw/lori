@@ -39,7 +39,9 @@ fun Routing.downloadRoutes(
                     .setSpanKind(SpanKind.SERVER)
                     .startSpan()
             withContext(span.asContextElement()) {
-                val jobId = call.parameters["jobId"]?.let { UUID.fromString(it) }
+                val jobId =
+                    call.parameters["jobId"]
+                        ?.let { UUID.fromString(it) }
                 span.setAttribute("jobId", jobId?.toString() ?: "null")
                 if (jobId == null) {
                     span.setStatus(
@@ -77,9 +79,10 @@ fun Routing.downloadRoutes(
                 )
 
                 call.respondOutputStream(contentType = contentType) {
-                    file.inputStream().use { input ->
+                    exportJob.getInputStream()!!.use { input ->
                         input.copyTo(this)
                     }
+                    flush()
                 }
             }
         }

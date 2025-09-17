@@ -9,13 +9,11 @@ import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.type.Either
-import de.zbw.business.lori.server.export.ExportJobService
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.ExportJob
-import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
@@ -1014,6 +1012,14 @@ class LoriServerBackend(
         dbConnector.jobDB.updateJobStatusById(
             exportJob,
         )
+
+    suspend fun cleanDownloads(instant: Instant): Int {
+        val jobs: List<ExportJob> = dbConnector.jobDB.getJobsOlderThan(instant)
+        jobs.forEach { job ->
+            job.getFile()?.delete()
+        }
+        return dbConnector.jobDB.deleteJobsByIds(jobs.map { it.id })
+    }
 
     companion object {
         val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)

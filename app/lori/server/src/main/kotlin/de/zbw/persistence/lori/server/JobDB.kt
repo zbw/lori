@@ -86,6 +86,56 @@ class JobDB(
             }
         }
 
+    suspend fun getJobsOlderThan(instant: Instant): List<ExportJob> =
+        connectionPool.useConnection("getAllJobIds") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_GET_ALL_IDS).apply {
+                    this.setTimestamp(1, Timestamp.from(instant))
+                }
+            val span = tracer.spanBuilder("getAllJobIds").startSpan()
+            val rs =
+                try {
+                    span.makeCurrent()
+                    runInTransaction(connection) { prepStmt.executeQuery() }
+                } finally {
+                    span.end()
+                }
+            return@useConnection generateSequence {
+                if (rs.next()) {
+                    ExportJob(
+                        id = UUID.fromString(rs.getString(1)),
+                        status = ExportJobStatus.valueOf(rs.getString(2)),
+                        createdOn =
+                            rs.getTimestamp(3, BookmarkDB.utcCalendar).toInstant(),
+                        createdBy = rs.getString(4),
+                        lastUpdatedOn =
+                            rs.getTimestamp(5, BookmarkDB.utcCalendar).toInstant(),
+                        errorMessage = rs.getString(6),
+                        filePath = rs.getString(7),
+                        searchTerm = rs.getString(8),
+                        format = ExportFormat.valueOf(rs.getString(9)),
+                    )
+                } else {
+                    null
+                }
+            }.takeWhile { true }.toList()
+        }
+
+    suspend fun deleteJobsByIds(ids: List<UUID>): Int =
+        connectionPool.useConnection("deleteJobsByIds") { connection ->
+            val prepStmt =
+                connection.prepareStatement(STATEMENT_DELETE_JOBS_BY_IDS).apply {
+                    this.setArray(1, connection.createArrayOf("text", ids.map { it.toString() }.toTypedArray()))
+                }
+            val span = tracer.spanBuilder("deleteJobsByIds").startSpan()
+            return@useConnection try {
+                span.makeCurrent()
+                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
+            } finally {
+                span.end()
+            }
+        }
+
     suspend fun updateJobStatusById(exportJob: ExportJob): Int =
         connectionPool.useConnection("updateJobStatusById") { connection ->
             val now = Instant.now()
@@ -140,5 +190,17 @@ class JobDB(
                 " $COLUMN_JOB_ERROR_MESSAGE=?," +
                 " $COLUMN_JOB_FILE_PATH=?" +
                 " WHERE $COLUMN_JOB_ID=?;"
+
+        const val STATEMENT_DELETE_JOBS_BY_IDS =
+            "DELETE " +
+                "FROM $TABLE_NAME_JOBS r " +
+                "WHERE r.$COLUMN_JOB_ID = ANY(?)"
+
+        const val STATEMENT_GET_ALL_IDS =
+            "SELECT $COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
+                "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_ERROR_MESSAGE," +
+                "$COLUMN_JOB_FILE_PATH,$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT" +
+                " FROM $TABLE_NAME_JOBS" +
+                " WHERE $COLUMN_JOB_LAST_UPDATED_ON < ?"
     }
 }

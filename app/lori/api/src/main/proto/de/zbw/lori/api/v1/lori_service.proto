@@ -11,4 +11,5 @@ service LoriService {
   rpc FullImport (FullImportRequest) returns (FullImportResponse);
   rpc ApplyTemplates (ApplyTemplatesRequest) returns (ApplyTemplatesResponse);
   rpc CheckForRightErrors (CheckForRightErrorsRequest) returns (CheckForRightErrorsResponse);
+  rpc CleanDownloads (CleanDownloadsRequest) returns (CleanDownloadsResponse);
 }
