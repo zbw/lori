@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server.type
 
-import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_AUTHOR
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_BAND
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_HANDLE
@@ -13,6 +12,23 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELET
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISSN
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LAST_UPDATED_BY
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LAST_UPDATED_ON
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LICENCE_URL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PAKET_SIGEL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_TYPE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_YEAR
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORAGE_DATE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_NAME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_JOURNAL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_SERIES
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -135,23 +151,23 @@ data class ItemMetadata(
                 "$COLUMN_METADATA_DOI," +
                 "$COLUMN_METADATA_HANDLE," +
                 "$COLUMN_METADATA_ISBN," +
-                "issn," +
-                "isPartOfSeries," +
-                "lastUpdatedBy," +
-                "lastUpdatedOn," +
-                "licenceUrl," +
-                "licenceUrlFilter," +
-                "paketSigel," +
-                "ppn," +
-                "publicationType.name," +
-                "publicationYear," +
-                "subCommunityHandle," +
-                "subCommunityName," +
-                "storageDate," +
-                "title," +
-                "titleJournal," +
-                "titleSeries," +
-                "zdbIds"
+                "$COLUMN_METADATA_ISSN," +
+                "$COLUMN_METADATA_IS_PART_OF_SERIES," +
+                "$COLUMN_METADATA_LAST_UPDATED_BY," +
+                "$COLUMN_METADATA_LAST_UPDATED_ON," +
+                "$COLUMN_METADATA_LICENCE_URL," +
+                "$COLUMN_METADATA_LICENCE_URL_FILTER," +
+                "$COLUMN_METADATA_PAKET_SIGEL," +
+                "$COLUMN_METADATA_PPN," +
+                "$COLUMN_METADATA_PUBLICATION_TYPE," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
+                "$COLUMN_METADATA_STORAGE_DATE," +
+                "$COLUMN_METADATA_TITLE," +
+                "$COLUMN_METADATA_TITLE_JOURNAL," +
+                "$COLUMN_METADATA_TITLE_SERIES," +
+                COLUMN_METADATA_ZDB_IDS
     }
 }
 
