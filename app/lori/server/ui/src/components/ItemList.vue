@@ -1681,14 +1681,9 @@ table.special, th.special, td.special {
           <v-btn
               :color="exportDone ? 'green darken-2' : 'blue darken-1'"
               :loading="exportInProgress"
-              :disabled="!userStore.isLoggedIn || !searchStore.isLastSearchNonTrivialAndSuccessful"
               @click="exportDone ? openDownloadLink() : null"
           >
-            <template v-if="exportInProgress">
-              Export läuft...
-            </template>
-
-            <template v-else-if="exportDone">
+            <template v-if="exportDone">
               <v-icon start>mdi-check</v-icon>
               Download
             </template>

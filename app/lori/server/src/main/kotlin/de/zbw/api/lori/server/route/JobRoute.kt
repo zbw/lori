@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.api.lori.server.type.toUpdateRest
@@ -15,8 +14,6 @@ import de.zbw.lori.model.ItemSearch
 import de.zbw.lori.model.JobCreatedRest
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
-import io.ktor.server.auth.authenticate
-import io.ktor.server.auth.principal
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -43,75 +40,66 @@ fun Routing.jobRoutes(
     exportJobService: ExportJobService,
 ) {
     route("/api/v1/export/jobs") {
-        authenticate("auth-session") {
-            /**
-             * Create a new Job.
-             */
-            post {
-                val span =
-                    tracer
-                        .spanBuilder("lori.LoriService.POST/api/v1/export/jobs")
-                        .setSpanKind(SpanKind.SERVER)
-                        .startSpan()
-                withContext(span.asContextElement()) {
-                    try {
-                        val searchTerm: String =
-                            call
-                                .receive(ItemSearch::class)
-                                .takeIf { it.searchTerm != null }
-                                ?.searchTerm
-                                ?: throw BadRequestException("Invalid Json has been provided")
+        /**
+         * Create a new Job.
+         */
+        post {
+            val span =
+                tracer
+                    .spanBuilder("lori.LoriService.POST/api/v1/export/jobs")
+                    .setSpanKind(SpanKind.SERVER)
+                    .startSpan()
+            withContext(span.asContextElement()) {
+                try {
+                    val searchTerm: String =
+                        call
+                            .receive(ItemSearch::class)
+                            .takeIf { it.searchTerm != null }
+                            ?.searchTerm
+                            ?: throw BadRequestException("Invalid Json has been provided")
 
-                        val format: ExportFormat =
-                            call.request.queryParameters
-                                .enumOrNull<ExportFormatRest>("format")
-                                ?.toBusiness()
-                                ?: ExportFormat.DEFAULT
+                    val format: ExportFormat =
+                        call.request.queryParameters
+                            .enumOrNull<ExportFormatRest>("format")
+                            ?.toBusiness()
+                            ?: ExportFormat.DEFAULT
 
-                        val userSession: UserSession =
-                            call.principal<UserSession>()
-                                ?: return@withContext call.respond(
-                                    HttpStatusCode.Unauthorized,
-                                    ApiError.unauthorizedError(ApiError.USER_NOT_AUTHED),
-                                ) // This should never happen
-
-                        val exportJob =
-                            exportJobService.createJob(
-                                createdBy = userSession.email,
-                                searchTerm = searchTerm,
-                                format = format,
-                            )
-                        span.setStatus(StatusCode.OK)
-                        call.respond(
-                            HttpStatusCode.Created,
-                            JobCreatedRest(
-                                jobId = exportJob.id.toString(),
-                                status = exportJob.status.toRest(),
-                                statusUrl = "/api/v1/export/jobs/${exportJob.id}",
-                            ),
+                    val exportJob =
+                        exportJobService.createJob(
+                            createdBy = "unkown",
+                            searchTerm = searchTerm,
+                            format = format,
                         )
-                    } catch (bre: BadRequestException) {
-                        span.recordException(bre)
-                        span.setStatus(StatusCode.ERROR, "Exception: ${bre.message}")
-                        call.respond(
-                            HttpStatusCode.BadRequest,
-                            ApiError.badRequestError("Invalide Suchanfrage aufgrund von korrupten Request Body"),
-                        )
-                    } catch (e: Exception) {
-                        span.recordException(e)
-                        span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
-                        call.respond(
-                            HttpStatusCode.InternalServerError,
-                            ErrorRest(
-                                type = "/errors/internalservererror",
-                                title = "Unerwarteter Fehler.",
-                                detail = "Ein interner Fehler ist aufgetreten.",
-                                status = "500",
-                            ),
-                        )
-                    } finally {
-                        span.end()
-                    }
+                    span.setStatus(StatusCode.OK)
+                    call.respond(
+                        HttpStatusCode.Created,
+                        JobCreatedRest(
+                            jobId = exportJob.id.toString(),
+                            status = exportJob.status.toRest(),
+                            statusUrl = "/api/v1/export/jobs/${exportJob.id}",
+                        ),
+                    )
+                } catch (bre: BadRequestException) {
+                    span.recordException(bre)
+                    span.setStatus(StatusCode.ERROR, "Exception: ${bre.message}")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError("Invalide Suchanfrage aufgrund von korrupten Request Body"),
+                    )
+                } catch (e: Exception) {
+                    span.recordException(e)
+                    span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    call.respond(
+                        HttpStatusCode.InternalServerError,
+                        ErrorRest(
+                            type = "/errors/internalservererror",
+                            title = "Unerwarteter Fehler.",
+                            detail = "Ein interner Fehler ist aufgetreten.",
+                            status = "500",
+                        ),
+                    )
+                } finally {
+                    span.end()
                 }
             }
         }

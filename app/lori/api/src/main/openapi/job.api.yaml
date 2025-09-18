@@ -1,7 +1,5 @@
 jobs-create:
   post:
-    security:
-      - cookieAuth: []
     tags:
       - job
     summary: Create a new job
