@@ -80,7 +80,7 @@ data class LoriConfiguration(
             val sessionEncryptKey = KonfigDeclaration.string(prefix, "session", "encrypt").secret().required()
             val stage = KonfigDeclaration.string(prefix, "stage").required()
             val handleURL = KonfigDeclaration.string(prefix, "connection", "digitalarchive", "handleurl").required()
-            val downloadDir = KonfigDeclaration.string(prefix, "download.directory").required()
+            val downloadDir = KonfigDeclaration.string(prefix, "download", "directory").required()
 
             return LoriConfiguration(
                 httpPort = source[httpPort],
