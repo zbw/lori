@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server
 
-import com.google.protobuf.Timestamp
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
