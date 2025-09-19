@@ -9,6 +9,8 @@ import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
+import de.zbw.lori.api.CleanDownloadsRequest
+import de.zbw.lori.api.CleanDownloadsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
@@ -151,6 +153,36 @@ class LoriGrpcServer(
                 ApplyTemplatesResponse
                     .newBuilder()
                     .addAllTemplateApplications(templateApplications)
+                    .build()
+            } catch (e: Throwable) {
+                span.recordException(e)
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+                throw StatusRuntimeException(
+                    Status.INTERNAL
+                        .withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}"),
+                )
+            }
+        }
+    }
+
+    override suspend fun cleanDownloads(request: CleanDownloadsRequest): CleanDownloadsResponse {
+        val span =
+            tracer
+                .spanBuilder("lori.LoriService/CleanDownloads")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
+        return withContext(span.asContextElement()) {
+            try {
+                val instant: Instant =
+                    Instant.ofEpochSecond(
+                        request.olderThan.seconds,
+                        request.olderThan.nanos.toLong(),
+                    )
+                val deletions = backend.cleanDownloads(instant)
+                CleanDownloadsResponse
+                    .newBuilder()
+                    .setDeletedCount(deletions)
                     .build()
             } catch (e: Throwable) {
                 span.recordException(e)

@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
+import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
@@ -48,6 +49,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 import kotlin.collections.filter
 import kotlin.math.ceil
 
@@ -322,7 +324,7 @@ class LoriServerBackend(
             null,
         )
 
-    suspend fun countItemByRightId(rightId: String) = dbConnector.itemDB.countItemByRightId(rightId)
+    suspend fun countItemByRightId(rightId: String): Int = dbConnector.itemDB.countItemByRightId(rightId)
 
     suspend fun deleteItemEntry(
         handle: String,
@@ -1000,6 +1002,23 @@ class LoriServerBackend(
                 targetRightId = relationship.sourceRightId,
             )
         }
+    }
+
+    suspend fun insertExportJob(exportJob: ExportJob): UUID = UUID.fromString(dbConnector.jobDB.insertJob(exportJob))
+
+    suspend fun getJobById(jobId: UUID): ExportJob? = dbConnector.jobDB.getJobById(jobId)
+
+    suspend fun updateJobById(exportJob: ExportJob): Int =
+        dbConnector.jobDB.updateJobStatusById(
+            exportJob,
+        )
+
+    suspend fun cleanDownloads(instant: Instant): Int {
+        val jobs: List<ExportJob> = dbConnector.jobDB.getJobsOlderThan(instant)
+        jobs.forEach { job ->
+            job.getFile()?.delete()
+        }
+        return dbConnector.jobDB.deleteJobsByIds(jobs.map { it.id })
     }
 
     companion object {

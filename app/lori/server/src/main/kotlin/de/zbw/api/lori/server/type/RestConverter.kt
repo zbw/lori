@@ -21,6 +21,9 @@ import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
+import de.zbw.business.lori.server.type.ExportFormat
+import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.GroupEntry
 import de.zbw.business.lori.server.type.GroupVersion
@@ -41,6 +44,7 @@ import de.zbw.lori.model.BookmarkRawRest
 import de.zbw.lori.model.BookmarkRest
 import de.zbw.lori.model.BookmarkTemplateRest
 import de.zbw.lori.model.ConflictTypeRest
+import de.zbw.lori.model.ExportFormatRest
 import de.zbw.lori.model.FilterAccessStateOnRest
 import de.zbw.lori.model.FilterPublicationYearRest
 import de.zbw.lori.model.FilterRightIdRest
@@ -48,6 +52,8 @@ import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
 import de.zbw.lori.model.ItemRest
+import de.zbw.lori.model.JobStatusRest
+import de.zbw.lori.model.JobStatusUpdateRest
 import de.zbw.lori.model.LicenceUrlCountRest
 import de.zbw.lori.model.MetadataRest
 import de.zbw.lori.model.OldGroupVersionRest
@@ -849,6 +855,31 @@ fun SortByRest.toBusiness(): SortByField =
         SortByRest.series -> SortByField.IS_PART_OF_SERIES
         SortByRest.titleJournal -> SortByField.TITLE_JOURNAL
         SortByRest.titleSeries -> SortByField.TITLE_SERIES
+    }
+
+fun ExportJob.toUpdateRest(
+    downloadUrl: String? = null,
+    rows: Int = 0,
+): JobStatusUpdateRest =
+    JobStatusUpdateRest(
+        status = this.status.toRest(),
+        jobId = this.id.toString(),
+        downloadUrl = downloadUrl,
+        rows = rows,
+    )
+
+fun ExportJobStatus.toRest(): JobStatusRest =
+    when (this) {
+        ExportJobStatus.QUEUED -> JobStatusRest.queued
+        ExportJobStatus.RUNNING -> JobStatusRest.running
+        ExportJobStatus.FINISHED -> JobStatusRest.finished
+        ExportJobStatus.FAILED -> JobStatusRest.failed
+    }
+
+fun ExportFormatRest.toBusiness(): ExportFormat =
+    when (this) {
+        ExportFormatRest.csv -> ExportFormat.CSV
+        ExportFormatRest.json -> ExportFormat.JSON
     }
 
 /**

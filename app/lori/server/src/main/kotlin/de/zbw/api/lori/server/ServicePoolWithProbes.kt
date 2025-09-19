@@ -8,10 +8,12 @@ import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.route.aboutRoutes
 import de.zbw.api.lori.server.route.bookmarkRoutes
 import de.zbw.api.lori.server.route.bookmarkTemplateRoutes
+import de.zbw.api.lori.server.route.downloadRoutes
 import de.zbw.api.lori.server.route.errorRoutes
 import de.zbw.api.lori.server.route.groupRoutes
 import de.zbw.api.lori.server.route.guiRoutes
 import de.zbw.api.lori.server.route.itemRoutes
+import de.zbw.api.lori.server.route.jobRoutes
 import de.zbw.api.lori.server.route.metadataRoutes
 import de.zbw.api.lori.server.route.rightRoutes
 import de.zbw.api.lori.server.route.staticRoutes
@@ -20,6 +22,7 @@ import de.zbw.api.lori.server.route.usersRoutes
 import de.zbw.api.lori.server.type.UserSession
 import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.export.ExportJobService
 import de.zbw.business.lori.server.type.UserPermission
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.gson.gson
@@ -67,6 +70,11 @@ class ServicePoolWithProbes(
         HTTPMetadataResolver(
             HttpClients.createDefault(),
             config.duoUrlMetadata,
+        ),
+    private val exportJobService: ExportJobService =
+        ExportJobService(
+            exportDir = config.downloadDir,
+            backend = backend,
         ),
 ) : ServiceLifecycle() {
     init {
@@ -168,6 +176,8 @@ class ServicePoolWithProbes(
             groupRoutes(backend, tracer)
             guiRoutes(backend, tracer, samlUtils)
             itemRoutes(backend, tracer)
+            jobRoutes(backend, tracer, exportJobService)
+            downloadRoutes(backend, tracer)
             metadataRoutes(backend, tracer)
             rightRoutes(backend, tracer)
             usersRoutes(backend, tracer)

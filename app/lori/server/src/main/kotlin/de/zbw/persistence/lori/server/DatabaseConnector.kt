@@ -48,6 +48,7 @@ class DatabaseConnector(
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
     internal val userDB: UserDB = UserDB(connectionPool, tracer),
     internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),
+    internal val jobDB: JobDB = JobDB(connectionPool, tracer),
 ) {
     constructor(
         config: LoriConfiguration,
@@ -73,6 +74,7 @@ class DatabaseConnector(
         const val TABLE_NAME_ITEM = "item"
         const val TABLE_NAME_ITEM_METADATA = "item_metadata"
         const val TABLE_NAME_ITEM_RIGHT = "item_right"
+        const val TABLE_NAME_JOBS = "export_jobs"
         const val TABLE_NAME_SESSIONS = "sessions"
         const val TABLE_NAME_RIGHT_ERROR = "right_error"
 

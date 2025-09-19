@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package de.zbw.lori.api.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option java_package = "de.zbw.lori.api";
 option java_multiple_files = true;
 
@@ -45,4 +47,12 @@ message TemplateApplication {
 
 message ApplyTemplatesResponse {
   repeated TemplateApplication template_applications = 1;
+}
+
+message CleanDownloadsRequest {
+  google.protobuf.Timestamp older_than = 1;
+}
+
+message CleanDownloadsResponse {
+  int32 deleted_count = 1;
 }

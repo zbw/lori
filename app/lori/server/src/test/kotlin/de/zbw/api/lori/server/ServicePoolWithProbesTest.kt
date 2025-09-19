@@ -94,6 +94,7 @@ class ServicePoolWithProbesTest {
                     backend = mockk(),
                     tracer = mockk(),
                     samlUtils = mockk(relaxed = true),
+                    httpClient = mockk(relaxed = true),
                 ),
             ) {
                 every { getHttpServer() } returns serverMock
@@ -138,6 +139,7 @@ class ServicePoolWithProbesTest {
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "foobar",
+                downloadDir = "path/to/downloads",
             )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
@@ -158,6 +160,7 @@ class ServicePoolWithProbesTest {
             backend = backend,
             tracer = tracer,
             samlUtils = mockk(relaxed = true),
+            httpClient = mockk(relaxed = true),
         )
     }
 }

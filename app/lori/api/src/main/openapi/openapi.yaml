@@ -30,12 +30,18 @@ paths:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates'
   /bookmarktemplates/batch:
     $ref: 'bookmarktemplates.api.yaml#/bookmarktemplates-batch'
+  /download/{job-id}:
+    $ref: 'download.api.yaml#/download-job-id'
   /errors/rights/{test-id}:
     $ref: 'error.api.yaml#/right-test-id'
   /errors/rights/list:
     $ref: 'error.api.yaml#/right-errors'
   /errors/rights/recompute:
     $ref: 'error.api.yaml#/recompute-errors'
+  /export/jobs:
+    $ref: 'job.api.yaml#/jobs-create'
+  /export/jobs/{job-id}:
+    $ref: 'job.api.yaml#/jobs-status'
   /group:
     $ref: 'group.api.yaml#/group'
   /group/{id}:

@@ -1,9 +1,9 @@
 <script lang="ts">
 import {
   AboutRest,
-  BookmarkRest, GroupRest,
+  BookmarkRest, ExportFormatRest, GroupRest,
   ItemInformation,
-  ItemRest,
+  ItemRest, JobCreatedRest, JobStatusRest, JobStatusUpdateRest,
   RightRest,
 } from "@/generated-sources/openapi";
 import api from "@/api/api";
@@ -32,9 +32,13 @@ import TopNavigationBar from "@/components/TopNavigationBar.vue";
 import bookmarkApi from "@/api/bookmarkApi";
 import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import jobApi from "@/api/jobApi";
 
 export default defineComponent({
   computed: {
+    ExportFormatRest() {
+      return ExportFormatRest
+    },
     metadata_utils() {
       return metadata_utils;
     },
@@ -1118,6 +1122,81 @@ export default defineComponent({
       );
     });
 
+    /**
+     * Export
+     */
+    const exportInProgress = ref(false);
+    const exportDone = ref(false);
+    let isPolling = false;
+    let pollTimeout = 5000;
+    const downloadUrl = ref("");
+
+    const startExport = (format: ExportFormatRest) => {
+      exportInProgress.value = true;
+
+      let exportSearchQuery;
+      if(searchStore.filtersAsQuery.length > 0 &&
+          searchStore.searchTerm.length > 0
+      ){
+        exportSearchQuery = searchStore.filtersAsQuery + " & " + searchStore.searchTerm;
+      } else {
+        exportSearchQuery = searchStore.filtersAsQuery + searchStore.searchTerm;
+      }
+      jobApi.createJob(
+          exportSearchQuery,
+          format,
+      ).then((created: JobCreatedRest) => {
+        isPolling = true;
+        pollStatus(created.jobId)
+      }).catch((e) => {
+        error.errorHandling(e, (errMsg: string) => {
+          errorMsg.value = errMsg;
+          errorMsgIsActive.value = true;
+        });
+        exportInProgress.value = false;
+      })
+    };
+
+    const pollStatus = async (jobId: string) => {
+      while(isPolling){
+        try{
+          const response: JobStatusUpdateRest = await jobApi.getJobStatus(jobId)
+          if(response.status == JobStatusRest.Finished){
+            openDownloadWindow(response)
+            exportInProgress.value = false;
+            exportDone.value = true;
+            break;
+          }
+          if(response.status == JobStatusRest.Failed){
+            exportInProgress.value = false;
+            errorMsg.value = "Export ist fehlgeschlagen!";
+            errorMsgIsActive.value = true;
+            break;
+          }
+        } catch(e){
+          error.errorHandling(e, (errMsg: string) => {
+            errorMsg.value = errMsg;
+            errorMsgIsActive.value = true;
+          });
+        }
+        await new Promise(resolve => setTimeout(resolve, pollTimeout))
+      }
+    };
+
+    const openDownloadWindow = (status: JobStatusUpdateRest) => {
+      if (status.jobId != null) {
+        downloadUrl.value = url.createDownloadHref(status.jobId);
+      } else {
+        errorMsg.value = "Keine Job Id gefunden";
+        errorMsgIsActive.value = true;
+      }
+    }
+
+    const openDownloadLink = () => {
+      window.open(downloadUrl.value, "_blank")
+      exportDone.value = false;
+    }
+
     return {
       successMsgIsActive,
       successMsg,
@@ -1128,6 +1207,8 @@ export default defineComponent({
       currentItem,
       currentPage,
       dialogStore,
+      exportDone,
+      exportInProgress,
       groupEditActivated,
       headers,
       headersValueVSelect,
@@ -1169,6 +1250,7 @@ export default defineComponent({
       loadTemplateView,
       onOptionsUpdate,
       openBookmarkSaveDialog,
+      openDownloadLink,
       openDialog,
       parsePublicationType,
       resetFilter,
@@ -1178,6 +1260,7 @@ export default defineComponent({
       selectedRowColor,
       setActiveItem,
       startEmptySearch,
+      startExport,
       startSearch,
     };
   },
@@ -1594,12 +1677,34 @@ table.special, th.special, td.special {
             </v-card>
           </v-dialog>
         </v-col>
-        <v-col
-            cols="auto">
+        <v-col cols="auto">
           <v-btn
-              color="blue darken-1"
+              :color="exportDone ? 'green darken-2' : 'blue darken-1'"
+              :loading="exportInProgress"
+              @click="exportDone ? openDownloadLink() : null"
           >
-            Exportieren
+            <template v-if="exportDone">
+              <v-icon start>mdi-check</v-icon>
+              Download
+            </template>
+
+            <template v-else>
+              Exportieren
+              <v-menu activator="parent">
+                <v-list>
+                  <v-list-item link>
+                    <v-list-item-title @click="startExport(ExportFormatRest.Csv)">
+                      CSV
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item link>
+                    <v-list-item-title @click="startExport(ExportFormatRest.Json)">
+                      JSON
+                    </v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </template>
           </v-btn>
         </v-col>
         <v-col

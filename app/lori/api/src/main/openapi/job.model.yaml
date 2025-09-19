@@ -1,0 +1,44 @@
+JobStatusRest:
+  type: string
+  enum:
+    - queued
+    - running
+    - finished
+    - failed
+
+JobCreatedRest:
+  required:
+    - jobId
+    - status
+    - statusUrl
+  type: object
+  properties:
+    jobId:
+      type: string
+    status:
+      $ref: 'job.model.yaml#/JobStatusRest'
+    statusUrl:
+      type: string
+
+JobStatusUpdateRest:
+  required:
+    - status
+    - rows
+  type: object
+  properties:
+    jobId:
+      type: string
+    status:
+      $ref: 'job.model.yaml#/JobStatusRest'
+    downloadUrl:
+      type: string
+    rows:
+      type: integer
+
+components:
+  schemas:
+    ExportFormatRest:
+      type: string
+      enum:
+        - csv
+        - json

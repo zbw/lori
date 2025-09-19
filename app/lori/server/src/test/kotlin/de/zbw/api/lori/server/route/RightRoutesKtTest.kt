@@ -11,6 +11,7 @@ import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.utils.SamlUtils
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.export.ExportJobService
 import de.zbw.lori.model.AccessStateRest
 import de.zbw.lori.model.RelationshipRest
 import de.zbw.lori.model.RightRest
@@ -487,6 +488,7 @@ class RightRoutesKtTest {
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "1234",
+                downloadDir = "path/to/downloads",
             )
 
         val TEST_RIGHT =
@@ -563,6 +565,7 @@ class RightRoutesKtTest {
         fun getServicePool(
             backend: LoriServerBackend,
             samlUtils: SamlUtils = mockk(relaxed = true),
+            exportJobService: ExportJobService = mockk(relaxed = true),
         ) = ServicePoolWithProbes(
             services =
                 listOf(
@@ -576,6 +579,7 @@ class RightRoutesKtTest {
             tracer = tracer,
             samlUtils = samlUtils,
             httpClient = mockk(),
+            exportJobService = exportJobService,
         )
     }
 }

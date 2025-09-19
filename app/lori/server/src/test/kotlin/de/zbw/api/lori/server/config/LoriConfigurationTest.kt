@@ -42,6 +42,7 @@ class LoriConfigurationTest {
         System.setProperty("lori.session.encrypt", expectedConfig.sessionEncryptKey)
         System.setProperty("lori.stage", expectedConfig.stage)
         System.setProperty("lori.connection.digitalarchive.handleurl", expectedConfig.handleURL)
+        System.setProperty("lori.download.directory", expectedConfig.downloadDir)
         val receivedConfig =
             LoriConfiguration.load(
                 "lori",
@@ -79,6 +80,7 @@ class LoriConfigurationTest {
                 duoUrlSLO = "https://duo/slo",
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "1234",
+                downloadDir = "path/to/downloads",
             )
     }
 }

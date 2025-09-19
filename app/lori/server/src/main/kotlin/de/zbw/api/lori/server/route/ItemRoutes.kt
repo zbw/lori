@@ -581,6 +581,13 @@ fun Routing.itemRoutes(
                         HttpStatusCode.BadRequest,
                         ApiError.badRequestError("Such-Anfrage ist ungültig. Siehe ?-Icon für mehr Informationen"),
                     )
+                } catch (bre: BadRequestException) {
+                    span.recordException(bre)
+                    span.setStatus(StatusCode.ERROR, "Exception: ${bre.message}")
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        ApiError.badRequestError("Invalide Suchanfrage aufgrund von korrupten Request Body"),
+                    )
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
