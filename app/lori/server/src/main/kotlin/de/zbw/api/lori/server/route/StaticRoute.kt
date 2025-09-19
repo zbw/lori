@@ -1,8 +1,6 @@
 package de.zbw.api.lori.server.route
 
-import io.ktor.server.http.content.defaultResource
-import io.ktor.server.http.content.resources
-import io.ktor.server.http.content.static
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.routing.Route
 
 /**
@@ -12,8 +10,8 @@ import io.ktor.server.routing.Route
  * @author Christian Bay (c.bay@zbw.eu)
  */
 fun Route.staticRoutes() {
-    static {
-        resources("dist")
-        defaultResource("index.html", "dist")
-    }
+    staticResources(
+        remotePath = "/", // URL path prefix
+        basePackage = "dist", // folder in resources
+    )
 }

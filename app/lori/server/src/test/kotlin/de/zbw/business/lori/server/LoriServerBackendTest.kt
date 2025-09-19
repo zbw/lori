@@ -372,7 +372,7 @@ class LoriServerBackendTest : DatabaseTest() {
         }
 
     @DataProvider(name = DATA_FOR_REMOVE_VALID_SEARCH_TOKEN)
-    fun createDataForRemoveValidSearchToken() =
+    fun createDataForRemoveValidSearchToken(): Array<Array<Any?>> =
         arrayOf(
             arrayOf(
                 "",
@@ -625,7 +625,7 @@ class LoriServerBackendTest : DatabaseTest() {
             // Insert first conflict, no deletion
             when (backend.insertItemEntry(givenMetadata.handle, givenRight2.rightId!!)) {
                 is Either.Left -> {
-                    // Error is expected due to conflict
+                    // Error is expected due to a conflict
                 }
 
                 is Either.Right -> {
@@ -635,7 +635,7 @@ class LoriServerBackendTest : DatabaseTest() {
 
             when (backend.insertItemEntry(givenMetadata.handle, givenRight3.rightId!!, true)) {
                 is Either.Left -> {
-                    // Error is expected due to conflict
+                    // Error is expected due to a conflict
                 }
 
                 is Either.Right -> {
@@ -657,8 +657,8 @@ class LoriServerBackendTest : DatabaseTest() {
             val givenRight4 =
                 TEST_RIGHT.copy(
                     rightId = "4",
-                    startDate = LoriServerBackendTest.TODAY.minusDays(10),
-                    endDate = LoriServerBackendTest.TODAY.minusDays(6),
+                    startDate = TODAY.minusDays(10),
+                    endDate = TODAY.minusDays(6),
                 )
             backend.insertRight(givenRight4)
             when (
