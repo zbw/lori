@@ -705,6 +705,8 @@ export default defineComponent({
     };
 
     const startSearch = () => {
+      exportInProgress.value = false;
+      exportDone.value = false;
       currentPage.value = 1;
       pageSize.value = "25";
       if (searchStore.searchTerm == undefined) {
@@ -1684,7 +1686,6 @@ table.special, th.special, td.special {
               @click="exportDone ? openDownloadLink() : null"
           >
             <template v-if="exportDone">
-              <v-icon start>mdi-check</v-icon>
               Download
             </template>
 

@@ -98,7 +98,7 @@ class ExportJobService(
                             launch {
                                 semaphore.withPermit {
                                     LOG.info(
-                                        "For JobId ${job.id}: " +
+                                        "Export-Job ${job.id}: " +
                                             "Export results ${offset * BATCH_SIZE} to ${offset * BATCH_SIZE + BATCH_SIZE}",
                                     )
                                     val results =
