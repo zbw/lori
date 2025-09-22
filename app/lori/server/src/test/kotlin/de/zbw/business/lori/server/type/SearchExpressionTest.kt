@@ -20,7 +20,7 @@ import org.testng.annotations.Test
 
 class SearchExpressionTest {
     @DataProvider(name = DATA_FOR_PARSING_SEARCH_QUERY)
-    fun createDataForParsing() =
+    fun createDataForParsing(): Array<Array<Any?>> =
         arrayOf(
             arrayOf(
                 "tit:'foo'",
@@ -106,7 +106,7 @@ class SearchExpressionTest {
 
                 is ErrorResult -> Assert.fail(expr.toString())
             }
-        } catch (pe: ParserException) {
+        } catch (_: ParserException) {
             assertTrue(throwsException)
         }
     }

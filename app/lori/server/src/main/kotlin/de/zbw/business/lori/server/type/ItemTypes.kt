@@ -123,8 +123,10 @@ data class ItemMetadata(
     private fun csvEscape(value: String?): String {
         if (value == null) return ""
         val needsQuoting =
-            value.contains(',') || value.contains('"') ||
-                value.contains('\n') || value.contains('\r')
+            value.contains(',') ||
+                value.contains('"') ||
+                value.contains('\n') ||
+                value.contains('\r')
         val escaped = value.replace("\"", "\"\"")
         return if (needsQuoting) "\"$escaped\"" else escaped
     }

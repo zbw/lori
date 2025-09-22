@@ -51,6 +51,7 @@ fun Routing.jobRoutes(
                     .startSpan()
             withContext(span.asContextElement()) {
                 try {
+                    @Suppress("SENSELESS_COMPARISON")
                     val searchTerm: String =
                         call
                             .receive(ItemSearch::class)
