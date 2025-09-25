@@ -1,6 +1,5 @@
 package de.zbw.business.lori.server.mail
 
-import de.zbw.api.lori.server.type.RestConverter
 import jakarta.mail.Authenticator
 import jakarta.mail.Message
 import jakarta.mail.PasswordAuthentication
