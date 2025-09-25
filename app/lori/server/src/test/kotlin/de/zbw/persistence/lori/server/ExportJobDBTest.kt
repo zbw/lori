@@ -17,17 +17,17 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Testing [JobDB].
+ * Testing [ExportJobDB].
  *
  * Created on 09-10-2025.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class JobDBTest : DatabaseTest() {
-    private val jobDB =
+class ExportJobDBTest : DatabaseTest() {
+    private val exportJobDB =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
-        ).jobDB
+        ).exportJobDB
 
     private fun mockkCurrentTime(instant: Instant) {
         mockkStatic(Instant::class)
@@ -46,8 +46,8 @@ class JobDBTest : DatabaseTest() {
             val createTime = NOW.toInstant()
             mockkCurrentTime(createTime)
 
-            val jobUUID = jobDB.insertJob(TEST_Export_JOB).let { UUID.fromString(it) }
-            val jobReceived = jobDB.getJobById(jobUUID)
+            val jobUUID = exportJobDB.insertJob(TEST_Export_JOB).let { UUID.fromString(it) }
+            val jobReceived = exportJobDB.getJobById(jobUUID)
             assertThat(
                 jobReceived.toString(),
                 `is`(
@@ -69,7 +69,7 @@ class JobDBTest : DatabaseTest() {
                     filePath = "path/to/file.csv",
                 )
             val rowsUpdated =
-                jobDB.updateJobStatusById(
+                exportJobDB.updateJobStatusById(
                     updatedJob,
                 )
 
@@ -79,7 +79,7 @@ class JobDBTest : DatabaseTest() {
                 `is`(1),
             )
 
-            val jobReceivedAfterUpdate = jobDB.getJobById(jobUUID)
+            val jobReceivedAfterUpdate = exportJobDB.getJobById(jobUUID)
             assertThat(
                 jobReceivedAfterUpdate.toString(),
                 `is`(
@@ -96,7 +96,7 @@ class JobDBTest : DatabaseTest() {
             )
 
             val ids =
-                jobDB.getJobsOlderThan(NOW.plusDays(2L).toInstant())
+                exportJobDB.getJobsOlderThan(NOW.plusDays(2L).toInstant())
             assertThat(
                 ids.size,
                 `is`(1),
@@ -107,7 +107,7 @@ class JobDBTest : DatabaseTest() {
             )
 
             val deletions =
-                jobDB.deleteJobsByIds(
+                exportJobDB.deleteJobsByIds(
                     listOf(jobUUID),
                 )
             assertThat(
@@ -115,7 +115,7 @@ class JobDBTest : DatabaseTest() {
                 `is`(1),
             )
             assertThat(
-                jobDB
+                exportJobDB
                     .getJobsOlderThan(
                         NOW.plusDays(2L).toInstant(),
                     ).size,

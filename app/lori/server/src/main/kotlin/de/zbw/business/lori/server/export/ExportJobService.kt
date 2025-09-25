@@ -37,7 +37,6 @@ class ExportJobService(
     ): ExportJob {
         val job =
             ExportJob(
-                id = UUID.randomUUID(),
                 status = ExportJobStatus.QUEUED,
                 searchTerm = searchTerm,
                 createdBy = createdBy,
@@ -71,7 +70,7 @@ class ExportJobService(
                     format = job.format,
                 )
             job.filePath = session.getFile().path
-            backend.updateJobById(job)
+            backend.updateExportJobById(job)
             session.use { exportSession ->
                 coroutineScope {
                     val facetsResult =
@@ -133,13 +132,13 @@ class ExportJobService(
                     job.filePath = newFile.path
                 }
             }
-            job.status = ExportJobStatus.FINISHED
+            job.status = ExportJobStatus.SUCCESSFUL
         } catch (e: Exception) {
             job.status = ExportJobStatus.FAILED
             job.errorMessage = e.message
         } finally {
             job.lastUpdatedOn = java.time.Instant.now()
-            backend.updateJobById(job)
+            backend.updateExportJobById(job)
             jobs.remove(job.id)
         }
     }

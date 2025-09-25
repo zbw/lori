@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.UUID
 
 data class ExportJob(
-    val id: UUID,
+    val id: UUID = UUID.randomUUID(),
     var status: ExportJobStatus,
     val createdOn: Instant = Instant.now(),
     val createdBy: String,
@@ -24,7 +24,7 @@ data class ExportJob(
 enum class ExportJobStatus {
     QUEUED,
     RUNNING,
-    FINISHED,
+    SUCCESSFUL,
     FAILED,
 }
 

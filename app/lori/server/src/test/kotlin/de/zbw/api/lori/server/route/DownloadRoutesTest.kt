@@ -43,7 +43,7 @@ class DownloadRoutesTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
-                    getJobById(any())
+                    getExportJobById(any())
                 } returns expectedExportJob
             }
         val servicePool =
@@ -99,7 +99,7 @@ class DownloadRoutesTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
-                    getJobById(any())
+                    getExportJobById(any())
                 } returns expectedExportJob
             }
         val servicePool =
@@ -142,7 +142,7 @@ class DownloadRoutesTest {
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery {
-                    getJobById(any())
+                    getExportJobById(any())
                 } returns null
             }
         val servicePool =

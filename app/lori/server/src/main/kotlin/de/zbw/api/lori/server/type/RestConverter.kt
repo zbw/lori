@@ -74,6 +74,7 @@ import de.zbw.lori.model.ZdbIdWithCountRest
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -872,7 +873,7 @@ fun ExportJobStatus.toRest(): JobStatusRest =
     when (this) {
         ExportJobStatus.QUEUED -> JobStatusRest.queued
         ExportJobStatus.RUNNING -> JobStatusRest.running
-        ExportJobStatus.FINISHED -> JobStatusRest.finished
+        ExportJobStatus.SUCCESSFUL -> JobStatusRest.finished
         ExportJobStatus.FAILED -> JobStatusRest.failed
     }
 
@@ -980,7 +981,7 @@ object RestConverter {
 
     fun parseHandle(given: String): String = given.replace("^[\\D]*".toRegex(), "")
 
-    val LOG = LogManager.getLogger(RestConverter::class.java)
+    val LOG: Logger = LogManager.getLogger(RestConverter::class.java)
     const val CSV_DELIMITER = ';'
     val IP_PATTERN_REGEX =
         Regex(

@@ -43,6 +43,11 @@ class LoriConfigurationTest {
         System.setProperty("lori.stage", expectedConfig.stage)
         System.setProperty("lori.connection.digitalarchive.handleurl", expectedConfig.handleURL)
         System.setProperty("lori.download.directory", expectedConfig.downloadDir)
+        System.setProperty("lori.mail.host", expectedConfig.mailHost)
+        System.setProperty("lori.mail.port", expectedConfig.mailPort.toString())
+        System.setProperty("lori.mail.to", expectedConfig.mailTo)
+        System.setProperty("lori.mail.from", expectedConfig.mailFrom)
+
         val receivedConfig =
             LoriConfiguration.load(
                 "lori",
@@ -81,6 +86,10 @@ class LoriConfigurationTest {
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "1234",
                 downloadDir = "path/to/downloads",
+                mailPort = 25,
+                mailHost = "localhost",
+                mailTo = "to@localhost",
+                mailFrom = "me@localhost",
             )
     }
 }

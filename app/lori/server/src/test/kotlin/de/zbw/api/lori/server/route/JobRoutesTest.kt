@@ -126,7 +126,7 @@ class JobRoutesTest {
             val backend =
                 mockk<LoriServerBackend>(relaxed = true) {
                     coEvery {
-                        getJobById(expectedExportJob.id)
+                        getExportJobById(expectedExportJob.id)
                     } returns expectedExportJob
                 }
             val servicePool =
@@ -171,7 +171,7 @@ class JobRoutesTest {
             val backend =
                 mockk<LoriServerBackend>(relaxed = true) {
                     coEvery {
-                        getJobById(expectedExportJob.id)
+                        getExportJobById(expectedExportJob.id)
                     } returns null
                 }
             val servicePool =

@@ -56,3 +56,14 @@ message CleanDownloadsRequest {
 message CleanDownloadsResponse {
   int32 deleted_count = 1;
 }
+
+message SendMailRequest {
+  string receiver = 1;
+  string subject = 2;
+  string text = 3;
+}
+
+message SendMailResponse {
+  string status = 1;
+  string description = 2;
+}

@@ -128,7 +128,7 @@ fun Routing.jobRoutes(
                         )
                     }
                     val exportJobStatus: ExportJob =
-                        backend.getJobById(jobId) ?: return@withContext call.respond(
+                        backend.getExportJobById(jobId) ?: return@withContext call.respond(
                             HttpStatusCode.NotFound,
                             ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
                         )
