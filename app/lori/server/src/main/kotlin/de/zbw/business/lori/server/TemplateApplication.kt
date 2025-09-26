@@ -4,6 +4,7 @@ import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
 import de.zbw.business.lori.server.LoriServerBackend.Companion.findItemsWithConflicts
+import de.zbw.business.lori.server.TemplateApplication.Companion.LOG
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ComparisonOperator
 import de.zbw.business.lori.server.type.Item
@@ -26,6 +27,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.collections.fold
 import kotlin.math.ceil
@@ -46,6 +48,10 @@ class TemplateApplication(
             dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
         if (skipTemplateDrafts && right.lastAppliedOn == null) {
             // Draft will be skipped for now.
+            return null
+        }
+        if (right.endDate != null && right.endDate < LocalDate.now()){
+            LOG.info("Template ${right.rightId}: Not applied due to end date lying in the past.")
             return null
         }
         // Exceptions
