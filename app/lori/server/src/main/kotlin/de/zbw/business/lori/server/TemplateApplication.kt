@@ -50,7 +50,7 @@ class TemplateApplication(
             // Draft will be skipped for now.
             return null
         }
-        if (right.endDate != null && right.endDate < LocalDate.now()){
+        if (right.endDate != null && right.endDate < LocalDate.now()) {
             LOG.info("Template ${right.rightId}: Not applied due to end date lying in the past.")
             return null
         }
