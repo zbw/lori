@@ -268,6 +268,9 @@ class LoriGrpcServerTest {
                     every {
                         mailTo
                     } returns "foo@bar"
+                    every {
+                        stage
+                    } returns "dev"
                 },
                 mockk<LoriServerBackend> {
                     coEvery {
@@ -375,7 +378,7 @@ class LoriGrpcServerTest {
             val expectedResponse =
                 SendMailResponse
                     .newBuilder()
-                    .setStatus("Successful send mail")
+                    .setStatus(LoriGrpcServer.SUCCESS_MSG)
                     .build()
             // when
             val grpcServer =

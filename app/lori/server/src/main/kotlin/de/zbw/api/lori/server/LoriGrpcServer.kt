@@ -248,7 +248,7 @@ class LoriGrpcServer(
 
                 SendMailResponse
                     .newBuilder()
-                    .setStatus("Successfully sent mail")
+                    .setStatus(SUCCESS_MSG)
                     .build()
             } catch (e: Throwable) {
                 span.recordException(e)
@@ -323,5 +323,6 @@ class LoriGrpcServer(
     companion object {
         private val LOG = LogManager.getLogger(LoriGrpcServer::class.java)
         private const val GPRC_USER = "GRPC_INTERFACE"
+        internal const val SUCCESS_MSG = "Successfully sent mail"
     }
 }

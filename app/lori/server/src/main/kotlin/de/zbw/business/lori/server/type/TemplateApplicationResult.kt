@@ -8,6 +8,7 @@ data class TemplateApplicationResult(
     val errors: List<RightError>,
     val numberOfErrors: Int,
     val exceptionTemplateApplicationResult: TemplateApplicationResult?,
+    val skippedApplication: Boolean = false,
 ) {
     // Monoid operation.
     fun mAppend(other: TemplateApplicationResult): TemplateApplicationResult =
