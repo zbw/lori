@@ -248,7 +248,7 @@ class LoriGrpcServer(
 
                 SendMailResponse
                     .newBuilder()
-                    .setStatus("Successful send mail")
+                    .setStatus("Successfully sent mail")
                     .build()
             } catch (e: Throwable) {
                 span.recordException(e)
@@ -277,7 +277,7 @@ class LoriGrpcServer(
         backend.updateGenericJobById(genericJob = job)
         mailService.sendMail(
             to = config.mailTo,
-            subject = "Lori-Job Error",
+            subject = "Lori-Job Error: Fehlerhafter Lauf (${config.stage})",
             body =
                 "Es ist ein Fehler aufgetreten beim Job '${job.kind}'!\n" +
                     "Bitte kontaktieren Sie den Systembesitzer.\n" +
