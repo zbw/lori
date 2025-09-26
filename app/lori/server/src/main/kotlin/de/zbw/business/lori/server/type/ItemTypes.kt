@@ -142,7 +142,7 @@ data class ItemMetadata(
 
         fun csvFileHeader(): String =
             "$COLUMN_METADATA_AUTHOR, " +
-                "$COLUMN_METADATA_BAND, ," +
+                "$COLUMN_METADATA_BAND," +
                 "$COLUMN_METADATA_COLLECTION_HANDLE," +
                 "$COLUMN_METADATA_COLLECTION_NAME," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE," +
