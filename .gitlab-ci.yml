@@ -122,9 +122,8 @@ pushLoriImportJobImage:
   stage: push
   needs: ["build"]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - job/lori_import/**/*
+    - changes:
+      - job/lori_import/**/*
   dependencies:
     - build
   tags:
@@ -139,16 +138,20 @@ pushLoriImportJobImage:
     - chmod 700 ~/.ssh
     - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - scp job/lori_import/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        scp job/lori_import/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar
+      else
+        echo "Skipping production deploy: commit not merged to default branch"
+      fi
     - scp job/lori_import/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/lori_import_${CI_COMMIT_SHORT_SHA}.tar
 
 pushTemplateApplyJobImage:
   stage: push
   needs: ["build"]
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
-        - job/template_apply/**/*
+    - changes:
+      - job/template_apply/**/*
   dependencies:
     - build
   tags:
@@ -163,7 +166,12 @@ pushTemplateApplyJobImage:
     - chmod 700 ~/.ssh
     - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
-    - scp job/template_apply/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        scp job/template_apply/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar
+      else
+        echo "Skipping production deploy: commit not merged to default branch"
+      fi
     - scp job/template_apply/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/template_apply_${CI_COMMIT_SHORT_SHA}.tar
 
 deployToQs:
@@ -242,8 +250,7 @@ deployImportJobToQs:
   needs: ["pushLoriImportJobImage"]
   environment: qs
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
+    - changes:
         - job/lori_import/**/*
   image:
     name: $ALPINE
@@ -299,8 +306,7 @@ deployTemplateApplyJobToQs:
   needs: ["pushTemplateApplyJobImage"]
   environment: qs
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      changes:
+    - changes:
         - job/template_apply/**/*
   image:
     name: $ALPINE
