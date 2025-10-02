@@ -120,12 +120,12 @@ pushLoriAppImage:
 
 pushLoriImportJobImage:
   stage: push
-  needs: ["build"]
+  needs: ["test"]
   rules:
     - changes:
       - job/lori_import/**/*
   dependencies:
-    - build
+    - test
   tags:
     - dockersocket
   script:
@@ -148,12 +148,12 @@ pushLoriImportJobImage:
 
 pushTemplateApplyJobImage:
   stage: push
-  needs: ["build"]
+  needs: ["test"]
   rules:
     - changes:
       - job/template_apply/**/*
   dependencies:
-    - build
+    - test
   tags:
     - dockersocket
   script:
@@ -252,6 +252,18 @@ deployImportJobToQs:
   rules:
     - changes:
         - job/lori_import/**/*
+    # Manual step only on main branch after merge
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+      allow_failure: true
+
+    # Manual step during merge request pipeline
+    - if: $CI_OPEN_MERGE_REQUESTS
+      when: manual
+      allow_failure: true
+
+    # Default fallback: don’t run
+    - when: never
   image:
     name: $ALPINE
   script:
@@ -308,6 +320,18 @@ deployTemplateApplyJobToQs:
   rules:
     - changes:
         - job/template_apply/**/*
+    # Manual step only on main branch after merge
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+      allow_failure: true
+
+    # Manual step during merge request pipeline
+    - if: $CI_OPEN_MERGE_REQUESTS
+      when: manual
+      allow_failure: true
+
+    # Default fallback: don’t run
+    - when: never
   image:
     name: $ALPINE
   script:

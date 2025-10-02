@@ -97,6 +97,7 @@ class LoriGrpcServer(
             )
         return withContext(span.asContextElement()) {
             try {
+                backend.insertGenericJob(job)
                 val startTime = Instant.now()
                 val token = daConnector.login()
                 LOG.info("Login-Token: $token")
