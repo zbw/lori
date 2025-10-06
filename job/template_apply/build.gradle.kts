@@ -23,6 +23,7 @@ dependencies {
     implementation(project(":app:lori:client"))
     implementation("io.opentelemetry:opentelemetry-sdk:$openTelemetry")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:$openTelemetry")
+    implementation("io.github.gfelbing:konfig-core:0.4.0")
 }
 
 application {

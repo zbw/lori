@@ -211,6 +211,7 @@ class LoriGrpcServer(
 
         return withContext(span.asContextElement()) {
             try {
+                backend.insertGenericJob(job)
                 val instant: Instant =
                     Instant.ofEpochSecond(
                         request.olderThan.seconds,

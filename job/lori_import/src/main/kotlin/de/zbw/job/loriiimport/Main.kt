@@ -2,6 +2,7 @@ package de.zbw.job.loriiimport
 
 import de.zbw.api.lori.client.LoriClient
 import de.zbw.api.lori.client.config.LoriClientConfiguration
+import de.zbw.job.loriiimport.config.LoriConfigurations
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import io.opentelemetry.api.OpenTelemetry
@@ -24,6 +25,8 @@ object Main {
         val tracer: Tracer =
             OpenTelemetry.noop().getTracer("foo")
 
+        val config = LoriConfigurations.serverConfig
+
         val span =
             tracer
                 .spanBuilder("main")
@@ -34,10 +37,9 @@ object Main {
             LoriClient(
                 configuration =
                     LoriClientConfiguration(
-                        9092,
-                        "lori",
-                        // Wait for four hour max. Anything above that is at least worth investigating.
-                        4 * 3600000,
+                        config.loriGrpcPort,
+                        config.loriAddress,
+                        config.loriClientDeadline,
                     ),
             )
 
