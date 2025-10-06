@@ -1911,7 +1911,7 @@ export default defineComponent({
                     hint="Beschreibung des Templates"
                     variant="outlined"
                     v-bind="{...$attrs, ...loginStatusProps}"
-                    rows="1"
+                    rows="2"
                   ></v-textarea>
                 </v-col>
               </v-row>
