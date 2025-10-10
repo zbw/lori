@@ -33,6 +33,7 @@ import bookmarkApi from "@/api/bookmarkApi";
 import {DataTableOptions, ReadonlyDataTableHeader} from "@/types/vuetify";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import jobApi from "@/api/jobApi";
+import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
   computed: {
@@ -44,6 +45,7 @@ export default defineComponent({
     },
   },
   components: {
+    RightsEditWrapper,
     GroupEdit,
     TopNavigationBar,
     ResizableDialog,
@@ -1367,13 +1369,13 @@ table.special, th.special, td.special {
         v-on:close="closeTemplateEditDialog"
         persistent
     >
-      <RightsEditDialog
+      <RightsEditWrapper
           :index="-1"
           :isNewRight="false"
           :isNewTemplate="false"
           :rightId="queryParameterRight.rightId"
           v-on:editRightClosed="closeTemplateEditDialog"
-      ></RightsEditDialog>
+      ></RightsEditWrapper>
     </v-dialog>
     <v-dialog
         v-model="groupEditActivated"

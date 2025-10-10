@@ -5,6 +5,7 @@ import {computed, ComputedRef, defineComponent, onMounted, PropType, Ref, ref, w
 import {useUserStore} from "@/stores/user";
 import url from "@/utils/url";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
+import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
   props: {
@@ -27,6 +28,7 @@ export default defineComponent({
   },
   emits: ["deleteSuccessful", "tabDialogClosed", "updateSuccessful"],
   components: {
+    RightsEditWrapper,
     RightsEditDialog,
   },
 
@@ -248,7 +250,7 @@ export default defineComponent({
         {{ handle }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
-        <RightsEditDialog
+        <RightsEditWrapper
           :index="index"
           :isNewRight="false"
           :isNewTemplate="false"
@@ -260,7 +262,7 @@ export default defineComponent({
           v-on:editRightClosed="tabDialogClosed"
           v-on:hasFormChanged="setFormStatus"
           v-on:updateSuccessful="updateSuccessful"
-        ></RightsEditDialog>
+        ></RightsEditWrapper>
         <v-dialog v-model="unsavedChangesDialog" max-width="500px">
           <v-card>
             <v-card-title class="text-h5 text-center">Hinweis</v-card-title>

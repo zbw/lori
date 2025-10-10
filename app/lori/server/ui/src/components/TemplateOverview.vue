@@ -15,6 +15,7 @@ import {useUserStore} from "@/stores/user";
 import rightErrorApi from "@/api/rightErrorApi";
 import Dashboard from "@/components/Dashboard.vue";
 import {ReadonlyDataTableHeader, SortItem} from "@/types/vuetify";
+import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
   computed: {
@@ -25,7 +26,7 @@ export default defineComponent({
       return date_utils;
     }
   },
-  components: {Dashboard, RightsEditDialog },
+  components: {RightsEditWrapper, Dashboard, RightsEditDialog },
   props: {},
   emits: [
       "getItemsByRightId",
@@ -737,14 +738,14 @@ export default defineComponent({
       </v-data-table>
       <v-dialog
         v-model="templateEditDialogActivated"
+        v-on:close="closeTemplateEditDialog"
         :retain-focus="false"
         max-width="1500px"
         max-height="850px"
-        v-on:close="closeTemplateEditDialog"
         scrollable
         persistent
       >
-        <RightsEditDialog
+        <RightsEditWrapper
           :index="-1"
           :isNewRight="false"
           :isNewTemplate="isNew"
@@ -759,7 +760,7 @@ export default defineComponent({
           v-on:deleteTemplateSuccessful="childTemplateDeleted"
           v-on:editRightClosed="closeTemplateEditDialog"
           v-on:updateTemplateSuccessful="childTemplateUpdated"
-        ></RightsEditDialog>
+        ></RightsEditWrapper>
       </v-dialog>
     </v-container>
   </v-card>
