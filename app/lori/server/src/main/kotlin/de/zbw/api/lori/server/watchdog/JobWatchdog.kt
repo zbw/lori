@@ -49,7 +49,7 @@ class JobWatchdog(
                 runBlocking {
                     mailService.sendMail(
                         to = config.mailTo,
-                        subject = "Lori-Job Error: Ausfall von täglichen Routinejobs (${config.stage})",
+                        subject = "Lori-Job Error: Ausfall von täglichen Routinejobs (${config.stage.uppercase()})",
                         body =
                             "Folgende Jobs sind wider Erwarten nicht gelaufen: ${missingJobs.joinToString(", ")}\n" +
                                 "Bitte kontaktieren Sie den Systembesitzer.",
@@ -61,7 +61,7 @@ class JobWatchdog(
                 runBlocking {
                     mailService.sendMail(
                         to = config.mailTo,
-                        subject = "Lori-Job Error: Ausfall von täglichen Routinejobs (${config.stage}",
+                        subject = "Lori-Job Error: Ausfall von täglichen Routinejobs (${config.stage.uppercase()})",
                         body =
                             "Der Watchdog von Lori ist fehlgeschlagen: ${e.message}" +
                                 "Bitte kontaktieren Sie den Systembesitzer.",

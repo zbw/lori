@@ -279,7 +279,7 @@ class LoriGrpcServer(
         backend.updateGenericJobById(genericJob = job)
         mailService.sendMail(
             to = config.mailTo,
-            subject = "Lori-Job Error: Fehlerhafter Lauf (${config.stage})",
+            subject = "Lori-Job Error: Fehlerhafter Lauf (${config.stage.uppercase()})",
             body =
                 "Es ist ein Fehler aufgetreten beim Job '${job.kind}'!\n" +
                     "Bitte kontaktieren Sie den Systembesitzer.\n" +
