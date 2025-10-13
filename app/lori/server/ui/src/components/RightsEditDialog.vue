@@ -92,6 +92,10 @@ export default defineComponent({
       type: Object as PropType<RightRest>,
       required: false,
     },
+    isCopy: {
+      type: Boolean,
+      default: false,
+    },
     isTabEntry: {
       type: Boolean,
       default: false,
@@ -122,6 +126,7 @@ export default defineComponent({
   emits: {
     addSuccessful: (right: RightRest) => true,
     addTemplateSuccessful: (right: RightRest) => true,
+    copyRight: (right: RightRest) => true,
     createException: () => true,
     deleteSuccessful: (index: number, rightId: string | undefined) => true,
     deleteTemplateSuccessful: (templateName: string) => true,
@@ -154,6 +159,7 @@ export default defineComponent({
       accessState: "",
       basisStorage: "",
       basisAccessState: "",
+      copyToHandleId: "",
       startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
       templateName: "",
@@ -280,6 +286,10 @@ export default defineComponent({
       return !((value == undefined || value == "") && isTemplate.value);
     };
 
+    const copyToHandleIdCheck = (value: string) => {
+      return !(props.isCopy && value.length == 0)
+    };
+
     const rules = {
       accessState: { required },
       startDate: { required },
@@ -287,6 +297,7 @@ export default defineComponent({
       templateName: { templateNameCheck },
       selectedGroups: { groupCheck },
       selectedBookmarks: { bookmarksCheck },
+      copyToHandleId: { copyToHandleIdCheck },
     };
 
     const v$ = useVuelidate(rules, formState);
@@ -447,15 +458,31 @@ export default defineComponent({
     /**
      * Create/Update Right/Template:
      */
+    const testHandleValidity = (handle: string, callback: () => void) => {
+      api
+          .getRightsByHandle(handle)
+          .then(() => {
+            callback();
+          })
+          .catch((e) => {
+            console.log(e);
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsgIsActive.value = true;
+              errorMsg.value = "Der Handle '" +  handle + "' existiert nicht";
+            });
+          })
+    };
+
     const createRight = () => {
       tmpRight.value.rightId = "unset";
       api
         .addRight(tmpRight.value)
         .then((r) => {
+          const handle = props.isCopy ? formState.copyToHandleId : props.handle;
           api
             .addItemEntry(
               {
-                handle: props.handle,
+                handle: handle,
                 rightId: r.rightId,
               } as ItemEntry,
               true,
@@ -804,12 +831,33 @@ export default defineComponent({
         createTemplate();
       } else if (isTemplate.value) {
         updateTemplate();
+      } else if (props.isCopy) {
+        testHandleValidity(formState.copyToHandleId, () => {
+          createRight();
+        })
       } else if (props.isNewRight) {
         createRight();
       } else {
         updateRight();
       }
     };
+
+    /**
+     * Copy
+     */
+    const copy: () => void = () => {
+      emit("copyRight", tmpRight.value);
+    }
+    const errorCopyToHandleId = computed(() => {
+      const errors: Array<string> = [];
+      if (
+          v$.value.copyToHandleId.$invalid &&
+          v$.value.copyToHandleId.$dirty
+      ) {
+        errors.push("Es wird eine gültige Handle-Id benötigt.");
+      }
+      return errors;
+    });
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
@@ -980,7 +1028,9 @@ export default defineComponent({
     );
 
     const mode = computed(() => {
-      if (isNew.value) {
+      if(props.isCopy){
+        return "kopieren";
+      } else if (isNew.value) {
         return "erstellen";
       } else if (userStore.isLoggedIn) {
         return "bearbeiten";
@@ -1589,6 +1639,8 @@ export default defineComponent({
       errorIPGroup,
       errorMsgIsActive,
       errorMsg,
+      errorCopyToHandleId,
+      exceptionTemplateHeaders,
       firstAppliedForHandleFormatted,
       groupItems,
       hasMissingBookmark,
@@ -1607,7 +1659,6 @@ export default defineComponent({
       renderTemplateKey,
       showDialogExceptionWarning,
       startDateFormatted,
-      exceptionTemplateHeaders,
       unsavedChangesDialog,
       unsavedChangesDialogPred,
       unsavedChangesDialogSucc,
@@ -1630,8 +1681,8 @@ export default defineComponent({
       connectException,
       connectPredecessorRelationship,
       connectSuccessorRelationship,
+      copy,
       createRight,
-      executeBookmarkNewTab,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
@@ -1639,6 +1690,7 @@ export default defineComponent({
       deleteSuccessful,
       deletePredecessorEntry,
       deleteSuccessorEntry,
+      executeBookmarkNewTab,
       labelModelToString,
       mergeSlotWithLogin,
       mergeSlotWithReadonly,
@@ -1773,18 +1825,26 @@ export default defineComponent({
           {{ cardTitle }}
         </v-col>
         <v-col cols="1" offset="4">
-          <v-tooltip location="bottom" text="Ausnahme Template">
+          <v-tooltip
+              v-if="isTemplateAndException"
+              location="bottom"
+              text="Ausnahme Template"
+          >
             <template v-slot:activator="{ props }">
-              <v-icon v-if="isTemplateAndException" v-bind="props">
+              <v-icon v-bind="props">
                 mdi-alpha-a-box-outline
               </v-icon>
             </template>
           </v-tooltip>
         </v-col>
         <v-col cols="1">
-          <v-tooltip location="bottom" text="Template Entwurf">
+          <v-tooltip
+              v-if="isTemplateDraft"
+              location="bottom"
+              text="Template Entwurf"
+          >
             <template v-slot:activator="{ props }">
-              <v-icon v-if="isTemplateDraft" v-bind="props">
+              <v-icon v-bind="props">
                 mdi-alpha-e-box-outline
               </v-icon>
             </template>
@@ -1838,10 +1898,11 @@ export default defineComponent({
           :readonly="updateInProgress"
           color="blue darken-1"
           :disabled="!userStore.isLoggedIn"
+          @click="copy"
       >Kopieren
       </v-btn>
       <v-btn
-          v-if="isTabEntry"
+          v-if="isTabEntry || isCopy"
           :readonly="updateInProgress"
           color="blue darken-1"
           @click="save"
@@ -1931,6 +1992,17 @@ export default defineComponent({
       </v-col>
     </v-row>
     <v-card-text>
+      <v-row v-if="isCopy">
+        <v-col cols="1">Item-Handle</v-col>
+        <v-col cols="4">
+          <v-text-field
+              v-model="formState.copyToHandleId"
+              variant="outlined"
+              :error-messages="errorCopyToHandleId"
+              hint="Kopierziel"
+          ></v-text-field>
+        </v-col>
+      </v-row>
     <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
       <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>

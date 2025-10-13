@@ -1,21 +1,21 @@
 import {
-  AboutApi,
-  AboutRest,
-  Configuration,
-  GroupApi,
-  GroupIdCreated,
-  GroupRest,
-  ItemApi,
-  ItemCountByRight,
-  ItemEntry,
-  ItemInformation, ItemSearch,
-  RightApi,
-  RightIdCreated,
-  RightRest, SortByRest, SortOrderRest,
+    AboutApi,
+    AboutRest,
+    Configuration,
+    GroupApi,
+    GroupIdCreated,
+    GroupRest,
+    ItemApi,
+    ItemCountByRight,
+    ItemEntry,
+    ItemInformation, ItemSearch,
+    RightApi,
+    RightIdCreated,
+    RightRest, SortByRest, SortOrderRest,
 } from "@/generated-sources/openapi";
 
 const configuration = new Configuration({
-  basePath: window.location.origin + "/api/v1",
+    basePath: window.location.origin + "/api/v1",
 });
 
 const loriItem = new ItemApi(configuration);
@@ -24,117 +24,120 @@ const loriGroupApi = new GroupApi(configuration);
 const loriAboutApi = new AboutApi(configuration);
 
 export default {
-  /**
-   * Group related calls.
-   */
-  addGroup(newGroup: GroupRest): Promise<GroupIdCreated> {
-    return loriGroupApi.addGroup({
-      body: newGroup,
-    });
-  },
-  deleteGroup(groupId: number): Promise<void> {
-    return loriGroupApi.deleteGroupById({
-      id: groupId,
-    });
-  },
-  getGroupById(groupId: number, version: number | undefined): Promise<GroupRest> {
-    return loriGroupApi.getGroupById({
-      id: groupId,
-      version: version,
-    });
-  },
-  getGroupList(
-    offset: number,
-    limit: number,
-  ): Promise<Array<GroupRest>> {
-    return loriGroupApi.getGroupList({
-      offset: offset,
-      limit: limit,
-    });
-  },
-  updateGroup(g: GroupRest): Promise<void> {
-    return loriGroupApi.updateGroup({
-      body: g,
-    });
-  },
-  getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {
-    return loriItem.getItemCountByRightId({ rightId: rightId });
-  },
-  updateRight(right: RightRest): Promise<void> {
-    return loriRightApi.updateRight({ body: right });
-  },
-  addRight(right: RightRest): Promise<RightIdCreated> {
-    return loriRightApi.addRight({ body: right });
-  },
-  addItemEntry(
-    entry: ItemEntry,
-    deleteRightOnConflict: boolean,
-  ): Promise<void> {
-    return loriItem.addItemRelation({
-      body: entry,
-      deleteRightOnConflict: deleteRightOnConflict,
-    });
-  },
-  deleteRight(rightId: string): Promise<void> {
-    return loriRightApi.deleteRightById({ id: rightId });
-  },
-  deleteItemRelation(handle: string, rightId: string): Promise<void> {
-    return loriItem.deleteItem({ handle: handle, rightId: rightId });
-  },
-  getAboutInformation(): Promise<AboutRest> {
-    return loriAboutApi.getAboutInformation();
-  },
-  searchQuery(
-    searchTerm: string,
-    offset: number,
-    limit: number,
-    pageSize: number,
-    facetsOnly: boolean | undefined,
-    noFacets: boolean | undefined,
-    filterPublicationYear: string | undefined,
-    filterPublicationType: string | undefined,
-    filterAccessState: string | undefined,
-    filterStartDate: string | undefined,
-    filterEndDate: string | undefined,
-    filterFormalRule: string | undefined,
-    filterValidOn: string | undefined,
-    filterPaketSigel: string | undefined,
-    filterZDBId: string | undefined,
-    filterNoRightInformation: string | undefined,
-    filterRightId: string | undefined,
-    filterSeries: string | undefined,
-    filterLicenceUrl: string | undefined,
-    filterManualRight: string | undefined,
-    filterDeletions: string | undefined,
-    filterAccessStateOn: string | undefined,
-    sortBy: SortByRest,
-    sortOrder: SortOrderRest,
-  ): Promise<ItemInformation> {
-    return loriItem.getSearchResult({
-      itemSearch: { searchTerm: searchTerm} as ItemSearch,
-      offset: offset,
-      limit: limit,
-      pageSize: pageSize,
-      noFacets: noFacets,
-      filterPublicationYear: filterPublicationYear,
-      filterPublicationType: filterPublicationType,
-      filterAccessState: filterAccessState,
-      filterStartDate: filterStartDate,
-      filterEndDate: filterEndDate,
-      filterFormalRule: filterFormalRule,
-      filterValidOn: filterValidOn,
-      filterPaketSigel: filterPaketSigel,
-      filterZDBId: filterZDBId,
-      filterNoRightInformation: filterNoRightInformation,
-      filterRightId: filterRightId,
-      filterSeries: filterSeries,
-      filterLicenceUrl: filterLicenceUrl,
-      filterManualRight: filterManualRight,
-      facetsOnly: facetsOnly,
-      filterAccessStateOn: filterAccessStateOn,
-      filterDeletions: filterDeletions,
-      sortBy: sortBy,
-      sortOrder: sortOrder,
-    });
-  },
+    /**
+     * Group related calls.
+     */
+    addGroup(newGroup: GroupRest): Promise<GroupIdCreated> {
+        return loriGroupApi.addGroup({
+            body: newGroup,
+        });
+    },
+    deleteGroup(groupId: number): Promise<void> {
+        return loriGroupApi.deleteGroupById({
+            id: groupId,
+        });
+    },
+    getGroupById(groupId: number, version: number | undefined): Promise<GroupRest> {
+        return loriGroupApi.getGroupById({
+            id: groupId,
+            version: version,
+        });
+    },
+    getGroupList(
+        offset: number,
+        limit: number,
+    ): Promise<Array<GroupRest>> {
+        return loriGroupApi.getGroupList({
+            offset: offset,
+            limit: limit,
+        });
+    },
+    updateGroup(g: GroupRest): Promise<void> {
+        return loriGroupApi.updateGroup({
+            body: g,
+        });
+    },
+    getItemCountByRightId(rightId: string): Promise<ItemCountByRight> {
+        return loriItem.getItemCountByRightId({ rightId: rightId });
+    },
+    updateRight(right: RightRest): Promise<void> {
+        return loriRightApi.updateRight({ body: right });
+    },
+    getRightsByHandle(handle: string): Promise<Array<RightRest>> {
+        return loriItem.getRightsByHandle({handle: handle})
+    },
+    addRight(right: RightRest): Promise<RightIdCreated> {
+        return loriRightApi.addRight({ body: right });
+    },
+    addItemEntry(
+        entry: ItemEntry,
+        deleteRightOnConflict: boolean,
+    ): Promise<void> {
+        return loriItem.addItemRelation({
+            body: entry,
+            deleteRightOnConflict: deleteRightOnConflict,
+        });
+    },
+    deleteRight(rightId: string): Promise<void> {
+        return loriRightApi.deleteRightById({ id: rightId });
+    },
+    deleteItemRelation(handle: string, rightId: string): Promise<void> {
+        return loriItem.deleteItem({ handle: handle, rightId: rightId });
+    },
+    getAboutInformation(): Promise<AboutRest> {
+        return loriAboutApi.getAboutInformation();
+    },
+    searchQuery(
+        searchTerm: string,
+        offset: number,
+        limit: number,
+        pageSize: number,
+        facetsOnly: boolean | undefined,
+        noFacets: boolean | undefined,
+        filterPublicationYear: string | undefined,
+        filterPublicationType: string | undefined,
+        filterAccessState: string | undefined,
+        filterStartDate: string | undefined,
+        filterEndDate: string | undefined,
+        filterFormalRule: string | undefined,
+        filterValidOn: string | undefined,
+        filterPaketSigel: string | undefined,
+        filterZDBId: string | undefined,
+        filterNoRightInformation: string | undefined,
+        filterRightId: string | undefined,
+        filterSeries: string | undefined,
+        filterLicenceUrl: string | undefined,
+        filterManualRight: string | undefined,
+        filterDeletions: string | undefined,
+        filterAccessStateOn: string | undefined,
+        sortBy: SortByRest,
+        sortOrder: SortOrderRest,
+    ): Promise<ItemInformation> {
+        return loriItem.getSearchResult({
+            itemSearch: { searchTerm: searchTerm} as ItemSearch,
+            offset: offset,
+            limit: limit,
+            pageSize: pageSize,
+            noFacets: noFacets,
+            filterPublicationYear: filterPublicationYear,
+            filterPublicationType: filterPublicationType,
+            filterAccessState: filterAccessState,
+            filterStartDate: filterStartDate,
+            filterEndDate: filterEndDate,
+            filterFormalRule: filterFormalRule,
+            filterValidOn: filterValidOn,
+            filterPaketSigel: filterPaketSigel,
+            filterZDBId: filterZDBId,
+            filterNoRightInformation: filterNoRightInformation,
+            filterRightId: filterRightId,
+            filterSeries: filterSeries,
+            filterLicenceUrl: filterLicenceUrl,
+            filterManualRight: filterManualRight,
+            facetsOnly: facetsOnly,
+            filterAccessStateOn: filterAccessStateOn,
+            filterDeletions: filterDeletions,
+            sortBy: sortBy,
+            sortOrder: sortOrder,
+        });
+    },
 };

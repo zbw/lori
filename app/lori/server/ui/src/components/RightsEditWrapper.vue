@@ -76,13 +76,24 @@ export default defineComponent({
 
     const exception = ref({} as RightRest);
     const exceptionValue = computed(() => exception.value);
+
     const addNewExceptionToOriginal = (excTemplate: RightRest) => {
       exception.value = Object.assign({}, excTemplate);
-      console.log("New exception added");
     };
 
     const displayExceptionView = () => {
       exceptionInstance.value = true;
+    };
+
+    const rightToCopy = ref({} as RightRest);
+    const displayCopyView = (right: RightRest) => {
+      rightToCopy.value = right;
+      copyInstance.value = true;
+    };
+
+    const closeCopyView = () => {
+      rightToCopy.value = Object.assign({} as RightRest);
+      copyInstance.value = false;
     };
 
     const onAddSuccessful = (newRight: RightRest) => {
@@ -122,8 +133,11 @@ export default defineComponent({
       copyInstance,
       exceptionValue,
       exceptionInstance,
+      rightToCopy,
       addNewExceptionToOriginal,
+      closeCopyView,
       closeExceptionView,
+      displayCopyView,
       displayExceptionView,
       onAddSuccessful,
       onAddTemplateSuccessful,
@@ -200,6 +214,7 @@ export default defineComponent({
           v-on:hasFormChanged="onHasFormChanged"
           v-on:updateSuccessful="onUpdateSuccessful"
           v-on:updateTemplateSuccessful="onUpdateTemplateSuccessful"
+          v-on:copyRight="displayCopyView"
       ></RightsEditDialog>
     </div>
 
@@ -210,10 +225,12 @@ export default defineComponent({
     >
       <RightsEditDialog
           v-bind="attrs"
-          :isNewRight=true
-          :isNewTemplate=false
-          :initialRight=initialRight
-          :index=0
+          :isNewRight="true"
+          :isNewTemplate="false"
+          :initialRight="rightToCopy"
+          :index="0"
+          :isCopy="true"
+          v-on:editRightClosed="closeCopyView"
       ></RightsEditDialog>
     </div>
 
@@ -226,7 +243,7 @@ export default defineComponent({
           v-bind="attrs"
           :isNewRight=false
           :isNewTemplate=true
-          :index=index
+          :index=0
           :isExceptionTemplate=true
           v-on:editRightClosed="closeExceptionView"
           v-on:addTemplateSuccessful="addNewExceptionToOriginal"
