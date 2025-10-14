@@ -127,7 +127,15 @@ class ApplyTemplateTest : DatabaseTest() {
                 )
 
             // Create Template
-            val rightId = backend.insertTemplate(TEST_RIGHT.copy(templateName = "test", isTemplate = true))
+            val rightId =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "test",
+                        isTemplate = true,
+                        startDate = LocalDate.now().minusMonths(1L),
+                        endDate = LocalDate.now(),
+                    ),
+                )
 
             // Connect Bookmark and Template
             backend.insertBookmarkTemplatePair(
@@ -143,7 +151,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     createdBy = "user1",
                 )
             assertThat(
-                received!!.appliedMetadataHandles,
+                received.appliedMetadataHandles,
                 `is`(listOf(item1ZDB1.handle)),
             )
 
@@ -168,16 +176,15 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightIdEndPast,
             )
 
-            val receivedEndPast =
+            val receivedEndPast: TemplateApplicationResult =
                 templateApplication.applyTemplate(
                     rightIdEndPast,
                     skipTemplateDrafts = false,
                     dryRun = false,
                     createdBy = "user1",
                 )
-            assertThat(
-                receivedEndPast!!.appliedMetadataHandles,
-                `is`(emptyList()),
+            assertTrue(
+                receivedEndPast.skippedApplication,
             )
 
             // Verify that new right is assigned to metadata id
@@ -190,7 +197,7 @@ class ApplyTemplateTest : DatabaseTest() {
             )
 
             // Repeat Apply Operation without duplicate entries errors
-            val received2: TemplateApplicationResult? =
+            val received2: TemplateApplicationResult =
                 templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
@@ -213,7 +220,7 @@ class ApplyTemplateTest : DatabaseTest() {
             backend.upsertMetadata(listOf(item1ZDB1.copy(zdbIds = listOf("foobar"))))
 
             // Apply Template
-            val received3: TemplateApplicationResult? =
+            val received3: TemplateApplicationResult =
                 templateApplication.applyTemplate(
                     rightId,
                     skipTemplateDrafts = false,
@@ -221,7 +228,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     createdBy = "user1",
                 )
             assertThat(
-                received3!!.appliedMetadataHandles.toSet(),
+                received3.appliedMetadataHandles.toSet(),
                 `is`(
                     setOf(
                         item2ZDB1.handle,
@@ -253,7 +260,13 @@ class ApplyTemplateTest : DatabaseTest() {
 
             // Create conflicting template
             val rightIdConflict =
-                backend.insertTemplate(TEST_RIGHT.copy(isTemplate = true, templateName = "conflicting"))
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        isTemplate = true,
+                        templateName = "conflicting",
+                        endDate = LocalDate.now(),
+                    ),
+                )
 
             // Connect Bookmark and Template
             backend.insertBookmarkTemplatePair(
@@ -268,7 +281,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     createdBy = "user1",
                 )
             assertThat(
-                receivedConflict!!.errors.size,
+                receivedConflict.errors.size,
                 `is`(2),
             )
         }
@@ -310,7 +323,14 @@ class ApplyTemplateTest : DatabaseTest() {
 
             // Create Templates
             val rightIdUpper =
-                backend.insertTemplate(TEST_RIGHT.copy(templateName = "upper", isTemplate = true))
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "upper",
+                        isTemplate = true,
+                        startDate = LocalDate.now().minusMonths(1L),
+                        endDate = LocalDate.now(),
+                    ),
+                )
 
             // Connect Bookmarks and Templates
             backend.insertBookmarkTemplatePair(
@@ -325,6 +345,8 @@ class ApplyTemplateTest : DatabaseTest() {
                         templateName = "exception",
                         isTemplate = true,
                         exceptionOfId = rightIdUpper,
+                        startDate = LocalDate.now().minusMonths(2L),
+                        endDate = LocalDate.now(),
                     ),
                 )
 
@@ -339,7 +361,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     skipTemplateDrafts = false,
                     dryRun = false,
                     createdBy = "user1",
-                )!!
+                )
             assertThat(
                 receivedUpperWithExc.appliedMetadataHandles.toSet(),
                 `is`(setOf(item1ZDB2.handle)),
@@ -354,7 +376,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     skipTemplateDrafts = false,
                     dryRun = false,
                     createdBy = "user1",
-                )!!
+                )
             assertThat(
                 receivedException.appliedMetadataHandles,
                 `is`(listOf(item2ZDB2.handle)),
@@ -414,13 +436,14 @@ class ApplyTemplateTest : DatabaseTest() {
                 rightId = rightId,
             )
 
-            assertNull(
-                templateApplication.applyTemplate(
-                    rightId,
-                    skipTemplateDrafts = true,
-                    dryRun = false,
-                    createdBy = "user1",
-                ),
+            assertTrue(
+                templateApplication
+                    .applyTemplate(
+                        rightId,
+                        skipTemplateDrafts = true,
+                        dryRun = false,
+                        createdBy = "user1",
+                    ).skippedApplication,
             )
         }
 
@@ -473,8 +496,8 @@ class ApplyTemplateTest : DatabaseTest() {
                     TEST_RIGHT.copy(
                         templateName = "testDryRun",
                         isTemplate = true,
-                        endDate = TEST_RIGHT.startDate.plusYears(1L),
-                        startDate = TEST_RIGHT.startDate.plusYears(1L),
+                        endDate = LocalDate.now().plusYears(1L),
+                        startDate = LocalDate.now().plusYears(1L).minusMonths(3L),
                     ),
                 )
 

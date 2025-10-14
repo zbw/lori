@@ -14,12 +14,14 @@ import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.ErrorQueryResult
 import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.type.GenericJob
 import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ItemRow
+import de.zbw.business.lori.server.type.JobKind
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.RightIdTemplateName
@@ -45,6 +47,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -1004,21 +1007,37 @@ class LoriServerBackend(
         }
     }
 
-    suspend fun insertExportJob(exportJob: ExportJob): UUID = UUID.fromString(dbConnector.jobDB.insertJob(exportJob))
+    suspend fun insertExportJob(exportJob: ExportJob): UUID = UUID.fromString(dbConnector.exportJobDB.insertJob(exportJob))
 
-    suspend fun getJobById(jobId: UUID): ExportJob? = dbConnector.jobDB.getJobById(jobId)
+    suspend fun insertGenericJob(genericJob: GenericJob): UUID = UUID.fromString(dbConnector.genericJobDB.insertJob(genericJob))
 
-    suspend fun updateJobById(exportJob: ExportJob): Int =
-        dbConnector.jobDB.updateJobStatusById(
+    suspend fun getExportJobById(jobId: UUID): ExportJob? = dbConnector.exportJobDB.getJobById(jobId)
+
+    suspend fun updateExportJobById(exportJob: ExportJob): Int =
+        dbConnector.exportJobDB.updateJobStatusById(
             exportJob,
         )
 
+    suspend fun updateGenericJobById(genericJob: GenericJob): Int =
+        dbConnector.genericJobDB.updateJobStatusById(
+            genericJob,
+        )
+
     suspend fun cleanDownloads(instant: Instant): Int {
-        val jobs: List<ExportJob> = dbConnector.jobDB.getJobsOlderThan(instant)
+        val jobs: List<ExportJob> = dbConnector.exportJobDB.getJobsOlderThan(instant)
         jobs.forEach { job ->
             job.getFile()?.delete()
         }
-        return dbConnector.jobDB.deleteJobsByIds(jobs.map { it.id })
+        return dbConnector.exportJobDB.deleteJobsByIds(jobs.map { it.id })
+    }
+
+    suspend fun findMissingJobs(): List<JobKind> {
+        val jobKinds =
+            dbConnector.genericJobDB
+                .getSuccessfulJobsSince(
+                    Instant.now().minus(Duration.ofDays(1)),
+                ).map { it.kind }
+        return JobKind.entries.filterNot { it in jobKinds }
     }
 
     companion object {

@@ -11,6 +11,8 @@ import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
+import de.zbw.lori.api.SendMailRequest
+import de.zbw.lori.api.SendMailResponse
 import de.zbw.lori.api.TemplateApplication
 import io.grpc.StatusRuntimeException
 import io.mockk.coEvery
@@ -25,6 +27,7 @@ import org.testng.annotations.Test
 import java.nio.channels.UnresolvedAddressException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 /**
  * Test [LoriGrpcServer].
@@ -77,6 +80,12 @@ class LoriGrpcServerTest {
                     coEvery {
                         applyAllTemplates(skipTemplateDrafts = false, dryRun = false, createdBy = any())
                     } returns expectedResult
+                    coEvery {
+                        updateGenericJobById(any())
+                    } returns 1
+                    coEvery {
+                        insertGenericJob(any())
+                    } returns UUID.randomUUID()
                 }
             // when
             val grpcServer =
@@ -88,6 +97,7 @@ class LoriGrpcServerTest {
                             every { backend } returns backendMock
                         },
                     tracer = tracer,
+                    mailService = mockk(relaxed = true),
                 )
             val response = grpcServer.applyTemplates(request)
 
@@ -146,6 +156,12 @@ class LoriGrpcServerTest {
                             createdBy = any(),
                         )
                     } returns expectedResult
+                    coEvery {
+                        updateGenericJobById(any())
+                    } returns 1
+                    coEvery {
+                        insertGenericJob(any())
+                    } returns UUID.randomUUID()
                 }
             // when
             val grpcServer =
@@ -157,6 +173,7 @@ class LoriGrpcServerTest {
                             every { backend } returns backendMock
                         },
                     tracer = tracer,
+                    mailService = mockk(relaxed = true),
                 )
             val response = grpcServer.applyTemplates(request)
 
@@ -218,9 +235,16 @@ class LoriGrpcServerTest {
                     mockk(),
                     mockk<LoriServerBackend> {
                         coEvery { updateMetadataAsDeleted(any()) } returns 5
+                        coEvery {
+                            updateGenericJobById(any())
+                        } returns 1
+                        coEvery {
+                            insertGenericJob(any())
+                        } returns UUID.randomUUID()
                     },
                     importer,
                     tracer,
+                    mailService = mockk(),
                 ).fullImport(request)
 
             // then
@@ -240,10 +264,34 @@ class LoriGrpcServerTest {
             val request = FullImportRequest.getDefaultInstance()
             // when
             LoriGrpcServer(
-                mockk(),
-                mockk(),
+                mockk {
+                    every {
+                        mailTo
+                    } returns "foo@bar"
+                    every {
+                        stage
+                    } returns "dev"
+                },
+                mockk<LoriServerBackend> {
+                    coEvery {
+                        updateGenericJobById(any())
+                    } returns 1
+                    coEvery {
+                        insertGenericJob(any())
+                    } returns UUID.randomUUID()
+                },
                 importer,
                 tracer,
+                mailService =
+                    mockk {
+                        coEvery {
+                            sendMail(
+                                any(),
+                                any(),
+                                any(),
+                            )
+                        } returns Unit
+                    },
             ).fullImport(request)
         }
     }
@@ -283,6 +331,12 @@ class LoriGrpcServerTest {
                     coEvery {
                         checkForRightErrors(any())
                     } returns expectedResult.size
+                    coEvery {
+                        updateGenericJobById(any())
+                    } returns 1
+                    coEvery {
+                        insertGenericJob(any())
+                    } returns UUID.randomUUID()
                 }
             // when
             val grpcServer =
@@ -294,8 +348,60 @@ class LoriGrpcServerTest {
                             every { backend } returns backendMock
                         },
                     tracer = tracer,
+                    mailService = mockk(),
                 )
             val response = grpcServer.checkForRightErrors(request)
+
+            // then
+            assertThat(response, `is`(expectedResponse))
+        }
+    }
+
+    @Test
+    fun testSendMail() {
+        runBlocking {
+            // given
+            val subject = "Moin"
+            val text = "Some text"
+            val receiver = "you@example.com"
+
+            val request =
+                SendMailRequest
+                    .newBuilder()
+                    .setSubject(subject)
+                    .setText(text)
+                    .setReceiver(receiver)
+                    .build()
+            val backendMock =
+                mockk<LoriServerBackend> {}
+
+            val expectedResponse =
+                SendMailResponse
+                    .newBuilder()
+                    .setStatus(LoriGrpcServer.SUCCESS_MSG)
+                    .build()
+            // when
+            val grpcServer =
+                LoriGrpcServer(
+                    config = mockk(),
+                    backend = backendMock,
+                    daConnector =
+                        mockk {
+                            every { backend } returns backendMock
+                        },
+                    tracer = tracer,
+                    mailService =
+                        mockk(relaxed = true) {
+                            coEvery {
+                                sendMail(
+                                    to = receiver,
+                                    body = text,
+                                    subject = subject,
+                                )
+                            } returns Unit
+                        },
+                )
+            val response = grpcServer.sendMail(request)
 
             // then
             assertThat(response, `is`(expectedResponse))

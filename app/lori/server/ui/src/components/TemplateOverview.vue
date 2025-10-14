@@ -21,6 +21,9 @@ export default defineComponent({
     info() {
       return info;
     },
+    date_utils() {
+      return date_utils;
+    }
   },
   components: {Dashboard, RightsEditDialog },
   props: {},
@@ -651,7 +654,7 @@ export default defineComponent({
             v-if="item.exceptionOfId == undefined"
             color="blue darken-1"
             @click="applyTemplate(item)"
-            :disabled="!userStore.isLoggedIn"
+            :disabled="!userStore.isLoggedIn || date_utils.isDateInPast(item.endDate)"
             >Template anwenden</v-btn
           >
         </template>

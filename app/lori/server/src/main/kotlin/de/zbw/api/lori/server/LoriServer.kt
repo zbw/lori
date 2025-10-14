@@ -2,7 +2,9 @@ package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfigurations
 import de.zbw.api.lori.server.utils.SamlUtils
+import de.zbw.api.lori.server.watchdog.JobWatchdog
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.mail.MailService
 import de.zbw.persistence.lori.server.FlywayMigrator
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
@@ -28,11 +30,23 @@ object LoriServer {
 
         val config = LoriConfigurations.serverConfig
         val backend = LoriServerBackend(config, tracer)
+        val mailService =
+            MailService(
+                port = config.mailPort,
+                host = config.mailHost,
+                fromEmail = config.mailFrom,
+            )
+        val watchdog =
+            JobWatchdog(
+                mailService = mailService,
+                config = config,
+                backend = backend,
+            )
+        watchdog.start()
 
         // Migrate DB
         FlywayMigrator(config).migrate()
 
-        // TODO: Add Service for DB connection test
         ServicePoolWithProbes(
             config = config,
             services =
@@ -45,6 +59,7 @@ object LoriServer {
                                     config = config,
                                     backend = backend,
                                     tracer = tracer,
+                                    mailService = mailService,
                                 ),
                             ),
                     ),

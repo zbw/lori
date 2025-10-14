@@ -12,4 +12,5 @@ service LoriService {
   rpc ApplyTemplates (ApplyTemplatesRequest) returns (ApplyTemplatesResponse);
   rpc CheckForRightErrors (CheckForRightErrorsRequest) returns (CheckForRightErrorsResponse);
   rpc CleanDownloads (CleanDownloadsRequest) returns (CleanDownloadsResponse);
+  rpc SendMail (SendMailRequest) returns (SendMailResponse);
 }

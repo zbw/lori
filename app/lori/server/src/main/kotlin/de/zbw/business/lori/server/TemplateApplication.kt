@@ -21,11 +21,11 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.time.LocalDate
 import java.util.UUID
 import kotlin.collections.fold
 import kotlin.math.ceil
@@ -39,14 +39,46 @@ class TemplateApplication(
         skipTemplateDrafts: Boolean,
         dryRun: Boolean,
         createdBy: String,
-    ): TemplateApplicationResult? {
+    ): TemplateApplicationResult {
         LOG.info("Start applying Template $rightId")
         // Get Right object
         val right: ItemRight =
-            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull() ?: return null
+            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull()
+                ?: return TemplateApplicationResult(
+                    rightId = rightId,
+                    templateName = "",
+                    testId = null,
+                    appliedMetadataHandles = emptyList(),
+                    errors = emptyList(),
+                    numberOfErrors = 0,
+                    exceptionTemplateApplicationResult = null,
+                    skippedApplication = true,
+                )
         if (skipTemplateDrafts && right.lastAppliedOn == null) {
             // Draft will be skipped for now.
-            return null
+            return TemplateApplicationResult(
+                rightId = rightId,
+                templateName = right.templateName ?: "",
+                testId = null,
+                appliedMetadataHandles = emptyList(),
+                errors = emptyList(),
+                numberOfErrors = 0,
+                exceptionTemplateApplicationResult = null,
+                skippedApplication = true,
+            )
+        }
+        if (right.endDate != null && right.endDate < LocalDate.now()) {
+            LOG.info("Template ${right.rightId}: Not applied due to end date lying in the past.")
+            return TemplateApplicationResult(
+                rightId = rightId,
+                templateName = right.templateName ?: "",
+                testId = null,
+                appliedMetadataHandles = emptyList(),
+                errors = emptyList(),
+                numberOfErrors = 0,
+                exceptionTemplateApplicationResult = null,
+                skippedApplication = true,
+            )
         }
         // Exceptions
         val exceptionTemplate: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
@@ -218,19 +250,18 @@ class TemplateApplication(
         createdOnFilter: CreatedOnFilter?,
     ): TemplateApplicationResult {
         val searchResults: Set<Item> =
-            runBlocking {
-                backend
-                    .searchQuery(
-                        searchTerm = bookmark.searchTerm,
-                        limit = LIMIT,
-                        offset = offset,
-                        metadataSearchFilter = (bookmark.getAllMetadataFilter() + createdOnFilter).filterNotNull(),
-                        rightSearchFilter = bookmark.getAllRightFilter(),
-                        noRightInformationFilter = bookmark.noRightInformationFilter,
-                        handlesToIgnore = searchResultsExceptionIds.toList(),
-                        sortInformation = SortInformation.DEFAULT,
-                    ).results
-            }.toSet()
+            backend
+                .searchQuery(
+                    searchTerm = bookmark.searchTerm,
+                    limit = LIMIT,
+                    offset = offset,
+                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + createdOnFilter).filterNotNull(),
+                    rightSearchFilter = bookmark.getAllRightFilter(),
+                    noRightInformationFilter = bookmark.noRightInformationFilter,
+                    handlesToIgnore = searchResultsExceptionIds.toList(),
+                    sortInformation = SortInformation.DEFAULT,
+                ).results
+                .toSet()
 
         val rightId = right.rightId!!
         if (!dryRun) {

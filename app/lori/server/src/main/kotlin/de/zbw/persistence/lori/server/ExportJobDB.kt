@@ -3,7 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_JOBS
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_EXPORT_JOBS
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.UserDB.Companion.utcCalendar
 import io.opentelemetry.api.trace.Tracer
@@ -14,21 +14,21 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * SQL queries regarding jobs.
+ * SQL queries regarding export jobs.
  *
  * Created on 09-10-2025.
  * @author Christian Bay (c.bay@zbw.eu)
  */
-class JobDB(
+class ExportJobDB(
     val connectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
     suspend fun insertJob(exportJob: ExportJob): String =
-        connectionPool.useConnection("createJob") { connection ->
-            val span = tracer.spanBuilder("createJob").startSpan()
+        connectionPool.useConnection("createExportJob") { connection ->
+            val span = tracer.spanBuilder("createExportJob").startSpan()
             val now = Instant.now()
             val prepStmt =
-                connection.prepareStatement(STATEMENT_INSERT_JOB, Statement.RETURN_GENERATED_KEYS).apply {
+                connection.prepareStatement(STATEMENT_INSERT_EXPORT_JOB, Statement.RETURN_GENERATED_KEYS).apply {
                     this.setString(1, exportJob.id.toString())
                     this.setString(2, exportJob.status.toString())
                     this.setTimestamp(3, Timestamp.from(now), utcCalendar)
@@ -54,10 +54,10 @@ class JobDB(
         }
 
     suspend fun getJobById(id: UUID): ExportJob? =
-        connectionPool.useConnection("getJobById") { connection ->
-            val span = tracer.spanBuilder("getJobById").startSpan()
+        connectionPool.useConnection("getExportJobById") { connection ->
+            val span = tracer.spanBuilder("getExportJobById").startSpan()
             val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_JOB_BY_ID).apply {
+                connection.prepareStatement(STATEMENT_GET_EXPORT_JOB_BY_ID).apply {
                     this.setString(1, id.toString())
                 }
             val rs =
@@ -87,12 +87,12 @@ class JobDB(
         }
 
     suspend fun getJobsOlderThan(instant: Instant): List<ExportJob> =
-        connectionPool.useConnection("getAllJobIds") { connection ->
+        connectionPool.useConnection("getAllExportJobIds") { connection ->
             val prepStmt =
                 connection.prepareStatement(STATEMENT_GET_ALL_IDS).apply {
                     this.setTimestamp(1, Timestamp.from(instant))
                 }
-            val span = tracer.spanBuilder("getAllJobIds").startSpan()
+            val span = tracer.spanBuilder("getAllExportJobIds").startSpan()
             val rs =
                 try {
                     span.makeCurrent()
@@ -122,12 +122,12 @@ class JobDB(
         }
 
     suspend fun deleteJobsByIds(ids: List<UUID>): Int =
-        connectionPool.useConnection("deleteJobsByIds") { connection ->
+        connectionPool.useConnection("deleteExportJobsByIds") { connection ->
             val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_JOBS_BY_IDS).apply {
+                connection.prepareStatement(STATEMENT_DELETE_EXPORT_JOBS_BY_IDS).apply {
                     this.setArray(1, connection.createArrayOf("text", ids.map { it.toString() }.toTypedArray()))
                 }
-            val span = tracer.spanBuilder("deleteJobsByIds").startSpan()
+            val span = tracer.spanBuilder("deleteExportJobsByIds").startSpan()
             return@useConnection try {
                 span.makeCurrent()
                 runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
@@ -137,17 +137,17 @@ class JobDB(
         }
 
     suspend fun updateJobStatusById(exportJob: ExportJob): Int =
-        connectionPool.useConnection("updateJobStatusById") { connection ->
+        connectionPool.useConnection("updateExportJobStatusById") { connection ->
             val now = Instant.now()
             val prepStmt =
-                connection.prepareStatement(STATEMENT_UPDATE_JOB).apply {
+                connection.prepareStatement(STATEMENT_UPDATE_EXPORT_JOB).apply {
                     this.setTimestamp(1, Timestamp.from(now), RightDB.utcCalendar) // last_applied_on
                     this.setString(2, exportJob.status.toString())
                     this.setString(3, exportJob.errorMessage)
                     this.setString(4, exportJob.filePath)
                     this.setString(5, exportJob.id.toString())
                 }
-            val span = tracer.spanBuilder("updateJobStatusById").startSpan()
+            val span = tracer.spanBuilder("updateExportJobStatusById").startSpan()
             return@useConnection try {
                 span.makeCurrent()
                 runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
@@ -157,50 +157,50 @@ class JobDB(
         }
 
     companion object {
-        const val COLUMN_JOB_ID = "id"
-        const val COLUMN_JOB_STATUS = "status"
-        const val COLUMN_JOB_CREATED_ON = "created_on"
-        const val COLUMN_JOB_CREATED_BY = "created_by"
-        const val COLUMN_JOB_LAST_UPDATED_ON = "last_updated_on"
-        const val COLUMN_JOB_ERROR_MESSAGE = "error_message"
-        const val COLUMN_JOB_FILE_PATH = "file_path"
-        const val COLUMN_JOB_SEARCH_TERM = "search_term"
-        const val COLUMN_JOB_EXPORT_FORMAT = "export_format"
+        const val COLUMN_EXPORT_JOB_ID = "id"
+        const val COLUMN_EXPORT_JOB_STATUS = "status"
+        const val COLUMN_EXPORT_JOB_CREATED_ON = "created_on"
+        const val COLUMN_EXPORT_JOB_CREATED_BY = "created_by"
+        const val COLUMN_EXPORT_JOB_LAST_UPDATED_ON = "last_updated_on"
+        const val COLUMN_EXPORT_JOB_ERROR_MESSAGE = "error_message"
+        const val COLUMN_EXPORT_JOB_FILE_PATH = "file_path"
+        const val COLUMN_EXPORT_JOB_SEARCH_TERM = "search_term"
+        const val COLUMN_EXPORT_JOB_EXPORT_FORMAT = "export_format"
 
-        const val STATEMENT_INSERT_JOB =
-            "INSERT INTO $TABLE_NAME_JOBS" +
-                " ($COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
-                "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_FILE_PATH," +
-                "$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT)" +
+        const val STATEMENT_INSERT_EXPORT_JOB =
+            "INSERT INTO $TABLE_NAME_EXPORT_JOBS" +
+                " ($COLUMN_EXPORT_JOB_ID,$COLUMN_EXPORT_JOB_STATUS,$COLUMN_EXPORT_JOB_CREATED_ON," +
+                "$COLUMN_EXPORT_JOB_CREATED_BY,$COLUMN_EXPORT_JOB_LAST_UPDATED_ON,$COLUMN_EXPORT_JOB_FILE_PATH," +
+                "$COLUMN_EXPORT_JOB_SEARCH_TERM,$COLUMN_EXPORT_JOB_EXPORT_FORMAT)" +
                 " VALUES (?,?,?," +
                 "?,?,?," +
                 "?,?);"
 
-        const val STATEMENT_GET_JOB_BY_ID =
-            "SELECT $COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
-                "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_ERROR_MESSAGE," +
-                "$COLUMN_JOB_FILE_PATH,$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT" +
-                " FROM $TABLE_NAME_JOBS" +
-                " WHERE $COLUMN_JOB_ID=?;"
+        const val STATEMENT_GET_EXPORT_JOB_BY_ID =
+            "SELECT $COLUMN_EXPORT_JOB_ID,$COLUMN_EXPORT_JOB_STATUS,$COLUMN_EXPORT_JOB_CREATED_ON," +
+                "$COLUMN_EXPORT_JOB_CREATED_BY,$COLUMN_EXPORT_JOB_LAST_UPDATED_ON,$COLUMN_EXPORT_JOB_ERROR_MESSAGE," +
+                "$COLUMN_EXPORT_JOB_FILE_PATH,$COLUMN_EXPORT_JOB_SEARCH_TERM,$COLUMN_EXPORT_JOB_EXPORT_FORMAT" +
+                " FROM $TABLE_NAME_EXPORT_JOBS" +
+                " WHERE $COLUMN_EXPORT_JOB_ID=?;"
 
-        const val STATEMENT_UPDATE_JOB =
-            "UPDATE $TABLE_NAME_JOBS" +
-                " SET $COLUMN_JOB_LAST_UPDATED_ON=?," +
-                " $COLUMN_JOB_STATUS=?," +
-                " $COLUMN_JOB_ERROR_MESSAGE=?," +
-                " $COLUMN_JOB_FILE_PATH=?" +
-                " WHERE $COLUMN_JOB_ID=?;"
+        const val STATEMENT_UPDATE_EXPORT_JOB =
+            "UPDATE $TABLE_NAME_EXPORT_JOBS" +
+                " SET $COLUMN_EXPORT_JOB_LAST_UPDATED_ON=?," +
+                " $COLUMN_EXPORT_JOB_STATUS=?," +
+                " $COLUMN_EXPORT_JOB_ERROR_MESSAGE=?," +
+                " $COLUMN_EXPORT_JOB_FILE_PATH=?" +
+                " WHERE $COLUMN_EXPORT_JOB_ID=?;"
 
-        const val STATEMENT_DELETE_JOBS_BY_IDS =
+        const val STATEMENT_DELETE_EXPORT_JOBS_BY_IDS =
             "DELETE " +
-                "FROM $TABLE_NAME_JOBS r " +
-                "WHERE r.$COLUMN_JOB_ID = ANY(?)"
+                "FROM $TABLE_NAME_EXPORT_JOBS r " +
+                "WHERE r.$COLUMN_EXPORT_JOB_ID = ANY(?)"
 
         const val STATEMENT_GET_ALL_IDS =
-            "SELECT $COLUMN_JOB_ID,$COLUMN_JOB_STATUS,$COLUMN_JOB_CREATED_ON," +
-                "$COLUMN_JOB_CREATED_BY,$COLUMN_JOB_LAST_UPDATED_ON,$COLUMN_JOB_ERROR_MESSAGE," +
-                "$COLUMN_JOB_FILE_PATH,$COLUMN_JOB_SEARCH_TERM,$COLUMN_JOB_EXPORT_FORMAT" +
-                " FROM $TABLE_NAME_JOBS" +
-                " WHERE $COLUMN_JOB_LAST_UPDATED_ON < ?"
+            "SELECT $COLUMN_EXPORT_JOB_ID,$COLUMN_EXPORT_JOB_STATUS,$COLUMN_EXPORT_JOB_CREATED_ON," +
+                "$COLUMN_EXPORT_JOB_CREATED_BY,$COLUMN_EXPORT_JOB_LAST_UPDATED_ON,$COLUMN_EXPORT_JOB_ERROR_MESSAGE," +
+                "$COLUMN_EXPORT_JOB_FILE_PATH,$COLUMN_EXPORT_JOB_SEARCH_TERM,$COLUMN_EXPORT_JOB_EXPORT_FORMAT" +
+                " FROM $TABLE_NAME_EXPORT_JOBS" +
+                " WHERE $COLUMN_EXPORT_JOB_LAST_UPDATED_ON < ?"
     }
 }

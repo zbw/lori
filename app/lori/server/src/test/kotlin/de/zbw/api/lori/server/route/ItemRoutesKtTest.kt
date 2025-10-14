@@ -1014,6 +1014,10 @@ class ItemRoutesKtTest {
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "1234",
                 downloadDir = "path/to/downloads",
+                mailHost = "host",
+                mailPort = 25,
+                mailTo = "receipents@mail.com",
+                mailFrom = "my@mail.com",
             )
 
         val ITEM_METADATA =

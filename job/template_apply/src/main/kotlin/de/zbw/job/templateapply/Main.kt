@@ -3,6 +3,7 @@ package de.zbw.job.templateapply
 import com.google.protobuf.Timestamp
 import de.zbw.api.lori.client.LoriClient
 import de.zbw.api.lori.client.config.LoriClientConfiguration
+import de.zbw.job.templateapply.config.LoriConfigurations
 import de.zbw.lori.api.ApplyTemplatesRequest
 import de.zbw.lori.api.ApplyTemplatesResponse
 import de.zbw.lori.api.CheckForRightErrorsRequest
@@ -29,6 +30,7 @@ object Main {
     fun main(args: Array<String>) {
         val openTelemetry = OpenTelemetry.noop()
         val tracer = openTelemetry.getTracer("de.zbw.job.templateapply.Main")
+        val config = LoriConfigurations.serverConfig
 
         val span =
             tracer
@@ -40,10 +42,9 @@ object Main {
             LoriClient(
                 configuration =
                     LoriClientConfiguration(
-                        9092,
-                        "lori",
-                        // Wait for one hour max. Anything above that is at least worth investigating.
-                        3600000,
+                        config.loriGrpcPort,
+                        config.loriAddress,
+                        config.loriClientDeadline,
                     ),
             )
 

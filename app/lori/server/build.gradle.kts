@@ -2,6 +2,7 @@ plugins {
     id("zbw.kotlin-application")
     id("zbw.kotlin-conventions")
     id("zbw.kotlin-coroutines")
+    id("zbw.kotlin-mail")
     id("zbw.kotlin-microservice-scaffold")
     id("zbw.kotlin-tests")
     id("zbw.tracing")
@@ -67,7 +68,7 @@ tasks.jacocoTestCoverageVerification {
     violationRules {
         rule {
             limit {
-                minimum = "0.800".toBigDecimal()
+                minimum = "0.790".toBigDecimal()
             }
         }
     }

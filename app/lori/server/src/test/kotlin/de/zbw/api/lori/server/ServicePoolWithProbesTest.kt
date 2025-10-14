@@ -140,6 +140,10 @@ class ServicePoolWithProbesTest {
                 duoUrlSSO = "https://duo/sso",
                 commitHash = "foobar",
                 downloadDir = "path/to/downloads",
+                mailHost = "host",
+                mailPort = 25,
+                mailTo = "receipents@mail.com",
+                mailFrom = "my@mail.com",
             )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")
