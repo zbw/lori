@@ -91,6 +91,11 @@ export default defineComponent({
       copyInstance.value = true;
     };
 
+    const copiedSuccessfulTo = ref("");
+    const copySuccessful = (handle: String) => {
+      copiedSuccessfulTo.value = handle;
+    };
+
     const closeCopyView = () => {
       rightToCopy.value = Object.assign({} as RightRest);
       copyInstance.value = false;
@@ -131,12 +136,14 @@ export default defineComponent({
     return {
       attrs,
       copyInstance,
+      copiedSuccessfulTo,
       exceptionValue,
       exceptionInstance,
       rightToCopy,
       addNewExceptionToOriginal,
       closeCopyView,
       closeExceptionView,
+      copySuccessful,
       displayCopyView,
       displayExceptionView,
       onAddSuccessful,
@@ -207,6 +214,7 @@ export default defineComponent({
           :isTabEntry=isTabEntry
           :licenceUrl=licenceUrl
           :exceptionTemplate=exceptionValue
+          :copySuccessfulTo="copiedSuccessfulTo"
           v-on:createException="displayExceptionView"
           v-on:addSuccessful="onAddSuccessful"
           v-on:addTemplateSuccessful="onAddTemplateSuccessful"
@@ -231,6 +239,7 @@ export default defineComponent({
           :index="0"
           :isCopy="true"
           v-on:editRightClosed="closeCopyView"
+          v-on:copySuccessful="copySuccessful"
       ></RightsEditDialog>
     </div>
 

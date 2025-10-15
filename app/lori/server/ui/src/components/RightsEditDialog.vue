@@ -108,6 +108,10 @@ export default defineComponent({
       type: Object as PropType<RightRest>,
       required: false,
     },
+    copySuccessfulTo: {
+      type: String,
+      default: false,
+    }
   },
 
   // Components
@@ -125,6 +129,7 @@ export default defineComponent({
    */
   emits: {
     addSuccessful: (right: RightRest) => true,
+    copySuccessful: (handle: string) => true,
     addTemplateSuccessful: (right: RightRest) => true,
     copyRight: (right: RightRest) => true,
     createException: () => true,
@@ -490,6 +495,9 @@ export default defineComponent({
             .then(() => {
               tmpRight.value.rightId = r.rightId;
               emit("addSuccessful", tmpRight.value);
+              if(props.isCopy){
+                emit("copySuccessful", formState.copyToHandleId);
+              }
               close();
             })
             .catch((e) => {
@@ -857,6 +865,12 @@ export default defineComponent({
         errors.push("Es wird eine gültige Handle-Id benötigt.");
       }
       return errors;
+    });
+
+    watch(() => props.copySuccessfulTo, () => {
+      successMsg.value =
+          "Rechteinformation wurde erfolgreich gekopiert zu Handle '" + props.copySuccessfulTo + "'.";
+      successMsgIsActive.value = true;
     });
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
