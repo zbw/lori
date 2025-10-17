@@ -824,6 +824,69 @@ class LoriServerBackendTest : DatabaseTest() {
         )
     }
 
+    @Test
+    fun testDeleteAndUpdateManualRightsByHandle() =
+        runBlocking {
+            // given
+            val deletedMetadata = TEST_METADATA.copy(handle = "11159/878", deleted = true)
+
+            val rightAssignments =
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2020, 1, 1),
+                        endDate = LocalDate.of(2020, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2021, 1, 1),
+                        endDate = LocalDate.of(2021, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2022, 1, 1),
+                        endDate = LocalDate.of(2022, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                )
+
+            backend.insertMetadataElement(deletedMetadata)
+            rightAssignments.forEach { pair ->
+                backend.insertRightForHandles(
+                    right = pair.first,
+                    handles = pair.second,
+                    createdBy = "testUser",
+                )
+            }
+
+            // when
+
+            val deletionDate = LocalDate.of(2020, 9, 1)
+
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = deletedMetadata.handle,
+                )
+            assertThat(
+                updates,
+                `is`(3),
+            )
+
+            // then
+            val item = backend.getItemByHandle(deletedMetadata.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(1),
+            )
+
+            assertThat(
+                item.rights.first().endDate!!,
+                `is`(deletionDate),
+            )
+            assertThat(
+                item.rights.first().startDate,
+                `is`(LocalDate.of(2020, 1, 1)),
+            )
+        }
+
     companion object {
         const val DATA_FOR_CHECK_RIGHT_CONFLICTS = "DATA_FOR_CHECK_RIGHT_CONFLICTS"
         const val DATA_FOR_FIND_RIGHT_CONFLICTS = "DATA_FOR_FIND_RIGHT_CONFLICTS"

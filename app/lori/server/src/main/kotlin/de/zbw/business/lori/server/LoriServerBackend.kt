@@ -196,7 +196,54 @@ class LoriServerBackend(
 
     suspend fun updateMetadataAsDeleted(instant: Instant): Int {
         val deletedHandles = dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(instant)
+        deletedHandles.forEach {
+            deleteAndUpdateManualRightsByHandle(
+                instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate(),
+                it,
+            )
+        }
         return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles, status = true)
+    }
+
+    suspend fun deleteAndUpdateManualRightsByHandle(
+        deletionDate: LocalDate,
+        handle: String,
+    ): Int {
+        val rightIds = dbConnector.itemDB.getRightIdsByHandle(handle)
+        if (rightIds.isEmpty()) {
+            return 0
+        }
+        var deletionsAndUpdates = 0
+        val manualRights =
+            dbConnector.rightDB
+                .getRightsByIds(
+                    rightIds,
+                ).filter { !it.isTemplate }
+
+        val rightsToDelete =
+            manualRights
+                .filter { it.startDate > deletionDate }
+
+        rightsToDelete.forEach {
+            deletionsAndUpdates += deleteRight(it.rightId!!)
+        }
+        val rightToSetNewEndDate =
+            manualRights
+                .filter {
+                    (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
+                }
+        if (rightToSetNewEndDate.isNotEmpty()) {
+            rightToSetNewEndDate
+                .first()
+                .let {
+                    deletionsAndUpdates +=
+                        dbConnector.rightDB.upsertRight(
+                            it.copy(endDate = deletionDate),
+                        )
+                }
+        }
+
+        return deletionsAndUpdates
     }
 
     suspend fun getMetadataList(
