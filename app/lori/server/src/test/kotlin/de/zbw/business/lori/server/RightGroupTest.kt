@@ -50,25 +50,7 @@ class RightGroupTest : DatabaseTest() {
             mockkStatic(Instant::class)
             every { Instant.now() } returns NOW.toInstant()
             // Given group
-            val group1 =
-                Group(
-                    groupId = 55,
-                    description = null,
-                    entries =
-                        listOf(
-                            GroupEntry(
-                                organisationName = "orga1",
-                                ipAddresses = "192.168.1.*",
-                            ),
-                        ),
-                    title = "some title",
-                    createdOn = NOW.minusMonths(1L),
-                    lastUpdatedOn = NOW,
-                    createdBy = "user1",
-                    lastUpdatedBy = "user2",
-                    version = 0,
-                    oldVersions = emptyList(),
-                )
+            val group1 = TEST_GROUP
 
             // Insert group
             val receivedGroupId1 = backend.insertGroup(group1)
@@ -101,6 +83,12 @@ class RightGroupTest : DatabaseTest() {
                 backend.dbConnector.groupDB.getGroupsByRightId(rightId1),
                 `is`(
                     listOf(expectedGroup1),
+                ),
+            )
+            assertThat(
+                backend.dbConnector.groupDB.getGroupsByRightIds(listOf(rightId1)),
+                `is`(
+                    mapOf(rightId1 to listOf(expectedGroup1)),
                 ),
             )
             // Update group
@@ -255,7 +243,92 @@ class RightGroupTest : DatabaseTest() {
             )
         }
 
+    @Test
+    fun testAddGroupInformationToRights() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+            val group1 = TEST_GROUP.copy(title = "foo")
+            val group2 = TEST_GROUP.copy(title = "bar")
+            val receivedGroupId1 = backend.insertGroup(group1)
+            val receivedGroupId2 = backend.insertGroup(group2)
+
+            val expectedGroup1 =
+                group1.copy(
+                    groupId = receivedGroupId1,
+                    lastUpdatedOn = NOW,
+                    createdOn = NOW,
+                    lastUpdatedBy = "user1",
+                )
+            val expectedGroup2 =
+                group2.copy(
+                    groupId = receivedGroupId2,
+                    lastUpdatedOn = NOW,
+                    createdOn = NOW,
+                    lastUpdatedBy = "user1",
+                )
+            // Insert Right using the group
+            val initialRight1: ItemRight =
+                TEST_RIGHT.copy(
+                    templateName = "one",
+                    groups =
+                        listOf(
+                            expectedGroup1,
+                            expectedGroup2,
+                        ),
+                    groupIds = listOf(receivedGroupId1, receivedGroupId2),
+                )
+
+            val initialRight2: ItemRight =
+                TEST_RIGHT.copy(
+                    templateName = "two",
+                    groups =
+                        listOf(
+                            expectedGroup1,
+                            expectedGroup2,
+                        ),
+                    groupIds = listOf(receivedGroupId1, receivedGroupId2),
+                )
+
+            val rightId1 = backend.insertRight(initialRight1)
+            val rightId2 = backend.insertRight(initialRight2)
+
+            backend.dbConnector.rightDB
+                .getRightsByIds(listOf(rightId1, rightId2))
+                .forEach {
+                    assertThat(
+                        it.groups,
+                        `is`(
+                            listOf(
+                                expectedGroup1,
+                                expectedGroup2,
+                            ),
+                        ),
+                    )
+                }
+        }
+
     companion object {
         val TEST_RIGHT = RestConverterTest.TEST_RIGHT
+
+        val TEST_GROUP =
+            Group(
+                groupId = 55,
+                description = null,
+                entries =
+                    listOf(
+                        GroupEntry(
+                            organisationName = "orga1",
+                            ipAddresses = "192.168.1.*",
+                        ),
+                    ),
+                title = "some title",
+                createdOn = NOW.minusMonths(1L),
+                lastUpdatedOn = NOW,
+                createdBy = "user1",
+                lastUpdatedBy = "user2",
+                version = 0,
+                oldVersions = emptyList(),
+            )
     }
 }
