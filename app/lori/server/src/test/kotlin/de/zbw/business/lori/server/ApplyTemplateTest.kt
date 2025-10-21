@@ -515,7 +515,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     createdBy = "user1",
                 )
             assertThat(
-                received!!.appliedMetadataHandles,
+                received.appliedMetadataHandles,
                 `is`(listOf(item1ZDB3.handle)),
             )
 

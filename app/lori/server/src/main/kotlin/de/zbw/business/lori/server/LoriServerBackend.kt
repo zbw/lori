@@ -242,6 +242,43 @@ class LoriServerBackend(
                         )
                 }
         }
+        val currentTemplate =
+            dbConnector.rightDB
+                .getRightsByIds(
+                    rightIds,
+                ).filter { it.isTemplate }
+                .filter {
+                    (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
+                }
+
+        if (currentTemplate.isNotEmpty()) {
+            // Remove old template
+            deletionsAndUpdates +=
+                dbConnector
+                    .itemDB
+                    .deleteItem(
+                        rightId = currentTemplate.first().rightId!!,
+                        handle = handle,
+                    )
+            // Create a new manual entry
+            val newManualRight: ItemRight =
+                currentTemplate
+                    .first()
+                    .copy(
+                        isTemplate = false,
+                        templateName = null,
+                        templateDescription = null,
+                        predecessorId = null,
+                        successorId = null,
+                        exceptionOfId = null,
+                        hasExceptionId = null,
+                    )
+            val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
+            dbConnector.itemDB.insertItem(
+                itemId = ItemId(handle = handle, rightId = newManualRightId),
+                createdBy = "lori",
+            )
+        }
 
         return deletionsAndUpdates
     }

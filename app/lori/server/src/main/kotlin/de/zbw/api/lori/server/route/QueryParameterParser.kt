@@ -282,8 +282,10 @@ object QueryParameterParser {
 
     fun parseDeletionsFilter(s: String?): DeletionsFilter? =
         s?.let { input ->
-            if (input.lowercase().toBoolean()) {
-                DeletionsFilter()
+            if (input.lowercase() == "true") {
+                DeletionsFilter(on = true)
+            } else if (input.lowercase() == "false") {
+                DeletionsFilter(on = false)
             } else {
                 null
             }

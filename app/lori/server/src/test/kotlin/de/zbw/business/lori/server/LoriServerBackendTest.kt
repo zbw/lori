@@ -23,6 +23,7 @@ import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert
+import org.testng.Assert.assertFalse
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
@@ -823,6 +824,66 @@ class LoriServerBackendTest : DatabaseTest() {
             `is`(expected),
         )
     }
+
+    @Test
+    fun testTransformTemplateToManualRightForDeletedItem() =
+        runBlocking {
+            // given
+            val deletedMetadata = TEST_METADATA.copy(handle = "11159/902", deleted = true)
+
+            val template =
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2020, 1, 1),
+                    endDate = LocalDate.of(2020, 12, 31),
+                    isTemplate = true,
+                    templateName = "testTransofrming",
+                )
+            val rightAssignments =
+                listOf(template to listOf(deletedMetadata.handle))
+
+            backend.insertMetadataElement(deletedMetadata)
+            rightAssignments.forEach { pair ->
+                backend.insertRightForHandles(
+                    right = pair.first,
+                    handles = pair.second,
+                    createdBy = "testUser",
+                )
+            }
+
+            // when
+            val deletionDate = LocalDate.of(2020, 9, 1)
+
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = deletedMetadata.handle,
+                )
+            assertThat(
+                updates,
+                `is`(1),
+            )
+
+            // then
+            val item = backend.getItemByHandle(deletedMetadata.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(1),
+            )
+
+            assertThat(
+                item.rights.first().endDate!!,
+                `is`(deletionDate),
+            )
+            assertThat(
+                item.rights.first().startDate,
+                `is`(LocalDate.of(2020, 1, 1)),
+            )
+
+            assertFalse(
+                item.rights.first().isTemplate,
+            )
+        }
 
     @Test
     fun testDeleteAndUpdateManualRightsByHandle() =

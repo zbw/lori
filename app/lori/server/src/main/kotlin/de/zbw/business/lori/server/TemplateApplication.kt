@@ -182,12 +182,17 @@ class TemplateApplication(
                                 ).toInstant(),
                     )
                 }
+            val ignoreDeletedItemsFilter = DeletionsFilter(on = false)
+
             val facetsResult =
                 backend.searchQuery(
                     searchTerm = bookmark.searchTerm,
                     limit = null,
                     offset = null,
-                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + endDateTemplateAfterCreatedOnFilter).filterNotNull(),
+                    metadataSearchFilter =
+                        (
+                            bookmark.getAllMetadataFilter() + endDateTemplateAfterCreatedOnFilter + ignoreDeletedItemsFilter
+                        ).filterNotNull(),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
@@ -214,7 +219,11 @@ class TemplateApplication(
                                 right = right,
                                 createdBy = createdBy,
                                 testId = testId,
-                                createdOnFilter = endDateTemplateAfterCreatedOnFilter,
+                                additionalMetadataSearchFilters =
+                                    listOfNotNull(
+                                        endDateTemplateAfterCreatedOnFilter,
+                                        ignoreDeletedItemsFilter,
+                                    ),
                             )
                         }
                     }
@@ -247,7 +256,7 @@ class TemplateApplication(
         searchResultsExceptionIds: Set<String>,
         createdBy: String,
         testId: String?,
-        createdOnFilter: CreatedOnFilter?,
+        additionalMetadataSearchFilters: List<MetadataSearchFilter>,
     ): TemplateApplicationResult {
         val searchResults: Set<Item> =
             backend
@@ -255,7 +264,8 @@ class TemplateApplication(
                     searchTerm = bookmark.searchTerm,
                     limit = LIMIT,
                     offset = offset,
-                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + createdOnFilter).filterNotNull(),
+                    metadataSearchFilter =
+                        (bookmark.getAllMetadataFilter() + additionalMetadataSearchFilters).filterNotNull(),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),

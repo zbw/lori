@@ -186,6 +186,7 @@ abstract class SearchFilter(
                         QueryParameterParser.parseDeletionsFilter(
                             when (searchValue) {
                                 "on" -> "true"
+                                "off" -> "false"
                                 else -> null
                             },
                         )
@@ -760,6 +761,34 @@ class CreatedOnFilter(
     override fun getFilterType(): FilterType = FilterType.CREATED_ON
 }
 
+class DeletionWithLastUpdatedOnFilter(
+    val lastUpdatedOn: Instant,
+    val comparisonOp: ComparisonOperator,
+) : MetadataSearchFilter(
+        dbColumnName = MetadataDB.COLUMN_METADATA_LAST_UPDATED_ON,
+    ) {
+    override fun toWhereClause(): String =
+        "(${ALIAS_ITEM_METADATA}.${MetadataDB.COLUMN_METADATA_DELETED} = false OR" +
+            " ${ALIAS_ITEM_METADATA}.$dbColumnName ${comparisonOp.toSQL()} ?)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+        connection: Connection,
+    ): Int {
+        var localCounter = counter
+        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
+        preparedStatement.setTimestamp(localCounter++, Timestamp.from(lastUpdatedOn), utcCalendar)
+        return localCounter
+    }
+
+    override fun toString(): String = ""
+
+    override fun toSQLString(): String = ""
+
+    override fun getFilterType(): FilterType = FilterType.CREATED_ON
+}
+
 /**
  * Represents the zdb:"zdbId1,zdbId2,...,zdbId3" key. Returns all entries matching at least one.
  */
@@ -875,20 +904,31 @@ class HandlesFilter(
     override fun getFilterType(): FilterType = FilterType.HANDLE
 }
 
-class DeletionsFilter :
-    MetadataSearchFilter(
+class DeletionsFilter(
+    val on: Boolean = true,
+) : MetadataSearchFilter(
         dbColumnName = MetadataDB.COLUMN_METADATA_DELETED,
     ) {
-    override fun toWhereClause(): String = "${ALIAS_ITEM_METADATA}.$dbColumnName = true"
+    override fun toWhereClause(): String =
+        if (on) {
+            "${ALIAS_ITEM_METADATA}.$dbColumnName = true"
+        } else {
+            "${ALIAS_ITEM_METADATA}.$dbColumnName = false"
+        }
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int = counter
 
-    override fun toSQLString(): String = "true"
+    override fun toSQLString(): String = "$on"
 
-    override fun toString(): String = "${getFilterType().keyAlias}:on"
+    override fun toString(): String =
+        if (on) {
+            "${getFilterType().keyAlias}:on"
+        } else {
+            "${getFilterType().keyAlias}:off"
+        }
 
     override fun getFilterType(): FilterType = FilterType.DELETIONS
 
