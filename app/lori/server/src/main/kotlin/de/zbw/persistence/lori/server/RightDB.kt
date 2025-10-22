@@ -3,6 +3,7 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Group
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -276,13 +277,7 @@ class RightDB(
                     }
                 }.takeWhile { true }.toList()
             }
-        return rights.map { r ->
-            val groups = groupDB.getGroupsByRightId(r.rightId!!)
-            r.copy(
-                groups = groups,
-                groupIds = groups.map { it.groupId },
-            )
-        }
+        return addGroupInformationToRights(rights)
     }
 
     suspend fun rightContainsId(rightId: String): Boolean =
@@ -419,13 +414,7 @@ class RightDB(
                     }
                 }.takeWhile { true }.toList()
             }
-        return rights.map { r ->
-            val groups = groupDB.getGroupsByRightId(r.rightId!!)
-            r.copy(
-                groups = groups,
-                groupIds = groups.map { it.groupId },
-            )
-        }
+        return addGroupInformationToRights(rights)
     }
 
     /**
@@ -498,13 +487,7 @@ class RightDB(
                     }
                 }.takeWhile { true }.toList()
             }
-        return rights.map { r ->
-            val groups = groupDB.getGroupsByRightId(r.rightId!!)
-            r.copy(
-                groups = groups,
-                groupIds = groups.map { it.groupId },
-            )
-        }
+        return addGroupInformationToRights(rights)
     }
 
     /**
@@ -674,6 +657,19 @@ class RightDB(
                 span.end()
             }
         }
+
+    suspend fun addGroupInformationToRights(rights: List<ItemRight>): List<ItemRight> {
+        val rightToGroups: Map<String, List<Group>> =
+            groupDB.getGroupsByRightIds(
+                rights.map { it.rightId!! },
+            )
+        return rights.map { r ->
+            r.copy(
+                groups = rightToGroups[r.rightId] ?: emptyList(),
+                groupIds = rightToGroups[r.rightId]?.map { it.groupId } ?: emptyList(),
+            )
+        }
+    }
 
     companion object {
         const val COLUMN_IS_TEMPLATE = "is_template"

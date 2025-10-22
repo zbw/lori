@@ -304,6 +304,55 @@ class GroupDB(
         return getLatestVersionGroupsByIds(groupIds)
     }
 
+    suspend fun getGroupsByRightIds(rightIds: List<String>): Map<String, List<Group>> {
+        val rightIdToGroupIds: Map<String, List<Int>> =
+            connectionPool.useConnection("getGroupsByRightIds") { connection ->
+                val prepStmt =
+                    connection.prepareStatement(STATEMENT_GET_GROUPS_BY_RIGHT_IDS).apply {
+                        this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
+                    }
+                val span = tracer.spanBuilder("getGroupsByRightIds").startSpan()
+                val rs =
+                    try {
+                        span.makeCurrent()
+                        runInTransaction(connection) { prepStmt.executeQuery() }
+                    } finally {
+                        span.end()
+                    }
+
+                val rightGroupPair: List<Pair<String, Int>> =
+                    generateSequence {
+                        if (rs.next()) {
+                            val groupId = rs.getInt(1)
+                            val rightId = rs.getString(2)
+                            rightId to groupId
+                        } else {
+                            null
+                        }
+                    }.takeWhile { true }.toList()
+                rightGroupPair
+                    .fold(initial = mutableMapOf<String, List<Int>>()) { acc, p ->
+                        acc.merge(p.first, listOf(p.second)) { oldValue, newValue ->
+                            oldValue + newValue
+                        }
+                        acc
+                    }
+            }
+
+        val allGroupIds =
+            rightIdToGroupIds.values.fold(mutableSetOf<Int>()) { acc, l ->
+                acc.addAll(l)
+                acc
+            }
+        val allGroups =
+            getLatestVersionGroupsByIds(allGroupIds.toList()).map {
+                it.groupId to it
+            }
+        return rightIdToGroupIds.entries.associate { entry ->
+            entry.key to entry.value.mapNotNull { allGroups.find { pair -> pair.first == it }?.second }
+        }
+    }
+
     suspend fun insertGroupRightPair(
         rightId: String,
         groupId: Int,
@@ -513,6 +562,11 @@ class GroupDB(
             "SELECT $COLUMN_GROUP_ID" +
                 " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
                 " WHERE $COLUMN_RIGHT_ID = ?;"
+
+        const val STATEMENT_GET_GROUPS_BY_RIGHT_IDS =
+            "SELECT $COLUMN_GROUP_ID,$COLUMN_RIGHT_ID" +
+                " FROM $TABLE_NAME_GROUP_RIGHT_MAP" +
+                " WHERE $COLUMN_RIGHT_ID = ANY(?);"
 
         const val STATEMENT_GET_GROUPS_BY_IDS =
             "SELECT $COLUMN_GROUP_ID,$COLUMN_DESCRIPTION,$COLUMN_IP_ADDRESSES,$COLUMN_TITLE," +

@@ -247,7 +247,9 @@ deployToProd:
 
 deployImportJobToQs:
   stage: deploy
-  needs: ["pushLoriImportJobImage"]
+  needs:
+    - job: "pushLoriImportJobImage"
+      optional: true
   environment: qs
   rules:
     - changes:
@@ -315,7 +317,9 @@ deployImportJobToProd:
 
 deployTemplateApplyJobToQs:
   stage: deploy
-  needs: ["pushTemplateApplyJobImage"]
+  needs:
+    - job: "pushTemplateApplyJobImage"
+      optional: true
   environment: qs
   rules:
     - changes:

@@ -19,7 +19,7 @@ import {
   PropType,
   reactive,
   Ref,
-  ref,
+  ref, useAttrs,
   watch,
 } from "vue";
 
@@ -92,6 +92,10 @@ export default defineComponent({
       type: Object as PropType<RightRest>,
       required: false,
     },
+    isCopy: {
+      type: Boolean,
+      default: false,
+    },
     isTabEntry: {
       type: Boolean,
       default: false,
@@ -100,18 +104,15 @@ export default defineComponent({
       type: String,
       required: false,
     },
+    exceptionTemplate: {
+      type: Object as PropType<RightRest>,
+      required: false,
+    },
+    copySuccessfulTo: {
+      type: String,
+      default: false,
+    }
   },
-  // Emits
-  emits: [
-    "addSuccessful",
-    "addTemplateSuccessful",
-    "deleteTemplateSuccessful",
-    "hasFormChanged",
-    "updateTemplateSuccessful",
-    "deleteSuccessful",
-    "editRightClosed",
-    "updateSuccessful",
-  ],
 
   // Components
   components: {
@@ -123,7 +124,25 @@ export default defineComponent({
     RightsDeleteDialog,
   },
 
-  setup(props, { emit }) {
+  /**
+   * Emits
+   */
+  emits: {
+    addSuccessful: (right: RightRest) => true,
+    copySuccessful: (handle: string) => true,
+    addTemplateSuccessful: (right: RightRest) => true,
+    copyRight: (right: RightRest) => true,
+    createException: () => true,
+    deleteSuccessful: (index: number, rightId: string | undefined) => true,
+    deleteTemplateSuccessful: (templateName: string) => true,
+    editRightClosed: () => true,
+    hasFormChanged: (existingRightHasChanges: boolean, rightId: string) => true,
+    updateSuccessful: (right: RightRest, index: number) => true,
+    updateTemplateSuccessful: (templateName: string) => true,
+  },
+
+  setup(props, {emit}) {
+
     /**
      * Stores:
      */
@@ -145,6 +164,7 @@ export default defineComponent({
       accessState: "",
       basisStorage: "",
       basisAccessState: "",
+      copyToHandleId: "",
       startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
       templateName: "",
@@ -263,12 +283,16 @@ export default defineComponent({
       return !(siblings.accessState == 'Restricted' && value.length == 0);
     };
 
-    const bookmarksCheck = (value: Array<RightRest>, siblings: FormState) => {
+    const bookmarksCheck = (value: Array<RightRest>) => {
       return !(value.length == 0 && isTemplate.value);
     };
 
     const templateNameCheck = (value: string, siblings: FormState) => {
       return !((value == undefined || value == "") && isTemplate.value);
+    };
+
+    const copyToHandleIdCheck = (value: string) => {
+      return !(props.isCopy && value.length == 0)
     };
 
     const rules = {
@@ -278,6 +302,7 @@ export default defineComponent({
       templateName: { templateNameCheck },
       selectedGroups: { groupCheck },
       selectedBookmarks: { bookmarksCheck },
+      copyToHandleId: { copyToHandleIdCheck },
     };
 
     const v$ = useVuelidate(rules, formState);
@@ -381,6 +406,7 @@ export default defineComponent({
       formState.templateName = "";
       formState.templateDescription = "";
       v$.value.$reset();
+      resetAllValues();
       emitClosedDialog();
     };
 
@@ -437,15 +463,31 @@ export default defineComponent({
     /**
      * Create/Update Right/Template:
      */
+    const testHandleValidity = (handle: string, callback: () => void) => {
+      api
+          .getRightsByHandle(handle)
+          .then(() => {
+            callback();
+          })
+          .catch((e) => {
+            console.log(e);
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsgIsActive.value = true;
+              errorMsg.value = "Der Handle '" +  handle + "' existiert nicht";
+            });
+          })
+    };
+
     const createRight = () => {
       tmpRight.value.rightId = "unset";
       api
         .addRight(tmpRight.value)
         .then((r) => {
+          const handle = props.isCopy ? formState.copyToHandleId : props.handle;
           api
             .addItemEntry(
               {
-                handle: props.handle,
+                handle: handle,
                 rightId: r.rightId,
               } as ItemEntry,
               true,
@@ -453,6 +495,9 @@ export default defineComponent({
             .then(() => {
               tmpRight.value.rightId = r.rightId;
               emit("addSuccessful", tmpRight.value);
+              if(props.isCopy){
+                emit("copySuccessful", formState.copyToHandleId);
+              }
               close();
             })
             .catch((e) => {
@@ -624,6 +669,19 @@ export default defineComponent({
       });
     };
 
+    /**
+     * Watch exceptions controlled by the wrapper:
+     */
+    watch(() => props.exceptionTemplate, (currentValue) => {
+      console.log("watcher exceptionTemplate");
+      if(currentValue == undefined){
+        formState.exceptionTemplates = [];
+      } else {
+        formState.exceptionTemplates =
+            formState.exceptionTemplates.concat(currentValue);
+      }
+      renderSuccessorKey.value += 1;
+    });
 
     /**
      * Refresh bookmarks.
@@ -781,12 +839,39 @@ export default defineComponent({
         createTemplate();
       } else if (isTemplate.value) {
         updateTemplate();
+      } else if (props.isCopy) {
+        testHandleValidity(formState.copyToHandleId, () => {
+          createRight();
+        })
       } else if (props.isNewRight) {
         createRight();
       } else {
         updateRight();
       }
     };
+
+    /**
+     * Copy
+     */
+    const copy: () => void = () => {
+      emit("copyRight", tmpRight.value);
+    }
+    const errorCopyToHandleId = computed(() => {
+      const errors: Array<string> = [];
+      if (
+          v$.value.copyToHandleId.$invalid &&
+          v$.value.copyToHandleId.$dirty
+      ) {
+        errors.push("Es wird eine gültige Handle-Id benötigt.");
+      }
+      return errors;
+    });
+
+    watch(() => props.copySuccessfulTo, () => {
+      successMsg.value =
+          "Rechteinformation wurde erfolgreich gekopiert zu Handle '" + props.copySuccessfulTo + "'.";
+      successMsgIsActive.value = true;
+    });
 
     const accessStateToString = (access: AccessStateRest | undefined) => {
       if (access == undefined) {
@@ -957,7 +1042,9 @@ export default defineComponent({
     );
 
     const mode = computed(() => {
-      if (isNew.value) {
+      if(props.isCopy){
+        return "kopieren";
+      } else if (isNew.value) {
         return "erstellen";
       } else if (userStore.isLoggedIn) {
         return "bearbeiten";
@@ -1164,16 +1251,12 @@ export default defineComponent({
     };
 
     // Template Exceptions
-    const dialogCreateException = ref(false);
     const dialogConnectException = ref(false);
     const openDialogException = ref(0);
     const renderTemplateKey = ref(0);
 
     const openCreateExceptionDialog = () => {
-      dialogCreateException.value = true;
-    };
-    const closeCreateExceptionDialog = () => {
-      dialogCreateException.value = false;
+      emit("createException");
     };
 
     const lastSavedExceptionTemplateItems: Ref<Array<RightRest>> = ref([]);
@@ -1499,6 +1582,25 @@ export default defineComponent({
         };
       }
     });
+    const attrs = useAttrs();
+    const attrWithROProps = computed(() => ({ ...attrs, ...readOnlyProps.value }));
+    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
+
+    const mergeSlotWithReadonly = (slotProps: any) => {
+      return {
+        ...attrs,
+        ...slotProps,
+        ...readOnlyProps.value
+      }
+    }
+
+    const mergeSlotWithLogin = (slotProps: any) => {
+      return {
+        ...attrs,
+        ...slotProps,
+        ...readOnlyProps.value
+      }
+    }
 
     const computedLicenceUrl = computed(() => {
       if(props.licenceUrl == undefined || props.licenceUrl == ''){
@@ -1516,6 +1618,8 @@ export default defineComponent({
       v$,
       // variables
       accessStatusSelect,
+      attrWithLogin,
+      attrWithROProps,
       basisAccessState,
       basisStorage,
       bookmarkDialogOn,
@@ -1528,7 +1632,6 @@ export default defineComponent({
       dialogConnectPredecessorCounter,
       dialogConnectSuccessor,
       dialogConnectSuccessorCounter,
-      dialogCreateException,
       dialogDeleteRight,
       dialogDeleteTemplate,
       editBookmark,
@@ -1550,13 +1653,14 @@ export default defineComponent({
       errorIPGroup,
       errorMsgIsActive,
       errorMsg,
+      errorCopyToHandleId,
+      exceptionTemplateHeaders,
       firstAppliedForHandleFormatted,
       groupItems,
       hasMissingBookmark,
       isStartDateMenuOpen,
       isEndDateMenuOpen,
       lastSavedRight,
-      loginStatusProps,
       menuStartDate,
       menuEndDate,
       metadataCount,
@@ -1569,8 +1673,6 @@ export default defineComponent({
       renderTemplateKey,
       showDialogExceptionWarning,
       startDateFormatted,
-      exceptionTemplateHeaders,
-      readOnlyProps,
       unsavedChangesDialog,
       unsavedChangesDialogPred,
       unsavedChangesDialogSucc,
@@ -1586,7 +1688,6 @@ export default defineComponent({
       cancelConfirm,
       checkForChangesAndClose,
       closeBookmarkEditDialog,
-      closeCreateExceptionDialog,
       closeDialogExceptionConnect,
       closeDialogPredecessor,
       closeDialogSuccessor,
@@ -1594,8 +1695,8 @@ export default defineComponent({
       connectException,
       connectPredecessorRelationship,
       connectSuccessorRelationship,
+      copy,
       createRight,
-      executeBookmarkNewTab,
       initiateDeleteDialog,
       deleteBookmarkEntry,
       deleteDialogClosed,
@@ -1603,7 +1704,10 @@ export default defineComponent({
       deleteSuccessful,
       deletePredecessorEntry,
       deleteSuccessorEntry,
+      executeBookmarkNewTab,
       labelModelToString,
+      mergeSlotWithLogin,
+      mergeSlotWithReadonly,
       openBookmarkEditDialog,
       openCreateExceptionDialog,
       openDialogExceptionConnect,
@@ -1623,10 +1727,12 @@ export default defineComponent({
 </script>
 
 <style >
+/* Do not remove! This is needed for scrolling inside expansion panels. */
 .v-expansion-panel-text__wrapper {
-  max-height: calc(700px - 64px - (4 * 48px));
-  overflow: scroll;
+    max-height: calc(700px - 64px - (4 * 48px));
+    overflow: scroll;
 }
+
 .rotate-180 {
   transform: rotate(180deg);
   transition: transform 0.2s ease;
@@ -1733,18 +1839,26 @@ export default defineComponent({
           {{ cardTitle }}
         </v-col>
         <v-col cols="1" offset="4">
-          <v-tooltip location="bottom" text="Ausnahme Template">
+          <v-tooltip
+              v-if="isTemplateAndException"
+              location="bottom"
+              text="Ausnahme Template"
+          >
             <template v-slot:activator="{ props }">
-              <v-icon v-if="isTemplateAndException" v-bind="props">
+              <v-icon v-bind="props">
                 mdi-alpha-a-box-outline
               </v-icon>
             </template>
           </v-tooltip>
         </v-col>
         <v-col cols="1">
-          <v-tooltip location="bottom" text="Template Entwurf">
+          <v-tooltip
+              v-if="isTemplateDraft"
+              location="bottom"
+              text="Template Entwurf"
+          >
             <template v-slot:activator="{ props }">
-              <v-icon v-if="isTemplateDraft" v-bind="props">
+              <v-icon v-bind="props">
                 mdi-alpha-e-box-outline
               </v-icon>
             </template>
@@ -1794,7 +1908,15 @@ export default defineComponent({
         </template>
       </v-tooltip>
       <v-btn
-          v-if="isTabEntry"
+          v-if="isTabEntry && !isTemplate"
+          :readonly="updateInProgress"
+          color="blue darken-1"
+          :disabled="!userStore.isLoggedIn"
+          @click="copy"
+      >Kopieren
+      </v-btn>
+      <v-btn
+          v-if="isTabEntry || isCopy"
           :readonly="updateInProgress"
           color="blue darken-1"
           @click="save"
@@ -1883,7 +2005,18 @@ export default defineComponent({
         </v-btn>
       </v-col>
     </v-row>
-    <v-card-text style="height:1100px;">
+    <v-card-text>
+      <v-row v-if="isCopy">
+        <v-col cols="1">Item-Handle</v-col>
+        <v-col cols="4">
+          <v-text-field
+              v-model="formState.copyToHandleId"
+              variant="outlined"
+              :error-messages="errorCopyToHandleId"
+              hint="Kopierziel"
+          ></v-text-field>
+        </v-col>
+      </v-row>
     <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
       <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>
@@ -1899,7 +2032,7 @@ export default defineComponent({
                     :error-messages="errorTemplateName"
                     hint="Name des Templates"
                     variant="outlined"
-                    v-bind="{...$attrs, ...loginStatusProps}"
+                    v-bind="attrWithLogin"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -1910,7 +2043,7 @@ export default defineComponent({
                     v-model="formState.templateDescription"
                     hint="Beschreibung des Templates"
                     variant="outlined"
-                    v-bind="{...$attrs, ...loginStatusProps}"
+                    v-bind="attrWithLogin"
                     rows="2"
                   ></v-textarea>
                 </v-col>
@@ -2151,22 +2284,6 @@ export default defineComponent({
                         v-on:exceptionConnectClosed="closeDialogExceptionConnect"
                     ></ExceptionConnect>
                   </v-dialog>
-                  <v-dialog
-                    v-model="dialogCreateException"
-                    :retain-focus="false"
-                    max-width="1500px"
-                    max-height="850px"
-                    scrollable
-                  >
-                    <RightsEditDialog
-                      :index="index"
-                      :isNewRight="false"
-                      :isNewTemplate="true"
-                      :isExceptionTemplate="true"
-                      v-on:editRightClosed="closeCreateExceptionDialog"
-                      v-on:addTemplateSuccessful="addNewException"
-                    ></RightsEditDialog>
-                  </v-dialog>
                 </v-col>
               </v-row>
               <v-row>
@@ -2329,7 +2446,7 @@ export default defineComponent({
               <v-col cols="8">
                 <v-select
                   v-model="formState.accessState"
-                  v-bind="{...$attrs, ...readOnlyProps}"
+                  v-bind="attrWithROProps"
                   :error-messages="errorAccessState"
                   :items="accessStatusSelect"
                   variant="outlined"
@@ -2356,7 +2473,7 @@ export default defineComponent({
                       prepend-icon="mdi-calendar"
                       required
                       readonly
-                      v-bind="{...$attrs, ...props, ...readOnlyProps}"
+                      v-bind="mergeSlotWithReadonly(props)"
                       @blur="v$.startDate.$touch()"
                       @change="v$.startDate.$touch()"
                     ></v-text-field>
@@ -2402,7 +2519,7 @@ export default defineComponent({
                       required
                       @blur="v$.endDate.$touch()"
                       @change="v$.endDate.$touch()"
-                      v-bind="{...$attrs, ...props, ...loginStatusProps}"
+                      v-bind="mergeSlotWithLogin(props)"
                     ></v-text-field>
                   </template>
                   <v-date-picker
@@ -2463,7 +2580,7 @@ export default defineComponent({
                   hint="Allgemeine Bemerkungen"
                   maxlength="256"
                   variant="outlined"
-                  v-bind="{...$attrs, ...loginStatusProps}"
+                  v-bind="attrWithLogin"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -2478,7 +2595,7 @@ export default defineComponent({
               <v-col cols="4"> Lizenzvertrag</v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-bind="{...$attrs, ...readOnlyProps}"
+                  v-bind="attrWithROProps"
                   v-model="tmpRight.licenceContract"
                   hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                   variant="outlined"
@@ -2549,7 +2666,7 @@ export default defineComponent({
                   hint="Bemerkungen für formale Regelungen"
                   maxlength="256"
                   variant="outlined"
-                  v-bind="{...$attrs, ...loginStatusProps}"
+                  v-bind="attrWithLogin"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -2566,7 +2683,7 @@ export default defineComponent({
               <v-col cols="4"> Basis der Speicherung</v-col>
               <v-col cols="8">
                 <v-select
-                  v-bind="{...$attrs, ...readOnlyProps}"
+                  v-bind="attrWithROProps"
                   v-model="formState.basisStorage"
                   :items="basisStorage"
                   variant="outlined"
@@ -2577,7 +2694,7 @@ export default defineComponent({
               <v-col cols="4"> Basis des Access-Status</v-col>
               <v-col cols="8">
                 <v-select
-                  v-bind="{...$attrs, ...readOnlyProps}"
+                  v-bind="attrWithROProps"
                   v-model="formState.basisAccessState"
                   :items="basisAccessState"
                   variant="outlined"
@@ -2593,7 +2710,7 @@ export default defineComponent({
                   hint="Bemerkungen für prozessdokumentierende Elemente"
                   maxlength="256"
                   variant="outlined"
-                  v-bind="{...$attrs, ...loginStatusProps}"
+                  v-bind="attrWithLogin"
                 ></v-textarea>
               </v-col>
             </v-row>
@@ -2610,7 +2727,7 @@ export default defineComponent({
               <v-col cols="4"> Erstellt am</v-col>
               <v-col cols="8">
                 <v-text-field
-                  v-bind="{...$attrs, ...readOnlyProps}"
+                  v-bind="attrWithROProps"
                   v-model="tmpRight.createdOn"
                   variant="outlined"
                   hint="Erstellungsdatum des Templates"
@@ -2659,7 +2776,7 @@ export default defineComponent({
                   hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
                   maxlength="256"
                   variant="outlined"
-                  v-bind="{...$attrs, ...loginStatusProps}"
+                  v-bind="attrWithLogin"
                 ></v-textarea>
               </v-col>
             </v-row>

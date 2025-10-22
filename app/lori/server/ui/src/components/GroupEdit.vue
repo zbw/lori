@@ -6,7 +6,7 @@ import {
   onMounted,
   PropType,
   reactive,
-  ref,
+  ref, useAttrs,
   watch,
 } from "vue";
 import api from "@/api/api";
@@ -380,8 +380,11 @@ export default defineComponent({
         };
       }
     });
+    const attrs = useAttrs();
+    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
 
     return {
+      attrWithLogin,
       unsavedChangesDialog,
       computedGroup,
       dialogStore,
@@ -394,7 +397,6 @@ export default defineComponent({
       groupTmp,
       hasNoCSVHeader,
       headersVersion,
-      loginStatusProps,
       oldVersion,
       oldVersions,
       saveAlertError,
@@ -499,7 +501,7 @@ export default defineComponent({
               variant="outlined"
               hint="Name der Berechtigungsgruppe"
               v-model="formState.title"
-              v-bind="{...$attrs, ...loginStatusProps}"
+              v-bind="attrWithLogin"
               :error-messages="errorName"
           ></v-text-field>
         </v-col>
@@ -558,7 +560,7 @@ export default defineComponent({
               label="IP-Adressen, Direkteingabe"
               v-model="formState.ipAddressesText"
               :error-messages="errorIpAddresses"
-              v-bind="{...$attrs, ...loginStatusProps}"
+              v-bind="attrWithLogin"
               variant="outlined"
           ></v-textarea>
           <v-checkbox
@@ -575,7 +577,7 @@ export default defineComponent({
               label="CSV-Datei Import"
               v-model="formState.ipAddressesFile"
               :error-messages="errorIpAddresses"
-              v-bind="{...$attrs, ...loginStatusProps}"
+              v-bind="attrWithLogin"
               variant="outlined"
           ></v-file-input>
           Hinweis: Es kann nur eine CSV-Datei pro Gruppe hinterlegt werden.
@@ -596,7 +598,7 @@ export default defineComponent({
               v-model="formState.description"
               variant="outlined"
               bg-color="white"
-              v-bind="{...$attrs, ...loginStatusProps}"
+              v-bind="attrWithLogin"
           ></v-textarea>
         </v-col>
       </v-row>

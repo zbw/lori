@@ -129,7 +129,7 @@ item-metadata:
     tags:
       - item
     summary: Get all right information related to handle
-    operationId: getItemByHandle
+    operationId: getRightsByHandle
     parameters:
       - name: handle
         in: query

@@ -20,6 +20,7 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.SortByField
@@ -169,7 +170,7 @@ fun Routing.itemRoutes(
             get {
                 val span =
                     tracer
-                        .spanBuilder("lori.LoriService.GET/api/v1/item/handle/{handle}")
+                        .spanBuilder("lori.LoriService.GET/api/v1/item/metadata?handle={handle}")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
@@ -189,7 +190,7 @@ fun Routing.itemRoutes(
                                     ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
                                 )
                             } else {
-                                val rights = backend.getRightEntriesByHandle(handle)
+                                val rights: List<ItemRight> = backend.getRightEntriesByHandle(handle)
                                 span.setStatus(StatusCode.OK)
                                 call.respond(rights.map { it.toRest() })
                             }

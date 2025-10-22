@@ -9,9 +9,10 @@ import RightsEditDialog from "@/components/RightsEditDialog.vue";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import {useUserStore} from "@/stores/user";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
-  components: {BookmarkSave, RightsEditDialog },
+  components: {RightsEditWrapper, BookmarkSave, RightsEditDialog },
   computed: {
     navigator_utils() {
       return navigator_utils;
@@ -406,7 +407,7 @@ export default defineComponent({
         v-on:close="closeTemplateDialog"
         scrollable
       >
-        <RightsEditDialog
+        <RightsEditWrapper
           :index="-1"
           :initial-bookmark="currentBookmark"
           :isNewRight="false"
@@ -414,7 +415,7 @@ export default defineComponent({
           :reinit-counter="templateReinitCounter"
           v-on:addTemplateSuccessful="childTemplateAdded"
           v-on:editRightClosed="closeTemplateDialog"
-        ></RightsEditDialog>
+        ></RightsEditWrapper>
       </v-dialog>
       <v-dialog
           v-model="editDialogActivated"

@@ -1,5 +1,5 @@
 <script lang="ts">
-import {computed, defineComponent, onMounted, PropType, reactive, Ref, ref, watch} from "vue";
+import {computed, defineComponent, onMounted, PropType, reactive, Ref, ref, useAttrs, watch} from "vue";
 import { useDialogsStore } from "@/stores/dialogs";
 import bookmarkApi from "@/api/bookmarkApi";
 import { useSearchStore } from "@/stores/search";
@@ -249,6 +249,9 @@ export default defineComponent({
       }
     });
 
+    const attrs = useAttrs();
+    const attrWithLogin = computed(() => ({ ...attrs, ...loginStatusProps.value }));
+
     watch(
         () => props.reinitCounter,
         () => {
@@ -268,6 +271,7 @@ export default defineComponent({
     });
 
     return {
+      attrWithLogin,
       cardTitle,
       createdBy,
       createdOn,
@@ -276,7 +280,6 @@ export default defineComponent({
       errorName,
       filterQuery,
       formState,
-      loginStatusProps,
       saveAlertError,
       saveAlertErrorMessage,
       unsavedChangesDialog,
@@ -347,7 +350,7 @@ export default defineComponent({
             hint="Name des Bookmarks"
             maxlength="256"
             variant="outlined"
-            v-bind="{...$attrs, ...loginStatusProps}"
+            v-bind="attrWithLogin"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -358,7 +361,7 @@ export default defineComponent({
             hint="Beschreibung des Bookmarks"
             v-model="description"
             variant="outlined"
-            v-bind="{...$attrs, ...loginStatusProps}"
+            v-bind="attrWithLogin"
           ></v-textarea>
         </v-col>
       </v-row>

@@ -8,6 +8,7 @@ import metadata_utils from "@/utils/metadata_utils";
 import { useSearchStore } from "@/stores/search";
 import {useUserStore} from "@/stores/user";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import RightsEditWrapper from "@/components/RightsEditWrapper.vue";
 
 export default defineComponent({
   computed: {
@@ -34,6 +35,7 @@ export default defineComponent({
     },
   },
   components: {
+    RightsEditWrapper,
     RightsEditDialog,
     RightsEditTabs,
   },
@@ -211,7 +213,7 @@ export default defineComponent({
       v-on:close="editRightClosed"
       persistent
     >
-      <RightsEditDialog
+      <RightsEditWrapper
         :index="currentIndex"
         :isNewRight="isNew"
         :isNewTemplate="false"
@@ -220,7 +222,7 @@ export default defineComponent({
         :licenceUrl="licenceUrl"
         v-on:addSuccessful="addRight"
         v-on:editRightClosed="editRightClosed"
-      ></RightsEditDialog>
+      ></RightsEditWrapper>
     </v-dialog>
     <v-dialog
       v-model="dialogStore.rightsEditTabsActivated"

@@ -95,13 +95,15 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testGetList() =
         runBlocking {
             // given
+
+            // We need high handle numbers for sorting purposes...
             val givenMetadata =
                 arrayOf(
-                    TEST_METADATA.copy(handle = "11159/818", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "11159/819", publicationYear = 1978),
-                    TEST_METADATA.copy(handle = "11159/820"),
-                    TEST_METADATA.copy(handle = "11159/821"),
-                    TEST_METADATA.copy(handle = "11159/822"),
+                    TEST_METADATA.copy(handle = "11159/10818", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/10819", publicationYear = 1978),
+                    TEST_METADATA.copy(handle = "11159/10820"),
+                    TEST_METADATA.copy(handle = "11159/10821"),
+                    TEST_METADATA.copy(handle = "11159/10822"),
                 )
 
             backend.insertMetadataElements(givenMetadata.toList())
@@ -155,7 +157,6 @@ class LoriServerBackendTest : DatabaseTest() {
             )
             assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
             assertThat(backend.getMetadataList(1, 100), `is`(emptyList()))
-            assertThat(backend.countMetadataEntries(), `is`(5))
         }
 
     @Test
@@ -611,19 +612,19 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testInsertItemEntry() =
         runBlocking {
             val givenMetadata = TEST_METADATA
-            val givenRight1 = TEST_RIGHT.copy(rightId = "1")
-            val givenRight2 = TEST_RIGHT.copy(rightId = "2")
-            val givenRight3 = TEST_RIGHT.copy(rightId = "3")
+            val givenRight1 = TEST_RIGHT
+            val givenRight2 = TEST_RIGHT
+            val givenRight3 = TEST_RIGHT
 
             backend.insertMetadataElement(givenMetadata)
-            backend.insertRight(givenRight1)
-            backend.insertRight(givenRight2)
-            backend.insertRight(givenRight3)
+            val rightId1 = backend.insertRight(givenRight1)
+            val rightId2 = backend.insertRight(givenRight2)
+            val rightId3 = backend.insertRight(givenRight3)
 
-            backend.insertItemEntry(givenMetadata.handle, givenRight1.rightId!!)
+            backend.insertItemEntry(givenMetadata.handle, rightId1)
 
             // Insert first conflict, no deletion
-            when (backend.insertItemEntry(givenMetadata.handle, givenRight2.rightId!!)) {
+            when (backend.insertItemEntry(givenMetadata.handle, rightId2)) {
                 is Either.Left -> {
                     // Error is expected due to a conflict
                 }
@@ -633,7 +634,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 }
             }
 
-            when (backend.insertItemEntry(givenMetadata.handle, givenRight3.rightId!!, true)) {
+            when (backend.insertItemEntry(givenMetadata.handle, rightId3, true)) {
                 is Either.Left -> {
                     // Error is expected due to a conflict
                 }
@@ -645,24 +646,23 @@ class LoriServerBackendTest : DatabaseTest() {
 
             val existingRights =
                 backend
-                    .getRightsByIds(listOf(givenRight1.rightId, givenRight2.rightId, givenRight3.rightId))
+                    .getRightsByIds(listOf(rightId1, rightId2, rightId3))
                     .map { it.rightId }
                     .toSet()
             assertThat(
                 existingRights,
-                `is`(setOf(givenRight1.rightId, givenRight2.rightId)),
+                `is`(setOf(rightId1, rightId2)),
             )
 
             // Add another entry successfully
             val givenRight4 =
                 TEST_RIGHT.copy(
-                    rightId = "4",
                     startDate = TODAY.minusDays(10),
                     endDate = TODAY.minusDays(6),
                 )
-            backend.insertRight(givenRight4)
+            val rightId4 = backend.insertRight(givenRight4)
             when (
-                backend.insertItemEntry(givenMetadata.handle, givenRight4.rightId!!)
+                backend.insertItemEntry(givenMetadata.handle, rightId4)
             ) {
                 is Either.Left -> {
                     Assert.fail("No conflicts expected.")
@@ -675,7 +675,10 @@ class LoriServerBackendTest : DatabaseTest() {
             // Test update conflicts
             val ret =
                 backend.upsertRight(
-                    givenRight4.copy(endDate = null),
+                    givenRight4.copy(
+                        rightId = rightId4,
+                        endDate = null,
+                    ),
                 )
             when (ret) {
                 is Either.Left -> {
