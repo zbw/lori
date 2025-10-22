@@ -120,7 +120,9 @@ pushLoriAppImage:
 
 pushLoriImportJobImage:
   stage: push
-  needs: ["test"]
+  needs:
+    - job: test
+      optional: true
   rules:
     - changes:
       - job/lori_import/**/*
@@ -148,7 +150,9 @@ pushLoriImportJobImage:
 
 pushTemplateApplyJobImage:
   stage: push
-  needs: ["test"]
+  needs:
+    - job: test
+      optional: true
   rules:
     - changes:
       - job/template_apply/**/*
