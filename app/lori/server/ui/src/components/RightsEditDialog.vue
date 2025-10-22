@@ -42,6 +42,7 @@ import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import {useDate} from "vuetify";
 
 export default defineComponent({
   computed: {
@@ -212,11 +213,21 @@ export default defineComponent({
       }
     });
 
-   const updateEndDate = (newValue : string | undefined) => {
-     if (newValue == '' || newValue == undefined){
-       formState.endDate = undefined;
-     }
-   };
+    const updateEndDate = (newValue : string | undefined) => {
+      if (newValue == '' || newValue == undefined){
+        formState.endDate = undefined;
+      }
+    };
+
+   const allowedDates = ((dateToCheck: string) => {
+     const currentDate = new Date();
+     const checkDate = new Date(dateToCheck);
+     // Zero out time for both dates to compare just by day
+     currentDate.setHours(0, 0, 0, 0);
+     checkDate.setHours(0, 0, 0, 0);
+     return checkDate >= currentDate;
+   }) as (date: unknown) => boolean;
+   // This nightmare of casting is necessary because of vuetifyes loose definition of allowed-dates
 
     const newRightHasChanges = computed (() => {
       return isNew.value &&
@@ -1684,6 +1695,7 @@ export default defineComponent({
       userStore,
       // methods
       addNewException,
+      allowedDates,
       cancel,
       cancelConfirm,
       checkForChangesAndClose,
@@ -2479,6 +2491,7 @@ export default defineComponent({
                     ></v-text-field>
                   </template>
                   <v-date-picker
+                      :allowed-dates="allowedDates"
                       first-day-of-week="1"
                       v-model="formState.startDate"
                       color="primary">
@@ -2524,6 +2537,7 @@ export default defineComponent({
                   </template>
                   <v-date-picker
                       first-day-of-week="1"
+                      :allowed-dates="allowedDates"
                       v-model="formState.endDate"
                       color="primary">
                     <template v-slot:header></template>
