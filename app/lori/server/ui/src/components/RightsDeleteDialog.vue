@@ -43,21 +43,21 @@ export default defineComponent({
         deleteAlertError.value = true;
       } else {
         api
-          .deleteRight(props.rightId)
-          .then(() => {
-            emit("deleteSuccessful", props.index);
-            close();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              deleteErrorMessage.value = errMsg;
-              deleteError.value = true;
-              deleteAlertError.value = true;
+            .deleteRight(props.rightId)
+            .then(() => {
+              emit("deleteSuccessful", props.index);
+              close();
+            })
+            .catch((e) => {
+              error.errorHandling(e, (errMsg: string) => {
+                deleteErrorMessage.value = errMsg;
+                deleteError.value = true;
+                deleteAlertError.value = true;
+              });
+            })
+            .finally(() => {
+              deleteInProgress.value = false;
             });
-          })
-          .finally(() => {
-            deleteInProgress.value = false;
-          });
       }
     };
 
@@ -71,21 +71,21 @@ export default defineComponent({
         deleteAlertError.value = true;
       } else {
         templateApi
-          .deleteTemplateById(props.rightId)
-          .then(() => {
-            emit("templateDeleteSuccessful");
-            close();
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              deleteErrorMessage.value = errMsg;
-              deleteError.value = true;
-              deleteAlertError.value = true;
+            .deleteTemplateById(props.rightId)
+            .then(() => {
+              emit("templateDeleteSuccessful");
+              close();
+            })
+            .catch((e) => {
+              error.errorHandling(e, (errMsg: string) => {
+                deleteErrorMessage.value = errMsg;
+                deleteError.value = true;
+                deleteAlertError.value = true;
+              });
+            })
+            .finally(() => {
+              deleteInProgress.value = false;
             });
-          })
-          .finally(() => {
-            deleteInProgress.value = false;
-          });
       }
     };
 
@@ -129,7 +129,7 @@ export default defineComponent({
     <v-card-actions>
       <v-spacer></v-spacer>
       <v-btn :disabled="deleteInProgress" color="blue darken-1" @click="close"
-        >Abbrechen
+      >Abbrechen
       </v-btn>
       <v-btn :loading="deleteInProgress" color="error" @click="deleteEntity">
         Löschen

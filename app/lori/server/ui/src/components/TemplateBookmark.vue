@@ -33,16 +33,16 @@ export default defineComponent({
     const selectedBookmarks: Ref<Array<BookmarkRest>> = ref([]);
     const getBookmarkList = () => {
       bookmarkApi
-        .getBookmarkList(0, 500) // TODO: simplification for now
-        .then((r: Array<BookmarkRest>) => {
-          bookmarkItems.value = r;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
+          .getBookmarkList(0, 500) // TODO: simplification for now
+          .then((r: Array<BookmarkRest>) => {
+            bookmarkItems.value = r;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     const selectedRowColor = (row: any) => {
@@ -121,32 +121,32 @@ export default defineComponent({
         {{ errorMsg }}
       </v-snackbar>
       <v-text-field
-        v-model="searchTerm"
-        append-icon="mdi-magnify"
-        hide-details
-        label="Suche"
-        single-line
+          v-model="searchTerm"
+          append-icon="mdi-magnify"
+          hide-details
+          label="Suche"
+          single-line
       ></v-text-field>
       <v-data-table
-        v-model="selectedBookmarks"
-        :headers="headers"
-        :items="bookmarkItems"
-        :search="searchTerm"
-        :row-props="selectedRowColor"
-        item-value="bookmarkId"
-        select-strategy="single"
-        return-object
-        @click:row="addActiveItem"
+          v-model="selectedBookmarks"
+          :headers="headers"
+          :items="bookmarkItems"
+          :search="searchTerm"
+          :row-props="selectedRowColor"
+          item-value="bookmarkId"
+          select-strategy="single"
+          return-object
+          @click:row="addActiveItem"
       >
       </v-data-table>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text="Zurück" @click="close"></v-btn>
         <v-btn
-          :disabled="selectedBookmarks.length == 0"
-          color="blue darken-1"
-          text="Speichern"
-          @click="save"
+            :disabled="selectedBookmarks.length == 0"
+            color="blue darken-1"
+            text="Speichern"
+            @click="save"
         >
         </v-btn>
       </v-card-actions>

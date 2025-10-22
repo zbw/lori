@@ -109,7 +109,7 @@ export default defineComponent({
      */
     const formWasChanged = computed(() => {
       return (props.isNew && (formState.name != "" ||
-          description.value != "")) ||
+              description.value != "")) ||
           (!props.isNew && (
               formState.name != props.bookmark?.bookmarkName ||
               description.value != props.bookmark?.description
@@ -145,40 +145,40 @@ export default defineComponent({
     const create = () => {
       let bookmarkName = formState.name;
       bookmarkApi
-        .addRawBookmark(
-            bookmarkName,
-            description.value,
-            searchStore.lastSearchTerm,
-            searchquerybuilder.buildPublicationYearFilter(searchStore),
-            searchquerybuilder.buildPublicationTypeFilter(searchStore),
-            searchquerybuilder.buildAccessStateFilter(searchStore),
-            searchquerybuilder.buildStartDateAtFilter(searchStore),
-            searchquerybuilder.buildEndDateAtFilter(searchStore),
-            searchquerybuilder.buildFormalRuleFilter(searchStore),
-            searchquerybuilder.buildValidOnFilter(searchStore),
-            searchquerybuilder.buildPaketSigelIdFilter(searchStore),
-            searchquerybuilder.buildZDBIdFilter(searchStore),
-            searchquerybuilder.buildNoRightInformation(searchStore),
-            searchquerybuilder.buildSeriesFilter(searchStore),
-            searchquerybuilder.buildTemplateNameFilter(searchStore),
-            searchquerybuilder.buildLicenceUrlFilter(searchStore),
-            searchquerybuilder.buildManualRightFilter(searchStore),
-            searchquerybuilder.buildAccessOnDateFilter(searchStore),
-            searchquerybuilder.buildDeletionsFilter(searchStore),
-        )
-        .then((r: BookmarkIdCreated) => {
-          emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
-          close();
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
+          .addRawBookmark(
+              bookmarkName,
+              description.value,
+              searchStore.lastSearchTerm,
+              searchquerybuilder.buildPublicationYearFilter(searchStore),
+              searchquerybuilder.buildPublicationTypeFilter(searchStore),
+              searchquerybuilder.buildAccessStateFilter(searchStore),
+              searchquerybuilder.buildStartDateAtFilter(searchStore),
+              searchquerybuilder.buildEndDateAtFilter(searchStore),
+              searchquerybuilder.buildFormalRuleFilter(searchStore),
+              searchquerybuilder.buildValidOnFilter(searchStore),
+              searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+              searchquerybuilder.buildZDBIdFilter(searchStore),
+              searchquerybuilder.buildNoRightInformation(searchStore),
+              searchquerybuilder.buildSeriesFilter(searchStore),
+              searchquerybuilder.buildTemplateNameFilter(searchStore),
+              searchquerybuilder.buildLicenceUrlFilter(searchStore),
+              searchquerybuilder.buildManualRightFilter(searchStore),
+              searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildDeletionsFilter(searchStore),
+          )
+          .then((r: BookmarkIdCreated) => {
+            emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);
+            close();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              updateInProgress.value = false;
+              saveAlertError.value = true;
+              saveAlertErrorMessage.value = errMsg;
+            });
+          }).finally(() =>{
             updateInProgress.value = false;
-            saveAlertError.value = true;
-            saveAlertErrorMessage.value = errMsg;
-          });
-        }).finally(() =>{
-          updateInProgress.value = false;
-        }
+          }
       );
     };
 
@@ -255,13 +255,13 @@ export default defineComponent({
     watch(
         () => props.reinitCounter,
         () => {
-      if(props.isNew){
-        resetAllValues();
-      } else {
-        reinitializeBookmark();
-      }
-    },
-    { immediate: true }
+          if(props.isNew){
+            resetAllValues();
+          } else {
+            reinitializeBookmark();
+          }
+        },
+        { immediate: true }
     );
 
     onMounted(() => {
@@ -345,12 +345,12 @@ export default defineComponent({
         <v-col cols="4"> Name</v-col>
         <v-col cols="8">
           <v-text-field
-            v-model="formState.name"
-            :error-messages="errorName"
-            hint="Name des Bookmarks"
-            maxlength="256"
-            variant="outlined"
-            v-bind="attrWithLogin"
+              v-model="formState.name"
+              :error-messages="errorName"
+              hint="Name des Bookmarks"
+              maxlength="256"
+              variant="outlined"
+              v-bind="attrWithLogin"
           ></v-text-field>
         </v-col>
       </v-row>
@@ -358,10 +358,10 @@ export default defineComponent({
         <v-col cols="4"> Beschreibung</v-col>
         <v-col cols="8">
           <v-textarea
-            hint="Beschreibung des Bookmarks"
-            v-model="description"
-            variant="outlined"
-            v-bind="attrWithLogin"
+              hint="Beschreibung des Bookmarks"
+              v-model="description"
+              variant="outlined"
+              v-bind="attrWithLogin"
           ></v-textarea>
         </v-col>
       </v-row>
@@ -406,10 +406,10 @@ export default defineComponent({
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
-          :disabled="updateInProgress"
-          color="blue darken-1"
-          text="Speichern"
-          @click="save"
+            :disabled="updateInProgress"
+            color="blue darken-1"
+            text="Speichern"
+            @click="save"
         ></v-btn>
       </v-card-actions>
     </v-container>
