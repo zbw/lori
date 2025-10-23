@@ -4,6 +4,9 @@ import com.google.gson.reflect.TypeToken
 import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.route.BookmarkRoutesKtTest.Companion.TEST_BOOKMARK
 import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TEST_RIGHT
+import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.TODAY
+import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.getServicePool
+import de.zbw.api.lori.server.route.RightRoutesKtTest.Companion.jsonAsString
 import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
@@ -33,13 +36,18 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.postgresql.util.PSQLException
 import org.postgresql.util.ServerErrorMessage
+import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * Testing [TemplateRoutes].
@@ -48,6 +56,11 @@ import java.sql.SQLException
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class TemplateRoutesKtTest {
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
+    }
+
     @Test
     fun testDeleteTemplateOK() {
         // given
@@ -113,6 +126,9 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostTemplateCreated() {
         // given
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
+
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { insertTemplate(any()) } returns "1"
@@ -165,6 +181,9 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostTemplateConflict() {
         // given
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
+
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { insertTemplate(any()) } throws
@@ -193,6 +212,9 @@ class TemplateRoutesKtTest {
     @Test
     fun testPostTemplateInternalError() {
         // given
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
+
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { insertTemplate(any()) } throws SQLException()
@@ -1022,6 +1044,49 @@ class TemplateRoutesKtTest {
             )
             val response = client.get("/api/v1/template/exceptions/$givenRightIdTemplate")
             assertThat("Should return 500", response.status, `is`(HttpStatusCode.InternalServerError))
+        }
+    }
+
+    @Test
+    fun testPostTemplateBadRequestDatesInPast() {
+        // Move current date into future
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.plusDays(14L)
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { insertRight(any()) } returns "5"
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/template") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT))
+                }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+
+        // Move current date to present
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TEST_RIGHT.startDate
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/template") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT))
+                }
+            assertThat("Should return 201", response.status, `is`(HttpStatusCode.Created))
         }
     }
 }
