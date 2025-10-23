@@ -1,0 +1,1 @@
+ALTER TABLE item_right ALTER COLUMN start_date SET NOT NULL;

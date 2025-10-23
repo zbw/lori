@@ -25,6 +25,8 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Testing [AccessStateOnDateFilter] which returns only items that have at least one right
@@ -43,7 +45,7 @@ class AccessStateOnFilterTest : DatabaseTest() {
             mockk(),
         )
 
-    private val itemWithRight =
+    private val metadataStandard =
         TEST_Metadata.copy(
             handle = "111159/74",
             collectionName = "subject1",
@@ -52,7 +54,7 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
     private fun getInitialMetadata(): Map<ItemMetadata, List<ItemRight>> =
         mapOf(
-            itemWithRight to
+            metadataStandard to
                 listOf(
                     TEST_RIGHT.copy(
                         accessState = AccessState.OPEN,
@@ -116,7 +118,7 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
         assertThat(
             searchResult1.results.map { it.metadata }.toSet(),
-            `is`(setOf(itemWithRight)),
+            `is`(setOf(metadataStandard)),
         )
 
         val rightSearchFilterWithoutResult =
@@ -167,7 +169,7 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
         assertThat(
             searchResult3.results.map { it.metadata }.toSet(),
-            `is`(setOf(itemWithRight)),
+            `is`(setOf(metadataStandard)),
         )
 
         // Valid on before created on
@@ -219,7 +221,129 @@ class AccessStateOnFilterTest : DatabaseTest() {
 
         assertThat(
             searchResultInBetween.results.map { it.metadata }.toSet(),
-            `is`(setOf(itemWithRight)),
+            `is`(setOf(metadataStandard)),
         )
     }
+
+    @Test
+    fun testFilterWithCreatedOnAfterStartDate() =
+        runBlocking {
+            // When a metadata entry got imported while the template was already active this
+            // filter should apply from the imported date onwards.
+
+            // given
+            val metadataCreatedOnAfterStartDate =
+                TEST_Metadata.copy(
+                    handle = "111159/76",
+                    collectionName = "subject2",
+                    publicationType = PublicationType.PROCEEDING,
+                )
+
+            val right =
+                TEST_RIGHT.copy(
+                    accessState = AccessState.OPEN,
+                    startDate = LocalDate.of(2002, 1, 1),
+                    endDate = null,
+                    isTemplate = false,
+                    templateName = null,
+                )
+
+            // set current date
+            val createdOnDate =
+                OffsetDateTime
+                    .of(
+                        2002,
+                        3,
+                        2,
+                        0,
+                        0,
+                        0,
+                        0,
+                        ZoneOffset.UTC,
+                    )
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns
+                createdOnDate
+                    .toInstant()
+
+            backend.insertMetadataElement(metadataCreatedOnAfterStartDate)
+            val rightId = backend.insertRight(right)
+            backend.insertItemEntry(metadataCreatedOnAfterStartDate.handle, rightId)
+
+            // when
+            val rightSearchFilterWithResult =
+                listOf(
+                    AccessStateOnDateFilter(
+                        date = LocalDate.of(createdOnDate.year, createdOnDate.month, createdOnDate.dayOfMonth),
+                        accessState = AccessState.OPEN,
+                    ),
+                )
+
+            // Set local date as well
+            mockkStatic(LocalDate::class)
+            every { LocalDate.now() } returns LocalDate.of(createdOnDate.year, createdOnDate.month, createdOnDate.dayOfMonth)
+
+            val searchResult1: SearchQueryResult =
+                backend.searchQuery(
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter = rightSearchFilterWithResult,
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
+                )
+
+            assertThat(
+                searchResult1.results.map { it.metadata.handle }.toSet(),
+                `is`(setOf(metadataCreatedOnAfterStartDate.handle)),
+            )
+
+            // Set AccessDateOn filter on day ahead and verify a
+            val searchResult2: SearchQueryResult =
+                backend.searchQuery(
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter =
+                        listOf(
+                            AccessStateOnDateFilter(
+                                date = LocalDate.of(createdOnDate.year, createdOnDate.month, createdOnDate.dayOfMonth.plus(1)),
+                                accessState = AccessState.OPEN,
+                            ),
+                        ),
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
+                )
+
+            assertThat(
+                searchResult2.results.map { it.metadata.handle }.toSet(),
+                `is`(setOf(metadataCreatedOnAfterStartDate.handle)),
+            )
+
+            // Set AccessDateOn filter on day before created_on and verify an empty result
+            val searchResult3: SearchQueryResult =
+                backend.searchQuery(
+                    searchTerm = null,
+                    limit = 10,
+                    offset = 0,
+                    metadataSearchFilter = emptyList(),
+                    rightSearchFilter =
+                        listOf(
+                            AccessStateOnDateFilter(
+                                date =
+                                    LocalDate.of(createdOnDate.year, createdOnDate.month, createdOnDate.dayOfMonth.minus(1)),
+                                accessState = AccessState.OPEN,
+                            ),
+                        ),
+                    noRightInformationFilter = null,
+                    sortInformation = SortInformation.DEFAULT,
+                )
+
+            assertThat(
+                searchResult3.results.map { it.metadata.handle }.toSet(),
+                `is`(emptySet<String>()),
+            )
+        }
 }

@@ -953,21 +953,17 @@ abstract class RightSearchFilter(
         const val WHERE_CLAUSE_BETWEEN_START_AND_END_DATE =
             "(" +
                 "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
                 " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz AND" +
                 " $COLUMN_RIGHT_END_DATE IS NOT NULL)" +
                 " OR" +
-                "($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
-                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz AND" +
-                " $COLUMN_RIGHT_END_DATE IS NOT NULL)" +
+                "($COLUMN_RIGHT_END_DATE IS NOT NULL AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
                 " OR" +
                 " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
                 " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz)" +
                 " OR" +
-                " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
-                " $COLUMN_RIGHT_START_DATE IS NOT NULL AND" +
+                " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON < ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
                 " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
                 ")"
     }
@@ -1039,7 +1035,8 @@ class AccessStateOnDateFilter(
                 date
                     .atStartOfDay(
                         TimezoneUtil.TIME_ZONE_UTC,
-                    ).toInstant(),
+                    ).plusDays(1L)
+                    .toInstant(),
             ),
         )
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1052,7 +1049,8 @@ class AccessStateOnDateFilter(
                 date
                     .atStartOfDay(
                         TimezoneUtil.TIME_ZONE_UTC,
-                    ).toInstant(),
+                    ).plusDays(1L)
+                    .toInstant(),
             ),
         )
         if (accessState != null) {
