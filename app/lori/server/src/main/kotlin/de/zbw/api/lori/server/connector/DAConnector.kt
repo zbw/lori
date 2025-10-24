@@ -169,7 +169,7 @@ class DAConnector(
         collection: DACollection,
         community: DACommunity,
     ): Int {
-        LOG.debug("Collection Handle ${collection.handle}: Offset $offset")
+        LOG.info("Collection Handle ${collection.handle}: Offset $offset")
 
         val response: ApiResponse<List<DAItem>, String> =
             client.safeRequest(2, 2000L) {
