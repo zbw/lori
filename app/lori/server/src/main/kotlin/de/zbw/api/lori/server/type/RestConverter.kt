@@ -5,7 +5,6 @@ import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.type.RestConverter.LOG
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
-import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
@@ -625,7 +624,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
         noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
         manualRightFilter = this.filterManualRight?.takeIf { it }?.let { ManualRightFilter() },
-        deletionsFilter = this.filterDeletions?.takeIf { it }?.let { DeletionsFilter() },
+        deletionsFilter = QueryParameterParser.parseDeletionsFilter(this.filterDeletions?.toString()),
         accessStateOnFilter =
             this.filterAccessOnDate?.let {
                 AccessStateOnDateFilter(
@@ -669,7 +668,7 @@ fun Bookmark.toRest(
         filterZDBId = this.zdbIdFilter?.zdbIds,
         filterNoRightInformation = this.noRightInformationFilter?.let { true } == true,
         filterManualRight = this.manualRightFilter?.let { true } == true,
-        filterDeletions = this.deletionsFilter?.let { true } == true,
+        filterDeletions = this.deletionsFilter?.on,
         createdBy = this.createdBy,
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
