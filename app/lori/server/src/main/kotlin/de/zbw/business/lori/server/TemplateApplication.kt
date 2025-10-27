@@ -151,7 +151,7 @@ class TemplateApplication(
                 TemplateApplicationResult(
                     rightId = right.rightId!!,
                     templateName = right.templateName ?: "",
-                    testId = null,
+                    testId = testId,
                     appliedMetadataHandles = emptyList(),
                     errors = emptyList(),
                     numberOfErrors = 0,
