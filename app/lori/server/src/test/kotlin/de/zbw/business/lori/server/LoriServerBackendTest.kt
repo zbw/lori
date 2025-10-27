@@ -426,6 +426,18 @@ class LoriServerBackendTest : DatabaseTest() {
         arrayOf(
             arrayOf(
                 TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 7, 1),
+                    endDate = null,
+                ),
+                true,
+                "Invalid overlap. End date equals start date",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
                     startDate = LocalDate.of(2025, 6, 1),
                     endDate = LocalDate.of(2025, 9, 1),
                 ),
@@ -590,7 +602,19 @@ class LoriServerBackendTest : DatabaseTest() {
                     endDate = null,
                 ),
                 false,
-                "No overlap.",
+                "No overlap. Gap between rights.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2024, 6, 1),
+                    endDate = LocalDate.of(2024, 12, 31),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 1, 1),
+                    endDate = null,
+                ),
+                false,
+                "No overlap. No gap between rights",
             ),
         )
 

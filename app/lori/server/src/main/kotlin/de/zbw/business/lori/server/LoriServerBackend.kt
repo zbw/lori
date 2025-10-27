@@ -1146,6 +1146,8 @@ class LoriServerBackend(
                 true
             } else if (r1.endDate == null) {
                 r2.endDate!! > r1.startDate
+            } else if (r2.startDate.toString() == r1.endDate.toString() || r1.startDate.toString() == r2.endDate.toString()) {
+                true
             } else if (r2.endDate == null) {
                 r1.endDate > r2.startDate
             } else if (r1.endDate >= r2.startDate && r1.endDate <= r2.endDate) {
