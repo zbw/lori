@@ -42,6 +42,10 @@ export default defineComponent({
       type: String,
       required: false,
     },
+    filters: {
+      type: String,
+      required: false,
+    },
   },
   setup(props, { emit }) {
     /**
@@ -268,6 +272,10 @@ export default defineComponent({
       url.addQueryParameters(route, router, {
         [url.QUERY_PARAMETER_BOOKMARK_ID]: props.bookmark?.bookmarkId
       });
+      if(props.isNew){
+        filterQuery.value = (props.searchTerm != undefined && props.searchTerm != '') && (props.filters != '' && props.filters != undefined)
+            ? '(' + props.searchTerm + ') & (' + props.filters + ')' : (props.searchTerm ?? '')  + (props.filters ?? '');
+      }
     });
 
     return {

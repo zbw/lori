@@ -1301,6 +1301,7 @@ table.special, th.special, td.special {
       <BookmarkSave
           :isNew="true"
           :searchTerm="searchStore.searchTerm"
+          :filters="searchStore.filtersAsQuery"
           v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>
