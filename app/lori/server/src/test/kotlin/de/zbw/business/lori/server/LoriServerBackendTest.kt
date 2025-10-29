@@ -313,7 +313,13 @@ class LoriServerBackendTest : DatabaseTest() {
                     TEST_METADATA.copy(handle = "11159/801", zdbIds = listOf("zbdTest")),
                     TEST_METADATA.copy(handle = "11159/802", zdbIds = listOf("zbdTest")),
                 )
-            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
+            val expectedRight =
+                TEST_RIGHT.copy(
+                    isTemplate = true,
+                    templateName = "some name",
+                )
+            val rightAssignments =
+                expectedRight to listOf(givenMetadataEntries[0].handle)
 
             backend.insertMetadataElements(givenMetadataEntries.toList())
             val generatedRightId =
@@ -344,9 +350,9 @@ class LoriServerBackendTest : DatabaseTest() {
                             metadata = givenMetadataEntries[0],
                             rights =
                                 listOf(
-                                    TEST_RIGHT.copy(
-                                        rightId = generatedRightId,
+                                    expectedRight.copy(
                                         startDate = TEST_RIGHT.createdOn!!.toLocalDate(),
+                                        rightId = generatedRightId,
                                     ),
                                 ),
                         ),

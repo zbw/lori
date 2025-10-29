@@ -44,7 +44,6 @@ import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.Duration
@@ -269,9 +268,7 @@ class LoriServerBackend(
             .takeIf {
                 it.isNotEmpty()
             }?.let { metadataList ->
-                runBlocking {
-                    getRightsForMetadata(metadataList)
-                }
+                getRightsForMetadata(metadataList)
             } ?: emptyList()
     }
 
@@ -384,12 +381,9 @@ class LoriServerBackend(
         val adjustedTemplates =
             templates
                 .map { t ->
-                    val itemTable = rightIdToItemTable[t.rightId]
-                    if (itemTable == null) {
-                        return emptyList()
-                    }
+                    val itemTable = rightIdToItemTable[t.rightId] ?: return emptyList()
                     filterAndAdjustTemplatesByDate(
-                        templates = listOf(t),
+                        templatesAndRights = listOf(t),
                         firstApplicationDate =
                             itemTable
                                 .createdOn
@@ -526,7 +520,7 @@ class LoriServerBackend(
                         getRightsForMetadata(metadata)
                     } ?: (emptyList())
 
-            // Acquire number of results
+            // Acquire the number of results
             val numberOfResults =
                 async {
                     items
@@ -880,7 +874,7 @@ class LoriServerBackend(
                 dbConnector = dbConnector,
                 backend = this,
             )
-        return rightIds.mapNotNull { rightId ->
+        return rightIds.map { rightId ->
             templateApplication.applyTemplate(
                 rightId,
                 skipTemplateDrafts,
@@ -1178,18 +1172,20 @@ class LoriServerBackend(
 
         /**
          * Right information whose end date lies before the given date will be discarded.
-         * If only the start date lies before the date then the start date will be set to the date.
+         * If only the start date lies before the date, then the start date will be set to the date.
          *
          * Templates may have ranges which end and/or start before the lifetime of the metadata it has
          * been applied to. Therefore, the start date for this metadata will be adjusted.
          */
         fun filterAndAdjustTemplatesByDate(
-            templates: List<ItemRight>,
+            templatesAndRights: List<ItemRight>,
             firstApplicationDate: LocalDate,
         ): List<ItemRight> {
+            val (templates, rights) = templatesAndRights.partition { it.isTemplate }
             val fs =
-                templates.filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
-            val rightsCorrectStart =
+                templates
+                    .filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
+            val templatesCorrectStart =
                 fs.map { right ->
                     if (firstApplicationDate > right.startDate) {
                         right.copy(
@@ -1199,7 +1195,7 @@ class LoriServerBackend(
                         right
                     }
                 }
-            return rightsCorrectStart
+            return templatesCorrectStart + rights
         }
 
         /**
