@@ -24,6 +24,7 @@ import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Assert
 import org.testng.Assert.assertFalse
+import org.testng.Assert.assertNull
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
@@ -882,6 +883,24 @@ class LoriServerBackendTest : DatabaseTest() {
 
             assertFalse(
                 item.rights.first().isTemplate,
+            )
+            assertNull(
+                item.rights.first().templateName,
+            )
+            assertNull(
+                item.rights.first().templateDescription,
+            )
+            assertNull(
+                item.rights.first().predecessorId,
+            )
+            assertNull(
+                item.rights.first().successorId,
+            )
+            assertNull(
+                item.rights.first().exceptionOfId,
+            )
+            assertNull(
+                item.rights.first().hasExceptionId,
             )
         }
 

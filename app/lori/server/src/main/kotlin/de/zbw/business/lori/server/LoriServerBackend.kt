@@ -272,6 +272,7 @@ class LoriServerBackend(
                         successorId = null,
                         exceptionOfId = null,
                         hasExceptionId = null,
+                        endDate = deletionDate,
                     )
             val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
             dbConnector.itemDB.insertItem(
