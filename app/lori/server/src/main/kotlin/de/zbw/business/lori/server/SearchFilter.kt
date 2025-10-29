@@ -15,6 +15,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
@@ -202,6 +203,11 @@ abstract class SearchFilter(
 
                     "acd" ->
                         QueryParameterParser.parseAccessStateOnDate(
+                            searchValue,
+                        )
+
+                    "ebid" ->
+                        QueryParameterParser.parseEconbizIdFilter(
                             searchValue,
                         )
 
@@ -422,6 +428,33 @@ class PPNFilter(
 
     companion object {
         fun fromString(s: String?): PPNFilter? = s?.let { QueryParameterParser.parsePPNFilter(it) }
+    }
+}
+
+class EconbizIDFilter(
+    val econbizId: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_ECONBIZID,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+        connection: Connection,
+    ): Int {
+        preparedStatement.setString(counter, econbizId)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = econbizId
+
+    override fun getFilterType(): FilterType = FilterType.ECONBIZID
+
+    companion object {
+        fun fromString(s: String?): EconbizIDFilter? = s?.let { QueryParameterParser.parseEconbizIdFilter(it) }
     }
 }
 
@@ -1374,6 +1407,7 @@ enum class FilterType(
     CREATED_ON("cro"),
     DELETIONS("del"),
     DOI("doi"),
+    ECONBIZID("ebid"),
     END_DATE("zge"),
     FORMAL_RULE("reg"),
     HANDLE("hdl"),

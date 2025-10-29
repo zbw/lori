@@ -287,6 +287,7 @@ class MetadataDB(
         const val COLUMN_METADATA_CREATED_ON = "created_on"
         const val COLUMN_METADATA_DELETED = "deleted"
         const val COLUMN_METADATA_DOI = "doi"
+        const val COLUMN_METADATA_ECONBIZID = "econbizid"
         const val COLUMN_METADATA_ISBN = "isbn"
         const val COLUMN_METADATA_ISSN = "issn"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
@@ -328,7 +329,7 @@ class MetadataDB(
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                COLUMN_METADATA_DELETED +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -366,14 +367,15 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED) " +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID) " +
                 "VALUES(" +
                 "?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?,?,?,?)" +
+                "?,?,?,?,?," +
+                "?)" +
                 "ON CONFLICT (handle) " +
                 "DO UPDATE SET " +
                 "ppn = EXCLUDED.ppn," +
@@ -401,7 +403,8 @@ class MetadataDB(
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME = EXCLUDED.$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
                 "$COLUMN_METADATA_LICENCE_URL_FILTER = EXCLUDED.$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED = EXCLUDED.$COLUMN_METADATA_DELETED;"
+                "$COLUMN_METADATA_DELETED = EXCLUDED.$COLUMN_METADATA_DELETED," +
+                "$COLUMN_METADATA_ECONBIZID = EXCLUDED.$COLUMN_METADATA_ECONBIZID;"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_METADATA_HANDLE=?)"
@@ -415,7 +418,7 @@ class MetadataDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                COLUMN_METADATA_DELETED +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID" +
                 ") " +
                 "VALUES(" +
                 "?,?,?,?," +
@@ -423,7 +426,8 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?,?,?,?,?)"
+                "?,?,?,?,?," +
+                "?)"
 
         fun extractMetadataRS(rs: ResultSet): ItemMetadata {
             var localCounter = 1
@@ -457,6 +461,7 @@ class MetadataDB(
                 isPartOfSeries = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 licenceUrlFilter = rs.getString(localCounter++),
                 deleted = rs.getBoolean(localCounter++),
+                econbizId = rs.getString(localCounter++),
             )
         }
 
@@ -544,6 +549,9 @@ class MetadataDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setBoolean(localCounter++, itemMetadata.deleted)
+                this.setIfNotNull(localCounter++, itemMetadata.econbizId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
             }
         }
     }

@@ -1606,6 +1606,11 @@ table.special, th.special, td.special {
                     <td class=special>del</td>
                     <td class=special>del:on</td>
                   </tr>
+                  <tr class=special>
+                    <td class=special>Econbiz-ID</td>
+                    <td class=special>ebid</td>
+                    <td class=special></td>
+                  </tr>
                   </tbody>
                 </table>
 

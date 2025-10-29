@@ -8,6 +8,7 @@ import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.DeletionsFilter
+import de.zbw.business.lori.server.EconbizIDFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.ISBNFilter
@@ -327,6 +328,8 @@ object QueryParameterParser {
         }
 
     fun parsePPNFilter(s: String?): PPNFilter? = s?.let { PPNFilter(escapeWildcards(it)) }
+
+    fun parseEconbizIdFilter(s: String?): EconbizIDFilter? = s?.let { EconbizIDFilter(escapeWildcards(it)) }
 
     fun escapeWildcards(s: String): String {
         val escaped =

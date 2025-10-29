@@ -850,6 +850,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("doi:example.org"),
+                econbizId = "123",
                 handle = "11159/810",
                 isbn = listOf("1234567890123"),
                 issn = "123456",

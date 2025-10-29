@@ -170,6 +170,7 @@ fun MetadataRest.toBusiness() =
         createdOn = createdOn,
         deleted = deleted,
         doi = doi,
+        econbizId = econbizid,
         handle = handle,
         isbn = isbn,
         issn = issn,
@@ -203,6 +204,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         createdOn = createdOn,
         deleted = deleted,
         doi = doi,
+        econbizid = econbizId,
         handle = handle,
         isbn = isbn,
         issn = issn,
@@ -437,6 +439,26 @@ fun DAItem.toBusiness(
             it[0]
         }
 
+    val ppn =
+        RestConverter.extractMetadata("dc.identifier.ppn", metadata)?.let {
+            if (it.size > 1) {
+                LOG.warn("Item has multiple ppns: Handle ${this.handle}")
+            }
+            it[0]
+        }
+
+    val econbizId =
+        RestConverter.extractMetadata("dc.identifier.econbizid", metadata)?.let {
+            if (it.size > 1) {
+                LOG.warn("Item has multiple Econbiz-IDs: Handle ${this.handle}")
+            }
+            it[0]
+        }
+
+    if (econbizId == null && ppn == null) {
+        LOG.warn("Econbiz-ID and PPN are missing: Handle ${this.handle}")
+    }
+
     return if (
         handle == null ||
         publicationType == null ||
@@ -478,6 +500,7 @@ fun DAItem.toBusiness(
                     ?.filter {
                         it.startsWith("10.")
                     },
+            econbizId = econbizId,
             handle = RestConverter.parseHandle(handle),
             isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
             issn =
@@ -494,13 +517,7 @@ fun DAItem.toBusiness(
             licenceUrl = licenceUrl,
             licenceUrlFilter = prepareLicenceUrlFilter(licenceUrl),
             paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
-            ppn =
-                RestConverter.extractMetadata("dc.identifier.ppn", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple ppns: Handle ${this.handle}")
-                    }
-                    it[0]
-                },
+            ppn = ppn,
             publicationType = publicationType,
             publicationYear = publicationYear,
             subCommunityHandle =
