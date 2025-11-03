@@ -2609,7 +2609,7 @@ export default defineComponent({
                 <v-col cols="4"> Lizenzvertrag</v-col>
                 <v-col cols="8">
                   <v-text-field
-                      v-bind="attrWithROProps"
+                      v-bind="attrWithLogin"
                       v-model="tmpRight.licenceContract"
                       hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
                       variant="outlined"
