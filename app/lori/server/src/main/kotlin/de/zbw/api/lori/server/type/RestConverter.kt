@@ -476,6 +476,17 @@ fun DAItem.toBusiness(
                 it[0]
             }
 
+        val isbns =
+            RestConverter
+                .extractMetadata("dc.identifier.isbn", metadata)
+                ?.foldRight(emptyList<String>()) { isbn, acc ->
+                    if (isbn.contains("-")) {
+                        acc + isbn + isbn.filter { it != '-' }
+                    } else {
+                        acc + isbn
+                    }
+                }
+
         ItemMetadata(
             // TODO(CB): Multiple authors may exist -> information not needed yet in frontend
             author = RestConverter.extractMetadata("dc.contributor.author", metadata)?.let { it[0] },
@@ -502,7 +513,7 @@ fun DAItem.toBusiness(
                     },
             econbizId = econbizId,
             handle = RestConverter.parseHandle(handle),
-            isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
+            isbn = isbns,
             issn =
                 RestConverter.extractMetadata("dc.identifier.issn", metadata)?.let {
                     if (it.size > 1) {

@@ -143,7 +143,7 @@ class RestConverterTest {
                 doi = listOf("10.7298/c5ps-be97"),
                 econbizId = "123",
                 handle = "11159/848",
-                isbn = listOf("9781847200235", "9781845420680"),
+                isbn = listOf("9781847200235", "978-1-84542-0680", "9781845420680"),
                 issn = null,
                 isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = null,
@@ -905,6 +905,11 @@ class RestConverterTest {
                             language = "EN",
                         ),
                         DAMetadata(
+                            key = "dc.identifier.isbn",
+                            value = "978-1-84542-0680",
+                            language = "EN",
+                        ),
+                        DAMetadata(
                             key = "dc.identifier.pi",
                             value = "1813/110555",
                             language = "EN",
@@ -912,11 +917,6 @@ class RestConverterTest {
                         DAMetadata(
                             key = "dc.identifier.isbn",
                             value = "9781847200235",
-                            language = "EN",
-                        ),
-                        DAMetadata(
-                            key = "dc.identifier.isbn",
-                            value = "9781845420680",
                             language = "EN",
                         ),
                         DAMetadata(
