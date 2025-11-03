@@ -57,8 +57,20 @@ export default defineComponent({
 <template>
   <v-card v-if="currentMetadata.handle" class="mx-auto" tile>
     <v-toolbar flat>
-      <v-toolbar-title
-      >Metadaten</v-toolbar-title>
+      <v-row class="fill-height" align="center" justify="space-between">
+        <v-col cols="auto">
+          <v-toolbar-title class="pl-4">Metadaten</v-toolbar-title>
+        </v-col>
+        <v-col cols="auto">
+          <v-btn
+              class="pr-5"
+              density="compact"
+              icon="mdi-help"
+              href="https://zbwintern/wiki/display/stba/LORI+Objekt-Metadaten"
+              target="_blank"
+          ></v-btn>
+        </v-col>
+      </v-row>
     </v-toolbar>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
