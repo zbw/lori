@@ -518,6 +518,10 @@ class LoriServerBackend(
                     .await()
                     .takeIf {
                         it.isNotEmpty()
+                    }?.map { metadata ->
+                        metadata.copy(
+                            isbn = filterISBNs(metadata.isbn)?.toList(),
+                        )
                     }?.let { metadata ->
                         getRightsForMetadata(metadata)
                     } ?: (emptyList())
@@ -1196,6 +1200,22 @@ class LoriServerBackend(
                     }
                 }
             return rightsCorrectStart
+        }
+
+        /**
+         * Remove duplicates. Keep those with - signs
+         */
+        fun filterISBNs(isbns: List<String>?): Set<String>? {
+            if (isbns == null) {
+                return null
+            }
+            val ret: MutableSet<String> = isbns.toMutableSet()
+            isbns.forEach { isbn ->
+                if (isbn.contains('-')) {
+                    ret.remove(isbn.filter { it != '-' })
+                }
+            }
+            return ret.toSet()
         }
     }
 }

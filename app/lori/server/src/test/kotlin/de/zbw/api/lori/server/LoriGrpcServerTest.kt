@@ -28,6 +28,7 @@ import java.nio.channels.UnresolvedAddressException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
+import kotlin.test.assertNull
 
 /**
  * Test [LoriGrpcServer].
@@ -406,6 +407,22 @@ class LoriGrpcServerTest {
             // then
             assertThat(response, `is`(expectedResponse))
         }
+    }
+
+    @Test
+    fun testFilterISBNs() {
+        val given = listOf("978-0-444-63922-6", "9780444639226", "9789292611279")
+        val expected = setOf("978-0-444-63922-6", "9789292611279")
+
+        assertThat(
+            LoriServerBackend.filterISBNs(
+                given,
+            ),
+            `is`(expected),
+        )
+        assertNull(
+            LoriServerBackend.filterISBNs(null),
+        )
     }
 
     companion object {
