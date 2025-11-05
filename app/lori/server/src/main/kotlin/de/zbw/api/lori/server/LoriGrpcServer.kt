@@ -3,6 +3,7 @@ package de.zbw.api.lori.server
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
+import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.mail.MailService
 import de.zbw.business.lori.server.type.GenericJob
@@ -103,8 +104,32 @@ class LoriGrpcServer(
                 LOG.info("Login-Token: $token")
                 val communityIds = daConnector.getAllCommunityIds(token)
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
-                val imports: Int = runImports(communityIds, token)
+
+                val validationErrorMap = mutableMapOf<MetadataValidationError, List<String>>()
+                val imports: Int =
+                    runImports(
+                        communityIds,
+                        token,
+                        validationErrorMap,
+                    )
                 val deleted: Int = backend.updateMetadataAsDeleted(startTime)
+                val importWarnings =
+                    MetadataValidationError.prettyPrintMap(
+                        validationErrorMap,
+                    )
+                importWarnings.takeIf { it.isNotEmpty() }?.let { LOG.warn(it) }
+                importWarnings
+                    .takeIf {
+                        it.isNotEmpty() &&
+                            config.mailToWarning != null
+                    }?.let {
+                        LOG.info("Send warning mail to ${config.mailToWarning}")
+                        mailService.sendMail(
+                            to = config.mailToWarning!!,
+                            body = importWarnings,
+                            subject = "Lori Vollimport: Validierungsfehler (${config.stage.uppercase()})",
+                        )
+                    }
                 LOG.info("Number of imported Items: $imports")
                 LOG.info("Number of deleted Items found: $deleted")
 
@@ -278,7 +303,7 @@ class LoriGrpcServer(
         job.errorMessage = e.message ?: e.cause.toString()
         backend.updateGenericJobById(genericJob = job)
         mailService.sendMail(
-            to = config.mailTo,
+            to = config.mailToError,
             subject = "Lori-Job Error: Fehlerhafter Lauf (${config.stage.uppercase()})",
             body =
                 "Es ist ein Fehler aufgetreten beim Job '${job.kind}'!\n" +
@@ -296,12 +321,21 @@ class LoriGrpcServer(
     private suspend fun runImports(
         communityIds: List<Int>,
         token: String,
+        validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
     ): Int {
         val semaphore = Semaphore(3)
         val numberImportsDeferred: List<Deferred<Int>> =
             coroutineScope {
                 communityIds.map {
-                    val import = async { importCommunity(token, it, semaphore) }
+                    val import =
+                        async {
+                            importCommunity(
+                                token,
+                                it,
+                                semaphore,
+                                validationErrorMap,
+                            )
+                        }
                     import
                 }
             }
@@ -312,11 +346,17 @@ class LoriGrpcServer(
         token: String,
         communityId: Int,
         semaphore: Semaphore,
+        validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
     ): Int {
         semaphore.acquire()
         LOG.info("Start importing community $communityId")
         val daCommunity: DACommunity = daConnector.getCommunityById(token, communityId) ?: return 0
-        val import = daConnector.importAllCollectionsOfCommunity(token, daCommunity)
+        val import =
+            daConnector.importAllCollectionsOfCommunity(
+                token,
+                daCommunity,
+                validationErrorMap,
+            )
         semaphore.release()
         LOG.info("Finished importing community $communityId")
         return import.sum()

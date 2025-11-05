@@ -553,7 +553,8 @@ class RightRoutesKtTest {
                 downloadDir = "path/to/downloads",
                 mailHost = "host",
                 mailPort = 25,
-                mailTo = "receipents@mail.com",
+                mailToError = "receipents@mail.com",
+                mailToWarning = "receipents@mail.com",
                 mailFrom = "my@mail.com",
             )
 

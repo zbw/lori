@@ -45,7 +45,8 @@ class LoriConfigurationTest {
         System.setProperty("lori.download.directory", expectedConfig.downloadDir)
         System.setProperty("lori.mail.host", expectedConfig.mailHost)
         System.setProperty("lori.mail.port", expectedConfig.mailPort.toString())
-        System.setProperty("lori.mail.to", expectedConfig.mailTo)
+        System.setProperty("lori.mail.to.error", expectedConfig.mailToError)
+        System.setProperty("lori.mail.to.warning", expectedConfig.mailToWarning)
         System.setProperty("lori.mail.from", expectedConfig.mailFrom)
 
         val receivedConfig =
@@ -88,8 +89,9 @@ class LoriConfigurationTest {
                 downloadDir = "path/to/downloads",
                 mailPort = 25,
                 mailHost = "localhost",
-                mailTo = "to@localhost",
+                mailToError = "to@localhost",
                 mailFrom = "me@localhost",
+                mailToWarning = "to@localhost",
             )
     }
 }

@@ -9,6 +9,7 @@ import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.DAMetadata
 import de.zbw.api.lori.server.type.DAObject
 import de.zbw.api.lori.server.type.DAResourcePolicy
+import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.api.lori.server.type.RestConverterTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -128,7 +129,7 @@ class DAConnectorTest {
                         backend = backend,
                     ),
                 ) {
-                    coEvery { importCollection(any(), any(), any()) } returns 1
+                    coEvery { importCollection(any(), any(), any(), any()) } returns 1
                 }
             // when
             val receivedItems =
@@ -142,11 +143,12 @@ class DAConnectorTest {
                                 TEST_COLLECTION,
                             ),
                     ),
+                    mutableMapOf<MetadataValidationError, List<String>>(),
                 )
 
             // then
             assertThat(receivedItems, `is`(listOf(1, 1, 1)))
-            coVerify(exactly = 3) { daConnector.importCollection("token", any(), any()) }
+            coVerify(exactly = 3) { daConnector.importCollection("token", any(), any(), any()) }
         }
     }
 
@@ -238,6 +240,7 @@ class DAConnectorTest {
                     "sometoken",
                     givenCollectionId,
                     TEST_COMMUNITY,
+                    mutableMapOf<MetadataValidationError, List<String>>(),
                 )
             // then
             assertThat(received, `is`(expected))
@@ -341,7 +344,13 @@ class DAConnectorTest {
             val expected = 0
 
             // when
-            val received: Int = daConnector.importCollection("sometoken", givenCommunityId, TEST_COMMUNITY)
+            val received: Int =
+                daConnector.importCollection(
+                    "sometoken",
+                    givenCommunityId,
+                    TEST_COMMUNITY,
+                    mutableMapOf<MetadataValidationError, List<String>>(),
+                )
             // then
             assertThat(received, `is`(expected))
         }

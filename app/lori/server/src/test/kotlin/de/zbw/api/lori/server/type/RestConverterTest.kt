@@ -34,6 +34,8 @@ import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert
@@ -166,7 +168,7 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 subCommunityHandle = TEST_COMMUNITY.subcommunities?.get(0)!!.handle,
-                subCommunityName = TEST_COMMUNITY.subcommunities?.get(0)!!.name,
+                subCommunityName = TEST_COMMUNITY.subcommunities.get(0)!!.name,
                 title = "some_title",
                 titleJournal = "some_journal",
                 titleSeries = "some_series",
@@ -175,10 +177,14 @@ class RestConverterTest {
 
         // when
         val receivedItem =
-            TEST_DA_ITEM.toBusiness(
-                TEST_COMMUNITY,
-                TEST_COLLECTION,
-            )
+            runBlocking {
+                TEST_DA_ITEM.toBusiness(
+                    daCommunity = TEST_COMMUNITY,
+                    daCollection = TEST_COLLECTION,
+                    validationErrorMap = mutableMapOf<MetadataValidationError, List<String>>(),
+                    mutexForLogging = Mutex(),
+                )
+            }
         // then
         assertThat(receivedItem, `is`(expected))
 
@@ -989,7 +995,7 @@ class RestConverterTest {
                             conflictingWithRightId = "sourceRightId",
                             conflictByRightId = "conflictingRightId",
                             handle = "somehandle",
-                            createdOn = ErrorRoutesKtTest.Companion.NOW,
+                            createdOn = ErrorRoutesKtTest.NOW,
                             conflictType = ConflictType.DATE_OVERLAP,
                             conflictByContext = "template name",
                             testId = null,

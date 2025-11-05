@@ -218,7 +218,7 @@ class LoriGrpcServerTest {
                     coEvery { login() } returns token
                     coEvery { getCommunityById(token, any()) } returns community
                     coEvery { getAllCommunityIds(token) } returns listOf(community.id)
-                    coEvery { importAllCollectionsOfCommunity(token, any()) } returns listOf(importsPerCommunity)
+                    coEvery { importAllCollectionsOfCommunity(token, any(), any()) } returns listOf(importsPerCommunity)
                 }
 
             val expected =
@@ -266,7 +266,7 @@ class LoriGrpcServerTest {
             LoriGrpcServer(
                 mockk {
                     every {
-                        mailTo
+                        mailToError
                     } returns "foo@bar"
                     every {
                         stage

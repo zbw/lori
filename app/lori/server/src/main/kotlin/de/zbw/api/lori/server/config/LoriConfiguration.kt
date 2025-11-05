@@ -33,7 +33,8 @@ data class LoriConfiguration(
     val duoUrlSSO: String,
     val mailHost: String,
     val mailPort: Int,
-    val mailTo: String,
+    val mailToError: String,
+    val mailToWarning: String?,
     val mailFrom: String,
     val sessionSignKey: String,
     val sessionEncryptKey: String,
@@ -85,8 +86,9 @@ data class LoriConfiguration(
             val downloadDir = string(prefix, "download", "directory").required()
             val mailHost = string(prefix, "mail", "host").required()
             val mailPort = int(prefix, "mail", "port").required()
-            val mailTo = string(prefix, "mail", "to").required()
+            val mailToError = string(prefix, "mail", "to", "error").required()
             val mailFrom = string(prefix, "mail", "from").required()
+            val mailToWarning = string(prefix, "mail", "to", "warning")
 
             return LoriConfiguration(
                 httpPort = source[httpPort],
@@ -113,7 +115,8 @@ data class LoriConfiguration(
                 downloadDir = source[downloadDir],
                 mailHost = source[mailHost],
                 mailPort = source[mailPort],
-                mailTo = source[mailTo],
+                mailToError = source[mailToError],
+                mailToWarning = source[mailToWarning],
                 mailFrom = source[mailFrom],
             )
         }
