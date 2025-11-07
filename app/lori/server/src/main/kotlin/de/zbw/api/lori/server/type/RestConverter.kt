@@ -816,7 +816,7 @@ fun Bookmark.toRest(
         filterZDBId = this.zdbIdFilter?.zdbIds,
         filterNoRightInformation = this.noRightInformationFilter?.let { true } == true,
         filterManualRight = this.manualRightFilter?.let { true } == true,
-        filterDeletions = this.deletionsFilter?.let { true } == true,
+        filterDeletions = this.deletionsFilter?.on,
         createdBy = this.createdBy,
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
