@@ -25,6 +25,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
@@ -736,13 +737,13 @@ class SearchDBTest : DatabaseTest() {
                 "$ALIAS_ITEM_METADATA.created_on,$ALIAS_ITEM_METADATA.last_updated_on,$ALIAS_ITEM_METADATA.created_by,$ALIAS_ITEM_METADATA.last_updated_by," +
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name,${COLUMN_METADATA_HANDLE_POSTFIX}"
         const val SELECT_ALL =
             "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band," +
                 "publication_type,doi,isbn,paket_sigel,zdb_ids,issn,created_on,last_updated_on," +
                 "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
-                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_HANDLE_POSTFIX"
+                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_HANDLE_POSTFIX"
     }
 }

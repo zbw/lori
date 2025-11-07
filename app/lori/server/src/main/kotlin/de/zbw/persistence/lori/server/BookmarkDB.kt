@@ -334,7 +334,10 @@ class BookmarkDB(
                 manualRightFilter = ManualRightFilter.fromString(rs.getBoolean(localCounter++).toString()),
                 accessStateOnFilter = AccessStateOnDateFilter.fromString(rs.getString(localCounter++)),
                 queryString = rs.getString(localCounter++),
-                deletionsFilter = DeletionsFilter.fromString(rs.getBoolean(localCounter++).toString()),
+                deletionsFilter =
+                    DeletionsFilter.fromString(
+                        (rs.getObject(localCounter++) as? Boolean).toString(),
+                    ),
             )
         }
 

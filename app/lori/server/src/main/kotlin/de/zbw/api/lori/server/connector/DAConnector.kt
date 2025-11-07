@@ -5,6 +5,7 @@ import de.zbw.api.lori.server.type.DACollection
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.api.lori.server.type.DACredentials
 import de.zbw.api.lori.server.type.DAItem
+import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemMetadata
@@ -38,6 +39,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.SerializationException
@@ -70,6 +72,7 @@ class DAConnector(
         },
 ) {
     private val restURL = "${config.digitalArchiveAddress}/rest"
+    private val mutexForLogging = Mutex()
 
     suspend fun login(): String {
         val statement: HttpResponse =
@@ -153,11 +156,17 @@ class DAConnector(
     suspend fun importAllCollectionsOfCommunity(
         loginToken: String,
         community: DACommunity,
-    ): List<Int> =
+        validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
+    ): List<CollectionImport> =
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
-            collectionIds.map { cId ->
-                importCollection(loginToken, cId, community)
+            collectionIds.mapNotNull { cId ->
+                importCollection(
+                    loginToken,
+                    cId,
+                    community,
+                    validationErrorMap = validationErrorMap,
+                )
             }
         }
 
@@ -168,8 +177,9 @@ class DAConnector(
         limit: Int,
         collection: DACollection,
         community: DACommunity,
+        validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
     ): Int {
-        LOG.info("Collection Handle ${collection.handle}: Offset $offset")
+        LOG.debug("Collection Handle ${collection.handle}: Offset $offset")
 
         val response: ApiResponse<List<DAItem>, String> =
             client.safeRequest(2, 2000L) {
@@ -210,6 +220,8 @@ class DAConnector(
                             it.toBusiness(
                                 daCollection = collection,
                                 daCommunity = community,
+                                validationErrorMap = validationErrorMap,
+                                mutexForLogging = mutexForLogging,
                             )
                         }.map { shortenHandle(it) }
                 val writtenToDB = backend.upsertMetadata(metadataList).filter { it == 1 }.size
@@ -262,7 +274,8 @@ class DAConnector(
         loginToken: String,
         collectionId: Int,
         community: DACommunity,
-    ): Int =
+        validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
+    ): CollectionImport? =
         coroutineScope {
             val collection: DACollection? =
                 getCollectionById(
@@ -271,7 +284,7 @@ class DAConnector(
                 )
 
             if (collection == null) {
-                return@coroutineScope 0
+                return@coroutineScope null
             }
 
             val numberItems: Int = collection.numberItems ?: 0
@@ -288,14 +301,30 @@ class DAConnector(
                                 limit = DEFAULT_IMPORT_CHUNK_SIZE,
                                 collection = collection,
                                 community = community,
+                                validationErrorMap = validationErrorMap,
                             )
                         }
                     }
             }
             // Sum results in the end to prevent race conditions
-            return@coroutineScope deferredResults.awaitAll().sum().also {
-                LOG.info("Collection Handle ${collection.handle}: Successfully imported $it entries")
-            }
+            return@coroutineScope deferredResults
+                .awaitAll()
+                .sum()
+                .let { successfullyImported ->
+                    CollectionImport(
+                        importsExpected = collection.numberItems ?: 0,
+                        importsReceived = successfullyImported,
+                        collectionId = collectionId,
+                    )
+                }.also {
+                    LOG.info("Collection Handle ${collection.handle}: Successfully imported ${it.importsReceived} entries")
+                    if (it.importsReceived < it.importsExpected) {
+                        LOG.warn(
+                            "Collection Handle ${collection.handle}:" +
+                                " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                        )
+                    }
+                }
         }
 
     suspend inline fun <reified T, reified E> HttpClient.safeRequest(
@@ -329,7 +358,7 @@ class DAConnector(
     suspend inline fun <reified E> ResponseException.errorBody(): E? =
         try {
             response.body()
-        } catch (e: SerializationException) {
+        } catch (_: SerializationException) {
             null
         }
 

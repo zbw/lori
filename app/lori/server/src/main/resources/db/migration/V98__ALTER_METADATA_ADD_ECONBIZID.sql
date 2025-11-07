@@ -1,0 +1,1 @@
+ALTER TABLE item_metadata ADD COLUMN econbizid TEXT;

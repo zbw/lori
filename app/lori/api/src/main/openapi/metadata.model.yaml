@@ -43,6 +43,8 @@ MetadataRest:
       type: array
       items:
         type: string
+    econbizid:
+      type: string
     handle:
       type: string
     isbn:

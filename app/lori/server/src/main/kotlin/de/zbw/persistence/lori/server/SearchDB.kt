@@ -34,6 +34,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREAT
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
@@ -576,7 +577,7 @@ class SearchDB(
                 "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle," +
                 "licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
+                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID," +
                 "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME," +
                 COLUMN_METADATA_HANDLE_POSTFIX
@@ -591,7 +592,8 @@ class SearchDB(
                 "$COLUMN_METADATA_COMMUNITY_NAME,$COLUMN_METADATA_STORAGE_DATE,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE,$COLUMN_METADATA_COLLECTION_HANDLE,$COLUMN_METADATA_LICENCE_URL," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME,$COLUMN_METADATA_IS_PART_OF_SERIES," +
-                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,${COLUMN_METADATA_HANDLE_POSTFIX}"
+                "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,${COLUMN_METADATA_ECONBIZID}," +
+                "${COLUMN_METADATA_HANDLE_POSTFIX}"
 
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,

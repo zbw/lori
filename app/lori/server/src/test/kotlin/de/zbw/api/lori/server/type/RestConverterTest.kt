@@ -34,6 +34,8 @@ import de.zbw.lori.model.TemplateApplicationRest
 import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.ZdbIdWithCountRest
 import de.zbw.persistence.lori.server.GroupDBTest.Companion.NOW
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert
@@ -68,6 +70,7 @@ class RestConverterTest {
                         createdOn = TEST_METADATA.createdOn,
                         deleted = TEST_METADATA.deleted,
                         doi = TEST_METADATA.doi,
+                        econbizid = TEST_METADATA.econbizId,
                         handle = TEST_METADATA.handle,
                         isbn = TEST_METADATA.isbn,
                         issn = TEST_METADATA.issn,
@@ -140,8 +143,9 @@ class RestConverterTest {
                 createdOn = null,
                 deleted = false,
                 doi = listOf("10.7298/c5ps-be97"),
+                econbizId = "123",
                 handle = "11159/848",
-                isbn = listOf("9781847200235", "9781845420680"),
+                isbn = listOf("9781847200235", "978-1-84542-0680", "9781845420680"),
                 issn = null,
                 isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = null,
@@ -164,7 +168,7 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 subCommunityHandle = TEST_COMMUNITY.subcommunities?.get(0)!!.handle,
-                subCommunityName = TEST_COMMUNITY.subcommunities?.get(0)!!.name,
+                subCommunityName = TEST_COMMUNITY.subcommunities.get(0)!!.name,
                 title = "some_title",
                 titleJournal = "some_journal",
                 titleSeries = "some_series",
@@ -173,10 +177,14 @@ class RestConverterTest {
 
         // when
         val receivedItem =
-            TEST_DA_ITEM.toBusiness(
-                TEST_COMMUNITY,
-                TEST_COLLECTION,
-            )
+            runBlocking {
+                TEST_DA_ITEM.toBusiness(
+                    daCommunity = TEST_COMMUNITY,
+                    daCollection = TEST_COLLECTION,
+                    validationErrorMap = mutableMapOf<MetadataValidationError, List<String>>(),
+                    mutexForLogging = Mutex(),
+                )
+            }
         // then
         assertThat(receivedItem, `is`(expected))
 
@@ -624,6 +632,7 @@ class RestConverterTest {
                     ),
                 deleted = false,
                 doi = listOf("10.0002", "10.982301"),
+                econbizId = "123",
                 handle = "hdl:example.handle.net",
                 isbn = listOf("1234567", "890123"),
                 issn = "123456",
@@ -902,6 +911,11 @@ class RestConverterTest {
                             language = "EN",
                         ),
                         DAMetadata(
+                            key = "dc.identifier.isbn",
+                            value = "978-1-84542-0680",
+                            language = "EN",
+                        ),
+                        DAMetadata(
                             key = "dc.identifier.pi",
                             value = "1813/110555",
                             language = "EN",
@@ -912,8 +926,8 @@ class RestConverterTest {
                             language = "EN",
                         ),
                         DAMetadata(
-                            key = "dc.identifier.isbn",
-                            value = "9781845420680",
+                            key = "dc.identifier.econbizid",
+                            value = "123",
                             language = "EN",
                         ),
                     ),
@@ -981,7 +995,7 @@ class RestConverterTest {
                             conflictingWithRightId = "sourceRightId",
                             conflictByRightId = "conflictingRightId",
                             handle = "somehandle",
-                            createdOn = ErrorRoutesKtTest.Companion.NOW,
+                            createdOn = ErrorRoutesKtTest.NOW,
                             conflictType = ConflictType.DATE_OVERLAP,
                             conflictByContext = "template name",
                             testId = null,

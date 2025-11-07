@@ -24,7 +24,7 @@ export default defineComponent({
     },
   },
   emits: [
-      "dashboardClosed"
+    "dashboardClosed"
   ],
   setup(props, {emit}) {
     const userStore = useUserStore();
@@ -179,9 +179,9 @@ export default defineComponent({
     const canReset = computed(() => {
       return (
           selectedContextNames.value.length > 0 ||
-              selectedConflictTypes.value.length > 0 ||
-              startDateFormatted.value != "" ||
-              endDateFormatted.value != ""
+          selectedConflictTypes.value.length > 0 ||
+          startDateFormatted.value != "" ||
+          endDateFormatted.value != ""
       );
     });
 
@@ -501,24 +501,24 @@ export default defineComponent({
           item-value="handleId"
           loading-text="Daten werden geladen... Bitte warten."
       >
-      <template v-slot:item.conflictByContext="{ item }">
-        <td v-if="item.conflictType == 'date_overlap'">
-          <a
-              v-bind:href="
+        <template v-slot:item.conflictByContext="{ item }">
+          <td v-if="item.conflictType == 'date_overlap'">
+            <a
+                v-bind:href="
                   url.createTemplateHref(item.conflictByRightId)
                   "
-              target="_blank"
-          > Template '{{item.conflictByContext}}'</a>
-        </td>
-        <td v-else>
-          {{ item.conflictByContext }}
-        </td>
-      </template>
-      <template v-slot:item.conflictType="{ item }">
-        <td >
-          {{prettyPrintConflict(item.conflictType)}}
-        </td>
-      </template>
+                target="_blank"
+            > Template '{{item.conflictByContext}}'</a>
+          </td>
+          <td v-else>
+            {{ item.conflictByContext }}
+          </td>
+        </template>
+        <template v-slot:item.conflictType="{ item }">
+          <td >
+            {{prettyPrintConflict(item.conflictType)}}
+          </td>
+        </template>
         <template v-slot:item.handle="{ item }">
           <td>
             <a

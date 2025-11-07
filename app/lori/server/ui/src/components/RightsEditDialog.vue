@@ -42,6 +42,7 @@ import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
+import {useDate} from "vuetify";
 
 export default defineComponent({
   computed: {
@@ -181,8 +182,8 @@ export default defineComponent({
 
     const startDateFormatted = computed(() => {
       if (
-        date_utils.isEmptyObject(formState.startDate) ||
-        formState.startDate == undefined
+          date_utils.isEmptyObject(formState.startDate) ||
+          formState.startDate == undefined
       ) {
         return "";
       } else {
@@ -192,8 +193,8 @@ export default defineComponent({
 
     const endDateFormatted = computed(() => {
       if (
-        date_utils.isEmptyObject(formState.endDate) ||
-        formState.endDate == undefined
+          date_utils.isEmptyObject(formState.endDate) ||
+          formState.endDate == undefined
       ) {
         return "";
       } else {
@@ -212,28 +213,38 @@ export default defineComponent({
       }
     });
 
-   const updateEndDate = (newValue : string | undefined) => {
-     if (newValue == '' || newValue == undefined){
-       formState.endDate = undefined;
-     }
-   };
+    const updateEndDate = (newValue : string | undefined) => {
+      if (newValue == '' || newValue == undefined){
+        formState.endDate = undefined;
+      }
+    };
+
+    const allowedDates = ((dateToCheck: string) => {
+      const currentDate = new Date();
+      const checkDate = new Date(dateToCheck);
+      // Zero out time for both dates to compare just by day
+      currentDate.setHours(0, 0, 0, 0);
+      checkDate.setHours(0, 0, 0, 0);
+      return checkDate >= currentDate;
+    }) as (date: unknown) => boolean;
+    // This nightmare of casting is necessary because of vuetifyes loose definition of allowed-dates
 
     const newRightHasChanges = computed (() => {
       return isNew.value &&
-      (formState.accessState != "" ||
-      formState.basisStorage != "" ||
-      formState.basisAccessState != ""  ||
-      !(formState.startDate == undefined || Object.keys(formState.startDate).length === 0) ||
-      !(formState.endDate == undefined || Object.keys(formState.endDate).length === 0) ||
-      (isTemplate.value && (
-              formState.templateName != "" ||
-              formState.templateDescription != "" ||
-              formState.selectedBookmarks.length != 0 ||
-              formState.exceptionTemplates.length != 0 ||
-              formState.predecessors.length != 0 ||
-              formState.successors.length != 0
-          )
-      ))
+          (formState.accessState != "" ||
+              formState.basisStorage != "" ||
+              formState.basisAccessState != ""  ||
+              !(formState.startDate == undefined || Object.keys(formState.startDate).length === 0) ||
+              !(formState.endDate == undefined || Object.keys(formState.endDate).length === 0) ||
+              (isTemplate.value && (
+                      formState.templateName != "" ||
+                      formState.templateDescription != "" ||
+                      formState.selectedBookmarks.length != 0 ||
+                      formState.exceptionTemplates.length != 0 ||
+                      formState.predecessors.length != 0 ||
+                      formState.successors.length != 0
+                  )
+              ))
     });
     const existingRightHasChanges = computed (() => {
       return (JSON.stringify(tmpRight.value) != JSON.stringify(lastSavedRight.value) ||
@@ -250,7 +261,7 @@ export default defineComponent({
                   JSON.stringify(formState.exceptionTemplates) != JSON.stringify(lastSavedExceptionTemplateItems.value) ||
                   JSON.stringify(formState.predecessors) != JSON.stringify(lastSavedPredecessors.value) ||
                   JSON.stringify(formState.successors) != JSON.stringify(lastSavedSuccessors.value)
-                )
+              )
           )
       )
     });
@@ -313,8 +324,8 @@ export default defineComponent({
     const errorAccessState = computed(() => {
       const errors: Array<string> = [];
       if (
-        v$.value.accessState.required.$invalid &&
-        v$.value.accessState.$dirty
+          v$.value.accessState.required.$invalid &&
+          v$.value.accessState.$dirty
       ) {
         errors.push("Eintrag wird benötigt");
       }
@@ -337,8 +348,8 @@ export default defineComponent({
     const errorTemplateName = computed(() => {
       const errors: Array<string> = [];
       if (
-        v$.value.templateName.$invalid &&
-        v$.value.templateName.$dirty
+          v$.value.templateName.$invalid &&
+          v$.value.templateName.$dirty
       ) {
         errors.push("Es wird ein Template-Name benötigt.");
       }
@@ -481,63 +492,63 @@ export default defineComponent({
     const createRight = () => {
       tmpRight.value.rightId = "unset";
       api
-        .addRight(tmpRight.value)
-        .then((r) => {
-          const handle = props.isCopy ? formState.copyToHandleId : props.handle;
-          api
-            .addItemEntry(
-              {
-                handle: handle,
-                rightId: r.rightId,
-              } as ItemEntry,
-              true,
-            )
-            .then(() => {
-              tmpRight.value.rightId = r.rightId;
-              emit("addSuccessful", tmpRight.value);
-              if(props.isCopy){
-                emit("copySuccessful", formState.copyToHandleId);
-              }
-              close();
-            })
-            .catch((e) => {
-              updateInProgress.value = false;
-              error.errorHandling(e, (errMsg: string) => {
-                errorMsgIsActive.value = true;
-                errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
-                updateConfirmDialog.value = false;
-              });
+          .addRight(tmpRight.value)
+          .then((r) => {
+            const handle = props.isCopy ? formState.copyToHandleId : props.handle;
+            api
+                .addItemEntry(
+                    {
+                      handle: handle,
+                      rightId: r.rightId,
+                    } as ItemEntry,
+                    true,
+                )
+                .then(() => {
+                  tmpRight.value.rightId = r.rightId;
+                  emit("addSuccessful", tmpRight.value);
+                  if(props.isCopy){
+                    emit("copySuccessful", formState.copyToHandleId);
+                  }
+                  close();
+                })
+                .catch((e) => {
+                  updateInProgress.value = false;
+                  error.errorHandling(e, (errMsg: string) => {
+                    errorMsgIsActive.value = true;
+                    errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
+                    updateConfirmDialog.value = false;
+                  });
+                });
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsgIsActive.value = true;
+              errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
+              updateConfirmDialog.value = false;
             });
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsgIsActive.value = true;
-            errorMsg.value = "Speichern war nicht erfolgreich: " +  errMsg;
-            updateConfirmDialog.value = false;
           });
-        });
     };
 
     const updateRight = () => {
       api
-        .updateRight(tmpRight.value)
-        .then(() => {
-          emit("updateSuccessful", tmpRight.value, props.index);
-          successMsg.value =
-            "Rechteinformation " +
-            tmpRight.value.rightId +
-            " erfolgreich geupdated";
-          successMsgIsActive.value = true;
-          reinitializeRight();
-        })
-        .catch((e) => {
-          updateInProgress.value = false;
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsgIsActive.value = true;
-            errorMsg.value = "Update war nicht erfolgreich: " +  errMsg;
-            updateConfirmDialog.value = false;
+          .updateRight(tmpRight.value)
+          .then(() => {
+            emit("updateSuccessful", tmpRight.value, props.index);
+            successMsg.value =
+                "Rechteinformation " +
+                tmpRight.value.rightId +
+                " erfolgreich geupdated";
+            successMsgIsActive.value = true;
+            reinitializeRight();
+          })
+          .catch((e) => {
+            updateInProgress.value = false;
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsgIsActive.value = true;
+              errorMsg.value = "Update war nicht erfolgreich: " +  errMsg;
+              updateConfirmDialog.value = false;
+            });
           });
-        });
     };
 
     /**
@@ -546,96 +557,96 @@ export default defineComponent({
     const createTemplate = () => {
       tmpRight.value.rightId = "unset";
       templateApi
-        .addTemplate(tmpRight.value)
-        .then((r: RightIdCreated) => {
-          const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
-          if(exceptionId == undefined){
-            updateBookmarks(r.rightId, () => {
-              tmpRight.value.rightId = r.rightId;
-              emit("addTemplateSuccessful", tmpRight.value);
-              close();
+          .addTemplate(tmpRight.value)
+          .then((r: RightIdCreated) => {
+            const exceptionId: string | undefined = formState.exceptionTemplates[0]?.rightId
+            if(exceptionId == undefined){
+              updateBookmarks(r.rightId, () => {
+                tmpRight.value.rightId = r.rightId;
+                emit("addTemplateSuccessful", tmpRight.value);
+                close();
+              });
+              return;
+            }
+            addExceptionsToTemplate(r.rightId, exceptionId, () => {
+              updateBookmarks(r.rightId, () => {
+                tmpRight.value.rightId = r.rightId;
+                emit("addTemplateSuccessful", tmpRight.value);
+                close();
+              });
             });
-            return;
-          }
-          addExceptionsToTemplate(r.rightId, exceptionId, () => {
-            updateBookmarks(r.rightId, () => {
-              tmpRight.value.rightId = r.rightId;
-              emit("addTemplateSuccessful", tmpRight.value);
-              close();
+          })
+          .catch((e) => {
+            updateInProgress.value = false;
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
             });
           });
-        })
-        .catch((e) => {
-          updateInProgress.value = false;
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
-          });
-        });
     };
 
     const updateTemplate = () => {
       templateApi
-        .updateTemplate(tmpRight.value)
-        .then(() => {
-          if (tmpRight.value.rightId == undefined) {
-            errorMsg.value =
-              "No RightId found when updating. This should NOT happen.";
-            errorMsgIsActive.value = true;
-            return;
-          }
-          updateBookmarks(tmpRight.value.rightId, () => {
-            removeExceptionsToTemplate(
-              tmpRight.value.rightId!!,
-              () => {
-                addExceptionsToTemplate(
-                    tmpRight.value.rightId!!,
-                    formState.exceptionTemplates[0]?.rightId,
-                    () => {
-                      successMsg.value =
-                          "Template " +
-                          tmpRight.value.templateName +
-                          " erfolgreich geupdated";
-                      successMsgIsActive.value = true;
-                      emit("updateTemplateSuccessful", formState.templateName);
-                      reinitializeRight();
-                    }
-                );
-              });
-          });
+          .updateTemplate(tmpRight.value)
+          .then(() => {
+            if (tmpRight.value.rightId == undefined) {
+              errorMsg.value =
+                  "No RightId found when updating. This should NOT happen.";
+              errorMsgIsActive.value = true;
+              return;
+            }
+            updateBookmarks(tmpRight.value.rightId, () => {
+              removeExceptionsToTemplate(
+                  tmpRight.value.rightId!!,
+                  () => {
+                    addExceptionsToTemplate(
+                        tmpRight.value.rightId!!,
+                        formState.exceptionTemplates[0]?.rightId,
+                        () => {
+                          successMsg.value =
+                              "Template " +
+                              tmpRight.value.templateName +
+                              " erfolgreich geupdated";
+                          successMsgIsActive.value = true;
+                          emit("updateTemplateSuccessful", formState.templateName);
+                          reinitializeRight();
+                        }
+                    );
+                  });
+            });
           })
-        .catch((e) => {
-          updateInProgress.value = false;
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
+          .catch((e) => {
+            updateInProgress.value = false;
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     /**
      * Add exceptions.
      */
     const addExceptionsToTemplate = (
-      rightId: string,
-      exceptionId: string | undefined,
-      callback: () => void,
+        rightId: string,
+        exceptionId: string | undefined,
+        callback: () => void,
     ) => {
       if (exceptionId == undefined){
         callback();
         return;
       }
       templateApi
-        .addExceptionToTemplate(rightId, exceptionId)
-        .then(() => {
-          callback();
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
+          .addExceptionToTemplate(rightId, exceptionId)
+          .then(() => {
+            callback();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     /**
@@ -691,22 +702,22 @@ export default defineComponent({
         return;
       }
       templateApi
-        .addBookmarksByRightId(
-          rightId,
-          formState.selectedBookmarks
-            .map((elem) => elem.bookmarkId)
-            .filter((elem): elem is number => !!elem),
-          true,
-        )
-        .then(() => {
-          callback();
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
+          .addBookmarksByRightId(
+              rightId,
+              formState.selectedBookmarks
+                  .map((elem) => elem.bookmarkId)
+                  .filter((elem): elem is number => !!elem),
+              true,
+          )
+          .then(() => {
+            callback();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
     const editDialogActivated = ref(false);
     const editBookmark = ref({} as BookmarkRest);
@@ -768,10 +779,10 @@ export default defineComponent({
 
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
       tmpRight.value.basisStorage = stringToBasisStorage(
-        formState.basisStorage,
+          formState.basisStorage,
       );
       tmpRight.value.basisAccessState = stringToBasisAccessState(
-        formState.basisAccessState,
+          formState.basisAccessState,
       );
       updateInProgress.value = true;
       if (formState.startDate == undefined) {
@@ -904,7 +915,7 @@ export default defineComponent({
     };
 
     const basisStorageToString = (
-      basisStorage: RightRestBasisStorageEnum | undefined,
+        basisStorage: RightRestBasisStorageEnum | undefined,
     ) => {
       if (basisStorage == undefined) {
         return "";
@@ -952,7 +963,7 @@ export default defineComponent({
     };
 
     const basisAccessStateToString = (
-      basisAccessState: RightRestBasisAccessStateEnum | undefined,
+        basisAccessState: RightRestBasisAccessStateEnum | undefined,
     ) => {
       if (basisAccessState == undefined) {
         return "";
@@ -1002,26 +1013,26 @@ export default defineComponent({
     const manualRightId = ref("");
     const computedRightId = computed(() => {
       // The check for undefined is required here!
-        if (props.rightId == undefined) {
-          return "";
-        } else if (manualRightId.value != ""){
-          return manualRightId.value;
-        } else {
-          return props.rightId;
-        }
+      if (props.rightId == undefined) {
+        return "";
+      } else if (manualRightId.value != ""){
+        return manualRightId.value;
+      } else {
+        return props.rightId;
+      }
     });
     const computedReinitCounter = computed(() => props.reinitCounter);
 
     const isNew = computed(() => props.isNewRight || props.isNewTemplate);
     const isEditable = computed(
-      () =>
-        (userStore.isLoggedIn && isNew.value) ||
-        (userStore.isLoggedIn && lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
+        () =>
+            (userStore.isLoggedIn && isNew.value) ||
+            (userStore.isLoggedIn && lastSavedRight.value != undefined && lastSavedRight.value.lastAppliedOn == undefined && isTemplate.value)
     );
     const isTemplate = computed(
-      () =>
-        props.isNewTemplate ||
-        (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
+        () =>
+            props.isNewTemplate ||
+            (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
     );
     const isExistingTemplate = computed(
         () =>
@@ -1029,16 +1040,16 @@ export default defineComponent({
             (lastSavedRight.value != undefined && lastSavedRight.value.isTemplate),
     );
     const isTemplateAndException = computed(
-      () => isTemplate.value && props.isExceptionTemplate,
+        () => isTemplate.value && props.isExceptionTemplate,
     );
     const isTemplateDraft = computed(
         () => isTemplate.value && lastSavedRight.value?.lastAppliedOn == undefined,
     );
     const exceptionsAllowed = computed(
-      () =>
-        !props.isExceptionTemplate &&
-        (props.isNewTemplate ||
-          (lastSavedRight.value != undefined && lastSavedRight.value.exceptionOfId == undefined)),
+        () =>
+            !props.isExceptionTemplate &&
+            (props.isNewTemplate ||
+                (lastSavedRight.value != undefined && lastSavedRight.value.exceptionOfId == undefined)),
     );
 
     const mode = computed(() => {
@@ -1059,15 +1070,15 @@ export default defineComponent({
         if (props.isExceptionTemplate && lastSavedRight.value?.lastAppliedOn == undefined){
           description = "(Ausnahme und Entwurf)"
         } else if (
-          lastSavedRight.value?.exceptionOfId != undefined &&
-          lastSavedRight.value?.exceptionOfId != '' &&
-          lastSavedRight.value?.lastAppliedOn == undefined
+            lastSavedRight.value?.exceptionOfId != undefined &&
+            lastSavedRight.value?.exceptionOfId != '' &&
+            lastSavedRight.value?.lastAppliedOn == undefined
         ){
           description = "(Ausnahme und Entwurf)"
         } else if (
-          props.isExceptionTemplate ||
+            props.isExceptionTemplate ||
             (lastSavedRight.value?.exceptionOfId != undefined &&
-            lastSavedRight.value?.exceptionOfId != '')
+                lastSavedRight.value?.exceptionOfId != '')
         ){
           description = "(Ausnahme)"
         } else if (lastSavedRight.value?.lastAppliedOn == undefined) {
@@ -1110,13 +1121,13 @@ export default defineComponent({
         formState.selectedGroups = tmpRight.value.groups;
       }
       formState.templateName =
-        tmpRight.value.templateName == undefined ? "" : tmpRight.value.templateName;
+          tmpRight.value.templateName == undefined ? "" : tmpRight.value.templateName;
       formState.templateDescription =
           tmpRight.value.templateDescription == undefined ? "" : tmpRight.value.templateDescription;
       formState.accessState = accessStateToString(tmpRight.value.accessState);
       formState.basisStorage = basisStorageToString(tmpRight.value.basisStorage);
       formState.basisAccessState = basisAccessStateToString(
-        tmpRight.value.basisAccessState,
+          tmpRight.value.basisAccessState,
       );
       formState.startDate = tmpRight.value.startDate;
       if (tmpRight.value.endDate !== undefined) {
@@ -1299,7 +1310,7 @@ export default defineComponent({
 
     const addNewException = (excTemplate: RightRest) => {
       formState.exceptionTemplates =
-        formState.exceptionTemplates.concat(excTemplate);
+          formState.exceptionTemplates.concat(excTemplate);
       renderTemplateKey.value += 1;
     };
 
@@ -1338,47 +1349,47 @@ export default defineComponent({
     const loadBookmarks = () => {
       if (computedRightId.value == undefined) {
         errorMsg.value =
-          "Error while loading bookmarks. Invalid Template ID.";
+            "Error while loading bookmarks. Invalid Template ID.";
         errorMsgIsActive.value = true;
       } else {
         templateApi
-          .getBookmarksByRightId(computedRightId.value)
-          .then((bookmarks: Array<BookmarkRest>) => {
-            formState.selectedBookmarks = bookmarks;
-            lastSavedBookmarkItems.value = Array.from(bookmarks);
-          })
-          .catch((e) => {
-            error.errorHandling(e, (errMsg: string) => {
-              errorMsg.value = errMsg;
-              errorMsgIsActive.value = true;
+            .getBookmarksByRightId(computedRightId.value)
+            .then((bookmarks: Array<BookmarkRest>) => {
+              formState.selectedBookmarks = bookmarks;
+              lastSavedBookmarkItems.value = Array.from(bookmarks);
+            })
+            .catch((e) => {
+              error.errorHandling(e, (errMsg: string) => {
+                errorMsg.value = errMsg;
+                errorMsgIsActive.value = true;
+              });
             });
-          });
       }
     };
 
     const loadExceptions = () => {
       if (computedRightId.value == undefined) {
         errorMsg.value =
-          "Error while loading bookmarks. Invalid Template ID.";
+            "Error while loading bookmarks. Invalid Template ID.";
         errorMsgIsActive.value = true;
       } else {
         templateApi
-          .getExceptionById(computedRightId.value)
-          .then((exception: RightRest) => {
-            formState.exceptionTemplates = [exception];
-            lastSavedExceptionTemplateItems.value = [exception];
-          })
-          .catch((e: ResponseError) => {
-            if(e.response && e.response.status == 404){
-              // This is expected.
-              lastSavedExceptionTemplateItems.value = [];
-            } else {
-              error.errorHandling(e, (errMsg: string) => {
-                errorMsg.value = errMsg;
-                errorMsgIsActive.value = true;
-              });
-            }
-          });
+            .getExceptionById(computedRightId.value)
+            .then((exception: RightRest) => {
+              formState.exceptionTemplates = [exception];
+              lastSavedExceptionTemplateItems.value = [exception];
+            })
+            .catch((e: ResponseError) => {
+              if(e.response && e.response.status == 404){
+                // This is expected.
+                lastSavedExceptionTemplateItems.value = [];
+              } else {
+                error.errorHandling(e, (errMsg: string) => {
+                  errorMsg.value = errMsg;
+                  errorMsgIsActive.value = true;
+                });
+              }
+            });
       }
     };
 
@@ -1393,20 +1404,20 @@ export default defineComponent({
         return;
       }
       rightApi
-        .getRightById(
-            lastSavedRight.value.predecessorId,
-            undefined,
-        )
-        .then((predecessor: RightRest) => {
-          formState.predecessors = [predecessor];
-          lastSavedPredecessors.value = [predecessor];
-        })
-        .catch((e: ResponseError) => {
+          .getRightById(
+              lastSavedRight.value.predecessorId,
+              undefined,
+          )
+          .then((predecessor: RightRest) => {
+            formState.predecessors = [predecessor];
+            lastSavedPredecessors.value = [predecessor];
+          })
+          .catch((e: ResponseError) => {
             error.errorHandling(e, (errMsg: string) => {
               errorMsg.value = errMsg;
               errorMsgIsActive.value = true;
             });
-        });
+          });
     };
 
     const loadSuccessor = () => {
@@ -1440,7 +1451,7 @@ export default defineComponent({
       // Unionise
       formState.selectedBookmarks = formState.selectedBookmarks.concat(bookmarks);
       formState.selectedBookmarks = uniqWith(formState.selectedBookmarks, isEqual).sort(
-        (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1),
+          (a, b) => (a.bookmarkId < b.bookmarkId ? -1 : 1),
       );
       renderBookmarkKey.value += 1;
     };
@@ -1460,16 +1471,16 @@ export default defineComponent({
     const groupItems: Ref<Array<GroupRest>> = ref([]);
     const getGroupList = () => {
       api
-        .getGroupList(0, 500)
-        .then((r: Array<GroupRest>) => {
-          groupItems.value = r;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            errorMsg.value = errMsg;
-            errorMsgIsActive.value = true;
+          .getGroupList(0, 500)
+          .then((r: Array<GroupRest>) => {
+            groupItems.value = r;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              errorMsg.value = errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     // Predecessor
@@ -1684,6 +1695,7 @@ export default defineComponent({
       userStore,
       // methods
       addNewException,
+      allowedDates,
       cancel,
       cancelConfirm,
       checkForChangesAndClose,
@@ -1729,8 +1741,8 @@ export default defineComponent({
 <style >
 /* Do not remove! This is needed for scrolling inside expansion panels. */
 .v-expansion-panel-text__wrapper {
-    max-height: calc(700px - 64px - (4 * 48px));
-    overflow: scroll;
+  max-height: calc(700px - 64px - (4 * 48px));
+  overflow: scroll;
 }
 
 .rotate-180 {
@@ -1921,18 +1933,18 @@ export default defineComponent({
           color="blue darken-1"
           @click="save"
           :disabled="!userStore.isLoggedIn"
-        >Speichern
+      >Speichern
       </v-btn>
 
       <v-tooltip
-        location="bottom"
+          location="bottom"
       >
         <template v-slot:activator="{ props }">
           <div v-bind="props" class="d-inline-block">
             <v-btn
-              :disabled="!isEditable || !userStore.isLoggedIn"
-              @click="initiateDeleteDialog"
-              class="mr-9"
+                :disabled="!isEditable || !userStore.isLoggedIn"
+                @click="initiateDeleteDialog"
+                class="mr-9"
             >
               <v-icon>mdi-delete</v-icon>
             </v-btn>
@@ -1951,30 +1963,30 @@ export default defineComponent({
       </v-tooltip>
 
       <v-dialog
-        v-model="dialogDeleteRight"
-        :retain-focus="false"
-        max-width="500px"
+          v-model="dialogDeleteRight"
+          :retain-focus="false"
+          max-width="500px"
       >
         <RightsDeleteDialog
-          :index="index"
-          :is-template="isTemplate"
-          :right-id="computedRightId"
-          v-on:deleteDialogClosed="deleteDialogClosed"
-          v-on:deleteSuccessful="deleteSuccessful"
+            :index="index"
+            :is-template="isTemplate"
+            :right-id="computedRightId"
+            v-on:deleteDialogClosed="deleteDialogClosed"
+            v-on:deleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
 
       <v-dialog
-        v-model="dialogDeleteTemplate"
-        :retain-focus="false"
-        max-width="500px"
+          v-model="dialogDeleteTemplate"
+          :retain-focus="false"
+          max-width="500px"
       >
         <RightsDeleteDialog
-          :index="index"
-          :is-template="isTemplate"
-          :right-id="computedRightId"
-          v-on:deleteDialogClosed="deleteDialogClosed"
-          v-on:templateDeleteSuccessful="deleteSuccessful"
+            :index="index"
+            :is-template="isTemplate"
+            :right-id="computedRightId"
+            v-on:deleteDialogClosed="deleteDialogClosed"
+            v-on:templateDeleteSuccessful="deleteSuccessful"
         ></RightsDeleteDialog>
       </v-dialog>
     </v-card-actions>
@@ -2017,8 +2029,8 @@ export default defineComponent({
           ></v-text-field>
         </v-col>
       </v-row>
-    <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
-      <v-expansion-panel v-if="isTemplate" value="0">
+      <v-expansion-panels bg-color="light-blue-lighten-5" v-model="openPanelsDefault" focusable variant="accordion">
+        <v-expansion-panel v-if="isTemplate" value="0">
           <v-expansion-panel-title>
             Template Informationen
           </v-expansion-panel-title>
@@ -2028,11 +2040,11 @@ export default defineComponent({
                 <v-col cols="4"> Template Name</v-col>
                 <v-col cols="8">
                   <v-text-field
-                    v-model="formState.templateName"
-                    :error-messages="errorTemplateName"
-                    hint="Name des Templates"
-                    variant="outlined"
-                    v-bind="attrWithLogin"
+                      v-model="formState.templateName"
+                      :error-messages="errorTemplateName"
+                      hint="Name des Templates"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
                   ></v-text-field>
                 </v-col>
               </v-row>
@@ -2040,11 +2052,11 @@ export default defineComponent({
                 <v-col cols="4">Beschreibung</v-col>
                 <v-col cols="8">
                   <v-textarea
-                    v-model="formState.templateDescription"
-                    hint="Beschreibung des Templates"
-                    variant="outlined"
-                    v-bind="attrWithLogin"
-                    rows="2"
+                      v-model="formState.templateDescription"
+                      hint="Beschreibung des Templates"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
+                      rows="2"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -2139,11 +2151,11 @@ export default defineComponent({
                 </v-col>
                 <v-col cols="8">
                   <v-data-table
-                    :key="renderBookmarkKey"
-                    :headers="bookmarkHeaders"
-                    :items="formState.selectedBookmarks"
-                    item-value="bookmarkId"
-                    loading-text="Daten werden geladen... Bitte warten."
+                      :key="renderBookmarkKey"
+                      :headers="bookmarkHeaders"
+                      :items="formState.selectedBookmarks"
+                      item-value="bookmarkId"
+                      loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template #bottom></template>
                     <template v-slot:item.actions="{ item }">
@@ -2184,7 +2196,7 @@ export default defineComponent({
                             <v-icon
                                 :disabled="!isEditable || !(lastSavedRight?.lastAppliedOn == undefined)"
                                 @click="deleteBookmarkEntry(item)"
-                                >
+                            >
                               mdi-delete
                             </v-icon>
                           </div>
@@ -2204,14 +2216,14 @@ export default defineComponent({
                   >Gespeicherte Suche verknüpfen
                   </v-btn>
                   <v-dialog
-                    v-model="bookmarkDialogOn"
-                    :retain-focus="false"
-                    max-width="500px"
+                      v-model="bookmarkDialogOn"
+                      :retain-focus="false"
+                      max-width="500px"
                   >
                     <TemplateBookmark
-                      :reinit-counter="openBookmarkSearch"
-                      v-on:bookmarksSelected="setSelectedBookmarks"
-                      v-on:templateBookmarkClosed="templateBookmarkClosed"
+                        :reinit-counter="openBookmarkSearch"
+                        v-on:bookmarksSelected="setSelectedBookmarks"
+                        v-on:templateBookmarkClosed="templateBookmarkClosed"
                     ></TemplateBookmark>
                   </v-dialog>
                 </v-col>
@@ -2220,11 +2232,11 @@ export default defineComponent({
                 <v-col cols="4">Ausnahme</v-col>
                 <v-col cols="8">
                   <v-data-table
-                    :key="renderTemplateKey"
-                    :headers="exceptionTemplateHeaders"
-                    :items="formState.exceptionTemplates"
-                    item-value="rightId"
-                    loading-text="Daten werden geladen... Bitte warten."
+                      :key="renderTemplateKey"
+                      :headers="exceptionTemplateHeaders"
+                      :items="formState.exceptionTemplates"
+                      item-value="rightId"
+                      loading-text="Daten werden geladen... Bitte warten."
                   >
                     <template v-slot:item.templateName="{ item }">
                       <td>
@@ -2259,10 +2271,10 @@ export default defineComponent({
                     </template>
                   </v-data-table>
                   <v-btn
-                    color="blue darken-1"
-                    :disabled="!isEditable || formState.exceptionTemplates.length != 0"
-                    @click="openCreateExceptionDialog"
-                    >Erstelle neue Ausnahme
+                      color="blue darken-1"
+                      :disabled="!isEditable || formState.exceptionTemplates.length != 0"
+                      @click="openCreateExceptionDialog"
+                  >Erstelle neue Ausnahme
                   </v-btn>
                   <v-btn
                       class="ma-3"
@@ -2412,378 +2424,380 @@ export default defineComponent({
             </v-container>
           </v-expansion-panel-text>
         </v-expansion-panel>
-      <v-expansion-panel value="1">
-        <v-expansion-panel-title
+        <v-expansion-panel value="1">
+          <v-expansion-panel-title
           >Steuerungsrelevante Elemente
-        </v-expansion-panel-title>
-        <v-expansion-panel-text eager>
-          <v-container fluid>
-            <v-row>
-              <v-col cols="4"> Right-Id</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-if="isNew"
-                  ref="rightId"
-                  readonly
-                  hint="Rechte Id"
-                  label="Wird automatisch generiert"
-                  bg-color="grey-lighten-2"
-                  variant="outlined"
-                ></v-text-field>
-                <v-text-field
-                  v-if="!isNew"
-                  ref="rightId"
-                  v-model="tmpRight.rightId"
-                  readonly
-                  bg-color="grey-lighten-2"
-                  hint="Rechte Id"
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Aktueller Access-Status</v-col>
-              <v-col cols="8">
-                <v-select
-                  v-model="formState.accessState"
-                  v-bind="attrWithROProps"
-                  :error-messages="errorAccessState"
-                  :items="accessStatusSelect"
-                  variant="outlined"
-                  @blur="v$.accessState.$touch()"
-                  @change="v$.accessState.$touch()"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Gültigkeit Startdatum</v-col>
-              <v-col cols="8">
-                <v-menu
-                  :close-on-content-click="false"
-                  :location="'bottom'"
-                  v-model="isStartDateMenuOpen"
-                  :disabled="!isEditable"
-                >
-                  <template v-slot:activator="{ props }">
-                   <v-text-field
-                      :modelValue="startDateFormatted"
-                      :error-messages="errorStartDate"
-                      label="Start-Datum"
-                      variant="outlined"
-                      prepend-icon="mdi-calendar"
-                      required
+          </v-expansion-panel-title>
+          <v-expansion-panel-text eager>
+            <v-container fluid>
+              <v-row>
+                <v-col cols="4"> Right-Id</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-if="isNew"
+                      ref="rightId"
                       readonly
-                      v-bind="mergeSlotWithReadonly(props)"
-                      @blur="v$.startDate.$touch()"
-                      @change="v$.startDate.$touch()"
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker
-                      first-day-of-week="1"
-                      v-model="formState.startDate"
-                      color="primary">
-                    <template v-slot:header></template>
-                  </v-date-picker>
-                </v-menu>
-              </v-col>
-            </v-row>
-            <v-row v-if="isTabEntry && isTemplate">
-              <v-col cols="4">
-                Datum der ersten Template-Anwendung auf das Objekt
-              </v-col>
-              <v-col cols="8">
-                {{ firstAppliedForHandleFormatted }}
-                <div class="text-caption text-grey-darken-1 mt-1">
+                      hint="Rechte Id"
+                      label="Wird automatisch generiert"
+                      bg-color="grey-lighten-2"
+                      variant="outlined"
+                  ></v-text-field>
+                  <v-text-field
+                      v-if="!isNew"
+                      ref="rightId"
+                      v-model="tmpRight.rightId"
+                      readonly
+                      bg-color="grey-lighten-2"
+                      hint="Rechte Id"
+                      variant="outlined"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Aktueller Access-Status</v-col>
+                <v-col cols="8">
+                  <v-select
+                      v-model="formState.accessState"
+                      v-bind="attrWithROProps"
+                      :error-messages="errorAccessState"
+                      :items="accessStatusSelect"
+                      variant="outlined"
+                      @blur="v$.accessState.$touch()"
+                      @change="v$.accessState.$touch()"
+                  ></v-select>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Gültigkeit Startdatum</v-col>
+                <v-col cols="8">
+                  <v-menu
+                      :close-on-content-click="false"
+                      :location="'bottom'"
+                      v-model="isStartDateMenuOpen"
+                      :disabled="!isEditable"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <v-text-field
+                          :modelValue="startDateFormatted"
+                          :error-messages="errorStartDate"
+                          label="Start-Datum"
+                          variant="outlined"
+                          prepend-icon="mdi-calendar"
+                          required
+                          readonly
+                          v-bind="mergeSlotWithReadonly(props)"
+                          @blur="v$.startDate.$touch()"
+                          @change="v$.startDate.$touch()"
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker
+                        :allowed-dates="allowedDates"
+                        first-day-of-week="1"
+                        v-model="formState.startDate"
+                        color="primary">
+                      <template v-slot:header></template>
+                    </v-date-picker>
+                  </v-menu>
+                </v-col>
+              </v-row>
+              <v-row v-if="isTabEntry && isTemplate">
+                <v-col cols="4">
                   Datum der ersten Template-Anwendung auf das Objekt
-                </div>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Gültigkeit Enddatum</v-col>
-              <v-col cols="8">
-                <v-menu
-                  :close-on-content-click="false"
-                  :location="'bottom'"
-                  v-model="isEndDateMenuOpen"
-                  :disabled="!userStore.isLoggedIn"
-                >
-                  <template v-slot:activator="{ props }">
-                    <v-text-field
-                      :modelValue="endDateFormatted"
-                      @update:modelValue="updateEndDate"
-                      :error-messages="errorEndDate"
-                      label="End-Datum"
-                      variant="outlined"
-                      prepend-icon="mdi-calendar"
+                </v-col>
+                <v-col cols="8">
+                  {{ firstAppliedForHandleFormatted }}
+                  <div class="text-caption text-grey-darken-1 mt-1">
+                    Datum der ersten Template-Anwendung auf das Objekt
+                  </div>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Gültigkeit Enddatum</v-col>
+                <v-col cols="8">
+                  <v-menu
+                      :close-on-content-click="false"
+                      :location="'bottom'"
+                      v-model="isEndDateMenuOpen"
+                      :disabled="!userStore.isLoggedIn"
+                  >
+                    <template v-slot:activator="{ props }">
+                      <v-text-field
+                          :modelValue="endDateFormatted"
+                          @update:modelValue="updateEndDate"
+                          :error-messages="errorEndDate"
+                          label="End-Datum"
+                          variant="outlined"
+                          prepend-icon="mdi-calendar"
+                          readonly
+                          required
+                          @blur="v$.endDate.$touch()"
+                          @change="v$.endDate.$touch()"
+                          v-bind="mergeSlotWithLogin(props)"
+                      ></v-text-field>
+                    </template>
+                    <v-date-picker
+                        first-day-of-week="1"
+                        :allowed-dates="allowedDates"
+                        v-model="formState.endDate"
+                        color="primary">
+                      <template v-slot:header></template>
+                    </v-date-picker>
+                  </v-menu>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4">IP-Gruppe</v-col>
+                <v-col cols="8">
+                  <v-select
+                      v-if="!isEditable || formState.accessState != 'Restricted'"
+                      bg-color="grey-lighten-2"
                       readonly
-                      required
-                      @blur="v$.endDate.$touch()"
-                      @change="v$.endDate.$touch()"
-                      v-bind="mergeSlotWithLogin(props)"
-                    ></v-text-field>
-                  </template>
-                  <v-date-picker
-                      first-day-of-week="1"
-                      v-model="formState.endDate"
-                      color="primary">
-                    <template v-slot:header></template>
-                  </v-date-picker>
-                </v-menu>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4">IP-Gruppe</v-col>
-              <v-col cols="8">
-                <v-select
-                  v-if="!isEditable || formState.accessState != 'Restricted'"
-                  bg-color="grey-lighten-2"
-                  readonly
-                  v-model="formState.selectedGroups"
-                  :items="groupItems"
-                  :error-messages="errorIPGroup"
-                  @blur="v$.selectedGroups.$touch()"
-                  @change="v$.selectedGroups.$touch()"
-                  chips
-                  multiple
-                  counter
-                  hint="Einschränkung des Zugriffs auf Berechtigungsgruppen (nur verfügbar für Restricted)"
-                  variant="outlined"
-                  return-object
-                  item-title="title"
+                      v-model="formState.selectedGroups"
+                      :items="groupItems"
+                      :error-messages="errorIPGroup"
+                      @blur="v$.selectedGroups.$touch()"
+                      @change="v$.selectedGroups.$touch()"
+                      chips
+                      multiple
+                      counter
+                      hint="Einschränkung des Zugriffs auf Berechtigungsgruppen (nur verfügbar für Restricted)"
+                      variant="outlined"
+                      return-object
+                      item-title="title"
+                  >
+                  </v-select>
+                  <v-select
+                      v-else
+                      v-model="formState.selectedGroups"
+                      :items="groupItems"
+                      :error-messages="errorIPGroup"
+                      @blur="v$.selectedGroups.$touch()"
+                      @change="v$.selectedGroups.$touch()"
+                      bg-color="white"
+                      chips
+                      multiple
+                      counter
+                      hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
+                      variant="outlined"
+                      return-object
+                      item-title="title"
+                  >
+                  </v-select>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Bemerkungen</v-col>
+                <v-col cols="8">
+                  <v-textarea
+                      v-model="tmpRight.notesGeneral"
+                      counter
+                      hint="Allgemeine Bemerkungen"
+                      maxlength="256"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+        <v-expansion-panel>
+          <v-expansion-panel-title>Formale Regelung</v-expansion-panel-title>
+          <v-expansion-panel-text eager>
+            <v-container fluid>
+              <v-row>
+                <v-col cols="4"> Lizenzvertrag</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-bind="attrWithLogin"
+                      v-model="tmpRight.licenceContract"
+                      hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
+                      variant="outlined"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-if="isTabEntry || isNewRight">
+                <v-col cols="4">
+                  Lizenz-URL am Objekt
+                </v-col>
+                <v-col cols="8">
+                  {{ computedLicenceUrl }}
+                  <div class="text-caption text-grey-darken-1 mt-1">
+                    Kommt aus den bibliographischen Metadaten.
+                  </div>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col
+                    cols="4"
                 >
-                </v-select>
-                <v-select
-                  v-else
-                  v-model="formState.selectedGroups"
-                  :items="groupItems"
-                  :error-messages="errorIPGroup"
-                  @blur="v$.selectedGroups.$touch()"
-                  @change="v$.selectedGroups.$touch()"
-                  bg-color="white"
-                  chips
-                  multiple
-                  counter
-                  hint="Einschränkung des Zugriffs auf Berechtigungsgruppen"
-                  variant="outlined"
-                  return-object
-                  item-title="title"
-                >
-                </v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Bemerkungen</v-col>
-              <v-col cols="8">
-                <v-textarea
-                  v-model="tmpRight.notesGeneral"
-                  counter
-                  hint="Allgemeine Bemerkungen"
-                  maxlength="256"
-                  variant="outlined"
-                  v-bind="attrWithLogin"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-      <v-expansion-panel>
-        <v-expansion-panel-title>Formale Regelung</v-expansion-panel-title>
-        <v-expansion-panel-text eager>
-          <v-container fluid>
-            <v-row>
-              <v-col cols="4"> Lizenzvertrag</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-bind="attrWithROProps"
-                  v-model="tmpRight.licenceContract"
-                  hint="Gibt Auskunft darüber, ob ein Lizenzvertrag für dieses Item als Nutzungsrechtsquelle vorliegt."
-                  variant="outlined"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-if="isTabEntry || isNewRight">
-              <v-col cols="4">
-                Lizenz-URL am Objekt
-              </v-col>
-              <v-col cols="8">
-                {{ computedLicenceUrl }}
-                <div class="text-caption text-grey-darken-1 mt-1">
-                  Kommt aus den bibliographischen Metadaten.
-                </div>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col
-                  cols="4"
-              >
-                Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
-              </v-col>
-              <v-col cols="8">
-                <v-switch
-                    v-model="tmpRight.hasLegalRisk"
-                    :false-value="true"
-                    :true-value="false"
-                    :readonly="!isEditable"
-                    color="indigo"
-                    :label="labelModelToString(tmpRight.hasLegalRisk == undefined ? undefined : !tmpRight.hasLegalRisk)"
-                    persistent-hint
-                ></v-switch>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> ZBW Nutzungsvereinbarung</v-col>
-              <v-col cols="8">
-                <v-switch
-                  v-model="tmpRight.zbwUserAgreement"
-                  :readonly="!isEditable"
-                  color="indigo"
-                  hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
-                  :label="labelModelToString(tmpRight.zbwUserAgreement)"
-                  persistent-hint
-                ></v-switch>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Open-Content mit Einschränkung</v-col>
-              <v-col cols="8">
-                <v-switch
-                  v-model="tmpRight.restrictedOpenContentLicence"
-                  :readonly="!isEditable"
-                  color="indigo"
-                  hint="Gilt für die Open-Content-Lizenz dieses Items eine Einschränkung, weil Material mit anderen Lizenzen enthalten ist?"
-                  :label="labelModelToString(tmpRight.restrictedOpenContentLicence)"
-                  persistent-hint
-                ></v-switch>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Bemerkungen</v-col>
-              <v-col cols="8">
-                <v-textarea
-                  v-model="tmpRight.notesFormalRules"
-                  counter
-                  hint="Bemerkungen für formale Regelungen"
-                  maxlength="256"
-                  variant="outlined"
-                  v-bind="attrWithLogin"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-      <v-expansion-panel value="2">
-        <v-expansion-panel-title
+                  Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
+                </v-col>
+                <v-col cols="8">
+                  <v-switch
+                      v-model="tmpRight.hasLegalRisk"
+                      :false-value="true"
+                      :true-value="false"
+                      :readonly="!isEditable"
+                      color="indigo"
+                      :label="labelModelToString(tmpRight.hasLegalRisk == undefined ? undefined : !tmpRight.hasLegalRisk)"
+                      persistent-hint
+                  ></v-switch>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> ZBW Nutzungsvereinbarung</v-col>
+                <v-col cols="8">
+                  <v-switch
+                      v-model="tmpRight.zbwUserAgreement"
+                      :readonly="!isEditable"
+                      color="indigo"
+                      hint="Gibt Auskunft darüber, ob eine Nutzungsvereinbarung für dieses Item als Nutzungsrechtsquelle vorliegt."
+                      :label="labelModelToString(tmpRight.zbwUserAgreement)"
+                      persistent-hint
+                  ></v-switch>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Open-Content mit Einschränkung</v-col>
+                <v-col cols="8">
+                  <v-switch
+                      v-model="tmpRight.restrictedOpenContentLicence"
+                      :readonly="!isEditable"
+                      color="indigo"
+                      hint="Gilt für die Open-Content-Lizenz dieses Items eine Einschränkung, weil Material mit anderen Lizenzen enthalten ist?"
+                      :label="labelModelToString(tmpRight.restrictedOpenContentLicence)"
+                      persistent-hint
+                  ></v-switch>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Bemerkungen</v-col>
+                <v-col cols="8">
+                  <v-textarea
+                      v-model="tmpRight.notesFormalRules"
+                      counter
+                      hint="Bemerkungen für formale Regelungen"
+                      maxlength="256"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+        <v-expansion-panel value="2">
+          <v-expansion-panel-title
           >Prozessdokumentierende Elemente
-        </v-expansion-panel-title>
-        <v-expansion-panel-text eager>
-          <v-container fluid>
-            <v-row>
-              <v-col cols="4"> Basis der Speicherung</v-col>
-              <v-col cols="8">
-                <v-select
-                  v-bind="attrWithROProps"
-                  v-model="formState.basisStorage"
-                  :items="basisStorage"
-                  variant="outlined"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Basis des Access-Status</v-col>
-              <v-col cols="8">
-                <v-select
-                  v-bind="attrWithROProps"
-                  v-model="formState.basisAccessState"
-                  :items="basisAccessState"
-                  variant="outlined"
-                ></v-select>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Bemerkungen</v-col>
-              <v-col cols="8">
-                <v-textarea
-                  v-model="tmpRight.notesProcessDocumentation"
-                  counter
-                  hint="Bemerkungen für prozessdokumentierende Elemente"
-                  maxlength="256"
-                  variant="outlined"
-                  v-bind="attrWithLogin"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-      <v-expansion-panel value="3">
-        <v-expansion-panel-title>
-          Metadaten über den Rechteinformationseintrag
-        </v-expansion-panel-title>
-        <v-expansion-panel-text eager>
-          <v-container fluid>
-            <v-row v-if="!isTemplate">
-              <v-col cols="4"> Erstellt am</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-bind="attrWithROProps"
-                  v-model="tmpRight.createdOn"
-                  variant="outlined"
-                  hint="Erstellungsdatum des Templates"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-if="!isTemplate">
-              <v-col cols="4"> Erstellt von</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-model="tmpRight.createdBy"
-                  variant="outlined"
-                  readonly
-                  bg-color="grey-lighten-2"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-if="!isTemplate">
-              <v-col cols="4"> Zuletzt editiert am</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-model="tmpRight.lastUpdatedOn"
-                  variant="outlined"
-                  readonly
-                  bg-color="grey-lighten-2"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row v-if="!isTemplate">
-              <v-col cols="4"> Zuletzt editiert von</v-col>
-              <v-col cols="8">
-                <v-text-field
-                  v-model="tmpRight.lastUpdatedBy"
-                  variant="outlined"
-                  readonly
-                  bg-color="grey-lighten-2"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-            <v-row>
-              <v-col cols="4"> Bemerkungen</v-col>
-              <v-col cols="8">
-                <v-textarea
-                  v-model="tmpRight.notesManagementRelated"
-                  counter
-                  hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
-                  maxlength="256"
-                  variant="outlined"
-                  v-bind="attrWithLogin"
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+          </v-expansion-panel-title>
+          <v-expansion-panel-text eager>
+            <v-container fluid>
+              <v-row>
+                <v-col cols="4"> Basis der Speicherung</v-col>
+                <v-col cols="8">
+                  <v-select
+                      v-bind="attrWithROProps"
+                      v-model="formState.basisStorage"
+                      :items="basisStorage"
+                      variant="outlined"
+                  ></v-select>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Basis des Access-Status</v-col>
+                <v-col cols="8">
+                  <v-select
+                      v-bind="attrWithROProps"
+                      v-model="formState.basisAccessState"
+                      :items="basisAccessState"
+                      variant="outlined"
+                  ></v-select>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Bemerkungen</v-col>
+                <v-col cols="8">
+                  <v-textarea
+                      v-model="tmpRight.notesProcessDocumentation"
+                      counter
+                      hint="Bemerkungen für prozessdokumentierende Elemente"
+                      maxlength="256"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+        <v-expansion-panel value="3">
+          <v-expansion-panel-title>
+            Metadaten über den Rechteinformationseintrag
+          </v-expansion-panel-title>
+          <v-expansion-panel-text eager>
+            <v-container fluid>
+              <v-row v-if="!isTemplate">
+                <v-col cols="4"> Erstellt am</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-bind="attrWithROProps"
+                      v-model="tmpRight.createdOn"
+                      variant="outlined"
+                      hint="Erstellungsdatum des Templates"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-if="!isTemplate">
+                <v-col cols="4"> Erstellt von</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-model="tmpRight.createdBy"
+                      variant="outlined"
+                      readonly
+                      bg-color="grey-lighten-2"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-if="!isTemplate">
+                <v-col cols="4"> Zuletzt editiert am</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-model="tmpRight.lastUpdatedOn"
+                      variant="outlined"
+                      readonly
+                      bg-color="grey-lighten-2"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row v-if="!isTemplate">
+                <v-col cols="4"> Zuletzt editiert von</v-col>
+                <v-col cols="8">
+                  <v-text-field
+                      v-model="tmpRight.lastUpdatedBy"
+                      variant="outlined"
+                      readonly
+                      bg-color="grey-lighten-2"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="4"> Bemerkungen</v-col>
+                <v-col cols="8">
+                  <v-textarea
+                      v-model="tmpRight.notesManagementRelated"
+                      counter
+                      hint="Bemerkungen für Metadaten über den Rechteinformationseintrag"
+                      maxlength="256"
+                      variant="outlined"
+                      v-bind="attrWithLogin"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -2791,7 +2805,7 @@ export default defineComponent({
           :disabled="updateInProgress || !userStore.isLoggedIn"
           color="blue darken-1"
           @click="save"
-        >Speichern
+      >Speichern
       </v-btn>
     </v-card-actions>
     <v-dialog v-model="updateConfirmDialog" max-width="500px">
@@ -2805,10 +2819,10 @@ export default defineComponent({
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            :disabled="updateInProgress"
-            color="blue darken-1"
-            @click="cancelConfirm"
-            >Abbrechen
+              :disabled="updateInProgress"
+              color="blue darken-1"
+              @click="cancelConfirm"
+          >Abbrechen
           </v-btn>
           <v-btn :loading="updateInProgress" color="error" @click="updateRight">
             Update

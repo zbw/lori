@@ -44,7 +44,6 @@ import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.Duration
@@ -82,7 +81,7 @@ class LoriServerBackend(
         handles: List<String>,
         createdBy: String,
     ): String {
-        val pkRight = dbConnector.rightDB.insertRight(right.copy(isTemplate = false, templateName = null))
+        val pkRight = dbConnector.rightDB.insertRight(right)
         dbConnector.itemDB.upsertItemBatch(
             createdBy = createdBy,
             itemIds =
@@ -269,9 +268,7 @@ class LoriServerBackend(
             .takeIf {
                 it.isNotEmpty()
             }?.let { metadataList ->
-                runBlocking {
-                    getRightsForMetadata(metadataList)
-                }
+                getRightsForMetadata(metadataList)
             } ?: emptyList()
     }
 
@@ -384,12 +381,9 @@ class LoriServerBackend(
         val adjustedTemplates =
             templates
                 .map { t ->
-                    val itemTable = rightIdToItemTable[t.rightId]
-                    if (itemTable == null) {
-                        return emptyList()
-                    }
+                    val itemTable = rightIdToItemTable[t.rightId] ?: return emptyList()
                     filterAndAdjustTemplatesByDate(
-                        templates = listOf(t),
+                        templatesAndRights = listOf(t),
                         firstApplicationDate =
                             itemTable
                                 .createdOn
@@ -518,11 +512,15 @@ class LoriServerBackend(
                     .await()
                     .takeIf {
                         it.isNotEmpty()
+                    }?.map { metadata ->
+                        metadata.copy(
+                            isbn = filterISBNs(metadata.isbn)?.toList(),
+                        )
                     }?.let { metadata ->
                         getRightsForMetadata(metadata)
                     } ?: (emptyList())
 
-            // Acquire number of results
+            // Acquire the number of results
             val numberOfResults =
                 async {
                     items
@@ -876,7 +874,7 @@ class LoriServerBackend(
                 dbConnector = dbConnector,
                 backend = this,
             )
-        return rightIds.mapNotNull { rightId ->
+        return rightIds.map { rightId ->
             templateApplication.applyTemplate(
                 rightId,
                 skipTemplateDrafts,
@@ -1146,6 +1144,8 @@ class LoriServerBackend(
                 true
             } else if (r1.endDate == null) {
                 r2.endDate!! > r1.startDate
+            } else if (r2.startDate.toString() == r1.endDate.toString() || r1.startDate.toString() == r2.endDate.toString()) {
+                true
             } else if (r2.endDate == null) {
                 r1.endDate > r2.startDate
             } else if (r1.endDate >= r2.startDate && r1.endDate <= r2.endDate) {
@@ -1172,18 +1172,20 @@ class LoriServerBackend(
 
         /**
          * Right information whose end date lies before the given date will be discarded.
-         * If only the start date lies before the date then the start date will be set to the date.
+         * If only the start date lies before the date, then the start date will be set to the date.
          *
          * Templates may have ranges which end and/or start before the lifetime of the metadata it has
          * been applied to. Therefore, the start date for this metadata will be adjusted.
          */
         fun filterAndAdjustTemplatesByDate(
-            templates: List<ItemRight>,
+            templatesAndRights: List<ItemRight>,
             firstApplicationDate: LocalDate,
         ): List<ItemRight> {
+            val (templates, rights) = templatesAndRights.partition { it.isTemplate }
             val fs =
-                templates.filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
-            val rightsCorrectStart =
+                templates
+                    .filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
+            val templatesCorrectStart =
                 fs.map { right ->
                     if (firstApplicationDate > right.startDate) {
                         right.copy(
@@ -1193,7 +1195,23 @@ class LoriServerBackend(
                         right
                     }
                 }
-            return rightsCorrectStart
+            return templatesCorrectStart + rights
+        }
+
+        /**
+         * Remove duplicates. Keep those with - signs
+         */
+        fun filterISBNs(isbns: List<String>?): Set<String>? {
+            if (isbns == null) {
+                return null
+            }
+            val ret: MutableSet<String> = isbns.toMutableSet()
+            isbns.forEach { isbn ->
+                if (isbn.contains('-')) {
+                    ret.remove(isbn.filter { it != '-' })
+                }
+            }
+            return ret.toSet()
         }
     }
 }

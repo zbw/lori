@@ -57,8 +57,20 @@ export default defineComponent({
 <template>
   <v-card v-if="currentMetadata.handle" class="mx-auto" tile>
     <v-toolbar flat>
-      <v-toolbar-title
-      >Metadaten</v-toolbar-title>
+      <v-row class="fill-height" align="center" justify="space-between">
+        <v-col cols="auto">
+          <v-toolbar-title class="pl-4">Metadaten</v-toolbar-title>
+        </v-col>
+        <v-col cols="auto">
+          <v-btn
+              class="pr-5"
+              density="compact"
+              icon="mdi-help"
+              href="https://zbwintern/wiki/display/stba/LORI+Objekt-Metadaten"
+              target="_blank"
+          ></v-btn>
+        </v-col>
+      </v-row>
     </v-toolbar>
     <v-expansion-panels focusable multiple>
       <v-expansion-panel>
@@ -72,13 +84,13 @@ export default defineComponent({
               <v-col>
                 <td>
                   <a
-                    v-bind:href="
+                      v-bind:href="
                       metadata_utils.hrefHandle(
                         currentMetadata.handle,
                         searchStore.handleURLResolver,
                       )
                     "
-                    >{{
+                  >{{
                       metadata_utils.shortenHandle(currentMetadata.handle)
                     }}</a
                   >
@@ -88,51 +100,51 @@ export default defineComponent({
             <v-row v-show="currentMetadata.collectionName">
               <v-col>Collection</v-col>
               <v-col
-                ><a
+              ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.collectionHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-                  >{{ currentMetadata.collectionHandle }}</a
-                ><br>{{ prettyPrint(currentMetadata.collectionName) }}
+              >{{ currentMetadata.collectionHandle }}</a
+              ><br>{{ prettyPrint(currentMetadata.collectionName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.subCommunityHandle">
               <v-col>Subcommunity</v-col>
               <v-col
-                ><a
+              ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.subCommunityHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-                  >{{ currentMetadata.subCommunityHandle }}</a
-                ><br>
+              >{{ currentMetadata.subCommunityHandle }}</a
+              ><br>
                 {{ prettyPrint(currentMetadata.subCommunityName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.communityName">
               <v-col>Community</v-col>
               <v-col
-                ><a
+              ><a
                   v-bind:href="
                     metadata_utils.prependHandleUrl(
                       currentMetadata.communityHandle,
                       searchStore.handleURLResolver,
                     )
                   "
-                  >{{ currentMetadata.communityHandle }}</a
-                ><br>{{ prettyPrint(currentMetadata.communityName) }}
+              >{{ currentMetadata.communityHandle }}</a
+              ><br>{{ prettyPrint(currentMetadata.communityName) }}
               </v-col>
             </v-row>
             <v-row v-show="currentMetadata.storageDate">
               <v-col>Speicherdatum im Digitalen Archiv</v-col>
               <v-col>{{
-                parseDateToLocaleString(currentMetadata.storageDate)
-              }}</v-col>
+                  parseDateToLocaleString(currentMetadata.storageDate)
+                }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.deleted">
               <v-col>Item-Status</v-col>
@@ -158,14 +170,14 @@ export default defineComponent({
             <v-row>
               <v-col>Publikationstyp</v-col>
               <v-col>{{
-                parsePublicationType(currentMetadata.publicationType)
-              }}</v-col>
+                  parsePublicationType(currentMetadata.publicationType)
+                }}</v-col>
             </v-row>
             <v-row>
               <v-col>Publikationsjahr</v-col>
               <v-col>{{
-                currentMetadata.publicationYear
-              }}</v-col>
+                  currentMetadata.publicationYear
+                }}</v-col>
             </v-row>
             <v-row v-if="currentMetadata.doi && currentMetadata.doi.length">
               <v-col>DOI</v-col>
@@ -200,6 +212,10 @@ export default defineComponent({
             <v-row v-show="currentMetadata.ppn">
               <v-col>PPN</v-col>
               <v-col>{{ prettyPrint(currentMetadata.ppn) }}</v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.econbizid">
+              <v-col>Econbiz-ID</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.econbizid) }}</v-col>
             </v-row>
             <v-row v-show="currentMetadata.issn">
               <v-col>Issn</v-col>

@@ -47,14 +47,14 @@ export default defineComponent({
 
     // Methods
     const deleteSuccessful = (
-      index: number,
-      rightIdDeleted: string | undefined,
+        index: number,
+        rightIdDeleted: string | undefined,
     ) => {
       currentRights.value.splice(index, 1);
       renderKey.value += 1;
       lastDeletionSuccessful.value = true;
       lastDeletedRight.value =
-        rightIdDeleted != undefined ? rightIdDeleted : "";
+          rightIdDeleted != undefined ? rightIdDeleted : "";
       emit("deleteSuccessful", index);
     };
 
@@ -165,7 +165,7 @@ export default defineComponent({
 
     onMounted(() => {
       const preselectedIdx = props.rights.findIndex(
-         (e) => e.rightId === props.selectedRight,
+          (e) => e.rightId === props.selectedRight,
       );
       if (preselectedIdx == -1){
         tab.value = 0;
@@ -220,10 +220,10 @@ export default defineComponent({
       ></v-btn>
       <template v-slot:extension>
         <v-tabs
-          v-model="tab"
-          align-with-title
-          show-arrows
-          slider-color="yellow"
+            v-model="tab"
+            align-with-title
+            show-arrows
+            slider-color="yellow"
         >
           <v-tab
               v-for="(r, index) in currentRights"
@@ -241,27 +241,27 @@ export default defineComponent({
 
     <v-window v-model="tab">
       <v-alert
-        v-model="lastDeletionSuccessful"
-        closable
-        type="success"
-        @close="resetLastDeletionSuccessful"
+          v-model="lastDeletionSuccessful"
+          closable
+          type="success"
+          @close="resetLastDeletionSuccessful"
       >
         Rechteinformation {{ lastDeletedRight }} erfolgreich gelöscht für Item
         {{ handle }}.
       </v-alert>
       <v-window-item v-for="(item, index) in currentRights" :key="item.rightId">
         <RightsEditWrapper
-          :index="index"
-          :isNewRight="false"
-          :isNewTemplate="false"
-          :handle="handle"
-          :rightId="item.rightId"
-          :isTabEntry="true"
-          :licenceUrl="licenceUrl"
-          v-on:deleteSuccessful="deleteSuccessful"
-          v-on:editRightClosed="tabDialogClosed"
-          v-on:hasFormChanged="setFormStatus"
-          v-on:updateSuccessful="updateSuccessful"
+            :index="index"
+            :isNewRight="false"
+            :isNewTemplate="false"
+            :handle="handle"
+            :rightId="item.rightId"
+            :isTabEntry="true"
+            :licenceUrl="licenceUrl"
+            v-on:deleteSuccessful="deleteSuccessful"
+            v-on:editRightClosed="tabDialogClosed"
+            v-on:hasFormChanged="setFormStatus"
+            v-on:updateSuccessful="updateSuccessful"
         ></RightsEditWrapper>
         <v-dialog v-model="unsavedChangesDialog" max-width="500px">
           <v-card>

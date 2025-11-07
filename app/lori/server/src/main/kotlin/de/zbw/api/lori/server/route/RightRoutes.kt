@@ -6,6 +6,7 @@ import de.zbw.api.lori.server.type.toBusiness
 import de.zbw.api.lori.server.type.toRest
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import de.zbw.lori.model.RelationshipRest
 import de.zbw.lori.model.RightIdCreated
@@ -28,6 +29,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import java.time.LocalDate
 import java.time.OffsetDateTime
 
 /**
@@ -126,6 +128,14 @@ fun Routing.rightRoutes(
                             return@withContext call.respond(
                                 HttpStatusCode.BadRequest,
                                 ApiError.badRequestError(ApiError.BAD_REQUEST_END_DATE),
+                            )
+                        }
+                        if (right.startDate < LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN) ||
+                            (right.endDate != null && right.endDate!! < LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN))
+                        ) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError(ApiError.BAD_REQUEST_START_END_DATE_DISALLOW_PAST),
                             )
                         }
                         val pk =

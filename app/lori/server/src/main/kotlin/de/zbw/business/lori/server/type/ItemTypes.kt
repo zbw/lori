@@ -57,6 +57,7 @@ data class ItemMetadata(
     val createdOn: OffsetDateTime?,
     val deleted: Boolean,
     val doi: List<String>?,
+    val econbizId: String?,
     val handle: String,
     val isbn: List<String>?,
     val issn: String?,

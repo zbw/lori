@@ -44,38 +44,38 @@ export default defineComponent({
     const cookieName = "JSESSIONID";
     const login = (init: boolean) => {
       const cookieValue = cookies.cookies.isKey(cookieName)
-        ? cookies.cookies.get(cookieName)
-        : "none";
+          ? cookies.cookies.get(cookieName)
+          : "none";
       usersApi
-        .getSessionById(cookieValue)
-        .then((userSession: UserSessionRest) => {
-          userStore.emailAddress = userSession.email;
-          userStore.permissions = userSession.permissions;
-          userStore.isLoggedIn = true;
-          if (!init) {
-            loginSuccessful.value = true;
-            loginSuccessfulMsg.value =
-              "You are successfully logged in as " + userSession.email;
-          }
-        })
-        .catch((e) => {
-          error.errorHandling(
-            e,
-            (errMsg: string, errorCode: string, errorDetail: string) => {
-              userStore.isLoggedIn = false;
-              console.log("Error Code: " + errorCode);
-              if (!init) {
-                if (errorCode == "401") {
-                  loginUnauthorized.value = true;
-                } else {
-                  loginErrorMsgTitle.value = "Login war nicht erfolgreich";
-                  loginErrorMsg.value = errMsg;
-                  loginError.value = true;
-                }
-              }
-            },
-          );
-        });
+          .getSessionById(cookieValue)
+          .then((userSession: UserSessionRest) => {
+            userStore.emailAddress = userSession.email;
+            userStore.permissions = userSession.permissions;
+            userStore.isLoggedIn = true;
+            if (!init) {
+              loginSuccessful.value = true;
+              loginSuccessfulMsg.value =
+                  "You are successfully logged in as " + userSession.email;
+            }
+          })
+          .catch((e) => {
+            error.errorHandling(
+                e,
+                (errMsg: string, errorCode: string, errorDetail: string) => {
+                  userStore.isLoggedIn = false;
+                  console.log("Error Code: " + errorCode);
+                  if (!init) {
+                    if (errorCode == "401") {
+                      loginUnauthorized.value = true;
+                    } else {
+                      loginErrorMsgTitle.value = "Login war nicht erfolgreich";
+                      loginErrorMsg.value = errMsg;
+                      loginError.value = true;
+                    }
+                  }
+                },
+            );
+          });
     };
     const deactivateLoginDialog = () => {
       loginUnauthorized.value = false;
@@ -84,23 +84,23 @@ export default defineComponent({
     const logoutDialog = ref(false);
     const logout = () => {
       const cookieValue = cookies.cookies.isKey(cookieName)
-        ? cookies.cookies.get(cookieName)
-        : "none";
+          ? cookies.cookies.get(cookieName)
+          : "none";
       usersApi
-        .deleteSessionById(cookieValue)
-        .then(() => {
-          userStore.emailAddress = "";
-          userStore.permissions = undefined;
-          userStore.isLoggedIn = false;
-          logoutDialog.value = true;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            loginErrorMsgTitle.value = "Logout war nicht erfolgreich";
-            loginErrorMsg.value = errMsg;
-            loginError.value = true;
+          .deleteSessionById(cookieValue)
+          .then(() => {
+            userStore.emailAddress = "";
+            userStore.permissions = undefined;
+            userStore.isLoggedIn = false;
+            logoutDialog.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              loginErrorMsgTitle.value = "Logout war nicht erfolgreich";
+              loginErrorMsg.value = errMsg;
+              loginError.value = true;
+            });
           });
-        });
     };
 
     const deactivateLogoutDialog = () => {
@@ -153,15 +153,15 @@ export default defineComponent({
   <v-app-bar
       app
       :color="appBarColor"
-      >
+  >
     <div class="d-flex align-center">
       <v-img
-        alt="Lori Logo"
-        class="shrink mr-2"
-        contain
-        src="@/assets/LogoLori.png"
-        transition="scale-transition"
-        width="100"
+          alt="Lori Logo"
+          class="shrink mr-2"
+          contain
+          src="@/assets/LogoLori.png"
+          transition="scale-transition"
+          width="100"
       />
     </div>
 
@@ -178,17 +178,17 @@ export default defineComponent({
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateGroupDialog"
-            >IP-Gruppen</v-list-item-title
+          >IP-Gruppen</v-list-item-title
           >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateTemplateDialog"
-            >Templates</v-list-item-title
+          >Templates</v-list-item-title
           >
         </v-list-item>
         <v-list-item link>
           <v-list-item-title @click="activateBookmarkOverviewDialog"
-            >Gespeicherte Suchen</v-list-item-title
+          >Gespeicherte Suchen</v-list-item-title
           >
         </v-list-item>
       </v-list>

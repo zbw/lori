@@ -313,7 +313,13 @@ class LoriServerBackendTest : DatabaseTest() {
                     TEST_METADATA.copy(handle = "11159/801", zdbIds = listOf("zbdTest")),
                     TEST_METADATA.copy(handle = "11159/802", zdbIds = listOf("zbdTest")),
                 )
-            val rightAssignments = TEST_RIGHT to listOf(givenMetadataEntries[0].handle)
+            val expectedRight =
+                TEST_RIGHT.copy(
+                    isTemplate = true,
+                    templateName = "some name",
+                )
+            val rightAssignments =
+                expectedRight to listOf(givenMetadataEntries[0].handle)
 
             backend.insertMetadataElements(givenMetadataEntries.toList())
             val generatedRightId =
@@ -344,9 +350,9 @@ class LoriServerBackendTest : DatabaseTest() {
                             metadata = givenMetadataEntries[0],
                             rights =
                                 listOf(
-                                    TEST_RIGHT.copy(
-                                        rightId = generatedRightId,
+                                    expectedRight.copy(
                                         startDate = TEST_RIGHT.createdOn!!.toLocalDate(),
+                                        rightId = generatedRightId,
                                     ),
                                 ),
                         ),
@@ -424,6 +430,18 @@ class LoriServerBackendTest : DatabaseTest() {
     @DataProvider(name = DATA_FOR_CHECK_RIGHT_CONFLICTS)
     fun createDataForCheckDateRightConflicts() =
         arrayOf(
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 6, 1),
+                    endDate = LocalDate.of(2026, 7, 1),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2026, 7, 1),
+                    endDate = null,
+                ),
+                true,
+                "Invalid overlap. End date equals start date",
+            ),
             arrayOf(
                 TEST_RIGHT.copy(
                     startDate = LocalDate.of(2025, 6, 1),
@@ -590,7 +608,19 @@ class LoriServerBackendTest : DatabaseTest() {
                     endDate = null,
                 ),
                 false,
-                "No overlap.",
+                "No overlap. Gap between rights.",
+            ),
+            arrayOf(
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2024, 6, 1),
+                    endDate = LocalDate.of(2024, 12, 31),
+                ),
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2025, 1, 1),
+                    endDate = null,
+                ),
+                false,
+                "No overlap. No gap between rights",
             ),
         )
 
@@ -826,6 +856,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("doi:example.org"),
+                econbizId = "123",
                 handle = "11159/810",
                 isbn = listOf("1234567890123"),
                 issn = "123456",

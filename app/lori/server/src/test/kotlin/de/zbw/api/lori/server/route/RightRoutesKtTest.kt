@@ -30,20 +30,29 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.annotations.AfterClass
 import org.testng.annotations.Test
 import java.lang.reflect.Type
 import java.sql.SQLException
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 class RightRoutesKtTest {
+    @AfterClass
+    fun afterTests() {
+        unmockkAll()
+    }
+
     @Test
     fun testGetMetadataOK() {
         // given
@@ -184,6 +193,8 @@ class RightRoutesKtTest {
 
     @Test
     fun testPostRightOK() {
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { insertRight(any()) } returns "5"
@@ -235,6 +246,8 @@ class RightRoutesKtTest {
                 coEvery { insertRight(any()) } throws SQLException()
             }
         val servicePool = getServicePool(backend)
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
         testApplication {
             moduleAuthForTests()
             application(
@@ -280,6 +293,8 @@ class RightRoutesKtTest {
 
     @Test
     fun testPutRightNoContent() {
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns true
@@ -304,6 +319,8 @@ class RightRoutesKtTest {
 
     @Test
     fun testPutRightCreated() {
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { rightContainsId(TEST_RIGHT.rightId!!) } returns false
@@ -375,6 +392,8 @@ class RightRoutesKtTest {
 
     @Test
     fun testPutRightInternalError() {
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.minusDays(14L)
         val backend =
             mockk<LoriServerBackend>(relaxed = true) {
                 coEvery { rightContainsId(TEST_RIGHT.rightId!!) } throws SQLException()
@@ -462,6 +481,49 @@ class RightRoutesKtTest {
         }
     }
 
+    @Test
+    fun testPostRightBadRequestDatesInPast() {
+        // Move current date into future
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TODAY.plusDays(14L)
+        val backend =
+            mockk<LoriServerBackend>(relaxed = true) {
+                coEvery { insertRight(any()) } returns "5"
+            }
+        val servicePool = getServicePool(backend)
+
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/right") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT))
+                }
+            assertThat("Should return 400", response.status, `is`(HttpStatusCode.BadRequest))
+        }
+
+        // Move current date to present
+        mockkStatic(LocalDate::class)
+        every { LocalDate.now(any<ZoneId>()) } returns TEST_RIGHT.startDate
+        testApplication {
+            moduleAuthForTests()
+            application(
+                servicePool.testApplication(),
+            )
+            val response =
+                client.post("/api/v1/right") {
+                    header(HttpHeaders.Accept, ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                    setBody(jsonAsString(TEST_RIGHT))
+                }
+            assertThat("Should return 200", response.status, `is`(HttpStatusCode.OK))
+        }
+    }
+
     companion object {
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
 
@@ -491,7 +553,8 @@ class RightRoutesKtTest {
                 downloadDir = "path/to/downloads",
                 mailHost = "host",
                 mailPort = 25,
-                mailTo = "receipents@mail.com",
+                mailToError = "receipents@mail.com",
+                mailToWarning = "receipents@mail.com",
                 mailFrom = "my@mail.com",
             )
 

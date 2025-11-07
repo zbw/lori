@@ -60,37 +60,38 @@ class MailService(
         to: String,
         subject: String,
         body: String,
-    ) = withContext(Dispatchers.IO) {
-        val msg =
-            MimeMessage(session).apply {
-                setFrom(InternetAddress(fromEmail))
-                setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
-                this.subject = subject
-                setText(body)
-                sentDate = Date()
-            }
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            val msg =
+                MimeMessage(session).apply {
+                    setFrom(InternetAddress(fromEmail))
+                    setRecipients(Message.RecipientType.TO, InternetAddress.parse(to))
+                    this.subject = subject
+                    setText(body)
+                    sentDate = Date()
+                }
 
-        var transport: Transport? = null
-        try {
-            transport = session.getTransport(transportProtocol)
-            if (auth && !username.isNullOrEmpty() && password != null) {
-                // explicit connect with credentials
-                transport.connect(host, port, username, password)
-            } else {
-                // connect with no auth (server must accept it)
-                transport.connect()
-            }
-            transport.sendMessage(msg, msg.allRecipients)
-        } finally {
-            // always attempt to close the transport to release sockets
+            var transport: Transport? = null
             try {
-                transport?.close()
-            } catch (ignored: Exception) {
-                // ignore or log
-                LOG.error("Error closing transport when sending mail", ignored)
+                transport = session.getTransport(transportProtocol)
+                if (auth && !username.isNullOrEmpty() && password != null) {
+                    // explicit connect with credentials
+                    transport.connect(host, port, username, password)
+                } else {
+                    // connect with no auth (server must accept it)
+                    transport.connect()
+                }
+                transport.sendMessage(msg, msg.allRecipients)
+            } finally {
+                // always attempt to close the transport to release sockets
+                try {
+                    transport?.close()
+                } catch (ignored: Exception) {
+                    // ignore or log
+                    LOG.error("Error closing transport when sending mail", ignored)
+                }
             }
         }
-    }
 
     companion object {
         val LOG: Logger = LogManager.getLogger(MailService::class.java)

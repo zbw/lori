@@ -2,10 +2,9 @@ package de.zbw.api.lori.server.type
 
 import de.zbw.api.lori.server.exception.InvalidIPAddressException
 import de.zbw.api.lori.server.route.QueryParameterParser
-import de.zbw.api.lori.server.type.RestConverter.LOG
+import de.zbw.api.lori.server.type.RestConverter.extractMetadata
 import de.zbw.api.lori.server.utils.RestConverterUtil.prepareLicenceUrlFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
-import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
@@ -71,6 +70,8 @@ import de.zbw.lori.model.TemplateNameWithCountRest
 import de.zbw.lori.model.UserPermissionRest
 import de.zbw.lori.model.UserSessionRest
 import de.zbw.lori.model.ZdbIdWithCountRest
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.apache.commons.csv.CSVFormat
 import org.apache.commons.csv.CSVParser
 import org.apache.logging.log4j.LogManager
@@ -171,6 +172,7 @@ fun MetadataRest.toBusiness() =
         createdOn = createdOn,
         deleted = deleted,
         doi = doi,
+        econbizId = econbizid,
         handle = handle,
         isbn = isbn,
         issn = issn,
@@ -204,6 +206,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         createdOn = createdOn,
         deleted = deleted,
         doi = doi,
+        econbizid = econbizId,
         handle = handle,
         isbn = isbn,
         issn = issn,
@@ -380,23 +383,39 @@ internal fun PublicationType.toRest(): PublicationTypeRest =
         PublicationType.OTHER -> PublicationTypeRest.other
     }
 
-fun DAItem.toBusiness(
+suspend fun DAItem.toBusiness(
     daCommunity: DACommunity,
     daCollection: DACollection,
+    validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
+    mutexForLogging: Mutex,
 ): ItemMetadata? {
     val metadata = this.metadata
     val handle =
-        RestConverter.extractMetadata("dc.identifier.uri", metadata)?.let {
+        extractMetadata("dc.identifier.uri", metadata)?.let {
             if (it.size > 1) {
-                LOG.warn("Item has multiple handles: Handle ${this.handle}")
+                mutexForLogging.withLock {
+                    validationErrorMap.merge(
+                        MetadataValidationError.MULTIPLE_HANDLES,
+                        listOf(this.handle ?: "Unknown handle"),
+                    ) { oldValue, newValue ->
+                        oldValue + newValue
+                    }
+                }
             }
             it[0]
         }
     val publicationType =
         try {
-            RestConverter.extractMetadata("dc.type", metadata)?.let {
+            extractMetadata("dc.type", metadata)?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple publication types: Handle ${this.handle}")
+                    mutexForLogging.withLock {
+                        validationErrorMap.merge(
+                            MetadataValidationError.MULTIPLE_PUBLICATION_TYPES,
+                            listOf(this.handle ?: "Unknown handle"),
+                        ) { oldValue, newValue ->
+                            oldValue + newValue
+                        }
+                    }
                 }
                 PublicationType.valueOf(
                     it[0]
@@ -406,58 +425,155 @@ fun DAItem.toBusiness(
                 )
             }
         } catch (iae: IllegalArgumentException) {
-            LOG.warn("Unknown PublicationType found: Handle ${this.handle}")
+            mutexForLogging.withLock {
+                validationErrorMap.merge(
+                    MetadataValidationError.UNKNOWN_PUBLICATION_TYPE,
+                    listOf(this.handle ?: "Unknown handle"),
+                ) { oldValue, newValue ->
+                    oldValue + newValue
+                }
+            }
             throw iae
         }
     val publicationYear: Int? =
-        RestConverter
-            .extractMetadata("dc.date.issued", metadata)
+        extractMetadata("dc.date.issued", metadata)
             ?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple publication years: Handle ${this.handle}")
+                    mutexForLogging.withLock {
+                        validationErrorMap.merge(
+                            MetadataValidationError.MULTIPLE_PUBLICATION_YEARS,
+                            listOf(this.handle ?: "Unknown handle"),
+                        ) { oldValue, newValue ->
+                            oldValue + newValue
+                        }
+                    }
                 }
                 it[0]
             }?.let {
                 val publicationDate = RestConverter.parseToDate(it)
                 if (publicationDate == null) {
-                    LOG.warn("Item has invalid dc.date.issued: Handle: ${this.handle}, Value: $it")
+                    mutexForLogging.withLock {
+                        validationErrorMap.merge(
+                            MetadataValidationError.INVALID_ISSUED,
+                            listOf(this.handle ?: "Unknown handle"),
+                        ) { oldValue, newValue ->
+                            oldValue + newValue
+                        }
+                    }
                     null
                 } else {
                     publicationDate.year
                 }
             } ?: let {
-            LOG.warn("Item misses the required dc.date.issued field: Handle: ${this.handle}")
+            mutexForLogging.withLock {
+                validationErrorMap.merge(
+                    MetadataValidationError.MISSING_DATE_ISSUED_FIELD,
+                    listOf(this.handle ?: "Unknown handle"),
+                ) { oldValue, newValue ->
+                    oldValue + newValue
+                }
+            }
             null
         }
 
     val title =
-        RestConverter.extractMetadata("dc.title", metadata)?.let {
+        extractMetadata("dc.title", metadata)?.let {
             if (it.size > 1) {
-                LOG.warn("Item has multiple titles: Handle ${this.handle}")
+                validationErrorMap.merge(
+                    MetadataValidationError.MULTIPLE_TITLES,
+                    listOf(this.handle ?: "Unknown handle"),
+                ) { oldValue, newValue ->
+                    oldValue + newValue
+                }
             }
             it[0]
         }
+
+    val ppn =
+        extractMetadata("dc.identifier.ppn", metadata)?.let {
+            if (it.size > 1) {
+                mutexForLogging.withLock {
+                    validationErrorMap.merge(
+                        MetadataValidationError.MULTIPLE_PPNS,
+                        listOf(this.handle ?: "Unknown handle"),
+                    ) { oldValue, newValue ->
+                        oldValue + newValue
+                    }
+                }
+            }
+            it[0]
+        }
+
+    val econbizId =
+        extractMetadata("dc.identifier.econbizid", metadata)?.let {
+            if (it.size > 1) {
+                mutexForLogging.withLock {
+                    validationErrorMap.merge(
+                        MetadataValidationError.MULTIPLE_ECONBIZIDS,
+                        listOf(this.handle ?: "Unknown handle"),
+                    ) { oldValue, newValue ->
+                        oldValue + newValue
+                    }
+                }
+            }
+            it[0]
+        }
+
+    if (econbizId == null && ppn == null) {
+        mutexForLogging.withLock {
+            validationErrorMap.merge(
+                MetadataValidationError.MISSING_ECONBIZID_AND_PPN,
+                listOf(this.handle ?: "Unknown handle"),
+            ) { oldValue, newValue ->
+                oldValue + newValue
+            }
+        }
+    }
 
     return if (
         handle == null ||
         publicationType == null ||
         title == null
     ) {
-        LOG.warn("Required field missing for metadata: Handle ${this.handle}")
+        mutexForLogging.withLock {
+            validationErrorMap.merge(
+                MetadataValidationError.MISSING_REQUIRED_FIELD,
+                listOf(this.handle ?: "Unknown handle"),
+            ) { oldValue, newValue ->
+                oldValue + newValue
+            }
+        }
         null
     } else {
         val subDACommunity: DACommunity? = daCommunity.subcommunities?.firstOrNull()
         val licenceUrl =
-            RestConverter.extractMetadata("dc.rights.license", metadata)?.let {
+            extractMetadata("dc.rights.license", metadata)?.let {
                 if (it.size > 1) {
-                    LOG.warn("Item has multiple licenceUrls: Handle ${this.handle}")
+                    mutexForLogging.withLock {
+                        validationErrorMap.merge(
+                            MetadataValidationError.MULTIPLE_LICENCEURLS,
+                            listOf(this.handle ?: "Unknown handle"),
+                        ) { oldValue, newValue ->
+                            oldValue + newValue
+                        }
+                    }
                 }
                 it[0]
             }
 
+        val isbns =
+            extractMetadata("dc.identifier.isbn", metadata)
+                ?.foldRight(emptyList<String>()) { isbn, acc ->
+                    if (isbn.contains("-")) {
+                        acc + isbn + isbn.filter { it != '-' }
+                    } else {
+                        acc + isbn
+                    }
+                }
+
         ItemMetadata(
             // TODO(CB): Multiple authors may exist -> information not needed yet in frontend
-            author = RestConverter.extractMetadata("dc.contributor.author", metadata)?.let { it[0] },
+            author = extractMetadata("dc.contributor.author", metadata)?.let { it[0] },
             // Not in DA yet
             band = null,
             collectionHandle =
@@ -474,34 +590,35 @@ fun DAItem.toBusiness(
             createdOn = null,
             deleted = this.withdrawn?.toBoolean() == true,
             doi =
-                RestConverter
-                    .extractMetadata("dc.identifier.pi", metadata)
+                extractMetadata("dc.identifier.pi", metadata)
                     ?.filter {
                         it.startsWith("10.")
                     },
+            econbizId = econbizId,
             handle = RestConverter.parseHandle(handle),
-            isbn = RestConverter.extractMetadata("dc.identifier.isbn", metadata),
+            isbn = isbns,
             issn =
-                RestConverter.extractMetadata("dc.identifier.issn", metadata)?.let {
+                extractMetadata("dc.identifier.issn", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple issns: Handle ${this.handle}")
+                        mutexForLogging.withLock {
+                            validationErrorMap.merge(
+                                MetadataValidationError.MULTIPLE_ISSNS,
+                                listOf(this.handle ?: "Unknown handle"),
+                            ) { oldValue, newValue ->
+                                oldValue + newValue
+                            }
+                        }
                     }
                     it[0]
                 },
             isPartOfSeries =
-                RestConverter.extractMetadata("dc.relation.ispartofseries", metadata),
+                extractMetadata("dc.relation.ispartofseries", metadata),
             lastUpdatedBy = null,
             lastUpdatedOn = null,
             licenceUrl = licenceUrl,
             licenceUrlFilter = prepareLicenceUrlFilter(licenceUrl),
-            paketSigel = RestConverter.extractMetadata("dc.identifier.packageid", metadata),
-            ppn =
-                RestConverter.extractMetadata("dc.identifier.ppn", metadata)?.let {
-                    if (it.size > 1) {
-                        LOG.warn("Item has multiple ppns: Handle ${this.handle}")
-                    }
-                    it[0]
-                },
+            paketSigel = extractMetadata("dc.identifier.packageid", metadata),
+            ppn = ppn,
             publicationType = publicationType,
             publicationYear = publicationYear,
             subCommunityHandle =
@@ -510,33 +627,53 @@ fun DAItem.toBusiness(
                 },
             subCommunityName = subDACommunity?.name,
             storageDate =
-                RestConverter
-                    .extractMetadata("dc.date.accessioned", metadata)
+                extractMetadata("dc.date.accessioned", metadata)
                     ?.let {
                         if (it.size > 1) {
-                            LOG.warn("Item has multiple storage dates: Handle ${this.handle}")
+                            mutexForLogging.withLock {
+                                validationErrorMap.merge(
+                                    MetadataValidationError.MULTIPLE_STORAGE_DATES,
+                                    listOf(this.handle ?: "Unknown handle"),
+                                ) { oldValue, newValue ->
+                                    oldValue + newValue
+                                }
+                            }
                         }
                         OffsetDateTime.parse(it[0])
                     },
             title = title,
             titleJournal =
-                RestConverter.extractMetadata("dc.journalname", metadata)?.let {
+                extractMetadata("dc.journalname", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple journal tiles: Handle ${this.handle}")
+                        mutexForLogging.withLock {
+                            validationErrorMap.merge(
+                                MetadataValidationError.MULTIPLE_JOURNAL_TITLES,
+                                listOf(this.handle ?: "Unknown handle"),
+                            ) { oldValue, newValue ->
+                                oldValue + newValue
+                            }
+                        }
                     }
                     it[0]
                 },
             titleSeries =
-                RestConverter.extractMetadata("dc.seriesname", metadata)?.let {
+                extractMetadata("dc.seriesname", metadata)?.let {
                     if (it.size > 1) {
-                        LOG.warn("Item has multiple title series names: ${this.handle}")
+                        mutexForLogging.withLock {
+                            validationErrorMap.merge(
+                                MetadataValidationError.MULTIPLE_SERIES_NAMES,
+                                listOf(this.handle ?: "Unknown handle"),
+                            ) { oldValue, newValue ->
+                                oldValue + newValue
+                            }
+                        }
                     }
                     it[0]
                 },
             zdbIds =
                 listOfNotNull(
-                    RestConverter.extractMetadata("dc.relation.journalzdbid", metadata),
-                    RestConverter.extractMetadata("dc.relation.serieszdbid", metadata),
+                    extractMetadata("dc.relation.journalzdbid", metadata),
+                    extractMetadata("dc.relation.serieszdbid", metadata),
                 ).flatten(),
         )
     }
@@ -625,7 +762,7 @@ fun BookmarkRest.toBusiness(): Bookmark =
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
         noRightInformationFilter = this.filterNoRightInformation?.takeIf { it }?.let { NoRightInformationFilter() },
         manualRightFilter = this.filterManualRight?.takeIf { it }?.let { ManualRightFilter() },
-        deletionsFilter = this.filterDeletions?.takeIf { it }?.let { DeletionsFilter() },
+        deletionsFilter = QueryParameterParser.parseDeletionsFilter(this.filterDeletions?.toString()),
         accessStateOnFilter =
             this.filterAccessOnDate?.let {
                 AccessStateOnDateFilter(

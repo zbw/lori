@@ -241,6 +241,7 @@ class ItemDBTest : DatabaseTest() {
                 createdOn = NOW,
                 deleted = false,
                 doi = listOf("10.992", "10.001"),
+                econbizId = "123",
                 handle = "11159/101",
                 isbn = listOf("12345", "67890123"),
                 issn = "123456",

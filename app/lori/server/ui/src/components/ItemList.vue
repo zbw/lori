@@ -208,7 +208,7 @@ export default defineComponent({
      */
     const addActiveItem = (mouseEvent: MouseEvent, row: any) => {
       const item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.handle === row.item.handle,
+          (e) => e.metadata.handle === row.item.handle,
       );
       if (item !== undefined) {
         currentItem.value = item;
@@ -220,13 +220,13 @@ export default defineComponent({
     const setActiveItem = (mouseEvent: MouseEvent, row: any) => {
       //row.select(true);
       const item: ItemRest | undefined = items.value.find(
-        (e) => e.metadata.handle === row.item.handle,
+          (e) => e.metadata.handle === row.item.handle,
       );
       if (item !== undefined) {
         currentItem.value = item;
       }
       selectedItems.value = selectedItems.value.filter(
-        (e: string) => e == row.item.handle,
+          (e: string) => e == row.item.handle,
       );
     };
 
@@ -324,17 +324,17 @@ export default defineComponent({
         return false;
       }
       templateApi
-        .getTemplateById(templateId)
-        .then((response: RightRest) => {
-          queryParameterRight.value = response;
-          rightEditActivated.value = true;
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            templateLoadErrorMsg.value = errMsg;
-            templateLoadError.value = true;
+          .getTemplateById(templateId)
+          .then((response: RightRest) => {
+            queryParameterRight.value = response;
+            rightEditActivated.value = true;
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              templateLoadErrorMsg.value = errMsg;
+              templateLoadError.value = true;
+            });
           });
-        });
       return true;
     };
 
@@ -391,27 +391,27 @@ export default defineComponent({
 
     const loadBackendParameters = () => {
       api
-        .getAboutInformation()
-        .then((response: AboutRest) => {
-          searchStore.stage = response.stage;
-          searchStore.handleURLResolver = response.handleURL;
-          userStore.signInURL = response.duoSSO;
-          userStore.signOutURL = response.duoSLO;
-          userStore.commitHash = response.commitHash;
-          if(response.stage == "dev"){
-            document.title = "lori-dev";
-          }
-          if(response.stage == "qs"){
-            document.title = "lori-qs";
-          }
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            tableContentLoading.value = false;
-            errorMsg.value = "Laden der bibliographischen Daten war nicht erfolgreich: " + errMsg;
-            errorMsgIsActive.value = true;
+          .getAboutInformation()
+          .then((response: AboutRest) => {
+            searchStore.stage = response.stage;
+            searchStore.handleURLResolver = response.handleURL;
+            userStore.signInURL = response.duoSSO;
+            userStore.signOutURL = response.duoSLO;
+            userStore.commitHash = response.commitHash;
+            if(response.stage == "dev"){
+              document.title = "lori-dev";
+            }
+            if(response.stage == "qs"){
+              document.title = "lori-qs";
+            }
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Laden der bibliographischen Daten war nicht erfolgreich: " + errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     const startDashboardSearch = (searchTerm: string) => {
@@ -451,9 +451,9 @@ export default defineComponent({
       currentRightId.value = rightId;
       closeTemplateOverview();
       successMsg.value =
-        "Alle gespeicherten Suchen für Template " +
-        "'" + templateName + " (" + rightId + ")'" +
-        " wurden ausgeführt.";
+          "Alle gespeicherten Suchen für Template " +
+          "'" + templateName + " (" + rightId + ")'" +
+          " wurden ausgeführt.";
       successMsgIsActive.value = true;
       searchStore.isLastSearchForTemplates = true;
       executeSearchByRightId(rightId);
@@ -502,135 +502,135 @@ export default defineComponent({
 
     const executeSearchByRightId = (rightId: string) => {
       api
-        .searchQuery(
-          "",
-          (currentPage.value - 1) * pageSizeComputed.value, // offset
-          pageSizeComputed.value, // limit
-          pageSizeComputed.value,
-            false,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-            rightId,
-          undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            searchquerybuilder.buildSortBy(datatableOptions.value),
-            searchquerybuilder.buildOrderBy(datatableOptions.value),
-        )
-        .then((response: ItemInformation) => {
-          processSearchResult(response);
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
-            errorMsgIsActive.value = true;
+          .searchQuery(
+              "",
+              (currentPage.value - 1) * pageSizeComputed.value, // offset
+              pageSizeComputed.value, // limit
+              pageSizeComputed.value,
+              false,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              rightId,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
+          )
+          .then((response: ItemInformation) => {
+            processSearchResult(response);
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
       api
-        .searchQuery(
-            "",
-            (currentPage.value - 1) * pageSizeComputed.value, // offset
-            pageSizeComputed.value, // limit
-            pageSizeComputed.value,
-            false,
-            true,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            rightId,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            searchquerybuilder.buildSortBy(datatableOptions.value),
-            searchquerybuilder.buildOrderBy(datatableOptions.value),
+          .searchQuery(
+              "",
+              (currentPage.value - 1) * pageSizeComputed.value, // offset
+              pageSizeComputed.value, // limit
+              pageSizeComputed.value,
+              false,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              rightId,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
 
-        )
-        .then((response: ItemInformation) => {
-          const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
+          )
+          .then((response: ItemInformation) => {
+            const worker = new Worker(new URL("@/worker/worker.ts", import.meta.url), { type: 'module' });
 
-          // Send the response to the worker for processing
-          worker.postMessage(response);
+            // Send the response to the worker for processing
+            worker.postMessage(response);
 
-          // Handle the message from the worker
-          worker.onmessage = (event) => {
-            const minifiedResponse = event.data;
-            getAccessStatesForDate();
-            processFacets(minifiedResponse);
+            // Handle the message from the worker
+            worker.onmessage = (event) => {
+              const minifiedResponse = event.data;
+              getAccessStatesForDate();
+              processFacets(minifiedResponse);
 
-            // Optionally, terminate the worker after use
-            worker.terminate();
-          }
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
-            errorMsgIsActive.value = true;
+              // Optionally, terminate the worker after use
+              worker.terminate();
+            }
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
     };
 
     const searchQueryByTerm = (searchTerm: string, callback: () => void) => {
       searchStore.isLastSearchForTemplates = false;
       api
-        .searchQuery(
-          searchTerm,
-          (currentPage.value - 1) * pageSizeComputed.value, // offset
-          pageSizeComputed.value, // limit
-          currentPage.value,
-            false,
-          true,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-            undefined,
-            undefined,
-            undefined,
-            searchquerybuilder.buildSortBy(datatableOptions.value),
-            searchquerybuilder.buildOrderBy(datatableOptions.value),
-        )
-        .then((response: ItemInformation) => {
-          processSearchResult(response);
-          callback();
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
-            errorMsgIsActive.value = true;
+          .searchQuery(
+              searchTerm,
+              (currentPage.value - 1) * pageSizeComputed.value, // offset
+              pageSizeComputed.value, // limit
+              currentPage.value,
+              false,
+              true,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
+          )
+          .then((response: ItemInformation) => {
+            processSearchResult(response);
+            callback();
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
       api
           .searchQuery(
               searchTerm,
@@ -688,12 +688,12 @@ export default defineComponent({
       searchquerybuilder.setDeletionsFilter(searchStore, bookmark);
       searchquerybuilder.setAccessStateOnDateFilter(searchStore, bookmark);
       searchStore.searchTerm =
-        bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
+          bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
       successMsg.value =
-        "Die gespeicherte Suche " +
-        "'" + bookmark.bookmarkName + " (" + bookmark.bookmarkId + ")'" +
-        " wurde erfolgreich ausgeführt.";
+          "Die gespeicherte Suche " +
+          "'" + bookmark.bookmarkName + " (" + bookmark.bookmarkId + ")'" +
+          " wurde erfolgreich ausgeführt.";
       successMsgIsActive.value = true;
       url.addQueryParameters(route, router, {
         [url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID]: bookmark?.bookmarkId
@@ -725,42 +725,42 @@ export default defineComponent({
 
     const searchQuery = () => {
       api
-        .searchQuery(
-          searchStore.searchTerm,
-          (currentPage.value - 1) * pageSizeComputed.value,
-          pageSizeComputed.value,
-          pageSizeComputed.value,
-            false,
-          true,
-          searchquerybuilder.buildPublicationYearFilter(searchStore),
-          searchquerybuilder.buildPublicationTypeFilter(searchStore),
-          searchquerybuilder.buildAccessStateFilter(searchStore),
-          searchquerybuilder.buildStartDateAtFilter(searchStore),
-          searchquerybuilder.buildEndDateAtFilter(searchStore),
-          searchquerybuilder.buildFormalRuleFilter(searchStore),
-          searchquerybuilder.buildValidOnFilter(searchStore),
-          searchquerybuilder.buildPaketSigelIdFilter(searchStore),
-          searchquerybuilder.buildZDBIdFilter(searchStore),
-          searchquerybuilder.buildNoRightInformation(searchStore),
-          searchquerybuilder.buildTemplateNameFilter(searchStore),
-          searchquerybuilder.buildSeriesFilter(searchStore),
-          searchquerybuilder.buildLicenceUrlFilter(searchStore),
-          searchquerybuilder.buildManualRightFilter(searchStore),
-          searchquerybuilder.buildDeletionsFilter(searchStore),
-          searchquerybuilder.buildAccessOnDateFilter(searchStore),
-          searchquerybuilder.buildSortBy(datatableOptions.value),
-          searchquerybuilder.buildOrderBy(datatableOptions.value),
-        )
-        .then((response: ItemInformation) => {
-          processSearchResult(response);
-        })
-        .catch((e) => {
-          error.errorHandling(e, (errMsg: string) => {
-            tableContentLoading.value = false;
-            errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
-            errorMsgIsActive.value = true;
+          .searchQuery(
+              searchStore.searchTerm,
+              (currentPage.value - 1) * pageSizeComputed.value,
+              pageSizeComputed.value,
+              pageSizeComputed.value,
+              false,
+              true,
+              searchquerybuilder.buildPublicationYearFilter(searchStore),
+              searchquerybuilder.buildPublicationTypeFilter(searchStore),
+              searchquerybuilder.buildAccessStateFilter(searchStore),
+              searchquerybuilder.buildStartDateAtFilter(searchStore),
+              searchquerybuilder.buildEndDateAtFilter(searchStore),
+              searchquerybuilder.buildFormalRuleFilter(searchStore),
+              searchquerybuilder.buildValidOnFilter(searchStore),
+              searchquerybuilder.buildPaketSigelIdFilter(searchStore),
+              searchquerybuilder.buildZDBIdFilter(searchStore),
+              searchquerybuilder.buildNoRightInformation(searchStore),
+              searchquerybuilder.buildTemplateNameFilter(searchStore),
+              searchquerybuilder.buildSeriesFilter(searchStore),
+              searchquerybuilder.buildLicenceUrlFilter(searchStore),
+              searchquerybuilder.buildManualRightFilter(searchStore),
+              searchquerybuilder.buildDeletionsFilter(searchStore),
+              searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildSortBy(datatableOptions.value),
+              searchquerybuilder.buildOrderBy(datatableOptions.value),
+          )
+          .then((response: ItemInformation) => {
+            processSearchResult(response);
+          })
+          .catch((e) => {
+            error.errorHandling(e, (errMsg: string) => {
+              tableContentLoading.value = false;
+              errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
+              errorMsgIsActive.value = true;
+            });
           });
-        });
       api
           .searchQuery(
               searchStore.searchTerm,
@@ -835,50 +835,50 @@ export default defineComponent({
     const resetAllDynamicFilter = (response: ItemInformation) => {
       // Reset AccessState
       searchStore.accessStateReceived =
-        response.accessStateWithCount != undefined
-          ? [...response.accessStateWithCount]
-          : [...Array(0)];
+          response.accessStateWithCount != undefined
+              ? [...response.accessStateWithCount]
+              : [...Array(0)];
       searchStore.accessStateIdx = Array(
-        searchStore.accessStateReceived.length,
+          searchStore.accessStateReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.accessStateReceived.map((e) => e.accessState),
-        searchStore.accessStateSelectedLastSearch,
-        searchStore.accessStateIdx,
+          searchStore.accessStateReceived.map((e) => e.accessState),
+          searchStore.accessStateSelectedLastSearch,
+          searchStore.accessStateIdx,
       );
       // Reset Paket Sigel
       searchStore.paketSigelIdReceived =
-        response.paketSigelWithCount != undefined
-          ? [...response.paketSigelWithCount]
-          : [...Array(0)];
+          response.paketSigelWithCount != undefined
+              ? [...response.paketSigelWithCount]
+              : [...Array(0)];
       searchStore.paketSigelIdIdx = Array(
-        searchStore.paketSigelIdReceived.length,
+          searchStore.paketSigelIdReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.paketSigelIdReceived.map((e) => e.paketSigel),
-        searchStore.paketSigelSelectedLastSearch,
-        searchStore.paketSigelIdIdx,
+          searchStore.paketSigelIdReceived.map((e) => e.paketSigel),
+          searchStore.paketSigelSelectedLastSearch,
+          searchStore.paketSigelIdIdx,
       );
       // Reset Publication Type
       searchStore.publicationTypeReceived =
-        response.publicationTypeWithCount != undefined
-          ? [...response.publicationTypeWithCount]
-          : [...Array(0)];
+          response.publicationTypeWithCount != undefined
+              ? [...response.publicationTypeWithCount]
+              : [...Array(0)];
       searchStore.publicationTypeIdx = Array(
-        searchStore.publicationTypeReceived.length,
+          searchStore.publicationTypeReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.publicationTypeReceived.map((e) => e.publicationType),
-        searchStore.publicationTypeSelectedLastSearch,
-        searchStore.publicationTypeIdx,
+          searchStore.publicationTypeReceived.map((e) => e.publicationType),
+          searchStore.publicationTypeSelectedLastSearch,
+          searchStore.publicationTypeIdx,
       );
       // Reset ZDB Id
       searchStore.zdbIdReceived =
-        response.zdbIdWithCount != undefined
-          ? [...response.zdbIdWithCount]
-          : [...Array(0)];
+          response.zdbIdWithCount != undefined
+              ? [...response.zdbIdWithCount]
+              : [...Array(0)];
       searchStore.zdbIdIdx = Array(searchStore.zdbIdReceived.length).fill(
-        false,
+          false,
       );
       resetDynamicFilter(
           searchStore.zdbIdReceived.map((e) => e.zdbId),
@@ -900,16 +900,16 @@ export default defineComponent({
       );
       // Reset Template Names
       searchStore.templateNameReceived =
-        response.templateNameWithCount != undefined
-          ? [...response.templateNameWithCount]
-          : [...Array(0)];
+          response.templateNameWithCount != undefined
+              ? [...response.templateNameWithCount]
+              : [...Array(0)];
       searchStore.templateNameIdx = Array(
-        searchStore.templateNameReceived.length,
+          searchStore.templateNameReceived.length,
       ).fill(false);
       resetDynamicFilter(
-        searchStore.templateNameReceived.map((e) => e.rightId),
-        searchStore.templateNameSelectedLastSearch,
-        searchStore.templateNameIdx,
+          searchStore.templateNameReceived.map((e) => e.rightId),
+          searchStore.templateNameSelectedLastSearch,
+          searchStore.templateNameIdx,
       );
       // Reset Licence Url
       searchStore.licenceUrlReceived =
@@ -927,9 +927,9 @@ export default defineComponent({
     };
 
     const resetDynamicFilter = (
-      receivedFilters: Array<string>,
-      savedFilters: Array<string>,
-      idxMap: Array<boolean>,
+        receivedFilters: Array<string>,
+        savedFilters: Array<string>,
+        idxMap: Array<boolean>,
     ) => {
       receivedFilters.forEach((elem: string, index: number): void => {
         if (savedFilters.includes(elem)) {
@@ -1301,6 +1301,7 @@ table.special, th.special, td.special {
       <BookmarkSave
           :isNew="true"
           :searchTerm="searchStore.searchTerm"
+          :filters="searchStore.filtersAsQuery"
           v-on:addBookmarkSuccessful="addBookmarkSuccessful"
       ></BookmarkSave>
     </v-dialog>
@@ -1606,6 +1607,11 @@ table.special, th.special, td.special {
                     <td class=special>del</td>
                     <td class=special>del:on</td>
                   </tr>
+                  <tr class=special>
+                    <td class=special>Econbiz-ID</td>
+                    <td class=special>ebid</td>
+                    <td class=special></td>
+                  </tr>
                   </tbody>
                 </table>
 
@@ -1711,7 +1717,7 @@ table.special, th.special, td.special {
           </v-btn>
         </v-col>
         <v-col
-          cols="auto">
+            cols="auto">
           <v-btn
               color="blue darken-1"
               @click="openBookmarkSaveDialog"
@@ -1721,7 +1727,7 @@ table.special, th.special, td.special {
           </v-btn>
         </v-col>
         <v-col
-          cols="auto">
+            cols="auto">
           <v-btn
               color="blue darken-1"
               :disabled="!canReset"
