@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server
 
+import de.zbw.api.lori.server.connector.CollectionImport
 import de.zbw.api.lori.server.connector.DAConnector
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.business.lori.server.LoriServerBackend
@@ -188,8 +189,12 @@ class LoriGrpcServerTest {
         runBlocking {
             // given
             val token = "SOME_TOKEN"
-            val importsPerCommunity = 3
-            val communityIds = listOf("4")
+            val importsPerCommunity =
+                CollectionImport(
+                    collectionId = 4,
+                    importsExpected = 3,
+                    importsReceived = 3,
+                )
             val community =
                 DACommunity(
                     id = 5,
@@ -225,7 +230,7 @@ class LoriGrpcServerTest {
             val expected =
                 FullImportResponse
                     .newBuilder()
-                    .setItemsImported(communityIds.size * importsPerCommunity)
+                    .setItemsImported(importsPerCommunity.importsReceived)
                     .setItemsDeleted(5)
                     .build()
 
@@ -246,6 +251,86 @@ class LoriGrpcServerTest {
                     importer,
                     tracer,
                     mailService = mockk(),
+                ).fullImport(request)
+
+            // then
+            assertThat(response, `is`(expected))
+        }
+    }
+
+    @Test(expectedExceptions = [StatusRuntimeException::class])
+    fun testFullImportFullimportException() {
+        runBlocking {
+            // given
+            val token = "SOME_TOKEN"
+            val importsPerCommunity =
+                CollectionImport(
+                    collectionId = 4,
+                    importsExpected = 5,
+                    importsReceived = 3,
+                )
+            val community =
+                DACommunity(
+                    id = 5,
+                    name = "Some name",
+                    handle = null,
+                    type = null,
+                    link = "some link",
+                    expand = emptyList(),
+                    logo = null,
+                    parentCommunity = null,
+                    copyrightText = null,
+                    introductoryText = null,
+                    shortDescription = null,
+                    sidebarText = null,
+                    subcommunities = emptyList(),
+                    collections =
+                        listOf(
+                            mockk {
+                                every { id } returns 101
+                            },
+                        ),
+                    countItems = 1,
+                )
+
+            val importer =
+                mockk<DAConnector> {
+                    coEvery { login() } returns token
+                    coEvery { getCommunityById(token, any()) } returns community
+                    coEvery { getAllCommunityIds(token) } returns listOf(community.id)
+                    coEvery { importAllCollectionsOfCommunity(token, any(), any()) } returns listOf(importsPerCommunity)
+                }
+
+            val expected =
+                FullImportResponse
+                    .newBuilder()
+                    .setItemsImported(importsPerCommunity.importsReceived)
+                    .setItemsDeleted(5)
+                    .build()
+
+            val request = FullImportRequest.getDefaultInstance()
+            // when
+            val response =
+                LoriGrpcServer(
+                    mockk {
+                        every { mailToError } returns "foo@bar.com"
+                        every { stage } returns "testing"
+                    },
+                    mockk<LoriServerBackend> {
+                        coEvery { updateMetadataAsDeleted(any()) } returns 5
+                        coEvery {
+                            updateGenericJobById(any())
+                        } returns 1
+                        coEvery {
+                            insertGenericJob(any())
+                        } returns UUID.randomUUID()
+                    },
+                    importer,
+                    tracer,
+                    mailService =
+                        mockk {
+                            coEvery { sendMail(any(), any(), any()) } returns Unit
+                        },
                 ).fullImport(request)
 
             // then

@@ -119,6 +119,12 @@ class DAConnectorTest {
                         mockk<LoriConfiguration>(),
                     ),
                 )
+            val expectedCollectionImport =
+                CollectionImport(
+                    collectionId = 1,
+                    importsExpected = 10,
+                    importsReceived = 10,
+                )
             val daConnector =
                 spyk(
                     DAConnector(
@@ -129,7 +135,8 @@ class DAConnectorTest {
                         backend = backend,
                     ),
                 ) {
-                    coEvery { importCollection(any(), any(), any(), any()) } returns 1
+                    coEvery { importCollection(any(), any(), any(), any()) } returns
+                        expectedCollectionImport
                 }
             // when
             val receivedItems =
@@ -147,7 +154,16 @@ class DAConnectorTest {
                 )
 
             // then
-            assertThat(receivedItems, `is`(listOf(1, 1, 1)))
+            assertThat(
+                receivedItems,
+                `is`(
+                    listOf(
+                        expectedCollectionImport,
+                        expectedCollectionImport,
+                        expectedCollectionImport,
+                    ),
+                ),
+            )
             coVerify(exactly = 3) { daConnector.importCollection("token", any(), any(), any()) }
         }
     }
@@ -210,7 +226,7 @@ class DAConnectorTest {
                                       "introductoryText": "",
                                       "shortDescription": "",
                                       "sidebarText": "",
-                                      "numberItems": 39
+                                      "numberItems": 1
                                     }
                                     """.trimIndent(),
                                 ),
@@ -232,10 +248,10 @@ class DAConnectorTest {
                             coEvery { upsertMetadata(any()) } returns IntArray(1) { _ -> 1 }
                         },
                 )
-            val expected = 1
+            val expected = CollectionImport(collectionId = givenCollectionId, importsExpected = 1, importsReceived = 1)
 
             // when
-            val received: Int =
+            val received: CollectionImport? =
                 daConnector.importCollection(
                     "sometoken",
                     givenCollectionId,
@@ -251,10 +267,10 @@ class DAConnectorTest {
     fun testImportCollectionZeroEntries() {
         runBlocking {
             // given
-            val givenCommunityId = 6
+            val givenCollectionId = 6
             val mockEngine =
                 MockEngine { request ->
-                    if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCommunityId/items")) {
+                    if (request.url.toString().startsWith("$REST_URL/rest/collections/$givenCollectionId/items")) {
                         respond(
                             content =
                                 ByteReadChannel(
@@ -341,18 +357,21 @@ class DAConnectorTest {
                     engine = mockEngine,
                     backend = mockk(),
                 )
-            val expected = 0
 
+            val expected = CollectionImport(collectionId = givenCollectionId, importsExpected = 0, importsReceived = 0)
             // when
-            val received: Int =
+            val received =
                 daConnector.importCollection(
                     "sometoken",
-                    givenCommunityId,
+                    givenCollectionId,
                     TEST_COMMUNITY,
                     mutableMapOf<MetadataValidationError, List<String>>(),
                 )
             // then
-            assertThat(received, `is`(expected))
+            assertThat(
+                received,
+                `is`(expected),
+            )
         }
     }
 

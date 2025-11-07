@@ -157,10 +157,10 @@ class DAConnector(
         loginToken: String,
         community: DACommunity,
         validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
-    ): List<Int> =
+    ): List<CollectionImport> =
         coroutineScope {
             val collectionIds = community.collections?.map { it.id } ?: emptyList()
-            collectionIds.map { cId ->
+            collectionIds.mapNotNull { cId ->
                 importCollection(
                     loginToken,
                     cId,
@@ -275,7 +275,7 @@ class DAConnector(
         collectionId: Int,
         community: DACommunity,
         validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
-    ): Int =
+    ): CollectionImport? =
         coroutineScope {
             val collection: DACollection? =
                 getCollectionById(
@@ -284,7 +284,7 @@ class DAConnector(
                 )
 
             if (collection == null) {
-                return@coroutineScope 0
+                return@coroutineScope null
             }
 
             val numberItems: Int = collection.numberItems ?: 0
@@ -307,9 +307,24 @@ class DAConnector(
                     }
             }
             // Sum results in the end to prevent race conditions
-            return@coroutineScope deferredResults.awaitAll().sum().also {
-                LOG.info("Collection Handle ${collection.handle}: Successfully imported $it entries")
-            }
+            return@coroutineScope deferredResults
+                .awaitAll()
+                .sum()
+                .let { successfullyImported ->
+                    CollectionImport(
+                        importsExpected = collection.numberItems ?: 0,
+                        importsReceived = successfullyImported,
+                        collectionId = collectionId,
+                    )
+                }.also {
+                    LOG.info("Collection Handle ${collection.handle}: Successfully imported ${it.importsReceived} entries")
+                    if (it.importsReceived < it.importsExpected) {
+                        LOG.warn(
+                            "Collection Handle ${collection.handle}:" +
+                                " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                        )
+                    }
+                }
         }
 
     suspend inline fun <reified T, reified E> HttpClient.safeRequest(

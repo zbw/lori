@@ -1,7 +1,10 @@
 package de.zbw.api.lori.server
 
 import de.zbw.api.lori.server.config.LoriConfiguration
+import de.zbw.api.lori.server.connector.CollectionImport
+import de.zbw.api.lori.server.connector.CommunityImport
 import de.zbw.api.lori.server.connector.DAConnector
+import de.zbw.api.lori.server.exception.FullimportException
 import de.zbw.api.lori.server.type.DACommunity
 import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.business.lori.server.LoriServerBackend
@@ -106,17 +109,26 @@ class LoriGrpcServer(
                 LOG.info("Community Ids to import: ${communityIds.sortedDescending().reversed()}")
 
                 val validationErrorMap = mutableMapOf<MetadataValidationError, List<String>>()
-                val imports: Int =
+                val communityImports: List<CommunityImport> =
                     runImports(
                         communityIds,
                         token,
                         validationErrorMap,
                     )
-                val deleted: Int = backend.updateMetadataAsDeleted(startTime)
+
+                val importsExpected = communityImports.sumOf { it.importsExpected }
+                val importsReceived = communityImports.sumOf { it.importsReceived }
                 val importWarnings =
                     MetadataValidationError.prettyPrintMap(
                         validationErrorMap,
                     )
+
+                if (importsExpected != importsReceived) {
+                    throw FullimportException(
+                        "Ungültiger Vollimport. Anzahl importierte Items ($importsReceived) stimmt" +
+                            "nicht mit Anzahl erwartener Items überein ($importsExpected)",
+                    )
+                }
                 importWarnings.takeIf { it.isNotEmpty() }?.let { LOG.warn(it) }
                 importWarnings
                     .takeIf {
@@ -130,16 +142,18 @@ class LoriGrpcServer(
                             subject = "Lori Vollimport: Validierungsfehler (${config.stage.uppercase()})",
                         )
                     }
-                LOG.info("Number of imported Items: $imports")
+
+                val deleted: Int = backend.updateMetadataAsDeleted(startTime)
+                LOG.info("Number of imported Items: $importsReceived")
                 LOG.info("Number of deleted Items found: $deleted")
 
                 job.status = JobStatus.SUCCESSFUL
-                job.summary = "Number of imported Items: $imports; Number of deleted Items found: $deleted"
+                job.summary = "Number of imported Items: $communityImports; Number of deleted Items found: $deleted"
                 backend.updateGenericJobById(genericJob = job)
 
                 FullImportResponse
                     .newBuilder()
-                    .setItemsImported(imports)
+                    .setItemsImported(importsReceived)
                     .setItemsDeleted(deleted)
                     .build()
             } catch (e: Throwable) {
@@ -322,9 +336,9 @@ class LoriGrpcServer(
         communityIds: List<Int>,
         token: String,
         validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
-    ): Int {
+    ): List<CommunityImport> {
         val semaphore = Semaphore(3)
-        val numberImportsDeferred: List<Deferred<Int>> =
+        val communityImportsDef: List<Deferred<CommunityImport?>> =
             coroutineScope {
                 communityIds.map {
                     val import =
@@ -339,7 +353,7 @@ class LoriGrpcServer(
                     import
                 }
             }
-        return numberImportsDeferred.awaitAll().sum()
+        return communityImportsDef.awaitAll().filterNotNull()
     }
 
     private suspend fun importCommunity(
@@ -347,11 +361,11 @@ class LoriGrpcServer(
         communityId: Int,
         semaphore: Semaphore,
         validationErrorMap: MutableMap<MetadataValidationError, List<String>>,
-    ): Int {
+    ): CommunityImport? {
         semaphore.acquire()
         LOG.info("Start importing community $communityId")
-        val daCommunity: DACommunity = daConnector.getCommunityById(token, communityId) ?: return 0
-        val import =
+        val daCommunity: DACommunity = daConnector.getCommunityById(token, communityId) ?: return null
+        val collectionsImported: List<CollectionImport> =
             daConnector.importAllCollectionsOfCommunity(
                 token,
                 daCommunity,
@@ -359,7 +373,24 @@ class LoriGrpcServer(
             )
         semaphore.release()
         LOG.info("Finished importing community $communityId")
-        return import.sum()
+        return collectionsImported
+            .fold(
+                CommunityImport(
+                    communityId = communityId,
+                    importsExpected = 0,
+                    importsReceived = 0,
+                ),
+            ) { communityImport: CommunityImport, collectionImport: CollectionImport ->
+                communityImport.copy(
+                    importsExpected = communityImport.importsExpected + collectionImport.importsExpected,
+                    importsReceived = communityImport.importsReceived + collectionImport.importsReceived,
+                )
+            }.also {
+                LOG.warn(
+                    "Community-Id $communityId:" +
+                        " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                )
+            }
     }
 
     companion object {
