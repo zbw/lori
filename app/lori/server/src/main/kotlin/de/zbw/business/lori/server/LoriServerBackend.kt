@@ -81,7 +81,7 @@ class LoriServerBackend(
         handles: List<String>,
         createdBy: String,
     ): String {
-        val pkRight = dbConnector.rightDB.insertRight(right.copy(isTemplate = false, templateName = null))
+        val pkRight = dbConnector.rightDB.insertRight(right)
         dbConnector.itemDB.upsertItemBatch(
             createdBy = createdBy,
             itemIds =
