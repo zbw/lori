@@ -387,10 +387,12 @@ class LoriGrpcServer(
                     importsReceived = communityImport.importsReceived + collectionImport.importsReceived,
                 )
             }.also {
-                LOG.warn(
-                    "Community-Id $communityId:" +
-                        " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
-                )
+                if (it.importsReceived < it.importsExpected) {
+                    LOG.warn(
+                        "Community-Id $communityId:" +
+                            " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                    )
+                }
             }
     }
 
