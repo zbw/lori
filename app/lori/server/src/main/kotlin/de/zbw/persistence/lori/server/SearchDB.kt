@@ -604,7 +604,7 @@ class SearchDB(
             hasHandlesToIgnore: Boolean,
             withLimit: Boolean = true,
             withOffset: Boolean = true,
-            sortInformation: SortInformation,
+            sortInformation: SortInformation?,
         ): String {
             val limit =
                 if (withLimit) {
@@ -659,16 +659,21 @@ class SearchDB(
                     .takeIf { it.isNotBlank() }
                     ?.let { " $it" }
                     ?: ""
+
             return if (hasHandlesToIgnore) {
+                val sorting =
+                    sortInformation?.let { " ORDER BY ${it.sortByField.columnName} ${it.sortOrder.sqlSyntax}" } ?: ""
                 val filterHandles = "WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
                     " FROM ($subquery) as $SUBQUERY_NAME" +
                     " $filterHandles" +
-                    " ORDER BY ${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    sorting +
                     limitOffset
             } else {
+                val sorting =
+                    sortInformation?.let { " ORDER BY ${ALIAS_ITEM_METADATA}.${it.sortByField.columnName} ${it.sortOrder.sqlSyntax}" } ?: ""
                 subquery +
-                    " ORDER BY ${ALIAS_ITEM_METADATA}.${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    sorting +
                     limitOffset
             }
         }
@@ -689,7 +694,7 @@ class SearchDB(
                     hasHandlesToIgnore,
                     false,
                     false,
-                    SortInformation.DEFAULT,
+                    null,
                 ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(

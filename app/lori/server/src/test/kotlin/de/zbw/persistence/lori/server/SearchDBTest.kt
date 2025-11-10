@@ -370,8 +370,7 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*)" +
                     " FROM ($SELECT_ALL_WITH_TS" +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC)" +
+                    " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " as countsearch",
                 "count query filter with one searchkey",
             ),
@@ -447,7 +446,7 @@ class SearchDBTest : DatabaseTest() {
                     " AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id WHERE item.handle = im.handle" +
                     " AND (access_state = ? AND access_state is not null)) AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null) AND (lower(publication_type) = lower(?))" +
-                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC)" +
+                    ")" +
                     " as countsearch",
                 "search bar filter metadata and right",
             ),
@@ -462,7 +461,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
-                    " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC) as countsearch",
+                    ") as countsearch",
                 "only right filter",
             ),
         )
