@@ -33,6 +33,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -342,7 +343,7 @@ class LoriGrpcServer(
             coroutineScope {
                 communityIds.map {
                     val import =
-                        async {
+                        async(Dispatchers.IO) {
                             importCommunity(
                                 token,
                                 it,

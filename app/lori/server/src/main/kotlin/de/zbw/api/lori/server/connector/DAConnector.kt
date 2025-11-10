@@ -35,6 +35,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.gson.gson
 import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -292,7 +293,7 @@ class DAConnector(
             val deferredResults = mutableListOf<Deferred<Int>>()
             for (offsetCounter in 0..<ceil(numberItems.toDouble() / DEFAULT_IMPORT_CHUNK_SIZE).toInt()) {
                 deferredResults +=
-                    async {
+                    async(Dispatchers.IO) {
                         semaphore.withPermit {
                             importCollectionPart(
                                 loginToken = loginToken,
