@@ -1440,7 +1440,7 @@ table.special, th.special, td.special {
           <v-col cols="1">
             <v-progress-circular
                 v-if="!searchFinished"
-                color="purple"
+                color="blue darken-1"
                 indeterminate
             ></v-progress-circular>
           </v-col>
