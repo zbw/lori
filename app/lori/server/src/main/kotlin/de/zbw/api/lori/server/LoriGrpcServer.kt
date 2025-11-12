@@ -33,6 +33,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -342,7 +343,7 @@ class LoriGrpcServer(
             coroutineScope {
                 communityIds.map {
                     val import =
-                        async {
+                        async(Dispatchers.IO) {
                             importCommunity(
                                 token,
                                 it,
@@ -386,10 +387,12 @@ class LoriGrpcServer(
                     importsReceived = communityImport.importsReceived + collectionImport.importsReceived,
                 )
             }.also {
-                LOG.warn(
-                    "Community-Id $communityId:" +
-                        " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
-                )
+                if (it.importsReceived < it.importsExpected) {
+                    LOG.warn(
+                        "Community-Id $communityId:" +
+                            " Not all items were imported. Only ${it.importsReceived} out of ${it.importsExpected} were imported.",
+                    )
+                }
             }
     }
 

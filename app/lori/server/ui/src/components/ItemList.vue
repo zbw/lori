@@ -444,6 +444,13 @@ export default defineComponent({
 
     // Search
     const templateSearchIsActive = ref(false);
+    const facetSearchFinished = ref(false);
+    const itemSearchFinished = ref(false);
+
+    const searchFinished = computed(() => {
+      return facetSearchFinished.value && itemSearchFinished.value
+    });
+
     const initSearchByRightId = (rightId: string, templateName: string) => {
       searchStore.searchTerm = "";
       templateSearchIsActive.value = true;
@@ -497,6 +504,9 @@ export default defineComponent({
               errorMsg.value = "Fehler beim Ausführen der Suche - " + errMsg;
               errorMsgIsActive.value = true;
             });
+          })
+          .finally(() => {
+            facetSearchFinished.value = true;
           });
     };
 
@@ -529,6 +539,7 @@ export default defineComponent({
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
+            itemSearchFinished.value = true;
             processSearchResult(response);
           })
           .catch((e) => {
@@ -621,6 +632,7 @@ export default defineComponent({
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
+            itemSearchFinished.value = true;
             processSearchResult(response);
             callback();
           })
@@ -707,6 +719,8 @@ export default defineComponent({
     };
 
     const startSearch = () => {
+      itemSearchFinished.value = false;
+      facetSearchFinished.value = false;
       exportInProgress.value = false;
       exportDone.value = false;
       currentPage.value = 1;
@@ -752,6 +766,7 @@ export default defineComponent({
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
           .then((response: ItemInformation) => {
+            itemSearchFinished.value = true;
             processSearchResult(response);
           })
           .catch((e) => {
@@ -1224,6 +1239,7 @@ export default defineComponent({
       queryParameterBookmark,
       queryParameterGroup,
       queryParameterRight,
+      searchFinished,
       searchStore,
       selectedHeaders,
       selectedItems,
@@ -1408,16 +1424,27 @@ table.special, th.special, td.special {
     </v-dialog>
     <v-card position="relative">
       <v-card-title>
-        <v-text-field
-            v-model="searchStore.searchTerm"
-            append-icon="mdi-magnify"
-            clearable
-            label="Suche"
-            variant="outlined"
-            single-line
-            @click:append="startSearch"
-            @keydown.enter.prevent="startSearch"
-        ></v-text-field>
+        <v-row>
+          <v-col cols="11">
+            <v-text-field
+                v-model="searchStore.searchTerm"
+                append-icon="mdi-magnify"
+                clearable
+                label="Suche"
+                variant="outlined"
+                single-line
+                @click:append="startSearch"
+                @keydown.enter.prevent="startSearch"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="1">
+            <v-progress-circular
+                v-if="!searchFinished"
+                color="blue darken-1"
+                indeterminate
+            ></v-progress-circular>
+          </v-col>
+        </v-row>
       </v-card-title>
       <v-row
           no-gutters

@@ -42,6 +42,7 @@ import de.zbw.persistence.lori.server.RightErrorDB
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.apache.logging.log4j.util.Strings
@@ -276,7 +277,7 @@ class LoriServerBackend(
         coroutineScope {
             val metadataToRights: List<Pair<ItemMetadata, Deferred<List<ItemRow>>>> =
                 metadataList.map { metadata ->
-                    metadata to async { dbConnector.rightDB.getItemRowsByHandle(metadata.handle) }
+                    metadata to async(Dispatchers.IO) { dbConnector.rightDB.getItemRowsByHandle(metadata.handle) }
                 }
 
             return@coroutineScope metadataToRights.map { p ->
@@ -462,7 +463,7 @@ class LoriServerBackend(
                     }
             // Acquire search results
             val receivedMetadata: Deferred<List<ItemMetadata>> =
-                async {
+                async(Dispatchers.IO) {
                     if (!facetsOnly) {
                         dbConnector.searchDB.searchMetadataItems(
                             searchExpression,
@@ -481,7 +482,7 @@ class LoriServerBackend(
 
             // Collect all publication types, zdbIds and paketSigels
             val facetsDef =
-                async {
+                async(Dispatchers.IO) {
                     if (!noFacets) {
                         dbConnector.searchDB.searchForFacets(
                             searchExpression,
@@ -522,7 +523,7 @@ class LoriServerBackend(
 
             // Acquire the number of results
             val numberOfResults =
-                async {
+                async(Dispatchers.IO) {
                     items
                         .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
                         ?.let {
@@ -897,7 +898,7 @@ class LoriServerBackend(
     ): ErrorQueryResult =
         coroutineScope {
             val results =
-                async {
+                async(Dispatchers.IO) {
                     dbConnector.rightErrorDB.getErrorList(
                         limit = limit,
                         offset = offset,
@@ -906,12 +907,12 @@ class LoriServerBackend(
                     )
                 }
             val totalNumber =
-                async {
+                async(Dispatchers.IO) {
                     dbConnector.rightErrorDB.getCount(filters = searchFilters, testId = testId)
                 }
 
             val occurrenceConflictTypes =
-                async {
+                async(Dispatchers.IO) {
                     dbConnector.rightErrorDB
                         .getOccurrences(
                             column = RightErrorDB.COLUMN_CONFLICTING_TYPE,
@@ -921,7 +922,7 @@ class LoriServerBackend(
                 }
 
             val occurrenceContextNames =
-                async {
+                async(Dispatchers.IO) {
                     dbConnector.rightErrorDB.getOccurrences(
                         column = RightErrorDB.COLUMN_CONFLICT_BY_CONTEXT,
                         filters = searchFilters,

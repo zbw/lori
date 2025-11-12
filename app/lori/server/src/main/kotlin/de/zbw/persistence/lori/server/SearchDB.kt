@@ -67,6 +67,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.extractMetadataRS
 import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_HAS_LEGAL_RISK
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import java.sql.ResultSet
@@ -89,7 +90,7 @@ class SearchDB(
     ): FacetTransientSet =
         coroutineScope {
             val paketSigelFacet: Deferred<Map<List<String>, Int>> =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         occurrenceForColumn = COLUMN_METADATA_PAKET_SIGEL,
                         searchExpression = searchExpression,
@@ -105,7 +106,7 @@ class SearchDB(
                 }
 
             val accessStateFacet: Deferred<Map<AccessState, Int>> =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -121,7 +122,7 @@ class SearchDB(
                 }
 
             val publicationTypeFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         occurrenceForColumn = COLUMN_METADATA_PUBLICATION_TYPE,
                         searchExpression = searchExpression,
@@ -137,7 +138,7 @@ class SearchDB(
                 }
 
             val zdbIDsJournalFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         occurrenceForColumn = COLUMN_METADATA_ZDB_IDS,
                         searchExpression = searchExpression,
@@ -153,7 +154,7 @@ class SearchDB(
                 }
 
             val isPartOfSeriesFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         occurrenceForColumn = COLUMN_METADATA_IS_PART_OF_SERIES,
                         searchExpression = searchExpression,
@@ -169,7 +170,7 @@ class SearchDB(
                 }
 
             val templateIdFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -185,7 +186,7 @@ class SearchDB(
                 }
 
             val licenceURLFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         occurrenceForColumn = COLUMN_METADATA_LICENCE_URL_FILTER,
                         searchExpression = searchExpression,
@@ -201,7 +202,7 @@ class SearchDB(
                 }
 
             val licenceContractFacet: Deferred<Map<String?, Int>> =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -217,7 +218,7 @@ class SearchDB(
                 }
 
             val zbwUserAgreementFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -233,7 +234,7 @@ class SearchDB(
                 }
 
             val ccLicenceNoRestrictionFacet =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -251,7 +252,7 @@ class SearchDB(
                 }
 
             val legalRiskFacet: Deferred<Map<Boolean, Int>> =
-                async {
+                async(Dispatchers.IO) {
                     searchOccurrences(
                         searchExpression = searchExpression,
                         metadataSearchFilters = metadataSearchFilter,
@@ -603,7 +604,7 @@ class SearchDB(
             hasHandlesToIgnore: Boolean,
             withLimit: Boolean = true,
             withOffset: Boolean = true,
-            sortInformation: SortInformation,
+            sortInformation: SortInformation?,
         ): String {
             val limit =
                 if (withLimit) {
@@ -658,16 +659,21 @@ class SearchDB(
                     .takeIf { it.isNotBlank() }
                     ?.let { " $it" }
                     ?: ""
+
             return if (hasHandlesToIgnore) {
+                val sorting =
+                    sortInformation?.let { " ORDER BY ${it.sortByField.columnName} ${it.sortOrder.sqlSyntax}" } ?: ""
                 val filterHandles = "WHERE NOT $COLUMN_METADATA_HANDLE = ANY(?)"
                 STATEMENT_SELECT_ALL_METADATA_NO_PREFIXES +
                     " FROM ($subquery) as $SUBQUERY_NAME" +
                     " $filterHandles" +
-                    " ORDER BY ${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    sorting +
                     limitOffset
             } else {
+                val sorting =
+                    sortInformation?.let { " ORDER BY ${ALIAS_ITEM_METADATA}.${it.sortByField.columnName} ${it.sortOrder.sqlSyntax}" } ?: ""
                 subquery +
-                    " ORDER BY ${ALIAS_ITEM_METADATA}.${sortInformation.sortByField.columnName} ${sortInformation.sortOrder.sqlSyntax}" +
+                    sorting +
                     limitOffset
             }
         }
@@ -688,7 +694,7 @@ class SearchDB(
                     hasHandlesToIgnore,
                     false,
                     false,
-                    SortInformation.DEFAULT,
+                    null,
                 ) + ") as countsearch"
 
         fun buildSearchQueryOccurrence(
