@@ -71,11 +71,32 @@ class SearchWithWildcards : DatabaseTest() {
     fun createDataForWildcardTest() =
         arrayOf(
             arrayOf(
-                "lur:by-nc-nd*",
+                "${FilterType.DOI.keyAlias}:10.1108/S05*",
+                setOf(
+                    item2,
+                ),
+                "find doi with wildcard",
+            ),
+            arrayOf(
+                "sig:wild_card",
+                setOf(
+                    item2,
+                ),
+                "find item with special character _ -> Test escaping",
+            ),
+            arrayOf(
+                "sig:blub%",
+                setOf(
+                    item2,
+                ),
+                "find item with special character % -> Test escaping",
+            ),
+            arrayOf(
+                "sig:fo* & sig:ba*",
                 setOf(
                     item1,
                 ),
-                "Licence URL with wildcard",
+                "conjugate values with wildcard",
             ),
             arrayOf(
                 "ser:big*",
@@ -83,6 +104,13 @@ class SearchWithWildcards : DatabaseTest() {
                     item1,
                 ),
                 "Series with wildcard",
+            ),
+            arrayOf(
+                "lur:by-nc-nd*",
+                setOf(
+                    item1,
+                ),
+                "Licence URL with wildcard",
             ),
             arrayOf(
                 "tpl:borec*",
@@ -104,27 +132,6 @@ class SearchWithWildcards : DatabaseTest() {
                     item1,
                 ),
                 "one entry in array with wildcard",
-            ),
-            arrayOf(
-                "sig:fo* & sig:ba*",
-                setOf(
-                    item1,
-                ),
-                "conjugate values with wildcard",
-            ),
-            arrayOf(
-                "sig:blub%",
-                setOf(
-                    item2,
-                ),
-                "find item with special character % -> Test escaping",
-            ),
-            arrayOf(
-                "sig:wild_card",
-                setOf(
-                    item2,
-                ),
-                "find item with special character _ -> Test escaping",
             ),
             arrayOf(
                 "sig:f*o",
@@ -149,13 +156,6 @@ class SearchWithWildcards : DatabaseTest() {
                     item2,
                 ),
                 "find isbn with wildcard",
-            ),
-            arrayOf(
-                "${FilterType.DOI.keyAlias}:10.1108/S05*",
-                setOf(
-                    item2,
-                ),
-                "find doi with wildcard",
             ),
         )
 

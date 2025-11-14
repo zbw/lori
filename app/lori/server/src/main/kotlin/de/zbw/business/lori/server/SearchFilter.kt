@@ -17,7 +17,7 @@ import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES_LOWER
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
@@ -61,6 +61,15 @@ abstract class SearchFilter(
     abstract fun getFilterType(): FilterType
 
     companion object {
+        fun prepareValuesForLowercasedJoinedArrays(arr: List<String>) =
+            arr.map { value ->
+                if (value.last() == '%') {
+                    "%$value"
+                } else {
+                    "%$value%"
+                }
+            }
+
         fun toSearchFilter(
             searchKey: String,
             searchValue: String,
@@ -75,25 +84,11 @@ abstract class SearchFilter(
                         CollectionNameFilter(searchValue)
 
                     "doi" -> {
-                        if (searchValue.split(",".toRegex()).size > 1) {
-                            DOIsFilter(
-                                searchValue.split(",".toRegex()),
-                            )
-                        } else {
-                            // Wildcards are possible for single values
-                            QueryParameterParser.parseDoiFilter(searchValue)
-                        }
+                        QueryParameterParser.parseDoisFilter(searchValue)
                     }
 
                     "isb" -> {
-                        if (searchValue.split(",".toRegex()).size > 1) {
-                            ISBNsFilter(
-                                searchValue.split(",".toRegex()),
-                            )
-                        } else {
-                            // Wildcards are possible for single values
-                            QueryParameterParser.parseISBNFilter(searchValue)
-                        }
+                        QueryParameterParser.parseIsbnsFilter(searchValue)
                     }
 
                     "hdl" -> {
@@ -213,7 +208,7 @@ abstract class SearchFilter(
 
                     else -> null
                 }
-            } catch (iae: IllegalArgumentException) {
+            } catch (_: IllegalArgumentException) {
                 null
             }
 
@@ -241,7 +236,7 @@ abstract class TSVectorMetadataSearchFilter(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        preparedStatement.setString(localCounter++, prepareValue(value))
+        preparedStatement.setString(localCounter++, prepareValueForTSVector(value))
         return localCounter
     }
 
@@ -253,7 +248,7 @@ abstract class TSVectorMetadataSearchFilter(
         internal const val SQL_FUNC_TO_TS_QUERY = "to_tsquery"
         private val LOGICAL_OPERATIONS = setOf("|", "&", "(", ")")
 
-        fun prepareValue(v: String): String =
+        fun prepareValueForTSVector(v: String): String =
             escapeWildcards(
                 insertDefaultAndOperator(
                     escapeSpecialChars(v),
@@ -425,10 +420,6 @@ class PPNFilter(
     override fun toSQLString(): String = ppn
 
     override fun getFilterType(): FilterType = FilterType.PPN
-
-    companion object {
-        fun fromString(s: String?): PPNFilter? = s?.let { QueryParameterParser.parsePPNFilter(it) }
-    }
 }
 
 class EconbizIDFilter(
@@ -452,10 +443,6 @@ class EconbizIDFilter(
     override fun toSQLString(): String = econbizId
 
     override fun getFilterType(): FilterType = FilterType.ECONBIZID
-
-    companion object {
-        fun fromString(s: String?): EconbizIDFilter? = s?.let { QueryParameterParser.parseEconbizIdFilter(it) }
-    }
 }
 
 class PPNsFilter(
@@ -488,46 +475,12 @@ class PPNsFilter(
     override fun getFilterType(): FilterType = FilterType.PPN
 }
 
-class DOIFilter(
-    val doi: String,
-) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_DOI,
-    ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE (lower(element) ILIKE ?)" +
-            ") AND $dbColumnName is not null)"
-
-    override fun setSQLParameter(
-        counter: Int,
-        preparedStatement: PreparedStatement,
-        connection: Connection,
-    ): Int {
-        var localCounter = counter
-        preparedStatement.setString(localCounter++, doi)
-        return localCounter
-    }
-
-    override fun toSQLString(): String = doi
-
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
-
-    override fun getFilterType(): FilterType = FilterType.DOI
-}
-
 class DOIsFilter(
     val dois: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_DOI,
+        MetadataDB.COLUMN_METADATA_DOI_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE lower(element) = ANY (?)" +
-            ") AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -535,7 +488,8 @@ class DOIsFilter(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", dois.toTypedArray()))
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(dois)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -546,46 +500,12 @@ class DOIsFilter(
     override fun getFilterType(): FilterType = FilterType.DOI
 }
 
-class ISBNFilter(
-    val isbn: String,
-) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ISBN,
-    ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE (lower(element) ILIKE ?)" +
-            ") AND $dbColumnName is not null)"
-
-    override fun setSQLParameter(
-        counter: Int,
-        preparedStatement: PreparedStatement,
-        connection: Connection,
-    ): Int {
-        var localCounter = counter
-        preparedStatement.setString(localCounter++, isbn)
-        return localCounter
-    }
-
-    override fun toSQLString(): String = isbn
-
-    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
-
-    override fun getFilterType(): FilterType = FilterType.ISBN
-}
-
 class ISBNsFilter(
     val isbns: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ISBN,
+        MetadataDB.COLUMN_METADATA_ISBN_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE lower(element) = ANY (?)" +
-            ") AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -593,7 +513,8 @@ class ISBNsFilter(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", isbns.toTypedArray()))
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(isbns)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -699,18 +620,9 @@ class PublicationTypeFilter(
 class PaketSigelFilterAND(
     val paketSigels: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
+        MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        paketSigels.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
-            "(" +
-                "EXISTS (" +
-                "SELECT 1" +
-                " FROM unnest($dbColumnName) AS element" +
-                " WHERE (element ILIKE ?)" +
-                ")" +
-                ")"
-        }
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -718,9 +630,8 @@ class PaketSigelFilterAND(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        paketSigels.forEach {
-            preparedStatement.setString(localCounter++, it)
-        }
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -738,14 +649,9 @@ class PaketSigelFilterAND(
 class PaketSigelFilterOR(
     val paketSigels: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
+        MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE lower(element) = ANY (?)" +
-            ") AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -753,7 +659,8 @@ class PaketSigelFilterOR(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", paketSigels.toTypedArray()))
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -762,10 +669,6 @@ class PaketSigelFilterOR(
     override fun toSQLString(): String = paketSigels.joinToString(separator = ",")
 
     override fun getFilterType(): FilterType = FilterType.PAKET_SIGEL
-
-    companion object {
-        fun fromString(s: String?): PaketSigelFilterOR? = QueryParameterParser.parsePaketSigelFilterOR(s)
-    }
 }
 
 class CreatedOnFilter(
@@ -800,14 +703,9 @@ class CreatedOnFilter(
 class ZDBIdFilterOR(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ZDB_IDS,
+        MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        "(EXISTS (" +
-            "SELECT 1" +
-            " FROM unnest($dbColumnName) AS element" +
-            " WHERE lower(element) = ANY (?)" +
-            ") AND $dbColumnName is not null)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -815,7 +713,8 @@ class ZDBIdFilterOR(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", zdbIds.toTypedArray()))
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -824,10 +723,6 @@ class ZDBIdFilterOR(
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.ZDB_ID
-
-    companion object {
-        fun fromString(s: String?): ZDBIdFilterOR? = QueryParameterParser.parseZDBIdFilterOR(s)
-    }
 }
 
 /**
@@ -836,18 +731,9 @@ class ZDBIdFilterOR(
 class ZDBIdFilterAND(
     val zdbIds: List<String>,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ZDB_IDS,
+        MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        zdbIds.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
-            "(" +
-                "EXISTS (" +
-                "SELECT 1" +
-                " FROM unnest($dbColumnName) AS element" +
-                " WHERE (lower(element) ILIKE ?)" +
-                ")" +
-                ")"
-        }
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -855,9 +741,8 @@ class ZDBIdFilterAND(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        zdbIds.forEach {
-            preparedStatement.setString(localCounter++, it)
-        }
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -875,18 +760,9 @@ class ZDBIdFilterAND(
 class SeriesFilter(
     val seriesNames: List<String>,
 ) : MetadataSearchFilter(
-        COLUMN_METADATA_IS_PART_OF_SERIES,
+        COLUMN_METADATA_IS_PART_OF_SERIES_LOWER,
     ) {
-    override fun toWhereClause(): String =
-        seriesNames.joinToString(prefix = "(", postfix = " AND $dbColumnName is not null)", separator = " AND ") {
-            "(" +
-                "EXISTS (" +
-                "SELECT 1" +
-                " FROM unnest($dbColumnName) AS element" +
-                " WHERE (lower(element) ILIKE ?)" +
-                ")" +
-                ")"
-        }
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -894,9 +770,8 @@ class SeriesFilter(
         connection: Connection,
     ): Int {
         var localCounter = counter
-        seriesNames.forEach {
-            preparedStatement.setString(localCounter++, it)
-        }
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(seriesNames)
+        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -1107,7 +982,7 @@ class AccessStateOnDateFilter(
 }
 
 /**
- * Filters for items which have a valid right information
+ * Filters for items which have valid right information
  * on a given day.
  */
 class RightValidOnFilter(
@@ -1305,10 +1180,6 @@ class TemplateNameFilter(
     override fun getFilterType(): FilterType = FilterType.TEMPLATE_NAME
 
     override fun toSQLString(): String = templateNames.joinToString(separator = ",")
-
-    companion object {
-        fun fromString(s: String?): TemplateNameFilter? = QueryParameterParser.parseTemplateNameFilter(s)
-    }
 }
 
 class FormalRuleFilter(

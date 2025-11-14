@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.api.lori.server.type.RestConverter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
@@ -70,6 +71,8 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.sql.ResultSet
 
 /**
@@ -740,6 +743,16 @@ class SearchDB(
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String {
+            if (searchExpression == null && metadataSearchFilters.isEmpty() &&
+                rightSearchFilters.isEmpty() && noRightInformationFilter == null
+            ) {
+                return "SELECT $columnName, COUNT(*)" +
+                    " FROM (" +
+                    " SELECT DISTINCT $columnName, $COLUMN_METADATA_HANDLE" +
+                    " FROM $TABLE_NAME_ITEM_METADATA" +
+                    " WHERE $columnName IS NOT NULL) t" +
+                    " GROUP BY $columnName;"
+            }
             val selectInWith =
                 "SELECT $ALIAS_ITEM_METADATA.$columnName, $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID," +
                     " $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE"
@@ -786,6 +799,15 @@ class SearchDB(
             rightSearchFilters: List<RightSearchFilter>,
             noRightInformationFilter: NoRightInformationFilter?,
         ): String {
+            if (searchExpression == null && metadataSearchFilters.isEmpty() &&
+                rightSearchFilters.isEmpty() && noRightInformationFilter == null
+            ) {
+                return "SELECT $ALIAS_ITEM_RIGHT.$columnName, COUNT(DISTINCT i.$COLUMN_METADATA_HANDLE)" +
+                    " FROM $TABLE_NAME_ITEM i" +
+                    " LEFT JOIN $TABLE_NAME_ITEM_RIGHT $ALIAS_ITEM_RIGHT ON i.$COLUMN_RIGHT_ID = $ALIAS_ITEM_RIGHT.$COLUMN_RIGHT_ID" +
+                    " WHERE $ALIAS_ITEM_RIGHT.$columnName IS NOT NULL" +
+                    " GROUP BY $ALIAS_ITEM_RIGHT.$columnName;"
+            }
             val selectInWith =
                 "SELECT DISTINCT ON ($ALIAS_ITEM_METADATA.handle, $ALIAS_ITEM_RIGHT.$columnName)" +
                     " $ALIAS_ITEM_RIGHT.$columnName"
@@ -935,5 +957,7 @@ class SearchDB(
         }
 
         private fun buildSearchQuerySelect(): String = STATEMENT_SELECT_ALL_METADATA
+
+        val LOG: Logger = LogManager.getLogger(SearchDB::class.java)
     }
 }

@@ -57,6 +57,15 @@ class SearchKeyTest : DatabaseTest() {
     fun createDataForSearchQuery() =
         arrayOf(
             arrayOf(
+                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel!!.joinToString(separator = ",")}'" +
+                    " & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
+                    " | ${FilterType.TITLE.keyAlias}:'stupid title')",
+                10,
+                0,
+                setOf(METADATA_TEST),
+                "negation around parantheses",
+            ),
+            arrayOf(
                 "!${FilterType.ZDB_ID.keyAlias}:'${METADATA_TEST.zdbIds?.get(0)}'",
                 10,
                 0,
@@ -101,15 +110,6 @@ class SearchKeyTest : DatabaseTest() {
                 0,
                 setOf(METADATA_TEST),
                 "search for specific metadata id with even complexer query ensuring parantheses works as expected",
-            ),
-            arrayOf(
-                "${FilterType.PAKET_SIGEL.keyAlias}:'${METADATA_TEST.paketSigel!!.joinToString(separator = ",")}'" +
-                    " & !(${FilterType.HANDLE.keyAlias}:'nonse'" +
-                    " | ${FilterType.TITLE.keyAlias}:'stupid title')",
-                10,
-                0,
-                setOf(METADATA_TEST),
-                "negation around parantheses",
             ),
             arrayOf(
                 "${FilterType.LICENCE_URL.keyAlias}:'${METADATA_TEST.licenceUrlFilter}'",
@@ -171,15 +171,15 @@ class SearchKeyTest : DatabaseTest() {
                 zdbIds = null,
                 licenceUrl = "foobar.baz",
                 licenceUrlFilter = "other",
-                paketSigel = listOf("someothersigel2"),
+                paketSigel = listOf("someotherrigel2"),
             )
         val METADATA_TEST_3 =
             TEST_Metadata.copy(
                 handle = "11159/7828",
-                zdbIds = listOf("someotherzdbid"),
+                zdbIds = listOf("someotherzdb"),
                 licenceUrl = "foobar",
                 licenceUrlFilter = "other",
-                paketSigel = listOf("someothersigel"),
+                paketSigel = listOf("someotherrigel"),
                 subCommunityName = "department 3",
             )
     }

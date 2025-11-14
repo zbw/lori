@@ -356,7 +356,7 @@ class SearchFilterTest : DatabaseTest() {
     ) {
         assertThat(
             reason,
-            TSVectorMetadataSearchFilter.prepareValue(input),
+            TSVectorMetadataSearchFilter.prepareValueForTSVector(input),
             `is`(expected),
         )
     }

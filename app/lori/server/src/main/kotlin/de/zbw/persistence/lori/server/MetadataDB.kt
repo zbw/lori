@@ -287,10 +287,13 @@ class MetadataDB(
         const val COLUMN_METADATA_CREATED_ON = "created_on"
         const val COLUMN_METADATA_DELETED = "deleted"
         const val COLUMN_METADATA_DOI = "doi"
+        const val COLUMN_METADATA_DOI_LOWER = "doi_joined_lower"
         const val COLUMN_METADATA_ECONBIZID = "econbizid"
         const val COLUMN_METADATA_ISBN = "isbn"
+        const val COLUMN_METADATA_ISBN_LOWER = "isbn_joined_lower"
         const val COLUMN_METADATA_ISSN = "issn"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
+        const val COLUMN_METADATA_IS_PART_OF_SERIES_LOWER = "is_part_of_series_joined_lower"
         const val COLUMN_METADATA_HANDLE = "handle"
         const val COLUMN_METADATA_HANDLE_POSTFIX = "handle_postfix"
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
@@ -298,6 +301,7 @@ class MetadataDB(
         const val COLUMN_METADATA_LICENCE_URL = "licence_url"
         const val COLUMN_METADATA_LICENCE_URL_FILTER = "licence_url_filter"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
+        const val COLUMN_METADATA_PAKET_SIGEL_LOWER = "paket_sigel_joined_lower"
         const val COLUMN_METADATA_PPN = "ppn"
         const val COLUMN_METADATA_PUBLICATION_YEAR = "publication_year"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
@@ -308,6 +312,7 @@ class MetadataDB(
         const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
+        const val COLUMN_METADATA_ZDB_IDS_LOWER = "zdb_ids_joined_lower"
 
         val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 
