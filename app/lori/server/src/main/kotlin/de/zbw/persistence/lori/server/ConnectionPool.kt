@@ -24,9 +24,12 @@ class ConnectionPool(
     ): T =
         jdbcSemaphore.withPermit {
             LOG.debug("Init: $methodName; Available ${jdbcSemaphore.availablePermits}")
-            val connection: Connection = ds.connection
-            connection.use { block(it) }.also {
-                LOG.debug("End: $methodName: Available: ${jdbcSemaphore.availablePermits}")
+            val connection = ds.connection
+            try {
+                block(connection)
+            } finally {
+                LOG.debug("End: $methodName; Available: ${jdbcSemaphore.availablePermits}")
+                connection.close()
             }
         }
 

@@ -23,6 +23,7 @@ class FlywayMigrator(
             .baselineVersion(MigrationVersion.fromVersion("0"))
             .validateMigrationNaming(true)
             .locations("db/migration")
+            .mixed(true) // allow mixed migrations if needed
             .dataSource(dataSource)
             .load(),
 ) {

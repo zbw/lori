@@ -2,7 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
-import de.zbw.business.lori.server.DOIFilter
+import de.zbw.business.lori.server.DOIsFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardContextFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
@@ -11,7 +11,7 @@ import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EconbizIDFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
-import de.zbw.business.lori.server.ISBNFilter
+import de.zbw.business.lori.server.ISBNsFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
@@ -142,10 +142,6 @@ object QueryParameterParser {
         return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilterAND(it) }
     }
 
-    fun parseISBNFilter(s: String?): ISBNFilter? = s?.let { ISBNFilter(escapeWildcards(it)) }
-
-    fun parseDoiFilter(s: String?): DOIFilter? = s?.let { DOIFilter(escapeWildcards(it)) }
-
     fun parseSeriesFilter(s: String?): SeriesFilter? {
         if (s == null) {
             return null
@@ -274,6 +270,28 @@ object QueryParameterParser {
                 escapeWildcards(it)
             }?.let {
                 TemplateNameFilter(it)
+            }
+
+    fun parseIsbnsFilter(s: String?): ISBNsFilter? =
+        s
+            ?.split(",".toRegex())
+            ?.takeIf {
+                it.isNotEmpty()
+            }?.map {
+                escapeWildcards(it)
+            }?.let {
+                ISBNsFilter(it)
+            }
+
+    fun parseDoisFilter(s: String?): DOIsFilter? =
+        s
+            ?.split(",".toRegex())
+            ?.takeIf {
+                it.isNotEmpty()
+            }?.map {
+                escapeWildcards(it)
+            }?.let {
+                DOIsFilter(it)
             }
 
     fun parseRightIdFilter(s: String?): RightIdFilter? =

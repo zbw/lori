@@ -5,13 +5,10 @@ import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_RIGHT_ERROR
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
 import io.opentelemetry.api.trace.Tracer
 import java.sql.PreparedStatement
-import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.Calendar
@@ -28,79 +25,59 @@ class RightErrorDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteErrorById(errorId: Int): Int =
-        connectionPool.useConnection("deleteErrorById") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_ID).apply {
-                    this.setInt(1, errorId)
-                }
-            val span = tracer.spanBuilder("deleteRightErrorById").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ERROR_BY_ID,
+            tracer = tracer,
+            spanName = "deleteErrorById",
+            params = { stmt ->
+                stmt.setInt(1, errorId)
+            },
+        )
 
     suspend fun deleteErrorByTestId(testId: String): Int =
-        connectionPool.useConnection("deleteErrorByTestId") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_TEST_ID).apply {
-                    this.setString(1, testId)
-                }
-            val span = tracer.spanBuilder("deleteRightErrorByTestId").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ERROR_BY_TEST_ID,
+            tracer = tracer,
+            spanName = "deleteErrorByTestId",
+            params = { stmt ->
+                stmt.setString(1, testId)
+            },
+        )
 
     suspend fun deleteErrorsByAge(isOlderThan: Instant): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_AGE).apply {
-                    this.setTimestamp(1, Timestamp.from(isOlderThan), utcCalendar)
-                }
-            val span = tracer.spanBuilder("deleteRightErrorByAge").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ERROR_BY_AGE,
+            tracer = tracer,
+            spanName = "deleteRightErrorByAge",
+            params = { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(isOlderThan), utcCalendar)
+            },
+        )
 
     suspend fun deleteErrorsByType(conflictType: ConflictType): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_CONFLICT_TYPE).apply {
-                    this.setString(1, conflictType.toString())
-                }
-            val span = tracer.spanBuilder("deleteByConflictType").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ERROR_BY_CONFLICT_TYPE,
+            tracer = tracer,
+            spanName = "deleteByConflictType",
+            params = { stmt ->
+                stmt.setString(1, conflictType.toString())
+            },
+        )
 
     suspend fun deleteByCausingRightId(rightId: String): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ERROR_BY_CAUSING_RIGHT_ID).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("deleteByCausingRightId").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ERROR_BY_CAUSING_RIGHT_ID,
+            tracer = tracer,
+            spanName = "deleteByCausingRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+        )
 
     suspend fun getErrorList(
         limit: Int,
@@ -108,165 +85,117 @@ class RightErrorDB(
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String? = null,
     ): List<RightError> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(buildFilterQuery(filters, testId)).apply {
-                    var counter = 1
-                    filters.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
-                    }
-                    if (testId != null) {
-                        this.setString(counter++, testId)
-                    }
-                    this.setInt(counter++, limit)
-                    this.setInt(counter++, offset)
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = buildFilterQuery(filters, testId),
+            tracer = tracer,
+            spanName = "getRightErrorList",
+            params = { stmt ->
+                var counter = 1
+                filters.forEach { f ->
+                    counter = f.setSQLParameter(counter, stmt)
                 }
-
-            val span = tracer.spanBuilder("getRightErrorList").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
+                if (testId != null) {
+                    stmt.setString(counter++, testId)
                 }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    RightError(
-                        errorId = rs.getInt(1),
-                        handle = rs.getString(2),
-                        conflictByRightId = rs.getString(3),
-                        conflictingWithRightId = rs.getString(4),
-                        message = rs.getString(5),
-                        createdOn = rs.getTimestamp(6, utcCalendar).toOffsetDateTime(),
-                        conflictType = ConflictType.valueOf(rs.getString(7)),
-                        conflictByContext = rs.getString(8),
-                        testId = rs.getString(9),
-                        createdBy = rs.getString(10),
-                    )
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+                stmt.setInt(counter++, limit)
+                stmt.setInt(counter++, offset)
+            },
+            mapper = { rs ->
+                RightError(
+                    errorId = rs.getInt(1),
+                    handle = rs.getString(2),
+                    conflictByRightId = rs.getString(3),
+                    conflictingWithRightId = rs.getString(4),
+                    message = rs.getString(5),
+                    createdOn = rs.getTimestamp(6, utcCalendar).toOffsetDateTime(),
+                    conflictType = ConflictType.valueOf(rs.getString(7)),
+                    conflictByContext = rs.getString(8),
+                    testId = rs.getString(9),
+                    createdBy = rs.getString(10),
+                )
+            },
+        )
 
     suspend fun getOccurrences(
         column: String,
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String?,
     ): List<String> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                // Input parameters values are not evaluated in buildOccurrenceQuery. Only counts number of ?
-                connection.prepareStatement(buildOccurrenceQuery(column, filters, testId)).apply {
-                    var counter = 1
-                    filters.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
-                    }
-                    if (testId != null) {
-                        this.setString(counter++, testId)
-                    }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = buildOccurrenceQuery(column, filters, testId),
+            tracer = tracer,
+            spanName = "getOccurrences",
+            params = { stmt ->
+                var counter = 1
+                filters.forEach { f ->
+                    counter = f.setSQLParameter(counter, stmt)
                 }
-
-            val span = tracer.spanBuilder("getOccurrences").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
+                if (testId != null) {
+                    stmt.setString(counter++, testId)
                 }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getString(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
 
     suspend fun getCount(
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String?,
     ): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(buildCountFilterQuery(filters, testId)).apply {
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = buildCountFilterQuery(filters, testId),
+                tracer = tracer,
+                spanName = "getRightErrorCount",
+                params = { stmt ->
                     var counter = 1
                     filters.forEach { f ->
-                        counter = f.setSQLParameter(counter, this)
+                        counter = f.setSQLParameter(counter, stmt)
                     }
                     if (testId != null) {
-                        this.setString(counter++, testId)
+                        stmt.setString(counter++, testId)
                     }
-                }
-
-            val span = tracer.spanBuilder("getRightErrorCount").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection if (rs.next()) {
-                rs.getInt(1)
-            } else {
-                0
-            }
-        }
+                },
+                mapper = { rs ->
+                    rs.getInt(1)
+                },
+            ).first()
 
     suspend fun insertError(rightError: RightError): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection
-                    .prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
-                    .let {
-                        insertRightErrorSetParameter(rightError, it)
-                    }
-            val span = tracer.spanBuilder("insertRightError").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                sql = STATEMENT_INSERT_RIGHT_ERROR,
+                tracer = tracer,
+                spanName = "insertRightError",
+                fetchGenerated = { rs ->
                     rs.getInt(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+                params = { stmt ->
+                    insertRightErrorSetParameter(rightError, stmt)
+                },
+            ).first()
 
     suspend fun insertErrorsBatch(errors: List<RightError>): List<Int> =
-        connectionPool.useConnection { connection ->
-            val prep = connection.prepareStatement(STATEMENT_INSERT_RIGHT_ERROR, Statement.RETURN_GENERATED_KEYS)
-            errors.map {
-                val p = insertRightErrorSetParameter(it, prep)
-                p.addBatch()
-            }
-            val span = tracer.spanBuilder("insertErrorBatch").startSpan()
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) {
-                    prep.executeBatch()
+        DatabaseConnector.insertBatchReturningKeys(
+            connectionPool = connectionPool,
+            sql = STATEMENT_INSERT_RIGHT_ERROR,
+            tracer = tracer,
+            spanName = "insertErrorBatch",
+            params = { stmt ->
+                errors.map {
+                    val p = insertRightErrorSetParameter(it, stmt)
+                    p.addBatch()
                 }
-                val rs: ResultSet = prep.generatedKeys
-                return@useConnection generateSequence {
-                    if (rs.next()) {
-                        rs.getInt(1)
-                    } else {
-                        null
-                    }
-                }.takeWhile { true }.toList()
-            } finally {
-                span.end()
-            }
-        }
+            },
+            fetchGenerated = { rs ->
+                rs.getInt(1)
+            },
+        )
 
     companion object {
         private const val COLUMN_CONFLICTING_WITH = "conflicting_right_id"

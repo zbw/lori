@@ -1,10 +1,8 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.BookmarkTemplate
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
-import java.sql.Statement
 
 /**
  * Execute SQL queries related to templates.
@@ -20,169 +18,110 @@ class BookmarkTemplateDB(
      * Queries on Template-Bookmark Pairs Table.
      */
     suspend fun deletePairsByRightId(rightId: String): Int =
-        connectionPool.useConnection("deletePairsByRightId") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("deleteTemplateBookmarkPairByTempId").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP,
+            tracer = tracer,
+            spanName = "deletePairsByRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+        )
 
     /**
-     * Get all bookmark ids that are a connected to a given RightId.
+     * Get all bookmark ids that are connected to a given RightId.
      */
     suspend fun getBookmarkIdsByRightId(rightId: String): List<Int> =
-        connectionPool.useConnection("getBookmarkIdsByRightId") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("getBookmarkIdsByRightId").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getInt(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            sql = STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getBookmarkIdsByRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+            mapper = { rs: ResultSet -> rs.getInt(1) },
+        )
 
     suspend fun getBookmarkIdsByRightIds(rightIds: List<String>): Set<Int> =
-        connectionPool.useConnection("getBookmarkIdsByRightIds") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS).apply {
-                    this.setArray(1, connection.createArrayOf("text", rightIds.toTypedArray()))
-                }
-            val span = tracer.spanBuilder("getBookmarkIdsByRightIds").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getInt(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toSet()
-        }
+        DatabaseConnector
+            .select(
+                sql = STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS,
+                connectionPool = connectionPool,
+                tracer = tracer,
+                spanName = "getBookmarkIdsByRightIds",
+                params = { stmt ->
+                    stmt.setArray(1, stmt.connection.createArrayOf("text", rightIds.toTypedArray()))
+                },
+                mapper = { rs: ResultSet -> rs.getInt(1) },
+            ).toSet()
 
     /**
-     * Get all bookmark ids that are a connected to a given template-id.
+     * Get all bookmark ids that are connected to a given template-id.
      */
     suspend fun getRightIdsByBookmarkId(bookmarkId: Int): List<String> =
-        connectionPool.useConnection("getRightIdsByBookmarkId") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID).apply {
-                    this.setInt(1, bookmarkId)
-                }
-            val span = tracer.spanBuilder("getTemplateIdsByBookmarkId").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getString(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getRightIdsByBookmarkId",
+            sql = STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID,
+            params = { stmt ->
+                stmt.setInt(1, bookmarkId)
+            },
+            mapper = { rs: ResultSet -> rs.getString(1) },
+        )
 
     suspend fun insertTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
-        connectionPool.useConnection("insertTemplateBookmarkPair") { connection ->
-            val prepStmt =
-                connection
-                    .prepareStatement(STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
-                    .apply {
-                        this.setString(1, bookmarkTemplate.rightId)
-                        this.setInt(2, bookmarkTemplate.bookmarkId)
-                    }
-            val span = tracer.spanBuilder("insertTemplateBookmarkPair").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                tracer = tracer,
+                spanName = "insertTemplateBookmarkPair",
+                sql = STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR,
+                params = { stmt ->
+                    stmt.setString(1, bookmarkTemplate.rightId)
+                    stmt.setInt(2, bookmarkTemplate.bookmarkId)
+                },
+                fetchGenerated = { rs ->
                     rs.getInt(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+            ).first()
 
     suspend fun deleteTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
-        connectionPool.useConnection("deleteTemplateBookmarkPair") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR).apply {
-                    this.setString(1, bookmarkTemplate.rightId)
-                    this.setInt(2, bookmarkTemplate.bookmarkId)
-                }
-            val span = tracer.spanBuilder("deleteTemplateBookmarkPair").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "deleteTemplateBookmarkPair",
+            sql = STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR,
+            params = { stmt ->
+                stmt.setString(1, bookmarkTemplate.rightId)
+                stmt.setInt(2, bookmarkTemplate.bookmarkId)
+            },
+        )
 
     suspend fun upsertTemplateBookmarkBatch(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
-        connectionPool.useConnection("upsertTemplateBookmarkBatch") { connection ->
-            val span = tracer.spanBuilder("upsertBookmarkTemplateBatch").startSpan()
-            val prep = connection.prepareStatement(STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR, Statement.RETURN_GENERATED_KEYS)
-            bookmarkTemplates.map { bookmarkTemplate ->
-                val p =
-                    prep.apply {
-                        this.setInt(1, bookmarkTemplate.bookmarkId)
-                        this.setString(2, bookmarkTemplate.rightId)
-                    }
-                p.addBatch()
-            }
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prep.executeBatch() }.sum()
-            } finally {
-                span.end()
-            }
-            val rs: ResultSet = prep.generatedKeys
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    BookmarkTemplate(
-                        bookmarkId = rs.getInt(1),
-                        rightId = rs.getString(2),
-                    )
-                } else {
-                    null
+        DatabaseConnector.insertBatchReturningKeys(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "upsertTemplateBookmarkBatch",
+            sql = STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR,
+            params = { stmt ->
+                bookmarkTemplates.map { bookmarkTemplate ->
+                    val p =
+                        stmt.apply {
+                            this.setInt(1, bookmarkTemplate.bookmarkId)
+                            this.setString(2, bookmarkTemplate.rightId)
+                        }
+                    p.addBatch()
                 }
-            }.takeWhile { true }.toList()
-        }
+            },
+            fetchGenerated = { rs ->
+                BookmarkTemplate(
+                    bookmarkId = rs.getInt(1),
+                    rightId = rs.getString(2),
+                )
+            },
+        )
 
     companion object {
         private const val TABLE_NAME_TEMPLATE_BOOKMARK_MAP = "template_bookmark_map"

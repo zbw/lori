@@ -4,11 +4,8 @@ import de.zbw.business.lori.server.type.Session
 import de.zbw.business.lori.server.type.UserPermission
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_SESSIONS
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
-import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.Calendar
@@ -16,7 +13,7 @@ import java.util.TimeZone
 import java.util.UUID
 
 /**
- * Execute SQL queries strongly related to user.
+ * Execute SQL queries strongly related to a user.
  *
  * Created on 03-17-2023.
  * @author Christian Bay (c.bay@zbw.eu)
@@ -26,88 +23,70 @@ class UserDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteSessionById(sessionID: String): Int =
-        connectionPool.useConnection("deleteSessionById") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_SESSION_BY_ID).apply {
-                    this.setString(1, sessionID)
-                }
-            val span = tracer.spanBuilder("deleteSessionById").startSpan()
-            try {
-                span.makeCurrent()
-                return@useConnection runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_SESSION_BY_ID,
+            tracer = tracer,
+            spanName = "deleteSessionById",
+            params = { stmt ->
+                stmt.setString(1, sessionID)
+            },
+        )
 
     suspend fun insertSession(session: Session): String =
-        connectionPool.useConnection("insertSession") { connection ->
-            val now = Instant.now()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_INSERT_SESSION, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(1, UUID.randomUUID().toString())
-                    this.setBoolean(2, session.authenticated)
-                    this.setIfNotNull(3, session.firstName) { value, idx, prepStmt ->
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                sql = STATEMENT_INSERT_SESSION,
+                tracer = tracer,
+                spanName = "insertSession",
+                params = { stmt ->
+                    val now = Instant.now()
+                    stmt.setString(1, UUID.randomUUID().toString())
+                    stmt.setBoolean(2, session.authenticated)
+                    stmt.setIfNotNull(3, session.firstName) { value, idx, prepStmt ->
                         prepStmt.setString(idx, value)
                     }
-                    this.setIfNotNull(4, session.lastName) { value, idx, prepStmt ->
+                    stmt.setIfNotNull(4, session.lastName) { value, idx, prepStmt ->
                         prepStmt.setString(idx, value)
                     }
-                    this.setIfNotNull(5, session.permissions) { value, idx, prepStmt ->
-                        prepStmt.setArray(idx, connection.createArrayOf("permission_enum", value.toTypedArray()))
+                    stmt.setIfNotNull(5, session.permissions) { value, idx, prepStmt ->
+                        prepStmt.setArray(idx, stmt.connection.createArrayOf("permission_enum", value.toTypedArray()))
                     }
-                    this.setTimestamp(6, Timestamp.from(session.validUntil), utcCalendar)
-                    this.setTimestamp(7, Timestamp.from(now), utcCalendar)
-                }
-
-            val span = tracer.spanBuilder("insertSession").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+                    stmt.setTimestamp(6, Timestamp.from(session.validUntil), utcCalendar)
+                    stmt.setTimestamp(7, Timestamp.from(now), utcCalendar)
+                },
+                fetchGenerated = { rs ->
                     rs.getString(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+            ).first()
 
     suspend fun getSessionById(sessionId: String): Session? =
-        connectionPool.useConnection("getSessionById") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_SESSION_BY_ID).apply {
-                    this.setString(1, sessionId)
-                }
-            val span = tracer.spanBuilder("getSessionById").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection if (rs.next()) {
-                Session(
-                    sessionID = rs.getString(1),
-                    authenticated = rs.getBoolean(2),
-                    firstName = rs.getString(3),
-                    lastName = rs.getString(4),
-                    permissions =
-                        (rs.getArray(5)?.array as? Array<out Any?>)
-                            ?.filterIsInstance<String>()
-                            ?.map { UserPermission.valueOf(it) }
-                            ?: emptyList(),
-                    validUntil = rs.getTimestamp(6, utcCalendar).toInstant(),
-                    createdOn = rs.getTimestamp(7, utcCalendar).toInstant(),
-                )
-            } else {
-                null
-            }
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_GET_SESSION_BY_ID,
+                tracer = tracer,
+                spanName = "getSessionById",
+                params = { stmt ->
+                    stmt.setString(1, sessionId)
+                },
+                mapper = { rs ->
+                    Session(
+                        sessionID = rs.getString(1),
+                        authenticated = rs.getBoolean(2),
+                        firstName = rs.getString(3),
+                        lastName = rs.getString(4),
+                        permissions =
+                            (rs.getArray(5)?.array as? Array<out Any?>)
+                                ?.filterIsInstance<String>()
+                                ?.map { UserPermission.valueOf(it) }
+                                ?: emptyList(),
+                        validUntil = rs.getTimestamp(6, utcCalendar).toInstant(),
+                        createdOn = rs.getTimestamp(7, utcCalendar).toInstant(),
+                    )
+                },
+            ).firstOrNull()
 
     companion object {
         val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))

@@ -19,12 +19,10 @@ import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import io.opentelemetry.api.trace.Tracer
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -42,141 +40,93 @@ class BookmarkDB(
     private val tracer: Tracer,
 ) {
     suspend fun deleteBookmarkById(bookmarkId: Int): Int =
-        connectionPool.useConnection("deleteBookmarkById") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_BOOKMARK_BY_ID).apply {
-                    this.setInt(1, bookmarkId)
-                }
-            val span = tracer.spanBuilder("deleteBookmarkById").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "deleteBookmarkById",
+            sql = STATEMENT_DELETE_BOOKMARK_BY_ID,
+            params = { stmt -> stmt.setInt(1, bookmarkId) },
+        )
 
     suspend fun insertBookmark(bookmark: Bookmark): Int =
-        connectionPool.useConnection("insertBookmark") { connection ->
-            val prepStmt =
-                insertUpdateSetParameters(
-                    bookmark,
-                    connection.prepareStatement(STATEMENT_INSERT_BOOKMARK, Statement.RETURN_GENERATED_KEYS),
-                )
-            val span = tracer.spanBuilder("insertBookmark").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                sql = STATEMENT_INSERT_BOOKMARK,
+                tracer = tracer,
+                spanName = "insertBookmark",
+                params = { stmt ->
+                    insertUpdateSetParameters(bookmark, stmt)
+                },
+                fetchGenerated = { rs ->
                     rs.getInt(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+            ).first()
 
     suspend fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> =
-        connectionPool.useConnection("getBookmarksByIds") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_BOOKMARKS).apply {
-                    this.setArray(1, connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
-                }
-            val span = tracer.spanBuilder("getBookmarksByIds").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    extractBookmark(rs)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getBookmarksById",
+            sql = STATEMENT_GET_BOOKMARKS,
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("integer", bookmarkIds.toTypedArray()))
+            },
+            mapper = { rs: ResultSet ->
+                extractBookmark(rs)
+            },
+        )
 
     suspend fun updateBookmarkById(
         bookmarkId: Int,
         bookmark: Bookmark,
     ): Int =
-        connectionPool.useConnection("updateBookmarkById") { connection ->
-            val prepStmt =
+        DatabaseConnector.executeUpdate(
+            sql = STATEMENT_UPDATE_BOOKMARK,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "updateBookmarkById",
+            params = { stmt ->
                 insertUpdateSetParameters(
                     bookmark,
-                    connection.prepareStatement(STATEMENT_UPDATE_BOOKMARK),
-                ).apply {
-                    // Important: Adjust this number when adding a new parameter!
-                    this.setInt(25, bookmarkId)
-                }
-            val span = tracer.spanBuilder("updateBookmarkById").startSpan()
-            try {
-                span.makeCurrent()
-                return@useConnection runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+                    stmt,
+                )
+                // Important: Adjust this number when adding a new parameter!
+                stmt.setInt(25, bookmarkId)
+            },
+        )
 
     suspend fun getBookmarkList(
         limit: Int,
         offset: Int,
     ): List<Bookmark> =
-        connectionPool.useConnection("getBookmarkList") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_BOOKMARK_LIST).apply {
-                    this.setInt(1, limit)
-                    this.setInt(2, offset)
-                }
-
-            val span = tracer.spanBuilder("getBookmarkList").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    extractBookmark(rs)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getBookmarksList",
+            sql = STATEMENT_GET_BOOKMARK_LIST,
+            params = { stmt ->
+                stmt.setInt(1, limit)
+                stmt.setInt(2, offset)
+            },
+            mapper = { rs: ResultSet ->
+                extractBookmark(rs)
+            },
+        )
 
     suspend fun getBookmarkIdByQuerystring(query: String): List<Int> =
-        connectionPool.useConnection("getBookmarkNamesByQuerystring") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_ID_BY_QUERYSTRING).apply {
-                    this.setString(1, query)
-                }
-
-            val span = tracer.spanBuilder("getBookmarkIdsByQuerystring").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getInt(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getBookmarkIdByQuerystring",
+            sql = STATEMENT_GET_ID_BY_QUERYSTRING,
+            params = { stmt ->
+                stmt.setString(1, query)
+            },
+            mapper = { rs: ResultSet ->
+                rs.getInt(1)
+            },
+        )
 
     companion object {
         private const val COLUMN_BOOKMARK_ID = "bookmark_id"

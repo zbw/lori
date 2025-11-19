@@ -212,11 +212,10 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
-                    " AND ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
+                    " WHERE (zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower IS NOT NULL)" +
+                    " AND (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
-                    " LIMIT ? OFFSET ?",
+                    " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date filter",
             ),
             arrayOf(
@@ -232,11 +231,10 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)" +
+                    " WHERE ((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower IS NOT NULL)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
-                    " OR ((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
-                    " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
-                    " LIMIT ? OFFSET ?",
+                    " OR (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),
         )

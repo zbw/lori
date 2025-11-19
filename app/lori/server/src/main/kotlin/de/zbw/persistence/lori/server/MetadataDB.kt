@@ -6,19 +6,16 @@ import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
-import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
-import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.Calendar
 import java.util.TimeZone
+import kotlin.collections.first
 
 /**
  * Execute SQL queries strongly related to metadata.
@@ -31,240 +28,179 @@ class MetadataDB(
     private val tracer: Tracer,
 ) {
     internal suspend fun deleteMetadata(handles: List<String>): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_METADATA).apply {
-                    this.setArray(1, connection.createArrayOf("text", handles.toTypedArray()))
-                }
-            val span = tracer.spanBuilder("deleteMetadata").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_METADATA,
+            tracer = tracer,
+            spanName = "deleteMetadata",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+        )
 
     suspend fun metadataContainsHandle(handle: String): Boolean =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_METADATA_CONTAINS_HANDLE).apply {
-                    this.setString(1, handle)
-                }
-            val span = tracer.spanBuilder("metadataContainsHandle").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            rs.next()
-            return@useConnection rs.getBoolean(1)
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_METADATA_CONTAINS_HANDLE,
+                tracer = tracer,
+                spanName = "metadataContainsHandle",
+                params = { stmt ->
+                    stmt.setString(1, handle)
+                },
+                mapper = { rs ->
+                    rs.getBoolean(1)
+                },
+            ).first()
 
     suspend fun getMetadataRange(
         limit: Int,
         offset: Int,
-    ): List<ItemMetadata> =
-        connectionPool.useConnection { connection: Connection ->
-            val prepStmt: PreparedStatement =
-                connection
-                    .prepareStatement(
-                        STATEMENT_SELECT_ALL_METADATA_FROM +
-                            " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
-                            " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
-                    ).apply {
-                        this.setInt(1, limit)
-                        this.setInt(2, offset)
-                    }
-            val span: Span = tracer.spanBuilder("getMetadataRange").startSpan()
-            return@useConnection runMetadataStatement(prepStmt, span, connection)
-        }
-
-    private fun runMetadataStatement(
-        prepStmt: PreparedStatement,
-        span: Span,
-        connection: Connection,
     ): List<ItemMetadata> {
-        val rs =
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.executeQuery() }
-            } finally {
-                span.end()
-            }
-
-        return generateSequence {
-            if (rs.next()) {
+        val sql =
+            STATEMENT_SELECT_ALL_METADATA_FROM +
+                " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
+                " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;"
+        return DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = sql,
+            tracer = tracer,
+            spanName = "getMetadataRange",
+            params = { stmt ->
+                stmt.setInt(1, limit)
+                stmt.setInt(2, offset)
+            },
+            mapper = { rs ->
                 extractMetadataRS(rs)
-            } else {
-                null
-            }
-        }.takeWhile { true }.toList()
+            },
+        )
     }
 
     suspend fun itemContainsHandle(handle: String): Boolean =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_METADATA).apply {
-                    this.setString(1, handle)
-                }
-            val span = tracer.spanBuilder("itemContainsMetadata").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            rs.next()
-            return@useConnection rs.getBoolean(1)
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_ITEM_CONTAINS_METADATA,
+                tracer = tracer,
+                spanName = "itemContainsHandle",
+                params = { stmt ->
+                    stmt.setString(1, handle)
+                },
+                mapper = { rs ->
+                    rs.getBoolean(1)
+                },
+            ).first()
 
     suspend fun getMetadata(handles: List<String>): List<ItemMetadata> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_METADATA).apply {
-                    this.setArray(1, connection.createArrayOf("text", handles.toTypedArray()))
-                }
-
-            val span = tracer.spanBuilder("getMetadata").startSpan()
-            return@useConnection runMetadataStatement(prepStmt, span, connection)
-        }
+        DatabaseConnector.select(
+            sql = STATEMENT_GET_METADATA,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getMetadata",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+            mapper = { rs ->
+                extractMetadataRS(rs)
+            },
+        )
 
     suspend fun getDeletedMetadata(
         limit: Int,
         offset: Int,
     ): List<ItemMetadata> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection
-                    .prepareStatement(
-                        STATEMENT_GET_DELETED_METADATA +
-                            " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
-                            " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
-                    ).apply {
-                        this.setInt(1, limit)
-                        this.setInt(2, offset)
-                    }
-
-            val span = tracer.spanBuilder("getDeletedMetadata").startSpan()
-            return@useConnection runMetadataStatement(prepStmt, span, connection)
-        }
+        DatabaseConnector.select(
+            sql =
+                STATEMENT_GET_DELETED_METADATA +
+                    " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
+                    " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getDeletedMetadata",
+            params = { stmt ->
+                stmt.setInt(1, limit)
+                stmt.setInt(2, offset)
+            },
+            mapper = { rs ->
+                extractMetadataRS(rs)
+            },
+        )
 
     suspend fun getDeletedMetadataCount(): Int =
-        connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getDeletedMetadata").startSpan()
-            val prepStmt =
-                connection
-                    .prepareStatement(
-                        STATEMENT_GET_DELETED_METADATA_COUNT,
-                    )
-
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            if (rs.next()) {
-                return@useConnection rs.getInt(1)
-            } else {
-                throw IllegalStateException("No count found.")
-            }
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_GET_DELETED_METADATA_COUNT,
+                tracer = tracer,
+                spanName = "getDeletedMetadataCount",
+                mapper = { rs ->
+                    rs.getInt(1)
+                },
+            ).first()
 
     suspend fun upsertMetadataBatch(itemMetadata: List<ItemMetadata>): IntArray =
-        connectionPool.useConnection { connection ->
-            val prep: PreparedStatement = connection.prepareStatement(STATEMENT_UPSERT_METADATA)
-            val prepLock: PreparedStatement = connection.prepareStatement(STATEMENT_LOCK_METADATA_ROW)
-            itemMetadata.forEach {
-                prepLock.setString(1, it.handle)
-                prepLock.addBatch()
-                insertUpsertMetadataSetParameters(
-                    itemMetadata = it,
-                    prep = prep,
-                )
-                prep.addBatch()
-            }
-            val span = tracer.spanBuilder("upsertMetadataBatch").startSpan()
-            try {
-                span.makeCurrent()
-                return@useConnection runInTransaction(connection) {
-                    prepLock.executeBatch()
-                    prep.executeBatch()
+        DatabaseConnector.insertBatch(
+            connectionPool = connectionPool,
+            sql = STATEMENT_UPSERT_METADATA,
+            tracer = tracer,
+            spanName = "upsertMetadataBatch",
+            params = { stmt ->
+                itemMetadata.forEach {
+                    insertUpsertMetadataSetParameters(
+                        itemMetadata = it,
+                        prep = stmt,
+                    )
+                    stmt.addBatch()
                 }
-            } finally {
-                span.end()
-            }
-        }
+            },
+        )
 
     suspend fun insertMetadata(itemMetadata: ItemMetadata): String =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                insertUpsertMetadataSetParameters(
-                    itemMetadata,
-                    connection.prepareStatement(STATEMENT_INSERT_METADATA, Statement.RETURN_GENERATED_KEYS),
-                )
-
-            val span = tracer.spanBuilder("insertMetadata").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                sql = STATEMENT_INSERT_METADATA,
+                tracer = tracer,
+                spanName = "insertMetadata",
+                params = { stmt ->
+                    insertUpsertMetadataSetParameters(
+                        itemMetadata,
+                        stmt,
+                    )
+                },
+                fetchGenerated = { rs ->
                     rs.getString(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+            ).first()
 
     suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<String> =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON).apply {
-                    this.setTimestamp(1, Timestamp.from(instant))
-                }
-            val span = tracer.spanBuilder("getMetadataHandlesOlderThanLastUpdatedOn").startSpan()
-            try {
-                span.makeCurrent()
-                val rs = runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                generateSequence {
-                    if (rs.next()) {
-                        rs.getString(1)
-                    } else {
-                        null
-                    }
-                }.takeWhile { true }.toList()
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON,
+            tracer = tracer,
+            spanName = "getMetadataHandlesOlderThanLastUpdatedOn",
+            params = { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(instant))
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
 
     suspend fun updateMetadataDeleteStatus(
         handles: List<String>,
         status: Boolean,
     ): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_UPDATE_DELETE_STATUS).apply {
-                    this.setBoolean(1, status)
-                    this.setArray(2, connection.createArrayOf("text", handles.toTypedArray()))
-                }
-            val span = tracer.spanBuilder("updateMetatadataDeleteStatus").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_UPDATE_DELETE_STATUS,
+            tracer = tracer,
+            spanName = "updateMetadataDeleteStatus",
+            params = { stmt ->
+                stmt.setBoolean(1, status)
+                stmt.setArray(2, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+        )
 
     companion object {
         const val TS_COMMUNITY = "ts_community"
@@ -287,10 +223,13 @@ class MetadataDB(
         const val COLUMN_METADATA_CREATED_ON = "created_on"
         const val COLUMN_METADATA_DELETED = "deleted"
         const val COLUMN_METADATA_DOI = "doi"
+        const val COLUMN_METADATA_DOI_LOWER = "doi_joined_lower"
         const val COLUMN_METADATA_ECONBIZID = "econbizid"
         const val COLUMN_METADATA_ISBN = "isbn"
+        const val COLUMN_METADATA_ISBN_LOWER = "isbn_joined_lower"
         const val COLUMN_METADATA_ISSN = "issn"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
+        const val COLUMN_METADATA_IS_PART_OF_SERIES_LOWER = "is_part_of_series_joined_lower"
         const val COLUMN_METADATA_HANDLE = "handle"
         const val COLUMN_METADATA_HANDLE_POSTFIX = "handle_postfix"
         const val COLUMN_METADATA_LAST_UPDATED_BY = "last_updated_by"
@@ -298,6 +237,7 @@ class MetadataDB(
         const val COLUMN_METADATA_LICENCE_URL = "licence_url"
         const val COLUMN_METADATA_LICENCE_URL_FILTER = "licence_url_filter"
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
+        const val COLUMN_METADATA_PAKET_SIGEL_LOWER = "paket_sigel_joined_lower"
         const val COLUMN_METADATA_PPN = "ppn"
         const val COLUMN_METADATA_PUBLICATION_YEAR = "publication_year"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
@@ -308,6 +248,7 @@ class MetadataDB(
         const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
         const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
+        const val COLUMN_METADATA_ZDB_IDS_LOWER = "zdb_ids_joined_lower"
 
         val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 

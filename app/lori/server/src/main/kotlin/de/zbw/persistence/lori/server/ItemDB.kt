@@ -3,10 +3,8 @@ package de.zbw.persistence.lori.server
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.Calendar
@@ -23,271 +21,196 @@ class ItemDB(
     private val tracer: Tracer,
 ) {
     suspend fun getRightIdsByHandle(handle: String): List<String> =
-        connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getRightIdsByHandle").startSpan()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID).apply {
-                    this.setString(1, handle)
-                }
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getString(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID,
+            tracer = tracer,
+            spanName = "getRightIdsByHandle",
+            params = { stmt ->
+                stmt.setString(1, handle)
+            },
+            mapper = { rs: ResultSet ->
+                rs.getString(1)
+            },
+        )
 
     suspend fun getHandlesByRightId(rightId: String): List<String> =
-        connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getHandlesByRightId").startSpan()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_HANDLES_BY_RIGHT_ID).apply {
-                    this.setString(1, rightId)
-                }
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getString(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            sql = STATEMENT_GET_HANDLES_BY_RIGHT_ID,
+            tracer = tracer,
+            spanName = "getHandlesByRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+            mapper = { rs: ResultSet ->
+                rs.getString(1)
+            },
+        )
 
     suspend fun getHandlesCount(): Int =
-        connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getHandlesCount").startSpan()
-            val prepStmt = connection.prepareStatement(STATEMENT_COUNT_DISTINCT_HANDLE)
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            if (rs.next()) {
-                return@useConnection rs.getInt(1)
-            } else {
-                throw IllegalStateException("No count found.")
-            }
-        }
+        DatabaseConnector.count(
+            connectionPool = connectionPool,
+            sql = STATEMENT_COUNT_DISTINCT_HANDLE,
+            tracer = tracer,
+            spanName = "getHandlesCount",
+        )
 
     suspend fun getDistinctHandlesByOffset(
         limit: Int,
         offset: Int,
     ): List<String> =
-        connectionPool.useConnection { connection ->
-            val span = tracer.spanBuilder("getDistinctHandlesByOffset").startSpan()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_SELECT_DISTINCT_HANDLE).apply {
-                    this.setInt(1, limit)
-                    this.setInt(2, offset)
-                }
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
-                    rs.getString(1)
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            sql = STATEMENT_SELECT_DISTINCT_HANDLE,
+            spanName = "getDistinctHandlesByOffset",
+            params = { stmt ->
+                stmt.setInt(1, limit)
+                stmt.setInt(2, offset)
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
 
     suspend fun itemContainsEntry(
         handle: String,
         rightId: String,
     ): Boolean =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_ENTRY).apply {
-                    this.setString(1, handle)
-                    this.setString(2, rightId)
-                }
-            val span = tracer.spanBuilder("itemContainsEntry").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            rs.next()
-            return@useConnection rs.getBoolean(1)
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_ITEM_CONTAINS_ENTRY,
+                tracer = tracer,
+                spanName = "itemContainsEntry",
+                params = { stmt ->
+                    stmt.setString(1, handle)
+                    stmt.setString(2, rightId)
+                },
+                mapper = { rs ->
+                    rs.getBoolean(1)
+                },
+            ).first()
 
     /**
      * Check if a given rightId is still used in the table.
      */
     suspend fun itemContainsRightId(rightId: String): Boolean =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_ITEM_CONTAINS_RIGHT).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("itemContainsRight").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            rs.next()
-            return@useConnection rs.getBoolean(1)
-        }
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_ITEM_CONTAINS_RIGHT,
+                tracer = tracer,
+                spanName = "itemContainsRight",
+                params = { stmt ->
+                    stmt.setString(1, rightId)
+                },
+                mapper = { rs ->
+                    rs.getBoolean(1)
+                },
+            ).first()
 
     suspend fun insertItem(
         itemId: ItemId,
         createdBy: String,
     ): String? =
-        connectionPool.useConnection { connection ->
-            val now = Instant.now()
-            var localCounter = 1
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_INSERT_ITEM, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(localCounter++, itemId.handle)
-                    this.setString(localCounter++, itemId.rightId)
-                    this.setString(localCounter++, createdBy)
-                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
-                    this.setString(localCounter++, createdBy)
-                    this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
-                }
-
-            val span = tracer.spanBuilder("insertItem").startSpan()
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection affectedRows.takeIf { it > 0 }?.let {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                sql = STATEMENT_INSERT_ITEM,
+                tracer = tracer,
+                spanName = "insertItem",
+                params = { stmt ->
+                    val now = Instant.now()
+                    var localCounter = 1
+                    stmt.setString(localCounter++, itemId.handle)
+                    stmt.setString(localCounter++, itemId.rightId)
+                    stmt.setString(localCounter++, createdBy)
+                    stmt.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                    stmt.setString(localCounter++, createdBy)
+                    stmt.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                },
+                fetchGenerated = { rs ->
                     rs.getString(1)
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+            ).firstOrNull()
 
     suspend fun upsertItemBatch(
         itemIds: List<ItemId>,
         createdBy: String,
     ): IntArray =
-        connectionPool.useConnection { connection ->
-            val now = Instant.now()
-            var localCounter = 1
-            val prep = connection.prepareStatement(STATEMENT_INSERT_ITEM)
-            itemIds.map {
-                val p =
-                    prep.apply {
-                        this.setString(localCounter++, it.handle)
-                        this.setString(localCounter++, it.rightId)
-                        this.setString(localCounter++, createdBy)
-                        this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
-                        this.setString(localCounter++, createdBy)
-                        this.setTimestamp(localCounter, Timestamp.from(now), utcCalendar)
-                    }
-                p.addBatch()
-                localCounter = 1
-            }
-            val span = tracer.spanBuilder("insertItemBatch").startSpan()
-            try {
-                span.makeCurrent()
-                runInTransaction(connection) {
-                    prep.executeBatch()
+        DatabaseConnector.insertBatch(
+            connectionPool = connectionPool,
+            sql = STATEMENT_INSERT_ITEM,
+            tracer = tracer,
+            spanName = "insertItemBatch",
+            params = { stmt ->
+                val now = Instant.now()
+                var localCounter = 1
+                itemIds.map {
+                    val p =
+                        stmt.apply {
+                            this.setString(localCounter++, it.handle)
+                            this.setString(localCounter++, it.rightId)
+                            this.setString(localCounter++, createdBy)
+                            this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
+                            this.setString(localCounter++, createdBy)
+                            this.setTimestamp(localCounter, Timestamp.from(now), utcCalendar)
+                        }
+                    p.addBatch()
+                    localCounter = 1
                 }
-            } finally {
-                span.end()
-            }
-        }
+            },
+        )
 
     suspend fun deleteItem(
         handle: String,
         rightId: String,
     ): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ITEM).apply {
-                    this.setString(1, rightId)
-                    this.setString(2, handle)
-                }
-            val span = tracer.spanBuilder("deleteItem").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ITEM,
+            tracer = tracer,
+            spanName = "deleteItem",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+                stmt.setString(2, handle)
+            },
+        )
 
     suspend fun countItemByRightId(rightId: String): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_COUNT_ITEM_BY_RIGHTID).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("countItemByRightId").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.run { this.executeQuery() } }
-                } finally {
-                    span.end()
-                }
-            if (rs.next()) {
-                return@useConnection rs.getInt(1)
-            } else {
-                throw IllegalStateException("No count found.")
-            }
-        }
+        DatabaseConnector.count(
+            connectionPool = connectionPool,
+            sql = STATEMENT_COUNT_ITEM_BY_RIGHTID,
+            tracer = tracer,
+            spanName = "countItemByRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+        )
 
     suspend fun deleteItemByHandle(handle: String): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_HANDLE).apply {
-                    this.setString(1, handle)
-                }
-            val span = tracer.spanBuilder("deleteItem").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ITEM_BY_HANDLE,
+            tracer = tracer,
+            spanName = "deleteItemByHandle",
+            params = { stmt ->
+                stmt.setString(1, handle)
+            },
+        )
 
     suspend fun deleteItemByRightId(rightId: String): Int =
-        connectionPool.useConnection { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_ITEM_BY_RIGHT).apply {
-                    this.setString(1, rightId)
-                }
-            val span = tracer.spanBuilder("deleteItem").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_ITEM_BY_RIGHT,
+            tracer = tracer,
+            spanName = "deleteItemByRightId",
+            params = { stmt ->
+                stmt.setString(1, rightId)
+            },
+        )
 
     companion object {
         private const val CONSTRAINT_ITEM_PKEY = "item_pkey"
