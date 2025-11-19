@@ -22,7 +22,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert
+import org.testng.Assert
 import org.testng.Assert.assertFalse
 import org.testng.Assert.assertNull
 import org.testng.annotations.AfterClass
@@ -49,7 +49,9 @@ class LoriServerBackendTest : DatabaseTest() {
                 connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
-            mockk(),
+            mockk {
+                every { url } returns "foo.bar"
+            },
         )
 
     @BeforeClass

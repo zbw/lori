@@ -761,34 +761,6 @@ class CreatedOnFilter(
     override fun getFilterType(): FilterType = FilterType.CREATED_ON
 }
 
-class DeletionWithLastUpdatedOnFilter(
-    val lastUpdatedOn: Instant,
-    val comparisonOp: ComparisonOperator,
-) : MetadataSearchFilter(
-        dbColumnName = MetadataDB.COLUMN_METADATA_LAST_UPDATED_ON,
-    ) {
-    override fun toWhereClause(): String =
-        "(${ALIAS_ITEM_METADATA}.${MetadataDB.COLUMN_METADATA_DELETED} = false OR" +
-            " ${ALIAS_ITEM_METADATA}.$dbColumnName ${comparisonOp.toSQL()} ?)"
-
-    override fun setSQLParameter(
-        counter: Int,
-        preparedStatement: PreparedStatement,
-        connection: Connection,
-    ): Int {
-        var localCounter = counter
-        val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
-        preparedStatement.setTimestamp(localCounter++, Timestamp.from(lastUpdatedOn), utcCalendar)
-        return localCounter
-    }
-
-    override fun toString(): String = ""
-
-    override fun toSQLString(): String = ""
-
-    override fun getFilterType(): FilterType = FilterType.CREATED_ON
-}
-
 /**
  * Represents the zdb:"zdbId1,zdbId2,...,zdbId3" key. Returns all entries matching at least one.
  */

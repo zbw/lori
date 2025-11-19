@@ -29,7 +29,9 @@ class ApplyTemplateOnDeletedEntries : DatabaseTest() {
                 connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
-            mockk(),
+            mockk {
+                every { url } returns "foo.bar"
+            },
         )
     private val templateApplication =
         TemplateApplication(

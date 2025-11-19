@@ -1019,6 +1019,7 @@ class ItemRoutesKtTest {
                 mailToError = "receipents@mail.com",
                 mailToWarning = "receipents@mail.com",
                 mailFrom = "my@mail.com",
+                url = "lori.home",
             )
 
         val ITEM_METADATA =

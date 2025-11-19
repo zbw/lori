@@ -42,6 +42,7 @@ data class LoriConfiguration(
     val handleURL: String,
     val commitHash: String,
     val downloadDir: String,
+    val url: String,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -53,6 +54,7 @@ data class LoriConfiguration(
         ): LoriConfiguration {
             val grpcPort = int(prefix, "grpc", "port").default(DEFAULT_GRPC_PORT)
             val httpPort = int(prefix, "http", "port").default(DEFAULT_HTTP_PORT)
+            val url = string(prefix, "url").default("localhost")
             val sqlUrl = string(prefix, "sql", "url").required()
             val sqlUser = string(prefix, "sql", "user").required()
             val sqlPassword = string(prefix, "sql", "password").secret().required()
@@ -118,6 +120,7 @@ data class LoriConfiguration(
                 mailToError = source[mailToError],
                 mailToWarning = source[mailToWarning],
                 mailFrom = source[mailFrom],
+                url = source[url],
             )
         }
 

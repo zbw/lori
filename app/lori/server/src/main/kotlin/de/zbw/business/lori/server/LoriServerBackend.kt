@@ -52,6 +52,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.filter
 import kotlin.math.ceil
@@ -238,7 +239,14 @@ class LoriServerBackend(
                 .let {
                     deletionsAndUpdates +=
                         dbConnector.rightDB.upsertRight(
-                            it.copy(endDate = deletionDate),
+                            it.copy(
+                                endDate = deletionDate,
+                                lastUpdatedBy = "Automatisch",
+                                notesManagementRelated =
+                                    "Enddatum automatisch auf Item-Löschdatum" +
+                                        " ${deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))}" +
+                                        " gesetzt.",
+                            ),
                         )
                 }
         }
@@ -273,6 +281,13 @@ class LoriServerBackend(
                         exceptionOfId = null,
                         hasExceptionId = null,
                         endDate = deletionDate,
+                        createdBy = "Automatisch",
+                        lastUpdatedBy = "Automatisch",
+                        notesManagementRelated =
+                            "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
+                                " Template-Zuordnung Template https://${config.url}?templateId=<Template-ID>" +
+                                " bis zum Item-Löschdatum" +
+                                " ${deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))} abzubilden",
                     )
             val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
             dbConnector.itemDB.insertItem(
