@@ -4,11 +4,9 @@ import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
 import de.zbw.business.lori.server.type.ExportJobStatus
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_EXPORT_JOBS
-import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.UserDB.Companion.utcCalendar
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
-import java.sql.Statement
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
@@ -24,84 +22,36 @@ class ExportJobDB(
     private val tracer: Tracer,
 ) {
     suspend fun insertJob(exportJob: ExportJob): String =
-        connectionPool.useConnection("createExportJob") { connection ->
-            val span = tracer.spanBuilder("createExportJob").startSpan()
-            val now = Instant.now()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_INSERT_EXPORT_JOB, Statement.RETURN_GENERATED_KEYS).apply {
-                    this.setString(1, exportJob.id.toString())
-                    this.setString(2, exportJob.status.toString())
-                    this.setTimestamp(3, Timestamp.from(now), utcCalendar)
-                    this.setString(4, exportJob.createdBy)
-                    this.setTimestamp(5, Timestamp.from(now), utcCalendar)
-                    this.setString(6, exportJob.filePath)
-                    this.setString(7, exportJob.searchTerm)
-                    this.setString(8, exportJob.format.toString())
-                }
-            try {
-                span.makeCurrent()
-                val affectedRows = runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-                return@useConnection if (affectedRows > 0) {
-                    val rs: ResultSet = prepStmt.generatedKeys
-                    rs.next()
+        DatabaseConnector
+            .insertReturningKeys(
+                connectionPool = connectionPool,
+                tracer = tracer,
+                spanName = "insertJob",
+                sql = STATEMENT_INSERT_EXPORT_JOB,
+                fetchGenerated = { rs ->
                     rs.getString(1)
-                } else {
-                    throw IllegalStateException("No row has been inserted.")
-                }
-            } finally {
-                span.end()
-            }
-        }
+                },
+                params = { stmt ->
+                    val now = Instant.now()
+                    stmt.setString(1, exportJob.id.toString())
+                    stmt.setString(2, exportJob.status.toString())
+                    stmt.setTimestamp(3, Timestamp.from(now), utcCalendar)
+                    stmt.setString(4, exportJob.createdBy)
+                    stmt.setTimestamp(5, Timestamp.from(now), utcCalendar)
+                    stmt.setString(6, exportJob.filePath)
+                    stmt.setString(7, exportJob.searchTerm)
+                    stmt.setString(8, exportJob.format.toString())
+                },
+            ).first()
 
     suspend fun getJobById(id: UUID): ExportJob? =
-        connectionPool.useConnection("getExportJobById") { connection ->
-            val span = tracer.spanBuilder("getExportJobById").startSpan()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_EXPORT_JOB_BY_ID).apply {
-                    this.setString(1, id.toString())
-                }
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection if (rs.next()) {
-                ExportJob(
-                    id = UUID.fromString(rs.getString(1)),
-                    status = ExportJobStatus.valueOf(rs.getString(2)),
-                    createdOn =
-                        rs.getTimestamp(3, BookmarkDB.utcCalendar).toInstant(),
-                    createdBy = rs.getString(4),
-                    lastUpdatedOn =
-                        rs.getTimestamp(5, BookmarkDB.utcCalendar).toInstant(),
-                    errorMessage = rs.getString(6),
-                    filePath = rs.getString(7),
-                    searchTerm = rs.getString(8),
-                    format = ExportFormat.valueOf(rs.getString(9)),
-                )
-            } else {
-                null
-            }
-        }
-
-    suspend fun getJobsOlderThan(instant: Instant): List<ExportJob> =
-        connectionPool.useConnection("getAllExportJobIds") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_GET_ALL_IDS).apply {
-                    this.setTimestamp(1, Timestamp.from(instant))
-                }
-            val span = tracer.spanBuilder("getAllExportJobIds").startSpan()
-            val rs =
-                try {
-                    span.makeCurrent()
-                    runInTransaction(connection) { prepStmt.executeQuery() }
-                } finally {
-                    span.end()
-                }
-            return@useConnection generateSequence {
-                if (rs.next()) {
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                tracer = tracer,
+                spanName = "getExportJobById",
+                sql = STATEMENT_GET_EXPORT_JOB_BY_ID,
+                mapper = { rs ->
                     ExportJob(
                         id = UUID.fromString(rs.getString(1)),
                         status = ExportJobStatus.valueOf(rs.getString(2)),
@@ -115,46 +65,64 @@ class ExportJobDB(
                         searchTerm = rs.getString(8),
                         format = ExportFormat.valueOf(rs.getString(9)),
                     )
-                } else {
-                    null
-                }
-            }.takeWhile { true }.toList()
-        }
+                },
+                params = { stmt ->
+                    stmt.setString(1, id.toString())
+                },
+            ).firstOrNull()
+
+    suspend fun getJobsOlderThan(instant: Instant): List<ExportJob> =
+        DatabaseConnector.select(
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getJobsOlderThan",
+            sql = STATEMENT_GET_ALL_IDS,
+            params = { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(instant))
+            },
+            mapper = { rs: ResultSet ->
+                ExportJob(
+                    id = UUID.fromString(rs.getString(1)),
+                    status = ExportJobStatus.valueOf(rs.getString(2)),
+                    createdOn =
+                        rs.getTimestamp(3, BookmarkDB.utcCalendar).toInstant(),
+                    createdBy = rs.getString(4),
+                    lastUpdatedOn =
+                        rs.getTimestamp(5, BookmarkDB.utcCalendar).toInstant(),
+                    errorMessage = rs.getString(6),
+                    filePath = rs.getString(7),
+                    searchTerm = rs.getString(8),
+                    format = ExportFormat.valueOf(rs.getString(9)),
+                )
+            },
+        )
 
     suspend fun deleteJobsByIds(ids: List<UUID>): Int =
-        connectionPool.useConnection("deleteExportJobsByIds") { connection ->
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_DELETE_EXPORT_JOBS_BY_IDS).apply {
-                    this.setArray(1, connection.createArrayOf("text", ids.map { it.toString() }.toTypedArray()))
-                }
-            val span = tracer.spanBuilder("deleteExportJobsByIds").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            sql = STATEMENT_DELETE_EXPORT_JOBS_BY_IDS,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "deleteExportJobsByIds",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", ids.map { it.toString() }.toTypedArray()))
+            },
+        )
 
     suspend fun updateJobStatusById(exportJob: ExportJob): Int =
-        connectionPool.useConnection("updateExportJobStatusById") { connection ->
-            val now = Instant.now()
-            val prepStmt =
-                connection.prepareStatement(STATEMENT_UPDATE_EXPORT_JOB).apply {
-                    this.setTimestamp(1, Timestamp.from(now), RightDB.utcCalendar) // last_applied_on
-                    this.setString(2, exportJob.status.toString())
-                    this.setString(3, exportJob.errorMessage)
-                    this.setString(4, exportJob.filePath)
-                    this.setString(5, exportJob.id.toString())
-                }
-            val span = tracer.spanBuilder("updateExportJobStatusById").startSpan()
-            return@useConnection try {
-                span.makeCurrent()
-                runInTransaction(connection) { prepStmt.run { this.executeUpdate() } }
-            } finally {
-                span.end()
-            }
-        }
+        DatabaseConnector.executeUpdate(
+            sql = STATEMENT_UPDATE_EXPORT_JOB,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "updateExportJobStatusById",
+            params = { stmt ->
+                val now = Instant.now()
+                stmt.setTimestamp(1, Timestamp.from(now), RightDB.utcCalendar) // last_applied_on
+                stmt.setString(2, exportJob.status.toString())
+                stmt.setString(3, exportJob.errorMessage)
+                stmt.setString(4, exportJob.filePath)
+                stmt.setString(5, exportJob.id.toString())
+            },
+        )
 
     companion object {
         const val COLUMN_EXPORT_JOB_ID = "id"

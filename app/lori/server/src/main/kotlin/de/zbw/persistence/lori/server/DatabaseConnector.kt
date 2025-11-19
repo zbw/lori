@@ -7,6 +7,8 @@ import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.runBlocking
 import java.sql.Connection
 import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.Statement
 import java.sql.Timestamp
 import java.sql.Types
 import java.time.OffsetDateTime
@@ -96,15 +98,225 @@ class DatabaseConnector(
                 TimezoneUtil.TIME_ZONE_UTC,
             )
 
-        fun <T> runInTransaction(
+        suspend fun <T> runInTransaction(
             connection: Connection,
-            block: () -> T,
-        ): T =
-            try {
-                block().also { connection.commit() }
+            tracer: Tracer,
+            spanName: String,
+            sql: String? = null,
+            block: suspend () -> T,
+        ): T {
+            val span = tracer.spanBuilder(spanName).startSpan()
+            span.setAttribute("db.system", "postgresql")
+            span.setAttribute("db.operation", "SELECT")
+            span.setAttribute("db.user", connection.metaData.userName)
+            span.setAttribute("db.statement", sql)
+
+            return try {
+                val result = block()
+                if (!connection.autoCommit) connection.commit()
+                result
             } catch (e: Exception) {
-                connection.rollback()
+                if (!connection.autoCommit) connection.rollback()
+                span.recordException(e)
                 throw e
+            } finally {
+                span.end()
+            }
+        }
+
+        suspend fun executeUpdate(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+        ): Int =
+            connectionPool.useConnection("executeUpdate") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql).use { stmt ->
+                        params(stmt)
+                        stmt.executeUpdate()
+                    }
+                }
+            }
+
+        suspend fun <T> insertReturningKeys(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+            fetchGenerated: (ResultSet) -> T,
+        ): List<T> =
+            connectionPool.useConnection("insertReturningKeys") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
+                        params(stmt)
+                        // Execute update
+                        stmt.executeUpdate()
+                        // Fetch generated keys safely
+                        stmt.generatedKeys.use { rs ->
+                            val results = mutableListOf<T>()
+                            while (rs.next()) {
+                                results += fetchGenerated(rs)
+                            }
+                            results
+                        }
+                    }
+                }
+            }
+
+        suspend fun insertBatch(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+        ): IntArray =
+            connectionPool.useConnection("insertBatch") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql).use { stmt ->
+                        params(stmt)
+                        // Execute batch insert
+                        stmt.executeBatch()
+                    }
+                }
+            }
+
+        suspend fun <T> insertBatchReturningKeys(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+            fetchGenerated: (ResultSet) -> T,
+        ): List<T> =
+            connectionPool.useConnection("insertBatchReturningKeys") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
+                        params(stmt)
+                        // Execute batch insert
+                        stmt.executeBatch()
+                        // Fetch generated keys safely
+                        stmt.generatedKeys.use { rs ->
+                            val results = mutableListOf<T>()
+                            while (rs.next()) {
+                                results += fetchGenerated(rs)
+                            }
+                            results
+                        }
+                    }
+                }
+            }
+
+        suspend fun <T> select(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            fetchSize: Int = 500,
+            mapper: (ResultSet) -> T,
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+        ): List<T> =
+            connectionPool.useConnection("select") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql).use { stmt ->
+                        stmt.fetchSize = fetchSize
+                        // bind parameters (if any)
+                        params(stmt)
+                        stmt.executeQuery().use { rs ->
+                            val result = ArrayList<T>()
+                            while (rs.next()) {
+                                result += mapper(rs)
+                            }
+                            result
+                        }
+                    }
+                }
+            }
+
+        suspend fun <K, V> selectToMap(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            fetchSize: Int = 500,
+            mapper: (ResultSet) -> Pair<K, V>,
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+        ): Map<K, V> =
+            connectionPool.useConnection("select") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql).use { stmt ->
+                        stmt.fetchSize = fetchSize
+                        // bind parameters (if any)
+                        params(stmt)
+                        stmt.executeQuery().use { rs ->
+                            val result = mutableMapOf<K, V>()
+                            while (rs.next()) {
+                                result += mapper(rs)
+                            }
+                            result
+                        }
+                    }
+                }
+            }
+
+        suspend fun count(
+            sql: String,
+            params: (PreparedStatement) -> Unit = {},
+            connectionPool: ConnectionPool,
+            tracer: Tracer,
+            spanName: String,
+        ): Int =
+            connectionPool.useConnection("count") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = spanName,
+                    sql = sql,
+                ) {
+                    conn.prepareStatement(sql).use { stmt ->
+                        // bind parameters (if any)
+                        params(stmt)
+                        stmt.executeQuery().use { rs ->
+                            if (rs.next()) {
+                                rs.getInt(1)
+                            } else {
+                                throw IllegalStateException("No count found.")
+                            }
+                        }
+                    }
+                }
             }
 
         internal fun <K, V : Any> addDefaultEntriesToMap(

@@ -22,7 +22,6 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
-import java.sql.Connection
 import java.sql.Date
 import java.sql.PreparedStatement
 import java.sql.Timestamp
@@ -51,7 +50,6 @@ abstract class SearchFilter(
     abstract fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int
 
     abstract override fun toString(): String
@@ -233,7 +231,6 @@ abstract class TSVectorMetadataSearchFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         preparedStatement.setString(localCounter++, prepareValueForTSVector(value))
@@ -382,7 +379,6 @@ class LicenceUrlFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         preparedStatement.setString(counter, licenceUrl)
         return counter + 1
@@ -409,7 +405,6 @@ class PPNFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         preparedStatement.setString(counter, ppn)
         return counter + 1
@@ -432,7 +427,6 @@ class EconbizIDFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         preparedStatement.setString(counter, econbizId)
         return counter + 1
@@ -459,7 +453,6 @@ class PPNsFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         ppns.forEach {
@@ -485,11 +478,10 @@ class DOIsFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(dois)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -510,11 +502,10 @@ class ISBNsFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(isbns)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -545,7 +536,6 @@ class PublicationYearFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int =
         if (fromYear == null && toYear == null) {
             counter
@@ -597,7 +587,6 @@ class PublicationTypeFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         publicationTypes.forEach {
@@ -627,11 +616,10 @@ class PaketSigelFilterAND(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -656,11 +644,10 @@ class PaketSigelFilterOR(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -682,7 +669,6 @@ class CreatedOnFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
@@ -710,11 +696,10 @@ class ZDBIdFilterOR(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -738,11 +723,10 @@ class ZDBIdFilterAND(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -767,11 +751,10 @@ class SeriesFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(seriesNames)
-        preparedStatement.setArray(localCounter++, connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
         return localCounter
     }
 
@@ -800,7 +783,6 @@ class HandlesFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         handles.forEach {
@@ -825,7 +807,6 @@ class DeletionsFilter :
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int = counter
 
     override fun toSQLString(): String = "true"
@@ -890,7 +871,6 @@ class AccessStateFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         accessStates.forEach {
@@ -931,7 +911,6 @@ class AccessStateOnDateFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -996,7 +975,6 @@ class RightValidOnFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1058,7 +1036,6 @@ class StartDateFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1104,7 +1081,6 @@ class EndDateFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         preparedStatement.setDate(localCounter++, Date.valueOf(date))
@@ -1135,7 +1111,6 @@ class RightIdFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         rightIds.forEach {
@@ -1168,7 +1143,6 @@ class TemplateNameFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int {
         var localCounter = counter
         templateNames.forEach {
@@ -1207,7 +1181,6 @@ class FormalRuleFilter(
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int = counter
 
     override fun toSQLString(): String = formalRules.joinToString(separator = ",")
@@ -1229,7 +1202,6 @@ class NoRightInformationFilter : RightSearchFilter(COLUMN_RIGHT_ID) {
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int = counter
 
     override fun toSQLString(): String = "true"
@@ -1252,7 +1224,6 @@ class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_IS_TEMPLATE) {
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
-        connection: Connection,
     ): Int = counter
 
     override fun toSQLString(): String = "true"

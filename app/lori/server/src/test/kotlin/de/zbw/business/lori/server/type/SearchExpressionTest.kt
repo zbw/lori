@@ -13,7 +13,7 @@ import de.zbw.business.lori.server.utils.SearchExpressionResolution.resolveSearc
 import io.ktor.http.cio.ParserException
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert
+import org.testng.Assert
 import org.testng.Assert.assertTrue
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
@@ -117,42 +117,40 @@ class SearchExpressionTest {
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
                 "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND" +
-                    " ((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null))" +
+                    " (zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower IS NOT NULL))" +
                     " OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
                 "zdb key searchs on two fields",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
                     " AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negation, parenthesis, or, and",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
-                    " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
-                    " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND" +
+                    " (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negate term before paranthesis",
             ),
             arrayOf(
                 "sig:\"sig\" | sig:\"sig1,sig2\"",
-                "((EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE (element ILIKE ?))) AND paket_sigel is not null)" +
-                    " OR (EXISTS (SELECT 1 FROM unnest(paket_sigel) AS element WHERE lower(element) = ANY (?)) AND paket_sigel is" +
-                    " not null)",
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " OR (paket_sigel_joined_lower ILIKE ANY (?) AND paket_sigel_joined_lower IS NOT NULL)",
                 "single and multiple paket sigels",
             ),
             arrayOf(
                 "zdb:\"zdb\" | zdb:\"zdb1,zdb2\"",
-                "((EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE (lower(element) ILIKE ?))) AND zdb_ids is not null)" +
-                    " OR (EXISTS (SELECT 1 FROM unnest(zdb_ids) AS element WHERE lower(element) = ANY (?)) AND zdb_ids is not null)",
+                "(zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower IS NOT NULL)" +
+                    " OR (zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower IS NOT NULL)",
                 "single and multiple zdbIds",
             ),
             arrayOf(
                 "doi:\"doi\" | doi:\"doi1,doi2\"",
-                """
-                (EXISTS (SELECT 1 FROM unnest(doi) AS element WHERE (lower(element) ILIKE ?)) AND doi is not null) OR (EXISTS (SELECT 1 FROM unnest(doi) AS element WHERE lower(element) = ANY (?)) AND doi is not null)
-                """.trimIndent(),
+                "(doi_joined_lower ILIKE ANY (?) AND doi_joined_lower IS NOT NULL) OR (doi_joined_lower ILIKE ANY (?)" +
+                    " AND doi_joined_lower IS NOT NULL)",
                 "single and multiple dois",
             ),
             arrayOf(
@@ -164,9 +162,8 @@ class SearchExpressionTest {
             ),
             arrayOf(
                 "isb:\"isb\" | isb:\"isbn1,isbn2\"",
-                """
-                (EXISTS (SELECT 1 FROM unnest(isbn) AS element WHERE (lower(element) ILIKE ?)) AND isbn is not null) OR (EXISTS (SELECT 1 FROM unnest(isbn) AS element WHERE lower(element) = ANY (?)) AND isbn is not null)
-                """.trimIndent(),
+                "(isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower IS NOT NULL)" +
+                    " OR (isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower IS NOT NULL)",
                 "single and multiple isbns",
             ),
         )
