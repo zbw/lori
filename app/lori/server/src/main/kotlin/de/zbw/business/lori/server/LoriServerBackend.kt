@@ -233,6 +233,8 @@ class LoriServerBackend(
                 .filter {
                     (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
                 }
+
+        val deletionDateGerman = deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))
         if (rightToSetNewEndDate.isNotEmpty()) {
             rightToSetNewEndDate
                 .first()
@@ -241,7 +243,7 @@ class LoriServerBackend(
                         dbConnector.rightDB.upsertRight(
                             it.copy(
                                 endDate = deletionDate,
-                                lastUpdatedBy = "Automatisch",
+                                lastUpdatedBy = "Automatisch $deletionDateGerman",
                                 notesManagementRelated =
                                     "Enddatum automatisch auf Item-Löschdatum" +
                                         " ${deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))}" +
@@ -261,11 +263,12 @@ class LoriServerBackend(
 
         if (currentTemplate.isNotEmpty()) {
             // Remove old template
+            val templateId = currentTemplate.first().rightId!!
             deletionsAndUpdates +=
                 dbConnector
                     .itemDB
                     .deleteItem(
-                        rightId = currentTemplate.first().rightId!!,
+                        rightId = templateId,
                         handle = handle,
                     )
             // Create a new manual entry
@@ -281,13 +284,13 @@ class LoriServerBackend(
                         exceptionOfId = null,
                         hasExceptionId = null,
                         endDate = deletionDate,
-                        createdBy = "Automatisch",
-                        lastUpdatedBy = "Automatisch",
+                        createdBy = "Automatisch $deletionDateGerman",
+                        lastUpdatedBy = "Automatisch $deletionDateGerman",
                         notesManagementRelated =
                             "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
-                                " Template-Zuordnung Template https://${config.url}?templateId=<Template-ID>" +
+                                " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
                                 " bis zum Item-Löschdatum" +
-                                " ${deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))} abzubilden",
+                                " $deletionDateGerman abzubilden",
                     )
             val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
             dbConnector.itemDB.insertItem(
