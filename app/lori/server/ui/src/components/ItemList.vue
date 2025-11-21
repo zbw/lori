@@ -1510,7 +1510,7 @@ table.special, th.special, td.special {
                     <td class=special></td>
                   </tr>
                   <tr class=special>
-                    <td class=special>Community</td>
+                    <td class=special>Name Community</td>
                     <td class=special>com</td>
                     <td class=special></td>
                   </tr>
@@ -1520,12 +1520,17 @@ table.special, th.special, td.special {
                     <td class=special></td>
                   </tr>
                   <tr class=special>
-                    <td class=special>Handle Subommunity</td>
+                    <td class=special>Name Subcommunity</td>
+                    <td class=special>subcom</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Handle Subcommunity</td>
                     <td class=special>hdlsubcom</td>
                     <td class=special></td>
                   </tr>
                   <tr class=special>
-                    <td class=special>Collection</td>
+                    <td class=special>Name Collection</td>
                     <td class=special>col</td>
                     <td class=special></td>
                   </tr>
