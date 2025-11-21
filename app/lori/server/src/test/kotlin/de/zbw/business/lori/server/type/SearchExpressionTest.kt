@@ -117,39 +117,40 @@ class SearchExpressionTest {
             arrayOf(
                 "(tit:'foo' & zdb:'123') | hdl:'123'",
                 "((ts_title @@ to_tsquery(?) AND ts_title is not null) AND" +
-                    " (zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower IS NOT NULL))" +
+                    " (zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL))" +
                     " OR (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)",
                 "zdb key searchs on two fields",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & (!hdl:11159/86 | !hdl:11159/993)",
-                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)" +
                     " AND (NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null)" +
                     " OR NOT (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negation, parenthesis, or, and",
             ),
             arrayOf(
                 "sig:zdb-33-sfen & !(hdl:11159/86 & hdl:11159/993)",
-                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)" +
                     " AND NOT ((ts_hdl @@ to_tsquery(?) AND ts_hdl is not null) AND" +
                     " (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))",
                 "negate term before paranthesis",
             ),
             arrayOf(
                 "sig:\"sig\" | sig:\"sig1,sig2\"",
-                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower IS NOT NULL)" +
-                    " OR (paket_sigel_joined_lower ILIKE ANY (?) AND paket_sigel_joined_lower IS NOT NULL)",
+                "(paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " OR (paket_sigel_joined_lower ILIKE ANY (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)",
                 "single and multiple paket sigels",
             ),
             arrayOf(
                 "zdb:\"zdb\" | zdb:\"zdb1,zdb2\"",
-                "(zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower IS NOT NULL)" +
-                    " OR (zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower IS NOT NULL)",
+                "(zdb_ids_joined_lower ILIKE ALL (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
+                    " OR (zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)",
                 "single and multiple zdbIds",
             ),
             arrayOf(
                 "doi:\"doi\" | doi:\"doi1,doi2\"",
-                "(doi_joined_lower ILIKE ANY (?) AND doi_joined_lower IS NOT NULL) OR (doi_joined_lower ILIKE ANY (?)" +
+                "(doi_joined_lower ILIKE ANY (?) AND doi_joined_lower != '' AND doi_joined_lower IS NOT NULL)" +
+                    " OR (doi_joined_lower ILIKE ANY (?) AND doi_joined_lower != ''" +
                     " AND doi_joined_lower IS NOT NULL)",
                 "single and multiple dois",
             ),
@@ -162,8 +163,8 @@ class SearchExpressionTest {
             ),
             arrayOf(
                 "isb:\"isb\" | isb:\"isbn1,isbn2\"",
-                "(isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower IS NOT NULL)" +
-                    " OR (isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower IS NOT NULL)",
+                "(isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower != '' AND isbn_joined_lower IS NOT NULL)" +
+                    " OR (isbn_joined_lower ILIKE ANY (?) AND isbn_joined_lower != '' AND isbn_joined_lower IS NOT NULL)",
                 "single and multiple isbns",
             ),
         )
