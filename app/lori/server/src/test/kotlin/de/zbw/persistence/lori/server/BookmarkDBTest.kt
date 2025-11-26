@@ -4,6 +4,7 @@ import de.zbw.api.lori.server.route.QueryParameterParser
 import de.zbw.api.lori.server.utils.RestConverterUtil
 import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
+import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import io.mockk.every
