@@ -473,7 +473,7 @@ class DOIsFilter(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_DOI_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -497,7 +497,7 @@ class ISBNsFilter(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_ISBN_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -611,7 +611,7 @@ class PaketSigelFilterAND(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -639,7 +639,7 @@ class PaketSigelFilterOR(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -691,7 +691,7 @@ class ZDBIdFilterOR(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -718,7 +718,7 @@ class ZDBIdFilterAND(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
@@ -746,7 +746,7 @@ class SeriesFilter(
 ) : MetadataSearchFilter(
         COLUMN_METADATA_IS_PART_OF_SERIES_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun setSQLParameter(
         counter: Int,
