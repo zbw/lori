@@ -172,6 +172,9 @@ export default defineComponent({
       searchStore.accessStateOnDateIdx = [] as Array<string>;
     };
 
+    /**
+     * Temporal valid
+     */
     const isValidOnMenuOpen = ref(false);
     const temporalValidOn = ref(undefined as Date | undefined);
 
@@ -186,6 +189,40 @@ export default defineComponent({
 
     watch(temporalValidOn, () => {
       isValidOnMenuOpen.value = false;
+    });
+
+    /**
+     * Storage date
+     */
+    const isStorageDateFromMenuOpen = ref(false);
+    const storageDateFromDate = ref(undefined as Date | undefined);
+    const isStorageDateToMenuOpen = ref(false);
+    const storageDateToDate = ref(undefined as Date | undefined);
+
+    const storageDateFromEntered = () => {
+      if (storageDateFromDate.value != undefined) {
+        searchStore.storageDateFromFormatted = date_utils.dateToIso8601(storageDateFromDate.value);
+      } else {
+        searchStore.storageDateFromFormatted = "";
+      }
+      emit("startSearch");
+    };
+
+    const storageDateToEntered = () => {
+      if (storageDateToDate.value != undefined) {
+        searchStore.storageDateToFormatted = date_utils.dateToIso8601(storageDateToDate.value);
+      } else {
+        searchStore.storageDateToFormatted = "";
+      }
+      emit("startSearch");
+    };
+
+    watch(storageDateFromDate, () => {
+      isStorageDateFromMenuOpen.value = false;
+    });
+
+    watch(storageDateToDate, () => {
+      isStorageDateToMenuOpen.value = false;
     });
 
     const emitSearchStart = () => {
@@ -352,6 +389,10 @@ export default defineComponent({
       isSeriesGroupOpen,
       isSigelGroupOpen,
       isZdbGroupOpen,
+      isStorageDateFromMenuOpen,
+      isStorageDateToMenuOpen,
+      storageDateFromDate,
+      storageDateToDate,
       licenceToShow,
       seriesToShow,
       sigelToShow,
@@ -395,6 +436,8 @@ export default defineComponent({
       ppZDBId,
       singleSelectionAccessStateOnDate,
       startDateOrEndDateEntered,
+      storageDateFromEntered,
+      storageDateToEntered,
       temporalValidOnEntered,
     };
   },
@@ -616,6 +659,72 @@ export default defineComponent({
                   </v-virtual-scroll>
                 </div>
               </v-expand-transition>
+            </v-list-group>
+            <v-list-group sub-group>
+              <template v-slot:activator="{ props }">
+                <v-list-item
+                    v-bind="props"
+                    title="Speicherdatum"
+                ></v-list-item>
+              </template>
+              <v-list-item>
+                <v-row>
+                  <v-col>
+                    <v-menu
+                        :close-on-content-click="false"
+                        :location="'bottom'"
+                        v-model="isStorageDateFromMenuOpen"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-text-field
+                            v-model="searchStore.storageDateFromFormatted"
+                            prepend-icon="mdi-calendar"
+                            v-bind="props"
+                            readonly
+                            clearable
+                            label="Von"
+                            @update:modelValue="emitSearchStart"
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                          v-model="storageDateFromDate"
+                          color="primary"
+                          first-day-of-week="1"
+                          @update:modelValue="storageDateFromEntered"
+                      ><template v-slot:header></template>
+                      </v-date-picker>
+                    </v-menu>
+                  </v-col>
+                </v-row>
+                <v-row>
+                  <v-col>
+                    <v-menu
+                        :close-on-content-click="false"
+                        :location="'bottom'"
+                        v-model="isStorageDateToMenuOpen"
+                    >
+                      <template v-slot:activator="{ props }">
+                        <v-text-field
+                            v-model="searchStore.storageDateToFormatted"
+                            prepend-icon="mdi-calendar"
+                            v-bind="props"
+                            readonly
+                            clearable
+                            label="Bis"
+                            @update:modelValue="emitSearchStart"
+                        ></v-text-field>
+                      </template>
+                      <v-date-picker
+                          v-model="storageDateToDate"
+                          color="primary"
+                          first-day-of-week="1"
+                          @update:modelValue="storageDateToEntered"
+                      ><template v-slot:header></template>
+                      </v-date-picker>
+                    </v-menu>
+                  </v-col>
+                </v-row>
+              </v-list-item>
             </v-list-group>
           </v-list>
         </v-col>

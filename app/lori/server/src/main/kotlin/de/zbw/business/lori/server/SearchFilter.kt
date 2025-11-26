@@ -19,6 +19,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES_LOWER
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORAGE_DATE
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
@@ -201,6 +202,11 @@ abstract class SearchFilter(
 
                     "ebid" ->
                         QueryParameterParser.parseEconbizIdFilter(
+                            searchValue,
+                        )
+
+                    FilterType.STORAGE_DATE.keyAlias ->
+                        QueryParameterParser.parseStorageDateFilter(
                             searchValue,
                         )
 
@@ -571,6 +577,77 @@ class PublicationYearFilter(
 
     companion object {
         fun fromString(s: String?): PublicationYearFilter? = QueryParameterParser.parsePublicationYearFilter(s)
+    }
+}
+
+class StorageDateFilter(
+    val from: LocalDate?,
+    val to: LocalDate?,
+) : MetadataSearchFilter(
+        COLUMN_METADATA_STORAGE_DATE,
+    ) {
+    override fun toWhereClause(): String =
+        if (from == null && to == null) {
+            ""
+        } else if (from == null) {
+            "($dbColumnName < ? AND $dbColumnName is not null)"
+        } else if (to == null) {
+            "($dbColumnName >= ? AND $dbColumnName is not null)"
+        } else {
+            "($dbColumnName >= ? AND $dbColumnName < ? AND $dbColumnName is not null)"
+        }
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        if (from != null) {
+            preparedStatement.setTimestamp(
+                localCounter++,
+                Timestamp.from(
+                    from
+                        .atStartOfDay(
+                            TimezoneUtil.TIME_ZONE_BERLIN,
+                        ).toInstant(),
+                ),
+            )
+        }
+        if (to != null) {
+            preparedStatement.setTimestamp(
+                localCounter++,
+                Timestamp.from(
+                    to
+                        .atStartOfDay(
+                            TimezoneUtil.TIME_ZONE_BERLIN,
+                        ).plusDays(1L)
+                        .toInstant(),
+                ),
+            )
+        }
+        return localCounter
+    }
+
+    override fun toString(): String {
+        val fromString =
+            from?.toString() ?: ""
+        val toString =
+            to?.toString() ?: ""
+        return "${getFilterType().keyAlias}:$fromString--$toString"
+    }
+
+    override fun toSQLString(): String {
+        val fromString =
+            from?.toString() ?: ""
+        val toString =
+            to?.toString() ?: ""
+        return "$fromString--$toString"
+    }
+
+    override fun getFilterType(): FilterType = FilterType.STORAGE_DATE
+
+    companion object {
+        fun fromString(s: String?): StorageDateFilter? = QueryParameterParser.parseStorageDateFilter(s)
     }
 }
 
@@ -1262,13 +1339,14 @@ enum class FilterType(
     PUBLICATION_TYPE("typ"),
     PAKET_SIGEL("sig"),
     PPN("ppn"),
-    TEMPLATE_NAME("tpl"),
     RIGHT_ID("rightid"),
     RIGHT_VALID_ON("zgp"),
     SERIES("ser"),
     START_DATE("zgb"),
+    STORAGE_DATE("sdt"),
     SUB_COMMUNITY_NAME("subcom"),
     SUB_COMMUNITY_HANDLE("hdlsubcom"),
+    TEMPLATE_NAME("tpl"),
     TITLE("tit"),
     ZDB_ID("zdb"),
 }

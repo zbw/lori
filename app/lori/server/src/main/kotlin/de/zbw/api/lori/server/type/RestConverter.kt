@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
@@ -47,6 +48,7 @@ import de.zbw.lori.model.ExportFormatRest
 import de.zbw.lori.model.FilterAccessStateOnRest
 import de.zbw.lori.model.FilterPublicationYearRest
 import de.zbw.lori.model.FilterRightIdRest
+import de.zbw.lori.model.FilterStorageDateRest
 import de.zbw.lori.model.GroupRest
 import de.zbw.lori.model.IsPartOfSeriesCountRest
 import de.zbw.lori.model.ItemInformation
@@ -715,6 +717,7 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         searchTerm = this.searchTerm,
         publicationYearFilter = QueryParameterParser.parsePublicationYearFilter(this.filterPublicationYear),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
+        storageDateFilter = QueryParameterParser.parseStorageDateFilter(this.filterStorageDate),
         paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND(this.filterPaketSigel),
         zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
@@ -770,6 +773,13 @@ fun BookmarkRest.toBusiness(): Bookmark =
                     accessState = AccessState.valueOf(it.accessState),
                 )
             },
+        storageDateFilter =
+            this.filterStorageDate?.let {
+                StorageDateFilter(
+                    from = it.fromDate,
+                    to = it.toDate,
+                )
+            },
         licenceURLFilter = this.filterLicenceUrl?.let { LicenceUrlFilter(it) },
         lastUpdatedBy = lastUpdatedBy,
         lastUpdatedOn = lastUpdatedOn,
@@ -820,6 +830,13 @@ fun Bookmark.toRest(
                 FilterAccessStateOnRest(
                     date = it.date,
                     accessState = it.accessState.toString(),
+                )
+            },
+        filterStorageDate =
+            this.storageDateFilter?.let {
+                FilterStorageDateRest(
+                    fromDate = it.from,
+                    toDate = it.to,
                 )
             },
     )

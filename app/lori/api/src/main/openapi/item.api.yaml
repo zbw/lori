@@ -339,6 +339,10 @@ item-search:
         in: query
         schema:
           type: string
+      - name: filterStorageDate
+        in: query
+        schema:
+          type: string
       - name: filterPublicationType
         in: query
         schema:

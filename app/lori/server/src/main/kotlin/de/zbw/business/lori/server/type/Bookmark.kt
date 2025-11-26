@@ -18,6 +18,7 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SearchFilter.Companion.filtersToString
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
 import java.time.OffsetDateTime
 
@@ -52,6 +53,7 @@ data class Bookmark(
     val manualRightFilter: ManualRightFilter? = null,
     val accessStateOnFilter: AccessStateOnDateFilter? = null,
     val deletionsFilter: DeletionsFilter? = null,
+    val storageDateFilter: StorageDateFilter? = null,
     private var queryString: String? = null,
 ) {
     fun getAllMetadataFilter(): List<MetadataSearchFilter> =

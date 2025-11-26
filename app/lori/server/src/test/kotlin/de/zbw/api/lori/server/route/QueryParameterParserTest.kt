@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
@@ -307,9 +308,82 @@ class QueryParameterParserTest {
         )
     }
 
+    @DataProvider(name = DATA_FOR_PARSE_STORAGE_DATE)
+    fun createDataForParseStorageDate() =
+        arrayOf(
+            arrayOf(
+                "2022-01-01--",
+                StorageDateFilter(
+                    from =
+                        LocalDate.of(
+                            2022,
+                            1,
+                            1,
+                        ),
+                    to = null,
+                ),
+                "Only from value",
+            ),
+            arrayOf(
+                "--2022-01-01",
+                StorageDateFilter(
+                    to =
+                        LocalDate.of(
+                            2022,
+                            1,
+                            1,
+                        ),
+                    from = null,
+                ),
+                "Only to value",
+            ),
+            arrayOf(
+                "2021-01-01--2022-01-01",
+                StorageDateFilter(
+                    from =
+                        LocalDate.of(
+                            2021,
+                            1,
+                            1,
+                        ),
+                    to =
+                        LocalDate.of(
+                            2022,
+                            1,
+                            1,
+                        ),
+                ),
+                "from and to value",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_PARSE_STORAGE_DATE)
+    fun testParseStorageDateFilter(
+        input: String,
+        expectedFilter: StorageDateFilter?,
+        reason: String,
+    ) {
+        // when
+        val received: StorageDateFilter? = QueryParameterParser.parseStorageDateFilter(input)
+
+        // then
+        if (expectedFilter == null) {
+            assertNull(received, reason)
+        } else {
+            assertThat(
+                reason,
+                received.toString(),
+                `is`(
+                    expectedFilter.toString(),
+                ),
+            )
+        }
+    }
+
     companion object {
         const val DATA_FOR_PARSE_ACCESS_STATE = "DATA_FOR_PARSE_ACCESS_STATE"
         const val DATA_FOR_PARSE_PUBLICATION_YEAR = "DATA_FOR_PARSE_PUBLICATION_YEAR"
         const val DATA_FOR_PARSE_PUBLICATION_TYPE = "DATA_FOR_PARSE_PUBLICATION_TYPE"
+        const val DATA_FOR_PARSE_STORAGE_DATE = "DATA_FOR_PARSE_STORAGE_DATE"
     }
 }

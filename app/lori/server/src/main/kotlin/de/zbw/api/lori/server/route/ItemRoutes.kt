@@ -478,6 +478,11 @@ fun Routing.itemRoutes(
                             call.request.queryParameters["filterAccessStateOn"],
                         )
 
+                    val storageDateFilter =
+                        QueryParameterParser.parseStorageDateFilter(
+                            call.request.queryParameters["filterStorageDate"],
+                        )
+
                     span.setAttribute("searchTerm", searchTerm)
                     span.setAttribute("limit", limit.toString())
                     span.setAttribute("offset", offset.toString())
@@ -538,6 +543,7 @@ fun Routing.itemRoutes(
                             publicationTypeFilter,
                             zdbIdFilter,
                             seriesFilter,
+                            storageDateFilter,
                         )
                     val rightFilters =
                         listOfNotNull(
