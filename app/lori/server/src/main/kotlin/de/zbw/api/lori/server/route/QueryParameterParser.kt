@@ -1,6 +1,5 @@
 package de.zbw.api.lori.server.route
 
-import de.zbw.api.lori.server.LoriGrpcServer
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
 import de.zbw.business.lori.server.DOIsFilter
