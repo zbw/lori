@@ -1,9 +1,11 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.type.Either
+import de.zbw.business.lori.server.ApplyTemplateTest.Companion.ZDB_1
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -33,6 +35,7 @@ import java.time.Instant
 import java.time.Instant.now
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertTrue
 
@@ -52,6 +55,11 @@ class LoriServerBackendTest : DatabaseTest() {
             mockk {
                 every { url } returns "foo.bar"
             },
+        )
+    private val templateApplication =
+        TemplateApplication(
+            dbConnector = backend.dbConnector,
+            backend = backend,
         )
 
     @BeforeClass
@@ -966,6 +974,94 @@ class LoriServerBackendTest : DatabaseTest() {
             assertThat(
                 item.rights.first().startDate,
                 `is`(LocalDate.of(2020, 1, 1)),
+            )
+        }
+
+    @Test
+    fun testDeleteAndUpdateFutureTemplates() =
+        runBlocking {
+            val today = LocalDate.of(NOW.year, NOW.month, NOW.dayOfMonth).plusDays(10)
+            mockkStatic(LocalDate::class)
+            every { LocalDate.now(any<ZoneId>()) } returns today
+            every { LocalDate.now() } returns today
+            // given
+            val metadataToDelete =
+                TEST_METADATA.copy(
+                    handle = "11159/478",
+                    deleted = false,
+                    zdbIds = listOf(ZDB_1),
+                )
+
+            val templateId =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "die zukunft",
+                        isTemplate = true,
+                        // Start Date is in the future as well
+                        startDate = today.plusDays(1),
+                        endDate = today.plusYears(1),
+                    ),
+                )
+            backend.insertMetadataElement(metadataToDelete)
+
+            // Connect Bookmark and Template
+            val bookmarkId =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "zdb1Bookmark",
+                        bookmarkId = 0,
+                        zdbIdFilter =
+                            ZDBIdFilterAND(
+                                zdbIds =
+                                    listOf(
+                                        ZDB_1,
+                                    ),
+                            ),
+                    ),
+                )
+
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = templateId,
+            )
+
+            val received =
+                templateApplication.applyTemplate(
+                    templateId,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )
+
+            assertThat(
+                received.appliedMetadataHandles,
+                `is`(listOf(metadataToDelete.handle)),
+            )
+
+            // when
+            backend.upsertMetadata(
+                listOf(
+                    metadataToDelete.copy(deleted = true),
+                ),
+            )
+            val deletionDate = today
+
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = metadataToDelete.handle,
+                )
+            assertThat(
+                updates,
+                `is`(1),
+            )
+
+            // then
+            val item = backend.getItemByHandle(metadataToDelete.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(0),
             )
         }
 

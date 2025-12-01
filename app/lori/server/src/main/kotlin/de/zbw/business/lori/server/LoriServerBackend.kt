@@ -215,19 +215,31 @@ class LoriServerBackend(
             return 0
         }
         var deletionsAndUpdates = 0
-        val manualRights =
+        val allRights =
             dbConnector.rightDB
                 .getRightsByIds(
                     rightIds,
-                ).filter { !it.isTemplate }
+                )
 
-        val rightsToDelete =
-            manualRights
-                .filter { it.startDate > deletionDate }
+        val manualRights =
+            allRights.filter { !it.isTemplate }
 
-        rightsToDelete.forEach {
-            deletionsAndUpdates += deleteRight(it.rightId!!)
-        }
+        val templateRights =
+            allRights.filter { it.isTemplate }
+
+        manualRights
+            .filter { it.startDate > deletionDate }
+            .forEach {
+                deletionsAndUpdates += deleteRight(it.rightId!!)
+            }
+
+        // Templates applying only in the future will be deleted as well
+        templateRights
+            .filter { it.startDate > deletionDate }
+            .forEach {
+                deletionsAndUpdates += deleteItemEntry(handle, it.rightId!!)
+            }
+
         val rightToSetNewEndDate =
             manualRights
                 .filter {
