@@ -491,6 +491,7 @@ export default defineComponent({
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildDeletionsFilter(searchStore),
               searchStore.accessStateOnDateState.dateValueFormatted, // The interesting line
+              searchquerybuilder.buildStorageDateFilter(searchStore),
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           ).then((response: ItemInformation) => {
@@ -535,6 +536,7 @@ export default defineComponent({
               undefined,
               undefined,
               undefined,
+              undefined,
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
@@ -568,6 +570,7 @@ export default defineComponent({
               undefined,
               undefined,
               rightId,
+              undefined,
               undefined,
               undefined,
               undefined,
@@ -628,6 +631,7 @@ export default defineComponent({
               undefined,
               undefined,
               undefined,
+              undefined,
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
@@ -651,6 +655,7 @@ export default defineComponent({
               currentPage.value,
               true,
               false,
+              undefined,
               undefined,
               undefined,
               undefined,
@@ -699,6 +704,7 @@ export default defineComponent({
       searchquerybuilder.setManualRightFilter(searchStore, bookmark);
       searchquerybuilder.setDeletionsFilter(searchStore, bookmark);
       searchquerybuilder.setAccessStateOnDateFilter(searchStore, bookmark);
+      searchquerybuilder.setStorageDateFilter(searchStore, bookmark);
       searchStore.searchTerm =
           bookmark.searchTerm != undefined ? bookmark.searchTerm : "";
       closeBookmarkOverview();
@@ -762,6 +768,7 @@ export default defineComponent({
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildDeletionsFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildStorageDateFilter(searchStore),
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
@@ -800,6 +807,7 @@ export default defineComponent({
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildDeletionsFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
+              searchquerybuilder.buildStorageDateFilter(searchStore),
               searchquerybuilder.buildSortBy(datatableOptions.value),
               searchquerybuilder.buildOrderBy(datatableOptions.value),
           )
@@ -1093,6 +1101,8 @@ export default defineComponent({
       searchStore.accessStateOnDateState.dateValueFormatted = "";
       searchStore.accessStateOnDateState.accessState = "";
       searchStore.accessStateOnDateIdx = [] as Array<string>;
+      searchStore.storageDateFromFormatted = "";
+      searchStore.storageDateToFormatted = "";
       url.removeQueryParameters(
           route,
           router,
@@ -1137,7 +1147,8 @@ export default defineComponent({
           searchStore.manualRight ||
           searchStore.deletions ||
           searchStore.accessStateOnDateState.dateValueFormatted ||
-          searchStore.accessStateOnDateState.accessState
+          searchStore.accessStateOnDateState.accessState ||
+          searchStore.storageDateFromFormatted
       );
     });
 
@@ -1643,6 +1654,11 @@ table.special, th.special, td.special {
                     <td class=special>Econbiz-ID</td>
                     <td class=special>ebid</td>
                     <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Speicherdatum</td>
+                    <td class=special>sdt</td>
+                    <td class=special>YYYY-MM-DD--YYYY-MM-DD</td>
                   </tr>
                   </tbody>
                 </table>

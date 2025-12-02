@@ -25,6 +25,7 @@ import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
+import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
 import de.zbw.business.lori.server.ZDBIdFilterAND
 import de.zbw.business.lori.server.ZDBIdFilterOR
@@ -32,6 +33,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.FormalRule
 import de.zbw.business.lori.server.type.PublicationType
+import org.apache.logging.log4j.LogManager
 import java.time.DateTimeException
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -72,6 +74,31 @@ object QueryParameterParser {
             )
         } else {
             null
+        }
+    }
+
+    fun parseStorageDateFilter(s: String?): StorageDateFilter? {
+        // Format: YYYY-MM-DD--YYYY-MM-DD; at least one date needs to exist
+        if (s == null) {
+            return null
+        }
+        val tokens: List<String> = s.split("--".toRegex()).filter { it.isNotBlank() }
+        return when (tokens.size) {
+            2 -> {
+                val parseFrom = parseDate(tokens[0]) ?: return null
+                val parseTo = parseDate(tokens[1]) ?: return null
+                StorageDateFilter(parseFrom, parseTo)
+            }
+            1 -> {
+                val parseDate = parseDate(tokens[0]) ?: return null
+                if (s.startsWith("--")) {
+                    StorageDateFilter(from = null, to = parseDate)
+                } else {
+                    StorageDateFilter(from = parseDate, to = null)
+                }
+            }
+            else ->
+                null
         }
     }
 
@@ -191,26 +218,24 @@ object QueryParameterParser {
             return null
         }
         val tokens: List<String> = s.split("\\+".toRegex())
-        return if (tokens.size == 2) {
-            val parsedDate = parseDate(tokens[1])
-            if (parsedDate == null) {
-                return null
+        return when (tokens.size) {
+            2 -> {
+                val parsedDate = parseDate(tokens[1]) ?: return null
+                AccessStateOnDateFilter(
+                    accessState = AccessState.valueOf(tokens[0].uppercase()),
+                    date = parsedDate,
+                )
             }
-            AccessStateOnDateFilter(
-                accessState = AccessState.valueOf(tokens[0].uppercase()),
-                date = parsedDate,
-            )
-        } else if (tokens.size == 1) {
-            val parsedDate = parseDate(tokens[0])
-            if (parsedDate == null) {
-                return null
+            1 -> {
+                val parsedDate = parseDate(tokens[0]) ?: return null
+                AccessStateOnDateFilter(
+                    accessState = null,
+                    date = parsedDate,
+                )
             }
-            AccessStateOnDateFilter(
-                accessState = null,
-                date = parsedDate,
-            )
-        } else {
-            null
+            else -> {
+                null
+            }
         }
     }
 
@@ -218,6 +243,9 @@ object QueryParameterParser {
         try {
             LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE)
         } catch (_: DateTimeException) {
+            if (s.isNotBlank()) {
+                LOG.warn("Could not parse date $s")
+            }
             null
         }
 
@@ -360,4 +388,6 @@ object QueryParameterParser {
             escaped
         }
     }
+
+    private val LOG = LogManager.getLogger(QueryParameterParser::class.java)
 }

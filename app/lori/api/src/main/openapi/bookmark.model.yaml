@@ -49,6 +49,8 @@ BookmarkRawRest:
       type: string
     filterAccessOnDate:
       type: string
+    filterStorageDate:
+      type: string
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -131,6 +133,8 @@ BookmarkRest:
       type: string
     filterAccessOnDate:
       $ref: 'bookmark.model.yaml#/FilterAccessStateOnRest'
+    filterStorageDate:
+      $ref: 'bookmark.model.yaml#/FilterStorageDateRest'
     lastUpdatedBy:
       type: string
     lastUpdatedOn:
@@ -156,6 +160,16 @@ FilterAccessStateOnRest:
     accessState:
       type: string
     date:
+      type: string
+      format: date
+
+FilterStorageDateRest:
+  type: object
+  properties:
+    fromDate:
+      type: string
+      format: date
+    toDate:
       type: string
       format: date
 

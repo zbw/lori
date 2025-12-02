@@ -164,6 +164,8 @@ class BookmarkDBTest : DatabaseTest() {
                         ),
                     ),
                 deletionsFilter = DeletionsFilter(),
+                storageDateFilter =
+                    QueryParameterParser.parseStorageDateFilter("2020-01-01--2020-12-31"),
             )
     }
 }

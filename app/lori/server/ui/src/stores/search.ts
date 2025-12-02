@@ -80,6 +80,9 @@ export const useSearchStore = defineStore("search", () => {
   const accessStateOnDateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
   const accessStateOnDateIdx: Ref<Array<string>> = ref([]);
 
+  const storageDateFromFormatted = ref("");
+  const storageDateToFormatted = ref("");
+
   // Deployment Stage
   const stage = ref("");
   const handleURLResolver = ref("");
@@ -125,6 +128,8 @@ export const useSearchStore = defineStore("search", () => {
     seriesReceived,
     seriesSelectedLastSearch,
     stage,
+    storageDateFromFormatted,
+    storageDateToFormatted,
     templateNameIdx,
     templateNameReceived,
     templateNameSelectedLastSearch,

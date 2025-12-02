@@ -110,6 +110,7 @@ export default {
         filterManualRight: string | undefined,
         filterDeletions: string | undefined,
         filterAccessStateOn: string | undefined,
+        filterStorageDate: string | undefined,
         sortBy: SortByRest,
         sortOrder: SortOrderRest,
     ): Promise<ItemInformation> {
@@ -136,6 +137,7 @@ export default {
             facetsOnly: facetsOnly,
             filterAccessStateOn: filterAccessStateOn,
             filterDeletions: filterDeletions,
+            filterStorageDate: filterStorageDate,
             sortBy: sortBy,
             sortOrder: sortOrder,
         });

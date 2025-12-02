@@ -169,6 +169,7 @@ export default defineComponent({
               searchquerybuilder.buildManualRightFilter(searchStore),
               searchquerybuilder.buildAccessOnDateFilter(searchStore),
               searchquerybuilder.buildDeletionsFilter(searchStore),
+              searchquerybuilder.buildStorageDateFilter(searchStore),
           )
           .then((r: BookmarkIdCreated) => {
             emit("addBookmarkSuccessful", r.bookmarkId, bookmarkName);

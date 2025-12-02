@@ -436,161 +436,198 @@ export default {
     }
   },
 
-  setAccessStateOnDateFilter(searchStore: any, bookmark: BookmarkRest): void {
-    if (bookmark.filterAccessOnDate == undefined) {
-      searchStore.accessStateOnDateState.dateValueFormatted = "";
-      searchStore.accessStateOnDateState.accessState = "";
-      return;
-    }
-
-    searchStore.accessStateOnDateState.dateValueFormatted = date_utils.dateToIso8601(bookmark.filterAccessOnDate.date);
-    searchStore.accessStateOnDateState.accessState = bookmark.filterAccessOnDate.accessState;
-    searchStore.accessStateOnDateIdx = [bookmark.filterAccessOnDate.accessState.toLowerCase()];
-  },
-
-
-  buildAccessOnDateFilter(searchStore: any): string | undefined {
-    if (
-        searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
-        searchStore.accessStateOnDateState.dateValueFormatted != "" &&
-        searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined).length == 1
-    ) {
-      let filteredAccessState = searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined)
-      return filteredAccessState[0].toUpperCase() + "+" + searchStore.accessStateOnDateState.dateValueFormatted;
-    } else {
-      return undefined;
-    }
-  },
-
-  setNoRightInformationFilter(searchStore: any, bookmark: BookmarkRest): void {
-    if (bookmark.filterNoRightInformation == undefined) {
-      searchStore.noRightInformation = false;
-      return;
-    }
-    searchStore.noRightInformation = bookmark.filterNoRightInformation;
-  },
-
-  buildNoRightInformation(searchStore: any): string | undefined {
-    if (searchStore.noRightInformation) {
-      return "true";
-    } else {
-      return undefined;
-    }
-  },
-
-  setManualRightFilter(searchStore: any, bookmark: BookmarkRest): void {
-    if (bookmark.filterManualRight == undefined) {
-      searchStore.manualRight = false;
-      return;
-    }
-    searchStore.manualRight = bookmark.filterManualRight;
-  },
-
-  buildManualRightFilter(searchStore: any): string | undefined {
-    if (searchStore.manualRight) {
-      return "true";
-    } else {
-      return undefined;
-    }
-  },
-
-  setDeletionsFilter(searchStore: any, bookmark: BookmarkRest): void {
-      if (bookmark.filterDeletions == undefined) {
-          searchStore.deletions = false;
+  setStorageDateFilter(searchStore: any, bookmark: BookmarkRest): void {
+      if (bookmark.filterStorageDate == undefined) {
+          searchStore.filterStorageDate = "";
           return;
       }
-      searchStore.deletions = bookmark.filterDeletions;
+
+      if (bookmark.filterStorageDate.fromDate != undefined) {
+          searchStore.storageDateFromFormatted = date_utils.dateToIso8601(bookmark.filterStorageDate.fromDate);
+      }
+
+      if (bookmark.filterStorageDate.toDate != undefined) {
+          searchStore.storageDateToFormatted = date_utils.dateToIso8601(bookmark.filterStorageDate.toDate);
+      }
   },
 
-  buildDeletionsFilter(searchStore: any): string | undefined {
-      if (searchStore.deletions) {
-          return "true";
+  buildStorageDateFilter(searchStore: any): string | undefined {
+      let fromDate;
+      if (searchStore.storageDateFromFormatted != undefined && searchStore.storageDateFromFormatted != "") {
+          fromDate = searchStore.storageDateFromFormatted
+      } else {
+          fromDate = ""
+      }
+
+      let toDate;
+      if (searchStore.storageDateToFormatted != undefined && searchStore.storageDateToFormatted != "") {
+          toDate = searchStore.storageDateToFormatted
+      } else {
+          toDate = ""
+      }
+
+      if(fromDate != "" || toDate != "") {
+          return fromDate + "--" + toDate;
       } else {
           return undefined;
       }
   },
 
-  accessStateToType(a: string): AccessStateRest {
-    switch (a) {
-      case "open":
-        return AccessStateRest.Open;
-      case "closed":
-        return AccessStateRest.Closed;
-      default:
-        return AccessStateRest.Restricted;
-    }
-  },
+    setAccessStateOnDateFilter(searchStore: any, bookmark: BookmarkRest): void {
+        if (bookmark.filterAccessOnDate == undefined) {
+            searchStore.accessStateOnDateState.dateValueFormatted = "";
+            searchStore.accessStateOnDateState.accessState = "";
+            return;
+        }
 
-  publicationTypeToType(t: string): PublicationTypeRest {
-    switch (t) {
-      case "article":
-        return PublicationTypeRest.Article;
-      case "book":
-        return PublicationTypeRest.Book;
-      case "book_part":
-        return PublicationTypeRest.BookPart;
-      case "conference_paper":
-        return PublicationTypeRest.ConferencePaper;
-      case "periodical_part":
-        return PublicationTypeRest.PeriodicalPart;
-      case "research_report":
-        return PublicationTypeRest.ResearchReport;
-      case "thesis":
-        return PublicationTypeRest.Thesis;
-      case "other":
-        return PublicationTypeRest.Other;
-      default:
-        return PublicationTypeRest.WorkingPaper;
-    }
-  },
+        searchStore.accessStateOnDateState.dateValueFormatted = date_utils.dateToIso8601(bookmark.filterAccessOnDate.date);
+        searchStore.accessStateOnDateState.accessState = bookmark.filterAccessOnDate.accessState;
+        searchStore.accessStateOnDateIdx = [bookmark.filterAccessOnDate.accessState.toLowerCase()];
+    },
 
-  buildSortBy(s: DataTableOptions): SortByRest {
-    if (s.sortBy.length == 0){
-      return SortByRest.Handle;
-    }
-    switch(s.sortBy[0].key) {
-      case "band":
-        return SortByRest.Band
-      case "collectionName":
-        return SortByRest.CollectionName;
-      case "communityName":
-        return SortByRest.CommunityName;
-      case "doi":
-        return SortByRest.Doi
-      case "isbn":
-        return SortByRest.Isbn
-      case "issn":
-        return SortByRest.Issn
-      case "isPartOfSeries":
-        return SortByRest.Series;
-      case "handle":
-        return SortByRest.Handle;
-      case "paketSigel":
-        return SortByRest.PaketSigel;
-      case "ppn":
-        return SortByRest.Ppn;
-      case "publicationType":
-        return SortByRest.PublicationType;
-      case "publicationYear":
-        return SortByRest.PublicationYear;
-      case "title":
-        return SortByRest.Title;
-      case "titleJournal":
-        return SortByRest.TitleJournal;
-      case "titleSeries":
-        return SortByRest.TitleSeries;
-      default:
-        return SortByRest.Handle;
-    }
-  },
 
-  buildOrderBy(s: DataTableOptions): SortOrderRest {
-    if (s.sortBy.length == 0 || s.sortBy[0].order == undefined) {
-      return SortOrderRest.Desc;
-    }
-    if (s.sortBy[0].order == 'asc'){
-      return SortOrderRest.Asc;
-    }
-    return SortOrderRest.Desc;
-  },
+    buildAccessOnDateFilter(searchStore: any): string | undefined {
+        if (
+            searchStore.accessStateOnDateState.dateValueFormatted != undefined &&
+            searchStore.accessStateOnDateState.dateValueFormatted != "" &&
+            searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined).length == 1
+        ) {
+            let filteredAccessState = searchStore.accessStateOnDateIdx.filter((e: string) => e != undefined)
+            return filteredAccessState[0].toUpperCase() + "+" + searchStore.accessStateOnDateState.dateValueFormatted;
+        } else {
+            return undefined;
+        }
+    },
+
+    setNoRightInformationFilter(searchStore: any, bookmark: BookmarkRest): void {
+        if (bookmark.filterNoRightInformation == undefined) {
+            searchStore.noRightInformation = false;
+            return;
+        }
+        searchStore.noRightInformation = bookmark.filterNoRightInformation;
+    },
+
+    buildNoRightInformation(searchStore: any): string | undefined {
+        if (searchStore.noRightInformation) {
+            return "true";
+        } else {
+            return undefined;
+        }
+    },
+
+    setManualRightFilter(searchStore: any, bookmark: BookmarkRest): void {
+        if (bookmark.filterManualRight == undefined) {
+            searchStore.manualRight = false;
+            return;
+        }
+        searchStore.manualRight = bookmark.filterManualRight;
+    },
+
+    buildManualRightFilter(searchStore: any): string | undefined {
+        if (searchStore.manualRight) {
+            return "true";
+        } else {
+            return undefined;
+        }
+    },
+
+    setDeletionsFilter(searchStore: any, bookmark: BookmarkRest): void {
+        if (bookmark.filterDeletions == undefined) {
+            searchStore.deletions = false;
+            return;
+        }
+        searchStore.deletions = bookmark.filterDeletions;
+    },
+
+    buildDeletionsFilter(searchStore: any): string | undefined {
+        if (searchStore.deletions) {
+            return "true";
+        } else {
+            return undefined;
+        }
+    },
+
+    accessStateToType(a: string): AccessStateRest {
+        switch (a) {
+            case "open":
+                return AccessStateRest.Open;
+            case "closed":
+                return AccessStateRest.Closed;
+            default:
+                return AccessStateRest.Restricted;
+        }
+    },
+
+    publicationTypeToType(t: string): PublicationTypeRest {
+        switch (t) {
+            case "article":
+                return PublicationTypeRest.Article;
+            case "book":
+                return PublicationTypeRest.Book;
+            case "book_part":
+                return PublicationTypeRest.BookPart;
+            case "conference_paper":
+                return PublicationTypeRest.ConferencePaper;
+            case "periodical_part":
+                return PublicationTypeRest.PeriodicalPart;
+            case "research_report":
+                return PublicationTypeRest.ResearchReport;
+            case "thesis":
+                return PublicationTypeRest.Thesis;
+            case "other":
+                return PublicationTypeRest.Other;
+            default:
+                return PublicationTypeRest.WorkingPaper;
+        }
+    },
+
+    buildSortBy(s: DataTableOptions): SortByRest {
+        if (s.sortBy.length == 0){
+            return SortByRest.Handle;
+        }
+        switch(s.sortBy[0].key) {
+            case "band":
+                return SortByRest.Band
+            case "collectionName":
+                return SortByRest.CollectionName;
+            case "communityName":
+                return SortByRest.CommunityName;
+            case "doi":
+                return SortByRest.Doi
+            case "isbn":
+                return SortByRest.Isbn
+            case "issn":
+                return SortByRest.Issn
+            case "isPartOfSeries":
+                return SortByRest.Series;
+            case "handle":
+                return SortByRest.Handle;
+            case "paketSigel":
+                return SortByRest.PaketSigel;
+            case "ppn":
+                return SortByRest.Ppn;
+            case "publicationType":
+                return SortByRest.PublicationType;
+            case "publicationYear":
+                return SortByRest.PublicationYear;
+            case "title":
+                return SortByRest.Title;
+            case "titleJournal":
+                return SortByRest.TitleJournal;
+            case "titleSeries":
+                return SortByRest.TitleSeries;
+            default:
+                return SortByRest.Handle;
+        }
+    },
+
+    buildOrderBy(s: DataTableOptions): SortOrderRest {
+        if (s.sortBy.length == 0 || s.sortBy[0].order == undefined) {
+            return SortOrderRest.Desc;
+        }
+        if (s.sortBy[0].order == 'asc'){
+            return SortOrderRest.Asc;
+        }
+        return SortOrderRest.Desc;
+    },
 };
