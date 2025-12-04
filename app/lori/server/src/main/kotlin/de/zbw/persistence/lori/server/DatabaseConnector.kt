@@ -4,7 +4,9 @@ import com.google.gson.Gson
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import io.opentelemetry.api.trace.Tracer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -103,20 +105,21 @@ class DatabaseConnector(
             tracer: Tracer,
             spanName: String,
             sql: String? = null,
+            isReadOnly: Boolean,
             block: suspend () -> T,
         ): T {
             val span = tracer.spanBuilder(spanName).startSpan()
             span.setAttribute("db.system", "postgresql")
-            span.setAttribute("db.operation", "SELECT")
+            span.setAttribute("db.operation", isReadOnly.takeIf { it }?.let { "SELECT" } ?: "UPDATE")
             span.setAttribute("db.user", connection.metaData.userName)
             span.setAttribute("db.statement", sql)
 
             return try {
                 val result = block()
-                if (!connection.autoCommit) connection.commit()
+                if (!connection.autoCommit && !isReadOnly) connection.commit()
                 result
             } catch (e: Exception) {
-                if (!connection.autoCommit) connection.rollback()
+                if (!connection.autoCommit && !isReadOnly) connection.rollback()
                 span.recordException(e)
                 throw e
             } finally {
@@ -137,10 +140,13 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
-                    conn.prepareStatement(sql).use { stmt ->
-                        params(stmt)
-                        stmt.executeUpdate()
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            params(stmt)
+                            stmt.executeUpdate()
+                        }
                     }
                 }
             }
@@ -159,18 +165,21 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
-                    conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
-                        params(stmt)
-                        // Execute update
-                        stmt.executeUpdate()
-                        // Fetch generated keys safely
-                        stmt.generatedKeys.use { rs ->
-                            val results = mutableListOf<T>()
-                            while (rs.next()) {
-                                results += fetchGenerated(rs)
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
+                            params(stmt)
+                            // Execute update
+                            stmt.executeUpdate()
+                            // Fetch generated keys safely
+                            stmt.generatedKeys.use { rs ->
+                                val results = mutableListOf<T>()
+                                while (rs.next()) {
+                                    results += fetchGenerated(rs)
+                                }
+                                results
                             }
-                            results
                         }
                     }
                 }
@@ -189,11 +198,14 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
-                    conn.prepareStatement(sql).use { stmt ->
-                        params(stmt)
-                        // Execute batch insert
-                        stmt.executeBatch()
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            params(stmt)
+                            // Execute batch insert
+                            stmt.executeBatch()
+                        }
                     }
                 }
             }
@@ -212,18 +224,21 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
-                    conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
-                        params(stmt)
-                        // Execute batch insert
-                        stmt.executeBatch()
-                        // Fetch generated keys safely
-                        stmt.generatedKeys.use { rs ->
-                            val results = mutableListOf<T>()
-                            while (rs.next()) {
-                                results += fetchGenerated(rs)
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
+                            params(stmt)
+                            // Execute batch insert
+                            stmt.executeBatch()
+                            // Fetch generated keys safely
+                            stmt.generatedKeys.use { rs ->
+                                val results = mutableListOf<T>()
+                                while (rs.next()) {
+                                    results += fetchGenerated(rs)
+                                }
+                                results
                             }
-                            results
                         }
                     }
                 }
@@ -244,17 +259,20 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
-                    conn.prepareStatement(sql).use { stmt ->
-                        stmt.fetchSize = fetchSize
-                        // bind parameters (if any)
-                        params(stmt)
-                        stmt.executeQuery().use { rs ->
-                            val result = ArrayList<T>()
-                            while (rs.next()) {
-                                result += mapper(rs)
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            stmt.fetchSize = fetchSize
+                            // bind parameters (if any)
+                            params(stmt)
+                            stmt.executeQuery().use { rs ->
+                                val result = ArrayList<T>()
+                                while (rs.next()) {
+                                    result += mapper(rs)
+                                }
+                                result
                             }
-                            result
                         }
                     }
                 }
@@ -275,17 +293,20 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
-                    conn.prepareStatement(sql).use { stmt ->
-                        stmt.fetchSize = fetchSize
-                        // bind parameters (if any)
-                        params(stmt)
-                        stmt.executeQuery().use { rs ->
-                            val result = mutableMapOf<K, V>()
-                            while (rs.next()) {
-                                result += mapper(rs)
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            stmt.fetchSize = fetchSize
+                            // bind parameters (if any)
+                            params(stmt)
+                            stmt.executeQuery().use { rs ->
+                                val result = mutableMapOf<K, V>()
+                                while (rs.next()) {
+                                    result += mapper(rs)
+                                }
+                                result
                             }
-                            result
                         }
                     }
                 }
@@ -304,15 +325,18 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
-                    conn.prepareStatement(sql).use { stmt ->
-                        // bind parameters (if any)
-                        params(stmt)
-                        stmt.executeQuery().use { rs ->
-                            if (rs.next()) {
-                                rs.getInt(1)
-                            } else {
-                                throw IllegalStateException("No count found.")
+                    withContext(Dispatchers.IO) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            // bind parameters (if any)
+                            params(stmt)
+                            stmt.executeQuery().use { rs ->
+                                if (rs.next()) {
+                                    rs.getInt(1)
+                                } else {
+                                    throw IllegalStateException("No count found.")
+                                }
                             }
                         }
                     }

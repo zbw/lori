@@ -796,7 +796,7 @@ class SearchDB(
         ): String {
             val searchExpressionFilters: String =
                 searchExpression?.let {
-                    resolveSearchExpression(it)
+                    "(" + resolveSearchExpression(it) + ")"
                 } ?: ""
             val metadataFilters =
                 metadataSearchFilter
@@ -827,7 +827,7 @@ class SearchDB(
             val noRightInformationFilterClause: String = noRightInformationFilter?.toWhereClause() ?: ""
             val searchExpressionFilters: String =
                 searchExpression?.let {
-                    resolveSearchExpression(it)
+                    "(" + resolveSearchExpression(it) + ")"
                 } ?: ""
             val rightFilters =
                 rightSearchFilter.joinToString(separator = " AND ") { f ->
@@ -861,7 +861,7 @@ class SearchDB(
             val noRightInformationFilterClause: String = noRightInformationFilter?.toWhereClause() ?: ""
             val searchExpressionFilters: String =
                 searchExpression?.let {
-                    resolveSearchExpression(it)
+                    "(" + resolveSearchExpression(it) + ")"
                 } ?: ""
             val searchExprUsesRights =
                 searchExpression?.let {

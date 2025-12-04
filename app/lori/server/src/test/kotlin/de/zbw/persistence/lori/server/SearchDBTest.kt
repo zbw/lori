@@ -197,7 +197,7 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " WHERE ((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " ORDER BY $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE_POSTFIX DESC" +
                     " LIMIT ? OFFSET ?",
                 "No right or metadatafilter. One search pair.",
@@ -212,8 +212,8 @@ class SearchDBTest : DatabaseTest() {
                 ),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
-                    " AND (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " WHERE ((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
+                    " AND (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date filter",
@@ -231,9 +231,9 @@ class SearchDBTest : DatabaseTest() {
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE ((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
+                    " WHERE (((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
-                    " OR (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL)" +
+                    " OR (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
                     " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),
@@ -274,11 +274,11 @@ class SearchDBTest : DatabaseTest() {
                 false,
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE EXISTS" +
+                    " WHERE (EXISTS" +
                     " (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
+                    " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null)))" +
                     " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "metadata filter search expression on rights",
@@ -295,7 +295,7 @@ class SearchDBTest : DatabaseTest() {
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null)) AND" +
-                    " (ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " ORDER BY im.${COLUMN_METADATA_HANDLE_POSTFIX} DESC" +
                     " LIMIT ? OFFSET ?",
                 "right filter with exception right filter only",
@@ -321,8 +321,8 @@ class SearchDBTest : DatabaseTest() {
                     " AND EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
                     " WHERE item.handle = im.handle AND (access_state = ? AND access_state is not null))" +
                     " AND NOT EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
-                    " WHERE item.handle = im.handle AND (TRUE)) AND (ts_collection @@ to_tsquery(?)" +
-                    " AND ts_collection is not null) AND (publication_year >= ? AND publication_year <= ?" +
+                    " WHERE item.handle = im.handle AND (TRUE)) AND ((ts_collection @@ to_tsquery(?)" +
+                    " AND ts_collection is not null)) AND (publication_year >= ? AND publication_year <= ?" +
                     " AND publication_year is not null) AND (lower(publication_type) = lower(?)" +
                     " OR lower(publication_type) = lower(?)))" +
                     " as sub" +
@@ -368,7 +368,7 @@ class SearchDBTest : DatabaseTest() {
                 "SELECT COUNT(*)" +
                     " FROM ($SELECT_ALL_WITH_TS" +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
-                    " WHERE (ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
+                    " WHERE ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)))" +
                     " as countsearch",
                 "count query filter with one searchkey",
             ),
@@ -557,7 +557,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
                     " WHERE $ALIAS_ITEM_METADATA.publication_type IS NOT NULL" +
-                    " AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " AND (((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
@@ -585,7 +585,7 @@ class SearchDBTest : DatabaseTest() {
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
-                    " WHERE $ALIAS_ITEM_METADATA.zdb_ids IS NOT NULL AND ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " WHERE $ALIAS_ITEM_METADATA.zdb_ids IS NOT NULL AND (((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
@@ -644,7 +644,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
                     " WHERE $ALIAS_ITEM_RIGHT.access_state IS NOT NULL AND" +
-                    " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " (((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
@@ -669,7 +669,7 @@ class SearchDBTest : DatabaseTest() {
                     " LEFT JOIN item i ON i.handle = $ALIAS_ITEM_METADATA.handle" +
                     " LEFT JOIN item_right ir ON i.right_id = $ALIAS_ITEM_RIGHT.right_id" +
                     " WHERE $ALIAS_ITEM_RIGHT.template_name IS NOT NULL AND" +
-                    " ((ts_collection @@ to_tsquery(?) AND ts_collection is not null)" +
+                    " (((ts_collection @@ to_tsquery(?) AND ts_collection is not null))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " AND (lower(publication_type) = lower(?)) AND" +
                     " EXISTS (SELECT 1 FROM item JOIN item_right ir ON item.right_id = ir.right_id" +
