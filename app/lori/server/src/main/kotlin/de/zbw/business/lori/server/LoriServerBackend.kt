@@ -300,7 +300,7 @@ class LoriServerBackend(
                             if (firstApplicationDate == null) {
                                 return@map listOf(r)
                             }
-                            filterAndAdjustTemplatesByDate(
+                            filterAndAdjustRightsByDate(
                                 listOf(r),
                                 firstApplicationDate,
                             )
@@ -383,7 +383,7 @@ class LoriServerBackend(
             templates
                 .map { t ->
                     val itemTable = rightIdToItemTable[t.rightId] ?: return emptyList()
-                    filterAndAdjustTemplatesByDate(
+                    filterAndAdjustRightsByDate(
                         templatesAndRights = listOf(t),
                         firstApplicationDate =
                             itemTable
@@ -1178,7 +1178,7 @@ class LoriServerBackend(
          * Templates may have ranges which end and/or start before the lifetime of the metadata it has
          * been applied to. Therefore, the start date for this metadata will be adjusted.
          */
-        fun filterAndAdjustTemplatesByDate(
+        fun filterAndAdjustRightsByDate(
             templatesAndRights: List<ItemRight>,
             firstApplicationDate: LocalDate,
         ): List<ItemRight> {
@@ -1186,8 +1186,8 @@ class LoriServerBackend(
             val fs =
                 templates
                     .filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
-            val templatesCorrectStart =
-                fs.map { right ->
+            val templatesAndRightsCorrectStart =
+                (fs + rights).map { right ->
                     if (firstApplicationDate > right.startDate) {
                         right.copy(
                             startDate = firstApplicationDate,
@@ -1196,7 +1196,7 @@ class LoriServerBackend(
                         right
                     }
                 }
-            return templatesCorrectStart + rights
+            return templatesAndRightsCorrectStart
         }
 
         /**
