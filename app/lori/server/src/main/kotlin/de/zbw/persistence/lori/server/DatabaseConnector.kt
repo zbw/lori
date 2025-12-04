@@ -103,20 +103,21 @@ class DatabaseConnector(
             tracer: Tracer,
             spanName: String,
             sql: String? = null,
+            isReadOnly: Boolean,
             block: suspend () -> T,
         ): T {
             val span = tracer.spanBuilder(spanName).startSpan()
             span.setAttribute("db.system", "postgresql")
-            span.setAttribute("db.operation", "SELECT")
+            span.setAttribute("db.operation", isReadOnly.takeIf { it }?.let { "SELECT" } ?: "UPDATE")
             span.setAttribute("db.user", connection.metaData.userName)
             span.setAttribute("db.statement", sql)
 
             return try {
                 val result = block()
-                if (!connection.autoCommit) connection.commit()
+                if (!connection.autoCommit && !isReadOnly) connection.commit()
                 result
             } catch (e: Exception) {
-                if (!connection.autoCommit) connection.rollback()
+                if (!connection.autoCommit && !isReadOnly) connection.rollback()
                 span.recordException(e)
                 throw e
             } finally {
@@ -137,6 +138,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
                     conn.prepareStatement(sql).use { stmt ->
                         params(stmt)
@@ -159,6 +161,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
                         params(stmt)
@@ -189,6 +192,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
                     conn.prepareStatement(sql).use { stmt ->
                         params(stmt)
@@ -212,6 +216,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = false,
                 ) {
                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { stmt ->
                         params(stmt)
@@ -244,6 +249,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
                     conn.prepareStatement(sql).use { stmt ->
                         stmt.fetchSize = fetchSize
@@ -275,6 +281,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
                     conn.prepareStatement(sql).use { stmt ->
                         stmt.fetchSize = fetchSize
@@ -304,6 +311,7 @@ class DatabaseConnector(
                     tracer = tracer,
                     spanName = spanName,
                     sql = sql,
+                    isReadOnly = true,
                 ) {
                     conn.prepareStatement(sql).use { stmt ->
                         // bind parameters (if any)
