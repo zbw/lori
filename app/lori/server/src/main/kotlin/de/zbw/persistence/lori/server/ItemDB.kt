@@ -1,12 +1,15 @@
 package de.zbw.persistence.lori.server
 
 import de.zbw.business.lori.server.type.ItemId
+import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.Calendar
 import java.util.TimeZone
 
@@ -212,6 +215,44 @@ class ItemDB(
             },
         )
 
+    suspend fun getItemRowByHandleAndRightId(
+        handle: String,
+        rightId: String,
+    ): ItemRow? =
+        DatabaseConnector
+            .select(
+                connectionPool = connectionPool,
+                sql = STATEMENT_GET_RIGHTS_IDS_FOR_METADATA,
+                tracer = tracer,
+                spanName = "getItemRowByHandleAndRightId",
+                params = { stmt ->
+                    stmt.setString(1, handle)
+                    stmt.setString(2, rightId)
+                },
+                mapper = { rs ->
+                    ItemRow(
+                        rightId = rs.getString(1),
+                        handle = rs.getString(2),
+                        createdBy = rs.getString(3),
+                        createdOn =
+                            rs.getTimestamp(4, RightDB.Companion.utcCalendar)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    TimezoneUtil.TIME_ZONE_UTC,
+                                )
+                            },
+                        lastUpdatedBy = rs.getString(5),
+                        lastUpdatedOn =
+                            rs.getTimestamp(6, RightDB.Companion.utcCalendar)?.let {
+                                OffsetDateTime.ofInstant(
+                                    it.toInstant(),
+                                    TimezoneUtil.TIME_ZONE_UTC,
+                                )
+                            },
+                    )
+                },
+            ).firstOrNull()
+
     companion object {
         private const val CONSTRAINT_ITEM_PKEY = "item_pkey"
         const val COLUMN_ITEM_HANDLE = "handle"
@@ -280,5 +321,11 @@ class ItemDB(
 
         const val STATEMENT_ITEM_CONTAINS_RIGHT =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_ITEM_RIGHT_ID=?)"
+
+        const val STATEMENT_GET_RIGHTS_IDS_FOR_METADATA =
+            "SELECT $COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_HANDLE,$COLUMN_ITEM_CREATED_BY," +
+                "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON" +
+                " FROM $TABLE_NAME_ITEM" +
+                " WHERE $COLUMN_METADATA_HANDLE = ? AND $COLUMN_ITEM_RIGHT_ID = ?;"
     }
 }

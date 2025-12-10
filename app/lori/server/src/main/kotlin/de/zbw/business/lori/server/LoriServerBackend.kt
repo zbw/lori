@@ -39,6 +39,7 @@ import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.RightErrorDB
+import de.zbw.persistence.lori.server.types.MetadataHandleLastUpdatedTransient
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
@@ -196,14 +197,28 @@ class LoriServerBackend(
     suspend fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
 
     suspend fun updateMetadataAsDeleted(instant: Instant): Int {
-        val deletedHandles = dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(instant)
-        deletedHandles.forEach {
-            deleteAndUpdateManualRightsByHandle(
-                instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate(),
-                it,
+        val deletedHandles: List<MetadataHandleLastUpdatedTransient> =
+            dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(
+                instant,
             )
+        deletedHandles.forEach { transient ->
+            if (!transient.isDeleted) {
+                // TODAY - 1 is the deletion date
+                deleteAndUpdateManualRightsByHandle(
+                    instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate(),
+                    transient.handle,
+                )
+            } else {
+                // Entry got already deleted in past. Then lastUpdatedOn is deletion date
+                deleteAndUpdateManualRightsByHandle(
+                    transient.lastUpdatedOn
+                        .atZone(TimezoneUtil.TIME_ZONE_BERLIN)
+                        .toLocalDate(),
+                    transient.handle,
+                )
+            }
         }
-        return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles, status = true)
+        return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles.map { it.handle }, status = true)
     }
 
     suspend fun deleteAndUpdateManualRightsByHandle(
@@ -276,6 +291,12 @@ class LoriServerBackend(
         if (currentTemplate.isNotEmpty()) {
             // Remove old template
             val templateId = currentTemplate.first().rightId!!
+            val firstTemplateApplication: LocalDate =
+                dbConnector.itemDB
+                    .getItemRowByHandleAndRightId(handle = handle, rightId = templateId)
+                    ?.createdOn
+                    ?.let { utcOffsetDateTimeToBerlinDate(it) }
+                    ?: throw InternalError("Missing create date in item table. This should never happen")
             deletionsAndUpdates +=
                 dbConnector
                     .itemDB
@@ -288,6 +309,12 @@ class LoriServerBackend(
                 currentTemplate
                     .first()
                     .copy(
+                        startDate =
+                            if (currentTemplate.first().startDate < firstTemplateApplication) {
+                                firstTemplateApplication
+                            } else {
+                                currentTemplate.first().startDate
+                            },
                         isTemplate = false,
                         templateName = null,
                         templateDescription = null,
@@ -1093,9 +1120,7 @@ class LoriServerBackend(
             )
 
         if (rights.size != 2) {
-            /**
-             * If either of the given Right-IDs does not exist, do nothing.
-             */
+            // If either of the given Right-IDs does not exist, do nothing.
             return
         }
         if (relationship.relationship == RelationshipRest.Relationship.predecessor) {

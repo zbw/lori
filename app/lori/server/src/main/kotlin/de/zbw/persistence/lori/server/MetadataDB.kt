@@ -8,6 +8,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
+import de.zbw.persistence.lori.server.types.MetadataHandleLastUpdatedTransient
 import io.opentelemetry.api.trace.Tracer
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -173,7 +174,7 @@ class MetadataDB(
                 },
             ).first()
 
-    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<String> =
+    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<MetadataHandleLastUpdatedTransient> =
         DatabaseConnector.select(
             connectionPool = connectionPool,
             sql = STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON,
@@ -183,7 +184,12 @@ class MetadataDB(
                 stmt.setTimestamp(1, Timestamp.from(instant))
             },
             mapper = { rs ->
-                rs.getString(1)
+                MetadataHandleLastUpdatedTransient(
+                    handle = rs.getString(1),
+                    lastUpdatedOn = rs.getTimestamp(2, utcCalendar).toInstant(),
+                    createdOn = rs.getTimestamp(3, utcCalendar).toInstant(),
+                    isDeleted = rs.getBoolean(4),
+                )
             },
         )
 
@@ -274,7 +280,8 @@ class MetadataDB(
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
-            "SELECT $COLUMN_METADATA_HANDLE" +
+            "SELECT $COLUMN_METADATA_HANDLE, $COLUMN_METADATA_LAST_UPDATED_ON," +
+                " $COLUMN_METADATA_CREATED_ON,$COLUMN_METADATA_DELETED" +
                 " FROM $TABLE_NAME_ITEM_METADATA" +
                 " WHERE $COLUMN_METADATA_LAST_UPDATED_ON < ?;"
 

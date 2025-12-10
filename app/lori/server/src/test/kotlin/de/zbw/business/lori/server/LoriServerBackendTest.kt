@@ -725,6 +725,7 @@ class LoriServerBackendTest : DatabaseTest() {
             when (ret) {
                 is Either.Left -> {
                 }
+
                 is Either.Right -> {
                     Assert.fail("An error should be raised due to a given conflict.")
                 }
@@ -840,7 +841,11 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testTransformTemplateToManualRightForDeletedItem() =
         runBlocking {
             // given
-            val deletedMetadata = TEST_METADATA.copy(handle = "11159/902", deleted = true)
+            val deletedMetadata =
+                TEST_METADATA.copy(
+                    handle = "11159/902",
+                    deleted = true,
+                )
 
             val template =
                 TEST_RIGHT.copy(
@@ -852,6 +857,8 @@ class LoriServerBackendTest : DatabaseTest() {
             val rightAssignments =
                 listOf(template to listOf(deletedMetadata.handle))
 
+            mockkStatic(Instant::class)
+            every { now() } returns NOW.minusYears(20L).toInstant()
             backend.insertMetadataElement(deletedMetadata)
             rightAssignments.forEach { pair ->
                 backend.insertRightForHandles(
@@ -864,6 +871,8 @@ class LoriServerBackendTest : DatabaseTest() {
             // when
             val deletionDate = LocalDate.of(2020, 9, 1)
 
+            mockkStatic(Instant::class)
+            every { now() } returns NOW.toInstant()
             val updates =
                 backend.deleteAndUpdateManualRightsByHandle(
                     deletionDate = deletionDate,
