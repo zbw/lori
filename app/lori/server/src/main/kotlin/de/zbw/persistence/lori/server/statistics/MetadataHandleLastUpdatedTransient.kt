@@ -1,4 +1,4 @@
-package de.zbw.persistence.lori.server.types
+package de.zbw.persistence.lori.server.statistics
 
 import java.time.Instant
 

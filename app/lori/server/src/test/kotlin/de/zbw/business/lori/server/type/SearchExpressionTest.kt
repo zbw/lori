@@ -179,7 +179,7 @@ class SearchExpressionTest {
     ) {
         assertThat(
             reason,
-            resolveSearchExpression(SearchGrammar.parseToEnd(query)),
+            resolveSearchExpression(SearchGrammar.parseToEnd(query), false),
             `is`(expected),
         )
     }

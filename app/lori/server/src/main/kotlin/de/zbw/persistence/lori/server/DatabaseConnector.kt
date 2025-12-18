@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import StatisticsService
 import com.google.gson.Gson
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -48,7 +49,7 @@ class DatabaseConnector(
             tracer,
             groupDB,
         ),
-    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer),
+    internal val searchDB: SearchDB = SearchDB(connectionPool, StatisticsService(connectionPool), tracer),
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
     internal val userDB: UserDB = UserDB(connectionPool, tracer),
     internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),

@@ -8,7 +8,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
-import de.zbw.persistence.lori.server.types.MetadataHandleLastUpdatedTransient
+import de.zbw.persistence.lori.server.statistics.MetadataHandleLastUpdatedTransient
 import io.opentelemetry.api.trace.Tracer
 import java.sql.PreparedStatement
 import java.sql.ResultSet

@@ -39,7 +39,7 @@ import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.RightErrorDB
-import de.zbw.persistence.lori.server.types.MetadataHandleLastUpdatedTransient
+import de.zbw.persistence.lori.server.statistics.MetadataHandleLastUpdatedTransient
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred

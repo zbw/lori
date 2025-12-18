@@ -10,7 +10,9 @@ import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_END_DATE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ID
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_LICENCE_CONTRACT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_START_DATE
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.COLUMN_RIGHT_ZBW_USER_AGREEMENT
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
@@ -21,6 +23,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORAGE_DATE
 import de.zbw.persistence.lori.server.RightDB
+import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_RIGHT_HAS_LEGAL_RISK
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_METADATA
 import de.zbw.persistence.lori.server.SearchDB.Companion.ALIAS_ITEM_RIGHT
 import java.sql.Date
@@ -41,6 +44,8 @@ abstract class SearchFilter(
     val dbColumnName: String,
 ) {
     abstract fun toWhereClause(): String
+
+    abstract fun toWhereClauseStatistics(): String
 
     /**
      * @param preparedStatement: The prepared statement.
@@ -271,6 +276,8 @@ abstract class TSVectorMetadataSearchFilter(
 ) : MetadataSearchFilter(dbColumnName) {
     override fun toWhereClause(): String = "($dbColumnName @@ $SQL_FUNC_TO_TS_QUERY(?) AND $dbColumnName is not null)"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -419,6 +426,8 @@ class LicenceUrlFilter(
     ) {
     override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -445,6 +454,8 @@ class PPNFilter(
     ) {
     override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -466,6 +477,8 @@ class EconbizIDFilter(
         dbColumnName = COLUMN_METADATA_ECONBIZID,
     ) {
     override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -493,6 +506,8 @@ class PPNsFilter(
                 "?"
             }
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -518,6 +533,8 @@ class DOIsFilter(
     ) {
     override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -541,6 +558,8 @@ class ISBNsFilter(
         MetadataDB.COLUMN_METADATA_ISBN_LOWER,
     ) {
     override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -575,6 +594,8 @@ class PublicationYearFilter(
         } else {
             "($dbColumnName >= ? AND $dbColumnName <= ? AND $dbColumnName is not null)"
         }
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -633,6 +654,8 @@ class StorageDateFilter(
         } else {
             "($dbColumnName >= ? AND $dbColumnName < ? AND $dbColumnName is not null)"
         }
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -698,6 +721,8 @@ class PublicationTypeFilter(
             "lower($dbColumnName) = lower(?)"
         }
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -727,6 +752,8 @@ class PaketSigelFilter(
     ) {
     override fun toWhereClause(): String = "(? = ANY($dbColumnName))"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -749,6 +776,8 @@ class PaketSigelFilterOR(
         MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
     override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -774,6 +803,8 @@ class CreatedOnFilter(
         dbColumnName = MetadataDB.COLUMN_METADATA_CREATED_ON,
     ) {
     override fun toWhereClause(): String = "(${ALIAS_ITEM_METADATA}.$dbColumnName ${comparisonOp.toSQL()} ?)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -802,6 +833,8 @@ class ZDBIdFilterOR(
     ) {
     override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -829,6 +862,8 @@ class ZDBIdFilter(
     ) {
     override fun toWhereClause(): String = "(? = ANY($dbColumnName))"
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -851,6 +886,8 @@ class SeriesFilter(
         COLUMN_METADATA_IS_PART_OF_SERIES_LOWER,
     ) {
     override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
 
     override fun setSQLParameter(
         counter: Int,
@@ -884,6 +921,8 @@ class HandlesFilter(
                 "?"
             }
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -914,6 +953,8 @@ class DeletionsFilter(
             "${ALIAS_ITEM_METADATA}.$dbColumnName = false"
         }
 
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -941,6 +982,8 @@ class DeletionsFilter(
 abstract class RightSearchFilter(
     dbColumnName: String,
 ) : SearchFilter(dbColumnName) {
+    open fun containsMetadataFilter(): Boolean = false
+
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     companion object {
@@ -970,6 +1013,23 @@ abstract class RightSearchFilter(
                 " ($TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON < ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
                 " $TABLE_NAME_ITEM.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
                 ")"
+
+        const val WHERE_CLAUSE_BETWEEN_START_AND_END_DATE_STATISTIC =
+            "(" +
+                "($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " i.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz AND" +
+                " $COLUMN_RIGHT_END_DATE IS NOT NULL)" +
+                " OR" +
+                "($COLUMN_RIGHT_END_DATE IS NOT NULL AND" +
+                " i.$COLUMN_ITEM_CREATED_ON <= ? AND $COLUMN_RIGHT_END_DATE >= ? AND" +
+                " i.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
+                " OR" +
+                " ($COLUMN_RIGHT_START_DATE <= ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " i.$COLUMN_ITEM_CREATED_ON <= $COLUMN_RIGHT_START_DATE::timestamptz)" +
+                " OR" +
+                " (i.$COLUMN_ITEM_CREATED_ON < ? AND $COLUMN_RIGHT_END_DATE IS NULL AND" +
+                " i.$COLUMN_ITEM_CREATED_ON > $COLUMN_RIGHT_START_DATE::timestamptz)" +
+                ")"
     }
 }
 
@@ -981,6 +1041,13 @@ class AccessStateFilter(
             separator = " AND ",
         ) {
             "$WHERE_CLAUSE_SKELETON_PREFIX$dbColumnName = ? AND $dbColumnName is not null$WHERE_CLAUSE_SKELETON_POSTFIX"
+        }
+
+    override fun toWhereClauseStatistics(): String =
+        accessStates.joinToString(
+            separator = " AND ",
+        ) {
+            "$dbColumnName = ? AND $dbColumnName is not null"
         }
 
     override fun setSQLParameter(
@@ -1022,6 +1089,16 @@ class AccessStateOnDateFilter(
 
         return WHERE_CLAUSE_SKELETON_PREFIX + clause + WHERE_CLAUSE_SKELETON_POSTFIX
     }
+
+    override fun toWhereClauseStatistics(): String =
+        if (accessState != null) {
+            "(" +
+                WHERE_CLAUSE_BETWEEN_START_AND_END_DATE_STATISTIC +
+                " AND ($dbColumnName = ? AND $dbColumnName is not null)" +
+                ")"
+        } else {
+            WHERE_CLAUSE_BETWEEN_START_AND_END_DATE_STATISTIC
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -1087,6 +1164,8 @@ class RightValidOnFilter(
             WHERE_CLAUSE_BETWEEN_START_AND_END_DATE +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
+    override fun toWhereClauseStatistics(): String = WHERE_CLAUSE_BETWEEN_START_AND_END_DATE_STATISTIC
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -1148,6 +1227,18 @@ class StartDateFilter(
             ")" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
+    override fun toWhereClauseStatistics(): String =
+        "(" +
+            "($dbColumnName = ? AND" +
+            " i.$COLUMN_ITEM_CREATED_ON <= $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            " OR" +
+            " (i.$COLUMN_ITEM_CREATED_ON >= ? AND" +
+            " i.$COLUMN_ITEM_CREATED_ON < ? AND" +
+            " i.$COLUMN_ITEM_CREATED_ON > $dbColumnName::timestamptz AND" +
+            " $dbColumnName is not null)" +
+            ")"
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -1193,6 +1284,8 @@ class EndDateFilter(
             "($dbColumnName = ? AND $dbColumnName is not null)" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
+    override fun toWhereClauseStatistics(): String = "($dbColumnName = ? AND $dbColumnName is not null)"
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -1222,6 +1315,11 @@ class RightIdFilter(
                 "($ALIAS_ITEM_RIGHT.$dbColumnName = ? AND $ALIAS_ITEM_RIGHT.$dbColumnName is not null)"
             } +
             WHERE_CLAUSE_SKELETON_POSTFIX
+
+    override fun toWhereClauseStatistics(): String =
+        rightIds.joinToString(prefix = "(", postfix = ")", separator = " OR ") {
+            "($ALIAS_ITEM_RIGHT.$dbColumnName = ? AND $ALIAS_ITEM_RIGHT.$dbColumnName is not null)"
+        }
 
     override fun setSQLParameter(
         counter: Int,
@@ -1255,6 +1353,13 @@ class TemplateNameFilter(
             } + ")" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
+    override fun toWhereClauseStatistics(): String =
+        "(${DatabaseConnector.COLUMN_RIGHT_IS_TEMPLATE} = true" +
+            " AND ${ALIAS_ITEM_RIGHT}.$dbColumnName is not null" +
+            templateNames.joinToString(prefix = " AND (", postfix = ")", separator = " AND ") {
+                "lower($ALIAS_ITEM_RIGHT.$dbColumnName) ILIKE ?"
+            } + ")"
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -1274,6 +1379,8 @@ class TemplateNameFilter(
 class FormalRuleFilter(
     val formalRules: List<FormalRule>,
 ) : RightSearchFilter("") {
+    override fun containsMetadataFilter(): Boolean = formalRules.contains(FormalRule.CC_LICENCE_NO_RESTRICTION)
+
     override fun toWhereClause(): String =
         formalRules.joinToString(
             separator = " AND ",
@@ -1281,11 +1388,40 @@ class FormalRuleFilter(
             val clause =
                 when (it) {
                     FormalRule.LICENCE_CONTRACT -> {
-                        "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                        "$COLUMN_RIGHT_LICENCE_CONTRACT <> ''"
                     }
 
                     FormalRule.ZBW_USER_AGREEMENT -> {
-                        "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
+                        "$COLUMN_RIGHT_ZBW_USER_AGREEMENT = true"
+                    }
+
+                    // TODO(CB): Handle this special for statistics
+                    FormalRule.CC_LICENCE_NO_RESTRICTION -> {
+                        "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
+                            "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +
+                            "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'licenses') AND " +
+                            "${MetadataDB.TS_LICENCE_URL} is not null"
+                    }
+
+                    FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> {
+                        "${ALIAS_ITEM_RIGHT}.${COLUMN_RIGHT_HAS_LEGAL_RISK} = false"
+                    }
+                }
+            "($WHERE_CLAUSE_SKELETON_PREFIX $clause $WHERE_CLAUSE_SKELETON_POSTFIX)"
+        }
+
+    override fun toWhereClauseStatistics(): String =
+        formalRules.joinToString(
+            separator = " AND ",
+        ) {
+            val clause =
+                when (it) {
+                    FormalRule.LICENCE_CONTRACT -> {
+                        "${COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                    }
+
+                    FormalRule.ZBW_USER_AGREEMENT -> {
+                        "${COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
                     }
 
                     FormalRule.CC_LICENCE_NO_RESTRICTION -> {
@@ -1296,10 +1432,10 @@ class FormalRuleFilter(
                     }
 
                     FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> {
-                        "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
+                        "${ALIAS_ITEM_RIGHT}.${COLUMN_RIGHT_HAS_LEGAL_RISK} = false"
                     }
                 }
-            "($WHERE_CLAUSE_SKELETON_PREFIX $clause $WHERE_CLAUSE_SKELETON_POSTFIX)"
+            "($clause)"
         }
 
     override fun setSQLParameter(
@@ -1323,6 +1459,11 @@ class NoRightInformationFilter : RightSearchFilter(COLUMN_RIGHT_ID) {
             "TRUE" +
             WHERE_CLAUSE_SKELETON_POSTFIX
 
+    override fun toWhereClauseStatistics(): String {
+        // TODO(CB: find a solution for this)
+        return "FALSE"
+    }
+
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
@@ -1339,11 +1480,13 @@ class NoRightInformationFilter : RightSearchFilter(COLUMN_RIGHT_ID) {
     }
 }
 
-class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_IS_TEMPLATE) {
+class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_RIGHT_IS_TEMPLATE) {
     override fun toWhereClause(): String =
         WHERE_CLAUSE_SKELETON_PREFIX +
             "${ALIAS_ITEM_RIGHT}.$dbColumnName = false" +
             WHERE_CLAUSE_SKELETON_POSTFIX
+
+    override fun toWhereClauseStatistics(): String = "${ALIAS_ITEM_RIGHT}.$dbColumnName = false"
 
     override fun setSQLParameter(
         counter: Int,

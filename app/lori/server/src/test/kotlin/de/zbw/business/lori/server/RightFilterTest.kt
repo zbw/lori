@@ -293,6 +293,7 @@ class RightFilterTest : DatabaseTest() {
                         is Either.Left -> {
                             error("Error on inserting a right information: ${ret.value}")
                         }
+
                         is Either.Right<*> -> {}
                     }
                 }
@@ -797,16 +798,16 @@ class RightFilterTest : DatabaseTest() {
     fun createDataForAccessState() =
         arrayOf(
             arrayOf(
-                "acc:'Open'",
-                emptyList<RightSearchFilter>(),
-                listOf(itemRightRestrictedOpen).toSet(),
-                "Simple search bar",
-            ),
-            arrayOf(
                 "acc:'Open' | acc:'Restricted'",
                 emptyList<RightSearchFilter>(),
                 listOf(itemRightRestrictedOpen, itemRightRestricted).toSet(),
                 "OR search bar",
+            ),
+            arrayOf(
+                "acc:'Open'",
+                emptyList<RightSearchFilter>(),
+                listOf(itemRightRestrictedOpen).toSet(),
+                "Simple search bar",
             ),
             arrayOf(
                 "!acc:'closed'",
