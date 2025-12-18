@@ -901,11 +901,11 @@ class LoriServerBackend(
                         message = "Handle ist gelöscht worden",
                         errorId = null,
                         createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
-                        conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
-                        conflictByRightId = null,
+                        conflictWithExistingRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
+                        conflictCausedByRightId = null,
                         conflictType = ConflictType.DELETION,
                         // TODO(CB): Clarify with Jana how to present multiple values
-                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        conflictCausedInContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                         testId = null,
                         createdBy = createdBy,
                     )
@@ -947,10 +947,10 @@ class LoriServerBackend(
                             OffsetDateTime.now(
                                 TimezoneUtil.TIME_ZONE_UTC,
                             ),
-                        conflictingWithRightId = null,
-                        conflictByRightId = null,
+                        conflictWithExistingRightId = null,
+                        conflictCausedByRightId = null,
                         conflictType = ConflictType.NO_RIGHT,
-                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        conflictCausedInContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                         testId = null,
                         createdBy = createdBy,
                     )
@@ -1253,7 +1253,7 @@ class LoriServerBackend(
             createdBy: String,
         ): List<RightError> =
             item.rights
-                .filter { r ->
+                .filter { r: ItemRight ->
                     (r.rightId != template.rightId)
                 }.mapNotNull { r ->
                     checkForDateConflict(r, template)
@@ -1261,11 +1261,12 @@ class LoriServerBackend(
                         ?.let {
                             RightError(
                                 handle = item.metadata.handle,
-                                conflictingWithRightId = r.rightId ?: "No Right Id",
+                                conflictWithExistingRightId = r.rightId ?: "No Right Id",
                                 conflictType = ConflictType.DATE_OVERLAP,
-                                conflictByRightId = template.rightId ?: "No Right Id",
-                                conflictByContext = template.templateName,
+                                conflictCausedByRightId = template.rightId ?: "No Right Id",
+                                conflictCausedInContext = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                                existingRightIsTemplate = r.isTemplate,
                                 errorId = null,
                                 message =
                                     "Start/End-Datum Konflikt: Template '${template.templateName}' steht im Widerspruch" +

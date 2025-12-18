@@ -117,9 +117,7 @@ fun Routing.bookmarkRoutes(
                     }
                 }
             }
-            /**
-             * Update an existing Bookmark.
-             */
+            // Update an existing Bookmark.
             put {
                 val span =
                     tracer
@@ -239,9 +237,7 @@ fun Routing.bookmarkRoutes(
             }
         }
 
-        /**
-         * Return Bookmark for a given id.
-         */
+        // Return Bookmark for a given id.
         get("{id}") {
             val span =
                 tracer
@@ -354,9 +350,7 @@ fun Routing.bookmarkRoutes(
                 }
             }
 
-            /**
-             * Update an existing Bookmark.
-             */
+            //  Update an existing Bookmark.
             put {
                 val span =
                     tracer
@@ -421,9 +415,7 @@ fun Routing.bookmarkRoutes(
                 }
             }
 
-            /**
-             * Delete Bookmark by Id.
-             */
+            // Delete Bookmark by Id.
             delete("{id}") {
                 val span =
                     tracer

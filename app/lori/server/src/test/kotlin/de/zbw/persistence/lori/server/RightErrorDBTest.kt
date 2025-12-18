@@ -83,15 +83,15 @@ class RightErrorDBTest : DatabaseTest() {
             )
 
             // Test Deletion by Template/RightId causing the errors
-            val templateError1 = TEST_RIGHT_ERROR.copy(conflictByRightId = "foo")
-            val templateError2 = TEST_RIGHT_ERROR.copy(conflictByRightId = "bar")
+            val templateError1 = TEST_RIGHT_ERROR.copy(conflictCausedByRightId = "foo")
+            val templateError2 = TEST_RIGHT_ERROR.copy(conflictCausedByRightId = "bar")
             dbConnector.insertError(templateError1)
             val errorIdTemplate2 = dbConnector.insertError(templateError2)
             assertThat(
                 dbConnector.getErrorList(10, 0).size,
                 `is`(2),
             )
-            dbConnector.deleteByCausingRightId(templateError1.conflictByRightId!!)
+            dbConnector.deleteByCausingRightId(templateError1.conflictCausedByRightId!!)
             assertThat(
                 dbConnector.getErrorList(10, 0).size,
                 `is`(1),
@@ -277,12 +277,12 @@ class RightErrorDBTest : DatabaseTest() {
             RightError(
                 errorId = null,
                 message = "Timing conflict",
-                conflictingWithRightId = "sourceRightId",
-                conflictByRightId = "conflictingRightId",
+                conflictWithExistingRightId = "sourceRightId",
+                conflictCausedByRightId = "conflictingRightId",
                 handle = "somehandle",
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByContext = "template name",
+                conflictCausedInContext = "template name",
                 testId = null,
                 createdBy = "user",
             )

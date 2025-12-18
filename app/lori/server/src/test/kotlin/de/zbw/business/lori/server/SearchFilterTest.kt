@@ -266,23 +266,15 @@ class SearchFilterTest : DatabaseTest() {
             ),
             arrayOf(
                 listOf(
-                    ZDBIdFilterAND(
-                        listOf(
-                            "333nase",
-                            "444nase",
-                        ),
-                    ),
-                ),
+                    "333nase",
+                    "444nase",
+                ).map { ZDBIdFilter(it) },
                 setOf(zdbIdFilterItems[2]),
                 "Search multiple values",
             ),
             arrayOf(
                 listOf(
-                    ZDBIdFilterAND(
-                        listOf(
-                            "444nase",
-                        ),
-                    ),
+                    ZDBIdFilter("444nase"),
                 ),
                 setOf(zdbIdFilterItems[1], zdbIdFilterItems[2]),
                 "Series id and journal id",

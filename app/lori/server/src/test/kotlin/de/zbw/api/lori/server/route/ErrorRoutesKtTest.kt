@@ -138,19 +138,19 @@ class ErrorRoutesKtTest {
             RightError(
                 errorId = 1,
                 message = "Timing conflict",
-                conflictingWithRightId = "sourceRightId",
-                conflictByRightId = "conflictingRightId",
+                conflictWithExistingRightId = "sourceRightId",
+                conflictCausedByRightId = "conflictingRightId",
                 handle = "somehandle",
                 createdOn = NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByContext = "template name",
+                conflictCausedInContext = "template name",
                 testId = null,
                 createdBy = "user1",
             )
         val TEST_ERROR_RESULT =
             ErrorQueryResult(
                 totalNumberOfResults = 1,
-                contextNames = listOf(TEST_ERROR.conflictByContext!!),
+                contextNames = listOf(TEST_ERROR.conflictCausedInContext!!),
                 conflictTypes = setOf(ConflictType.DATE_OVERLAP),
                 results = listOf(TEST_ERROR),
             )

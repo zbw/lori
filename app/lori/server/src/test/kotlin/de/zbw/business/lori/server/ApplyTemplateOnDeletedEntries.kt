@@ -66,12 +66,11 @@ class ApplyTemplateOnDeletedEntries : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "zdb3",
                         bookmarkId = 99,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_3,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_3,
+                                ),
                             ),
                         lastUpdatedOn = null,
                         lastUpdatedBy = "user2",
@@ -152,12 +151,11 @@ class ApplyTemplateOnDeletedEntries : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "zdb3withpublicationtype",
                         bookmarkId = 99,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_3,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_3,
+                                ),
                             ),
                         publicationTypeFilter =
                             PublicationTypeFilter(listOf(itemDeletedWhileTemplateIsActive.publicationType)),

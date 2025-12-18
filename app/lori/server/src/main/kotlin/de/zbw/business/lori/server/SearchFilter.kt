@@ -75,12 +75,17 @@ abstract class SearchFilter(
         ): SearchFilter? =
             try {
                 when (searchKey.lowercase()) {
-                    "acc" -> QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
-                    "com" ->
-                        CommunityNameFilter(searchValue)
+                    "acc" -> {
+                        QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
+                    }
 
-                    "col" ->
+                    "com" -> {
+                        CommunityNameFilter(searchValue)
+                    }
+
+                    "col" -> {
                         CollectionNameFilter(searchValue)
+                    }
 
                     "doi" -> {
                         QueryParameterParser.parseDoisFilter(searchValue)
@@ -99,41 +104,45 @@ abstract class SearchFilter(
                     }
 
                     "sig" -> {
-                        if (searchValue.split(",".toRegex()).size > 1) {
-                            QueryParameterParser.parsePaketSigelFilterOR(searchValue)
-                        } else {
-                            QueryParameterParser.parsePaketSigelFilterAND(searchValue)
-                        }
+                        QueryParameterParser.parsePaketSigelFilterOR(searchValue)
                     }
 
-                    "tit" ->
+                    "tit" -> {
                         TitleFilter(searchValue)
+                    }
 
                     "zdb" -> {
-                        if (searchValue.split(",".toRegex()).size > 1) {
-                            QueryParameterParser.parseZDBIdFilterOR(searchValue)
-                        } else {
-                            // Wildcards are possible
-                            QueryParameterParser.parseZDBIdFilterAND(searchValue)
-                        }
+                        QueryParameterParser.parseZDBIdFilterOR(searchValue)
                     }
 
-                    "hdlcol" ->
+                    "hdlcol" -> {
                         CollectionHandleFilter(searchValue)
+                    }
 
-                    "hdlcom" ->
+                    "hdlcom" -> {
                         CommunityHandleFilter(
                             searchValue,
                         )
+                    }
 
-                    "hdlsubcom" ->
+                    "hdlsubcom" -> {
                         SubcommunityHandleFilter(
                             searchValue,
                         )
+                    }
 
-                    "rightid" -> QueryParameterParser.parseRightIdFilter(searchValue)
-                    "lur" -> QueryParameterParser.parseLicenceUrlFilter(searchValue)
-                    "luk" -> QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
+                    "rightid" -> {
+                        QueryParameterParser.parseRightIdFilter(searchValue)
+                    }
+
+                    "lur" -> {
+                        QueryParameterParser.parseLicenceUrlFilter(searchValue)
+                    }
+
+                    "luk" -> {
+                        QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
+                    }
+
                     "ppn" -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             PPNsFilter(searchValue.split(",".toRegex()))
@@ -142,20 +151,37 @@ abstract class SearchFilter(
                         }
                     }
 
-                    "subcom" ->
+                    "subcom" -> {
                         SubcommunityNameFilter(
                             searchValue,
                         )
+                    }
 
-                    "ser" -> QueryParameterParser.parseSeriesFilter(searchValue)
-                    "typ" ->
+                    "ser" -> {
+                        QueryParameterParser.parseSeriesFilter(searchValue)
+                    }
+
+                    "typ" -> {
                         QueryParameterParser.parsePublicationTypeFilter(searchValue)
+                    }
 
-                    "jah" -> QueryParameterParser.parsePublicationYearFilter(searchValue)
-                    "zgp" -> QueryParameterParser.parseRightValidOnFilter(searchValue)
-                    "zgb" -> QueryParameterParser.parseStartDateFilter(searchValue)
-                    "zge" -> QueryParameterParser.parseEndDateFilter(searchValue)
-                    "reg" ->
+                    "jah" -> {
+                        QueryParameterParser.parsePublicationYearFilter(searchValue)
+                    }
+
+                    "zgp" -> {
+                        QueryParameterParser.parseRightValidOnFilter(searchValue)
+                    }
+
+                    "zgb" -> {
+                        QueryParameterParser.parseStartDateFilter(searchValue)
+                    }
+
+                    "zge" -> {
+                        QueryParameterParser.parseEndDateFilter(searchValue)
+                    }
+
+                    "reg" -> {
                         QueryParameterParser.parseFormalRuleFilter(
                             searchValue
                                 .uppercase()
@@ -165,24 +191,27 @@ abstract class SearchFilter(
                                     FormalRule.CC_LICENCE_NO_RESTRICTION.toString(),
                                 ).replace("ZBW-NUTZUNGSVEREINBARUNG", FormalRule.ZBW_USER_AGREEMENT.toString()),
                         )
+                    }
 
-                    "nor" ->
+                    "nor" -> {
                         QueryParameterParser.parseNoRightInformationFilter(
                             when (searchValue) {
                                 "on" -> "true"
                                 else -> null
                             },
                         )
+                    }
 
-                    "man" ->
+                    "man" -> {
                         QueryParameterParser.parseManualRightFilter(
                             when (searchValue) {
                                 "on" -> "true"
                                 else -> null
                             },
                         )
+                    }
 
-                    "del" ->
+                    "del" -> {
                         QueryParameterParser.parseDeletionsFilter(
                             when (searchValue) {
                                 "on" -> "true"
@@ -190,28 +219,35 @@ abstract class SearchFilter(
                                 else -> null
                             },
                         )
+                    }
 
-                    "tpl" ->
+                    "tpl" -> {
                         QueryParameterParser.parseTemplateNameFilter(
                             searchValue,
                         )
+                    }
 
-                    "acd" ->
+                    "acd" -> {
                         QueryParameterParser.parseAccessStateOnDate(
                             searchValue,
                         )
+                    }
 
-                    "ebid" ->
+                    "ebid" -> {
                         QueryParameterParser.parseEconbizIdFilter(
                             searchValue,
                         )
+                    }
 
-                    FilterType.STORAGE_DATE.keyAlias ->
+                    FilterType.STORAGE_DATE.keyAlias -> {
                         QueryParameterParser.parseStorageDateFilter(
                             searchValue,
                         )
+                    }
 
-                    else -> null
+                    else -> {
+                        null
+                    }
                 }
             } catch (_: IllegalArgumentException) {
                 null
@@ -684,32 +720,27 @@ class PublicationTypeFilter(
     }
 }
 
-class PaketSigelFilterAND(
-    val paketSigels: List<String>,
+class PaketSigelFilter(
+    val paketSigel: String,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
+        MetadataDB.COLUMN_METADATA_PAKET_SIGEL,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "(? = ANY($dbColumnName))"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setString(localCounter++, paketSigel)
         return localCounter
     }
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun toSQLString(): String = paketSigels.joinToString(separator = ",")
+    override fun toSQLString(): String = paketSigel
 
     override fun getFilterType(): FilterType = FilterType.PAKET_SIGEL
-
-    companion object {
-        fun fromString(s: String?): PaketSigelFilterAND? = QueryParameterParser.parsePaketSigelFilterAND(s)
-    }
 }
 
 class PaketSigelFilterOR(
@@ -789,34 +820,29 @@ class ZDBIdFilterOR(
 }
 
 /**
- * Represents the ZDB filter in the search bar. Returns only entries matching all given zdbIds.
+ * Represents the ZDB filter in the search bar.
  */
-class ZDBIdFilterAND(
-    val zdbIds: List<String>,
+class ZDBIdFilter(
+    val zdbId: String,
 ) : MetadataSearchFilter(
-        MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
+        MetadataDB.COLUMN_METADATA_ZDB_IDS,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String = "(? = ANY($dbColumnName))"
 
     override fun setSQLParameter(
         counter: Int,
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
-        val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setString(localCounter++, zdbId)
         return localCounter
     }
 
-    override fun toSQLString(): String = zdbIds.joinToString(separator = ",")
+    override fun toSQLString(): String = zdbId
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
     override fun getFilterType(): FilterType = FilterType.ZDB_ID
-
-    companion object {
-        fun fromString(s: String?): ZDBIdFilterAND? = QueryParameterParser.parseZDBIdFilterAND(s)
-    }
 }
 
 class SeriesFilter(
@@ -1254,15 +1280,24 @@ class FormalRuleFilter(
         ) {
             val clause =
                 when (it) {
-                    FormalRule.LICENCE_CONTRACT -> "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
-                    FormalRule.ZBW_USER_AGREEMENT -> "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
-                    FormalRule.CC_LICENCE_NO_RESTRICTION ->
+                    FormalRule.LICENCE_CONTRACT -> {
+                        "${DatabaseConnector.COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                    }
+
+                    FormalRule.ZBW_USER_AGREEMENT -> {
+                        "${DatabaseConnector.COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
+                    }
+
+                    FormalRule.CC_LICENCE_NO_RESTRICTION -> {
                         "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
                             "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +
                             "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'licenses') AND " +
                             "${MetadataDB.TS_LICENCE_URL} is not null"
+                    }
 
-                    FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
+                    FormalRule.COPYRIGHT_EXCEPTION_RISKFREE -> {
+                        "${ALIAS_ITEM_RIGHT}.${RightDB.COLUMN_HAS_LEGAL_RISK} = false"
+                    }
                 }
             "($WHERE_CLAUSE_SKELETON_PREFIX $clause $WHERE_CLAUSE_SKELETON_POSTFIX)"
         }

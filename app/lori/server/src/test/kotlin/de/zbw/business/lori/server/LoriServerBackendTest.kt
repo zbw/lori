@@ -1019,12 +1019,11 @@ class LoriServerBackendTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "zdb1Bookmark",
                         bookmarkId = 0,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_1,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_1,
+                                ),
                             ),
                     ),
                 )

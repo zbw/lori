@@ -17,7 +17,7 @@ import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.PPNFilter
-import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PaketSigelFilterOR
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
@@ -27,7 +27,7 @@ import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.StorageDateFilter
 import de.zbw.business.lori.server.TemplateNameFilter
-import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.ZDBIdFilterOR
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ConflictType
@@ -89,6 +89,7 @@ object QueryParameterParser {
                 val parseTo = parseDate(tokens[1]) ?: return null
                 StorageDateFilter(parseFrom, parseTo)
             }
+
             1 -> {
                 val parseDate = parseDate(tokens[0]) ?: return null
                 if (s.startsWith("--")) {
@@ -97,8 +98,10 @@ object QueryParameterParser {
                     StorageDateFilter(from = parseDate, to = null)
                 }
             }
-            else ->
+
+            else -> {
                 null
+            }
         }
     }
 
@@ -130,7 +133,7 @@ object QueryParameterParser {
         return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilterOR(it) }
     }
 
-    fun parsePaketSigelFilterAND(s: String?): PaketSigelFilterAND? {
+    fun parsePaketSigelFilter(s: String?): List<PaketSigelFilter>? {
         if (s == null) {
             return null
         }
@@ -140,7 +143,7 @@ object QueryParameterParser {
                 .map {
                     escapeWildcards(it)
                 }
-        return paketSigelIds.takeIf { it.isNotEmpty() }?.let { PaketSigelFilterAND(it) }
+        return paketSigelIds.takeIf { it.isNotEmpty() }?.map { PaketSigelFilter(it) }
     }
 
     fun parseZDBIdFilterOR(s: String?): ZDBIdFilterOR? {
@@ -156,7 +159,7 @@ object QueryParameterParser {
         return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilterOR(it) }
     }
 
-    fun parseZDBIdFilterAND(s: String?): ZDBIdFilterAND? {
+    fun parseZDBIdFilters(s: String?): List<ZDBIdFilter>? {
         if (s == null) {
             return null
         }
@@ -166,7 +169,7 @@ object QueryParameterParser {
                 .map {
                     escapeWildcards(it)
                 }
-        return zdbIds.takeIf { it.isNotEmpty() }?.let { ZDBIdFilterAND(it) }
+        return zdbIds.takeIf { it.isNotEmpty() }?.map { ZDBIdFilter(it) }
     }
 
     fun parseSeriesFilter(s: String?): SeriesFilter? {
@@ -226,6 +229,7 @@ object QueryParameterParser {
                     date = parsedDate,
                 )
             }
+
             1 -> {
                 val parsedDate = parseDate(tokens[0]) ?: return null
                 AccessStateOnDateFilter(
@@ -233,6 +237,7 @@ object QueryParameterParser {
                     date = parsedDate,
                 )
             }
+
             else -> {
                 null
             }

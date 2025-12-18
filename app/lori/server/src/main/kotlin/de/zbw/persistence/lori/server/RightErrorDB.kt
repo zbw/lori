@@ -105,12 +105,12 @@ class RightErrorDB(
                 RightError(
                     errorId = rs.getInt(1),
                     handle = rs.getString(2),
-                    conflictByRightId = rs.getString(3),
-                    conflictingWithRightId = rs.getString(4),
+                    conflictCausedByRightId = rs.getString(3),
+                    conflictWithExistingRightId = rs.getString(4),
                     message = rs.getString(5),
                     createdOn = rs.getTimestamp(6, utcCalendar).toOffsetDateTime(),
                     conflictType = ConflictType.valueOf(rs.getString(7)),
-                    conflictByContext = rs.getString(8),
+                    conflictCausedInContext = rs.getString(8),
                     testId = rs.getString(9),
                     createdBy = rs.getString(10),
                 )
@@ -304,16 +304,16 @@ class RightErrorDB(
         ): PreparedStatement =
             prep.apply {
                 this.setString(1, rightError.handle)
-                this.setIfNotNull(2, rightError.conflictByRightId) { value, idx, prepStmt ->
+                this.setIfNotNull(2, rightError.conflictCausedByRightId) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
-                this.setIfNotNull(3, rightError.conflictingWithRightId) { value, idx, prepStmt ->
+                this.setIfNotNull(3, rightError.conflictWithExistingRightId) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
                 this.setString(4, rightError.message)
                 this.setTimestamp(5, Timestamp.from(rightError.createdOn.toInstant()), utcCalendar)
                 this.setString(6, rightError.conflictType.toString())
-                this.setIfNotNull(7, rightError.conflictByContext) { value, idx, prepStmt ->
+                this.setIfNotNull(7, rightError.conflictCausedInContext) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(8, rightError.testId) { value, idx, prepStmt ->

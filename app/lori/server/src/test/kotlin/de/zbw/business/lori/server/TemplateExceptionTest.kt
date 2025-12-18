@@ -38,12 +38,11 @@ class TemplateExceptionTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "allZDB2",
                         bookmarkId = 10,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_2,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_2,
+                                ),
                             ),
                     ),
                 )
@@ -53,12 +52,11 @@ class TemplateExceptionTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "zdb2AndHandle",
                         bookmarkId = 20,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_2,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_2,
+                                ),
                             ),
                         searchTerm = "hdl:bar",
                     ),

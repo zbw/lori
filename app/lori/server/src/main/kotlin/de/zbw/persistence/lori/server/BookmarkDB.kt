@@ -8,7 +8,7 @@ import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
@@ -16,7 +16,7 @@ import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.StorageDateFilter
-import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_BOOKMARK
@@ -137,6 +137,8 @@ class BookmarkDB(
         const val COLUMN_FILTER_MANUAL_RIGHT = "filter_manual_right"
         const val COLUMN_FILTER_ACCESS_STATE_ON = "filter_access_state_on"
         const val COLUMN_FILTER_STORAGE_DATE = "filter_storage_date"
+        const val COLUMN_FILTER_ZDB_ID = "filter_zdb_id"
+        const val COLUMN_FILTER_PAKET_SIGEL = "filter_paket_sigel"
         const val COLUMN_QUERYSTRING = "querystring"
 
         val utcCalendar: Calendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
@@ -146,7 +148,7 @@ class BookmarkDB(
                 "$COLUMN_BOOKMARK_ID,$COLUMN_BOOKMARK_NAME,description,search_term," +
                 "filter_publication_year,filter_access_state," +
                 "filter_start_date,filter_end_date,filter_formal_rule," +
-                "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+                "filter_valid_on,$COLUMN_FILTER_PAKET_SIGEL,$COLUMN_FILTER_ZDB_ID," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
@@ -160,7 +162,7 @@ class BookmarkDB(
                 "($COLUMN_BOOKMARK_NAME,search_term,description,filter_publication_year," +
                 "filter_access_state,filter_start_date," +
                 "filter_end_date,filter_formal_rule,filter_valid_on," +
-                "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
+                "$COLUMN_FILTER_PAKET_SIGEL,$COLUMN_FILTER_ZDB_ID,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on,created_by," +
                 "last_updated_by,filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
                 "$COLUMN_FILTER_MANUAL_RIGHT,$COLUMN_FILTER_ACCESS_STATE_ON,$COLUMN_QUERYSTRING," +
@@ -185,7 +187,7 @@ class BookmarkDB(
                 "($COLUMN_BOOKMARK_NAME,search_term,description,filter_publication_year," +
                 "filter_access_state,filter_start_date," +
                 "filter_end_date,filter_formal_rule,filter_valid_on," +
-                "filter_paket_sigel,filter_zdb_id,filter_no_right_information," +
+                "$COLUMN_FILTER_PAKET_SIGEL,$COLUMN_FILTER_ZDB_ID,filter_no_right_information," +
                 "filter_publication_type,created_on,last_updated_on," +
                 "created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
@@ -212,8 +214,8 @@ class BookmarkDB(
                 " filter_end_date = EXCLUDED.filter_end_date," +
                 " filter_formal_rule = EXCLUDED.filter_formal_rule," +
                 " filter_valid_on = EXCLUDED.filter_valid_on," +
-                " filter_paket_sigel = EXCLUDED.filter_paket_sigel," +
-                " filter_zdb_id = EXCLUDED.filter_zdb_id," +
+                " $COLUMN_FILTER_PAKET_SIGEL = EXCLUDED.$COLUMN_FILTER_PAKET_SIGEL," +
+                " $COLUMN_FILTER_ZDB_ID = EXCLUDED.$COLUMN_FILTER_ZDB_ID," +
                 " filter_no_right_information = EXCLUDED.filter_no_right_information," +
                 " filter_publication_type = EXCLUDED.filter_publication_type," +
                 " last_updated_on = EXCLUDED.last_updated_on," +
@@ -232,7 +234,7 @@ class BookmarkDB(
                 " $COLUMN_BOOKMARK_ID,$COLUMN_BOOKMARK_NAME,description,search_term," +
                 "filter_publication_year,filter_access_state," +
                 "filter_start_date,filter_end_date,filter_formal_rule," +
-                "filter_valid_on,filter_paket_sigel,filter_zdb_id," +
+                "filter_valid_on,$COLUMN_FILTER_PAKET_SIGEL,$COLUMN_FILTER_ZDB_ID," +
                 "filter_no_right_information,filter_publication_type," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
                 "filter_series,filter_template_name,$COLUMN_FILTER_LICENCE_URL," +
@@ -259,8 +261,20 @@ class BookmarkDB(
                 endDateFilter = EndDateFilter.fromString(rs.getString(localCounter++)),
                 formalRuleFilter = FormalRuleFilter.fromString(rs.getString(localCounter++)),
                 validOnFilter = RightValidOnFilter.fromString(rs.getString(localCounter++)),
-                paketSigelFilter = PaketSigelFilterAND.fromString(rs.getString(localCounter++)),
-                zdbIdFilter = ZDBIdFilterAND.fromString(rs.getString(localCounter++)),
+                paketSigelFilters =
+                    (
+                        rs
+                            .getArray(
+                                localCounter++,
+                            )?.array as? Array<out Any?>
+                    )?.filterIsInstance<String>()?.map { PaketSigelFilter(it) },
+                zdbIdFilters =
+                    (
+                        rs
+                            .getArray(
+                                localCounter++,
+                            )?.array as? Array<out Any?>
+                    )?.filterIsInstance<String>()?.map { ZDBIdFilter(it) },
                 noRightInformationFilter =
                     NoRightInformationFilter.fromString(
                         rs.getBoolean(localCounter++).toString(),
@@ -328,11 +342,20 @@ class BookmarkDB(
                 this.setIfNotNull(localCounter++, bookmark.validOnFilter) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value.toSQLString())
                 }
-                this.setIfNotNull(localCounter++, bookmark.paketSigelFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toSQLString())
+                this.setIfNotNull(localCounter++, bookmark.paketSigelFilters) { value, idx, prepStmt ->
+                    prepStmt.setArray(idx, prepStmt.connection.createArrayOf("text", value.map { it.toSQLString() }.toTypedArray()))
                 }
-                this.setIfNotNull(localCounter++, bookmark.zdbIdFilter) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value.toSQLString())
+                this.setIfNotNull(localCounter++, bookmark.zdbIdFilters) { value, idx, prepStmt ->
+                    prepStmt.setArray(
+                        idx,
+                        prepStmt.connection.createArrayOf(
+                            "text",
+                            value
+                                .map {
+                                    it.toSQLString()
+                                }.toTypedArray(),
+                        ),
+                    )
                 }
                 this.setIfNotNull(localCounter++, bookmark.noRightInformationFilter) { _, idx, prepStmt ->
                     prepStmt.setBoolean(idx, true)

@@ -11,15 +11,17 @@ import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.ManualRightFilter
+import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
+import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.RightValidOnFilter
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
-import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.ZDBIdFilter
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.SearchQueryResult
@@ -427,10 +429,10 @@ fun Routing.itemRoutes(
                         QueryParameterParser.parsePublicationYearFilter(call.request.queryParameters["filterPublicationYear"])
                     val publicationTypeFilter: PublicationTypeFilter? =
                         QueryParameterParser.parsePublicationTypeFilter(call.request.queryParameters["filterPublicationType"])
-                    val paketSigelFilter: PaketSigelFilterAND? =
-                        QueryParameterParser.parsePaketSigelFilterAND(call.request.queryParameters["filterPaketSigel"])
-                    val zdbIdFilter: ZDBIdFilterAND? =
-                        QueryParameterParser.parseZDBIdFilterAND(call.request.queryParameters["filterZDBId"])
+                    val paketSigelFilters: List<PaketSigelFilter>? =
+                        QueryParameterParser.parsePaketSigelFilter(call.request.queryParameters["filterPaketSigel"])
+                    val zdbIdFilters: List<ZDBIdFilter>? =
+                        QueryParameterParser.parseZDBIdFilters(call.request.queryParameters["filterZDBId"])
                     val seriesFilter: SeriesFilter? =
                         QueryParameterParser.parseSeriesFilter(call.request.queryParameters["filterSeries"])
                     val licenceUrlFilter: LicenceUrlFilter? =
@@ -534,18 +536,20 @@ fun Routing.itemRoutes(
                         )
                         return@withContext
                     }
-                    val metadataFilters =
+                    val metadataFilters: List<MetadataSearchFilter> =
                         listOfNotNull(
-                            deletionsFilter,
-                            licenceUrlFilter,
-                            paketSigelFilter,
-                            publicationYearFilter,
-                            publicationTypeFilter,
-                            zdbIdFilter,
-                            seriesFilter,
-                            storageDateFilter,
-                        )
-                    val rightFilters =
+                            zdbIdFilters,
+                            paketSigelFilters,
+                        ).flatten() +
+                            listOfNotNull(
+                                deletionsFilter,
+                                licenceUrlFilter,
+                                publicationYearFilter,
+                                publicationTypeFilter,
+                                seriesFilter,
+                                storageDateFilter,
+                            )
+                    val rightFilters: List<RightSearchFilter> =
                         listOfNotNull(
                             accessStateFilter,
                             endDateFilter,
