@@ -1395,7 +1395,7 @@ class FormalRuleFilter(
                         "$COLUMN_RIGHT_ZBW_USER_AGREEMENT = true"
                     }
 
-                    // TODO(CB): Handle this special for statistics
+                    // TODO(CB): Handle this special for statistics as well?
                     FormalRule.CC_LICENCE_NO_RESTRICTION -> {
                         "${DatabaseConnector.COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE} = false AND " +
                             "${MetadataDB.TS_LICENCE_URL} @@ $SQL_FUNC_TO_TS_QUERY('simple', 'creativecommons') AND " +

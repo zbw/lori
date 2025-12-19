@@ -95,6 +95,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
     ): FacetTransientSet =
         coroutineScope {
+            // TODO(CB): Return error when noRightInformationFilter is set with right filters in search expression
             val statisticsResponseDef: Deferred<StatisticsResponse> =
                 async(Dispatchers.IO) {
                     if (
@@ -103,7 +104,8 @@ class SearchDB(
                     ) {
                         // Case 1
                         statisticsService.getStatisticsNoFilter()
-                    } else if (!SearchExpressionResolution.hasRightQueries(searchExpression) &&
+                    } else if (
+                        !SearchExpressionResolution.hasRightQueries(searchExpression) &&
                         rightSearchFilter.isEmpty() && noRightInformationFilter == null
                     ) {
                         // Case 2
@@ -114,13 +116,23 @@ class SearchDB(
                     } else if (
                         !SearchExpressionResolution.hasMetadataQueries(searchExpression) &&
                         metadataSearchFilter.isEmpty() &&
-                        rightSearchFilter.all { !it.containsMetadataFilter() }
+                        rightSearchFilter.all { !it.containsMetadataFilter() } &&
+                        noRightInformationFilter == null
                     ) {
                         // Case 3
                         statisticsService.getStatisticsWithRightsFilter(
                             searchExpression = searchExpression,
                             rightSearchFilters = rightSearchFilter,
                             noRightInformationFilter = noRightInformationFilter,
+                        )
+                    } else if (
+                        !SearchExpressionResolution.hasRightQueries(searchExpression) &&
+                        noRightInformationFilter != null
+                    ) {
+                        // Case 5
+                        statisticsService.getStatisticsWithoutItems(
+                            searchExpression = searchExpression,
+                            metadataSearchFilters = metadataSearchFilter,
                         )
                     } else {
                         // Case 4

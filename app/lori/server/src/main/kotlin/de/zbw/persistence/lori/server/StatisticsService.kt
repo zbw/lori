@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.sql.Connection
 import java.sql.ResultSet
+import kotlin.collections.List
 
 class StatisticsService(
     private val connectionPool: ConnectionPool,
@@ -283,6 +284,100 @@ class StatisticsService(
                 } catch (t: Throwable) {
                     conn.rollback()
                     throw t
+                }
+            }
+        }
+
+    /**
+     * CASE 5:
+     * Returns metadata that have no corresponding entries in the item table -> No rights
+     */
+    suspend fun getStatisticsWithoutItems(
+        searchExpression: SearchExpression?,
+        metadataSearchFilters: List<MetadataSearchFilter>,
+    ): StatisticsResponse =
+        withContext(Dispatchers.IO) {
+            connectionPool.useConnection { conn ->
+                conn.autoCommit = false
+
+                try {
+                    val whereClause =
+                        buildWhereClause(
+                            searchExpression = searchExpression,
+                            metadataSearchFilter = metadataSearchFilters,
+                            rightSearchFilter = emptyList(),
+                            noRightInformationFilter = null,
+                            isStatistics = true,
+                        )
+                    val hasFilters = whereClause.isNotEmpty()
+
+                    // Create temp table with metadata that have NO item records
+                    val sql =
+                        """
+                        CREATE TEMP TABLE temp_metadata_without_items 
+                        ON COMMIT DROP
+                        AS
+                        SELECT 
+                            im.handle,
+                            im.paket_sigel,
+                            im.is_part_of_series,
+                            im.publication_type,
+                            im.zdb_ids,
+                            im.licence_url_filter
+                        FROM item_metadata im
+                        WHERE NOT EXISTS (
+                            SELECT 1
+                            FROM item i
+                            WHERE i.handle = im.handle
+                        )
+                        ${if (hasFilters) "AND $whereClause" else ""}
+                        """.trimIndent()
+
+                    // Execute with or without parameters
+                    if (hasFilters) {
+                        conn.prepareStatement(sql).use { stmt ->
+                            var counter = 1
+                            val searchPairs =
+                                searchExpression?.let { SearchExpressionResolution.getSearchPairs(it) }
+                                    ?: emptyList()
+                            searchPairs.forEach { f ->
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = stmt,
+                                    )
+                            }
+                            metadataSearchFilters.forEach { f ->
+                                counter =
+                                    f.setSQLParameter(
+                                        counter = counter,
+                                        preparedStatement = stmt,
+                                    )
+                            }
+                            stmt.execute()
+                        }
+                    } else {
+                        conn.createStatement().use { stmt ->
+                            stmt.execute(sql)
+                        }
+                    }
+
+                    conn.createStatement().execute("ANALYZE temp_metadata_without_items")
+
+                    // Get metadata statistics
+
+                    val metadataStats =
+                        getMetadataStatsFromTable(conn, "temp_metadata_without_items")
+
+                    // No rights stats since there are no item records
+                    val rightsStats = emptyList<StatisticResult>()
+
+                    conn.commit()
+
+                    StatisticsResponse(metadataStats, rightsStats)
+                } catch (e: Exception) {
+                    conn.rollback()
+                    throw e
                 }
             }
         }

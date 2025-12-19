@@ -11,6 +11,7 @@ import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.business.lori.server.type.PublicationType
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
+import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -49,6 +50,7 @@ class StatisticsServiceTest : DatabaseTest() {
                         templateName = null,
                     ),
                 ),
+            itemNoRight to emptyList(),
         )
 
     @BeforeClass
@@ -153,4 +155,37 @@ class StatisticsServiceTest : DatabaseTest() {
                 `is`(1),
             )
         }
+
+    @Test
+    fun testGetStatisticsWithNoRightsFilter() =
+        runBlocking {
+            val response =
+                statisticsService.getStatisticsWithoutItems(
+                    searchExpression = null,
+                    metadataSearchFilters =
+                        listOf(
+                            PublicationTypeFilter(
+                                listOf(PublicationType.ARTICLE),
+                            ),
+                        ),
+                )
+
+            assertThat(
+                response.metadataStats
+                    .first { it.metric == "publication_type" }
+                    .value,
+                `is`("ARTICLE"),
+            )
+        }
+
+    companion object {
+        val itemNoRight =
+            TEST_Metadata.copy(
+                handle = "11159/77104",
+                collectionName = "common zdb",
+                zdbIds = emptyList(),
+                publicationYear = 2010,
+                publicationType = PublicationType.ARTICLE,
+            )
+    }
 }
