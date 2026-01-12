@@ -118,6 +118,37 @@ pushLoriAppImage:
     - scp app/lori/server/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/lori_${CI_COMMIT_SHORT_SHA}.tar
     - ssh-agent -k
 
+pushLoriRefreshMaterializedViewsJobImage:
+  stage: push
+  needs:
+    - job: test
+      optional: true
+  rules:
+    - changes:
+        - job/refresh_materialized_views/**/*
+  dependencies:
+    - test
+  tags:
+    - dockersocket
+  script:
+    - ./gradlew :job:refresh_materialized_views:jibBuildTar
+    - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_IMAGEPUSHER"
+    - base64 -d "$SSH_PRIVATE_KEY_IMAGEPUSHER" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cat "$SSH_KNOWN_HOSTS_QS" "$SSH_KNOWN_HOSTS_PROD" > ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        scp job/refresh_materialized_views/build/jib-image.tar imagepusher@lori-prod.dmz3.zbw.eu:/var/tmp/refresh_materialized_views_${CI_COMMIT_SHORT_SHA}.tar
+      else
+        echo "Skipping production deploy: commit not merged to default branch"
+      fi
+    - scp job/refresh_materialized_views/build/jib-image.tar imagepusher@lori-qs.dmz3.zbw.eu:/var/tmp/refresh_materialized_views_${CI_COMMIT_SHORT_SHA}.tar
+
+
 pushLoriImportJobImage:
   stage: push
   needs:
@@ -246,6 +277,76 @@ deployToProd:
       sed -i "s/app-lori-server:[0-9a-zA-Z_.-]*/app-lori-server:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
       docker compose -f /srv/lori/docker-compose.yaml --profile "*" down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml up -d
+      docker ps
+      EOT
+
+deployRefreshMaterializedViewsToQs:
+  stage: deploy
+  needs:
+    - job: "pushLoriRefreshMaterializedViewsJobImage"
+      optional: true
+  environment: qs
+  rules:
+    - changes:
+        - job/refresh_materialized_views/**/*
+    # Manual step only on main branch after merge
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PIPELINE_SOURCE == "push"
+      when: manual
+      allow_failure: true
+
+    # Manual step during merge request pipeline
+    - if: $CI_OPEN_MERGE_REQUESTS
+      when: manual
+      allow_failure: true
+
+    # Default fallback: don’t run
+    - when: never
+  image:
+    name: $ALPINE
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_QS"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_QS" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_QS" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-qs.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/refresh_materialized_views_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-refresh_materialized_views:[0-9a-zA-Z_.-]*/job-refresh_materialized_views:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-qs/docker-compose-qs.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-refresh-materialized-views up -d
+      docker ps
+      EOT
+
+deployRefreshMaterializedViewsToProd:
+  stage: deploy
+  when: manual
+  needs: ["pushLoriRefreshMaterializedViewsJobImage"]
+  environment: production
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - job/refresh_materialized_views/**/*
+  image:
+    name: $ALPINE
+  script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh-client )'
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_PRIVATE_KEY_DOCKER_PROD"
+    - base64 -d "$SSH_PRIVATE_KEY_DOCKER_PROD" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - cp "$SSH_KNOWN_HOSTS_PROD" ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - |
+      ssh docker@lori-prod.dmz3.zbw.eu /bin/bash -s << EOT
+      docker load --input /var/tmp/refresh_materialized_views_${CI_COMMIT_SHORT_SHA}.tar && \
+      sed -i "s/job-refresh_materialized_views:[0-9a-zA-Z_.-]*/job-refresh_materialized_views:${CI_COMMIT_SHA:0:12}/g" /srv/lori/config-prod/docker-compose-prod.yaml && \
+      docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
+      docker compose -f /srv/lori/docker-compose.yaml --profile cronjob-refresh-materialized-views up -d
       docker ps
       EOT
 
