@@ -16,6 +16,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
@@ -27,7 +28,7 @@ import java.time.LocalDate
 
 class StatisticsServiceTest : DatabaseTest() {
     val connectionPool = ConnectionPool(testDataSource)
-    val statisticsService = StatisticsService(connectionPool)
+    val statisticsService = StatisticsService(connectionPool, tracer = tracer)
 
     private val backend =
         LoriServerBackend(
@@ -187,5 +188,7 @@ class StatisticsServiceTest : DatabaseTest() {
                 publicationYear = 2010,
                 publicationType = PublicationType.ARTICLE,
             )
+
+        private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.StatisticsServiceTest")
     }
 }

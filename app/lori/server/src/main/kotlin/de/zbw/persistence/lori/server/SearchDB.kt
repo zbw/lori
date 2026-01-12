@@ -109,7 +109,8 @@ class SearchDB(
                     } else if (
                         !SearchExpressionResolution.hasRightQueries(searchExpression) &&
                         rightSearchFilter.isEmpty() &&
-                        noRightInformationFilter == null
+                        noRightInformationFilter == null &&
+                        !SearchExpressionResolution.hasNoRightFilter(searchExpression)
                     ) {
                         // Case 2
                         statisticsService.getStatisticsWithMetadataFilter(

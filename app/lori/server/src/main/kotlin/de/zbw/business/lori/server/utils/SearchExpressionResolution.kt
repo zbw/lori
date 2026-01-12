@@ -1,6 +1,7 @@
 package de.zbw.business.lori.server.utils
 
 import de.zbw.business.lori.server.MetadataSearchFilter
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.type.SEAnd
@@ -72,6 +73,37 @@ object SearchExpressionResolution {
 
                 is SEVariable -> {
                     expression.searchFilter is RightSearchFilter
+                }
+
+                is SEPar -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SENotPar -> {
+                    hasRightQueries(expression.body)
+                }
+            }
+        }
+
+    fun hasNoRightFilter(expression: SearchExpression?): Boolean =
+        if (expression == null) {
+            false
+        } else {
+            when (expression) {
+                is SEAnd -> {
+                    hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
+
+                is SEOr -> {
+                    hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
+
+                is SENot -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SEVariable -> {
+                    expression.searchFilter is NoRightInformationFilter
                 }
 
                 is SEPar -> {

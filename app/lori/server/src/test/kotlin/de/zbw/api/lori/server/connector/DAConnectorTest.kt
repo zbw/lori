@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server.connector
 
+import StatisticsService
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.type.DABitstream
 import de.zbw.api.lori.server.type.DAChecksum
@@ -115,6 +116,7 @@ class DAConnectorTest {
                     LoriServerBackend(
                         mockk {
                             coEvery { metadataDB.upsertMetadataBatch(any()) } returns IntArray(1) { 1 }
+                            every { statisticsService } returns mockk<StatisticsService>()
                         },
                         mockk<LoriConfiguration>(),
                     ),
