@@ -10,6 +10,8 @@ import de.zbw.lori.api.CleanDownloadsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
+import de.zbw.lori.api.RefreshMaterializedViewsRequest
+import de.zbw.lori.api.RefreshMaterializedViewsResponse
 import io.grpc.Channel
 import io.grpc.ManagedChannelBuilder
 import io.opentelemetry.api.OpenTelemetry
@@ -56,6 +58,11 @@ class LoriClient(
     suspend fun cleanDownloads(request: CleanDownloadsRequest): CleanDownloadsResponse =
         runWithTracing("client_cleanDownloads") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
             s.cleanDownloads(request)
+        }
+
+    suspend fun refreshMaterializedViews(request: RefreshMaterializedViewsRequest): RefreshMaterializedViewsResponse =
+        runWithTracing("client_refreshMaterializedViews") { s: LoriServiceGrpcKt.LoriServiceCoroutineStub ->
+            s.refreshMaterializedViews(request)
         }
 
     private suspend fun <T> runWithTracing(

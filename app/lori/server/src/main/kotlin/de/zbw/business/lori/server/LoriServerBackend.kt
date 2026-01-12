@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import StatisticsService
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
@@ -67,6 +68,7 @@ import kotlin.math.ceil
 class LoriServerBackend(
     internal val dbConnector: DatabaseConnector,
     internal val config: LoriConfiguration,
+    val statisticsService: StatisticsService = dbConnector.statisticsService,
 ) {
     constructor(
         config: LoriConfiguration,

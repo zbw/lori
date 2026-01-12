@@ -85,8 +85,8 @@ import java.sql.ResultSet
  */
 class SearchDB(
     val connectionPool: ConnectionPool,
-    val statisticsService: StatisticsService = StatisticsService(connectionPool),
     private val tracer: Tracer,
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
 ) {
     suspend fun searchForFacets(
         searchExpression: SearchExpression?,
@@ -99,14 +99,17 @@ class SearchDB(
             val statisticsResponseDef: Deferred<StatisticsResponse> =
                 async(Dispatchers.IO) {
                     if (
-                        searchExpression == null && metadataSearchFilter.isEmpty() && rightSearchFilter.isEmpty() &&
+                        searchExpression == null &&
+                        metadataSearchFilter.isEmpty() &&
+                        rightSearchFilter.isEmpty() &&
                         noRightInformationFilter == null
                     ) {
                         // Case 1
                         statisticsService.getStatisticsNoFilter()
                     } else if (
                         !SearchExpressionResolution.hasRightQueries(searchExpression) &&
-                        rightSearchFilter.isEmpty() && noRightInformationFilter == null
+                        rightSearchFilter.isEmpty() &&
+                        noRightInformationFilter == null
                     ) {
                         // Case 2
                         statisticsService.getStatisticsWithMetadataFilter(

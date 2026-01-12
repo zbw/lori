@@ -4,11 +4,13 @@ import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.utils.SearchExpressionResolution
 import de.zbw.persistence.lori.server.ConnectionPool
+import de.zbw.persistence.lori.server.DatabaseConnector.Companion.runInTransaction
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PAKET_SIGEL
 import de.zbw.persistence.lori.server.SearchDB.Companion.buildWhereClause
 import de.zbw.persistence.lori.server.statistics.RefreshResult
 import de.zbw.persistence.lori.server.statistics.StatisticResult
 import de.zbw.persistence.lori.server.statistics.StatisticsResponse
+import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.sql.Connection
@@ -17,6 +19,7 @@ import kotlin.collections.List
 
 class StatisticsService(
     private val connectionPool: ConnectionPool,
+    private val tracer: Tracer,
 ) {
     /**
      * CASE 1: No filters - baseline statistics
@@ -24,8 +27,13 @@ class StatisticsService(
     suspend fun getStatisticsNoFilter(): StatisticsResponse =
         withContext(Dispatchers.IO) {
             connectionPool.useConnection { conn ->
-                conn.autoCommit = false
-                try {
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "getStatisticsNoFilter",
+                    sql = "",
+                    isReadOnly = true,
+                ) {
                     val metadataStats = mutableListOf<StatisticResult>()
 
                     // Execute metadata queries sequentially
@@ -44,11 +52,7 @@ class StatisticsService(
                     rightsStats.addAll(getRightsStatFromMV(conn, "zbw_user_agreement"))
                     rightsStats.addAll(getRightsStatFromMV(conn, "has_legal_risk"))
 
-                    conn.commit()
                     StatisticsResponse(metadataStats, rightsStats)
-                } catch (t: Throwable) {
-                    conn.rollback()
-                    throw t
                 }
             }
         }
@@ -63,7 +67,13 @@ class StatisticsService(
         withContext(Dispatchers.IO) {
             connectionPool.useConnection { conn ->
                 conn.autoCommit = false
-                try {
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "getStatisticsWithMetadataFilter",
+                    sql = "",
+                    isReadOnly = false,
+                ) {
                     val whereClause =
                         buildWhereClause(
                             searchExpression = searchExpression,
@@ -154,15 +164,10 @@ class StatisticsService(
                     val rightsStats =
                         getRightsStatsWithHandleFilter(conn)
 
-                    conn.commit()
-
                     StatisticsResponse(
                         metadataStats = metadataStats,
                         rightsStats = rightsStats,
                     )
-                } catch (t: Throwable) {
-                    conn.rollback()
-                    throw t
                 }
             }
         }
@@ -178,7 +183,13 @@ class StatisticsService(
         withContext(Dispatchers.IO) {
             connectionPool.useConnection { conn ->
                 conn.autoCommit = false
-                try {
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "getStatisticsWithRightsFilter",
+                    sql = "",
+                    isReadOnly = false,
+                ) {
                     createFilteredMetadataTableByRights(
                         conn,
                         searchExpression,
@@ -195,11 +206,7 @@ class StatisticsService(
                             noRightInformationFilter,
                         )
 
-                    conn.commit()
                     StatisticsResponse(metadataStats, rightsStats)
-                } catch (t: Throwable) {
-                    conn.rollback()
-                    throw t
                 }
             }
         }
@@ -216,8 +223,13 @@ class StatisticsService(
         withContext(Dispatchers.IO) {
             connectionPool.useConnection { conn ->
                 conn.autoCommit = false
-
-                try {
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "getStatisticsWithBothFilters",
+                    sql = "",
+                    isReadOnly = false,
+                ) {
                     val whereClause =
                         buildWhereClause(
                             searchExpression = searchExpression,
@@ -278,12 +290,7 @@ class StatisticsService(
                     val metadataStats = getMetadataStatsFromTable(conn, "temp_combined_filtered")
                     val rightsStats = getRightsStatsWithCombinedFilter(conn, "temp_combined_filtered")
 
-                    conn.commit()
-
                     StatisticsResponse(metadataStats, rightsStats)
-                } catch (t: Throwable) {
-                    conn.rollback()
-                    throw t
                 }
             }
         }
@@ -299,8 +306,13 @@ class StatisticsService(
         withContext(Dispatchers.IO) {
             connectionPool.useConnection { conn ->
                 conn.autoCommit = false
-
-                try {
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "getStatisticsWithoutItems",
+                    sql = "",
+                    isReadOnly = false,
+                ) {
                     val whereClause =
                         buildWhereClause(
                             searchExpression = searchExpression,
@@ -372,12 +384,7 @@ class StatisticsService(
                     // No rights stats since there are no item records
                     val rightsStats = emptyList<StatisticResult>()
 
-                    conn.commit()
-
                     StatisticsResponse(metadataStats, rightsStats)
-                } catch (e: Exception) {
-                    conn.rollback()
-                    throw e
                 }
             }
         }
@@ -829,63 +836,48 @@ class StatisticsService(
      */
     suspend fun refreshStatisticsMaterializedViews(): RefreshResult =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
-                val startTime = System.currentTimeMillis()
-
-                try {
-                    conn.createStatement().use { stmt ->
-                        // Use CONCURRENTLY to allow reads during refresh
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_paket_sigel")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_is_part_of_series")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_publication_type")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_zdb_ids")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_licence_url_filter")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_access_state")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_template_name")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_licence_contract")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_zbw_user_agreement")
-                        stmt.execute("REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_has_legal_risk")
-                    }
-
-                    val duration = System.currentTimeMillis() - startTime
-                    RefreshResult(success = true, durationMs = duration)
-                } catch (e: Exception) {
-                    val duration = System.currentTimeMillis() - startTime
-                    RefreshResult(success = false, durationMs = duration, error = e.message)
-                }
-            }
-        }
-
-    /**
-     * Get last refresh time for materialized views
-     */
-    suspend fun getLastRefreshTime(): Map<String, String?> =
-        withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
-                val sql =
-                    """
-                    SELECT 
-                        schemaname,
-                        matviewname,
-                        last_refresh
-                    FROM pg_matviews
-                    WHERE schemaname = 'public'
-                    AND matviewname IN ('mv_metadata_statistics', 'mv_rights_statistics')
-                    """.trimIndent()
-
-                val result = mutableMapOf<String, String?>()
-
-                conn.createStatement().use { stmt ->
-                    stmt.executeQuery(sql).use { rs ->
-                        while (rs.next()) {
-                            val viewName = rs.getString("matviewname")
-                            val lastRefresh = rs.getTimestamp("last_refresh")
-                            result[viewName] = lastRefresh?.toString()
+            connectionPool.useConnection("refreshStatisticsMaterializedViews") { conn ->
+                runInTransaction(
+                    connection = conn,
+                    tracer = tracer,
+                    spanName = "refreshStatisticsMaterializedViews",
+                    sql = STATEMENTS_REFRESH_MATERIALIZED_VIEWS.joinToString(),
+                    isReadOnly = false,
+                ) {
+                    val startTime = System.currentTimeMillis()
+                    try {
+                        conn.createStatement().use { stmt ->
+                            // Use CONCURRENTLY to allow reads during refresh
+                            STATEMENTS_REFRESH_MATERIALIZED_VIEWS.forEach { stmtMatView ->
+                                conn.prepareStatement(stmtMatView).use { stmt ->
+                                    stmt.execute()
+                                }
+                            }
                         }
+
+                        val duration = System.currentTimeMillis() - startTime
+                        RefreshResult(success = true, durationMs = duration)
+                    } catch (e: Exception) {
+                        val duration = System.currentTimeMillis() - startTime
+                        RefreshResult(success = false, durationMs = duration, error = e.message)
                     }
                 }
-
-                result
             }
         }
+
+    companion object {
+        val STATEMENTS_REFRESH_MATERIALIZED_VIEWS =
+            listOf(
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_paket_sigel;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_is_part_of_series;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_publication_type;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_zdb_ids;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_metadata_licence_url_filter;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_access_state;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_template_name;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_licence_contract;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_zbw_user_agreement;",
+                "REFRESH MATERIALIZED VIEW CONCURRENTLY mv_rights_has_legal_risk;",
+            )
+    }
 }

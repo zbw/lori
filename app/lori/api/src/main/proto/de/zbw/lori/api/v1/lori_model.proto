@@ -67,3 +67,12 @@ message SendMailResponse {
   string status = 1;
   string description = 2;
 }
+
+message RefreshMaterializedViewsResponse {
+  bool is_successful = 1;
+  uint64 duration_in_ms = 2;
+  string error_message = 3;
+}
+
+message RefreshMaterializedViewsRequest {
+}

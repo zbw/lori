@@ -49,12 +49,13 @@ class DatabaseConnector(
             tracer,
             groupDB,
         ),
-    internal val searchDB: SearchDB = SearchDB(connectionPool, StatisticsService(connectionPool), tracer),
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
     internal val userDB: UserDB = UserDB(connectionPool, tracer),
     internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),
     internal val exportJobDB: ExportJobDB = ExportJobDB(connectionPool, tracer),
     internal val genericJobDB: GenericJobDB = GenericJobDB(connectionPool, tracer),
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
+    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer, statisticsService),
 ) {
     constructor(
         config: LoriConfiguration,
