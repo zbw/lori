@@ -7,6 +7,8 @@ import de.zbw.lori.api.CheckForRightErrorsRequest
 import de.zbw.lori.api.CheckForRightErrorsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
+import de.zbw.lori.api.RefreshMaterializedViewsRequest
+import de.zbw.lori.api.RefreshMaterializedViewsResponse
 import io.grpc.Channel
 import io.mockk.coEvery
 import io.mockk.every
@@ -80,6 +82,26 @@ class LoriClientTest {
                     openTelemetry = OpenTelemetry.noop(),
                 )
             val received = client.applyTemplates((ApplyTemplatesRequest.getDefaultInstance()))
+            assertThat(received, `is`(expected))
+        }
+    }
+
+    @Test
+    fun testRefreshMaterializedViews() {
+        runBlocking {
+            val expected = RefreshMaterializedViewsResponse.getDefaultInstance()
+            val client =
+                LoriClient(
+                    configuration = LoriClientConfiguration(port = 10000, address = "foo", deadlineInMilli = 2000L),
+                    channel = mockk<Channel>(),
+                    stub =
+                        mockk {
+                            coEvery { refreshMaterializedViews(any(), any()) } returns expected
+                            every { withDeadlineAfter(any(), any()) } returns this
+                        },
+                    openTelemetry = OpenTelemetry.noop(),
+                )
+            val received = client.refreshMaterializedViews((RefreshMaterializedViewsRequest.getDefaultInstance()))
             assertThat(received, `is`(expected))
         }
     }
