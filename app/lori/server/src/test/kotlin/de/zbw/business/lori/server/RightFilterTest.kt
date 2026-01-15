@@ -937,8 +937,8 @@ class RightFilterTest : DatabaseTest() {
                 restrictedOpenContentLicence = false,
                 successorId = null,
                 zbwUserAgreement = true,
-                templateDescription = "some description",
-                templateName = "exampleTemplate",
+                templateDescription = null,
+                templateName = null,
                 groups = null,
                 groupIds = emptyList(),
             )

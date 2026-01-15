@@ -40,10 +40,10 @@ import java.util.TimeZone
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
     private val groupDB: GroupDB,
-) {
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_RIGHT) {
     suspend fun insertRight(right: ItemRight): String =
         DatabaseConnector
             .insertReturningKeys(

@@ -17,6 +17,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_RIGHT
 import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES_LOWER
@@ -800,7 +801,7 @@ class CreatedOnFilter(
     val createdOn: Instant,
     val comparisonOp: ComparisonOperator,
 ) : MetadataSearchFilter(
-        dbColumnName = MetadataDB.COLUMN_METADATA_CREATED_ON,
+        dbColumnName = COLUMN_METADATA_CREATED_ON,
     ) {
     override fun toWhereClause(): String = "(${ALIAS_ITEM_METADATA}.$dbColumnName ${comparisonOp.toSQL()} ?)"
 
@@ -816,7 +817,7 @@ class CreatedOnFilter(
         return localCounter
     }
 
-    override fun toString(): String = ""
+    override fun toString(): String = "${COLUMN_METADATA_CREATED_ON} ${comparisonOp.toSQL()} $createdOn"
 
     override fun toSQLString(): String = ""
 

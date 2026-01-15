@@ -76,6 +76,20 @@ class DatabaseConnector(
         }
     }
 
+    // For testing only!
+    internal suspend fun cleanAllTables() {
+        userDB.cleanTable()
+        bookmarkTemplateDB.cleanTable()
+        groupDB.cleanTable()
+        bookmarkDB.cleanTable()
+        itemDB.cleanTable()
+        metadataDB.cleanTable()
+        rightErrorDB.cleanTable()
+        rightDB.cleanTable()
+        exportJobDB.cleanTable()
+        genericJobDB.cleanTable()
+    }
+
     companion object {
         const val TABLE_NAME_BOOKMARK = "bookmark"
         const val TABLE_NAME_EXPORT_JOBS = "export_jobs"

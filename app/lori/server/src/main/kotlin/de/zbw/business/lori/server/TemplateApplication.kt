@@ -67,7 +67,7 @@ class TemplateApplication(
                 skippedApplication = true,
             )
         }
-        if (right.endDate != null && right.endDate < LocalDate.now()) {
+        if (right.endDate != null && right.endDate < LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN)) {
             LOG.info("Template ${right.rightId}: Not applied due to end date lying in the past.")
             return TemplateApplicationResult(
                 rightId = rightId,

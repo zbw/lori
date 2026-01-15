@@ -21,9 +21,9 @@ import java.util.TimeZone
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightErrorDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_RIGHT_ERROR) {
     suspend fun deleteErrorById(errorId: Int): Int =
         DatabaseConnector.executeUpdate(
             connectionPool = connectionPool,

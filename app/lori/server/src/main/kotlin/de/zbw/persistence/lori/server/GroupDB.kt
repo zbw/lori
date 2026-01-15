@@ -25,10 +25,10 @@ import kotlin.collections.map
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class GroupDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
     private val gson: Gson,
-) {
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_RIGHT_GROUP) {
     suspend fun insertGroup(
         group: Group,
         useGivenId: Boolean = false,

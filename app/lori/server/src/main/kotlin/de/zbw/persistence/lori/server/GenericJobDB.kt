@@ -18,9 +18,9 @@ import java.util.UUID
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class GenericJobDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, tableName = TABLE_NAME_JOBS) {
     suspend fun insertJob(genericJob: GenericJob): String =
         DatabaseConnector
             .insertReturningKeys(

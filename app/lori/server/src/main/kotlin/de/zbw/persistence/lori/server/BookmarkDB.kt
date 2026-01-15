@@ -37,9 +37,13 @@ import java.util.TimeZone
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class BookmarkDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(
+        connectionPool = connectionPool,
+        tracer = tracer,
+        tableName = TABLE_NAME_BOOKMARK,
+    ) {
     suspend fun deleteBookmarkById(bookmarkId: Int): Int =
         DatabaseConnector.executeUpdate(
             connectionPool = connectionPool,

@@ -54,6 +54,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.filter
@@ -205,13 +206,13 @@ class LoriServerBackend(
             )
         deletedHandles.forEach { transient ->
             if (!transient.isDeleted) {
-                // TODAY - 1 is the deletion date
+                // TODAY is the deletion date
                 deleteAndUpdateManualRightsByHandle(
-                    instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate(),
+                    instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate().minusDays(1L),
                     transient.handle,
                 )
             } else {
-                // Entry got already deleted in past. Then lastUpdatedOn is deletion date
+                // Entry got already deleted in the past. Then lastUpdatedOn is deletion date
                 deleteAndUpdateManualRightsByHandle(
                     transient.lastUpdatedOn
                         .atZone(TimezoneUtil.TIME_ZONE_BERLIN)
@@ -251,8 +252,8 @@ class LoriServerBackend(
             }
 
         // Templates applying only in the future will be deleted as well
-        templateRights
-            .filter { it.startDate > deletionDate }
+        val (futureTemplates, nonFutureTemplates) = templateRights.partition { it.startDate > deletionDate }
+        futureTemplates
             .forEach {
                 deletionsAndUpdates += deleteItemEntry(handle, it.rightId!!)
             }
@@ -263,7 +264,10 @@ class LoriServerBackend(
                     (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
                 }
 
-        val deletionDateGerman = deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))
+        val currentTimeFormat =
+            ZonedDateTime
+                .ofInstant(Instant.now(), TimezoneUtil.TIME_ZONE_BERLIN)
+                .format(DateTimeFormatter.ISO_DATE_TIME)
         if (rightToSetNewEndDate.isNotEmpty()) {
             rightToSetNewEndDate
                 .first()
@@ -272,27 +276,18 @@ class LoriServerBackend(
                         dbConnector.rightDB.upsertRight(
                             it.copy(
                                 endDate = deletionDate,
-                                lastUpdatedBy = "Automatisch $deletionDateGerman",
+                                lastUpdatedBy = "Automatisch $currentTimeFormat",
                                 notesManagementRelated =
-                                    "Enddatum automatisch auf Item-Löschdatum" +
-                                        " ${deletionDate.format(DateTimeFormatter.ofPattern("dd-MM-YYYY"))}" +
-                                        " gesetzt.",
+                                    "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
                             ),
                         )
                 }
         }
-        val currentTemplate =
-            dbConnector.rightDB
-                .getRightsByIds(
-                    rightIds,
-                ).filter { it.isTemplate }
-                .filter {
-                    (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
-                }
-
-        if (currentTemplate.isNotEmpty()) {
+        nonFutureTemplates.forEach { template: ItemRight ->
             // Remove old template
-            val templateId = currentTemplate.first().rightId!!
+            val isCurrentTemplate =
+                (template.endDate == null || template.endDate > deletionDate) && template.startDate <= deletionDate
+            val templateId = template.rightId!!
             val firstTemplateApplication: LocalDate =
                 dbConnector.itemDB
                     .getItemRowByHandleAndRightId(handle = handle, rightId = templateId)
@@ -308,14 +303,13 @@ class LoriServerBackend(
                     )
             // Create a new manual entry
             val newManualRight: ItemRight =
-                currentTemplate
-                    .first()
+                template
                     .copy(
                         startDate =
-                            if (currentTemplate.first().startDate < firstTemplateApplication) {
+                            if (template.startDate < firstTemplateApplication) {
                                 firstTemplateApplication
                             } else {
-                                currentTemplate.first().startDate
+                                template.startDate
                             },
                         isTemplate = false,
                         templateName = null,
@@ -324,14 +318,18 @@ class LoriServerBackend(
                         successorId = null,
                         exceptionOfId = null,
                         hasExceptionId = null,
-                        endDate = deletionDate,
-                        createdBy = "Automatisch $deletionDateGerman",
-                        lastUpdatedBy = "Automatisch $deletionDateGerman",
+                        endDate =
+                            if (isCurrentTemplate) {
+                                deletionDate
+                            } else {
+                                template.endDate
+                            },
+                        createdBy = "Automatisch $currentTimeFormat",
+                        lastUpdatedBy = "Automatisch $currentTimeFormat",
                         notesManagementRelated =
                             "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
                                 " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
-                                " bis zum Item-Löschdatum" +
-                                " $deletionDateGerman abzubilden",
+                                " bis zur Item-Löschung abzubilden",
                     )
             val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
             dbConnector.itemDB.insertItem(
@@ -434,6 +432,7 @@ class LoriServerBackend(
                 val adjustedRights: List<ItemRight> =
                     rights
                         .map { r ->
+                            if (!r.isTemplate) return@map listOf(r)
                             val firstApplicationDate =
                                 r.rightId
                                     ?.let {

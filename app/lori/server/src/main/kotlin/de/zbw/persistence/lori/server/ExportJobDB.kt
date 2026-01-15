@@ -18,9 +18,9 @@ import java.util.UUID
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class ExportJobDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_EXPORT_JOBS) {
     suspend fun insertJob(exportJob: ExportJob): String =
         DatabaseConnector
             .insertReturningKeys(

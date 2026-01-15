@@ -20,9 +20,9 @@ import java.util.TimeZone
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class ItemDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM) {
     suspend fun getRightIdsByHandle(handle: String): List<String> =
         DatabaseConnector.select(
             connectionPool = connectionPool,

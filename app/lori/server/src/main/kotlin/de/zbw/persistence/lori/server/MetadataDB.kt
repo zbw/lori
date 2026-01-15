@@ -25,9 +25,9 @@ import kotlin.collections.first
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MetadataDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_METADATA) {
     internal suspend fun deleteMetadata(handles: List<String>): Int =
         DatabaseConnector.executeUpdate(
             connectionPool = connectionPool,
