@@ -13,10 +13,12 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
+import org.apache.logging.log4j.LogManager
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.Assert.assertTrue
 import org.testng.annotations.AfterClass
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 import java.time.Instant
 import java.time.LocalDate
@@ -49,11 +51,16 @@ class MetadataDeleteTest : DatabaseTest() {
         )
 
     @AfterClass
-    fun afterTests() {
+    fun afterClass() {
+        unmockkAll()
+    }
+
+    @BeforeMethod
+    fun beforeMethod() {
         runBlocking {
+            LOG.info("Running cleanAllTables")
             backend.dbConnector.cleanAllTables()
         }
-        unmockkAll()
     }
 
     @Test
@@ -82,18 +89,11 @@ class MetadataDeleteTest : DatabaseTest() {
             // Then
             assertThat(
                 markedAsDeleted,
-                `is`(2),
+                `is`(1),
             )
 
             val receivedMetadata = backend.getMetadataElementsByIds(listOf(deletedMetadata.handle, upToDateMetadata.handle))
 
-            // Delete every entry to clean up table
-            backend.dbConnector.metadataDB.deleteMetadata(
-                listOf(
-                    deletedMetadata.handle,
-                    upToDateMetadata.handle,
-                ),
-            )
             assertThat(
                 receivedMetadata.toSet(),
                 `is`(
@@ -307,6 +307,7 @@ class MetadataDeleteTest : DatabaseTest() {
                 resultAfterDeletion.first().rights.sortedBy { it.startDate }.map {
                     Pair(it.startDate, it.endDate)
                 }
+
             assertThat(
                 times,
                 `is`(
@@ -314,6 +315,76 @@ class MetadataDeleteTest : DatabaseTest() {
                         Pair(LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31)),
                         Pair(LocalDate.of(2025, 12, 18), LocalDate.of(2025, 12, 30)),
                         Pair(LocalDate.of(2025, 12, 31), LocalDate.of(2025, 12, 31)),
+                    ),
+                ),
+            )
+        }
+
+    @Test
+    fun testRightEntryActiveWhenDeleting() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            mockkStatic(LocalDate::class)
+            every { LocalDate.now(any<ZoneId>()) } returns LocalDate.of(2025, 12, 17)
+            every { Instant.now() } returns TEMPLATE_APPLICATION_DATE.toInstant()
+
+            val newlyDeletedMetadata =
+                TEST_Metadata.copy(
+                    handle = "11159/7086",
+                    deleted = false,
+                    zdbIds = listOf(ZDB_1),
+                    paketSigel = listOf(SIGEL_1),
+                )
+
+            backend.insertMetadataElement(newlyDeletedMetadata)
+
+            // Add manual right entries
+            val rights =
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2025, 1, 10),
+                        endDate = LocalDate.of(2027, 1, 31),
+                    ),
+                )
+            rights.forEach { right ->
+                val r = backend.insertRight(right)
+                when (val ret = backend.insertItemEntry(newlyDeletedMetadata.handle, r)) {
+                    is Either.Left -> {
+                        error("Error on inserting a right information: ${ret.value}")
+                    }
+
+                    is Either.Right<*> -> {}
+                }
+            }
+
+            // when
+            every { LocalDate.now(any<ZoneId>()) } returns LocalDate.of(2026, 1, 1)
+            every { Instant.now() } returns DELETION_DATE.toInstant()
+
+            val markedAsDeleted: Int = backend.updateMetadataAsDeleted(DELETION_DATE.toInstant())
+            assertThat(
+                markedAsDeleted,
+                `is`(1),
+            )
+            val resultAfterDeletion = backend.getItemList(1, 0)
+            assertThat(
+                resultAfterDeletion.first().rights.size,
+                `is`(1),
+            )
+
+            assertTrue(
+                resultAfterDeletion.first().rights.all { !it.isTemplate },
+            )
+
+            val times =
+                resultAfterDeletion.first().rights.sortedBy { it.startDate }.map {
+                    Pair(it.startDate, it.endDate)
+                }
+            assertThat(
+                times,
+                `is`(
+                    listOf(
+                        Pair(LocalDate.of(2025, 1, 10), LocalDate.of(2025, 12, 31)),
                     ),
                 ),
             )
@@ -358,6 +429,6 @@ class MetadataDeleteTest : DatabaseTest() {
 
         const val ZDB_1 = "zdb1"
         const val SIGEL_1 = "sigel1"
-        val TODAY: LocalDate = LocalDate.of(2026, 1, 9)
+        private val LOG = LogManager.getLogger(MetadataDeleteTest::class.java)
     }
 }
