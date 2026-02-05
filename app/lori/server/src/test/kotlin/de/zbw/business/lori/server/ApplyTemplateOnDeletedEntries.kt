@@ -20,6 +20,7 @@ import org.testng.annotations.Test
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 
 class ApplyTemplateOnDeletedEntries : DatabaseTest() {
@@ -59,6 +60,7 @@ class ApplyTemplateOnDeletedEntries : DatabaseTest() {
             every { Instant.now() } returns CREATED_ON.plusDays(3L).toInstant()
             mockkStatic(LocalDate::class)
             every { LocalDate.now() } returns CREATED_ON.plusDays(3L).toLocalDate()
+            every { LocalDate.now(any<ZoneId>()) } returns LocalDate.of(2022, 1, 3)
 
             // Create bookmark and Template
             val bookmarkId =
