@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
@@ -7,6 +8,7 @@ import de.zbw.business.lori.server.type.ItemRight
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_RIGHT
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -29,16 +31,24 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightDBTest : DatabaseTest() {
-    private val dbConnector =
-        DatabaseConnector(
-            connectionPool = ConnectionPool(testDataSource),
-            tracer = OpenTelemetry.noop().getTracer("foo"),
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connectionPool = ConnectionPool(testDataSource),
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk {
+                every { url } returns "my_url"
+            },
         )
 
     @BeforeMethod
     fun beforeTest() {
         mockkStatic(Instant::class)
         every { Instant.now() } returns NOW.toInstant()
+        runBlocking {
+            backend.dbConnector.cleanAllTables()
+        }
     }
 
     @AfterMethod
@@ -54,8 +64,11 @@ class RightDBTest : DatabaseTest() {
 
             // Insert
             // when
-            val generatedRightId = dbConnector.rightDB.insertRight(initialRight)
-            val receivedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
+            val generatedRightId =
+                backend.dbConnector.rightDB.insertRight(
+                    initialRight.copy(hasLegalRisk = null),
+                )
+            val receivedRights: List<ItemRight> = backend.dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
 
             // then
             assertThat(
@@ -65,10 +78,11 @@ class RightDBTest : DatabaseTest() {
                         firstAppliedOn = null,
                         rightId = generatedRightId,
                         lastAppliedOn = null,
+                        hasLegalRisk = null,
                     ),
                 ),
             )
-            assertTrue(dbConnector.rightDB.rightContainsId(generatedRightId))
+            assertTrue(backend.dbConnector.rightDB.rightContainsId(generatedRightId))
 
             // upsert
 
@@ -81,11 +95,11 @@ class RightDBTest : DatabaseTest() {
             every { Instant.now() } returns NOW.plusDays(1).toInstant()
 
             // when
-            val updatedRights = dbConnector.rightDB.upsertRight(updatedRight)
+            val updatedRights = backend.dbConnector.rightDB.upsertRight(updatedRight)
 
             // then
             assertThat(updatedRights, `is`(1))
-            val receivedUpdatedRights: List<ItemRight> = dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
+            val receivedUpdatedRights: List<ItemRight> = backend.dbConnector.rightDB.getRightsByIds(listOf(generatedRightId))
             assertThat(
                 receivedUpdatedRights.first(),
                 `is`(
@@ -99,16 +113,16 @@ class RightDBTest : DatabaseTest() {
 
             // delete
             // when
-            val deletedItems = dbConnector.rightDB.deleteRightsByIds(listOf(generatedRightId))
+            val deletedItems = backend.dbConnector.rightDB.deleteRightsByIds(listOf(generatedRightId))
 
             // then
             assertThat(deletedItems, `is`(1))
 
             // when + then
-            assertThat(dbConnector.rightDB.getRightsByIds(listOf(generatedRightId)), `is`(emptyList()))
-            assertFalse(dbConnector.rightDB.rightContainsId(generatedRightId))
+            assertThat(backend.dbConnector.rightDB.getRightsByIds(listOf(generatedRightId)), `is`(emptyList()))
+            assertFalse(backend.dbConnector.rightDB.rightContainsId(generatedRightId))
 
-            dbConnector.rightDB.deleteRightsByIds(
+            backend.dbConnector.rightDB.deleteRightsByIds(
                 listOf(
                     generatedRightId,
                 ),
@@ -121,10 +135,10 @@ class RightDBTest : DatabaseTest() {
         runBlocking {
             val templateName1 = "foobar"
             val templateName2 = "baz"
-            val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
-            val rightId2 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2))
+            val rightId1 = backend.dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+            val rightId2 = backend.dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName2))
             val receivedRightIds =
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getRightsByTemplateNames(listOf(templateName2, templateName1))
                     .map { it.rightId }
                     .toSet()
@@ -134,7 +148,7 @@ class RightDBTest : DatabaseTest() {
                 `is`(setOf(rightId1, rightId2)),
             )
             // Clean up for other tests
-            dbConnector.rightDB.deleteRightsByIds(listOf(rightId2, rightId1))
+            backend.dbConnector.rightDB.deleteRightsByIds(listOf(rightId2, rightId1))
             assertTrue(true)
         }
 
@@ -143,11 +157,11 @@ class RightDBTest : DatabaseTest() {
         runBlocking {
             val templateName1 = "foobar"
             val templateName2 = "baz"
-            val rightId1 = dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+            val rightId1 = backend.dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
 
             // Create Template which is an exception of the first one.
             val rightId2 =
-                dbConnector.rightDB.insertRight(
+                backend.dbConnector.rightDB.insertRight(
                     TEST_RIGHT.copy(
                         isTemplate = true,
                         templateName = templateName2,
@@ -155,7 +169,7 @@ class RightDBTest : DatabaseTest() {
                     ),
                 )
 
-            val exceptionRights: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId1)
+            val exceptionRights: ItemRight? = backend.dbConnector.rightDB.getExceptionByRightId(rightId1)
 
             assertThat(
                 exceptionRights!!.rightId,
@@ -163,7 +177,7 @@ class RightDBTest : DatabaseTest() {
             )
 
             // Clean up for other tests
-            dbConnector.rightDB.deleteRightsByIds(listOf(rightId1, rightId2))
+            backend.dbConnector.rightDB.deleteRightsByIds(listOf(rightId1, rightId2))
             assertTrue(true)
         }
 
@@ -171,8 +185,8 @@ class RightDBTest : DatabaseTest() {
     fun testUniqueConstraintOnTemplates() =
         runBlocking {
             val templateName1 = "foobar"
-            dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
-            dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+            backend.dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
+            backend.dbConnector.rightDB.insertRight(TEST_RIGHT.copy(isTemplate = true, templateName = templateName1))
             Assert.fail()
         }
 
@@ -181,7 +195,7 @@ class RightDBTest : DatabaseTest() {
         runBlocking {
             val templateNameUpper = "upper"
             val upperID =
-                dbConnector.rightDB.insertRight(
+                backend.dbConnector.rightDB.insertRight(
                     TEST_RIGHT.copy(
                         isTemplate = true,
                         firstAppliedOn = null,
@@ -197,36 +211,36 @@ class RightDBTest : DatabaseTest() {
                     lastAppliedOn = null,
                     templateName = templateNameException,
                 )
-            val excID1 = dbConnector.rightDB.insertRight(exceptionTemplate1)
+            val excID1 = backend.dbConnector.rightDB.insertRight(exceptionTemplate1)
 
             assertFalse(
-                dbConnector.rightDB.isException(upperID),
+                backend.dbConnector.rightDB.isException(upperID),
             )
-            dbConnector.rightDB.addExceptionToTemplate(
+            backend.dbConnector.rightDB.addExceptionToTemplate(
                 rightIdException = excID1,
                 rightIdTemplate = upperID,
             )
             assertThat(
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getRightsByIds(listOf(upperID))
                     .first()
                     .hasExceptionId!!,
                 `is`(excID1),
             )
             assertFalse(
-                dbConnector.rightDB.isException(upperID),
+                backend.dbConnector.rightDB.isException(upperID),
             )
             assertTrue(
-                dbConnector.rightDB.isException(excID1),
+                backend.dbConnector.rightDB.isException(excID1),
             )
-            val result = dbConnector.rightDB.getExceptionByRightId(upperID)
+            val result = backend.dbConnector.rightDB.getExceptionByRightId(upperID)
             assertThat(
                 result,
                 `is`(
                     exceptionTemplate1.copy(rightId = excID1, exceptionOfId = upperID),
                 ),
             )
-            dbConnector.rightDB.deleteRightsByIds(
+            backend.dbConnector.rightDB.deleteRightsByIds(
                 listOf(
                     upperID,
                     excID1,
@@ -246,7 +260,7 @@ class RightDBTest : DatabaseTest() {
                     templateName = "draft",
                     isTemplate = true,
                 )
-            val draftRightId = dbConnector.rightDB.insertRight(draftRight)
+            val draftRightId = backend.dbConnector.rightDB.insertRight(draftRight)
             val exceptionRight =
                 TEST_RIGHT.copy(
                     rightId = "exception2",
@@ -256,21 +270,23 @@ class RightDBTest : DatabaseTest() {
                     templateName = "exception2",
                     isTemplate = true,
                 )
-            val exceptionRightId = dbConnector.rightDB.insertRight(exceptionRight)
-            dbConnector.rightDB.addExceptionToTemplate(
+            val exceptionRightId = backend.dbConnector.rightDB.insertRight(exceptionRight)
+            backend.dbConnector.rightDB.addExceptionToTemplate(
                 rightIdTemplate = draftRightId,
                 rightIdException = exceptionRightId,
             )
-            dbConnector.rightDB.updateAppliedOnByTemplateId(exceptionRightId)
+            backend.dbConnector.rightDB.updateAppliedOnByTemplateId(exceptionRightId)
             assertThat(
                 "Get all templates",
-                dbConnector.rightDB.getTemplateList(offset = 0, limit = 100).size,
+                backend.dbConnector.rightDB
+                    .getTemplateList(offset = 0, limit = 100)
+                    .size,
                 `is`(2),
             )
 
             assertThat(
                 "Get all templates",
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getTemplateList(
                         limit = 100,
                         offset = 0,
@@ -282,7 +298,7 @@ class RightDBTest : DatabaseTest() {
             )
             assertThat(
                 "Get all exceptions",
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getTemplateList(
                         limit = 100,
                         offset = 0,
@@ -301,10 +317,10 @@ class RightDBTest : DatabaseTest() {
                     templateName = "draft2",
                     isTemplate = true,
                 )
-            val draftRightId2 = dbConnector.rightDB.insertRight(draftRight2)
+            val draftRightId2 = backend.dbConnector.rightDB.insertRight(draftRight2)
             assertThat(
                 "Get all Drafts, no exceptions and add exclusions",
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getTemplateList(
                         limit = 100,
                         offset = 0,
@@ -318,7 +334,7 @@ class RightDBTest : DatabaseTest() {
             )
             assertThat(
                 "Get all templates having an exception",
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getTemplateList(
                         limit = 100,
                         offset = 0,
@@ -333,7 +349,7 @@ class RightDBTest : DatabaseTest() {
             )
             assertThat(
                 "Get all templates having no exception",
-                dbConnector.rightDB
+                backend.dbConnector.rightDB
                     .getTemplateList(
                         limit = 100,
                         offset = 0,
@@ -347,7 +363,7 @@ class RightDBTest : DatabaseTest() {
                     setOf(draftRightId2, exceptionRightId),
                 ),
             )
-            dbConnector.rightDB.deleteRightsByIds(
+            backend.dbConnector.rightDB.deleteRightsByIds(
                 listOf(
                     draftRightId,
                     draftRightId2,
@@ -380,23 +396,23 @@ class RightDBTest : DatabaseTest() {
                     templateName = "EXCEPTION REMOVE EXCEPTION",
                     isTemplate = true,
                 )
-            val draftRightId = dbConnector.rightDB.insertRight(draftRight)
-            val exceptionRightId = dbConnector.rightDB.insertRight(exceptionRight)
-            dbConnector.rightDB.addExceptionToTemplate(
+            val draftRightId = backend.dbConnector.rightDB.insertRight(draftRight)
+            val exceptionRightId = backend.dbConnector.rightDB.insertRight(exceptionRight)
+            backend.dbConnector.rightDB.addExceptionToTemplate(
                 rightIdTemplate = draftRightId,
                 rightIdException = exceptionRightId,
             )
             assertTrue(
-                dbConnector.rightDB.isException(exceptionRightId),
+                backend.dbConnector.rightDB.isException(exceptionRightId),
             )
-            dbConnector.rightDB.removeExceptionTemplateConnection(
+            backend.dbConnector.rightDB.removeExceptionTemplateConnection(
                 rightIdTemplate = draftRightId,
                 rightIdException = exceptionRightId,
             )
             assertFalse(
-                dbConnector.rightDB.isException(exceptionRightId),
+                backend.dbConnector.rightDB.isException(exceptionRightId),
             )
-            dbConnector.rightDB.deleteRightsByIds(listOf(draftRightId, exceptionRightId))
+            backend.dbConnector.rightDB.deleteRightsByIds(listOf(draftRightId, exceptionRightId))
             assertTrue(true)
         }
 

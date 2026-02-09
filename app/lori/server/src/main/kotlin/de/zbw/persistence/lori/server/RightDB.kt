@@ -140,7 +140,9 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasLegalRisk) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -216,7 +218,9 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasLegalRisk) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -767,7 +771,7 @@ class RightDB(
                         )
                     },
                 exceptionOfId = rs.getString(localCounter++),
-                hasLegalRisk = rs.getBoolean(localCounter++),
+                hasLegalRisk = rs.getObject(localCounter++) as? Boolean, // Retrieving NULL from booleans is tricky
                 hasExceptionId = rs.getString(localCounter++),
                 predecessorId = rs.getString(localCounter++),
                 successorId = rs.getString(localCounter++),
