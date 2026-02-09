@@ -14,6 +14,7 @@ export const useSearchStore = defineStore("search", () => {
   const isLastSearchForTemplates = ref(false);
   const filtersAsQuery = ref("");
   const isLastSearchNonTrivialAndSuccessful = ref(false);
+  const facetSearchInProgress = ref(false);
 
   const accessStateIdx: Ref<Array<boolean>> = ref([]);
   const accessStateReceived: Ref<Array<AccessStateWithCountRest>> = ref([]);
@@ -99,6 +100,7 @@ export const useSearchStore = defineStore("search", () => {
     accessStateReceived,
     ccLicenceNoRestrictions,
     deletions,
+    facetSearchInProgress,
     filtersAsQuery,
     formalRuleNoLegalRisk,
     formalRuleCCNoRestriction,
