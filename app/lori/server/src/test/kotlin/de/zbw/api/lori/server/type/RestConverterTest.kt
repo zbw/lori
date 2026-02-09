@@ -377,6 +377,18 @@ class RestConverterTest {
                 ),
                 "more columns than expected will be accepted as well.",
             ),
+            arrayOf(
+                true,
+                "\nIP-Address;Organisation\n10.100.40.1-254;organisation1",
+                false,
+                listOf(
+                    GroupEntry(
+                        organisationName = "organisation1",
+                        ipAddresses = "10.100.40.1-254",
+                    ),
+                ),
+                "Range at last position is valid.",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_PARSE_TO_GROUP)

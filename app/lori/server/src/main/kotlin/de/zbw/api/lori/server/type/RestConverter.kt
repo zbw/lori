@@ -1070,7 +1070,7 @@ object RestConverter {
 
     /**
      * Parse CSV formatted string.
-     * The expected format is as following:
+     * The expected format is as follows:
      * ipAddress1,ipAddress2,ipAdress3;organisationName;
      */
     fun parseToGroup(
