@@ -443,7 +443,7 @@ class LoriServerBackend(
                             if (firstApplicationDate == null) {
                                 return@map listOf(r)
                             }
-                            filterAndAdjustRightsByDate(
+                            filterAndAdjustTemplateDates(
                                 listOf(r),
                                 firstApplicationDate,
                             )
@@ -526,7 +526,7 @@ class LoriServerBackend(
             templates
                 .map { t ->
                     val itemTable = rightIdToItemTable[t.rightId] ?: return emptyList()
-                    filterAndAdjustRightsByDate(
+                    filterAndAdjustTemplateDates(
                         templatesAndRights = listOf(t),
                         firstApplicationDate =
                             itemTable
@@ -1320,26 +1320,33 @@ class LoriServerBackend(
          * Templates may have ranges which end and/or start before the lifetime of the metadata it has
          * been applied to. Therefore, the start date for this metadata will be adjusted.
          */
-        fun filterAndAdjustRightsByDate(
+        fun filterAndAdjustTemplateDates(
             templatesAndRights: List<ItemRight>,
             firstApplicationDate: LocalDate,
         ): List<ItemRight> {
-            val (templates, rights) = templatesAndRights.partition { it.isTemplate }
+            // Partition template and manual rights to only affect templates
+            val (templates, manualRights) = templatesAndRights.partition { it.isTemplate }
             val fs =
                 templates
                     .filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
-            val templatesAndRightsCorrectStart =
-                (fs + rights).map { right ->
-                    if (firstApplicationDate > right.startDate) {
-                        right.copy(
-                            startDate = firstApplicationDate,
-                        )
-                    } else {
-                        right
-                    }
+            val templatesCorrectStart =
+                fs.map { template ->
+                    template.copy(
+                        startDate = getIndividualStartDate(firstApplicationDate, template),
+                    )
                 }
-            return templatesAndRightsCorrectStart
+            return templatesCorrectStart + manualRights
         }
+
+        fun getIndividualStartDate(
+            firstApplicationDate: LocalDate,
+            template: ItemRight,
+        ): LocalDate =
+            if (firstApplicationDate > template.startDate) {
+                firstApplicationDate
+            } else {
+                template.startDate
+            }
 
         /**
          * Remove duplicates. Keep those with - signs

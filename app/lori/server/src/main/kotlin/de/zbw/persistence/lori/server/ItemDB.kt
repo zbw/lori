@@ -4,7 +4,6 @@ import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.business.lori.server.utils.TimezoneUtil
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import io.opentelemetry.api.trace.Tracer
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -229,29 +228,25 @@ class ItemDB(
                     stmt.setString(1, handle)
                     stmt.setString(2, rightId)
                 },
-                mapper = { rs ->
-                    ItemRow(
-                        rightId = rs.getString(1),
-                        handle = rs.getString(2),
-                        createdBy = rs.getString(3),
-                        createdOn =
-                            rs.getTimestamp(4, RightDB.Companion.utcCalendar)?.let {
-                                OffsetDateTime.ofInstant(
-                                    it.toInstant(),
-                                    TimezoneUtil.TIME_ZONE_UTC,
-                                )
-                            },
-                        lastUpdatedBy = rs.getString(5),
-                        lastUpdatedOn =
-                            rs.getTimestamp(6, RightDB.Companion.utcCalendar)?.let {
-                                OffsetDateTime.ofInstant(
-                                    it.toInstant(),
-                                    TimezoneUtil.TIME_ZONE_UTC,
-                                )
-                            },
-                    )
-                },
+                mapper = { rs -> rs.toItemRow() },
             ).firstOrNull()
+
+    suspend fun getItemsByLastUpdatedBeforeAndRightId(
+        rightId: String,
+        lastUpdatedBefore: Instant,
+    ): List<ItemRow> =
+        DatabaseConnector
+            .select(
+                sql = STATEMENT_GET_RIGHTS_UPDATED_BEFORE_BY_RIGHT_ID,
+                connectionPool = connectionPool,
+                tracer = tracer,
+                spanName = "getItemLastUpdatedBeforeByRightId",
+                mapper = { rs -> rs.toItemRow() },
+                params = { stmt ->
+                    stmt.setString(1, rightId)
+                    stmt.setTimestamp(2, Timestamp.from(lastUpdatedBefore), utcCalendar)
+                },
+            )
 
     companion object {
         private const val CONSTRAINT_ITEM_PKEY = "item_pkey"
@@ -326,6 +321,34 @@ class ItemDB(
             "SELECT $COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_HANDLE,$COLUMN_ITEM_CREATED_BY," +
                 "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON" +
                 " FROM $TABLE_NAME_ITEM" +
-                " WHERE $COLUMN_METADATA_HANDLE = ? AND $COLUMN_ITEM_RIGHT_ID = ?;"
+                " WHERE $COLUMN_ITEM_HANDLE = ? AND $COLUMN_ITEM_RIGHT_ID = ?;"
+
+        const val STATEMENT_GET_RIGHTS_UPDATED_BEFORE_BY_RIGHT_ID =
+            "SELECT $COLUMN_ITEM_RIGHT_ID,$COLUMN_ITEM_HANDLE,$COLUMN_ITEM_CREATED_BY," +
+                "$COLUMN_ITEM_CREATED_ON,$COLUMN_ITEM_LAST_UPDATED_BY,$COLUMN_ITEM_LAST_UPDATED_ON" +
+                " FROM $TABLE_NAME_ITEM" +
+                " WHERE $COLUMN_ITEM_RIGHT_ID = ? AND $COLUMN_ITEM_LAST_UPDATED_ON < ?;"
+
+        fun ResultSet.toItemRow(): ItemRow =
+            ItemRow(
+                rightId = this.getString(1),
+                handle = this.getString(2),
+                createdBy = this.getString(3),
+                createdOn =
+                    this.getTimestamp(4, RightDB.utcCalendar)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            TimezoneUtil.TIME_ZONE_UTC,
+                        )
+                    },
+                lastUpdatedBy = this.getString(5),
+                lastUpdatedOn =
+                    this.getTimestamp(6, RightDB.utcCalendar)?.let {
+                        OffsetDateTime.ofInstant(
+                            it.toInstant(),
+                            TimezoneUtil.TIME_ZONE_UTC,
+                        )
+                    },
+            )
     }
 }

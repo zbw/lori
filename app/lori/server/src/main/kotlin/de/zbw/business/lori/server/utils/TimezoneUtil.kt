@@ -8,6 +8,7 @@ import java.time.ZoneOffset
 object TimezoneUtil {
     val TIME_ZONE_BERLIN: ZoneId = ZoneId.of("Europe/Berlin")
     val TIME_ZONE_UTC: ZoneId = ZoneId.of("UTC")
+    const val MILLIS_PER_DAY: Long = 24 * 60 * 60 * 1000
 
     fun utcOffsetDateTimeToBerlinDate(utcOdt: OffsetDateTime): LocalDate =
         utcOdt

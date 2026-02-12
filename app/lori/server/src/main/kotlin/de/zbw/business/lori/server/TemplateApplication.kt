@@ -13,6 +13,7 @@ import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -25,7 +26,9 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.collections.fold
 import kotlin.math.ceil
@@ -135,6 +138,7 @@ class TemplateApplication(
             } else {
                 null
             }
+        val beforeApplicationTimestamp = Instant.now()
         val results: List<TemplateApplicationResult> =
             bookmarks.map { bookmark ->
                 applyTemplateByBookmark(
@@ -146,6 +150,9 @@ class TemplateApplication(
                     testId = testId,
                 )
             }
+        // Check if some entries were not reapplied
+        replaceOutOfDateApplications(template = right, atLeastLastUpdatedOn = beforeApplicationTimestamp)
+
         return results.fold(
             initial =
                 TemplateApplicationResult(
@@ -184,8 +191,9 @@ class TemplateApplication(
                 }
             val ignoreDeletedItemsFilter = DeletionsFilter(on = false)
 
-            val facetsResult =
+            val facetsResult: SearchQueryResult =
                 backend.searchQuery(
+                    facetsOnly = true, // Only receive facets
                     searchTerm = bookmark.searchTerm,
                     limit = null,
                     offset = null,
@@ -196,7 +204,6 @@ class TemplateApplication(
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
-                    facetsOnly = true,
                     sortInformation = SortInformation.DEFAULT,
                 )
 
@@ -265,7 +272,7 @@ class TemplateApplication(
                     limit = LIMIT,
                     offset = offset,
                     metadataSearchFilter =
-                        (bookmark.getAllMetadataFilter() + additionalMetadataSearchFilters).filterNotNull(),
+                        (bookmark.getAllMetadataFilter() + additionalMetadataSearchFilters),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
@@ -316,6 +323,62 @@ class TemplateApplication(
                 numberOfErrors = itemsWithConflicts.values.flatten().size,
             )
         }
+    }
+
+    suspend fun replaceOutOfDateApplications(
+        template: ItemRight,
+        atLeastLastUpdatedOn: Instant,
+    ) {
+        dbConnector.itemDB
+            .getItemsByLastUpdatedBeforeAndRightId(template.rightId!!, atLeastLastUpdatedOn)
+            .forEach { item ->
+                val itemRow =
+                    dbConnector.itemDB.getItemRowByHandleAndRightId(rightId = template.rightId, handle = item.handle)
+                        ?: return@forEach
+                // Get the start date which is displayed for this handle in the UI because
+                // it might differ from the start date of the template
+                val startDateDisplayed =
+                    LoriServerBackend
+                        .filterAndAdjustTemplateDates(
+                            templatesAndRights = listOf(template),
+                            firstApplicationDate = TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.createdOn!!),
+                        ).firstOrNull()
+                        ?.startDate
+                dbConnector.itemDB.deleteItem(item.handle, item.rightId)
+                if (startDateDisplayed != null) {
+                    val newEndDate =
+                        if (itemRow.lastUpdatedOn!!.toInstant() < Instant.now().minusMillis(TimezoneUtil.MILLIS_PER_DAY)) {
+                            TimezoneUtil.utcOffsetDateTimeToBerlinDate(
+                                OffsetDateTime.ofInstant(
+                                    Instant.now(),
+                                    TimezoneUtil.TIME_ZONE_BERLIN,
+                                ),
+                            )
+                        } else {
+                            TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.lastUpdatedOn)
+                        }
+                    val newManualRight =
+                        template.copy(
+                            startDate = startDateDisplayed,
+                            isTemplate = false,
+                            templateName = null,
+                            templateDescription = null,
+                            notesManagementRelated =
+                                "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
+                                    " Template-Zuordnung Template https://${backend.config.url}?templateId=${template.rightId}" +
+                                    " bis zur Item-Löschung abzubilden",
+                            endDate = newEndDate,
+                            createdBy = "Automatisch",
+                            lastUpdatedBy = "Automatisch",
+                        )
+                    LOG.info("Replacing template entry ${template.rightId} of item ${itemRow.handle} with a manual right")
+                    val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
+                    dbConnector.itemDB.insertItem(
+                        itemId = ItemId(handle = itemRow.handle, rightId = newManualRightId),
+                        createdBy = "lori",
+                    )
+                }
+            }
     }
 
     companion object {
