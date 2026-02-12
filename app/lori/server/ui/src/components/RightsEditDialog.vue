@@ -775,6 +775,9 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.templateName = "foo";
       }
+      if(tmpRight.value.accessState != AccessStateRest.Restricted){
+        formState.selectedGroups = [];
+      }
       tmpRight.value.groupIds = formState.selectedGroups.map((g: GroupRest) => g.groupId);
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
