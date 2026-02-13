@@ -54,8 +54,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.filter
 import kotlin.math.ceil
@@ -264,10 +262,6 @@ class LoriServerBackend(
                     (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
                 }
 
-        val currentTimeFormat =
-            ZonedDateTime
-                .ofInstant(Instant.now(), TimezoneUtil.TIME_ZONE_BERLIN)
-                .format(DateTimeFormatter.ISO_DATE_TIME)
         if (rightToSetNewEndDate.isNotEmpty()) {
             rightToSetNewEndDate
                 .first()
@@ -276,8 +270,8 @@ class LoriServerBackend(
                         dbConnector.rightDB.upsertRight(
                             it.copy(
                                 endDate = deletionDate,
-                                lastUpdatedBy = "Automatisch $currentTimeFormat",
-                                notesManagementRelated =
+                                lastUpdatedBy = "Automatisch",
+                                notesGeneral =
                                     "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
                             ),
                         )
@@ -324,8 +318,8 @@ class LoriServerBackend(
                             } else {
                                 template.endDate
                             },
-                        createdBy = "Automatisch $currentTimeFormat",
-                        lastUpdatedBy = "Automatisch $currentTimeFormat",
+                        createdBy = "Automatisch",
+                        lastUpdatedBy = "Automatisch",
                         notesManagementRelated =
                             "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
                                 " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
