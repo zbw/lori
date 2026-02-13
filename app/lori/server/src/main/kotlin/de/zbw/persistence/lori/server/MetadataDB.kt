@@ -106,6 +106,20 @@ class MetadataDB(
             },
         )
 
+    suspend fun getDeletedMetadataByHandles(handles: List<String>): List<String> =
+        DatabaseConnector.select(
+            sql = STATEMENT_GET_DELETED_METADATA_BY_HANDLES,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getMetadataByHandles",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
+
     suspend fun getDeletedMetadata(
         limit: Int,
         offset: Int,
@@ -288,15 +302,21 @@ class MetadataDB(
         const val STATEMENT_UPDATE_DELETE_STATUS =
             "UPDATE $TABLE_NAME_ITEM_METADATA" +
                 " SET $COLUMN_METADATA_DELETED=?" +
-                " WHERE $COLUMN_METADATA_HANDLE=ANY(?)"
+                " WHERE $COLUMN_METADATA_HANDLE=ANY(?);"
 
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
-                " WHERE $COLUMN_METADATA_HANDLE = ANY(?)"
+                " WHERE $COLUMN_METADATA_HANDLE = ANY(?);"
 
         const val STATEMENT_GET_DELETED_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
-                " WHERE $COLUMN_METADATA_DELETED = true"
+                " WHERE $COLUMN_METADATA_DELETED = true;"
+
+        const val STATEMENT_GET_DELETED_METADATA_BY_HANDLES =
+            "SELECT $COLUMN_METADATA_HANDLE" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
+                " WHERE $COLUMN_METADATA_DELETED = true AND" +
+                " $COLUMN_METADATA_HANDLE = ANY(?);"
 
         const val STATEMENT_GET_DELETED_METADATA_COUNT =
             "SELECT COUNT(*)" +

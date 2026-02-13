@@ -23,7 +23,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-class ApplyTemplateOnDeletedEntries : DatabaseTest() {
+class ApplyTemplateOnDeletedEntriesTest : DatabaseTest() {
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
