@@ -302,10 +302,7 @@ deployToProd:
 
       sed -i "s/${JOB_IMAGE_NAME}:[0-9a-zA-Z_.-]*/${JOB_IMAGE_NAME}:${CI_COMMIT_SHA:0:12}/g" "${DOCKER_COMPOSE_ENV_FILE}"
 
-      if [ "${DOCKER_COMPOSE_DOWN_BEFORE_UP:-false}" = "true" ]; then
-        docker compose -f /srv/lori/docker-compose.yaml down --remove-orphans
-      fi
-
+      docker compose -f /srv/lori/docker-compose.yaml --profile "${DOCKER_COMPOSE_PROFILE}" down --remove-orphans
       docker compose -f /srv/lori/docker-compose.yaml --profile "${DOCKER_COMPOSE_PROFILE}" up -d
       docker ps
       EOT
@@ -318,7 +315,6 @@ deployToProd:
     SSH_KNOWN_HOSTS: "$SSH_KNOWN_HOSTS_QS"
     SSH_HOST: "lori-qs.dmz3.zbw.eu"
     DOCKER_COMPOSE_ENV_FILE: "/srv/lori/config-qs/docker-compose-qs.yaml"
-    DOCKER_COMPOSE_DOWN_BEFORE_UP: "false"
   rules:
     - changes:
         - $JOB_CHANGES_PATH
@@ -341,7 +337,6 @@ deployToProd:
     SSH_KNOWN_HOSTS: "$SSH_KNOWN_HOSTS_PROD"
     SSH_HOST: "lori-prod.dmz3.zbw.eu"
     DOCKER_COMPOSE_ENV_FILE: "/srv/lori/config-prod/docker-compose-prod.yaml"
-    DOCKER_COMPOSE_DOWN_BEFORE_UP: "true"
   rules:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
