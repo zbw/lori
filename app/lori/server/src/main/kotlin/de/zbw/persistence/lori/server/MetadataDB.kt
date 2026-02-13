@@ -126,7 +126,7 @@ class MetadataDB(
     ): List<ItemMetadata> =
         DatabaseConnector.select(
             sql =
-                STATEMENT_GET_DELETED_METADATA +
+                STATEMENT_GET_DELETED_METADATA.dropLast(1) +
                     " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
                     " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
             connectionPool = connectionPool,
