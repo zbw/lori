@@ -244,7 +244,19 @@ data class ItemRight(
     val templateDescription: String?,
     val templateName: String?,
     val zbwUserAgreement: Boolean?,
-)
+) {
+    fun validate(): List<String> =
+        mutableListOf<String>().also { errors ->
+            if (groupIds?.isNotEmpty() ?: false && accessState != AccessState.RESTRICTED) {
+                errors.add("AccessState must be RESTRICTED if groups are defined")
+            }
+
+            if (endDate != null && startDate.isAfter(endDate)) {
+                errors.add("Start date must be before end date")
+            }
+            return errors
+        }
+}
 
 data class ItemRow(
     val rightId: String,

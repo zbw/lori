@@ -775,9 +775,6 @@ export default defineComponent({
       if (!isTemplate.value) {
         formState.templateName = "foo";
       }
-      if(tmpRight.value.accessState != AccessStateRest.Restricted){
-        formState.selectedGroups = [];
-      }
       tmpRight.value.groupIds = formState.selectedGroups.map((g: GroupRest) => g.groupId);
       tmpRight.value.groups = formState.selectedGroups;
       const isValid = await v$.value.$validate();
@@ -790,6 +787,11 @@ export default defineComponent({
       }
 
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
+      if(tmpRight.value.accessState != AccessStateRest.Restricted){
+        // Ensure groups are only passed when access state is restricted.
+        tmpRight.value.groups = [];
+        tmpRight.value.groupIds = [];
+      }
       tmpRight.value.basisStorage = stringToBasisStorage(
           formState.basisStorage,
       );

@@ -138,13 +138,22 @@ fun Routing.rightRoutes(
                                 ApiError.badRequestError(ApiError.BAD_REQUEST_START_END_DATE_DISALLOW_PAST),
                             )
                         }
-                        val pk =
-                            backend.insertRight(
-                                right.toBusiness().copy(
-                                    createdBy = userSession.email,
-                                    lastUpdatedBy = userSession.email,
+                        val r =
+                            right.toBusiness().copy(
+                                createdBy = userSession.email,
+                                lastUpdatedBy = userSession.email,
+                            )
+                        val errors = r.validate()
+                        if (errors.isNotEmpty()) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError(
+                                    detail = errors.joinToString("\n"),
                                 ),
                             )
+                        }
+                        val pk =
+                            backend.insertRight(r)
                         span.setStatus(StatusCode.OK)
                         call.respond(RightIdCreated(pk))
                     } catch (e: BadRequestException) {
@@ -204,17 +213,27 @@ fun Routing.rightRoutes(
                                 ApiError.notFoundError(ApiError.NO_RESOURCE_FOR_ID),
                             )
                         }
+                        val r =
+                            right.toBusiness().copy(
+                                lastUpdatedBy = userSession.email,
+                            )
+                        val errors = r.validate()
+                        if (errors.isNotEmpty()) {
+                            return@withContext call.respond(
+                                HttpStatusCode.BadRequest,
+                                ApiError.badRequestError(
+                                    detail = errors.joinToString("\n"),
+                                ),
+                            )
+                        }
                         when (
                             val ret =
-                                backend.upsertRight(
-                                    right.toBusiness().copy(
-                                        lastUpdatedBy = userSession.email,
-                                    ),
-                                )
+                                backend.upsertRight(r)
                         ) {
                             is Either.Left -> {
                                 call.respond(ret.value.first, ret.value.second)
                             }
+
                             is Either.Right -> {
                                 span.setStatus(StatusCode.OK)
                                 call.respond(HttpStatusCode.NoContent)
