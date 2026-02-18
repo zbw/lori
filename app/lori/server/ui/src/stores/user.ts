@@ -6,7 +6,7 @@ export const useUserStore = defineStore("user", () => {
   const emailAddress = ref("");
   const permissions = ref([] as Array<UserPermissionRest> | undefined);
   const isLoggedIn = ref(false);
-  const signInURL = ref( "");
+  const signInURL = ref("");
   const signOutURL = ref("");
   const commitHash = ref("");
 

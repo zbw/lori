@@ -47,6 +47,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.Duration
@@ -125,7 +126,10 @@ class LoriServerBackend(
                         ),
                     createdBy = createdBy,
                 )?.let { Either.Right(it) }
-                ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
+                ?: let {
+                    LOG.error("Could not insert item entry for handle '$handle' and rightId '$rightId'")
+                    Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
+                }
         }
 
     suspend fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> = metadataElems.map { insertMetadataElement(it) }
@@ -1176,6 +1180,7 @@ class LoriServerBackend(
 
     companion object {
         val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)
+        private val LOG = LogManager.getLogger(LoriServerBackend::class.java)
 
         // Default chunk size when iterating over a huge dataset
         const val DEFAULT_CHUNK_SIZE: Int = 5000
