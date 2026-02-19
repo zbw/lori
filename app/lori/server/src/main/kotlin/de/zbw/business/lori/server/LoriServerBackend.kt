@@ -276,7 +276,8 @@ class LoriServerBackend(
                                 endDate = deletionDate,
                                 lastUpdatedBy = "Automatisch",
                                 notesGeneral =
-                                    "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
+                                    it.notesGeneral + "\n" +
+                                        "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
                             ),
                         )
                 }
@@ -325,7 +326,8 @@ class LoriServerBackend(
                         createdBy = "Automatisch",
                         lastUpdatedBy = "Automatisch",
                         notesManagementRelated =
-                            "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
+                            template.notesManagementRelated + "\n" +
+                                "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
                                 " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
                                 " bis zur Item-Löschung abzubilden",
                     )

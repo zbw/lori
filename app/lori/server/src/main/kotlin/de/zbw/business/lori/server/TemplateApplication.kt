@@ -366,7 +366,8 @@ class TemplateApplication(
                         templateName = null,
                         templateDescription = null,
                         notesManagementRelated =
-                            "Automatisch erzeugt, um Rechteinformationen aus in der Vergangenheit existierender Template-Zuordnung" +
+                            template.notesManagementRelated + "\n" +
+                                "Automatisch erzeugt, um Rechteinformationen aus in der Vergangenheit existierender Template-Zuordnung" +
                                 " zu Template https://${backend.config.url}?templateId=${template.rightId}" +
                                 " abzubilden",
                         endDate = newEndDate,
