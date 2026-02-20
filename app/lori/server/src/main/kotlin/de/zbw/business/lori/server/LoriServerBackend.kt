@@ -269,14 +269,15 @@ class LoriServerBackend(
         if (rightToSetNewEndDate.isNotEmpty()) {
             rightToSetNewEndDate
                 .first()
-                .let {
+                .let { r ->
+                    val oldNotesGeneral = r.notesGeneral?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
                     deletionsAndUpdates +=
                         dbConnector.rightDB.upsertRight(
-                            it.copy(
+                            r.copy(
                                 endDate = deletionDate,
                                 lastUpdatedBy = "Automatisch",
                                 notesGeneral =
-                                    it.notesGeneral + "\n" +
+                                    oldNotesGeneral +
                                         "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
                             ),
                         )
@@ -301,6 +302,7 @@ class LoriServerBackend(
                         handle = handle,
                     )
             // Create a new manual entry
+            val oldNotesManagementRelated = template.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
             val newManualRight: ItemRight =
                 template
                     .copy(
@@ -326,7 +328,7 @@ class LoriServerBackend(
                         createdBy = "Automatisch",
                         lastUpdatedBy = "Automatisch",
                         notesManagementRelated =
-                            template.notesManagementRelated + "\n" +
+                            oldNotesManagementRelated +
                                 "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
                                 " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
                                 " bis zur Item-Löschung abzubilden",

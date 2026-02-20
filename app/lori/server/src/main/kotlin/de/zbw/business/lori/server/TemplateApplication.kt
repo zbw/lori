@@ -359,6 +359,7 @@ class TemplateApplication(
                     } else {
                         TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.lastUpdatedOn)
                     }
+                val oldNotesManagementRelated = template.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
                 val newManualRight =
                     template.copy(
                         startDate = startDateDisplayed,
@@ -366,7 +367,7 @@ class TemplateApplication(
                         templateName = null,
                         templateDescription = null,
                         notesManagementRelated =
-                            template.notesManagementRelated + "\n" +
+                            oldNotesManagementRelated +
                                 "Automatisch erzeugt, um Rechteinformationen aus in der Vergangenheit existierender Template-Zuordnung" +
                                 " zu Template https://${backend.config.url}?templateId=${template.rightId}" +
                                 " abzubilden",
