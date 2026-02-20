@@ -72,6 +72,14 @@ class ApplyTemplateReplaceTest : DatabaseTest() {
             arrayOf(
                 LocalDate.of(2025, 12, 17),
                 TEMPLATE_APPLICATION_DATE,
+                LocalDate.of(2025, 12, 18),
+                TEMPLATE_APPLICATION_DATE.plusDays(1).plusHours(23),
+                Pair(LocalDate.of(2025, 12, 17), LocalDate.of(2025, 12, 17)),
+                "Last update no longer than a day ago (calender wise) -> endDate == current day - 1",
+            ),
+            arrayOf(
+                LocalDate.of(2025, 12, 17),
+                TEMPLATE_APPLICATION_DATE,
                 LocalDate.of(2025, 12, 20),
                 TEMPLATE_APPLICATION_DATE.plusDays(3),
                 Pair(LocalDate.of(2025, 12, 17), LocalDate.of(2025, 12, 20)),

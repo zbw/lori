@@ -348,8 +348,16 @@ class TemplateApplication(
                     ?.startDate
             dbConnector.itemDB.deleteItem(itemRow.handle, itemRow.rightId)
             if (startDateDisplayed != null) {
+                val localDateLastImport =
+                    TimezoneUtil.utcOffsetDateTimeToBerlinDate(
+                        OffsetDateTime.ofInstant(
+                            itemRow.lastUpdatedOn!!.toInstant(),
+                            TimezoneUtil.TIME_ZONE_BERLIN,
+                        ),
+                    )
+                val localDateNow = LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN)
                 val newEndDate =
-                    if (itemRow.lastUpdatedOn!!.toInstant() < Instant.now().minusMillis(TimezoneUtil.MILLIS_PER_DAY)) {
+                    if (localDateNow.minusDays(1L) > localDateLastImport) {
                         TimezoneUtil.utcOffsetDateTimeToBerlinDate(
                             OffsetDateTime.ofInstant(
                                 Instant.now(),
