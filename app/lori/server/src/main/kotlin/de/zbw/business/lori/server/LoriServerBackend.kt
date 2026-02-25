@@ -144,6 +144,7 @@ class LoriServerBackend(
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
                 groupId = id,
+                createdBy = right.createdBy ?: "Unknown",
             )
         }
         createRelationshipsByRight(right)
@@ -177,6 +178,7 @@ class LoriServerBackend(
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = rightId,
                 groupId = gId,
+                createdBy = right.lastUpdatedBy ?: "Unknown",
             )
         }
 

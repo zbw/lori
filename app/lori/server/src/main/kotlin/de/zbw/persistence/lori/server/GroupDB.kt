@@ -267,6 +267,7 @@ class GroupDB(
     suspend fun insertGroupRightPair(
         rightId: String,
         groupId: Int,
+        createdBy: String,
     ): String =
         DatabaseConnector
             .insertReturningKeys(
@@ -275,8 +276,13 @@ class GroupDB(
                 tracer = tracer,
                 spanName = "insertGroupRightPair",
                 params = { stmt ->
+                    val now = Instant.now()
                     stmt.setInt(1, groupId)
                     stmt.setString(2, rightId)
+                    stmt.setString(3, createdBy)
+                    stmt.setTimestamp(4, Timestamp.from(now), utcCalendar)
+                    stmt.setString(5, createdBy)
+                    stmt.setTimestamp(6, Timestamp.from(now), utcCalendar)
                 },
                 fetchGenerated = { rs ->
                     rs.getString(1)
@@ -422,8 +428,10 @@ class GroupDB(
 
         const val STATEMENT_INSERT_GROUP_RIGHT_PAIR =
             "INSERT INTO $TABLE_NAME_GROUP_RIGHT_MAP" +
-                " ($COLUMN_GROUP_ID, $COLUMN_RIGHT_ID)" +
-                " VALUES(?,?);"
+                " ($COLUMN_GROUP_ID, $COLUMN_RIGHT_ID,$COLUMN_CREATED_BY," +
+                "$COLUMN_CREATED_ON,$COLUMN_LAST_UPDATED_BY,$COLUMN_LAST_UPDATED_ON)" +
+                " VALUES(?,?,?," +
+                "?,?,?);"
 
         const val STATEMENT_DELETE_GROUP_RIGHT_PAIR =
             "DELETE" +
