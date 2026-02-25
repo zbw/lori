@@ -124,7 +124,7 @@ export default defineComponent({
 
     const currentRights = computed(() => {
       return props.rights.sort(
-          (a, b) => (a.startDate < b.startDate ? -1 : 1),
+          (a, b) => (a.startDate < b.startDate ? 1 : -1),
       );
     });
 
