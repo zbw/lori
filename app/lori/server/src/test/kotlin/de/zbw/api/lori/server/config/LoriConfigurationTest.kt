@@ -25,6 +25,7 @@ class LoriConfigurationTest {
         System.setProperty("lori.grpc.port", expectedConfig.grpcPort.toString())
         System.setProperty("lori.http.port", expectedConfig.httpPort.toString())
         System.setProperty("lori.sql.url", expectedConfig.sqlUrl)
+        System.setProperty("lori.url", expectedConfig.url)
         System.setProperty("lori.sql.user", expectedConfig.sqlUser)
         System.setProperty("lori.sql.password", expectedConfig.sqlPassword)
         System.setProperty("lori.connection.digitalarchive.address", expectedConfig.digitalArchiveAddress)
@@ -92,6 +93,7 @@ class LoriConfigurationTest {
                 mailToError = "to@localhost",
                 mailFrom = "me@localhost",
                 mailToWarning = "to@localhost",
+                url = "lori.home",
             )
     }
 }

@@ -100,6 +100,7 @@ class LoriGrpcServerTest {
                         },
                     tracer = tracer,
                     mailService = mockk(relaxed = true),
+                    statisticsService = mockk(relaxed = true),
                 )
             val response = grpcServer.applyTemplates(request)
 
@@ -176,6 +177,7 @@ class LoriGrpcServerTest {
                         },
                     tracer = tracer,
                     mailService = mockk(relaxed = true),
+                    statisticsService = mockk(relaxed = true),
                 )
             val response = grpcServer.applyTemplates(request)
 
@@ -251,6 +253,7 @@ class LoriGrpcServerTest {
                     importer,
                     tracer,
                     mailService = mockk(),
+                    statisticsService = mockk(relaxed = true),
                 ).fullImport(request)
 
             // then
@@ -331,6 +334,7 @@ class LoriGrpcServerTest {
                         mockk {
                             coEvery { sendMail(any(), any(), any()) } returns Unit
                         },
+                    statisticsService = mockk(relaxed = true),
                 ).fullImport(request)
 
             // then
@@ -368,6 +372,7 @@ class LoriGrpcServerTest {
                 },
                 importer,
                 tracer,
+                statisticsService = mockk(relaxed = true),
                 mailService =
                     mockk {
                         coEvery {
@@ -394,9 +399,9 @@ class LoriGrpcServerTest {
                         handle = "handle",
                         createdOn = NOW,
                         conflictType = ConflictType.GAP,
-                        conflictByContext = "sigel1234",
-                        conflictByRightId = null,
-                        conflictingWithRightId = null,
+                        conflictCausedInContext = "sigel1234",
+                        conflictCausedByRightId = null,
+                        conflictWithExistingRightId = null,
                         testId = null,
                         createdBy = "user1",
                     ),
@@ -435,6 +440,7 @@ class LoriGrpcServerTest {
                         },
                     tracer = tracer,
                     mailService = mockk(),
+                    statisticsService = mockk(relaxed = true),
                 )
             val response = grpcServer.checkForRightErrors(request)
 
@@ -476,6 +482,7 @@ class LoriGrpcServerTest {
                             every { backend } returns backendMock
                         },
                     tracer = tracer,
+                    statisticsService = mockk(relaxed = true),
                     mailService =
                         mockk(relaxed = true) {
                             coEvery {

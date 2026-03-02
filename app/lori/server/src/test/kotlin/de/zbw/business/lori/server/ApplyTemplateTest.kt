@@ -92,12 +92,11 @@ class ApplyTemplateTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "applyBookmark",
                         bookmarkId = 0,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_1,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_1,
+                                ),
                             ),
                         lastUpdatedOn =
                             OffsetDateTime.of(
@@ -295,12 +294,11 @@ class ApplyTemplateTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "allZDB2",
                         bookmarkId = 10,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_2,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_2,
+                                ),
                             ),
                     ),
                 )
@@ -310,12 +308,11 @@ class ApplyTemplateTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "zdb2AndHandle",
                         bookmarkId = 20,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_2,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_2,
+                                ),
                             ),
                         searchTerm = "hdl:${item2ZDB2.handle}",
                     ),
@@ -392,12 +389,11 @@ class ApplyTemplateTest : DatabaseTest() {
                         bookmarkName = "bookmarkDraft",
                         bookmarkId = 0,
                         searchTerm = "col:'common zdb'",
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_1,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_1,
+                                ),
                             ),
                         lastUpdatedOn =
                             OffsetDateTime.of(
@@ -456,12 +452,11 @@ class ApplyTemplateTest : DatabaseTest() {
                     Bookmark(
                         bookmarkName = "applyBookmarkForDryRun",
                         bookmarkId = 99,
-                        zdbIdFilter =
-                            ZDBIdFilterAND(
-                                zdbIds =
-                                    listOf(
-                                        ZDB_3,
-                                    ),
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_3,
+                                ),
                             ),
                         lastUpdatedOn =
                             OffsetDateTime.of(
@@ -515,7 +510,7 @@ class ApplyTemplateTest : DatabaseTest() {
                     createdBy = "user1",
                 )
             assertThat(
-                received!!.appliedMetadataHandles,
+                received.appliedMetadataHandles,
                 `is`(listOf(item1ZDB3.handle)),
             )
 

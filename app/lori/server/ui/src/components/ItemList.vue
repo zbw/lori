@@ -448,7 +448,7 @@ export default defineComponent({
     const itemSearchFinished = ref(false);
 
     const searchFinished = computed(() => {
-      return facetSearchFinished.value && itemSearchFinished.value
+      return !searchStore.facetSearchInProgress && itemSearchFinished.value
     });
 
     const initSearchByRightId = (rightId: string, templateName: string) => {
@@ -508,6 +508,7 @@ export default defineComponent({
           })
           .finally(() => {
             facetSearchFinished.value = true;
+            searchStore.facetSearchInProgress = false;
           });
     };
 
@@ -727,6 +728,7 @@ export default defineComponent({
     const startSearch = () => {
       itemSearchFinished.value = false;
       facetSearchFinished.value = false;
+      searchStore.facetSearchInProgress = true;
       exportInProgress.value = false;
       exportDone.value = false;
       currentPage.value = 1;

@@ -6,7 +6,7 @@ import de.zbw.business.lori.server.CommunityNameFilter
 import de.zbw.business.lori.server.HandleFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilterOR
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightSearchFilter
@@ -118,7 +118,7 @@ class SearchDBTest : DatabaseTest() {
                         SEVariable(CommunityNameFilter(testZDB.communityName!!)),
                         SEAnd(
                             SEVariable(
-                                PaketSigelFilterAND(testZDB.paketSigel!!),
+                                PaketSigelFilterOR(testZDB.paketSigel!!),
                             ),
                             SEVariable(ZDBIdFilterOR(testZDB.zdbIds)),
                         ),
@@ -205,7 +205,7 @@ class SearchDBTest : DatabaseTest() {
             arrayOf(
                 SEAnd(
                     SEVariable(ZDBIdFilterOR(listOf("foo & bar"))),
-                    SEVariable(PaketSigelFilterAND(listOf("bar"))),
+                    SEVariable(PaketSigelFilterOR(listOf("bar"))),
                 ),
                 listOf<MetadataSearchFilter>(
                     PublicationYearFilter(fromYear = 2016, toYear = 2022),
@@ -213,7 +213,7 @@ class SearchDBTest : DatabaseTest() {
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE ((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
-                    " AND (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
+                    " AND (paket_sigel_joined_lower ILIKE ANY (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
                     " AND (publication_year >= ? AND publication_year <= ? AND publication_year is not null)" +
                     " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date filter",
@@ -226,14 +226,14 @@ class SearchDBTest : DatabaseTest() {
                             SEVariable(HandleFilter("bar")),
                         ),
                     ),
-                    SEVariable(PaketSigelFilterAND(listOf("bar"))),
+                    SEVariable(PaketSigelFilterOR(listOf("bar"))),
                 ),
                 emptyList<MetadataSearchFilter>(),
                 SELECT_ALL_WITH_TS +
                     " FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA" +
                     " WHERE (((zdb_ids_joined_lower ILIKE ANY (?) AND zdb_ids_joined_lower != '' AND zdb_ids_joined_lower IS NOT NULL)" +
                     " AND (ts_hdl @@ to_tsquery(?) AND ts_hdl is not null))" +
-                    " OR (paket_sigel_joined_lower ILIKE ALL (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
+                    " OR (paket_sigel_joined_lower ILIKE ANY (?) AND paket_sigel_joined_lower != '' AND paket_sigel_joined_lower IS NOT NULL))" +
                     " ORDER BY im.handle_postfix DESC LIMIT ? OFFSET ?",
                 "query for publication date and publication type filter",
             ),

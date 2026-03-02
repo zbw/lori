@@ -13,4 +13,5 @@ service LoriService {
   rpc CheckForRightErrors (CheckForRightErrorsRequest) returns (CheckForRightErrorsResponse);
   rpc CleanDownloads (CleanDownloadsRequest) returns (CleanDownloadsResponse);
   rpc SendMail (SendMailRequest) returns (SendMailResponse);
+  rpc RefreshMaterializedViews (RefreshMaterializedViewsRequest) returns (RefreshMaterializedViewsResponse);
 }

@@ -42,9 +42,7 @@ fun Routing.groupRoutes(
 ) {
     route("/api/v1/group") {
         authenticate("auth-session") {
-            /**
-             * Insert a new Group.
-             */
+            // Insert a new Group.
             post {
                 val span =
                     tracer
@@ -124,8 +122,8 @@ fun Routing.groupRoutes(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
                                 detail =
-                                    iie.message + "; Das erwartete Format ist:" +
-                                        " \"organisation;IP-Adresse1,IP-Adresse2,...IP-AdresseN\" ",
+                                    iie.message + "; Das erwartete Format ist bspw:" +
+                                        " \"192.168.1.12-22,100.1.0.1;Organisation\"",
                             ),
                         )
                     } catch (e: Exception) {
@@ -143,9 +141,7 @@ fun Routing.groupRoutes(
                 }
             }
 
-            /**
-             * Update an existing Group.
-             */
+            // Update an existing Group.
             put {
                 val span =
                     tracer
@@ -216,7 +212,7 @@ fun Routing.groupRoutes(
                             ApiError.badRequestError(
                                 detail =
                                     iie.message + "; Das erwartete Format ist:" +
-                                        " \"organisation;IP-Adresse1,IP-Adresse2,...IP-AdresseN\" ",
+                                        " \"192.168.1.12-22,100.1.0.1;Organisation\"",
                             ),
                         )
                     } catch (e: Exception) {
@@ -231,9 +227,7 @@ fun Routing.groupRoutes(
                 }
             }
 
-            /**
-             * Delete Group by Id.
-             */
+            // Delete Group by Id
             delete("{id}") {
                 val span =
                     tracer
@@ -285,9 +279,7 @@ fun Routing.groupRoutes(
             }
         }
 
-        /**
-         * Return Group for a given id.
-         */
+        // Return Group for a given id.
         get("{id}") {
             val span =
                 tracer
@@ -331,9 +323,7 @@ fun Routing.groupRoutes(
         }
 
         route("/list") {
-            /**
-             * Receive a list of groups.
-             */
+            // Receive a list of groups.
             get {
                 val span =
                     tracer

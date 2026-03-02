@@ -46,19 +46,21 @@ class ConnectionPool(
         private val jdbcSemaphore = Semaphore(JDBC_PARALLELISM)
 
         fun createConnection(config: LoriConfiguration): HikariDataSource {
-            val hiConfig = HikariConfig()
-            hiConfig.jdbcUrl = config.sqlUrl
-            hiConfig.username = config.sqlUser
-            hiConfig.password = config.sqlPassword
-            hiConfig.addDataSourceProperty("cachePrepStmts", "true")
-            hiConfig.addDataSourceProperty("prepStmtCacheSize", "250")
-            hiConfig.addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
-            hiConfig.leakDetectionThreshold = LEAK_DETECTION_THRESHOLD
-            hiConfig.isAutoCommit = false
-            hiConfig.maximumPoolSize = MAXIMUM_POOL_SIZE
-            hiConfig.idleTimeout = IDLE_TIMEOUT
-            hiConfig.connectionTimeout = CONNECTION_TIMEOUT
-            hiConfig.minimumIdle = MINIMUM_IDLE
+            val hiConfig =
+                HikariConfig().apply {
+                    jdbcUrl = config.sqlUrl
+                    username = config.sqlUser
+                    password = config.sqlPassword
+                    addDataSourceProperty("cachePrepStmts", "true")
+                    addDataSourceProperty("prepStmtCacheSize", "250")
+                    addDataSourceProperty("prepStmtCacheSqlLimit", "2048")
+                    leakDetectionThreshold = LEAK_DETECTION_THRESHOLD
+                    isAutoCommit = false
+                    maximumPoolSize = MAXIMUM_POOL_SIZE
+                    idleTimeout = IDLE_TIMEOUT
+                    connectionTimeout = CONNECTION_TIMEOUT
+                    minimumIdle = MINIMUM_IDLE
+                }
             return HikariDataSource(hiConfig)
         }
     }

@@ -1,5 +1,6 @@
 package de.zbw.api.lori.server
 
+import StatisticsService
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.api.lori.server.connector.CollectionImport
 import de.zbw.api.lori.server.connector.CommunityImport
@@ -22,9 +23,12 @@ import de.zbw.lori.api.CleanDownloadsResponse
 import de.zbw.lori.api.FullImportRequest
 import de.zbw.lori.api.FullImportResponse
 import de.zbw.lori.api.LoriServiceGrpcKt
+import de.zbw.lori.api.RefreshMaterializedViewsRequest
+import de.zbw.lori.api.RefreshMaterializedViewsResponse
 import de.zbw.lori.api.SendMailRequest
 import de.zbw.lori.api.SendMailResponse
 import de.zbw.lori.api.TemplateApplication
+import de.zbw.persistence.lori.server.statistics.RefreshResult
 import io.grpc.Status
 import io.grpc.StatusRuntimeException
 import io.opentelemetry.api.trace.Span
@@ -54,6 +58,7 @@ class LoriGrpcServer(
     private val daConnector: DAConnector = DAConnector(config, backend),
     private val tracer: Tracer,
     private val mailService: MailService,
+    private val statisticsService: StatisticsService,
 ) : LoriServiceGrpcKt.LoriServiceCoroutineImplBase() {
     override suspend fun checkForRightErrors(request: CheckForRightErrorsRequest): CheckForRightErrorsResponse {
         val span =
@@ -291,6 +296,37 @@ class LoriGrpcServer(
                 SendMailResponse
                     .newBuilder()
                     .setStatus(SUCCESS_MSG)
+                    .build()
+            } catch (e: Throwable) {
+                span.recordException(e)
+                span.setStatus(StatusCode.ERROR, e.message ?: e.cause.toString())
+
+                throw StatusRuntimeException(
+                    Status.INTERNAL
+                        .withCause(e.cause)
+                        .withDescription("Following error occurred: ${e.message}\nStacktrace: ${e.stackTraceToString()}"),
+                )
+            } finally {
+                span.end()
+            }
+        }
+    }
+
+    override suspend fun refreshMaterializedViews(request: RefreshMaterializedViewsRequest): RefreshMaterializedViewsResponse {
+        val span: Span =
+            tracer
+                .spanBuilder("lori.LoriService/UpdateMaterializedViews")
+                .setSpanKind(SpanKind.SERVER)
+                .startSpan()
+
+        return withContext(span.asContextElement()) {
+            try {
+                val result: RefreshResult = statisticsService.refreshStatisticsMaterializedViews()
+                RefreshMaterializedViewsResponse
+                    .newBuilder()
+                    .setErrorMessage(result.error ?: "")
+                    .setIsSuccessful(result.success)
+                    .setDurationInMs(result.durationMs)
                     .build()
             } catch (e: Throwable) {
                 span.recordException(e)

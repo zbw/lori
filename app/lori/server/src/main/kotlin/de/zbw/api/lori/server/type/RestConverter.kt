@@ -718,8 +718,8 @@ fun BookmarkRawRest.toBusiness(): Bookmark =
         publicationYearFilter = QueryParameterParser.parsePublicationYearFilter(this.filterPublicationYear),
         publicationTypeFilter = QueryParameterParser.parsePublicationTypeFilter(this.filterPublicationType),
         storageDateFilter = QueryParameterParser.parseStorageDateFilter(this.filterStorageDate),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND(this.filterPaketSigel),
-        zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND(this.filterZDBId),
+        paketSigelFilters = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel),
+        zdbIdFilters = QueryParameterParser.parseZDBIdFilters(this.filterZDBId),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule),
         startDateFilter = QueryParameterParser.parseStartDateFilter(this.filterStartDate),
@@ -756,8 +756,8 @@ fun BookmarkRest.toBusiness(): Bookmark =
                     separator = ",",
                 ),
             ),
-        paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND(this.filterPaketSigel?.joinToString(separator = ",")),
-        zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND(this.filterZDBId?.joinToString(separator = ",")),
+        paketSigelFilters = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
+        zdbIdFilters = QueryParameterParser.parseZDBIdFilters(this.filterZDBId?.joinToString(separator = ",")),
         accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
         formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
@@ -812,11 +812,11 @@ fun Bookmark.toRest(
         filterEndDate = this.endDateFilter?.date,
         filterFormalRule = this.formalRuleFilter?.formalRules?.map { it.toString() },
         filterValidOn = this.validOnFilter?.date,
-        filterPaketSigel = this.paketSigelFilter?.paketSigels,
-        filterZDBId = this.zdbIdFilter?.zdbIds,
+        filterPaketSigel = this.paketSigelFilters?.map { it.paketSigel },
+        filterZDBId = this.zdbIdFilters?.map { it.zdbId },
         filterNoRightInformation = this.noRightInformationFilter?.let { true } == true,
         filterManualRight = this.manualRightFilter?.let { true } == true,
-        filterDeletions = this.deletionsFilter?.let { true } == true,
+        filterDeletions = this.deletionsFilter?.on,
         createdBy = this.createdBy,
         createdOn = this.createdOn,
         lastUpdatedBy = this.lastUpdatedBy,
@@ -953,12 +953,12 @@ fun ConflictType.toRest(): ConflictTypeRest =
 
 fun RightError.toRest(): RightErrorRest =
     RightErrorRest(
-        conflictByRightId = conflictByRightId,
-        conflictByContext = conflictByContext,
+        conflictByRightId = conflictCausedByRightId,
+        conflictByContext = conflictCausedInContext,
         createdOn = createdOn,
         message = message,
         handle = handle,
-        conflictingWithRightId = conflictingWithRightId,
+        conflictingWithRightId = conflictWithExistingRightId,
         conflictType = conflictType.toRest(),
         errorId = errorId ?: -1,
     )
@@ -1070,7 +1070,7 @@ object RestConverter {
 
     /**
      * Parse CSV formatted string.
-     * The expected format is as following:
+     * The expected format is as follows:
      * ipAddress1,ipAddress2,ipAdress3;organisationName;
      */
     fun parseToGroup(

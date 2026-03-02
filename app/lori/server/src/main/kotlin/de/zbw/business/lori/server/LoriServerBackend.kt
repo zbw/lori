@@ -1,5 +1,6 @@
 package de.zbw.business.lori.server
 
+import StatisticsService
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
@@ -39,12 +40,14 @@ import de.zbw.lori.model.RelationshipRest
 import de.zbw.persistence.lori.server.DatabaseConnector
 import de.zbw.persistence.lori.server.FacetTransientSet
 import de.zbw.persistence.lori.server.RightErrorDB
+import de.zbw.persistence.lori.server.statistics.MetadataHandleLastUpdatedTransient
 import io.ktor.http.HttpStatusCode
 import io.opentelemetry.api.trace.Tracer
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.util.Strings
 import java.security.MessageDigest
 import java.time.Duration
@@ -65,6 +68,7 @@ import kotlin.math.ceil
 class LoriServerBackend(
     internal val dbConnector: DatabaseConnector,
     internal val config: LoriConfiguration,
+    val statisticsService: StatisticsService = dbConnector.statisticsService,
 ) {
     constructor(
         config: LoriConfiguration,
@@ -122,7 +126,10 @@ class LoriServerBackend(
                         ),
                     createdBy = createdBy,
                 )?.let { Either.Right(it) }
-                ?: Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
+                ?: let {
+                    LOG.error("Could not insert item entry for handle '$handle' and rightId '$rightId'")
+                    Either.Left(Pair(HttpStatusCode.InternalServerError, ApiError.internalServerError()))
+                }
         }
 
     suspend fun insertMetadataElements(metadataElems: List<ItemMetadata>): List<String> = metadataElems.map { insertMetadataElement(it) }
@@ -137,6 +144,7 @@ class LoriServerBackend(
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = generatedRightId,
                 groupId = id,
+                createdBy = right.createdBy ?: "Unknown",
             )
         }
         createRelationshipsByRight(right)
@@ -170,6 +178,7 @@ class LoriServerBackend(
             dbConnector.groupDB.insertGroupRightPair(
                 rightId = rightId,
                 groupId = gId,
+                createdBy = right.lastUpdatedBy ?: "Unknown",
             )
         }
 
@@ -195,8 +204,145 @@ class LoriServerBackend(
     suspend fun upsertMetadata(metadata: List<ItemMetadata>): IntArray = dbConnector.metadataDB.upsertMetadataBatch(metadata)
 
     suspend fun updateMetadataAsDeleted(instant: Instant): Int {
-        val deletedHandles = dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(instant)
-        return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles, status = true)
+        val deletedHandles: List<MetadataHandleLastUpdatedTransient> =
+            dbConnector.metadataDB.getMetadataHandlesOlderThanLastUpdatedOn(
+                instant,
+            )
+        deletedHandles.forEach { transient ->
+            if (!transient.isDeleted) {
+                // TODAY is the deletion date
+                deleteAndUpdateManualRightsByHandle(
+                    instant.atZone(TimezoneUtil.TIME_ZONE_BERLIN).toLocalDate().minusDays(1L),
+                    transient.handle,
+                )
+            } else {
+                // Entry got already deleted in the past. Then lastUpdatedOn is deletion date
+                deleteAndUpdateManualRightsByHandle(
+                    transient.lastUpdatedOn
+                        .atZone(TimezoneUtil.TIME_ZONE_BERLIN)
+                        .toLocalDate(),
+                    transient.handle,
+                )
+            }
+        }
+        return dbConnector.metadataDB.updateMetadataDeleteStatus(handles = deletedHandles.map { it.handle }, status = true)
+    }
+
+    suspend fun deleteAndUpdateManualRightsByHandle(
+        deletionDate: LocalDate,
+        handle: String,
+    ): Int {
+        val rightIds = dbConnector.itemDB.getRightIdsByHandle(handle)
+        if (rightIds.isEmpty()) {
+            return 0
+        }
+        var deletionsAndUpdates = 0
+        val allRights =
+            dbConnector.rightDB
+                .getRightsByIds(
+                    rightIds,
+                )
+
+        val manualRights =
+            allRights.filter { !it.isTemplate }
+
+        val templateRights =
+            allRights.filter { it.isTemplate }
+
+        manualRights
+            .filter { it.startDate > deletionDate }
+            .forEach {
+                deletionsAndUpdates += deleteRight(it.rightId!!)
+            }
+
+        // Templates applying only in the future will be deleted as well
+        val (futureTemplates, nonFutureTemplates) = templateRights.partition { it.startDate > deletionDate }
+        futureTemplates
+            .forEach {
+                deletionsAndUpdates += deleteItemEntry(handle, it.rightId!!)
+            }
+
+        val rightToSetNewEndDate =
+            manualRights
+                .filter {
+                    (it.endDate == null || it.endDate > deletionDate) && it.startDate <= deletionDate
+                }
+
+        if (rightToSetNewEndDate.isNotEmpty()) {
+            rightToSetNewEndDate
+                .first()
+                .let { r ->
+                    val oldNotesGeneral = r.notesGeneral?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
+                    deletionsAndUpdates +=
+                        dbConnector.rightDB.upsertRight(
+                            r.copy(
+                                endDate = deletionDate,
+                                lastUpdatedBy = "Automatisch",
+                                notesGeneral =
+                                    oldNotesGeneral +
+                                        "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
+                            ),
+                        )
+                }
+        }
+        nonFutureTemplates.forEach { template: ItemRight ->
+            // Remove old template
+            val isCurrentTemplate =
+                (template.endDate == null || template.endDate > deletionDate) && template.startDate <= deletionDate
+            val templateId = template.rightId!!
+            val firstTemplateApplication: LocalDate =
+                dbConnector.itemDB
+                    .getItemRowByHandleAndRightId(handle = handle, rightId = templateId)
+                    ?.createdOn
+                    ?.let { utcOffsetDateTimeToBerlinDate(it) }
+                    ?: throw InternalError("Missing create date in item table. This should never happen")
+            deletionsAndUpdates +=
+                dbConnector
+                    .itemDB
+                    .deleteItem(
+                        rightId = templateId,
+                        handle = handle,
+                    )
+            // Create a new manual entry
+            val oldNotesManagementRelated = template.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
+            val newManualRight: ItemRight =
+                template
+                    .copy(
+                        startDate =
+                            if (template.startDate < firstTemplateApplication) {
+                                firstTemplateApplication
+                            } else {
+                                template.startDate
+                            },
+                        isTemplate = false,
+                        templateName = null,
+                        templateDescription = null,
+                        predecessorId = null,
+                        successorId = null,
+                        exceptionOfId = null,
+                        hasExceptionId = null,
+                        endDate =
+                            if (isCurrentTemplate) {
+                                deletionDate
+                            } else {
+                                template.endDate
+                            },
+                        createdBy = "Automatisch",
+                        lastUpdatedBy = "Automatisch",
+                        notesManagementRelated =
+                            oldNotesManagementRelated +
+                                "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
+                                " Template-Zuordnung Template https://${config.url}?templateId=$templateId" +
+                                " bis zur Item-Löschung abzubilden",
+                    )
+            val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
+            dbConnector.itemDB.insertItem(
+                itemId = ItemId(handle = handle, rightId = newManualRightId),
+                createdBy = "lori",
+            )
+        }
+
+        return deletionsAndUpdates
     }
 
     suspend fun getMetadataList(
@@ -290,6 +436,7 @@ class LoriServerBackend(
                 val adjustedRights: List<ItemRight> =
                     rights
                         .map { r ->
+                            if (!r.isTemplate) return@map listOf(r)
                             val firstApplicationDate =
                                 r.rightId
                                     ?.let {
@@ -300,7 +447,7 @@ class LoriServerBackend(
                             if (firstApplicationDate == null) {
                                 return@map listOf(r)
                             }
-                            filterAndAdjustRightsByDate(
+                            filterAndAdjustTemplateDates(
                                 listOf(r),
                                 firstApplicationDate,
                             )
@@ -383,7 +530,7 @@ class LoriServerBackend(
             templates
                 .map { t ->
                     val itemTable = rightIdToItemTable[t.rightId] ?: return emptyList()
-                    filterAndAdjustRightsByDate(
+                    filterAndAdjustTemplateDates(
                         templatesAndRights = listOf(t),
                         firstApplicationDate =
                             itemTable
@@ -759,11 +906,11 @@ class LoriServerBackend(
                         message = "Handle ist gelöscht worden",
                         errorId = null,
                         createdOn = OffsetDateTime.now(TimezoneUtil.TIME_ZONE_UTC),
-                        conflictingWithRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
-                        conflictByRightId = null,
+                        conflictWithExistingRightId = "gelöscht, zuletzt importiert am ${metadata.lastUpdatedOn}",
+                        conflictCausedByRightId = null,
                         conflictType = ConflictType.DELETION,
                         // TODO(CB): Clarify with Jana how to present multiple values
-                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        conflictCausedInContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                         testId = null,
                         createdBy = createdBy,
                     )
@@ -805,10 +952,10 @@ class LoriServerBackend(
                             OffsetDateTime.now(
                                 TimezoneUtil.TIME_ZONE_UTC,
                             ),
-                        conflictingWithRightId = null,
-                        conflictByRightId = null,
+                        conflictWithExistingRightId = null,
+                        conflictCausedByRightId = null,
                         conflictType = ConflictType.NO_RIGHT,
-                        conflictByContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
+                        conflictCausedInContext = metadata.paketSigel?.joinToString(separator = ",") ?: metadata.collectionName,
                         testId = null,
                         createdBy = createdBy,
                     )
@@ -978,9 +1125,7 @@ class LoriServerBackend(
             )
 
         if (rights.size != 2) {
-            /**
-             * If either of the given Right-IDs does not exist, do nothing.
-             */
+            // If either of the given Right-IDs does not exist, do nothing.
             return
         }
         if (relationship.relationship == RelationshipRest.Relationship.predecessor) {
@@ -1041,6 +1186,7 @@ class LoriServerBackend(
 
     companion object {
         val FALLBACK_DATE: LocalDate = LocalDate.of(2000, 1, 1)
+        private val LOG = LogManager.getLogger(LoriServerBackend::class.java)
 
         // Default chunk size when iterating over a huge dataset
         const val DEFAULT_CHUNK_SIZE: Int = 5000
@@ -1113,7 +1259,7 @@ class LoriServerBackend(
             createdBy: String,
         ): List<RightError> =
             item.rights
-                .filter { r ->
+                .filter { r: ItemRight ->
                     (r.rightId != template.rightId)
                 }.mapNotNull { r ->
                     checkForDateConflict(r, template)
@@ -1121,11 +1267,12 @@ class LoriServerBackend(
                         ?.let {
                             RightError(
                                 handle = item.metadata.handle,
-                                conflictingWithRightId = r.rightId ?: "No Right Id",
+                                conflictWithExistingRightId = r.rightId ?: "No Right Id",
                                 conflictType = ConflictType.DATE_OVERLAP,
-                                conflictByRightId = template.rightId ?: "No Right Id",
-                                conflictByContext = template.templateName,
+                                conflictCausedByRightId = template.rightId ?: "No Right Id",
+                                conflictCausedInContext = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),
+                                existingRightIsTemplate = r.isTemplate,
                                 errorId = null,
                                 message =
                                     "Start/End-Datum Konflikt: Template '${template.templateName}' steht im Widerspruch" +
@@ -1178,26 +1325,33 @@ class LoriServerBackend(
          * Templates may have ranges which end and/or start before the lifetime of the metadata it has
          * been applied to. Therefore, the start date for this metadata will be adjusted.
          */
-        fun filterAndAdjustRightsByDate(
+        fun filterAndAdjustTemplateDates(
             templatesAndRights: List<ItemRight>,
             firstApplicationDate: LocalDate,
         ): List<ItemRight> {
-            val (templates, rights) = templatesAndRights.partition { it.isTemplate }
+            // Partition template and manual rights to only affect templates
+            val (templates, manualRights) = templatesAndRights.partition { it.isTemplate }
             val fs =
                 templates
                     .filter { right -> right.endDate == null || right.endDate >= firstApplicationDate }
-            val templatesAndRightsCorrectStart =
-                (fs + rights).map { right ->
-                    if (firstApplicationDate > right.startDate) {
-                        right.copy(
-                            startDate = firstApplicationDate,
-                        )
-                    } else {
-                        right
-                    }
+            val templatesCorrectStart =
+                fs.map { template ->
+                    template.copy(
+                        startDate = getIndividualStartDate(firstApplicationDate, template),
+                    )
                 }
-            return templatesAndRightsCorrectStart
+            return templatesCorrectStart + manualRights
         }
+
+        fun getIndividualStartDate(
+            firstApplicationDate: LocalDate,
+            template: ItemRight,
+        ): LocalDate =
+            if (firstApplicationDate > template.startDate) {
+                firstApplicationDate
+            } else {
+                template.startDate
+            }
 
         /**
          * Remove duplicates. Keep those with - signs

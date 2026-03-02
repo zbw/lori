@@ -177,11 +177,7 @@ class FacetTest : DatabaseTest() {
             ),
             arrayOf(
                 "col:'common'",
-                listOf(
-                    PaketSigelFilterAND(
-                        itemSigel1.paketSigel!!,
-                    ),
-                ),
+                itemSigel1.paketSigel!!.map { PaketSigelFilter(it) },
                 emptyList<RightSearchFilter>(),
                 setOf(
                     itemSigel1,
@@ -201,9 +197,7 @@ class FacetTest : DatabaseTest() {
             ),
             arrayOf(
                 "col:'common'",
-                listOf(
-                    ZDBIdFilterAND(itemZDB1.zdbIds!!),
-                ),
+                itemZDB1.zdbIds!!.map { ZDBIdFilter(it) },
                 emptyList<RightSearchFilter>(),
                 setOf(
                     itemZDB1,
@@ -223,12 +217,7 @@ class FacetTest : DatabaseTest() {
             ),
             arrayOf(
                 "col:'common'",
-                listOf(
-                    PaketSigelFilterAND(
-                        itemSigel1.paketSigel,
-                    ),
-                    ZDBIdFilterAND(itemZDB1.zdbIds),
-                ),
+                itemSigel1.paketSigel.map { PaketSigelFilter(it) } + itemZDB1.zdbIds.map { ZDBIdFilter(it) },
                 emptyList<RightSearchFilter>(),
                 emptySet<ItemMetadata>(),
                 0,

@@ -60,6 +60,7 @@ object LoriServer {
                                     backend = backend,
                                     tracer = tracer,
                                     mailService = mailService,
+                                    statisticsService = backend.statisticsService,
                                 ),
                             ),
                     ),

@@ -487,8 +487,9 @@ class TemplateRoutesKtTest {
                 `is`(
                     listOf(
                         TEST_BOOKMARK.toRest(
-                            "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
-                                " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
+                            "(tit:someTitle) & (zdb:\"zdbId1\" & zdb:\"zdbId2\" & sig:\"sigel\"" +
+                                " & lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
+                                " & jah:2020-2030 & typ:\"BOOK,ARTICLE\"" +
                                 " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                                 " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                             emptyList(),

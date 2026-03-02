@@ -506,6 +506,7 @@ export default defineComponent({
                       hide-details
                       class="pl-9 ml-4"
                       v-model="searchStore.publicationTypeIdx[i]"
+                      :disabled="searchStore.facetSearchInProgress"
                       @update:modelValue="emitSearchStart"
                   ></v-checkbox>
                   <v-divider
@@ -540,6 +541,7 @@ export default defineComponent({
                           hide-details
                           class="pl-9 ml-4"
                           v-model="searchStore.paketSigelIdIdx[index]"
+                          :disabled="searchStore.facetSearchInProgress"
                           @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
@@ -575,6 +577,7 @@ export default defineComponent({
                           :label="ppZDBId(item.series, item.count)"
                           hide-details
                           class="pl-9 ml-4"
+                          :disabled="searchStore.facetSearchInProgress"
                           v-model="searchStore.seriesIdx[index]"
                           @update:modelValue="emitSearchStart"
                       ></v-checkbox>
@@ -612,6 +615,7 @@ export default defineComponent({
                           hide-details
                           class="pl-9 ml-4"
                           v-model="searchStore.zdbIdIdx[index]"
+                          :disabled="searchStore.facetSearchInProgress"
                           @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
@@ -648,6 +652,7 @@ export default defineComponent({
                           hide-details
                           class="pl-9 ml-4"
                           v-model="searchStore.licenceUrlIdx[index]"
+                          :disabled="searchStore.facetSearchInProgress"
                           @update:modelValue="emitSearchStart"
                       ></v-checkbox>
                       <v-divider
@@ -752,6 +757,7 @@ export default defineComponent({
                       :label="parseAccessState(item.accessState, item.count)"
                       hide-details
                       class="pl-9 ml-4"
+                      :disabled="searchStore.facetSearchInProgress"
                       v-model="searchStore.accessStateIdx[i]"
                       @update:modelValue="emitSearchStart"
                   ></v-checkbox>
@@ -810,6 +816,7 @@ export default defineComponent({
                       :label="parseAccessState(item.accessState, item.count)"
                       hide-details
                       class="pl-9 ml-4"
+                      :disabled="searchStore.facetSearchInProgress"
                       v-model="searchStore.accessStateOnDateIdx"
                       :value="item.accessState"
                       @click="singleSelectionAccessStateOnDate"
@@ -895,6 +902,7 @@ export default defineComponent({
                   <v-checkbox
                       label="Startdatum"
                       class="pl-9 ml-4"
+                      :disabled="searchStore.facetSearchInProgress"
                       hide-details
                       v-model="
                       searchStore.temporalEventState.startDateOrEndDateOption
@@ -913,6 +921,7 @@ export default defineComponent({
                   <v-checkbox
                       label="Enddatum"
                       class="pl-9 ml-4"
+                      :disabled="searchStore.facetSearchInProgress"
                       v-model="
                       searchStore.temporalEventState.startDateOrEndDateOption
                     "
@@ -934,6 +943,7 @@ export default defineComponent({
               <v-checkbox
                   v-if="searchStore.licenceContracts > 0"
                   :label=ppLicenceContracts(searchStore.licenceContracts)
+                  :disabled="searchStore.facetSearchInProgress"
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleLicenceContract"
@@ -947,6 +957,7 @@ export default defineComponent({
               <v-checkbox
                   v-if="searchStore.ccLicenceNoRestrictions > 0"
                   :label=ppCCLicenceNoRestriction(searchStore.ccLicenceNoRestrictions)
+                  :disabled="searchStore.facetSearchInProgress"
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleCCNoRestriction"
@@ -960,6 +971,7 @@ export default defineComponent({
               <v-checkbox
                   v-if="searchStore.zbwUserAgreements > 0"
                   :label=ppZBWUserAgreements(searchStore.zbwUserAgreements)
+                  :disabled="searchStore.facetSearchInProgress"
                   hide-details
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleUserAgreement"
@@ -974,6 +986,7 @@ export default defineComponent({
                   v-if="searchStore.noLegalRisks > 0"
                   :label=ppNoLegalRisk(searchStore.noLegalRisks)
                   hide-details
+                  :disabled="searchStore.facetSearchInProgress"
                   class="pl-9 ml-4"
                   v-model="searchStore.formalRuleNoLegalRisk"
                   @update:modelValue="emitSearchStart"
@@ -988,6 +1001,7 @@ export default defineComponent({
                   label="Keine Rechteeinträge"
                   hide-details
                   class="pl-9 ml-4"
+                  :disabled="searchStore.facetSearchInProgress"
                   v-model="searchStore.noRightInformation"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
@@ -1000,6 +1014,7 @@ export default defineComponent({
                   label="Manuell erstellte Rechteeinträge"
                   hide-details
                   class="pl-9 ml-4"
+                  :disabled="searchStore.facetSearchInProgress"
                   v-model="searchStore.manualRight"
                   @update:modelValue="emitSearchStart"
               ></v-checkbox>
@@ -1011,6 +1026,7 @@ export default defineComponent({
               <v-checkbox
                   label="Löschungen"
                   hide-details
+                  :disabled="searchStore.facetSearchInProgress"
                   class="pl-9 ml-4"
                   v-model="searchStore.deletions"
                   @update:modelValue="emitSearchStart"
@@ -1035,6 +1051,7 @@ export default defineComponent({
                   <v-checkbox
                       :label="ppZDBId(item.templateName, item.count)"
                       hide-details
+                      :disabled="searchStore.facetSearchInProgress"
                       class="pl-9 ml-4"
                       v-model="searchStore.templateNameIdx[i]"
                       @update:modelValue="emitSearchStart"

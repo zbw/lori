@@ -1,9 +1,11 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.type.Either
+import de.zbw.business.lori.server.ApplyTemplateTest.Companion.ZDB_1
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
+import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -22,7 +24,9 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
-import org.junit.Assert
+import org.testng.Assert
+import org.testng.Assert.assertFalse
+import org.testng.Assert.assertNull
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
@@ -31,6 +35,7 @@ import java.time.Instant
 import java.time.Instant.now
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlin.test.assertTrue
 
@@ -47,7 +52,14 @@ class LoriServerBackendTest : DatabaseTest() {
                 connectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
-            mockk(),
+            mockk {
+                every { url } returns "foo.bar"
+            },
+        )
+    private val templateApplication =
+        TemplateApplication(
+            dbConnector = backend.dbConnector,
+            backend = backend,
         )
 
     @BeforeClass
@@ -713,6 +725,7 @@ class LoriServerBackendTest : DatabaseTest() {
             when (ret) {
                 is Either.Left -> {
                 }
+
                 is Either.Right -> {
                     Assert.fail("An error should be raised due to a given conflict.")
                 }
@@ -823,6 +836,242 @@ class LoriServerBackendTest : DatabaseTest() {
             `is`(expected),
         )
     }
+
+    @Test
+    fun testTransformTemplateToManualRightForDeletedItem() =
+        runBlocking {
+            // given
+            val deletedMetadata =
+                TEST_METADATA.copy(
+                    handle = "11159/902",
+                    deleted = true,
+                )
+
+            val template =
+                TEST_RIGHT.copy(
+                    startDate = LocalDate.of(2020, 1, 1),
+                    endDate = LocalDate.of(2020, 12, 31),
+                    isTemplate = true,
+                    templateName = "testTransofrming",
+                )
+            val rightAssignments =
+                listOf(template to listOf(deletedMetadata.handle))
+
+            mockkStatic(Instant::class)
+            every { now() } returns NOW.minusYears(20L).toInstant()
+            backend.insertMetadataElement(deletedMetadata)
+            rightAssignments.forEach { pair ->
+                backend.insertRightForHandles(
+                    right = pair.first,
+                    handles = pair.second,
+                    createdBy = "testUser",
+                )
+            }
+
+            // when
+            val deletionDate = LocalDate.of(2020, 9, 1)
+
+            mockkStatic(Instant::class)
+            every { now() } returns NOW.toInstant()
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = deletedMetadata.handle,
+                )
+            assertThat(
+                updates,
+                `is`(1),
+            )
+
+            // then
+            val item = backend.getItemByHandle(deletedMetadata.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(1),
+            )
+
+            assertThat(
+                item.rights.first().endDate!!,
+                `is`(deletionDate),
+            )
+            assertThat(
+                item.rights.first().startDate,
+                `is`(LocalDate.of(2020, 1, 1)),
+            )
+
+            assertFalse(
+                item.rights.first().isTemplate,
+            )
+            assertNull(
+                item.rights.first().templateName,
+            )
+            assertNull(
+                item.rights.first().templateDescription,
+            )
+            assertNull(
+                item.rights.first().predecessorId,
+            )
+            assertNull(
+                item.rights.first().successorId,
+            )
+            assertNull(
+                item.rights.first().exceptionOfId,
+            )
+            assertNull(
+                item.rights.first().hasExceptionId,
+            )
+        }
+
+    @Test
+    fun testDeleteAndUpdateManualRightsByHandle() =
+        runBlocking {
+            // given
+            val deletedMetadata = TEST_METADATA.copy(handle = "11159/878", deleted = true)
+
+            val rightAssignments =
+                listOf(
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2020, 1, 1),
+                        endDate = LocalDate.of(2020, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2021, 1, 1),
+                        endDate = LocalDate.of(2021, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                    TEST_RIGHT.copy(
+                        startDate = LocalDate.of(2022, 1, 1),
+                        endDate = LocalDate.of(2022, 12, 31),
+                    ) to listOf(deletedMetadata.handle),
+                )
+
+            backend.insertMetadataElement(deletedMetadata)
+            rightAssignments.forEach { pair ->
+                backend.insertRightForHandles(
+                    right = pair.first,
+                    handles = pair.second,
+                    createdBy = "testUser",
+                )
+            }
+
+            // when
+
+            val deletionDate = LocalDate.of(2020, 9, 1)
+
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = deletedMetadata.handle,
+                )
+            assertThat(
+                updates,
+                `is`(3),
+            )
+
+            // then
+            val item = backend.getItemByHandle(deletedMetadata.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(1),
+            )
+
+            assertThat(
+                item.rights.first().endDate!!,
+                `is`(deletionDate),
+            )
+            assertThat(
+                item.rights.first().startDate,
+                `is`(LocalDate.of(2020, 1, 1)),
+            )
+        }
+
+    @Test
+    fun testDeleteAndUpdateFutureTemplates() =
+        runBlocking {
+            val today = LocalDate.of(NOW.year, NOW.month, NOW.dayOfMonth).plusDays(10)
+            mockkStatic(LocalDate::class)
+            every { LocalDate.now(any<ZoneId>()) } returns today
+            every { LocalDate.now() } returns today
+            // given
+            val metadataToDelete =
+                TEST_METADATA.copy(
+                    handle = "11159/478",
+                    deleted = false,
+                    zdbIds = listOf(ZDB_1),
+                )
+
+            val templateId =
+                backend.insertTemplate(
+                    TEST_RIGHT.copy(
+                        templateName = "die zukunft",
+                        isTemplate = true,
+                        // Start Date is in the future as well
+                        startDate = today.plusDays(1),
+                        endDate = today.plusYears(1),
+                    ),
+                )
+            backend.insertMetadataElement(metadataToDelete)
+
+            // Connect Bookmark and Template
+            val bookmarkId =
+                backend.insertBookmark(
+                    Bookmark(
+                        bookmarkName = "zdb1Bookmark",
+                        bookmarkId = 0,
+                        zdbIdFilters =
+                            listOf(
+                                ZDBIdFilter(
+                                    zdbId = ZDB_1,
+                                ),
+                            ),
+                    ),
+                )
+
+            backend.insertBookmarkTemplatePair(
+                bookmarkId = bookmarkId,
+                rightId = templateId,
+            )
+
+            val received =
+                templateApplication.applyTemplate(
+                    templateId,
+                    skipTemplateDrafts = false,
+                    dryRun = false,
+                    createdBy = "user1",
+                )
+
+            assertThat(
+                received.appliedMetadataHandles,
+                `is`(listOf(metadataToDelete.handle)),
+            )
+
+            // when
+            backend.upsertMetadata(
+                listOf(
+                    metadataToDelete.copy(deleted = true),
+                ),
+            )
+            val deletionDate = today
+
+            val updates =
+                backend.deleteAndUpdateManualRightsByHandle(
+                    deletionDate = deletionDate,
+                    handle = metadataToDelete.handle,
+                )
+            assertThat(
+                updates,
+                `is`(1),
+            )
+
+            // then
+            val item = backend.getItemByHandle(metadataToDelete.handle)!!
+
+            assertThat(
+                item.rights.size,
+                `is`(0),
+            )
+        }
 
     companion object {
         const val DATA_FOR_CHECK_RIGHT_CONFLICTS = "DATA_FOR_CHECK_RIGHT_CONFLICTS"

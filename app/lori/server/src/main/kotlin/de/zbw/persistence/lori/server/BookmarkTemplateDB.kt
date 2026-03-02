@@ -11,9 +11,13 @@ import java.sql.ResultSet
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class BookmarkTemplateDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(
+        connectionPool = connectionPool,
+        tracer = tracer,
+        tableName = TABLE_NAME_TEMPLATE_BOOKMARK_MAP,
+    ) {
     /**
      * Queries on Template-Bookmark Pairs Table.
      */

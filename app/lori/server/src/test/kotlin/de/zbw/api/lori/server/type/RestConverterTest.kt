@@ -377,6 +377,18 @@ class RestConverterTest {
                 ),
                 "more columns than expected will be accepted as well.",
             ),
+            arrayOf(
+                true,
+                "\nIP-Address;Organisation\n10.100.40.1-254;organisation1",
+                false,
+                listOf(
+                    GroupEntry(
+                        organisationName = "organisation1",
+                        ipAddresses = "10.100.40.1-254",
+                    ),
+                ),
+                "Range at last position is valid.",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_PARSE_TO_GROUP)
@@ -949,8 +961,8 @@ class RestConverterTest {
                 startDateFilter = QueryParameterParser.parseStartDateFilter("2020-01-01"),
                 endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
                 formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
-                paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND("sigel"),
-                zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND("zdbId1,zdbId2"),
+                paketSigelFilters = QueryParameterParser.parsePaketSigelFilter("sigel"),
+                zdbIdFilters = QueryParameterParser.parseZDBIdFilters("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
                 manualRightFilter = QueryParameterParser.parseManualRightFilter("true"),
                 deletionsFilter = QueryParameterParser.parseDeletionsFilter("true"),
@@ -992,12 +1004,12 @@ class RestConverterTest {
                         RightError(
                             errorId = 1,
                             message = "Timing conflict",
-                            conflictingWithRightId = "sourceRightId",
-                            conflictByRightId = "conflictingRightId",
+                            conflictWithExistingRightId = "sourceRightId",
+                            conflictCausedByRightId = "conflictingRightId",
                             handle = "somehandle",
                             createdOn = ErrorRoutesKtTest.NOW,
                             conflictType = ConflictType.DATE_OVERLAP,
-                            conflictByContext = "template name",
+                            conflictCausedInContext = "template name",
                             testId = null,
                             createdBy = "user1",
                         ),

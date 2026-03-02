@@ -1,9 +1,11 @@
 package de.zbw.persistence.lori.server
 
+import de.zbw.business.lori.server.LoriServerBackend
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import io.mockk.every
+import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.opentelemetry.api.OpenTelemetry
@@ -25,16 +27,25 @@ import kotlin.test.assertTrue
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MetadataDBTest : DatabaseTest() {
-    private val dbConnector =
-        DatabaseConnector(
-            connectionPool = ConnectionPool(testDataSource),
-            tracer = OpenTelemetry.noop().getTracer("foo"),
+    private val backend =
+        LoriServerBackend(
+            DatabaseConnector(
+                connectionPool = ConnectionPool(testDataSource),
+                tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
+            ),
+            mockk {
+                every { url } returns "foo.bar"
+            },
         )
 
     @BeforeMethod
     fun beforeTest() {
         mockkStatic(Instant::class)
         every { Instant.now() } returns NOW.toInstant()
+
+        runBlocking {
+            backend.dbConnector.cleanAllTables()
+        }
     }
 
     @AfterMethod
@@ -50,10 +61,34 @@ class MetadataDBTest : DatabaseTest() {
             val testMetadata = TEST_Metadata.copy(handle = testHeaderId)
 
             // when
-            dbConnector.metadataDB.insertMetadata(testMetadata)
+            backend.dbConnector.metadataDB.insertMetadata(testMetadata)
 
             // exception
-            dbConnector.metadataDB.insertMetadata(testMetadata)
+            backend.dbConnector.metadataDB.insertMetadata(testMetadata)
+        }
+
+    @Test
+    fun testGetDeletedMetadata() =
+        runBlocking {
+            // given
+            val testHeaderId = "11159/1023"
+            val testMetadata =
+                TEST_Metadata.copy(
+                    handle = testHeaderId,
+                    deleted = true,
+                )
+
+            // when
+            backend.dbConnector.metadataDB.insertMetadata(testMetadata)
+
+            // then
+            assertThat(
+                backend.dbConnector.metadataDB
+                    .getDeletedMetadata(10, 0)
+                    .first()
+                    .handle,
+                `is`(testHeaderId),
+            )
         }
 
     @Test
@@ -64,13 +99,13 @@ class MetadataDBTest : DatabaseTest() {
             val testMetadata = TEST_Metadata.copy(handle = testId, title = "foo")
 
             // when
-            val responseInsert = dbConnector.metadataDB.insertMetadata(testMetadata)
+            val responseInsert = backend.dbConnector.metadataDB.insertMetadata(testMetadata)
 
             // then
             assertThat(responseInsert, `is`(testId))
 
             // when
-            val receivedMetadata: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(testId))
+            val receivedMetadata: List<ItemMetadata> = backend.dbConnector.metadataDB.getMetadata(listOf(testId))
 
             // then
             assertThat(
@@ -80,16 +115,16 @@ class MetadataDBTest : DatabaseTest() {
 
             // when
             assertThat(
-                dbConnector.metadataDB.getMetadata(listOf("not_in_db")),
+                backend.dbConnector.metadataDB.getMetadata(listOf("not_in_db")),
                 `is`(listOf()),
             )
 
             // when
-            val deletedMetadata = dbConnector.metadataDB.deleteMetadata(listOf(testId))
+            val deletedMetadata = backend.dbConnector.metadataDB.deleteMetadata(listOf(testId))
 
             // then
             assertThat(deletedMetadata, `is`(1))
-            assertThat(dbConnector.metadataDB.getMetadata(listOf(testId)), `is`(listOf()))
+            assertThat(backend.dbConnector.metadataDB.getMetadata(listOf(testId)), `is`(listOf()))
         }
 
     @Test
@@ -102,13 +137,13 @@ class MetadataDBTest : DatabaseTest() {
             val m2 = TEST_Metadata.copy(handle = id2, title = "bar")
 
             // when
-            val responseUpsert = dbConnector.metadataDB.upsertMetadataBatch(listOf(m1, m2))
+            val responseUpsert = backend.dbConnector.metadataDB.upsertMetadataBatch(listOf(m1, m2))
 
             // then
             assertThat(responseUpsert, `is`(IntArray(2) { 1 }))
 
             // when
-            val receivedM1: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id1))
+            val receivedM1: List<ItemMetadata> = backend.dbConnector.metadataDB.getMetadata(listOf(id1))
 
             // then
             assertThat(
@@ -116,7 +151,7 @@ class MetadataDBTest : DatabaseTest() {
                 `is`(m1),
             )
 
-            val receivedM2: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id2))
+            val receivedM2: List<ItemMetadata> = backend.dbConnector.metadataDB.getMetadata(listOf(id2))
 
             // then
             assertThat(
@@ -132,13 +167,13 @@ class MetadataDBTest : DatabaseTest() {
             val m1Changed = m1.copy(title = "foo2", lastUpdatedBy = "user2", lastUpdatedOn = NOW.plusDays(1))
             val m2Changed = m2.copy(title = "bar2", lastUpdatedBy = "user2", lastUpdatedOn = NOW.plusDays(1))
 
-            val responseUpsert2 = dbConnector.metadataDB.upsertMetadataBatch(listOf(m1Changed, m2Changed))
+            val responseUpsert2 = backend.dbConnector.metadataDB.upsertMetadataBatch(listOf(m1Changed, m2Changed))
 
             // then
             assertThat(responseUpsert2, `is`(IntArray(2) { 1 }))
 
             // when
-            val receivedM1Changed: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id1))
+            val receivedM1Changed: List<ItemMetadata> = backend.dbConnector.metadataDB.getMetadata(listOf(id1))
 
             // then
             assertThat(
@@ -146,7 +181,7 @@ class MetadataDBTest : DatabaseTest() {
                 `is`(m1Changed),
             )
 
-            val receivedM2Changed: List<ItemMetadata> = dbConnector.metadataDB.getMetadata(listOf(id2))
+            val receivedM2Changed: List<ItemMetadata> = backend.dbConnector.metadataDB.getMetadata(listOf(id2))
 
             // then
             assertThat(
@@ -163,12 +198,12 @@ class MetadataDBTest : DatabaseTest() {
             val expectedMetadata = TEST_Metadata.copy(handle = handle)
 
             // when
-            val containedBefore = dbConnector.metadataDB.metadataContainsHandle(handle)
+            val containedBefore = backend.dbConnector.metadataDB.metadataContainsHandle(handle)
             assertFalse(containedBefore, "Metadata should not exist yet")
 
             // when
-            dbConnector.metadataDB.insertMetadata(expectedMetadata)
-            val containedAfter = dbConnector.metadataDB.metadataContainsHandle(handle)
+            backend.dbConnector.metadataDB.insertMetadata(expectedMetadata)
+            val containedAfter = backend.dbConnector.metadataDB.metadataContainsHandle(handle)
             assertTrue(containedAfter, "Metadata should exist now")
         }
 
@@ -184,16 +219,20 @@ class MetadataDBTest : DatabaseTest() {
                 )
             // when
             givenMetadata.map {
-                dbConnector.metadataDB.insertMetadata(it)
+                backend.dbConnector.metadataDB.insertMetadata(it)
             }
 
             // then
             assertThat(
-                dbConnector.metadataDB.getMetadataRange(limit = 3, offset = 0).toSet(),
+                backend.dbConnector.metadataDB
+                    .getMetadataRange(limit = 3, offset = 0)
+                    .toSet(),
                 `is`(givenMetadata.toSet()),
             )
             assertThat(
-                dbConnector.metadataDB.getMetadataRange(limit = 2, offset = 1).toSet(),
+                backend.dbConnector.metadataDB
+                    .getMetadataRange(limit = 2, offset = 1)
+                    .toSet(),
                 `is`(givenMetadata.subList(0, 2).toSet()),
             )
         }

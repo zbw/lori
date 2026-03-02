@@ -10,15 +10,16 @@ import java.time.OffsetDateTime
  * @author Christian Bay (c.bay@zbw.eu)
  */
 data class RightError(
-    val conflictByRightId: String?,
-    val conflictByContext: String?,
+    val conflictCausedByRightId: String?,
+    val conflictCausedInContext: String?,
+    val conflictWithExistingRightId: String?,
     val conflictType: ConflictType,
     val createdBy: String?,
     val createdOn: OffsetDateTime,
-    val message: String,
-    val handle: String,
     val errorId: Int?,
-    val conflictingWithRightId: String?,
+    val existingRightIsTemplate: Boolean = false,
+    val handle: String,
+    val message: String,
     val testId: String?,
 )
 

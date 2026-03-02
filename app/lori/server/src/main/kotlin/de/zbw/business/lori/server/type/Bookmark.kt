@@ -9,7 +9,7 @@ import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.MetadataSearchFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
-import de.zbw.business.lori.server.PaketSigelFilterAND
+import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PublicationTypeFilter
 import de.zbw.business.lori.server.PublicationYearFilter
 import de.zbw.business.lori.server.RightIdFilter
@@ -19,7 +19,7 @@ import de.zbw.business.lori.server.SearchFilter.Companion.filtersToString
 import de.zbw.business.lori.server.SeriesFilter
 import de.zbw.business.lori.server.StartDateFilter
 import de.zbw.business.lori.server.StorageDateFilter
-import de.zbw.business.lori.server.ZDBIdFilterAND
+import de.zbw.business.lori.server.ZDBIdFilter
 import java.time.OffsetDateTime
 
 /**
@@ -39,8 +39,8 @@ data class Bookmark(
     val searchTerm: String? = null,
     val publicationYearFilter: PublicationYearFilter? = null,
     val publicationTypeFilter: PublicationTypeFilter? = null,
-    val paketSigelFilter: PaketSigelFilterAND? = null,
-    val zdbIdFilter: ZDBIdFilterAND? = null,
+    val paketSigelFilters: List<PaketSigelFilter>? = null,
+    val zdbIdFilters: List<ZDBIdFilter>? = null,
     val accessStateFilter: AccessStateFilter? = null,
     val formalRuleFilter: FormalRuleFilter? = null,
     val startDateFilter: StartDateFilter? = null,
@@ -58,14 +58,16 @@ data class Bookmark(
 ) {
     fun getAllMetadataFilter(): List<MetadataSearchFilter> =
         listOfNotNull(
-            deletionsFilter,
-            licenceURLFilter,
-            paketSigelFilter,
-            publicationYearFilter,
-            publicationTypeFilter,
-            seriesFilter,
-            zdbIdFilter,
-        )
+            zdbIdFilters,
+            paketSigelFilters,
+        ).flatten() +
+            listOfNotNull(
+                deletionsFilter,
+                licenceURLFilter,
+                publicationYearFilter,
+                publicationTypeFilter,
+                seriesFilter,
+            )
 
     fun getAllRightFilter(): List<RightSearchFilter> =
         listOfNotNull(

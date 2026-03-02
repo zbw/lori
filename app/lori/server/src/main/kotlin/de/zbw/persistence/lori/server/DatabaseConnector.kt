@@ -1,5 +1,6 @@
 package de.zbw.persistence.lori.server
 
+import StatisticsService
 import com.google.gson.Gson
 import de.zbw.api.lori.server.config.LoriConfiguration
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -48,12 +49,13 @@ class DatabaseConnector(
             tracer,
             groupDB,
         ),
-    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer),
     internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
     internal val userDB: UserDB = UserDB(connectionPool, tracer),
     internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),
     internal val exportJobDB: ExportJobDB = ExportJobDB(connectionPool, tracer),
     internal val genericJobDB: GenericJobDB = GenericJobDB(connectionPool, tracer),
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
+    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer, statisticsService),
 ) {
     constructor(
         config: LoriConfiguration,
@@ -72,6 +74,20 @@ class DatabaseConnector(
                 connection.commit()
             }
         }
+    }
+
+    // For testing only!
+    internal suspend fun cleanAllTables() {
+        userDB.cleanTable()
+        bookmarkTemplateDB.cleanTable()
+        groupDB.cleanTable()
+        bookmarkDB.cleanTable()
+        itemDB.cleanTable()
+        metadataDB.cleanTable()
+        rightErrorDB.cleanTable()
+        rightDB.cleanTable()
+        exportJobDB.cleanTable()
+        genericJobDB.cleanTable()
     }
 
     companion object {

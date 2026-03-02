@@ -9,10 +9,12 @@ import de.zbw.business.lori.server.type.ComparisonOperator
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.type.ItemRow
 import de.zbw.business.lori.server.type.ParsingException
 import de.zbw.business.lori.server.type.RightError
 import de.zbw.business.lori.server.type.SearchExpression
 import de.zbw.business.lori.server.type.SearchGrammar
+import de.zbw.business.lori.server.type.SearchQueryResult
 import de.zbw.business.lori.server.type.SortInformation
 import de.zbw.business.lori.server.type.TemplateApplicationResult
 import de.zbw.business.lori.server.utils.TimezoneUtil
@@ -25,7 +27,9 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.collections.fold
 import kotlin.math.ceil
@@ -67,7 +71,7 @@ class TemplateApplication(
                 skippedApplication = true,
             )
         }
-        if (right.endDate != null && right.endDate < LocalDate.now()) {
+        if (right.endDate != null && right.endDate < LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN)) {
             LOG.info("Template ${right.rightId}: Not applied due to end date lying in the past.")
             return TemplateApplicationResult(
                 rightId = rightId,
@@ -135,6 +139,7 @@ class TemplateApplication(
             } else {
                 null
             }
+        val beforeApplicationTimestamp = Instant.now()
         val results: List<TemplateApplicationResult> =
             bookmarks.map { bookmark ->
                 applyTemplateByBookmark(
@@ -146,6 +151,9 @@ class TemplateApplication(
                     testId = testId,
                 )
             }
+        // Check if some entries were not reapplied
+        replaceOutOfDateApplications(template = right, atLeastLastUpdatedOn = beforeApplicationTimestamp)
+
         return results.fold(
             initial =
                 TemplateApplicationResult(
@@ -182,16 +190,21 @@ class TemplateApplication(
                                 ).toInstant(),
                     )
                 }
-            val facetsResult =
+            val ignoreDeletedItemsFilter = DeletionsFilter(on = false)
+
+            val facetsResult: SearchQueryResult =
                 backend.searchQuery(
+                    facetsOnly = true, // Only receive facets
                     searchTerm = bookmark.searchTerm,
                     limit = null,
                     offset = null,
-                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + endDateTemplateAfterCreatedOnFilter).filterNotNull(),
+                    metadataSearchFilter =
+                        (
+                            bookmark.getAllMetadataFilter() + endDateTemplateAfterCreatedOnFilter + ignoreDeletedItemsFilter
+                        ).filterNotNull(),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
-                    facetsOnly = true,
                     sortInformation = SortInformation.DEFAULT,
                 )
 
@@ -214,7 +227,11 @@ class TemplateApplication(
                                 right = right,
                                 createdBy = createdBy,
                                 testId = testId,
-                                createdOnFilter = endDateTemplateAfterCreatedOnFilter,
+                                additionalMetadataSearchFilters =
+                                    listOfNotNull(
+                                        endDateTemplateAfterCreatedOnFilter,
+                                        ignoreDeletedItemsFilter,
+                                    ),
                             )
                         }
                     }
@@ -247,7 +264,7 @@ class TemplateApplication(
         searchResultsExceptionIds: Set<String>,
         createdBy: String,
         testId: String?,
-        createdOnFilter: CreatedOnFilter?,
+        additionalMetadataSearchFilters: List<MetadataSearchFilter>,
     ): TemplateApplicationResult {
         val searchResults: Set<Item> =
             backend
@@ -255,7 +272,8 @@ class TemplateApplication(
                     searchTerm = bookmark.searchTerm,
                     limit = LIMIT,
                     offset = offset,
-                    metadataSearchFilter = (bookmark.getAllMetadataFilter() + createdOnFilter).filterNotNull(),
+                    metadataSearchFilter =
+                        (bookmark.getAllMetadataFilter() + additionalMetadataSearchFilters),
                     rightSearchFilter = bookmark.getAllRightFilter(),
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
@@ -305,6 +323,73 @@ class TemplateApplication(
                 testId = testId,
                 numberOfErrors = itemsWithConflicts.values.flatten().size,
             )
+        }
+    }
+
+    suspend fun replaceOutOfDateApplications(
+        template: ItemRight,
+        atLeastLastUpdatedOn: Instant,
+    ) {
+        val itemRows =
+            dbConnector.itemDB
+                .getItemsByLastUpdatedBeforeAndRightId(template.rightId!!, atLeastLastUpdatedOn)
+        val deletedHandles = dbConnector.metadataDB.getDeletedMetadataByHandles(itemRows.map { it.handle }).toSet()
+
+        itemRows.forEach { itemRow: ItemRow ->
+            if (itemRow.handle in deletedHandles) return@forEach
+            // Get the start date which is displayed for this handle in the UI because
+            // it might differ from the start date of the template
+            val startDateDisplayed =
+                LoriServerBackend
+                    .filterAndAdjustTemplateDates(
+                        templatesAndRights = listOf(template),
+                        firstApplicationDate = TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.createdOn!!),
+                    ).firstOrNull()
+                    ?.startDate
+            dbConnector.itemDB.deleteItem(itemRow.handle, itemRow.rightId)
+            if (startDateDisplayed != null) {
+                val localDateLastImport =
+                    TimezoneUtil.utcOffsetDateTimeToBerlinDate(
+                        OffsetDateTime.ofInstant(
+                            itemRow.lastUpdatedOn!!.toInstant(),
+                            TimezoneUtil.TIME_ZONE_BERLIN,
+                        ),
+                    )
+                val localDateNow = LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN)
+                val newEndDate =
+                    if (localDateNow.minusDays(1L) > localDateLastImport) {
+                        TimezoneUtil.utcOffsetDateTimeToBerlinDate(
+                            OffsetDateTime.ofInstant(
+                                Instant.now(),
+                                TimezoneUtil.TIME_ZONE_BERLIN,
+                            ),
+                        )
+                    } else {
+                        TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.lastUpdatedOn)
+                    }
+                val oldNotesManagementRelated = template.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
+                val newManualRight =
+                    template.copy(
+                        startDate = startDateDisplayed,
+                        isTemplate = false,
+                        templateName = null,
+                        templateDescription = null,
+                        notesManagementRelated =
+                            oldNotesManagementRelated +
+                                "Automatisch erzeugt, um Rechteinformationen aus in der Vergangenheit existierender Template-Zuordnung" +
+                                " zu Template https://${backend.config.url}?templateId=${template.rightId}" +
+                                " abzubilden",
+                        endDate = newEndDate,
+                        createdBy = "Automatisch",
+                        lastUpdatedBy = "Automatisch",
+                    )
+                LOG.info("Replacing template entry ${template.rightId} of item ${itemRow.handle} with a manual right")
+                val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
+                dbConnector.itemDB.insertItem(
+                    itemId = ItemId(handle = itemRow.handle, rightId = newManualRightId),
+                    createdBy = "lori",
+                )
+            }
         }
     }
 

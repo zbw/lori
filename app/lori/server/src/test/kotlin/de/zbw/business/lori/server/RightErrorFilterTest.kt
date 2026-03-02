@@ -33,13 +33,13 @@ class RightErrorFilterTest : DatabaseTest() {
     private fun getErrorsConflictType(): List<RightError> =
         listOf(
             RIGHT_ERROR.copy(
-                conflictByContext = "foo",
+                conflictCausedInContext = "foo",
                 handle = "ct_1",
                 conflictType = ConflictType.UNSPECIFIED,
             ),
             RIGHT_ERROR.copy(
                 conflictType = ConflictType.UNSPECIFIED,
-                conflictByContext = "foo",
+                conflictCausedInContext = "foo",
                 handle = "ct_2",
             ),
         )
@@ -47,11 +47,11 @@ class RightErrorFilterTest : DatabaseTest() {
     private fun getErrorsCausedByTemplateName(): List<RightError> =
         listOf(
             RIGHT_ERROR.copy(
-                conflictByContext = CAUSED_BY_TEMPLATE_NAME,
+                conflictCausedInContext = CAUSED_BY_TEMPLATE_NAME,
                 handle = "tn_1",
             ),
             RIGHT_ERROR.copy(
-                conflictByContext = CAUSED_BY_TEMPLATE_NAME,
+                conflictCausedInContext = CAUSED_BY_TEMPLATE_NAME,
                 handle = "tn_2",
             ),
         )
@@ -127,7 +127,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = listOf(RIGHT_ERROR_PAST.conflictByContext!!),
+                    contextNames = listOf(RIGHT_ERROR_PAST.conflictCausedInContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),
@@ -144,7 +144,7 @@ class RightErrorFilterTest : DatabaseTest() {
                 ),
                 ErrorQueryResult(
                     totalNumberOfResults = 2,
-                    contextNames = listOf(RIGHT_ERROR_PAST.conflictByContext!!),
+                    contextNames = listOf(RIGHT_ERROR_PAST.conflictCausedInContext!!),
                     conflictTypes = setOf(RIGHT_ERROR_PAST.conflictType),
                     results = getErrorsCreatedOn(),
                 ),
@@ -194,12 +194,12 @@ class RightErrorFilterTest : DatabaseTest() {
             RightError(
                 errorId = null,
                 message = "Timing conflict",
-                conflictingWithRightId = "sourceRightId",
-                conflictByRightId = "conflictingRightId",
+                conflictWithExistingRightId = "sourceRightId",
+                conflictCausedByRightId = "conflictingRightId",
                 handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW,
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByContext = "template name",
+                conflictCausedInContext = "template name",
                 testId = null,
                 createdBy = "user1",
             )
@@ -208,12 +208,12 @@ class RightErrorFilterTest : DatabaseTest() {
             RightError(
                 errorId = null,
                 message = "Timing conflict",
-                conflictingWithRightId = "sourceRightId",
-                conflictByRightId = "conflictingRightId",
+                conflictWithExistingRightId = "sourceRightId",
+                conflictCausedByRightId = "conflictingRightId",
                 handle = "somehandle",
                 createdOn = RightErrorDBTest.NOW.minusDays(DAYS_PAST),
                 conflictType = ConflictType.DATE_OVERLAP,
-                conflictByContext = "template name",
+                conflictCausedInContext = "template name",
                 testId = null,
                 createdBy = "user1",
             )

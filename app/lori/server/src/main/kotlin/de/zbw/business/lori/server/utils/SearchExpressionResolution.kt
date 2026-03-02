@@ -1,5 +1,7 @@
 package de.zbw.business.lori.server.utils
 
+import de.zbw.business.lori.server.MetadataSearchFilter
+import de.zbw.business.lori.server.NoRightInformationFilter
 import de.zbw.business.lori.server.RightSearchFilter
 import de.zbw.business.lori.server.SearchFilter
 import de.zbw.business.lori.server.type.SEAnd
@@ -11,18 +13,45 @@ import de.zbw.business.lori.server.type.SEVariable
 import de.zbw.business.lori.server.type.SearchExpression
 
 object SearchExpressionResolution {
-    fun resolveSearchExpression(expression: SearchExpression): String =
+    fun resolveSearchExpression(
+        expression: SearchExpression,
+        isStatistics: Boolean,
+    ): String =
         when (expression) {
-            is SEAnd -> "${resolveSearchExpression(
-                expression.left,
-            )} AND ${resolveSearchExpression(expression.right)}"
-            is SEOr -> "${resolveSearchExpression(
-                expression.left,
-            )} OR ${resolveSearchExpression(expression.right)}"
-            is SENot -> "NOT ${resolveSearchExpression(expression.body)}"
-            is SEVariable -> expression.searchFilter.toWhereClause()
-            is SEPar -> "(${resolveSearchExpression(expression.body)})"
-            is SENotPar -> "NOT (${resolveSearchExpression(expression.body)})"
+            is SEAnd -> {
+                "${resolveSearchExpression(
+                    expression.left,
+                    isStatistics,
+                )} AND ${resolveSearchExpression(expression.right, isStatistics)}"
+            }
+
+            is SEOr -> {
+                "${resolveSearchExpression(
+                    expression.left,
+                    isStatistics,
+                )} OR ${resolveSearchExpression(expression.right, isStatistics)}"
+            }
+
+            is SENot -> {
+                "NOT ${resolveSearchExpression(expression.body, isStatistics)}"
+            }
+
+            is SEVariable -> {
+                if (isStatistics) {
+                    expression.searchFilter.toWhereClauseStatistics()
+                } else {
+                    expression.searchFilter
+                        .toWhereClause()
+                }
+            }
+
+            is SEPar -> {
+                "(${resolveSearchExpression(expression.body, isStatistics)})"
+            }
+
+            is SENotPar -> {
+                "NOT (${resolveSearchExpression(expression.body, isStatistics)})"
+            }
         }
 
     fun hasRightQueries(expression: SearchExpression?): Boolean =
@@ -30,14 +59,91 @@ object SearchExpressionResolution {
             false
         } else {
             when (expression) {
-                is SEAnd ->
+                is SEAnd -> {
                     hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
 
-                is SEOr -> hasRightQueries(expression.left) || hasRightQueries(expression.right)
-                is SENot -> hasRightQueries(expression.body)
-                is SEVariable -> expression.searchFilter is RightSearchFilter
-                is SEPar -> hasRightQueries(expression.body)
-                is SENotPar -> hasRightQueries(expression.body)
+                is SEOr -> {
+                    hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
+
+                is SENot -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SEVariable -> {
+                    expression.searchFilter is RightSearchFilter
+                }
+
+                is SEPar -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SENotPar -> {
+                    hasRightQueries(expression.body)
+                }
+            }
+        }
+
+    fun hasNoRightFilter(expression: SearchExpression?): Boolean =
+        if (expression == null) {
+            false
+        } else {
+            when (expression) {
+                is SEAnd -> {
+                    hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
+
+                is SEOr -> {
+                    hasRightQueries(expression.left) || hasRightQueries(expression.right)
+                }
+
+                is SENot -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SEVariable -> {
+                    expression.searchFilter is NoRightInformationFilter
+                }
+
+                is SEPar -> {
+                    hasRightQueries(expression.body)
+                }
+
+                is SENotPar -> {
+                    hasRightQueries(expression.body)
+                }
+            }
+        }
+
+    fun hasMetadataQueries(expression: SearchExpression?): Boolean =
+        if (expression == null) {
+            false
+        } else {
+            when (expression) {
+                is SEAnd -> {
+                    hasMetadataQueries(expression.left) || hasMetadataQueries(expression.right)
+                }
+
+                is SEOr -> {
+                    hasMetadataQueries(expression.left) || hasMetadataQueries(expression.right)
+                }
+
+                is SENot -> {
+                    hasMetadataQueries(expression.body)
+                }
+
+                is SEVariable -> {
+                    expression.searchFilter is MetadataSearchFilter
+                }
+
+                is SEPar -> {
+                    hasMetadataQueries(expression.body)
+                }
+
+                is SENotPar -> {
+                    hasMetadataQueries(expression.body)
+                }
             }
         }
 

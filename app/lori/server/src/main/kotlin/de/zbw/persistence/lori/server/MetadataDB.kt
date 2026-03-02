@@ -8,6 +8,7 @@ import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITE
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.TABLE_NAME_ITEM_METADATA
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.setIfNotNull
 import de.zbw.persistence.lori.server.DatabaseConnector.Companion.toOffsetDateTime
+import de.zbw.persistence.lori.server.statistics.MetadataHandleLastUpdatedTransient
 import io.opentelemetry.api.trace.Tracer
 import java.sql.PreparedStatement
 import java.sql.ResultSet
@@ -24,9 +25,9 @@ import kotlin.collections.first
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class MetadataDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
-) {
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_METADATA) {
     internal suspend fun deleteMetadata(handles: List<String>): Int =
         DatabaseConnector.executeUpdate(
             connectionPool = connectionPool,
@@ -105,13 +106,27 @@ class MetadataDB(
             },
         )
 
+    suspend fun getDeletedMetadataByHandles(handles: List<String>): List<String> =
+        DatabaseConnector.select(
+            sql = STATEMENT_GET_DELETED_METADATA_BY_HANDLES,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getMetadataByHandles",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
+
     suspend fun getDeletedMetadata(
         limit: Int,
         offset: Int,
     ): List<ItemMetadata> =
         DatabaseConnector.select(
             sql =
-                STATEMENT_GET_DELETED_METADATA +
+                STATEMENT_GET_DELETED_METADATA.dropLast(1) +
                     " ORDER BY ${SortInformation.DEFAULT.sortByField.columnName}" +
                     " ${SortInformation.DEFAULT.sortOrder.sqlSyntax} LIMIT ? OFFSET ?;",
             connectionPool = connectionPool,
@@ -173,7 +188,7 @@ class MetadataDB(
                 },
             ).first()
 
-    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<String> =
+    suspend fun getMetadataHandlesOlderThanLastUpdatedOn(instant: Instant): List<MetadataHandleLastUpdatedTransient> =
         DatabaseConnector.select(
             connectionPool = connectionPool,
             sql = STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON,
@@ -183,7 +198,12 @@ class MetadataDB(
                 stmt.setTimestamp(1, Timestamp.from(instant))
             },
             mapper = { rs ->
-                rs.getString(1)
+                MetadataHandleLastUpdatedTransient(
+                    handle = rs.getString(1),
+                    lastUpdatedOn = rs.getTimestamp(2, utcCalendar).toInstant(),
+                    createdOn = rs.getTimestamp(3, utcCalendar).toInstant(),
+                    isDeleted = rs.getBoolean(4),
+                )
             },
         )
 
@@ -274,22 +294,29 @@ class MetadataDB(
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
-            "SELECT $COLUMN_METADATA_HANDLE" +
+            "SELECT $COLUMN_METADATA_HANDLE, $COLUMN_METADATA_LAST_UPDATED_ON," +
+                " $COLUMN_METADATA_CREATED_ON,$COLUMN_METADATA_DELETED" +
                 " FROM $TABLE_NAME_ITEM_METADATA" +
                 " WHERE $COLUMN_METADATA_LAST_UPDATED_ON < ?;"
 
         const val STATEMENT_UPDATE_DELETE_STATUS =
             "UPDATE $TABLE_NAME_ITEM_METADATA" +
                 " SET $COLUMN_METADATA_DELETED=?" +
-                " WHERE $COLUMN_METADATA_HANDLE=ANY(?)"
+                " WHERE $COLUMN_METADATA_HANDLE=ANY(?);"
 
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
-                " WHERE $COLUMN_METADATA_HANDLE = ANY(?)"
+                " WHERE $COLUMN_METADATA_HANDLE = ANY(?);"
 
         const val STATEMENT_GET_DELETED_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
-                " WHERE $COLUMN_METADATA_DELETED = true"
+                " WHERE $COLUMN_METADATA_DELETED = true;"
+
+        const val STATEMENT_GET_DELETED_METADATA_BY_HANDLES =
+            "SELECT $COLUMN_METADATA_HANDLE" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
+                " WHERE $COLUMN_METADATA_DELETED = true AND" +
+                " $COLUMN_METADATA_HANDLE = ANY(?);"
 
         const val STATEMENT_GET_DELETED_METADATA_COUNT =
             "SELECT COUNT(*)" +

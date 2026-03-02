@@ -123,12 +123,15 @@ export default defineComponent({
     };
 
     const currentRights = computed(() => {
-      return props.rights;
+      return props.rights.sort(
+          (a, b) => (a.startDate < b.startDate ? 1 : -1),
+      );
     });
 
     return {
       // Variables
       currentRight,
+      currentRights,
       currentIndex,
       dialogStore,
       isNew,
@@ -152,12 +155,12 @@ export default defineComponent({
 
 <style scoped></style>
 <template>
-  <v-sheet v-if="rights" class="mx-auto" tile>
+  <v-sheet v-if="currentRights" class="mx-auto" tile>
     <v-divider></v-divider>
     <v-data-table
       :key="renderKey"
       :headers="headers"
-      :items="rights"
+      :items="currentRights"
       @click:row="activateTabEdit"
     >
       <template v-slot:top>

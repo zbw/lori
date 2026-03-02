@@ -2,6 +2,7 @@ package de.zbw.business.lori.server.export
 
 import de.zbw.business.lori.server.type.ExportFormat
 import de.zbw.business.lori.server.type.ExportJob
+import de.zbw.business.lori.server.utils.TimezoneUtil
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.BufferedWriter
@@ -66,7 +67,7 @@ class ExportSession(
                     ExportFormat.JSON -> "ndjson"
                 }
 
-            val fileName = "${LocalDate.now().format(dateFormatter)}-$jobUUID.$fileSuffix"
+            val fileName = "${LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN).format(dateFormatter)}-$jobUUID.$fileSuffix"
             val filePath = exportDir.resolve(fileName)
 
             val writer =
@@ -83,7 +84,7 @@ class ExportSession(
             exportDir: Path,
             job: ExportJob,
         ): File? {
-            val fileName = "${LocalDate.now().format(dateFormatter)}-${job.id}.json"
+            val fileName = "${LocalDate.now(TimezoneUtil.TIME_ZONE_BERLIN).format(dateFormatter)}-${job.id}.json"
             val filePath = exportDir.resolve(fileName)
 
             val inputFile = job.getFile() ?: return null

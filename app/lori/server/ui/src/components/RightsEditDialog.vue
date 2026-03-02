@@ -42,7 +42,6 @@ import RelationshipConnect from "@/components/RelationshipConnect.vue";
 import {RouteLocationNormalizedLoaded, Router, useRoute, useRouter} from "vue-router";
 import BookmarkSave from "@/components/BookmarkSave.vue";
 import {ReadonlyDataTableHeader} from "@/types/vuetify";
-import {useDate} from "vuetify";
 
 export default defineComponent({
   computed: {
@@ -166,6 +165,7 @@ export default defineComponent({
       basisStorage: "",
       basisAccessState: "",
       copyToHandleId: "",
+      hasLegalRisk: "",
       startDate: {} as Date | undefined,
       endDate: {} as Date | undefined,
       templateName: "",
@@ -234,6 +234,7 @@ export default defineComponent({
           (formState.accessState != "" ||
               formState.basisStorage != "" ||
               formState.basisAccessState != ""  ||
+              formState.hasLegalRisk != "" ||
               !(formState.startDate == undefined || Object.keys(formState.startDate).length === 0) ||
               !(formState.endDate == undefined || Object.keys(formState.endDate).length === 0) ||
               (isTemplate.value && (
@@ -251,6 +252,7 @@ export default defineComponent({
           ((tmpRight.value.groups != undefined) && (formState.selectedGroups != tmpRight.value.groups)) ||
           formState.accessState != accessStateToString(lastSavedRight.value.accessState) ||
           formState.basisStorage != basisStorageToString(lastSavedRight.value.basisStorage) ||
+          formState.hasLegalRisk != hasLegalRiskToString(lastSavedRight.value.hasLegalRisk) ||
           formState.basisAccessState != basisAccessStateToString(lastSavedRight.value.basisAccessState)  ||
           formState.startDate != lastSavedRight.value.startDate ||
           formState.endDate != lastSavedRight.value.endDate ||
@@ -385,6 +387,13 @@ export default defineComponent({
       "ZBW-Policy (Open Content mit Einschränkung)",
       "ZBW-Policy (unbeantwortete Rechteanforderung)",
     ]);
+
+    const legalRiskSelect = ref([
+      "Ja",
+      "Nein",
+      "Kein Wert gewählt",
+    ]);
+
     const dialogDeleteRight = ref(false);
     const dialogDeleteTemplate = ref(false);
     const menuEndDate = ref(false);
@@ -778,9 +787,15 @@ export default defineComponent({
       }
 
       tmpRight.value.accessState = stringToAccessState(formState.accessState);
+      if(tmpRight.value.accessState != AccessStateRest.Restricted){
+        // Ensure groups are only passed when access state is restricted.
+        tmpRight.value.groups = [];
+        tmpRight.value.groupIds = [];
+      }
       tmpRight.value.basisStorage = stringToBasisStorage(
           formState.basisStorage,
       );
+      tmpRight.value.hasLegalRisk = stringToHasLegalRisk(formState.hasLegalRisk);
       tmpRight.value.basisAccessState = stringToBasisAccessState(
           formState.basisAccessState,
       );
@@ -912,6 +927,24 @@ export default defineComponent({
             return AccessStateRest.Restricted;
         }
       }
+    };
+
+    const hasLegalRiskToString = (hasLegalRisk: boolean | undefined) => {
+      if (hasLegalRisk == undefined) {
+        return "Kein Wert gewählt";
+      } else {
+        return hasLegalRisk ? "Ja" : "Nein";
+      }
+    };
+
+    const stringToHasLegalRisk = (value: string | undefined) => {
+      if (value == "Ja") {
+        return true;
+      }
+      if (value == "Nein") {
+        return false;
+      }
+      return undefined;
     };
 
     const basisStorageToString = (
@@ -1126,6 +1159,7 @@ export default defineComponent({
           tmpRight.value.templateDescription == undefined ? "" : tmpRight.value.templateDescription;
       formState.accessState = accessStateToString(tmpRight.value.accessState);
       formState.basisStorage = basisStorageToString(tmpRight.value.basisStorage);
+      formState.hasLegalRisk = hasLegalRiskToString(tmpRight.value.hasLegalRisk);
       formState.basisAccessState = basisAccessStateToString(
           tmpRight.value.basisAccessState,
       );
@@ -1672,6 +1706,7 @@ export default defineComponent({
       isStartDateMenuOpen,
       isEndDateMenuOpen,
       lastSavedRight,
+      legalRiskSelect,
       menuStartDate,
       menuEndDate,
       metadataCount,
@@ -2634,15 +2669,12 @@ export default defineComponent({
                   Urheberrechtsschranke ohne vertragrechtliches Risiko anwendbar?
                 </v-col>
                 <v-col cols="8">
-                  <v-switch
-                      v-model="tmpRight.hasLegalRisk"
-                      :false-value="true"
-                      :true-value="false"
-                      :readonly="!isEditable"
-                      color="indigo"
-                      :label="labelModelToString(tmpRight.hasLegalRisk == undefined ? undefined : !tmpRight.hasLegalRisk)"
-                      persistent-hint
-                  ></v-switch>
+                  <v-select
+                      v-bind="attrWithROProps"
+                      v-model="formState.hasLegalRisk"
+                      :items="legalRiskSelect"
+                      variant="outlined"
+                  ></v-select>
                 </v-col>
               </v-row>
               <v-row>

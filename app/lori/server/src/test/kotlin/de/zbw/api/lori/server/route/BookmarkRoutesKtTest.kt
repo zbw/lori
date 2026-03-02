@@ -251,8 +251,9 @@ class BookmarkRoutesKtTest {
         val bookmarkId = 45
         val expected =
             TEST_BOOKMARK.toRest(
-                "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
-                    " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
+                "(tit:someTitle) & (zdb:\"zdbId1\" & zdb:\"zdbId2\" & sig:\"sigel\"" +
+                    " & lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
+                    " & jah:2020-2030 & typ:\"BOOK,ARTICLE\"" +
                     " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                     " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                 emptyList(),
@@ -448,8 +449,9 @@ class BookmarkRoutesKtTest {
         val expected =
             listOf(
                 TEST_BOOKMARK.toRest(
-                    "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
-                        " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
+                    "(tit:someTitle) & (zdb:\"zdbId1\" & zdb:\"zdbId2\" & sig:\"sigel\"" +
+                        " & lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
+                        " & jah:2020-2030 & typ:\"BOOK,ARTICLE\"" +
                         " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                         " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                     emptyList(),
@@ -483,8 +485,9 @@ class BookmarkRoutesKtTest {
         val expected =
             listOf(
                 givenBookmark.toRest(
-                    "(tit:someTitle) & (lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
-                        " & sig:\"sigel\" & jah:2020-2030 & typ:\"BOOK,ARTICLE\" & zdb:\"zdbId1,zdbId2\"" +
+                    "(tit:someTitle) & (zdb:\"zdbId1\" & zdb:\"zdbId2\" & sig:\"sigel\"" +
+                        " & lur:\"http://creativecommons.org/licenses/by/3.0/au\"" +
+                        " & jah:2020-2030 & typ:\"BOOK,ARTICLE\"" +
                         " & acc:\"OPEN,RESTRICTED\" & zge:\"2021-12-31\" & reg:\"ZBW_USER_AGREEMENT\"" +
                         " & zgb:\"2020-01-01\" & zgp:\"2018-04-01\")",
                     emptyList(),
@@ -586,8 +589,8 @@ class BookmarkRoutesKtTest {
                 endDateFilter = QueryParameterParser.parseEndDateFilter("2021-12-31"),
                 licenceURLFilter = QueryParameterParser.parseLicenceUrlFilter("http://creativecommons.org/licenses/by/3.0/au"),
                 formalRuleFilter = QueryParameterParser.parseFormalRuleFilter("ZBW_USER_AGREEMENT"),
-                paketSigelFilter = QueryParameterParser.parsePaketSigelFilterAND("sigel"),
-                zdbIdFilter = QueryParameterParser.parseZDBIdFilterAND("zdbId1,zdbId2"),
+                paketSigelFilters = QueryParameterParser.parsePaketSigelFilter("sigel"),
+                zdbIdFilters = QueryParameterParser.parseZDBIdFilters("zdbId1,zdbId2"),
                 noRightInformationFilter = QueryParameterParser.parseNoRightInformationFilter("false"),
                 lastUpdatedOn =
                     OffsetDateTime.of(

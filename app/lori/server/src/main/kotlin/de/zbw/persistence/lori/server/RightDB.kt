@@ -40,10 +40,10 @@ import java.util.TimeZone
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class RightDB(
-    val connectionPool: ConnectionPool,
-    private val tracer: Tracer,
+    connectionPool: ConnectionPool,
+    tracer: Tracer,
     private val groupDB: GroupDB,
-) {
+) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_RIGHT) {
     suspend fun insertRight(right: ItemRight): String =
         DatabaseConnector
             .insertReturningKeys(
@@ -140,7 +140,9 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasLegalRisk) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -216,7 +218,9 @@ class RightDB(
             this.setIfNotNull(localCounter++, right.exceptionOfId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
-            this.setBoolean(localCounter++, right.hasLegalRisk != false)
+            this.setIfNotNull(localCounter++, right.hasLegalRisk) { value, idx, prepStmt ->
+                prepStmt.setBoolean(idx, value)
+            }
             this.setIfNotNull(localCounter++, right.hasExceptionId) { value, idx, prepStmt ->
                 prepStmt.setString(idx, value)
             }
@@ -319,17 +323,17 @@ class RightDB(
                     if (draftFilter == null) {
                         it
                     } else if (draftFilter) {
-                        "$it AND $COLUMN_LAST_APPLIED_ON IS NULL"
+                        "$it AND $COLUMN_RIGHT_LAST_APPLIED_ON IS NULL"
                     } else {
-                        "$it AND $COLUMN_LAST_APPLIED_ON IS NOT NULL"
+                        "$it AND $COLUMN_RIGHT_LAST_APPLIED_ON IS NOT NULL"
                     }
                 }.let {
                     if (exceptionFilter == null) {
                         it
                     } else if (exceptionFilter) {
-                        "$it AND $COLUMN_EXCEPTION_OF_ID IS NOT NULL"
+                        "$it AND $COLUMN_RIGHT_EXCEPTION_OF_ID IS NOT NULL"
                     } else {
-                        "$it AND $COLUMN_EXCEPTION_OF_ID IS NULL"
+                        "$it AND $COLUMN_RIGHT_EXCEPTION_OF_ID IS NULL"
                     }
                 }.let {
                     if (excludes != null) {
@@ -341,9 +345,9 @@ class RightDB(
                     if (hasException == null) {
                         it
                     } else if (hasException) {
-                        "$it AND $COLUMN_HAS_EXCEPTION_ID IS NOT NULL"
+                        "$it AND $COLUMN_RIGHT_HAS_EXCEPTION_ID IS NOT NULL"
                     } else {
-                        "$it AND $COLUMN_HAS_EXCEPTION_ID IS NULL"
+                        "$it AND $COLUMN_RIGHT_HAS_EXCEPTION_ID IS NULL"
                     }
                 }.let {
                     "$it ORDER BY created_on DESC LIMIT ? OFFSET ?;"
@@ -563,14 +567,14 @@ class RightDB(
     }
 
     companion object {
-        const val COLUMN_IS_TEMPLATE = "is_template"
-        private const val COLUMN_EXCEPTION_OF_ID = "exception_of_id"
-        private const val COLUMN_FIRST_APPLIED_ON = "first_applied_on"
-        private const val COLUMN_HAS_EXCEPTION_ID = "has_exception_id"
-        const val COLUMN_HAS_LEGAL_RISK = "has_legal_risk"
-        private const val COLUMN_LAST_APPLIED_ON = "last_applied_on"
-        private const val COLUMN_PREDECESSOR_ID = "predecessor_id"
-        private const val COLUMN_SUCCESSOR_ID = "successor_id"
+        const val COLUMN_RIGHT_IS_TEMPLATE = "is_template"
+        private const val COLUMN_RIGHT_EXCEPTION_OF_ID = "exception_of_id"
+        private const val COLUMN_RIGHT_FIRST_APPLIED_ON = "first_applied_on"
+        private const val COLUMN_RIGHT_HAS_EXCEPTION_ID = "has_exception_id"
+        const val COLUMN_RIGHT_HAS_LEGAL_RISK = "has_legal_risk"
+        private const val COLUMN_RIGHT_LAST_APPLIED_ON = "last_applied_on"
+        private const val COLUMN_RIGHT_PREDECESSOR_ID = "predecessor_id"
+        private const val COLUMN_RIGHT_SUCCESSOR_ID = "successor_id"
 
         val utcCalendar = Calendar.getInstance(TimeZone.getTimeZone(TimezoneUtil.TIME_ZONE_UTC))
 
@@ -580,14 +584,14 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation, notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_LAST_APPLIED_ON," +
-                "$COLUMN_EXCEPTION_OF_ID,$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID," +
-                "$COLUMN_PREDECESSOR_ID,$COLUMN_SUCCESSOR_ID,$COLUMN_FIRST_APPLIED_ON"
+                "$COLUMN_RIGHT_IS_TEMPLATE,template_name,template_description,$COLUMN_RIGHT_LAST_APPLIED_ON," +
+                "$COLUMN_RIGHT_EXCEPTION_OF_ID,$COLUMN_RIGHT_HAS_LEGAL_RISK,$COLUMN_RIGHT_HAS_EXCEPTION_ID," +
+                "$COLUMN_RIGHT_PREDECESSOR_ID,$COLUMN_RIGHT_SUCCESSOR_ID,$COLUMN_RIGHT_FIRST_APPLIED_ON"
 
         const val STATEMENT_GET_ALL_IDS_OF_TEMPLATES =
             "SELECT $COLUMN_RIGHT_ID" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_IS_TEMPLATE = true"
+                " WHERE $COLUMN_RIGHT_IS_TEMPLATE = true"
 
         const val STATEMENT_GET_RIGHTS =
             STATEMENT_SELECT_ALL +
@@ -611,9 +615,9 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules,basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID,$COLUMN_PREDECESSOR_ID," +
-                "$COLUMN_SUCCESSOR_ID) " +
+                "$COLUMN_RIGHT_IS_TEMPLATE,template_name,template_description,$COLUMN_RIGHT_EXCEPTION_OF_ID," +
+                "$COLUMN_RIGHT_HAS_LEGAL_RISK,$COLUMN_RIGHT_HAS_EXCEPTION_ID,$COLUMN_RIGHT_PREDECESSOR_ID," +
+                "$COLUMN_RIGHT_SUCCESSOR_ID) " +
                 "VALUES(?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -632,9 +636,9 @@ class RightDB(
                 "$COLUMN_RIGHT_LICENCE_CONTRACT,$COLUMN_RIGHT_ZBW_USER_AGREEMENT," +
                 "$COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,notes_formal_rules, basis_storage," +
                 "basis_access_state,notes_process_documentation,notes_management_related," +
-                "$COLUMN_IS_TEMPLATE,template_name,template_description,$COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_LEGAL_RISK,$COLUMN_HAS_EXCEPTION_ID,$COLUMN_PREDECESSOR_ID," +
-                "$COLUMN_SUCCESSOR_ID) " +
+                "$COLUMN_RIGHT_IS_TEMPLATE,template_name,template_description,$COLUMN_RIGHT_EXCEPTION_OF_ID," +
+                "$COLUMN_RIGHT_HAS_LEGAL_RISK,$COLUMN_RIGHT_HAS_EXCEPTION_ID,$COLUMN_RIGHT_PREDECESSOR_ID," +
+                "$COLUMN_RIGHT_SUCCESSOR_ID) " +
                 "VALUES(?,?,?," +
                 "?,?,?," +
                 "?,?,?," +
@@ -660,14 +664,14 @@ class RightDB(
                 "basis_access_state = EXCLUDED.basis_access_state," +
                 "notes_process_documentation = EXCLUDED.notes_process_documentation," +
                 "notes_management_related = EXCLUDED.notes_management_related," +
-                "$COLUMN_IS_TEMPLATE = EXCLUDED.$COLUMN_IS_TEMPLATE," +
+                "$COLUMN_RIGHT_IS_TEMPLATE = EXCLUDED.$COLUMN_RIGHT_IS_TEMPLATE," +
                 "template_name = EXCLUDED.template_name," +
                 "template_description = EXCLUDED.template_description," +
-                "$COLUMN_EXCEPTION_OF_ID = EXCLUDED.$COLUMN_EXCEPTION_OF_ID," +
-                "$COLUMN_HAS_EXCEPTION_ID = EXCLUDED.$COLUMN_HAS_EXCEPTION_ID," +
-                "$COLUMN_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_HAS_LEGAL_RISK," +
-                "$COLUMN_PREDECESSOR_ID = EXCLUDED.$COLUMN_PREDECESSOR_ID," +
-                "$COLUMN_SUCCESSOR_ID = EXCLUDED.$COLUMN_SUCCESSOR_ID;"
+                "$COLUMN_RIGHT_EXCEPTION_OF_ID = EXCLUDED.$COLUMN_RIGHT_EXCEPTION_OF_ID," +
+                "$COLUMN_RIGHT_HAS_EXCEPTION_ID = EXCLUDED.$COLUMN_RIGHT_HAS_EXCEPTION_ID," +
+                "$COLUMN_RIGHT_HAS_LEGAL_RISK = EXCLUDED.$COLUMN_RIGHT_HAS_LEGAL_RISK," +
+                "$COLUMN_RIGHT_PREDECESSOR_ID = EXCLUDED.$COLUMN_RIGHT_PREDECESSOR_ID," +
+                "$COLUMN_RIGHT_SUCCESSOR_ID = EXCLUDED.$COLUMN_RIGHT_SUCCESSOR_ID;"
 
         const val STATEMENT_DELETE_RIGHTS =
             "DELETE " +
@@ -677,12 +681,12 @@ class RightDB(
         const val STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID =
             STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_EXCEPTION_OF_ID = ?"
+                " WHERE $COLUMN_RIGHT_EXCEPTION_OF_ID = ?"
 
         const val STATEMENT_GET_TEMPLATES =
             STATEMENT_SELECT_ALL +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_IS_TEMPLATE = true"
+                " WHERE $COLUMN_RIGHT_IS_TEMPLATE = true"
 
         const val STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME =
             STATEMENT_SELECT_ALL +
@@ -691,36 +695,36 @@ class RightDB(
 
         const val STATEMENT_UPDATE_TEMPLATE_APPLIED_ON =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_LAST_APPLIED_ON=?," +
-                " $COLUMN_FIRST_APPLIED_ON = CASE" +
-                " WHEN $COLUMN_FIRST_APPLIED_ON IS NULL THEN ?" +
-                " ELSE $COLUMN_FIRST_APPLIED_ON" +
+                " SET $COLUMN_RIGHT_LAST_APPLIED_ON=?," +
+                " $COLUMN_RIGHT_FIRST_APPLIED_ON = CASE" +
+                " WHEN $COLUMN_RIGHT_FIRST_APPLIED_ON IS NULL THEN ?" +
+                " ELSE $COLUMN_RIGHT_FIRST_APPLIED_ON" +
                 " END" +
                 " WHERE $COLUMN_RIGHT_ID = ?"
 
         const val STATEMENT_IS_EXCEPTION =
             "SELECT COUNT(*)" +
                 " FROM $TABLE_NAME_ITEM_RIGHT" +
-                " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_EXCEPTION_OF_ID IS NOT NULL AND $COLUMN_IS_TEMPLATE;"
+                " WHERE $COLUMN_RIGHT_ID = ? AND $COLUMN_RIGHT_EXCEPTION_OF_ID IS NOT NULL AND $COLUMN_RIGHT_IS_TEMPLATE;"
 
         const val STATEMENT_SET_EXCEPTION_OF_ID =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_EXCEPTION_OF_ID=?" +
+                " SET $COLUMN_RIGHT_EXCEPTION_OF_ID=?" +
                 " WHERE $COLUMN_RIGHT_ID=?;"
 
         const val STATEMENT_SET_HAS_EXCEPTION_ID =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_HAS_EXCEPTION_ID=?" +
+                " SET $COLUMN_RIGHT_HAS_EXCEPTION_ID=?" +
                 " WHERE $COLUMN_RIGHT_ID=?;"
 
         const val STATEMENT_SET_PREDECESSOR =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_PREDECESSOR_ID=?" +
+                " SET $COLUMN_RIGHT_PREDECESSOR_ID=?" +
                 " WHERE $COLUMN_RIGHT_ID=?;"
 
         const val STATEMENT_SET_SUCCESSOR =
             "UPDATE $TABLE_NAME_ITEM_RIGHT" +
-                " SET $COLUMN_SUCCESSOR_ID=?" +
+                " SET $COLUMN_RIGHT_SUCCESSOR_ID=?" +
                 " WHERE $COLUMN_RIGHT_ID=?;"
 
         fun extractRightFromRS(rs: ResultSet): ItemRight {
@@ -767,7 +771,7 @@ class RightDB(
                         )
                     },
                 exceptionOfId = rs.getString(localCounter++),
-                hasLegalRisk = rs.getBoolean(localCounter++),
+                hasLegalRisk = rs.getObject(localCounter++) as? Boolean, // Retrieving NULL from booleans is tricky
                 hasExceptionId = rs.getString(localCounter++),
                 predecessorId = rs.getString(localCounter++),
                 successorId = rs.getString(localCounter++),
