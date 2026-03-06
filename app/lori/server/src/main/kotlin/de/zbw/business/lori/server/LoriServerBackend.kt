@@ -10,6 +10,7 @@ import de.zbw.api.lori.server.exception.ResourceConflictException
 import de.zbw.api.lori.server.exception.ResourceStillInUseException
 import de.zbw.api.lori.server.route.ApiError
 import de.zbw.api.lori.server.type.Either
+import de.zbw.api.lori.server.utils.Constants
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.BookmarkTemplate
 import de.zbw.business.lori.server.type.ConflictType
@@ -277,7 +278,7 @@ class LoriServerBackend(
                         dbConnector.rightDB.upsertRight(
                             r.copy(
                                 endDate = deletionDate,
-                                lastUpdatedBy = "Automatisch",
+                                lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
                                 notesGeneral =
                                     oldNotesGeneral +
                                         "Enddatum anlässlich Item-Löschung automatisch gesetzt.",
@@ -327,8 +328,8 @@ class LoriServerBackend(
                             } else {
                                 template.endDate
                             },
-                        createdBy = "Automatisch",
-                        lastUpdatedBy = "Automatisch",
+                        createdBy = Constants.AUTHOR_AUTOMATIC,
+                        lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
                         notesManagementRelated =
                             oldNotesManagementRelated +
                                 "Automatisch erzeugt, um Rechteinformationen aus ursprünglicher" +
@@ -358,6 +359,8 @@ class LoriServerBackend(
             } ?: emptyList()
 
     suspend fun getMetadataElementsByIds(handles: List<String>): List<ItemMetadata> = dbConnector.metadataDB.getMetadata(handles)
+
+    suspend fun getExistingMetadataHandles(handles: List<String>): List<String> = dbConnector.metadataDB.getExistingHandles(handles)
 
     suspend fun getItemRowsByHandleAndRightId(
         handle: String,

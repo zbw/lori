@@ -557,6 +557,7 @@ class RightRoutesKtTest {
                 mailToWarning = "receipents@mail.com",
                 mailFrom = "my@mail.com",
                 url = "lori.home",
+                groupIdZBWTerminal = 1,
             )
 
         val TEST_RIGHT =

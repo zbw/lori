@@ -146,6 +146,7 @@ class ServicePoolWithProbesTest {
                 mailFrom = "my@mail.com",
                 mailToWarning = "foobar@mail.com",
                 url = "lori.home",
+                groupIdZBWTerminal = 1,
             )
 
         private val tracer: Tracer = OpenTelemetry.noop().getTracer("de.zbw.api.lori.server.ServiceWithProbesTest")

@@ -3,6 +3,7 @@ package de.zbw.business.lori.server
 import com.github.h0tk3y.betterParse.grammar.tryParseToEnd
 import com.github.h0tk3y.betterParse.parser.ErrorResult
 import com.github.h0tk3y.betterParse.parser.Parsed
+import de.zbw.api.lori.server.utils.Constants
 import de.zbw.business.lori.server.LoriServerBackend.Companion.findItemsWithConflicts
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ComparisonOperator
@@ -380,8 +381,8 @@ class TemplateApplication(
                                 " zu Template https://${backend.config.url}?templateId=${template.rightId}" +
                                 " abzubilden",
                         endDate = newEndDate,
-                        createdBy = "Automatisch",
-                        lastUpdatedBy = "Automatisch",
+                        createdBy = Constants.AUTHOR_AUTOMATIC,
+                        lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
                     )
                 LOG.info("Replacing template entry ${template.rightId} of item ${itemRow.handle} with a manual right")
                 val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)

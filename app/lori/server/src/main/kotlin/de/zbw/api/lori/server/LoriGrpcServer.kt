@@ -131,7 +131,7 @@ class LoriGrpcServer(
 
                 if (importsExpected != importsReceived) {
                     throw FullimportException(
-                        "Ungültiger Vollimport. Anzahl importierte Items ($importsReceived) stimmt" +
+                        "Ungültiger Vollimport. Anzahl importierte Items ($importsReceived) stimmt " +
                             "nicht mit Anzahl erwartener Items überein ($importsExpected)",
                     )
                 }

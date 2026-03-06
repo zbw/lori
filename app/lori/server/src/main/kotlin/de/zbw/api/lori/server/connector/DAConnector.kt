@@ -7,8 +7,14 @@ import de.zbw.api.lori.server.type.DACredentials
 import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.api.lori.server.type.toBusiness
+import de.zbw.api.lori.server.utils.Constants
 import de.zbw.business.lori.server.LoriServerBackend
+import de.zbw.business.lori.server.type.AccessState
+import de.zbw.business.lori.server.type.BasisAccessState
+import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.ItemMetadata
+import de.zbw.business.lori.server.type.ItemRight
+import de.zbw.business.lori.server.utils.TimezoneUtil.utcOffsetDateTimeToBerlinDate
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
@@ -46,6 +52,8 @@ import kotlinx.coroutines.sync.withPermit
 import kotlinx.serialization.SerializationException
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import kotlin.math.ceil
 
 /**
@@ -215,7 +223,7 @@ class DAConnector(
 
             is ApiResponse.Success<List<DAItem>> -> {
                 val daItemList = response.body
-                val metadataList =
+                val metadataList: List<ItemMetadata> =
                     daItemList
                         .mapNotNull {
                             it.toBusiness(
@@ -225,8 +233,10 @@ class DAConnector(
                                 mutexForLogging = mutexForLogging,
                             )
                         }.map { shortenHandle(it) }
+                val newHandlesGettingDefaultEntries = checkForDefaultEntries(metadataList)
                 val writtenToDB = backend.upsertMetadata(metadataList).filter { it == 1 }.size
-                return writtenToDB
+                createDefaultRightEntries(newHandlesGettingDefaultEntries)
+                writtenToDB
             }
         }
     }
@@ -328,6 +338,51 @@ class DAConnector(
                 }
         }
 
+    suspend fun checkForDefaultEntries(metadata: List<ItemMetadata>): List<String> {
+        val candidateHandles =
+            metadata
+                .filter { it.collectionHandle == COLLECTION_WITH_DEFAULT_ENTRIES }
+                .takeIf { it.isNotEmpty() }
+                ?.map { it.handle }
+                ?: return emptyList()
+        val existingHandles = backend.getExistingMetadataHandles(candidateHandles)
+        return candidateHandles.filter { it !in existingHandles }
+    }
+
+    /**
+     * Special case for all new imports of collection 11159/17. Those get a
+     * default entry when imported for the first time.
+     */
+    suspend fun createDefaultRightEntries(newHandles: List<String>) {
+        val localDate: LocalDate = utcOffsetDateTimeToBerlinDate(OffsetDateTime.now())
+        try {
+            newHandles.forEach { handle ->
+                LOG.info("Create default right entry for new handle $handle")
+                val generatedRightId =
+                    backend.insertRight(
+                        ItemRight(
+                            groupIds = listOf(config.groupIdZBWTerminal),
+                            accessState = AccessState.RESTRICTED,
+                            startDate = localDate,
+                            createdBy = Constants.AUTHOR_AUTOMATIC,
+                            lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
+                            basisStorage = BasisStorage.AUTHOR_RIGHT_EXCEPTION,
+                            basisAccessState = BasisAccessState.AUTHOR_RIGHT_EXCEPTION,
+                            isTemplate = false,
+                        ),
+                    )
+                backend.insertItemEntry(
+                    createdBy = Constants.AUTHOR_AUTOMATIC,
+                    handle = handle,
+                    rightId = generatedRightId,
+                )
+            }
+            return
+        } catch (e: Exception) {
+            LOG.error("Error while creating default right entries for handles $newHandles", e)
+        }
+    }
+
     suspend inline fun <reified T, reified E> HttpClient.safeRequest(
         retries: Int,
         delayMillis: Long,
@@ -366,6 +421,9 @@ class DAConnector(
     companion object {
         const val DSPACE_TOKEN = "rest-dspace-token"
         const val DEFAULT_IMPORT_CHUNK_SIZE = 100
+
+        // New entries in this collection will receive default right entries
+        const val COLLECTION_WITH_DEFAULT_ENTRIES = "11159/17"
         private const val HANDLE_URL = "http://hdl.handle.net/"
         internal val LOG: Logger = LogManager.getLogger(DAConnector::class.java)
 
