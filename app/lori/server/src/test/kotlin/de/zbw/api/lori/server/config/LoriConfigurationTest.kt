@@ -49,6 +49,7 @@ class LoriConfigurationTest {
         System.setProperty("lori.mail.to.error", expectedConfig.mailToError)
         System.setProperty("lori.mail.to.warning", expectedConfig.mailToWarning)
         System.setProperty("lori.mail.from", expectedConfig.mailFrom)
+        System.setProperty("lori.group.id.terminal", expectedConfig.groupIdZBWTerminal.toString())
 
         val receivedConfig =
             LoriConfiguration.load(
@@ -94,6 +95,7 @@ class LoriConfigurationTest {
                 mailFrom = "me@localhost",
                 mailToWarning = "to@localhost",
                 url = "lori.home",
+                groupIdZBWTerminal = 1,
             )
     }
 }

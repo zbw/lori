@@ -106,6 +106,20 @@ class MetadataDB(
             },
         )
 
+    suspend fun getExistingHandles(handles: List<String>): List<String> =
+        DatabaseConnector.select(
+            sql = STATEMENT_GET_EXISTING_HANDLES,
+            connectionPool = connectionPool,
+            tracer = tracer,
+            spanName = "getExistingHandles",
+            params = { stmt ->
+                stmt.setArray(1, stmt.connection.createArrayOf("text", handles.toTypedArray()))
+            },
+            mapper = { rs ->
+                rs.getString(1)
+            },
+        )
+
     suspend fun getDeletedMetadataByHandles(handles: List<String>): List<String> =
         DatabaseConnector.select(
             sql = STATEMENT_GET_DELETED_METADATA_BY_HANDLES,
@@ -306,6 +320,11 @@ class MetadataDB(
 
         const val STATEMENT_GET_METADATA =
             STATEMENT_SELECT_ALL_METADATA_FROM +
+                " WHERE $COLUMN_METADATA_HANDLE = ANY(?);"
+
+        const val STATEMENT_GET_EXISTING_HANDLES =
+            "SELECT $COLUMN_METADATA_HANDLE" +
+                " FROM $TABLE_NAME_ITEM_METADATA" +
                 " WHERE $COLUMN_METADATA_HANDLE = ANY(?);"
 
         const val STATEMENT_GET_DELETED_METADATA =

@@ -43,6 +43,7 @@ data class LoriConfiguration(
     val commitHash: String,
     val downloadDir: String,
     val url: String,
+    val groupIdZBWTerminal: Int,
 ) {
     companion object {
         private const val DEFAULT_HTTP_PORT = 8082
@@ -91,6 +92,7 @@ data class LoriConfiguration(
             val mailToError = string(prefix, "mail", "to", "error").required()
             val mailFrom = string(prefix, "mail", "from").required()
             val mailToWarning = string(prefix, "mail", "to", "warning")
+            val groupIdZBWTerminal = int(prefix, "group", "id", "terminal").required()
 
             return LoriConfiguration(
                 httpPort = source[httpPort],
@@ -121,6 +123,7 @@ data class LoriConfiguration(
                 mailToWarning = source[mailToWarning],
                 mailFrom = source[mailFrom],
                 url = source[url],
+                groupIdZBWTerminal = source[groupIdZBWTerminal],
             )
         }
 

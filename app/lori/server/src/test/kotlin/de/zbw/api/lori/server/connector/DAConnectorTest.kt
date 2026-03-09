@@ -10,6 +10,7 @@ import de.zbw.api.lori.server.type.DAItem
 import de.zbw.api.lori.server.type.DAMetadata
 import de.zbw.api.lori.server.type.DAObject
 import de.zbw.api.lori.server.type.DAResourcePolicy
+import de.zbw.api.lori.server.type.Either
 import de.zbw.api.lori.server.type.MetadataValidationError
 import de.zbw.api.lori.server.type.RestConverterTest.Companion.TEST_METADATA
 import de.zbw.business.lori.server.LoriServerBackend
@@ -24,13 +25,18 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
+import org.testng.annotations.AfterMethod
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 /**
  * Tests for [DAConnector].
@@ -39,6 +45,11 @@ import org.testng.annotations.Test
  * @author Christian Bay (c.bay@zbw.eu)
  */
 class DAConnectorTest {
+    @AfterMethod
+    fun afterMethod() {
+        unmockkAll()
+    }
+
     @Test
     fun testLogin() {
         runBlocking {
@@ -457,9 +468,136 @@ class DAConnectorTest {
         )
     }
 
+    @DataProvider(name = DATA_FOR_DEFAULT_RIGHT_ENTRIES)
+    fun createDefaultRightEntriesData() =
+        arrayOf(
+            arrayOf(
+                "11159/1",
+                listOf(
+                    TEST_METADATA.copy(
+                        handle = "11159/1",
+                        collectionHandle = MAGIC_COLLECTION_HANDLE,
+                    ),
+                    TEST_METADATA.copy(
+                        handle = "11159/2",
+                        collectionHandle = "11159/18",
+                    ),
+                ),
+                emptyList<String>(),
+                listOf("11159/1"),
+                1,
+                1,
+                "One new handle being part of magic collection gets one new right entry",
+            ),
+            arrayOf(
+                "11159/1",
+                listOf(
+                    TEST_METADATA.copy(
+                        handle = "11159/1",
+                        collectionHandle = MAGIC_COLLECTION_HANDLE,
+                    ),
+                    TEST_METADATA.copy(
+                        handle = "11159/2",
+                        collectionHandle = "11159/18",
+                    ),
+                ),
+                listOf("11159/1"),
+                emptyList<String>(),
+                0,
+                0,
+                "One old handle being part of magic collection. No changes to db.",
+            ),
+        )
+
+    @Test(dataProvider = DATA_FOR_DEFAULT_RIGHT_ENTRIES)
+    fun testCreateDefaultRightEntries(
+        newHandle: String,
+        givenMetadataList: List<ItemMetadata>,
+        existingHandles: List<String>,
+        expectedNewHandles: List<String>,
+        verifyInsertItems: Int,
+        verifyInsertRights: Int,
+        reason: String,
+    ) {
+        mockkStatic(OffsetDateTime::class)
+        every { OffsetDateTime.now() } returns TODAY_UTC
+        val expectedGeneratedRightId = "61"
+
+        val expectedToken = "token-foo"
+        val mockEngine =
+            MockEngine {
+                respond(
+                    content = ByteReadChannel(expectedToken),
+                    status = HttpStatusCode.OK,
+                    headers = headersOf(HttpHeaders.ContentType, "text/plain"),
+                )
+            }
+
+        val backend =
+            spyk(
+                LoriServerBackend(
+                    mockk {
+                        every { statisticsService } returns mockk<StatisticsService>()
+                    },
+                    mockk<LoriConfiguration>(),
+                ),
+            ) {
+                coEvery { insertRight(any()) } returns expectedGeneratedRightId
+                coEvery { insertItemEntry(handle = newHandle, rightId = expectedGeneratedRightId, createdBy = any()) } returns
+                    Either.Right("foobar")
+                coEvery { getExistingMetadataHandles(listOf(newHandle)) } returns existingHandles
+            }
+
+        val daConnector =
+            DAConnector(
+                config =
+                    mockk {
+                        every { digitalArchiveAddress } returns REST_URL
+                        every { digitalArchiveBasicAuth } returns "pw"
+                        every { groupIdZBWTerminal } returns 3
+                    },
+                engine = mockEngine,
+                backend = backend,
+            )
+        // when
+        runBlocking {
+            val newHandles = daConnector.checkForDefaultEntries(givenMetadataList)
+            assertThat(
+                reason,
+                newHandles,
+                `is`(expectedNewHandles),
+            )
+            daConnector.createDefaultRightEntries(newHandles)
+        }
+
+        // then
+        coVerify(exactly = verifyInsertItems) {
+            backend.insertItemEntry(
+                handle = newHandle,
+                rightId = expectedGeneratedRightId,
+                createdBy = any(),
+            )
+        }
+        coVerify(exactly = verifyInsertRights) { backend.insertRight(any()) }
+    }
+
     companion object {
         const val DATA_FOR_SERIALIZATION = "DATA_FOR_SERIALIZATION"
+        const val DATA_FOR_DEFAULT_RIGHT_ENTRIES = "DATA_FOR_DEFAULT_RIGHT_ENTRIES"
         const val REST_URL = "http://test-archive.de"
+        const val MAGIC_COLLECTION_HANDLE = "11159/17"
+
+        val TODAY_UTC: OffsetDateTime =
+            OffsetDateTime.of(
+                2025,
+                12,
+                17,
+                0,
+                0,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
 
         val TEST_SUBCOMMUNITY =
             DACommunity(
