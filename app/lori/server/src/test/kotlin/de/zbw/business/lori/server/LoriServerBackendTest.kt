@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
 import de.zbw.business.lori.server.type.BasisStorage
 import de.zbw.business.lori.server.type.Bookmark
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemMetadata
 import de.zbw.business.lori.server.type.ItemRight
@@ -745,6 +746,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 TEST_RIGHT,
                 emptySet<Item>(),
                 0,
+                emptySet<ConflictType>(),
                 "Skip same right",
             ),
             arrayOf(
@@ -762,7 +764,76 @@ class LoriServerBackendTest : DatabaseTest() {
                     ),
                 ),
                 1,
+                setOf<ConflictType>(
+                    ConflictType.DATE_OVERLAP,
+                ),
                 "Find duplicate",
+            ),
+            arrayOf(
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights =
+                            listOf(
+                                TEST_RIGHT.copy(endDate = null),
+                            ),
+                    ),
+                ),
+                TEST_RIGHT.copy(
+                    rightId = "testConflict",
+                    startDate = TODAY.plusDays(2),
+                    isTemplate = true,
+                ),
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights =
+                            listOf(
+                                TEST_RIGHT.copy(endDate = null),
+                            ),
+                    ),
+                ),
+                1,
+                setOf<ConflictType>(
+                    ConflictType.DATE_OVERLAP_NO_END_MANUAL,
+                ),
+                "Conflict which can be resolved",
+            ),
+            arrayOf(
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights =
+                            listOf(
+                                TEST_RIGHT.copy(
+                                    endDate = null,
+                                    isTemplate = true,
+                                ),
+                            ),
+                    ),
+                ),
+                TEST_RIGHT.copy(
+                    rightId = "testConflict",
+                    startDate = TODAY.plusDays(2),
+                    isTemplate = true,
+                ),
+                setOf(
+                    Item(
+                        metadata = TEST_METADATA,
+                        rights =
+                            listOf(
+                                TEST_RIGHT.copy(
+                                    endDate = null,
+                                    isTemplate = true,
+                                ),
+                            ),
+                    ),
+                ),
+                1,
+                setOf<ConflictType>(
+                    ConflictType.DATE_OVERLAP,
+                ),
+                "Conflict which can not be resolved",
             ),
             arrayOf(
                 setOf(
@@ -782,6 +853,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ),
                 emptySet<Item>(),
                 0,
+                emptySet<ConflictType>(),
                 "No conflicts found",
             ),
         )
@@ -792,6 +864,7 @@ class LoriServerBackendTest : DatabaseTest() {
         rightConflictToCheck: ItemRight,
         expected: Set<Item>,
         expectedErrorCount: Int,
+        expectedConflictTypes: Set<ConflictType>,
         reason: String,
     ) {
         val received: Map<Item, List<RightError>> =
@@ -810,6 +883,14 @@ class LoriServerBackendTest : DatabaseTest() {
             reason,
             received.values.flatten().size,
             `is`(expectedErrorCount),
+        )
+        assertThat(
+            reason,
+            received.values
+                .flatten()
+                .map { it.conflictType }
+                .toSet(),
+            `is`(expectedConflictTypes),
         )
     }
 

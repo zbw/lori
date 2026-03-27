@@ -949,6 +949,7 @@ fun ConflictType.toRest(): ConflictTypeRest =
         ConflictType.GAP -> ConflictTypeRest.gap
         ConflictType.DELETION -> ConflictTypeRest.deletion
         ConflictType.NO_RIGHT -> ConflictTypeRest.no_right
+        ConflictType.DATE_OVERLAP_NO_END_MANUAL -> ConflictTypeRest.date_overlap_no_end
     }
 
 fun RightError.toRest(): RightErrorRest =

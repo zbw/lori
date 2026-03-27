@@ -1271,7 +1271,12 @@ class LoriServerBackend(
                             RightError(
                                 handle = item.metadata.handle,
                                 conflictWithExistingRightId = r.rightId ?: "No Right Id",
-                                conflictType = ConflictType.DATE_OVERLAP,
+                                conflictType =
+                                    if (r.endDate == null && !r.isTemplate && template.startDate >= r.startDate) {
+                                        ConflictType.DATE_OVERLAP_NO_END_MANUAL
+                                    } else {
+                                        ConflictType.DATE_OVERLAP
+                                    },
                                 conflictCausedByRightId = template.rightId ?: "No Right Id",
                                 conflictCausedInContext = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),
