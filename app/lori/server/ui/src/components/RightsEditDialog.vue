@@ -933,16 +933,16 @@ export default defineComponent({
       if (hasLegalRisk == undefined) {
         return "Kein Wert gewählt";
       } else {
-        return hasLegalRisk ? "Ja" : "Nein";
+        return hasLegalRisk ? "Nein" : "Ja";
       }
     };
 
     const stringToHasLegalRisk = (value: string | undefined) => {
       if (value == "Ja") {
-        return true;
+        return false;
       }
       if (value == "Nein") {
-        return false;
+        return true;
       }
       return undefined;
     };
