@@ -46,6 +46,8 @@ class SearchWithWildcards : DatabaseTest() {
                     ),
                 ),
             item2 to emptyList(),
+            item3 to emptyList(),
+            item4 to emptyList(),
         )
 
     @BeforeClass
@@ -73,63 +75,63 @@ class SearchWithWildcards : DatabaseTest() {
             arrayOf(
                 "${FilterType.DOI.keyAlias}:10.1108/S05*",
                 setOf(
-                    item2,
+                    item2.handle,
                 ),
                 "find doi with wildcard",
             ),
             arrayOf(
                 "sig:wild_card",
                 setOf(
-                    item2,
+                    item2.handle,
                 ),
                 "find item with special character _ -> Test escaping",
             ),
             arrayOf(
                 "sig:blub%",
                 setOf(
-                    item2,
+                    item2.handle,
                 ),
                 "find item with special character % -> Test escaping",
             ),
             arrayOf(
                 "sig:fo* & sig:ba*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "conjugate values with wildcard",
             ),
             arrayOf(
                 "ser:big*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "Series with wildcard",
             ),
             arrayOf(
                 "lur:by-nc-nd*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "Licence URL with wildcard",
             ),
             arrayOf(
                 "tpl:borec*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "Template Name with wildcard",
             ),
             arrayOf(
                 "tit:inno*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "title with wildcard",
             ),
             arrayOf(
                 "sig:fo*",
                 setOf(
-                    item1,
+                    item1.handle,
                 ),
                 "one entry in array with wildcard",
             ),
@@ -146,23 +148,46 @@ class SearchWithWildcards : DatabaseTest() {
             arrayOf(
                 "${FilterType.PPN.keyAlias}:EBP107*",
                 setOf(
-                    item2,
+                    item2.handle,
                 ),
                 "find ppn with wildcard",
             ),
             arrayOf(
                 "${FilterType.ISBN.keyAlias}:978-1-84*",
                 setOf(
-                    item2,
+                    item2.handle,
                 ),
                 "find isbn with wildcard",
+            ),
+            arrayOf(
+                "${FilterType.PAKET_SIGEL.keyAlias}:'zdb-1-dhw'",
+                setOf(
+                    item4.handle,
+                ),
+                "do not find sigel 'zdb-1-dhww'",
+            ),
+            arrayOf(
+                "${FilterType.PAKET_SIGEL.keyAlias}:'zdb-1-dhww'",
+                setOf(
+                    item3.handle,
+                ),
+                "do not find sigel 'zdb-1-dhw'",
+            ),
+            arrayOf(
+                "${FilterType.PAKET_SIGEL.keyAlias}:'zdb-1-dhw*,bar'",
+                setOf(
+                    item1.handle,
+                    item3.handle,
+                    item4.handle,
+                ),
+                "allow wildcard in lists",
             ),
         )
 
     @Test(dataProvider = DATA_FOR_WILDCARD_TESTS)
     fun testWildcards(
         searchTerm: String,
-        expectedResult: Set<ItemMetadata>,
+        expectedResult: Set<String>,
         description: String,
     ) {
         val searchResult: SearchQueryResult =
@@ -176,7 +201,7 @@ class SearchWithWildcards : DatabaseTest() {
 
         assertThat(
             description,
-            searchResult.results.map { it.metadata }.toSet(),
+            searchResult.results.map { it.metadata.handle }.toSet(),
             `is`(expectedResult),
         )
     }
@@ -198,6 +223,16 @@ class SearchWithWildcards : DatabaseTest() {
                 ppn = "EBP107179776",
                 doi = listOf("10.1108/S0573-8555(2004)0000262002"),
                 isbn = listOf("978-1-84950-841-4"),
+            )
+        val item3 =
+            TEST_Metadata.copy(
+                handle = "11159/7923",
+                paketSigel = listOf("zdb-1-ewe", "zdb-1-dhww"),
+            )
+        val item4 =
+            TEST_Metadata.copy(
+                handle = "11159/7924",
+                paketSigel = listOf("zdb-1-dhw"),
             )
     }
 }

@@ -1468,7 +1468,7 @@ table.special, th.special, td.special {
           <b>Aktive Filter:</b> {{ searchStore.filtersAsQuery }}
         </v-col>
       </v-row>
-      <v-row justify="end" align="center" class="ga-0">
+      <v-row justify="end" align="center" class="ga-0 mb-3">
         <v-col
             cols="auto"
         >

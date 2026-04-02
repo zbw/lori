@@ -66,14 +66,16 @@ abstract class SearchFilter(
     abstract fun getFilterType(): FilterType
 
     companion object {
-        fun prepareValuesForLowercasedJoinedArrays(arr: List<String>) =
-            arr.map { value ->
-                if (value.last() == '%') {
-                    "%$value"
-                } else {
-                    "%$value%"
-                }
-            }
+        fun prepareValuesForLowercasedJoinedArrays(arr: List<String>): Array<String> =
+            arr
+                .map { searchTerm ->
+                    if (searchTerm.endsWith("*") || searchTerm.endsWith("%")) {
+                        "% ${searchTerm.dropLast(1)}%"
+                    } else {
+                        // Exact match with optional spaces
+                        "% $searchTerm %"
+                    }
+                }.toTypedArray()
 
         fun toSearchFilter(
             searchKey: String,
@@ -532,7 +534,8 @@ class DOIsFilter(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_DOI_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun toWhereClauseStatistics(): String = toWhereClause()
 
@@ -542,7 +545,7 @@ class DOIsFilter(
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(dois)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
         return localCounter
     }
 
@@ -558,7 +561,8 @@ class ISBNsFilter(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_ISBN_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun toWhereClauseStatistics(): String = toWhereClause()
 
@@ -568,7 +572,7 @@ class ISBNsFilter(
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(isbns)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
         return localCounter
     }
 
@@ -776,7 +780,8 @@ class PaketSigelFilterOR(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_PAKET_SIGEL_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun toWhereClauseStatistics(): String = toWhereClause()
 
@@ -785,8 +790,9 @@ class PaketSigelFilterOR(
         preparedStatement: PreparedStatement,
     ): Int {
         var localCounter = counter
+        // Prepare each search term by adding wildcards
         val preparedArray = prepareValuesForLowercasedJoinedArrays(paketSigels)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
         return localCounter
     }
 
@@ -832,7 +838,8 @@ class ZDBIdFilterOR(
 ) : MetadataSearchFilter(
         MetadataDB.COLUMN_METADATA_ZDB_IDS_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun toWhereClauseStatistics(): String = toWhereClause()
 
@@ -842,7 +849,7 @@ class ZDBIdFilterOR(
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(zdbIds)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
         return localCounter
     }
 
@@ -886,7 +893,8 @@ class SeriesFilter(
 ) : MetadataSearchFilter(
         COLUMN_METADATA_IS_PART_OF_SERIES_LOWER,
     ) {
-    override fun toWhereClause(): String = "($dbColumnName ILIKE ALL (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
 
     override fun toWhereClauseStatistics(): String = toWhereClause()
 
@@ -896,7 +904,7 @@ class SeriesFilter(
     ): Int {
         var localCounter = counter
         val preparedArray = prepareValuesForLowercasedJoinedArrays(seriesNames)
-        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray.toTypedArray()))
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
         return localCounter
     }
 

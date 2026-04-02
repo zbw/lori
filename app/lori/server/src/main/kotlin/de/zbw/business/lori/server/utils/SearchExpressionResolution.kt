@@ -156,20 +156,4 @@ object SearchExpressionResolution {
             is SEVariable -> listOf(expression.searchFilter)
             is SENotPar -> getSearchPairs(expression.body)
         }
-
-    fun negateSearchExpression(expression: SearchExpression?): SearchExpression? = expression?.let { SENot(expression) }
-
-    fun conjungateSearchExpressions(
-        expr1: SearchExpression?,
-        expr2: SearchExpression?,
-    ): SearchExpression? =
-        if (expr1 == null && expr2 == null) {
-            null
-        } else if (expr1 == null) {
-            expr2
-        } else if (expr2 == null) {
-            expr1
-        } else {
-            SEAnd(expr1, expr2)
-        }
 }
