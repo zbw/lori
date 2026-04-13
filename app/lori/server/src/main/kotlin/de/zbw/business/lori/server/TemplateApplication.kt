@@ -313,12 +313,14 @@ class TemplateApplication(
                     backend.deleteRight(conflictingRight.rightId!!)
                 }
 
+                val oldNotesManagementRelated = conflictingRight.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
                 dbConnector.rightDB.upsertRight(
                     conflictingRight.copy(
                         endDate = template.startDate.minusDays(1),
                         lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
                         notesManagementRelated =
-                            "Enddatum automatisch eingefügt anlässlich initialer Anwendung" +
+                            oldNotesManagementRelated +
+                                "Enddatum automatisch eingefügt anlässlich initialer Anwendung" +
                                 " von https://${backend.config.url}?templateId=${template.rightId}.",
                     ),
                 )
