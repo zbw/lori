@@ -20,10 +20,6 @@ MetadataRest:
     - deleted
   type: object
   properties:
-    author:
-      type: string
-    band:
-      type: string
     collectionHandle:
       type: string
     collectionName:
@@ -45,6 +41,10 @@ MetadataRest:
         type: string
     econbizid:
       type: string
+    econstorIssue:
+      type: string
+    econstorVolume:
+      type: string
     handle:
       type: string
     isbn:
@@ -52,6 +52,12 @@ MetadataRest:
       items:
         type: string
     issn:
+      type: array
+      items:
+        type: string
+    isPartOfBook:
+      type: string
+    isPartOfJournal:
       type: string
     isPartOfSeries:
       type: array
@@ -70,6 +76,12 @@ MetadataRest:
         type: string
     ppn:
       type: string
+    ppnBook:
+      type: string
+    ppnJournal:
+      type: string
+    ppnSeries:
+      type: string
     publicationType:
       $ref: 'metadata.model.yaml#/PublicationTypeRest'
     publicationYear:
@@ -82,10 +94,6 @@ MetadataRest:
       type: string
       format: date-time
     title:
-      type: string
-    titleJournal:
-      type: string
-    titleSeries:
       type: string
     zdbIds:
       type: array

@@ -221,7 +221,7 @@ class SearchWithWildcards : DatabaseTest() {
                 handle = "11159/7922",
                 paketSigel = listOf("blub%", "wild_card"),
                 ppn = "EBP107179776",
-                doi = listOf("10.1108/S0573-8555(2004)0000262002"),
+                pids = listOf("10.1108/S0573-8555(2004)0000262002"),
                 isbn = listOf("978-1-84950-841-4"),
             )
         val item3 =

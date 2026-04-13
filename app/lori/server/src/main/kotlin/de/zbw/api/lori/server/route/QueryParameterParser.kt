@@ -2,6 +2,7 @@ package de.zbw.api.lori.server.route
 
 import de.zbw.business.lori.server.AccessStateFilter
 import de.zbw.business.lori.server.AccessStateOnDateFilter
+import de.zbw.business.lori.server.BookFilter
 import de.zbw.business.lori.server.DOIsFilter
 import de.zbw.business.lori.server.DashboardConflictTypeFilter
 import de.zbw.business.lori.server.DashboardContextFilter
@@ -9,14 +10,20 @@ import de.zbw.business.lori.server.DashboardTimeIntervalEndFilter
 import de.zbw.business.lori.server.DashboardTimeIntervalStartFilter
 import de.zbw.business.lori.server.DeletionsFilter
 import de.zbw.business.lori.server.EconbizIDFilter
+import de.zbw.business.lori.server.EconstorVolumeFilter
 import de.zbw.business.lori.server.EndDateFilter
 import de.zbw.business.lori.server.FormalRuleFilter
 import de.zbw.business.lori.server.ISBNsFilter
+import de.zbw.business.lori.server.ISSNsFilter
+import de.zbw.business.lori.server.JournalFilter
 import de.zbw.business.lori.server.LicenceUrlFilter
 import de.zbw.business.lori.server.LicenceUrlFilterLUK
 import de.zbw.business.lori.server.ManualRightFilter
 import de.zbw.business.lori.server.NoRightInformationFilter
+import de.zbw.business.lori.server.PPNBookFilter
 import de.zbw.business.lori.server.PPNFilter
+import de.zbw.business.lori.server.PPNJournalFilter
+import de.zbw.business.lori.server.PPNSeriesFilter
 import de.zbw.business.lori.server.PaketSigelFilter
 import de.zbw.business.lori.server.PaketSigelFilterOR
 import de.zbw.business.lori.server.PublicationTypeFilter
@@ -318,6 +325,17 @@ object QueryParameterParser {
                 ISBNsFilter(it)
             }
 
+    fun parseIssnsFilter(s: String?): ISSNsFilter? =
+        s
+            ?.split(",".toRegex())
+            ?.takeIf {
+                it.isNotEmpty()
+            }?.map {
+                escapeWildcards(it)
+            }?.let {
+                ISSNsFilter(it)
+            }
+
     fun parseDoisFilter(s: String?): DOIsFilter? =
         s
             ?.split(",".toRegex())
@@ -381,6 +399,18 @@ object QueryParameterParser {
         }
 
     fun parsePPNFilter(s: String?): PPNFilter? = s?.let { PPNFilter(escapeWildcards(it)) }
+
+    fun parseBookPPNFilter(s: String?): PPNBookFilter? = s?.let { PPNBookFilter(escapeWildcards(it)) }
+
+    fun parseJournalPPNFilter(s: String?): PPNJournalFilter? = s?.let { PPNJournalFilter(escapeWildcards(it)) }
+
+    fun parseSeriesPPNFilter(s: String?): PPNSeriesFilter? = s?.let { PPNSeriesFilter(escapeWildcards(it)) }
+
+    fun parseJournalFilter(s: String?): JournalFilter? = s?.let { JournalFilter(escapeWildcards(it)) }
+
+    fun parseBookFilter(s: String?): BookFilter? = s?.let { BookFilter(escapeWildcards(it)) }
+
+    fun parseEconstorVolumeFilter(s: String?): EconstorVolumeFilter? = s?.let { EconstorVolumeFilter(escapeWildcards(it)) }
 
     fun parseEconbizIdFilter(s: String?): EconbizIDFilter? = s?.let { EconbizIDFilter(escapeWildcards(it)) }
 

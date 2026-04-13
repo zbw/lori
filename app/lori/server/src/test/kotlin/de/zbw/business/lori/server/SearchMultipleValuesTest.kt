@@ -35,7 +35,7 @@ class SearchMultipleValuesTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "11159/12345",
                 zdbIds = listOf("555nase"),
-                doi = listOf("doi555"),
+                pids = listOf("doi555"),
                 isbn = listOf("isbn1"),
                 ppn = "ppn1",
                 paketSigel = listOf("sigel1", "sigel2"),
@@ -43,7 +43,7 @@ class SearchMultipleValuesTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "11159/67832",
                 zdbIds = listOf("444nase"),
-                doi = listOf("doi444"),
+                pids = listOf("doi444"),
                 isbn = listOf("isbn2"),
                 ppn = "ppn2",
                 paketSigel = listOf("sigel3"),
@@ -51,7 +51,7 @@ class SearchMultipleValuesTest : DatabaseTest() {
             TEST_Metadata.copy(
                 handle = "11159/90813",
                 zdbIds = listOf("444nase", "333nase"),
-                doi = listOf("doi333"),
+                pids = listOf("doi333"),
                 isbn = listOf("isbn3", "isbn4"),
                 ppn = "ppn3",
                 paketSigel = listOf("sigel4"),
@@ -130,14 +130,14 @@ class SearchMultipleValuesTest : DatabaseTest() {
                 "all ppns",
             ),
             arrayOf(
-                "doi:" +
+                "pid:" +
                     zdbIdFilterItems.joinToString(
                         separator = ",",
                         prefix = "\"",
                         postfix = "\"",
-                    ) { it.doi!!.joinToString(separator = ",") },
+                    ) { it.pids!!.joinToString(separator = ",") },
                 zdbIdFilterItems.toSet(),
-                "all dois",
+                "all pids",
             ),
             arrayOf(
                 "isb:" +

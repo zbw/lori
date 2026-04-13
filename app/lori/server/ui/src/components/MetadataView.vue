@@ -163,10 +163,6 @@ export default defineComponent({
               <v-col>Titel</v-col>
               <v-col>{{ prettyPrint(currentMetadata.title) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.band">
-              <v-col>Band</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.band) }}</v-col>
-            </v-row>
             <v-row>
               <v-col>Publikationstyp</v-col>
               <v-col>{{
@@ -179,8 +175,16 @@ export default defineComponent({
                   currentMetadata.publicationYear
                 }}</v-col>
             </v-row>
+            <v-row v-show="currentMetadata.ppn">
+              <v-col>PPN</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.ppn) }}</v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.econbizid">
+              <v-col>Econbiz-ID</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.econbizid) }}</v-col>
+            </v-row>
             <v-row v-if="currentMetadata.doi && currentMetadata.doi.length">
-              <v-col>DOI</v-col>
+              <v-col>Persistenter Identifier</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
@@ -190,6 +194,40 @@ export default defineComponent({
                       lines="one"
                   >
                     {{ doi }}
+                  </v-list-item>
+                </v-list>
+              </v-col>
+            </v-row>
+            <v-row v-if="currentMetadata.paketSigel && currentMetadata.paketSigel.length">
+              <v-col>Paket Sigel</v-col>
+              <v-col>
+                <v-list density="compact" class="pa-0">
+                  <v-list-item
+                      v-for="(paketSigel, index) in currentMetadata.paketSigel"
+                      :key="index"
+                      class="pa-0"
+                      lines="one"
+                  >
+                    {{ paketSigel }}
+                  </v-list-item>
+                </v-list>
+              </v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.licenceUrl">
+              <v-col>OC-/CC-Lizenz-URL</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
+            </v-row>
+            <v-row v-if="currentMetadata.zdbIds && currentMetadata.zdbIds.length">
+              <v-col>ZDB-ID</v-col>
+              <v-col>
+                <v-list density="compact" class="pa-0">
+                  <v-list-item
+                      v-for="(zdbIds, index) in currentMetadata.zdbIds"
+                      :key="index"
+                      class="pa-0"
+                      lines="one"
+                  >
+                    {{ zdbIds }}
                   </v-list-item>
                 </v-list>
               </v-col>
@@ -209,62 +247,47 @@ export default defineComponent({
                 </v-list>
               </v-col>
             </v-row>
-            <v-row v-show="currentMetadata.ppn">
-              <v-col>PPN</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.ppn) }}</v-col>
+            <v-row v-show="currentMetadata.isPartOfBook">
+              <v-col>Buchtitel</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.isPartOfBook) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.econbizid">
-              <v-col>Econbiz-ID</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.econbizid) }}</v-col>
+            <v-row v-show="currentMetadata.ppnBook">
+              <v-col>Buch-PPN</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.ppnBook) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.issn">
-              <v-col>Issn</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.issn) }}</v-col>
+            <v-row v-show="currentMetadata.isPartOfJournal">
+              <v-col>Zeitschriftentitel</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.isPartOfJournal) }}</v-col>
             </v-row>
-            <v-row v-if="currentMetadata.paketSigel && currentMetadata.paketSigel.length">
-              <v-col>Paket Sigel</v-col>
+            <v-row v-show="currentMetadata.ppnJournal">
+              <v-col>Zeitschriften-PPN</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.ppnJournal) }}</v-col>
+            </v-row>
+            <v-row v-if="currentMetadata.issn && currentMetadata.issn.length">
+              <v-col>ISSN</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
-                      v-for="(paketSigel, index) in currentMetadata.paketSigel"
+                      v-for="(isbn, index) in currentMetadata.issn"
                       :key="index"
                       class="pa-0"
                       lines="one"
                   >
-                    {{ paketSigel }}
+                    {{ isbn }}
                   </v-list-item>
                 </v-list>
               </v-col>
             </v-row>
-            <v-row v-show="currentMetadata.titleJournal">
-              <v-col>Titel Zeitschrift</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.titleJournal) }}</v-col>
+            <v-row v-show="currentMetadata.econstorVolume">
+              <v-col>Band</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.econstorVolume) }}</v-col>
             </v-row>
-            <v-row v-show="currentMetadata.titleSeries">
-              <v-col>Titel Serie</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.titleSeries) }}</v-col>
-            </v-row>
-            <v-row v-if="currentMetadata.zdbIds && currentMetadata.zdbIds.length">
-              <v-col>ZDB-ID</v-col>
-              <v-col>
-                <v-list density="compact" class="pa-0">
-                  <v-list-item
-                      v-for="(zdbIds, index) in currentMetadata.zdbIds"
-                      :key="index"
-                      class="pa-0"
-                      lines="one"
-                  >
-                    {{ zdbIds }}
-                  </v-list-item>
-                </v-list>
-              </v-col>
-            </v-row>
-            <v-row v-show="currentMetadata.licenceUrl">
-              <v-col>OC-/CC-Lizenz-URL</v-col>
-              <v-col>{{ prettyPrint(currentMetadata.licenceUrl) }}</v-col>
+            <v-row v-show="currentMetadata.econstorIssue">
+              <v-col>Heft</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.econstorIssue) }}</v-col>
             </v-row>
             <v-row v-if="currentMetadata.isPartOfSeries && currentMetadata.isPartOfSeries.length">
-              <v-col>Serie</v-col>
+              <v-col>Serientitel</v-col>
               <v-col>
                 <v-list density="compact" class="pa-0">
                   <v-list-item
@@ -277,6 +300,10 @@ export default defineComponent({
                   </v-list-item>
                 </v-list>
               </v-col>
+            </v-row>
+            <v-row v-show="currentMetadata.ppnSeries">
+              <v-col>Serien-PPN</v-col>
+              <v-col>{{ prettyPrint(currentMetadata.ppnSeries) }}</v-col>
             </v-row>
           </v-container>
         </v-expansion-panel-text>

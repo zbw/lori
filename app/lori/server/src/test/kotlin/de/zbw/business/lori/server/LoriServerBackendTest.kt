@@ -176,7 +176,7 @@ class LoriServerBackendTest : DatabaseTest() {
     fun testUpsert() =
         runBlocking {
             // given
-            val expectedMetadata = TEST_METADATA.copy(band = "anotherband")
+            val expectedMetadata = TEST_METADATA.copy(isPartOfBook = "anotherbook")
 
             // when
             backend.upsertMetadataElements(listOf(expectedMetadata))
@@ -185,7 +185,7 @@ class LoriServerBackendTest : DatabaseTest() {
             // then
             assertThat(received, `is`(listOf(expectedMetadata)))
 
-            val expectedMetadata2 = TEST_METADATA.copy(band = "anotherband2")
+            val expectedMetadata2 = TEST_METADATA.copy(isPartOfBook = "anotherbook")
             // when
             backend.upsertMetadataElements(listOf(expectedMetadata2))
             val received2 = backend.getMetadataElementsByIds(listOf(expectedMetadata2.handle))
@@ -1176,8 +1176,6 @@ class LoriServerBackendTest : DatabaseTest() {
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA =
             ItemMetadata(
-                author = "Colbjørnsen, Terje",
-                band = "band",
                 collectionHandle = "colHandle",
                 collectionName = "collectionName",
                 communityHandle = "comHandle",
@@ -1185,11 +1183,11 @@ class LoriServerBackendTest : DatabaseTest() {
                 createdBy = "user1",
                 createdOn = NOW,
                 deleted = false,
-                doi = listOf("doi:example.org"),
+                pids = listOf("doi:example.org"),
                 econbizId = "123",
                 handle = "11159/810",
                 isbn = listOf("1234567890123"),
-                issn = "123456",
+                issn = listOf("123456"),
                 isPartOfSeries = listOf("series"),
                 lastUpdatedBy = "user2",
                 lastUpdatedOn = NOW,
@@ -1203,9 +1201,14 @@ class LoriServerBackendTest : DatabaseTest() {
                 subCommunityHandle = "11159/1114",
                 subCommunityName = "Department",
                 title = "Important title",
-                titleJournal = null,
-                titleSeries = null,
                 zdbIds = listOf("zdbId"),
+                econstorIssue = "issue",
+                econstorVolume = "volume",
+                ppnBook = "ppnBook",
+                ppnSeries = "ppnSeries",
+                ppnJournal = "ppnJournal",
+                isPartOfBook = "part of book",
+                isPartOfJournal = "part of journal",
             )
 
         private val TEST_RIGHT =

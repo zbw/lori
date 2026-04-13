@@ -231,8 +231,6 @@ class ItemDBTest : DatabaseTest() {
 
         val TEST_Metadata =
             ItemMetadata(
-                author = "Colbjørnsen, Terje",
-                band = "band",
                 collectionName = "collectionName",
                 collectionHandle = "colHandle",
                 communityHandle = "comHandle",
@@ -240,11 +238,11 @@ class ItemDBTest : DatabaseTest() {
                 createdBy = "user1",
                 createdOn = NOW,
                 deleted = false,
-                doi = listOf("10.992", "10.001"),
+                pids = listOf("10.992", "10.001"),
                 econbizId = "123",
                 handle = "11159/101",
                 isbn = listOf("12345", "67890123"),
-                issn = "123456",
+                issn = listOf("123456"),
                 isPartOfSeries = listOf("series123"),
                 lastUpdatedBy = "user2",
                 lastUpdatedOn = NOW,
@@ -258,9 +256,14 @@ class ItemDBTest : DatabaseTest() {
                 subCommunityName = "Department of University of Foo",
                 storageDate = NOW.minusDays(3),
                 title = "Important title",
-                titleJournal = "anything",
-                titleSeries = null,
                 zdbIds = listOf("some journal id"),
+                econstorIssue = "issue",
+                econstorVolume = "volume",
+                ppnBook = "ppnBook",
+                ppnSeries = "ppnSeries",
+                ppnJournal = "ppnJournal",
+                isPartOfBook = "part of book",
+                isPartOfJournal = "part of journal",
             )
 
         val TEST_RIGHT =
