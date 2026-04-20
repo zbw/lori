@@ -15,7 +15,7 @@ object DashboardUtil {
         item: Item,
         createdBy: String,
     ): List<RightError> {
-        if (item.rights.isEmpty()) {
+        if (item.rights.isEmpty() || item.metadata.deleted) {
             return emptyList()
         }
         // Check if rights end at given time
