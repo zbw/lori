@@ -190,6 +190,10 @@ export default defineComponent({
       templateDraft.value.predecessorId = undefined;
       templateDraft.value.templateName = "KOPIE - " + templateDraft.value.templateName;
       reinitCounter.value = reinitCounter.value + 1;
+      if (templateDraft.value.startDate < new Date()){
+        templateDraft.value.startDate = new Date();
+        templateDraft.value.endDate = undefined;
+      }
       activateTemplateEditDialog();
     };
 
