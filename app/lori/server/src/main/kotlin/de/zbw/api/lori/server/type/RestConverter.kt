@@ -466,14 +466,36 @@ fun BookmarkRest.toBusiness(): Bookmark =
             ),
         publicationTypeFilter =
             QueryParameterParser.parsePublicationTypeFilter(
-                this.filterPublicationType?.joinToString(
-                    separator = ",",
-                ),
+                this.filterPublicationType
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.joinToString(
+                        separator = ",",
+                    ),
             ),
-        paketSigelFilters = QueryParameterParser.parsePaketSigelFilter(this.filterPaketSigel?.joinToString(separator = ",")),
-        zdbIdFilters = QueryParameterParser.parseZDBIdFilters(this.filterZDBId?.joinToString(separator = ",")),
-        accessStateFilter = QueryParameterParser.parseAccessStateFilter(this.filterAccessState?.joinToString(separator = ",")),
-        formalRuleFilter = QueryParameterParser.parseFormalRuleFilter(this.filterFormalRule?.joinToString(separator = ",")),
+        paketSigelFilters =
+            QueryParameterParser.parsePaketSigelFilter(
+                this.filterPaketSigel
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.joinToString(separator = ","),
+            ),
+        zdbIdFilters =
+            QueryParameterParser.parseZDBIdFilters(
+                this.filterZDBId
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.joinToString(separator = ","),
+            ),
+        accessStateFilter =
+            QueryParameterParser.parseAccessStateFilter(
+                this.filterAccessState
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.joinToString(separator = ","),
+            ),
+        formalRuleFilter =
+            QueryParameterParser.parseFormalRuleFilter(
+                this.filterFormalRule
+                    ?.takeIf { it.isNotEmpty() }
+                    ?.joinToString(separator = ","),
+            ),
         startDateFilter = this.filterStartDate?.let { StartDateFilter(it) },
         endDateFilter = this.filterEndDate?.let { EndDateFilter(it) },
         validOnFilter = this.filterValidOn?.let { RightValidOnFilter(it) },
