@@ -37,6 +37,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import org.postgresql.util.PSQLException
 import java.time.LocalDate
 
@@ -49,6 +50,7 @@ import java.time.LocalDate
 fun Routing.templateRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/template") {
         authenticate("auth-session") {
@@ -98,6 +100,7 @@ fun Routing.templateRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database error in route POST /api/v1/template", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -108,6 +111,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/template", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -119,9 +123,7 @@ fun Routing.templateRoutes(
                     }
                 }
             }
-            /**
-             * Update an existing Template.
-             */
+            // Update an existing Template.
             put {
                 val span =
                     tracer.spanBuilder("lori.LoriService.PUT/api/v1/template").setSpanKind(SpanKind.SERVER).startSpan()
@@ -151,6 +153,7 @@ fun Routing.templateRoutes(
                             is Either.Left -> {
                                 call.respond(ret.value.first, ret.value.second)
                             }
+
                             is Either.Right -> {
                                 if (ret.value == 1) {
                                     span.setStatus(StatusCode.OK)
@@ -178,6 +181,7 @@ fun Routing.templateRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database error in route PUT /api/v1/template", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -188,6 +192,7 @@ fun Routing.templateRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequestException in route PUT /api/v1/template", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -197,6 +202,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route PUT /api/v1/template", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(),
@@ -209,9 +215,7 @@ fun Routing.templateRoutes(
         }
     }
     route("/api/v1/template") {
-        /**
-         * Return all bookmarks connected to a given RightId.
-         */
+        // Return all bookmarks connected to a given RightId.
         get("{id}/bookmarks") {
             val span =
                 tracer
@@ -240,6 +244,7 @@ fun Routing.templateRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/template/{id}/bookmarks", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ApiError.internalServerError(),
@@ -250,9 +255,7 @@ fun Routing.templateRoutes(
             }
         }
 
-        /**
-         * Return Template for a given RightId.
-         */
+        // Return Template for a given RightId.
         get("{id}") {
             val span =
                 tracer
@@ -284,6 +287,7 @@ fun Routing.templateRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/template/{id}", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ApiError.internalServerError(),
@@ -295,9 +299,7 @@ fun Routing.templateRoutes(
         }
 
         authenticate("auth-session") {
-            /**
-             * Apply given templates.
-             */
+            // Apply given templates.
             post("/applications") {
                 val span =
                     tracer
@@ -335,6 +337,7 @@ fun Routing.templateRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequestException in route GET /api/v1/template/applications", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -344,6 +347,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/template/applications", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(),
@@ -392,6 +396,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/template/{id}/bookmarks", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -402,9 +407,7 @@ fun Routing.templateRoutes(
                 }
             }
 
-            /**
-             * Delete Template by RightId.
-             */
+            // Delete Template by RightId.
             delete("{id}") {
                 val span =
                     tracer
@@ -442,6 +445,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/template/{id}", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -487,6 +491,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/template/exceptions/{id}", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -534,6 +539,7 @@ fun Routing.templateRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/template/exceptions", e)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -586,6 +592,7 @@ fun Routing.templateRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route POST /api/v1/template/exceptions", e)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -613,10 +620,8 @@ fun Routing.templateRoutes(
                         val exception: Boolean? = call.request.queryParameters["exception"]?.toBoolean()
                         val hasException: Boolean? = call.request.queryParameters["hasException"]?.toBoolean()
                         val excludes: List<String>? =
-                            call.request.queryParameters["excludes"]?.let {
-                                it.split(",".toRegex())
-                            }
-                        if (limit < 1 || limit > 500) {
+                            call.request.queryParameters["excludes"]?.split(",".toRegex())
+                        if (limit !in 1..500) {
                             span.setStatus(
                                 StatusCode.ERROR,
                                 "BadRequest: Limit parameter is expected to be between 1 and 200.",
@@ -646,6 +651,7 @@ fun Routing.templateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/template/list", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ErrorRest(

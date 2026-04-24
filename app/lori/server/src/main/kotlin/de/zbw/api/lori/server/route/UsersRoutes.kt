@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 
 /**
  * REST-API routes for users.
@@ -27,6 +28,7 @@ import kotlinx.coroutines.withContext
 fun Routing.usersRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/users") {
         route("/sessions") {
@@ -52,6 +54,7 @@ fun Routing.usersRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route GET /api/v1/users/sessions", e)
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
                             span.end()
@@ -80,6 +83,7 @@ fun Routing.usersRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/users/sessions", e)
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
                             span.end()

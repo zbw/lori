@@ -13,6 +13,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 
 /**
  * REST-API routes for information about the system.
@@ -23,6 +24,7 @@ import kotlinx.coroutines.withContext
 fun Routing.aboutRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/about") {
         get {
@@ -46,6 +48,7 @@ fun Routing.aboutRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Error in route GET /api/v1/about", e)
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()

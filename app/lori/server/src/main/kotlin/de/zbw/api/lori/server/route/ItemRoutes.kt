@@ -52,6 +52,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import kotlin.Int.Companion.MAX_VALUE
 import kotlin.math.ceil
 
@@ -64,6 +65,7 @@ import kotlin.math.ceil
 fun Routing.itemRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/item") {
         authenticate("auth-session") {
@@ -121,6 +123,7 @@ fun Routing.itemRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequestException in route POST /api/v1/item", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(ApiError.INVALID_JSON),
@@ -128,6 +131,7 @@ fun Routing.itemRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/item", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -162,6 +166,7 @@ fun Routing.itemRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/item/metadata", e)
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
                             span.end()
@@ -200,6 +205,7 @@ fun Routing.itemRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/item/metadata", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -234,6 +240,7 @@ fun Routing.itemRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/item/right", e)
                             call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                         } finally {
                             span.end()
@@ -273,6 +280,7 @@ fun Routing.itemRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/item/count/right/{rightId}", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -309,6 +317,7 @@ fun Routing.itemRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/item/", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -389,6 +398,7 @@ fun Routing.itemRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/item/list", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -595,6 +605,7 @@ fun Routing.itemRoutes(
                 } catch (bre: BadRequestException) {
                     span.recordException(bre)
                     span.setStatus(StatusCode.ERROR, "Exception: ${bre.message}")
+                    log.error("BadRequest Exception in route GET /api/v1/item/list/search", bre)
                     call.respond(
                         HttpStatusCode.BadRequest,
                         ApiError.badRequestError("Invalide Suchanfrage aufgrund von korrupten Request Body"),
@@ -602,6 +613,7 @@ fun Routing.itemRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/item/list/search", e)
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()

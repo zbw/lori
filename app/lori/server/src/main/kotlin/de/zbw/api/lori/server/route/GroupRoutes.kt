@@ -28,6 +28,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import org.postgresql.util.PSQLException
 
 /**
@@ -39,6 +40,7 @@ import org.postgresql.util.PSQLException
 fun Routing.groupRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/group") {
         authenticate("auth-session") {
@@ -81,6 +83,7 @@ fun Routing.groupRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequest in route POST /api/v1/group", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -129,6 +132,7 @@ fun Routing.groupRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/group", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -190,6 +194,7 @@ fun Routing.groupRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database exception in route POST /api/v1/group", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -266,6 +271,7 @@ fun Routing.groupRoutes(
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/group/{id}", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -312,6 +318,7 @@ fun Routing.groupRoutes(
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/group/{id}", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ApiError.internalServerError(),
@@ -355,6 +362,7 @@ fun Routing.groupRoutes(
                         call.respond(receivedGroups.map { it.toRest() })
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/group/list", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ErrorRest(
