@@ -33,6 +33,22 @@ class UserDB(
             },
         )
 
+    suspend fun deleteSessionOlderThan(days: Int): Int {
+        val deleteBefore =
+            Instant.now().minusSeconds(
+                (days * 60 * 60 * 24).toLong(),
+            )
+        return DatabaseConnector.executeUpdate(
+            connectionPool = connectionPool,
+            sql = STATEMENT_DELETE_SESSIONS_OLDER_THAN,
+            tracer = tracer,
+            spanName = "deleteSessionOlderThan",
+            params = { stmt ->
+                stmt.setTimestamp(1, Timestamp.from(deleteBefore), utcCalendar)
+            },
+        )
+    }
+
     suspend fun insertSession(session: Session): String =
         DatabaseConnector
             .insertReturningKeys(
@@ -109,5 +125,10 @@ class UserDB(
             "DELETE" +
                 " FROM $TABLE_NAME_SESSIONS i" +
                 " WHERE i.session_id = ?"
+
+        const val STATEMENT_DELETE_SESSIONS_OLDER_THAN =
+            "DELETE" +
+                " FROM $TABLE_NAME_SESSIONS i" +
+                " WHERE i.created_on < ?"
     }
 }

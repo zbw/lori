@@ -549,7 +549,11 @@ class LoriServerBackend(
 
     suspend fun getSessionById(sessionID: String): Session? = dbConnector.userDB.getSessionById(sessionID)
 
-    suspend fun insertSession(session: Session): String = dbConnector.userDB.insertSession(session)
+    suspend fun insertSession(session: Session): String {
+        val id = dbConnector.userDB.insertSession(session)
+        dbConnector.userDB.deleteSessionOlderThan(days = 14)
+        return id
+    }
 
     private suspend fun checkRightConflicts(
         handle: String,
