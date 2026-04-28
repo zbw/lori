@@ -97,33 +97,31 @@ object Main {
                 span.end()
             }
 
-            runBlocking {
-                try {
-                    withContext(span.asContextElement()) {
-                        LOG.info("-------------------------------")
-                        LOG.info("Start cleaning download older than 1 day")
-                        val cutoffInstant = Instant.now().minus(1, ChronoUnit.DAYS)
-                        val response: CleanDownloadsResponse =
-                            loriClient.cleanDownloads(
-                                CleanDownloadsRequest
-                                    .newBuilder()
-                                    .setOlderThan(
-                                        Timestamp
-                                            .newBuilder()
-                                            .setNanos(cutoffInstant.nano)
-                                            .build(),
-                                    ).build(),
-                            )
-                        span.setAttribute("Number of deletions", response.deletedCount.toLong())
-                        LOG.info("Deleting downloads was successful; Deleted ${response.deletedCount} downloads.")
-                    }
-                } catch (e: Exception) {
-                    LOG.error("An error occurred on when deleting downloads: ${e.message}")
-                    LOG.error("Stacktrace: ${e.printStackTrace()}")
-                    throw e
-                } finally {
-                    span.end()
+            try {
+                withContext(span.asContextElement()) {
+                    LOG.info("-------------------------------")
+                    LOG.info("Start cleaning download older than 1 day")
+                    val cutoffInstant = Instant.now().minus(1, ChronoUnit.DAYS)
+                    val response: CleanDownloadsResponse =
+                        loriClient.cleanDownloads(
+                            CleanDownloadsRequest
+                                .newBuilder()
+                                .setOlderThan(
+                                    Timestamp
+                                        .newBuilder()
+                                        .setNanos(cutoffInstant.nano)
+                                        .build(),
+                                ).build(),
+                        )
+                    span.setAttribute("Number of deletions", response.deletedCount.toLong())
+                    LOG.info("Deleting downloads was successful; Deleted ${response.deletedCount} downloads.")
                 }
+            } catch (e: Exception) {
+                LOG.error("An error occurred on when deleting downloads: ${e.message}")
+                LOG.error("Stacktrace: ${e.printStackTrace()}")
+                throw e
+            } finally {
+                span.end()
             }
         }
     }

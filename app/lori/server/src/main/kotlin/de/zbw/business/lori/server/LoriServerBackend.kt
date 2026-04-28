@@ -493,7 +493,7 @@ class LoriServerBackend(
         } else {
             val group = dbConnector.groupDB.getGroupById(groupId)
             if (group == null) {
-                return 0
+                0
             } else {
                 val rightsBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
                 throw ResourceStillInUseException(
@@ -789,7 +789,7 @@ class LoriServerBackend(
         } else {
             val bookmark = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
             if (bookmark == null) {
-                return 0
+                0
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedTemplateIds)
                 throw ResourceStillInUseException(
@@ -993,7 +993,7 @@ class LoriServerBackend(
                         rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),
                     )
                 }
-            val errors = items.map { DashboardUtil.checkForGapErrors(it, createdBy) }.flatten()
+            val errors = items.flatMap { DashboardUtil.checkForGapErrors(it, createdBy) }
             dbConnector.rightErrorDB.insertErrorsBatch(errors)
             errorCount += errors.size
         }
