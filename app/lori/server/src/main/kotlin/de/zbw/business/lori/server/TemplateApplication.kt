@@ -280,6 +280,8 @@ class TemplateApplication(
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
                     sortInformation = SortInformation.DEFAULT,
+                    noFacets = true,
+                    noNumberOfResults = true,
                 ).results
                 .toSet()
 

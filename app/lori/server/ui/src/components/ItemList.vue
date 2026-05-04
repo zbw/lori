@@ -1749,7 +1749,7 @@ table.special, th.special, td.special {
                 <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
 
                 <p class="text-left text-body-2 mt-1 mb-1">
-                  Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
+                  Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>pid</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
                   <br>
                   <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
                 </p>

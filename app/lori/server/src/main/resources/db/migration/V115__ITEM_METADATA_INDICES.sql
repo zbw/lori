@@ -1,0 +1,1 @@
+CREATE INDEX idx_deleted ON item_metadata (deleted);

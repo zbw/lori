@@ -603,6 +603,7 @@ class LoriServerBackend(
         facetsOnly: Boolean = false,
         noFacets: Boolean = false,
         sortInformation: SortInformation = SortInformation.DEFAULT,
+        noNumberOfResults: Boolean = false,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -678,17 +679,21 @@ class LoriServerBackend(
             // Acquire the number of results
             val numberOfResults =
                 async(Dispatchers.IO) {
-                    items
-                        .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
-                        ?.let {
-                            dbConnector.searchDB.countSearchMetadata(
-                                searchExpression,
-                                metadataSearchFilter,
-                                rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
-                                noRightInformationFilter,
-                            )
-                        }
-                        ?: 0
+                    if (!noNumberOfResults) {
+                        items
+                            .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
+                            ?.let {
+                                dbConnector.searchDB.countSearchMetadata(
+                                    searchExpression,
+                                    metadataSearchFilter,
+                                    rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                                    noRightInformationFilter,
+                                )
+                            }
+                            ?: 0
+                    } else {
+                        0
+                    }
                 }
 
             val facets = facetsDef.await()
