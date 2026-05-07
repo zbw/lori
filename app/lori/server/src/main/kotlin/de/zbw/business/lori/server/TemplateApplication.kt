@@ -7,6 +7,7 @@ import de.zbw.api.lori.server.utils.Constants
 import de.zbw.business.lori.server.LoriServerBackend.Companion.findItemsWithConflicts
 import de.zbw.business.lori.server.type.Bookmark
 import de.zbw.business.lori.server.type.ComparisonOperator
+import de.zbw.business.lori.server.type.ConflictType
 import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.ItemId
 import de.zbw.business.lori.server.type.ItemRight
@@ -225,7 +226,7 @@ class TemplateApplication(
                                 offset = offset * LIMIT,
                                 dryRun = dryRun,
                                 searchResultsExceptionIds = searchResultsExceptionIds,
-                                right = right,
+                                template = right,
                                 createdBy = createdBy,
                                 testId = testId,
                                 additionalMetadataSearchFilters =
@@ -258,7 +259,7 @@ class TemplateApplication(
         }
 
     suspend fun applyTemplateByBookmarkAndOffset(
-        right: ItemRight,
+        template: ItemRight,
         bookmark: Bookmark,
         offset: Int,
         dryRun: Boolean,
@@ -279,17 +280,53 @@ class TemplateApplication(
                     noRightInformationFilter = bookmark.noRightInformationFilter,
                     handlesToIgnore = searchResultsExceptionIds.toList(),
                     sortInformation = SortInformation.DEFAULT,
+                    noFacets = true,
+                    noNumberOfResults = true,
                 ).results
                 .toSet()
 
-        val rightId = right.rightId!!
+        val rightId = template.rightId!!
+        // Connect Template to all results
+        val itemsWithConflicts: Map<Item, List<RightError>> =
+            findItemsWithConflicts(searchResults, template, null, createdBy)
+
+        // Conflicts with a single right entry which has an open end will either be deleted if not applied yet
+        // or the end date will be adjusted to the start date of the template
+        val itemsWithFixableConflicts =
+            itemsWithConflicts
+                .filter { it.value.size == 1 && it.value[0].conflictType == ConflictType.DATE_OVERLAP_NO_END_MANUAL }
+        val itemsWithConflictsNotFixable =
+            itemsWithConflicts
+                .filter { it.value.size > 1 || it.value[0].conflictType != ConflictType.DATE_OVERLAP_NO_END_MANUAL }
+        val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflictsNotFixable.keys)
+
         if (!dryRun) {
-            // Connect Template to all results
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, null, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
             dbConnector.rightErrorDB.deleteByCausingRightId(rightId)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
+            dbConnector.rightErrorDB.insertErrorsBatch(
+                itemsWithConflictsNotFixable
+                    .values
+                    .flatten(),
+            )
+
+            itemsWithFixableConflicts.forEach { (item, errors) ->
+                val conflictingRight: ItemRight =
+                    item.rights.filter { errors[0].conflictWithExistingRightId == it.rightId!! }[0]
+                if (conflictingRight.startDate >= template.startDate) {
+                    backend.deleteRight(conflictingRight.rightId!!)
+                }
+
+                val oldNotesManagementRelated = conflictingRight.notesManagementRelated?.takeIf { it.isNotBlank() }?.let { "$it\n" } ?: ""
+                dbConnector.rightDB.upsertRight(
+                    conflictingRight.copy(
+                        endDate = template.startDate.minusDays(1),
+                        lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
+                        notesManagementRelated =
+                            oldNotesManagementRelated +
+                                "Enddatum automatisch eingefügt anlässlich initialer Anwendung" +
+                                " von https://${backend.config.url}?templateId=${template.rightId}.",
+                    ),
+                )
+            }
             dbConnector.itemDB.upsertItemBatch(
                 createdBy = createdBy,
                 itemIds =
@@ -303,26 +340,23 @@ class TemplateApplication(
             return TemplateApplicationResult(
                 rightId = rightId,
                 appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
-                errors = itemsWithConflicts.values.flatten(),
+                errors = itemsWithConflictsNotFixable.values.flatten(),
                 exceptionTemplateApplicationResult = null,
-                templateName = right.templateName ?: "Missing Template Name",
+                templateName = template.templateName ?: "Missing Template Name",
                 testId = null,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
+                numberOfErrors = itemsWithConflictsNotFixable.values.flatten().size,
             )
         } else {
-            val itemsWithConflicts: Map<Item, List<RightError>> =
-                findItemsWithConflicts(searchResults, right, testId, createdBy)
-            val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflicts.keys)
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflicts.values.flatten())
+            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflictsNotFixable.values.flatten())
             return TemplateApplicationResult(
                 rightId = rightId,
                 // TODO(CB): Don't send back thousands of errors for now
                 errors = emptyList(),
                 appliedMetadataHandles = searchResultsWithoutConflict.map { it.metadata.handle },
                 exceptionTemplateApplicationResult = null,
-                templateName = right.templateName ?: "Missing Template Name",
+                templateName = template.templateName ?: "Missing Template Name",
                 testId = testId,
-                numberOfErrors = itemsWithConflicts.values.flatten().size,
+                numberOfErrors = itemsWithConflictsNotFixable.values.flatten().size,
             )
         }
     }

@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 
 /**
  * REST-API routes for errors.
@@ -35,6 +36,7 @@ import kotlinx.coroutines.withContext
 fun Routing.errorRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/errors") {
         route("/rights") {
@@ -91,6 +93,7 @@ fun Routing.errorRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/errors/rights/list", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ErrorRest(
@@ -141,6 +144,7 @@ fun Routing.errorRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/errors/rights/{testId}", e)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -178,6 +182,7 @@ fun Routing.errorRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route POST /api/v1/errors/rights/{testId}", e)
                             return@withContext call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(

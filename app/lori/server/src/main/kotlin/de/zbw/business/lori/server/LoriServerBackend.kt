@@ -493,7 +493,7 @@ class LoriServerBackend(
         } else {
             val group = dbConnector.groupDB.getGroupById(groupId)
             if (group == null) {
-                return 0
+                0
             } else {
                 val rightsBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedRights)
                 throw ResourceStillInUseException(
@@ -549,7 +549,11 @@ class LoriServerBackend(
 
     suspend fun getSessionById(sessionID: String): Session? = dbConnector.userDB.getSessionById(sessionID)
 
-    suspend fun insertSession(session: Session): String = dbConnector.userDB.insertSession(session)
+    suspend fun insertSession(session: Session): String {
+        val id = dbConnector.userDB.insertSession(session)
+        dbConnector.userDB.deleteSessionOlderThan(days = 14)
+        return id
+    }
 
     private suspend fun checkRightConflicts(
         handle: String,
@@ -599,6 +603,7 @@ class LoriServerBackend(
         facetsOnly: Boolean = false,
         noFacets: Boolean = false,
         sortInformation: SortInformation = SortInformation.DEFAULT,
+        noNumberOfResults: Boolean = false,
     ): SearchQueryResult =
         coroutineScope {
             val searchExpression: SearchExpression? =
@@ -674,17 +679,21 @@ class LoriServerBackend(
             // Acquire the number of results
             val numberOfResults =
                 async(Dispatchers.IO) {
-                    items
-                        .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
-                        ?.let {
-                            dbConnector.searchDB.countSearchMetadata(
-                                searchExpression,
-                                metadataSearchFilter,
-                                rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
-                                noRightInformationFilter,
-                            )
-                        }
-                        ?: 0
+                    if (!noNumberOfResults) {
+                        items
+                            .takeIf { it.isNotEmpty() || offset != 0 || facetsOnly }
+                            ?.let {
+                                dbConnector.searchDB.countSearchMetadata(
+                                    searchExpression,
+                                    metadataSearchFilter,
+                                    rightSearchFilter.takeIf { noRightInformationFilter == null } ?: emptyList(),
+                                    noRightInformationFilter,
+                                )
+                            }
+                            ?: 0
+                    } else {
+                        0
+                    }
                 }
 
             val facets = facetsDef.await()
@@ -785,7 +794,7 @@ class LoriServerBackend(
         } else {
             val bookmark = dbConnector.bookmarkDB.getBookmarksByIds(listOf(bookmarkId)).firstOrNull()
             if (bookmark == null) {
-                return 0
+                0
             } else {
                 val templatesBlocking: List<ItemRight> = dbConnector.rightDB.getRightsByIds(receivedTemplateIds)
                 throw ResourceStillInUseException(
@@ -989,7 +998,7 @@ class LoriServerBackend(
                         rights = dbConnector.rightDB.getRightsByIds(items.map { it.rightId }),
                     )
                 }
-            val errors = items.map { DashboardUtil.checkForGapErrors(it, createdBy) }.flatten()
+            val errors = items.flatMap { DashboardUtil.checkForGapErrors(it, createdBy) }
             dbConnector.rightErrorDB.insertErrorsBatch(errors)
             errorCount += errors.size
         }
@@ -1271,7 +1280,12 @@ class LoriServerBackend(
                             RightError(
                                 handle = item.metadata.handle,
                                 conflictWithExistingRightId = r.rightId ?: "No Right Id",
-                                conflictType = ConflictType.DATE_OVERLAP,
+                                conflictType =
+                                    if (r.endDate == null && !r.isTemplate && template.startDate >= r.startDate) {
+                                        ConflictType.DATE_OVERLAP_NO_END_MANUAL
+                                    } else {
+                                        ConflictType.DATE_OVERLAP
+                                    },
                                 conflictCausedByRightId = template.rightId ?: "No Right Id",
                                 conflictCausedInContext = template.templateName,
                                 createdOn = OffsetDateTime.now(ZoneOffset.UTC),

@@ -5,6 +5,13 @@ import de.zbw.api.lori.server.connector.DAConnectorTest.Companion.TEST_COMMUNITY
 import de.zbw.api.lori.server.exception.InvalidIPAddressException
 import de.zbw.api.lori.server.route.ErrorRoutesKtTest
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_ECONSTOR_ISSUE
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_ECONSTOR_VOLUME
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_IS_PART_OF_BOOK
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_IS_PART_OF_JOURNAL
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_PPN_BOOK
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_PPN_JOURNAL
+import de.zbw.api.lori.server.type.rest.DAItemConverter.KEY_PPN_SERIES
 import de.zbw.business.lori.server.RightIdFilter
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.BasisAccessState
@@ -60,8 +67,6 @@ class RestConverterTest {
             ItemRest(
                 metadata =
                     MetadataRest(
-                        author = TEST_METADATA.author,
-                        band = TEST_METADATA.band,
                         collectionName = TEST_METADATA.collectionName,
                         collectionHandle = TEST_METADATA.collectionHandle,
                         communityHandle = TEST_METADATA.communityHandle,
@@ -69,25 +74,30 @@ class RestConverterTest {
                         createdBy = TEST_METADATA.createdBy,
                         createdOn = TEST_METADATA.createdOn,
                         deleted = TEST_METADATA.deleted,
-                        doi = TEST_METADATA.doi,
+                        doi = TEST_METADATA.pids,
                         econbizid = TEST_METADATA.econbizId,
+                        econstorIssue = TEST_METADATA.econstorIssue,
+                        econstorVolume = TEST_METADATA.econstorVolume,
                         handle = TEST_METADATA.handle,
                         isbn = TEST_METADATA.isbn,
                         issn = TEST_METADATA.issn,
+                        isPartOfBook = TEST_METADATA.isPartOfBook,
+                        isPartOfJournal = TEST_METADATA.isPartOfJournal,
                         isPartOfSeries = TEST_METADATA.isPartOfSeries,
                         lastUpdatedBy = TEST_METADATA.lastUpdatedBy,
                         lastUpdatedOn = TEST_METADATA.lastUpdatedOn,
                         licenceUrl = TEST_METADATA.licenceUrl,
                         paketSigel = TEST_METADATA.paketSigel,
                         ppn = TEST_METADATA.ppn,
+                        ppnBook = TEST_METADATA.ppnBook,
+                        ppnJournal = TEST_METADATA.ppnJournal,
+                        ppnSeries = TEST_METADATA.ppnSeries,
                         publicationType = TEST_METADATA.publicationType.toRest(),
                         publicationYear = TEST_METADATA.publicationYear,
                         subCommunityHandle = TEST_METADATA.subCommunityHandle,
                         subCommunityName = TEST_METADATA.subCommunityName,
                         storageDate = TEST_METADATA.storageDate,
                         title = TEST_METADATA.title,
-                        titleJournal = TEST_METADATA.titleJournal,
-                        titleSeries = TEST_METADATA.titleSeries,
                         zdbIds = TEST_METADATA.zdbIds,
                     ),
                 rights =
@@ -133,8 +143,6 @@ class RestConverterTest {
         // given
         val expected =
             ItemMetadata(
-                author = "Colbjørnsen, Terje",
-                band = null,
                 collectionHandle = TEST_COLLECTION.handle,
                 collectionName = TEST_COLLECTION.name,
                 communityName = TEST_COMMUNITY.name,
@@ -142,7 +150,7 @@ class RestConverterTest {
                 createdBy = null,
                 createdOn = null,
                 deleted = false,
-                doi = listOf("10.7298/c5ps-be97"),
+                pids = listOf("10.7298/c5ps-be97", "1813/110555"),
                 econbizId = "123",
                 handle = "11159/848",
                 isbn = listOf("9781847200235", "978-1-84542-0680", "9781845420680"),
@@ -170,9 +178,14 @@ class RestConverterTest {
                 subCommunityHandle = TEST_COMMUNITY.subcommunities?.get(0)!!.handle,
                 subCommunityName = TEST_COMMUNITY.subcommunities.get(0)!!.name,
                 title = "some_title",
-                titleJournal = "some_journal",
-                titleSeries = "some_series",
                 zdbIds = listOf("zdbId1", "zdbId2"),
+                econstorIssue = "issue",
+                econstorVolume = "volume",
+                ppnBook = "ppn book",
+                ppnSeries = "ppn series",
+                ppnJournal = "ppn journal",
+                isPartOfBook = "book1",
+                isPartOfJournal = "journal1",
             )
 
         // when
@@ -624,8 +637,6 @@ class RestConverterTest {
         val TODAY: LocalDate = LocalDate.of(2022, 3, 1)
         val TEST_METADATA =
             ItemMetadata(
-                author = "Colbjørnsen, Terje",
-                band = "band",
                 collectionHandle = "handleCol",
                 collectionName = "Collectioname",
                 communityHandle = "handleCom",
@@ -643,11 +654,11 @@ class RestConverterTest {
                         ZoneOffset.UTC,
                     ),
                 deleted = false,
-                doi = listOf("10.0002", "10.982301"),
+                pids = listOf("10.0002", "10.982301"),
                 econbizId = "123",
                 handle = "hdl:example.handle.net",
                 isbn = listOf("1234567", "890123"),
-                issn = "123456",
+                issn = listOf("123456"),
                 isPartOfSeries = listOf("seriespart"),
                 lastUpdatedBy = "user2",
                 lastUpdatedOn =
@@ -671,9 +682,14 @@ class RestConverterTest {
                 subCommunityHandle = "11159/1114",
                 subCommunityName = "Department",
                 title = "Important title",
-                titleJournal = null,
-                titleSeries = null,
                 zdbIds = listOf("zdbIds"),
+                econstorIssue = "issue",
+                econstorVolume = "volume",
+                ppnBook = "ppnBook",
+                ppnSeries = "ppnSeries",
+                ppnJournal = "ppnJournal",
+                isPartOfBook = "part of book",
+                isPartOfJournal = "part of journal",
             )
 
         val TEST_RIGHT =
@@ -940,6 +956,41 @@ class RestConverterTest {
                         DAMetadata(
                             key = "dc.identifier.econbizid",
                             value = "123",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_IS_PART_OF_BOOK,
+                            value = "book1",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_IS_PART_OF_JOURNAL,
+                            value = "journal1",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_ECONSTOR_ISSUE,
+                            value = "issue",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_ECONSTOR_VOLUME,
+                            value = "volume",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_PPN_BOOK,
+                            value = "ppn book",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_PPN_JOURNAL,
+                            value = "ppn journal",
+                            language = "EN",
+                        ),
+                        DAMetadata(
+                            key = KEY_PPN_SERIES,
+                            value = "ppn series",
                             language = "EN",
                         ),
                     ),

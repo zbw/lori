@@ -247,8 +247,6 @@ class MetadataDB(
         const val TS_LICENCE_URL = "ts_licence_url"
         const val TS_TITLE = "ts_title"
 
-        const val COLUMN_METADATA_AUTHOR = "author"
-        const val COLUMN_METADATA_BAND = "band"
         const val COLUMN_METADATA_COLLECTION_HANDLE = "collection_handle"
         const val COLUMN_METADATA_COMMUNITY_HANDLE = "community_handle"
         const val COLUMN_METADATA_COMMUNITY_NAME = "community_name"
@@ -259,9 +257,14 @@ class MetadataDB(
         const val COLUMN_METADATA_DOI = "doi"
         const val COLUMN_METADATA_DOI_LOWER = "doi_joined_lower"
         const val COLUMN_METADATA_ECONBIZID = "econbizid"
+        const val COLUMN_METADATA_ECONSTOR_ISSUE = "econstor_issue"
+        const val COLUMN_METADATA_ECONSTOR_VOLUME = "econstor_volume"
         const val COLUMN_METADATA_ISBN = "isbn"
         const val COLUMN_METADATA_ISBN_LOWER = "isbn_joined_lower"
         const val COLUMN_METADATA_ISSN = "issn"
+        const val COLUMN_METADATA_ISSN_LOWER = "issn_joined_lower"
+        const val COLUMN_METADATA_IS_PART_OF_BOOK = "is_part_of_book"
+        const val COLUMN_METADATA_IS_PART_OF_JOURNAL = "is_part_of_journal"
         const val COLUMN_METADATA_IS_PART_OF_SERIES = "is_part_of_series"
         const val COLUMN_METADATA_IS_PART_OF_SERIES_LOWER = "is_part_of_series_joined_lower"
         const val COLUMN_METADATA_HANDLE = "handle"
@@ -273,14 +276,15 @@ class MetadataDB(
         const val COLUMN_METADATA_PAKET_SIGEL = "paket_sigel"
         const val COLUMN_METADATA_PAKET_SIGEL_LOWER = "paket_sigel_joined_lower"
         const val COLUMN_METADATA_PPN = "ppn"
+        const val COLUMN_METADATA_PPN_BOOK = "ppn_book"
+        const val COLUMN_METADATA_PPN_JOURNAL = "ppn_journal"
+        const val COLUMN_METADATA_PPN_SERIES = "ppn_series"
         const val COLUMN_METADATA_PUBLICATION_YEAR = "publication_year"
         const val COLUMN_METADATA_PUBLICATION_TYPE = "publication_type"
         const val COLUMN_METADATA_STORAGE_DATE = "storage_date"
         const val COLUMN_METADATA_SUBCOMMUNITY_HANDLE = "sub_community_handle"
         const val COLUMN_METADATA_SUBCOMMUNITY_NAME = "sub_community_name"
         const val COLUMN_METADATA_TITLE = "title"
-        const val COLUMN_METADATA_TITLE_JOURNAL = "title_journal"
-        const val COLUMN_METADATA_TITLE_SERIES = "title_series"
         const val COLUMN_METADATA_ZDB_IDS = "zdb_ids"
         const val COLUMN_METADATA_ZDB_IDS_LOWER = "zdb_ids_joined_lower"
 
@@ -295,16 +299,19 @@ class MetadataDB(
                 "WHERE h.handle = ANY(?)"
 
         const val STATEMENT_SELECT_ALL_METADATA_FROM =
-            "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+            "SELECT $TABLE_NAME_ITEM_METADATA.handle,ppn,title," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "$TABLE_NAME_ITEM_METADATA.created_on,$TABLE_NAME_ITEM_METADATA.last_updated_on," +
                 "$TABLE_NAME_ITEM_METADATA.created_by,$TABLE_NAME_ITEM_METADATA.last_updated_by," +
-                "$COLUMN_METADATA_AUTHOR,collection_name,community_name,storage_date," +
+                "collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID" +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK," +
+                "$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -342,19 +349,18 @@ class MetadataDB(
                 " FROM $TABLE_NAME_ITEM_METADATA" +
                 " WHERE $COLUMN_METADATA_DELETED = true;"
 
-        const val STATEMENT_LOCK_METADATA_ROW =
-            "SELECT * FROM $TABLE_NAME_ITEM_METADATA WHERE $COLUMN_METADATA_HANDLE = ? FOR UPDATE;"
-
         const val STATEMENT_UPSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-                "(handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "(handle,ppn,title," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID) " +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES) " +
                 "VALUES(" +
                 "?,?,?,?," +
                 "?,?,?,?,?," +
@@ -362,15 +368,12 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?)" +
+                "?,?,?,?) " +
                 "ON CONFLICT (handle) " +
                 "DO UPDATE SET " +
                 "ppn = EXCLUDED.ppn," +
                 "title = EXCLUDED.title," +
-                "title_journal = EXCLUDED.title_journal," +
-                "title_series = EXCLUDED.title_series," +
                 "$COLUMN_METADATA_PUBLICATION_YEAR = EXCLUDED.$COLUMN_METADATA_PUBLICATION_YEAR," +
-                "band = EXCLUDED.band," +
                 "$COLUMN_METADATA_PUBLICATION_TYPE = EXCLUDED.$COLUMN_METADATA_PUBLICATION_TYPE," +
                 "doi = EXCLUDED.doi," +
                 "isbn = EXCLUDED.isbn," +
@@ -379,7 +382,6 @@ class MetadataDB(
                 "issn = EXCLUDED.issn," +
                 "last_updated_on = EXCLUDED.last_updated_on," +
                 "last_updated_by = EXCLUDED.last_updated_by," +
-                "author = EXCLUDED.author," +
                 "collection_name = EXCLUDED.collection_name," +
                 "community_name = EXCLUDED.community_name," +
                 "storage_date = EXCLUDED.storage_date," +
@@ -391,21 +393,30 @@ class MetadataDB(
                 "$COLUMN_METADATA_IS_PART_OF_SERIES = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_SERIES," +
                 "$COLUMN_METADATA_LICENCE_URL_FILTER = EXCLUDED.$COLUMN_METADATA_LICENCE_URL_FILTER," +
                 "$COLUMN_METADATA_DELETED = EXCLUDED.$COLUMN_METADATA_DELETED," +
-                "$COLUMN_METADATA_ECONBIZID = EXCLUDED.$COLUMN_METADATA_ECONBIZID;"
+                "$COLUMN_METADATA_ECONBIZID = EXCLUDED.$COLUMN_METADATA_ECONBIZID," +
+                "$COLUMN_METADATA_ECONSTOR_ISSUE = EXCLUDED.$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME = EXCLUDED.$COLUMN_METADATA_ECONSTOR_VOLUME," +
+                "$COLUMN_METADATA_IS_PART_OF_BOOK = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_BOOK," +
+                "$COLUMN_METADATA_IS_PART_OF_JOURNAL = EXCLUDED.$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK = EXCLUDED.$COLUMN_METADATA_PPN_BOOK," +
+                "$COLUMN_METADATA_PPN_JOURNAL = EXCLUDED.$COLUMN_METADATA_PPN_JOURNAL," +
+                "$COLUMN_METADATA_PPN_SERIES = EXCLUDED.$COLUMN_METADATA_PPN_SERIES" +
+                ";"
 
         const val STATEMENT_ITEM_CONTAINS_METADATA =
             "SELECT EXISTS(SELECT 1 from $TABLE_NAME_ITEM WHERE $COLUMN_METADATA_HANDLE=?)"
 
         const val STATEMENT_INSERT_METADATA =
             "INSERT INTO $TABLE_NAME_ITEM_METADATA" +
-                "(handle,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+                "(handle,ppn,title,$COLUMN_METADATA_PUBLICATION_YEAR,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,$COLUMN_METADATA_COLLECTION_HANDLE,licence_url,$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_IS_PART_OF_SERIES,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID" +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES" +
                 ") " +
                 "VALUES(" +
                 "?,?,?,?," +
@@ -414,7 +425,7 @@ class MetadataDB(
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
                 "?,?,?,?,?," +
-                "?)"
+                "?,?,?,?)"
 
         fun extractMetadataRS(rs: ResultSet): ItemMetadata {
             var localCounter = 1
@@ -422,21 +433,17 @@ class MetadataDB(
                 handle = rs.getString(localCounter++),
                 ppn = rs.getString(localCounter++),
                 title = rs.getString(localCounter++),
-                titleJournal = rs.getString(localCounter++),
-                titleSeries = rs.getString(localCounter++),
                 publicationYear = rs.getInt(localCounter++),
-                band = rs.getString(localCounter++),
                 publicationType = PublicationType.valueOf(rs.getString(localCounter++)),
-                doi = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
+                pids = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 isbn = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 paketSigel = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 zdbIds = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
-                issn = rs.getString(localCounter++),
+                issn = (rs.getArray(localCounter++)?.array as? Array<out Any?>)?.filterIsInstance<String>(),
                 createdOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
                 lastUpdatedOn = rs.getTimestamp(localCounter++, utcCalendar)?.toOffsetDateTime(),
                 createdBy = rs.getString(localCounter++),
                 lastUpdatedBy = rs.getString(localCounter++),
-                author = rs.getString(localCounter++),
                 collectionName = rs.getString(localCounter++),
                 communityName = rs.getString(localCounter++),
                 storageDate = rs.getTimestamp(localCounter++)?.toOffsetDateTime(),
@@ -449,6 +456,13 @@ class MetadataDB(
                 licenceUrlFilter = rs.getString(localCounter++),
                 deleted = rs.getBoolean(localCounter++),
                 econbizId = rs.getString(localCounter++),
+                econstorIssue = rs.getString(localCounter++),
+                econstorVolume = rs.getString(localCounter++),
+                isPartOfBook = rs.getString(localCounter++),
+                isPartOfJournal = rs.getString(localCounter++),
+                ppnBook = rs.getString(localCounter++),
+                ppnJournal = rs.getString(localCounter++),
+                ppnSeries = rs.getString(localCounter++),
             )
         }
 
@@ -465,20 +479,11 @@ class MetadataDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setString(localCounter++, itemMetadata.title)
-                this.setIfNotNull(localCounter++, itemMetadata.titleJournal) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
-                this.setIfNotNull(localCounter++, itemMetadata.titleSeries) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
                 this.setIfNotNull(localCounter++, itemMetadata.publicationYear) { value, idx, prepStmt ->
                     prepStmt.setInt(idx, value)
                 }
-                this.setIfNotNull(localCounter++, itemMetadata.band) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
                 this.setString(localCounter++, itemMetadata.publicationType.toString())
-                this.setIfNotNull(localCounter++, itemMetadata.doi) { value, idx, prepStmt ->
+                this.setIfNotNull(localCounter++, itemMetadata.pids) { value, idx, prepStmt ->
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(localCounter++, itemMetadata.isbn) { value, idx, prepStmt ->
@@ -492,7 +497,7 @@ class MetadataDB(
                     prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setIfNotNull(localCounter++, itemMetadata.issn) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
+                    prepStmt.setArray(idx, connection.createArrayOf("text", value.toTypedArray()))
                 }
                 this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
                 this.setTimestamp(localCounter++, Timestamp.from(now), utcCalendar)
@@ -500,9 +505,6 @@ class MetadataDB(
                     prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(localCounter++, itemMetadata.lastUpdatedBy) { value, idx, prepStmt ->
-                    prepStmt.setString(idx, value)
-                }
-                this.setIfNotNull(localCounter++, itemMetadata.author) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
                 this.setIfNotNull(localCounter++, itemMetadata.collectionName) { value, idx, prepStmt ->
@@ -537,6 +539,27 @@ class MetadataDB(
                 }
                 this.setBoolean(localCounter++, itemMetadata.deleted)
                 this.setIfNotNull(localCounter++, itemMetadata.econbizId) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.econstorIssue) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.econstorVolume) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.isPartOfBook) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.isPartOfJournal) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.ppnBook) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.ppnJournal) { value, idx, prepStmt ->
+                    prepStmt.setString(idx, value)
+                }
+                this.setIfNotNull(localCounter++, itemMetadata.ppnSeries) { value, idx, prepStmt ->
                     prepStmt.setString(idx, value)
                 }
             }

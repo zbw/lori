@@ -26,10 +26,17 @@ import de.zbw.persistence.lori.server.ItemDBTest.Companion.NOW
 import de.zbw.persistence.lori.server.ItemDBTest.Companion.TEST_Metadata
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DELETED
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_ISSUE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_VOLUME
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_BOOK
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_JOURNAL
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_LICENCE_URL_FILTER
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PAKET_SIGEL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_BOOK
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_JOURNAL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_SERIES
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_TYPE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PUBLICATION_YEAR
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
@@ -725,26 +732,36 @@ class SearchDBTest : DatabaseTest() {
         const val DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY = "DATA_FOR_BUILD_BOTH_FILTER_NO_SEARCH_QUERY "
 
         const val STATEMENT_GET_METADATA_RANGE =
-            "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal," +
-                "title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
+            "SELECT $COLUMN_METADATA_HANDLE,ppn,title," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR,$COLUMN_METADATA_PUBLICATION_TYPE,doi," +
                 "isbn,$COLUMN_METADATA_PAKET_SIGEL,$COLUMN_METADATA_ZDB_IDS,issn," +
                 "created_on,last_updated_on,created_by,last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
+                "collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE," +
                 "community_handle,collection_handle " +
                 "FROM $TABLE_NAME_ITEM_METADATA $ALIAS_ITEM_METADATA"
         const val SELECT_ALL_WITH_TS =
-            "SELECT $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series," +
-                "$COLUMN_METADATA_PUBLICATION_YEAR,band,publication_type,doi,isbn,paket_sigel,zdb_ids,issn," +
+            "SELECT $ALIAS_ITEM_METADATA.$COLUMN_METADATA_HANDLE,ppn,title," +
+                "$COLUMN_METADATA_PUBLICATION_YEAR,publication_type,doi,isbn,paket_sigel,zdb_ids,issn," +
                 "$ALIAS_ITEM_METADATA.created_on,$ALIAS_ITEM_METADATA.last_updated_on,$ALIAS_ITEM_METADATA.created_by,$ALIAS_ITEM_METADATA.last_updated_by," +
-                "author,collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
+                "collection_name,community_name,storage_date,$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle," +
                 "collection_handle,licence_url,sub_community_name,is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER," +
-                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
+                "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID," +
+                "$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL," +
+                "$COLUMN_METADATA_PPN_SERIES," +
+                "ts_collection,ts_community,ts_title,ts_col_hdl,ts_com_hdl,ts_subcom_hdl," +
                 "ts_hdl,ts_subcom_name,${COLUMN_METADATA_HANDLE_POSTFIX}"
         const val SELECT_ALL =
-            "SELECT $COLUMN_METADATA_HANDLE,ppn,title,title_journal,title_series,$COLUMN_METADATA_PUBLICATION_YEAR,band," +
+            "SELECT $COLUMN_METADATA_HANDLE,ppn,title,$COLUMN_METADATA_PUBLICATION_YEAR," +
                 "publication_type,doi,isbn,paket_sigel,zdb_ids,issn,created_on,last_updated_on," +
-                "created_by,last_updated_by,author,collection_name,community_name,storage_date," +
+                "created_by,last_updated_by,collection_name,community_name,storage_date," +
                 "$COLUMN_METADATA_SUBCOMMUNITY_HANDLE,community_handle,collection_handle,licence_url,sub_community_name," +
-                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_HANDLE_POSTFIX"
+                "is_part_of_series,$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED," +
+                "$COLUMN_METADATA_ECONBIZID," +
+                "$COLUMN_METADATA_ECONSTOR_ISSUE," +
+                "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL," +
+                "$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_HANDLE_POSTFIX"
     }
 }

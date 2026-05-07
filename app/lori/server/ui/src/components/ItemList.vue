@@ -114,11 +114,6 @@ export default defineComponent({
         value: "publicationYear",
       },
       {
-        title: "Band",
-        sortable: true,
-        value: "band",
-      },
-      {
         title: "DOI",
         sortable: true,
         value: "doi",
@@ -1573,8 +1568,23 @@ table.special, th.special, td.special {
                     <td class=special></td>
                   </tr>
                   <tr class=special>
-                    <td class=special>Series</td>
+                    <td class=special>Buchtitel</td>
+                    <td class=special>bok</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Zeitschriftentitel</td>
+                    <td class=special>jou</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Serientitel</td>
                     <td class=special>ser</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Band</td>
+                    <td class=special>vol</td>
                     <td class=special></td>
                   </tr>
                   <tr class=special>
@@ -1633,13 +1643,33 @@ table.special, th.special, td.special {
                     <td class=special></td>
                   </tr>
                   <tr class=special>
-                    <td class=special>DOI</td>
-                    <td class=special>doi</td>
+                    <td class=special>ISSN</td>
+                    <td class=special>issn</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Persistenter Identifier</td>
+                    <td class=special>pid</td>
                     <td class=special></td>
                   </tr>
                   <tr class=special>
                     <td class=special>PPN</td>
                     <td class=special>ppn</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Buch-PPN</td>
+                    <td class=special>bokppn</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Serien-PPN</td>
+                    <td class=special>serppn</td>
+                    <td class=special></td>
+                  </tr>
+                  <tr class=special>
+                    <td class=special>Zeitschriften-PPN</td>
+                    <td class=special>jouppn</td>
                     <td class=special></td>
                   </tr>
                   <tr class=special>
@@ -1719,7 +1749,7 @@ table.special, th.special, td.special {
                 <p class="text-left text-body-1 mt-4 font-weight-bold">Suche von mehreren Werten</p>
 
                 <p class="text-left text-body-2 mt-1 mb-1">
-                  Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>doi</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
+                  Für folgende Suchschlüssel können mehrere Werte mit einem Suchschlüssel eingegeben werden: <b>pid</b>,<b>hdl</b>,<b>isb</b>,<b>ppn</b>,<b>sig</b>,<b>zdb</b>.
                   <br>
                   <b>Wichtig</b>: Wildcards funktionieren nicht mit dieser Syntax!
                 </p>

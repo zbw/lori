@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 
 /**
  * REST-API routes for metadata.
@@ -24,6 +25,7 @@ import kotlinx.coroutines.withContext
 fun Routing.metadataRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/metadata") {
         get {
@@ -58,6 +60,7 @@ fun Routing.metadataRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/metadata", e)
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()
@@ -103,6 +106,7 @@ fun Routing.metadataRoutes(
             } catch (e: Exception) {
                 span.recordException(e)
                 span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                log.error("Exception in route GET /api/v1/metadata/list", e)
                 call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
             } finally {
                 span.end()

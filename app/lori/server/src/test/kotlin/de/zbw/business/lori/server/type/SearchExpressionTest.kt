@@ -153,7 +153,7 @@ class SearchExpressionTest {
                 "single and multiple zdbIds",
             ),
             arrayOf(
-                "doi:\"doi\" | doi:\"doi1,doi2\"",
+                "pid:\"doi\" | pid:\"doi1,doi2\"",
                 "((' ' || doi_joined_lower || ' ') ILIKE ANY (?) AND doi_joined_lower != ''" +
                     " AND doi_joined_lower IS NOT NULL) OR ((' ' || doi_joined_lower || ' ')" +
                     " ILIKE ANY (?) AND doi_joined_lower != '' AND doi_joined_lower IS NOT NULL)",

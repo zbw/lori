@@ -26,6 +26,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import java.util.UUID
 
 /**
@@ -38,11 +39,10 @@ fun Routing.jobRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
     exportJobService: ExportJobService,
+    log: Logger,
 ) {
     route("/api/v1/export/jobs") {
-        /**
-         * Create a new Job.
-         */
+        // Create a new Job.
         post {
             val span =
                 tracer
@@ -83,6 +83,7 @@ fun Routing.jobRoutes(
                 } catch (bre: BadRequestException) {
                     span.recordException(bre)
                     span.setStatus(StatusCode.ERROR, "Exception: ${bre.message}")
+                    log.error("BadRequestException in route POST /api/v1/export/jobs", bre)
                     call.respond(
                         HttpStatusCode.BadRequest,
                         ApiError.badRequestError("Invalide Suchanfrage aufgrund von korrupten Request Body"),
@@ -90,6 +91,7 @@ fun Routing.jobRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route POST /api/v1/export/jobs", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ErrorRest(
@@ -104,9 +106,8 @@ fun Routing.jobRoutes(
                 }
             }
         }
-        /**
-         * Receive status of a job.
-         */
+
+        // Receive status of a job.
         get("{jobId}") {
             val span =
                 tracer
@@ -139,6 +140,7 @@ fun Routing.jobRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/export/jobs/{jobId}", e)
                     call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                 } finally {
                     span.end()

@@ -1,7 +1,5 @@
 package de.zbw.business.lori.server.type
 
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_AUTHOR
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_BAND
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COLLECTION_NAME
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_COMMUNITY_HANDLE
@@ -26,8 +24,6 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORA
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_SUBCOMMUNITY_NAME
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_JOURNAL
-import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_TITLE_SERIES
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ZDB_IDS
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -46,8 +42,6 @@ data class ItemId(
 
 @Serializable
 data class ItemMetadata(
-    val author: String?,
-    val band: String?,
     val collectionHandle: String?,
     val collectionName: String?,
     val communityHandle: String?,
@@ -56,11 +50,15 @@ data class ItemMetadata(
     @Serializable(with = OffsetDateTimeSerializer::class)
     val createdOn: OffsetDateTime?,
     val deleted: Boolean,
-    val doi: List<String>?,
+    val pids: List<String>?,
     val econbizId: String?,
     val handle: String,
+    val econstorIssue: String?,
+    val econstorVolume: String?,
     val isbn: List<String>?,
-    val issn: String?,
+    val issn: List<String>?,
+    val isPartOfBook: String?,
+    val isPartOfJournal: String?,
     val isPartOfSeries: List<String>?,
     val lastUpdatedBy: String?,
     @Serializable(with = OffsetDateTimeSerializer::class)
@@ -69,6 +67,9 @@ data class ItemMetadata(
     val licenceUrlFilter: String?,
     val paketSigel: List<String>?,
     val ppn: String?,
+    val ppnBook: String?,
+    val ppnJournal: String?,
+    val ppnSeries: String?,
     val publicationType: PublicationType,
     val publicationYear: Int?,
     val subCommunityHandle: String?,
@@ -76,8 +77,6 @@ data class ItemMetadata(
     @Serializable(with = OffsetDateTimeSerializer::class)
     val storageDate: OffsetDateTime?,
     val title: String,
-    val titleJournal: String?,
-    val titleSeries: String?,
     val zdbIds: List<String>?,
 ) {
     fun toCSV(): String {
@@ -87,8 +86,6 @@ data class ItemMetadata(
 
         val fields =
             listOf(
-                author,
-                band,
                 collectionHandle,
                 collectionName,
                 communityHandle,
@@ -96,10 +93,10 @@ data class ItemMetadata(
                 createdBy,
                 dateToString(createdOn),
                 deleted.toString(),
-                listToString(doi),
+                listToString(pids),
                 handle,
                 listToString(isbn),
-                issn,
+                listToString(issn),
                 listToString(isPartOfSeries),
                 lastUpdatedBy,
                 dateToString(lastUpdatedOn),
@@ -113,8 +110,6 @@ data class ItemMetadata(
                 subCommunityName,
                 dateToString(storageDate),
                 title,
-                titleJournal,
-                titleSeries,
                 listToString(zdbIds),
             )
 
@@ -142,9 +137,7 @@ data class ItemMetadata(
             }
 
         fun csvFileHeader(): String =
-            "$COLUMN_METADATA_AUTHOR, " +
-                "$COLUMN_METADATA_BAND," +
-                "$COLUMN_METADATA_COLLECTION_HANDLE," +
+            "$COLUMN_METADATA_COLLECTION_HANDLE," +
                 "$COLUMN_METADATA_COLLECTION_NAME," +
                 "$COLUMN_METADATA_COMMUNITY_HANDLE," +
                 "$COLUMN_METADATA_COMMUNITY_NAME," +
@@ -168,8 +161,6 @@ data class ItemMetadata(
                 "$COLUMN_METADATA_SUBCOMMUNITY_NAME," +
                 "$COLUMN_METADATA_STORAGE_DATE," +
                 "$COLUMN_METADATA_TITLE," +
-                "$COLUMN_METADATA_TITLE_JOURNAL," +
-                "$COLUMN_METADATA_TITLE_SERIES," +
                 COLUMN_METADATA_ZDB_IDS
     }
 }

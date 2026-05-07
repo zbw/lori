@@ -586,8 +586,6 @@ export default {
             return SortByRest.Handle;
         }
         switch(s.sortBy[0].key) {
-            case "band":
-                return SortByRest.Band
             case "collectionName":
                 return SortByRest.CollectionName;
             case "communityName":

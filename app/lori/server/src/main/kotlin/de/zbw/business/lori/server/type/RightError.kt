@@ -25,6 +25,7 @@ data class RightError(
 
 enum class ConflictType {
     DATE_OVERLAP,
+    DATE_OVERLAP_NO_END_MANUAL,
     DELETION,
     GAP,
     NO_RIGHT,

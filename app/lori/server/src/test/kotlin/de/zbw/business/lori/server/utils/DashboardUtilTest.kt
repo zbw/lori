@@ -128,6 +128,14 @@ class DashboardUtilTest {
                 ),
                 "Both, gap and no open end but with reverse order (to check if sort works internally as expected)",
             ),
+            arrayOf(
+                Item(
+                    metadata = TEST_METADATA.copy(deleted = true),
+                    rights = listOf(RIGHT_NOV, RIGHT_SEP),
+                ),
+                emptyList<RightError>(),
+                "Deleted metadata entries do not cause GAP errors",
+            ),
         )
 
     @Test(dataProvider = DATA_FOR_GAP_ERRORS)
@@ -144,7 +152,7 @@ class DashboardUtilTest {
     }
 
     companion object {
-        const val DATA_FOR_GAP_ERRORS = "DATA_FOR_GAP_ERRORS "
+        const val DATA_FOR_GAP_ERRORS = "DATA_FOR_GAP_ERRORS"
         val TEST_METADATA = RestConverterTest.TEST_METADATA
         val NOW: OffsetDateTime =
             OffsetDateTime.of(

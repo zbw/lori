@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
+import org.testng.Assert.assertNotNull
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 import java.time.Instant
@@ -49,6 +50,43 @@ class UserDBTest : DatabaseTest() {
                 ),
             )
             dbConnector.userDB.deleteSessionById(sessionId)
+            assertNull(
+                dbConnector.userDB.getSessionById(sessionId),
+            )
+        }
+
+    @Test
+    fun testDeleteOldSessions() =
+        runBlocking {
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.minusDays(5).toInstant()
+            val sessionId: String = dbConnector.userDB.insertSession(TEST_SESSION)
+            assertThat(
+                dbConnector.userDB.getSessionById(sessionId),
+                `is`(
+                    TEST_SESSION.copy(
+                        sessionID = sessionId,
+                        createdOn = NOW.minusDays(5).toInstant(),
+                    ),
+                ),
+            )
+
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.toInstant()
+            assertThat(
+                dbConnector.userDB.deleteSessionOlderThan(14),
+                `is`(0),
+            )
+            assertNotNull(
+                dbConnector.userDB.getSessionById(sessionId),
+            )
+
+            mockkStatic(Instant::class)
+            every { Instant.now() } returns NOW.plusDays(15L).toInstant()
+            assertThat(
+                dbConnector.userDB.deleteSessionOlderThan(14),
+                `is`(1),
+            )
             assertNull(
                 dbConnector.userDB.getSessionById(sessionId),
             )

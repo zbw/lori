@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import org.postgresql.util.PSQLException
 
 /**
@@ -32,6 +33,7 @@ import org.postgresql.util.PSQLException
 fun Routing.bookmarkTemplateRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/bookmarktemplates") {
         authenticate("auth-session") {
@@ -75,6 +77,7 @@ fun Routing.bookmarkTemplateRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database error in route POST /api/v1/bookmarktemplates", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -84,6 +87,7 @@ fun Routing.bookmarkTemplateRoutes(
                         }
                     } catch (e: Exception) {
                         span.recordException(e)
+                        log.error("Exception in route POST /api/v1/bookmarktemplates", e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
                             HttpStatusCode.InternalServerError,
@@ -97,9 +101,7 @@ fun Routing.bookmarkTemplateRoutes(
                 }
             }
 
-            /**
-             * Delete Bookmark Template Pair.
-             */
+            // Delete Bookmark Template Pair.
             delete {
                 val span =
                     tracer
@@ -144,6 +146,7 @@ fun Routing.bookmarkTemplateRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/bookmarktemplates", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -177,6 +180,7 @@ fun Routing.bookmarkTemplateRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route DELETE /api/v1/bookmarktemplates/batch", e)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -207,6 +211,7 @@ fun Routing.bookmarkTemplateRoutes(
                         } catch (e: Exception) {
                             span.recordException(e)
                             span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                            log.error("Exception in route POST /api/v1/bookmarktemplates/batch", e)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(

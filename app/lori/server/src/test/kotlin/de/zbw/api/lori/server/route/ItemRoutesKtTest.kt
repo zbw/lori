@@ -1025,23 +1025,19 @@ class ItemRoutesKtTest {
 
         val ITEM_METADATA =
             MetadataRest(
-                author = "Colbjørnsen, Terje",
-                band = "band",
                 collectionName = "collectionName",
                 communityName = "communityName",
                 deleted = false,
                 doi = listOf("doi:example.org"),
                 handle = "hdl:example.handle.net",
                 isbn = listOf("1234567890123"),
-                issn = "123456",
+                issn = listOf("123456"),
                 paketSigel = listOf("sigel"),
                 ppn = "ppn",
                 publicationType = PublicationTypeRest.book,
                 publicationYear = 2022,
                 storageDate = NOW.minusDays(3),
                 title = "Important title",
-                titleJournal = null,
-                titleSeries = null,
                 zdbIds = listOf("zdb"),
             )
 

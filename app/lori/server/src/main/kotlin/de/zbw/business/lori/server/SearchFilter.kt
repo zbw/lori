@@ -1,6 +1,44 @@
 package de.zbw.business.lori.server
 
 import de.zbw.api.lori.server.route.QueryParameterParser
+import de.zbw.business.lori.server.FilterType.ACCESS
+import de.zbw.business.lori.server.FilterType.ACCESS_ON_DATE
+import de.zbw.business.lori.server.FilterType.BOOK
+import de.zbw.business.lori.server.FilterType.COLLECTION_HANDLE
+import de.zbw.business.lori.server.FilterType.COLLECTION_NAME
+import de.zbw.business.lori.server.FilterType.COMMUNITY_HANDLE
+import de.zbw.business.lori.server.FilterType.COMMUNITY_NAME
+import de.zbw.business.lori.server.FilterType.DELETIONS
+import de.zbw.business.lori.server.FilterType.DOI
+import de.zbw.business.lori.server.FilterType.ECONBIZID
+import de.zbw.business.lori.server.FilterType.ECONSTOR_VOLUME
+import de.zbw.business.lori.server.FilterType.END_DATE
+import de.zbw.business.lori.server.FilterType.FORMAL_RULE
+import de.zbw.business.lori.server.FilterType.HANDLE
+import de.zbw.business.lori.server.FilterType.ISBN
+import de.zbw.business.lori.server.FilterType.ISSN
+import de.zbw.business.lori.server.FilterType.JOURNAL
+import de.zbw.business.lori.server.FilterType.LICENCE_URL
+import de.zbw.business.lori.server.FilterType.LICENCE_URL_LUK
+import de.zbw.business.lori.server.FilterType.MANUAL_RIGHTS
+import de.zbw.business.lori.server.FilterType.NO_RIGHTS
+import de.zbw.business.lori.server.FilterType.PAKET_SIGEL
+import de.zbw.business.lori.server.FilterType.PPN
+import de.zbw.business.lori.server.FilterType.PPN_BOOK
+import de.zbw.business.lori.server.FilterType.PPN_JOURNAL
+import de.zbw.business.lori.server.FilterType.PPN_SERIES
+import de.zbw.business.lori.server.FilterType.PUBLICATION_TYPE
+import de.zbw.business.lori.server.FilterType.PUBLICATION_YEAR
+import de.zbw.business.lori.server.FilterType.RIGHT_ID
+import de.zbw.business.lori.server.FilterType.RIGHT_VALID_ON
+import de.zbw.business.lori.server.FilterType.SERIES
+import de.zbw.business.lori.server.FilterType.START_DATE
+import de.zbw.business.lori.server.FilterType.STORAGE_DATE
+import de.zbw.business.lori.server.FilterType.SUB_COMMUNITY_HANDLE
+import de.zbw.business.lori.server.FilterType.SUB_COMMUNITY_NAME
+import de.zbw.business.lori.server.FilterType.TEMPLATE_NAME
+import de.zbw.business.lori.server.FilterType.TITLE
+import de.zbw.business.lori.server.FilterType.ZDB_ID
 import de.zbw.business.lori.server.TSVectorMetadataSearchFilter.Companion.SQL_FUNC_TO_TS_QUERY
 import de.zbw.business.lori.server.type.AccessState
 import de.zbw.business.lori.server.type.ComparisonOperator
@@ -19,9 +57,15 @@ import de.zbw.persistence.lori.server.ItemDB.Companion.COLUMN_ITEM_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_CREATED_ON
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_VOLUME
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_BOOK
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_JOURNAL
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_IS_PART_OF_SERIES_LOWER
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_BOOK
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_JOURNAL
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_PPN_SERIES
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_STORAGE_DATE
 import de.zbw.persistence.lori.server.RightDB
 import de.zbw.persistence.lori.server.RightDB.Companion.COLUMN_RIGHT_HAS_LEGAL_RISK
@@ -83,27 +127,27 @@ abstract class SearchFilter(
         ): SearchFilter? =
             try {
                 when (searchKey.lowercase()) {
-                    "acc" -> {
+                    ACCESS.keyAlias -> {
                         QueryParameterParser.parseAccessStateFilter(searchValue.uppercase())
                     }
 
-                    "com" -> {
+                    COMMUNITY_NAME.keyAlias -> {
                         CommunityNameFilter(searchValue)
                     }
 
-                    "col" -> {
+                    COLLECTION_NAME.keyAlias -> {
                         CollectionNameFilter(searchValue)
                     }
 
-                    "doi" -> {
+                    DOI.keyAlias -> {
                         QueryParameterParser.parseDoisFilter(searchValue)
                     }
 
-                    "isb" -> {
+                    ISBN.keyAlias -> {
                         QueryParameterParser.parseIsbnsFilter(searchValue)
                     }
 
-                    "hdl" -> {
+                    HANDLE.keyAlias -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             HandlesFilter(searchValue.split(",".toRegex()))
                         } else {
@@ -111,47 +155,47 @@ abstract class SearchFilter(
                         }
                     }
 
-                    "sig" -> {
+                    PAKET_SIGEL.keyAlias -> {
                         QueryParameterParser.parsePaketSigelFilterOR(searchValue)
                     }
 
-                    "tit" -> {
+                    TITLE.keyAlias -> {
                         TitleFilter(searchValue)
                     }
 
-                    "zdb" -> {
+                    ZDB_ID.keyAlias -> {
                         QueryParameterParser.parseZDBIdFilterOR(searchValue)
                     }
 
-                    "hdlcol" -> {
+                    COLLECTION_HANDLE.keyAlias -> {
                         CollectionHandleFilter(searchValue)
                     }
 
-                    "hdlcom" -> {
+                    COMMUNITY_HANDLE.keyAlias -> {
                         CommunityHandleFilter(
                             searchValue,
                         )
                     }
 
-                    "hdlsubcom" -> {
+                    SUB_COMMUNITY_HANDLE.keyAlias -> {
                         SubcommunityHandleFilter(
                             searchValue,
                         )
                     }
 
-                    "rightid" -> {
+                    RIGHT_ID.keyAlias -> {
                         QueryParameterParser.parseRightIdFilter(searchValue)
                     }
 
-                    "lur" -> {
+                    LICENCE_URL.keyAlias -> {
                         QueryParameterParser.parseLicenceUrlFilter(searchValue)
                     }
 
-                    "luk" -> {
+                    LICENCE_URL_LUK.keyAlias -> {
                         QueryParameterParser.parseLicenceUrlLUKFilter(searchValue)
                     }
 
-                    "ppn" -> {
+                    PPN.keyAlias -> {
                         if (searchValue.split(",".toRegex()).size > 1) {
                             PPNsFilter(searchValue.split(",".toRegex()))
                         } else {
@@ -159,37 +203,37 @@ abstract class SearchFilter(
                         }
                     }
 
-                    "subcom" -> {
+                    SUB_COMMUNITY_NAME.keyAlias -> {
                         SubcommunityNameFilter(
                             searchValue,
                         )
                     }
 
-                    "ser" -> {
+                    SERIES.keyAlias -> {
                         QueryParameterParser.parseSeriesFilter(searchValue)
                     }
 
-                    "typ" -> {
+                    PUBLICATION_TYPE.keyAlias -> {
                         QueryParameterParser.parsePublicationTypeFilter(searchValue)
                     }
 
-                    "jah" -> {
+                    PUBLICATION_YEAR.keyAlias -> {
                         QueryParameterParser.parsePublicationYearFilter(searchValue)
                     }
 
-                    "zgp" -> {
+                    RIGHT_VALID_ON.keyAlias -> {
                         QueryParameterParser.parseRightValidOnFilter(searchValue)
                     }
 
-                    "zgb" -> {
+                    START_DATE.keyAlias -> {
                         QueryParameterParser.parseStartDateFilter(searchValue)
                     }
 
-                    "zge" -> {
+                    END_DATE.keyAlias -> {
                         QueryParameterParser.parseEndDateFilter(searchValue)
                     }
 
-                    "reg" -> {
+                    FORMAL_RULE.keyAlias -> {
                         QueryParameterParser.parseFormalRuleFilter(
                             searchValue
                                 .uppercase()
@@ -201,7 +245,7 @@ abstract class SearchFilter(
                         )
                     }
 
-                    "nor" -> {
+                    NO_RIGHTS.keyAlias -> {
                         QueryParameterParser.parseNoRightInformationFilter(
                             when (searchValue) {
                                 "on" -> "true"
@@ -210,7 +254,7 @@ abstract class SearchFilter(
                         )
                     }
 
-                    "man" -> {
+                    MANUAL_RIGHTS.keyAlias -> {
                         QueryParameterParser.parseManualRightFilter(
                             when (searchValue) {
                                 "on" -> "true"
@@ -219,7 +263,7 @@ abstract class SearchFilter(
                         )
                     }
 
-                    "del" -> {
+                    DELETIONS.keyAlias -> {
                         QueryParameterParser.parseDeletionsFilter(
                             when (searchValue) {
                                 "on" -> "true"
@@ -229,26 +273,68 @@ abstract class SearchFilter(
                         )
                     }
 
-                    "tpl" -> {
+                    TEMPLATE_NAME.keyAlias -> {
                         QueryParameterParser.parseTemplateNameFilter(
                             searchValue,
                         )
                     }
 
-                    "acd" -> {
+                    ACCESS_ON_DATE.keyAlias -> {
                         QueryParameterParser.parseAccessStateOnDate(
                             searchValue,
                         )
                     }
 
-                    "ebid" -> {
+                    ECONBIZID.keyAlias -> {
                         QueryParameterParser.parseEconbizIdFilter(
                             searchValue,
                         )
                     }
 
-                    FilterType.STORAGE_DATE.keyAlias -> {
+                    STORAGE_DATE.keyAlias -> {
                         QueryParameterParser.parseStorageDateFilter(
+                            searchValue,
+                        )
+                    }
+
+                    BOOK.keyAlias -> {
+                        QueryParameterParser.parseBookFilter(
+                            searchValue,
+                        )
+                    }
+
+                    JOURNAL.keyAlias -> {
+                        QueryParameterParser.parseJournalFilter(
+                            searchValue,
+                        )
+                    }
+
+                    PPN_JOURNAL.keyAlias -> {
+                        QueryParameterParser.parseJournalPPNFilter(
+                            searchValue,
+                        )
+                    }
+
+                    PPN_BOOK.keyAlias -> {
+                        QueryParameterParser.parseBookPPNFilter(
+                            searchValue,
+                        )
+                    }
+
+                    PPN_SERIES.keyAlias -> {
+                        QueryParameterParser.parseSeriesPPNFilter(
+                            searchValue,
+                        )
+                    }
+
+                    ECONSTOR_VOLUME.keyAlias -> {
+                        QueryParameterParser.parseEconstorVolumeFilter(
+                            searchValue,
+                        )
+                    }
+
+                    ISSN.keyAlias -> {
+                        QueryParameterParser.parseIssnsFilter(
                             searchValue,
                         )
                     }
@@ -345,7 +431,7 @@ class TitleFilter(
         dbColumnName = MetadataDB.TS_TITLE,
         value = title,
     ) {
-    override fun getFilterType(): FilterType = FilterType.TITLE
+    override fun getFilterType(): FilterType = TITLE
 }
 
 class CommunityNameFilter(
@@ -354,7 +440,7 @@ class CommunityNameFilter(
         dbColumnName = MetadataDB.TS_COMMUNITY,
         value = communityName,
     ) {
-    override fun getFilterType(): FilterType = FilterType.COMMUNITY_NAME
+    override fun getFilterType(): FilterType = COMMUNITY_NAME
 }
 
 class CollectionNameFilter(
@@ -363,7 +449,7 @@ class CollectionNameFilter(
         dbColumnName = MetadataDB.TS_COLLECTION,
         value = collectionName,
     ) {
-    override fun getFilterType(): FilterType = FilterType.COLLECTION_NAME
+    override fun getFilterType(): FilterType = COLLECTION_NAME
 }
 
 class HandleFilter(
@@ -372,7 +458,7 @@ class HandleFilter(
         dbColumnName = MetadataDB.TS_HANDLE,
         value = handleName,
     ) {
-    override fun getFilterType(): FilterType = FilterType.HANDLE
+    override fun getFilterType(): FilterType = HANDLE
 }
 
 class CommunityHandleFilter(
@@ -381,7 +467,7 @@ class CommunityHandleFilter(
         dbColumnName = MetadataDB.TS_COMMUNITY_HANDLE,
         value = communityHandle,
     ) {
-    override fun getFilterType(): FilterType = FilterType.COMMUNITY_HANDLE
+    override fun getFilterType(): FilterType = COMMUNITY_HANDLE
 }
 
 class CollectionHandleFilter(
@@ -390,7 +476,7 @@ class CollectionHandleFilter(
         dbColumnName = MetadataDB.TS_COLLECTION_HANDLE,
         value = collectionHandle,
     ) {
-    override fun getFilterType(): FilterType = FilterType.COLLECTION_HANDLE
+    override fun getFilterType(): FilterType = COLLECTION_HANDLE
 }
 
 class SubcommunityHandleFilter(
@@ -399,7 +485,7 @@ class SubcommunityHandleFilter(
         dbColumnName = MetadataDB.TS_SUBCOMMUNITY_HANDLE,
         value = subcommunityHandle,
     ) {
-    override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_HANDLE
+    override fun getFilterType(): FilterType = SUB_COMMUNITY_HANDLE
 }
 
 class SubcommunityNameFilter(
@@ -408,7 +494,7 @@ class SubcommunityNameFilter(
         dbColumnName = MetadataDB.TS_SUBCOMMUNITY_NAME,
         value = subcommunityName,
     ) {
-    override fun getFilterType(): FilterType = FilterType.SUB_COMMUNITY_NAME
+    override fun getFilterType(): FilterType = SUB_COMMUNITY_NAME
 }
 
 class LicenceUrlFilterLUK(
@@ -419,7 +505,7 @@ class LicenceUrlFilterLUK(
     ) {
     override fun toWhereClause(): String = "($dbColumnName @@ $SQL_FUNC_TO_TS_QUERY('simple', ?) AND $dbColumnName is not null)"
 
-    override fun getFilterType(): FilterType = FilterType.LICENCE_URL_LUK
+    override fun getFilterType(): FilterType = LICENCE_URL_LUK
 }
 
 class LicenceUrlFilter(
@@ -443,7 +529,7 @@ class LicenceUrlFilter(
 
     override fun toSQLString(): String = licenceUrl
 
-    override fun getFilterType(): FilterType = FilterType.LICENCE_URL
+    override fun getFilterType(): FilterType = LICENCE_URL
 
     companion object {
         fun fromString(s: String?): LicenceUrlFilter? = s?.let { QueryParameterParser.parseLicenceUrlFilter(it) }
@@ -471,7 +557,151 @@ class PPNFilter(
 
     override fun toSQLString(): String = ppn
 
-    override fun getFilterType(): FilterType = FilterType.PPN
+    override fun getFilterType(): FilterType = PPN
+}
+
+class BookFilter(
+    val book: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_IS_PART_OF_BOOK,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, book)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = book
+
+    override fun getFilterType(): FilterType = BOOK
+}
+
+class JournalFilter(
+    val journal: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_IS_PART_OF_JOURNAL,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, journal)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = journal
+
+    override fun getFilterType(): FilterType = JOURNAL
+}
+
+class PPNBookFilter(
+    val ppn: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_PPN_BOOK,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, ppn)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = ppn
+
+    override fun getFilterType(): FilterType = PPN_BOOK
+}
+
+class PPNJournalFilter(
+    val ppn: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_PPN_JOURNAL,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, ppn)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = ppn
+
+    override fun getFilterType(): FilterType = PPN_JOURNAL
+}
+
+class PPNSeriesFilter(
+    val ppn: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_PPN_SERIES,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, ppn)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = ppn
+
+    override fun getFilterType(): FilterType = PPN_SERIES
+}
+
+class EconstorVolumeFilter(
+    val ppn: String,
+) : MetadataSearchFilter(
+        dbColumnName = COLUMN_METADATA_ECONSTOR_VOLUME,
+    ) {
+    override fun toWhereClause(): String = "(lower($dbColumnName) ILIKE ? AND $dbColumnName is not null)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        preparedStatement.setString(counter, ppn)
+        return counter + 1
+    }
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun toSQLString(): String = ppn
+
+    override fun getFilterType(): FilterType = ECONSTOR_VOLUME
 }
 
 class EconbizIDFilter(
@@ -495,7 +725,7 @@ class EconbizIDFilter(
 
     override fun toSQLString(): String = econbizId
 
-    override fun getFilterType(): FilterType = FilterType.ECONBIZID
+    override fun getFilterType(): FilterType = ECONBIZID
 }
 
 class PPNsFilter(
@@ -526,7 +756,7 @@ class PPNsFilter(
 
     override fun toSQLString(): String = ppns.joinToString(separator = ",") { it }
 
-    override fun getFilterType(): FilterType = FilterType.PPN
+    override fun getFilterType(): FilterType = PPN
 }
 
 class DOIsFilter(
@@ -553,7 +783,7 @@ class DOIsFilter(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun getFilterType(): FilterType = FilterType.DOI
+    override fun getFilterType(): FilterType = DOI
 }
 
 class ISBNsFilter(
@@ -580,7 +810,34 @@ class ISBNsFilter(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun getFilterType(): FilterType = FilterType.ISBN
+    override fun getFilterType(): FilterType = ISBN
+}
+
+class ISSNsFilter(
+    val issns: List<String>,
+) : MetadataSearchFilter(
+        MetadataDB.COLUMN_METADATA_ISSN_LOWER,
+    ) {
+    override fun toWhereClause(): String =
+        "((' ' || $dbColumnName || ' ') ILIKE ANY (?) AND $dbColumnName != '' AND $dbColumnName IS NOT NULL)"
+
+    override fun toWhereClauseStatistics(): String = toWhereClause()
+
+    override fun setSQLParameter(
+        counter: Int,
+        preparedStatement: PreparedStatement,
+    ): Int {
+        var localCounter = counter
+        val preparedArray = prepareValuesForLowercasedJoinedArrays(issns)
+        preparedStatement.setArray(localCounter++, preparedStatement.connection.createArrayOf("text", preparedArray))
+        return localCounter
+    }
+
+    override fun toSQLString(): String = issns.joinToString(separator = ",")
+
+    override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
+
+    override fun getFilterType(): FilterType = ISSN
 }
 
 class PublicationYearFilter(
@@ -636,7 +893,7 @@ class PublicationYearFilter(
         return "$fromYearString-$toYearString"
     }
 
-    override fun getFilterType(): FilterType = FilterType.PUBLICATION_YEAR
+    override fun getFilterType(): FilterType = PUBLICATION_YEAR
 
     companion object {
         fun fromString(s: String?): PublicationYearFilter? = QueryParameterParser.parsePublicationYearFilter(s)
@@ -709,7 +966,7 @@ class StorageDateFilter(
         return "$fromString--$toString"
     }
 
-    override fun getFilterType(): FilterType = FilterType.STORAGE_DATE
+    override fun getFilterType(): FilterType = STORAGE_DATE
 
     companion object {
         fun fromString(s: String?): StorageDateFilter? = QueryParameterParser.parseStorageDateFilter(s)
@@ -743,7 +1000,7 @@ class PublicationTypeFilter(
 
     override fun toSQLString(): String = publicationTypes.joinToString(separator = ",")
 
-    override fun getFilterType(): FilterType = FilterType.PUBLICATION_TYPE
+    override fun getFilterType(): FilterType = PUBLICATION_TYPE
 
     companion object {
         fun fromString(s: String?): PublicationTypeFilter? = QueryParameterParser.parsePublicationTypeFilter(s)
@@ -772,7 +1029,7 @@ class PaketSigelFilter(
 
     override fun toSQLString(): String = paketSigel
 
-    override fun getFilterType(): FilterType = FilterType.PAKET_SIGEL
+    override fun getFilterType(): FilterType = PAKET_SIGEL
 }
 
 class PaketSigelFilterOR(
@@ -800,7 +1057,7 @@ class PaketSigelFilterOR(
 
     override fun toSQLString(): String = paketSigels.joinToString(separator = ",")
 
-    override fun getFilterType(): FilterType = FilterType.PAKET_SIGEL
+    override fun getFilterType(): FilterType = PAKET_SIGEL
 }
 
 class CreatedOnFilter(
@@ -823,7 +1080,7 @@ class CreatedOnFilter(
         return localCounter
     }
 
-    override fun toString(): String = "${COLUMN_METADATA_CREATED_ON} ${comparisonOp.toSQL()} $createdOn"
+    override fun toString(): String = "$COLUMN_METADATA_CREATED_ON ${comparisonOp.toSQL()} $createdOn"
 
     override fun toSQLString(): String = ""
 
@@ -857,7 +1114,7 @@ class ZDBIdFilterOR(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun getFilterType(): FilterType = FilterType.ZDB_ID
+    override fun getFilterType(): FilterType = ZDB_ID
 }
 
 /**
@@ -885,7 +1142,7 @@ class ZDBIdFilter(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun getFilterType(): FilterType = FilterType.ZDB_ID
+    override fun getFilterType(): FilterType = ZDB_ID
 }
 
 class SeriesFilter(
@@ -908,7 +1165,7 @@ class SeriesFilter(
         return localCounter
     }
 
-    override fun getFilterType(): FilterType = FilterType.SERIES
+    override fun getFilterType(): FilterType = SERIES
 
     override fun toSQLString(): String = seriesNames.joinToString(separator = ",")
 
@@ -947,7 +1204,7 @@ class HandlesFilter(
 
     override fun toSQLString(): String = handles.joinToString(separator = ",") { it }
 
-    override fun getFilterType(): FilterType = FilterType.HANDLE
+    override fun getFilterType(): FilterType = HANDLE
 }
 
 class DeletionsFilter(
@@ -978,7 +1235,7 @@ class DeletionsFilter(
             "${getFilterType().keyAlias}:off"
         }
 
-    override fun getFilterType(): FilterType = FilterType.DELETIONS
+    override fun getFilterType(): FilterType = DELETIONS
 
     companion object {
         fun fromString(s: String?): DeletionsFilter? = QueryParameterParser.parseDeletionsFilter(s)
@@ -1070,7 +1327,7 @@ class AccessStateFilter(
         return localCounter
     }
 
-    override fun getFilterType(): FilterType = FilterType.ACCESS
+    override fun getFilterType(): FilterType = ACCESS
 
     override fun toSQLString(): String = accessStates.joinToString(separator = ",")
 
@@ -1154,7 +1411,7 @@ class AccessStateOnDateFilter(
             "$date"
         }
 
-    override fun getFilterType(): FilterType = FilterType.ACCESS_ON_DATE
+    override fun getFilterType(): FilterType = ACCESS_ON_DATE
 
     companion object {
         fun fromString(s: String?) = QueryParameterParser.parseAccessStateOnDate(s)
@@ -1212,7 +1469,7 @@ class RightValidOnFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun getFilterType(): FilterType = FilterType.RIGHT_VALID_ON
+    override fun getFilterType(): FilterType = RIGHT_VALID_ON
 
     companion object {
         fun fromString(s: String?) = QueryParameterParser.parseRightValidOnFilter(s)
@@ -1278,7 +1535,7 @@ class StartDateFilter(
 
     override fun toSQLString(): String = date.toString()
 
-    override fun getFilterType(): FilterType = FilterType.START_DATE
+    override fun getFilterType(): FilterType = START_DATE
 
     companion object {
         fun fromString(s: String?): StartDateFilter? = QueryParameterParser.parseStartDateFilter(s)
@@ -1308,7 +1565,7 @@ class EndDateFilter(
 
     override fun toString(): String = "${getFilterType().keyAlias}:\"${toSQLString()}\""
 
-    override fun getFilterType(): FilterType = FilterType.END_DATE
+    override fun getFilterType(): FilterType = END_DATE
 
     companion object {
         fun fromString(s: String?): EndDateFilter? = QueryParameterParser.parseEndDateFilter(s)
@@ -1341,7 +1598,7 @@ class RightIdFilter(
         return localCounter
     }
 
-    override fun getFilterType(): FilterType = FilterType.RIGHT_ID
+    override fun getFilterType(): FilterType = RIGHT_ID
 
     override fun toSQLString(): String = rightIds.joinToString(separator = ",")
 
@@ -1380,7 +1637,7 @@ class TemplateNameFilter(
         return localCounter
     }
 
-    override fun getFilterType(): FilterType = FilterType.TEMPLATE_NAME
+    override fun getFilterType(): FilterType = TEMPLATE_NAME
 
     override fun toSQLString(): String = templateNames.joinToString(separator = ",")
 }
@@ -1426,11 +1683,11 @@ class FormalRuleFilter(
             val clause =
                 when (it) {
                     FormalRule.LICENCE_CONTRACT -> {
-                        "${COLUMN_RIGHT_LICENCE_CONTRACT} <> ''"
+                        "$COLUMN_RIGHT_LICENCE_CONTRACT <> ''"
                     }
 
                     FormalRule.ZBW_USER_AGREEMENT -> {
-                        "${COLUMN_RIGHT_ZBW_USER_AGREEMENT} = true"
+                        "$COLUMN_RIGHT_ZBW_USER_AGREEMENT = true"
                     }
 
                     FormalRule.CC_LICENCE_NO_RESTRICTION -> {
@@ -1454,7 +1711,7 @@ class FormalRuleFilter(
 
     override fun toSQLString(): String = formalRules.joinToString(separator = ",")
 
-    override fun getFilterType(): FilterType = FilterType.FORMAL_RULE
+    override fun getFilterType(): FilterType = FORMAL_RULE
 
     companion object {
         fun fromString(s: String?): FormalRuleFilter? = QueryParameterParser.parseFormalRuleFilter(s)
@@ -1482,7 +1739,7 @@ class NoRightInformationFilter : RightSearchFilter(COLUMN_RIGHT_ID) {
 
     override fun toString(): String = "${getFilterType().keyAlias}:on"
 
-    override fun getFilterType(): FilterType = FilterType.NO_RIGHTS
+    override fun getFilterType(): FilterType = NO_RIGHTS
 
     companion object {
         fun fromString(s: String?): NoRightInformationFilter? = QueryParameterParser.parseNoRightInformationFilter(s)
@@ -1506,7 +1763,7 @@ class ManualRightFilter : RightSearchFilter(RightDB.COLUMN_RIGHT_IS_TEMPLATE) {
 
     override fun toString(): String = "${getFilterType().keyAlias}:on"
 
-    override fun getFilterType(): FilterType = FilterType.MANUAL_RIGHTS
+    override fun getFilterType(): FilterType = MANUAL_RIGHTS
 
     companion object {
         fun fromString(s: String?): ManualRightFilter? = QueryParameterParser.parseManualRightFilter(s)
@@ -1518,18 +1775,22 @@ enum class FilterType(
 ) {
     ACCESS("acc"),
     ACCESS_ON_DATE("acd"),
+    BOOK("bok"),
     COLLECTION_HANDLE("hdlcol"),
     COLLECTION_NAME("col"),
     COMMUNITY_HANDLE("hdlcom"),
     COMMUNITY_NAME("com"),
     CREATED_ON("cro"),
     DELETIONS("del"),
-    DOI("doi"),
+    DOI("pid"),
     ECONBIZID("ebid"),
+    ECONSTOR_VOLUME("vol"),
     END_DATE("zge"),
     FORMAL_RULE("reg"),
     HANDLE("hdl"),
     ISBN("isb"),
+    ISSN("issn"),
+    JOURNAL("jou"),
     LICENCE_URL("lur"),
     LICENCE_URL_LUK("luk"),
     MANUAL_RIGHTS("man"),
@@ -1538,6 +1799,9 @@ enum class FilterType(
     PUBLICATION_TYPE("typ"),
     PAKET_SIGEL("sig"),
     PPN("ppn"),
+    PPN_BOOK("bokppn"),
+    PPN_JOURNAL("jouppn"),
+    PPN_SERIES("serppn"),
     RIGHT_ID("rightid"),
     RIGHT_VALID_ON("zgp"),
     SERIES("ser"),

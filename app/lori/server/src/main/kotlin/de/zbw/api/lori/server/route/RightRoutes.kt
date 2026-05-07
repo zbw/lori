@@ -29,6 +29,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -41,6 +42,7 @@ import java.time.OffsetDateTime
 fun Routing.rightRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/right") {
         get("{id}") {
@@ -92,6 +94,7 @@ fun Routing.rightRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/right/{id}", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ApiError.internalServerError(),
@@ -159,6 +162,7 @@ fun Routing.rightRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequestException in route POST /api/v1/right", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -168,6 +172,7 @@ fun Routing.rightRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/right", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(),
@@ -242,6 +247,7 @@ fun Routing.rightRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequestException in route PUT /api/v1/right", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -251,6 +257,7 @@ fun Routing.rightRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route PUT /api/v1/right", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -289,6 +296,7 @@ fun Routing.rightRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/right/{id}", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()
@@ -299,7 +307,7 @@ fun Routing.rightRoutes(
             post("/relationship") {
                 val span =
                     tracer
-                        .spanBuilder("lori.LoriService.GET/api/v1/right/relationship")
+                        .spanBuilder("lori.LoriService.POST/api/v1/right/relationship")
                         .setSpanKind(SpanKind.SERVER)
                         .startSpan()
                 withContext(span.asContextElement()) {
@@ -325,6 +333,7 @@ fun Routing.rightRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/right/relationship", e)
                         call.respond(HttpStatusCode.InternalServerError, ApiError.internalServerError())
                     } finally {
                         span.end()

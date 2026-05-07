@@ -30,6 +30,7 @@ import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
+import org.apache.logging.log4j.Logger
 import org.postgresql.util.PSQLException
 
 /**
@@ -41,6 +42,7 @@ import org.postgresql.util.PSQLException
 fun Routing.bookmarkRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
+    log: Logger,
 ) {
     route("/api/v1/bookmarkraw") {
         authenticate("auth-session") {
@@ -85,6 +87,7 @@ fun Routing.bookmarkRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database error in route POST /api/v1/bookmarkraw", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -98,6 +101,7 @@ fun Routing.bookmarkRoutes(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(ApiError.INVALID_JSON),
                         )
+                        log.error("BadRequest in route POST /api/v1/bookmarkraw", e)
                     } catch (e: ResourceConflictException) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
                         call.respond(
@@ -106,6 +110,7 @@ fun Routing.bookmarkRoutes(
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/bookmarkraw", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -156,6 +161,7 @@ fun Routing.bookmarkRoutes(
                         }
                     } catch (e: BadRequestException) {
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequest in route PUT /api/v1/bookmarkraw", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -170,6 +176,7 @@ fun Routing.bookmarkRoutes(
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route PUT /api/v1/bookmarkraw", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(),
@@ -221,6 +228,7 @@ fun Routing.bookmarkRoutes(
                         )
                     } catch (e: Exception) {
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route GET /api/v1/bookmark/list", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ErrorRest(
@@ -273,6 +281,7 @@ fun Routing.bookmarkRoutes(
                     }
                 } catch (e: Exception) {
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route GET /api/v1/bookmark/{id}", e)
                     call.respond(
                         HttpStatusCode.InternalServerError,
                         ApiError.internalServerError(),
@@ -321,6 +330,7 @@ fun Routing.bookmarkRoutes(
                             )
                         } else {
                             span.setStatus(StatusCode.ERROR, "Exception: ${pe.message}")
+                            log.error("Database exception in route POST /api/v1/bookmark", pe)
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(
@@ -338,6 +348,7 @@ fun Routing.bookmarkRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route POST /api/v1/bookmark", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(
@@ -389,6 +400,7 @@ fun Routing.bookmarkRoutes(
                     } catch (e: BadRequestException) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "BadRequest: ${e.message}")
+                        log.error("BadRequest in route PUT /api/v1/bookmark", e)
                         call.respond(
                             HttpStatusCode.BadRequest,
                             ApiError.badRequestError(
@@ -405,6 +417,7 @@ fun Routing.bookmarkRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route PUT /api/v1/bookmark", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(),
@@ -461,6 +474,7 @@ fun Routing.bookmarkRoutes(
                     } catch (e: Exception) {
                         span.recordException(e)
                         span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                        log.error("Exception in route DELETE /api/v1/bookmark/{id}", e)
                         call.respond(
                             HttpStatusCode.InternalServerError,
                             ApiError.internalServerError(

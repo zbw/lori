@@ -22,6 +22,7 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.extension.kotlin.asContextElement
 import kotlinx.coroutines.withContext
 import net.shibboleth.utilities.java.support.resolver.ResolverException
+import org.apache.logging.log4j.Logger
 import org.opensaml.core.xml.schema.XSString
 import org.opensaml.saml.saml2.core.Response
 import org.opensaml.xmlsec.signature.support.SignatureException
@@ -38,6 +39,7 @@ fun Routing.guiRoutes(
     backend: LoriServerBackend,
     tracer: Tracer,
     samlUtils: SamlUtils = SamlUtils(backend.config.duoUrlMetadata),
+    log: Logger,
 ) {
     route("/ui/callback-sso") {
         post {
@@ -99,22 +101,25 @@ fun Routing.guiRoutes(
                 } catch (e: Exception) {
                     span.recordException(e)
                     span.setStatus(StatusCode.ERROR, "Exception: ${e.message}")
+                    log.error("Exception in route POST /ui/callback-sso", e)
                     when (e) {
                         is SecurityException,
                         is SignatureException,
                         is BadRequestException,
                         is ResolverException,
-                        ->
+                        -> {
                             call.respond(
                                 HttpStatusCode.Unauthorized,
                                 ApiError.unauthorizedError(e.message),
                             )
+                        }
 
-                        else ->
+                        else -> {
                             call.respond(
                                 HttpStatusCode.InternalServerError,
                                 ApiError.internalServerError(),
                             )
+                        }
                     }
                 }
             }

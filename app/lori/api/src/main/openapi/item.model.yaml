@@ -184,7 +184,6 @@ components:
     SortByRest:
       type: string
       enum:
-        - band
         - community_name
         - collection_name
         - doi
@@ -197,8 +196,6 @@ components:
         - publication_year
         - series
         - title
-        - titleJournal
-        - titleSeries
     SortOrderRest:
       type: string
       enum:

@@ -46,6 +46,7 @@ import io.ktor.server.sessions.cookie
 import io.ktor.util.hex
 import io.opentelemetry.api.trace.Tracer
 import org.apache.http.impl.client.HttpClients
+import org.apache.logging.log4j.LogManager
 import org.opensaml.saml.metadata.resolver.impl.HTTPMetadataResolver
 import org.slf4j.event.Level
 import java.time.Instant
@@ -169,19 +170,19 @@ class ServicePoolWithProbes(
                     call.respond(HttpStatusCode.InternalServerError)
                 }
             }
-            aboutRoutes(backend, tracer)
-            bookmarkRoutes(backend, tracer)
-            bookmarkTemplateRoutes(backend, tracer)
-            errorRoutes(backend, tracer)
-            groupRoutes(backend, tracer)
-            guiRoutes(backend, tracer, samlUtils)
-            itemRoutes(backend, tracer)
-            jobRoutes(backend, tracer, exportJobService)
-            downloadRoutes(backend, tracer)
-            metadataRoutes(backend, tracer)
-            rightRoutes(backend, tracer)
-            usersRoutes(backend, tracer)
-            templateRoutes(backend, tracer)
+            aboutRoutes(backend, tracer, LOG)
+            bookmarkRoutes(backend, tracer, LOG)
+            bookmarkTemplateRoutes(backend, tracer, LOG)
+            errorRoutes(backend, tracer, LOG)
+            groupRoutes(backend, tracer, LOG)
+            guiRoutes(backend, tracer, samlUtils, LOG)
+            itemRoutes(backend, tracer, LOG)
+            jobRoutes(backend, tracer, exportJobService, LOG)
+            downloadRoutes(backend, tracer, LOG)
+            metadataRoutes(backend, tracer, LOG)
+            rightRoutes(backend, tracer, LOG)
+            usersRoutes(backend, tracer, LOG)
+            templateRoutes(backend, tracer, LOG)
             staticRoutes()
         }
     }
@@ -194,13 +195,15 @@ class ServicePoolWithProbes(
                         session.sessionId.isBlank() -> {
                             null
                         }
-                        else ->
+
+                        else -> {
                             backend
                                 .getSessionById(session.sessionId)
                                 ?.takeIf { s ->
                                     s.validUntil > Instant.now().minusMillis(500) &&
                                         s.permissions.any { it == UserPermission.WRITE || it == UserPermission.ADMIN }
                                 }?.let { session }
+                        }
                     }
                 }
                 challenge {
@@ -238,5 +241,9 @@ class ServicePoolWithProbes(
             it.stop()
         }
         getHttpServer().stop(1000, 2000)
+    }
+
+    companion object {
+        private val LOG = LogManager.getLogger(ServicePoolWithProbes::class.java)
     }
 }
