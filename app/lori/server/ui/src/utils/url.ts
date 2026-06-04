@@ -7,6 +7,7 @@ const QUERY_PARAMETER_GROUP_ID = "groupId";
 const QUERY_PARAMETER_HANDLE = "handle";
 const QUERY_PARAMETER_RIGHT_ID = "rightId";
 const QUERY_PARAMETER_TEMPLATE_ID = "templateId";
+const QUERY_PARAMETER_SEARCH = "executeSearch";
 const REST_API_BASE_PATH = "/api/v1";
 const REST_API_DOWNLOAD_PATH = "/download";
 
@@ -17,6 +18,7 @@ export default {
     QUERY_PARAMETER_GROUP_ID,
     QUERY_PARAMETER_HANDLE,
     QUERY_PARAMETER_RIGHT_ID,
+    QUERY_PARAMETER_SEARCH,
     QUERY_PARAMETER_TEMPLATE_ID,
     REST_API_BASE_PATH,
     REST_API_DOWNLOAD_PATH,
@@ -69,6 +71,14 @@ export default {
                 );
         }
     },
+
+    getQueryParameter(
+        parameter: string,
+    ): string | null {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(parameter);
+    },
+
     createTemplateHref(rightId: string | undefined) : string {
         if(rightId == undefined){
             return "";

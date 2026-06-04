@@ -233,6 +233,10 @@ export default defineComponent({
       const hasInitSearch = loadInitSearchQuery();
       const hasInitBookmarkId = loadInitBookmarkId();
       if (!hasMetadataParameter && !hasInitSearch && !hasInitBookmarkId) {
+        const queryParameterSearch = url.getQueryParameter(url.QUERY_PARAMETER_SEARCH)
+        if(queryParameterSearch != null){
+          searchStore.searchTerm = decodeURIComponent(queryParameterSearch)
+        }
         startSearch();
       }
       // Always load about information from backend
@@ -256,8 +260,7 @@ export default defineComponent({
     const bookmarkSaveQueryParameterDialog = ref(false);
 
     const loadBookmarkView: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const bookmarkId: string | null = urlParams.get(url.QUERY_PARAMETER_BOOKMARK_ID);
+      const bookmarkId: string | null = url.getQueryParameter(url.QUERY_PARAMETER_BOOKMARK_ID);
       if (bookmarkId == null || bookmarkId == "") {
         return false;
       }
@@ -280,8 +283,7 @@ export default defineComponent({
     const queryParameterGroup = ref({} as GroupRest);
     const groupEditActivated = ref(false);
     const loadGroupView: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const groupId: string | null = urlParams.get(url.QUERY_PARAMETER_GROUP_ID);
+      const groupId: string | null = url.getQueryParameter(url.QUERY_PARAMETER_GROUP_ID);
       if (groupId == null || groupId == "") {
         return false;
       }
@@ -313,8 +315,7 @@ export default defineComponent({
     const queryParameterRight = ref({} as RightRest);
     const rightEditActivated = ref(false);
     const loadTemplateView: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const templateId: string | null = urlParams.get(url.QUERY_PARAMETER_TEMPLATE_ID);
+      const templateId: string | null = url.getQueryParameter(url.QUERY_PARAMETER_TEMPLATE_ID);
       if (templateId == null || templateId == "") {
         return false;
       }
@@ -334,8 +335,7 @@ export default defineComponent({
     };
 
     const getRightPP: () => string | null = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const rightId: string | null = urlParams.get(url.QUERY_PARAMETER_RIGHT_ID);
+      const rightId: string | null = url.getQueryParameter(url.QUERY_PARAMETER_RIGHT_ID);
       if (rightId == null || rightId == "") {
         return null;
       } else {
@@ -344,8 +344,7 @@ export default defineComponent({
     };
 
     const loadInitBookmarkId: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const bookmarkId: string | null = urlParams.get(url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID);
+      const bookmarkId: string | null = url.getQueryParameter(url.QUERY_PARAMETER_EXECUTE_BOOKMARK_ID);
       if (bookmarkId == null || bookmarkId == "") {
         return false;
       }
@@ -365,8 +364,7 @@ export default defineComponent({
     };
 
     const loadMetadataView: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const handle: string | null = urlParams.get(url.QUERY_PARAMETER_HANDLE);
+      const handle: string | null = url.getQueryParameter(url.QUERY_PARAMETER_HANDLE);
       if (handle == null || handle == "") {
         return false;
       }
@@ -375,8 +373,7 @@ export default defineComponent({
     };
 
     const loadInitSearchQuery: () => boolean = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const searchQuery: string | null = urlParams.get(url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
+      const searchQuery: string | null = url.getQueryParameter(url.QUERY_PARAMETER_DASHBOARD_HANDLE_SEARCH);
       if (searchQuery == null || searchQuery == "") {
         return false;
       }
@@ -737,6 +734,11 @@ export default defineComponent({
       templateSearchIsActive.value = false;
       currentRightId.value = "";
       currentItem.value = {} as ItemRest;
+      if (searchStore.searchTerm != "") {
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_SEARCH]: encodeURIComponent(searchStore.searchTerm),
+        });
+      }
       searchQuery();
     };
 
