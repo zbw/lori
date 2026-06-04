@@ -118,8 +118,8 @@ export default defineComponent({
     const dialogStore = useDialogsStore();
     const close = () => {
       v$.value.$reset();
-      saveAlertError.value = false;
-      saveAlertErrorMessage.value = "";
+      snackbarModel.value = false;
+      snackbarMessage.value = "";
       url.removeQueryParameters(
           route,
           router,
@@ -188,8 +188,9 @@ export default defineComponent({
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              saveAlertErrorMessage.value = errMsg;
-              saveAlertError.value = true;
+              snackbarMessage.value = errMsg;
+              snackbarModel.value = true;
+              snackbarColor.value = "error";
             });
           });
     };
@@ -215,8 +216,9 @@ export default defineComponent({
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              saveAlertErrorMessage.value = errMsg;
-              saveAlertError.value = true;
+              snackbarMessage.value = errMsg;
+              snackbarModel.value = true;
+              snackbarColor.value = "error";
             });
           });
     };
@@ -259,8 +261,9 @@ export default defineComponent({
     /**
      * Save Group.
      */
-    const saveAlertError = ref(false);
-    const saveAlertErrorMessage = ref("");
+    const snackbarModel = ref(false);
+    const snackbarMessage = ref("");
+    const snackbarColor = ref("");
 
     const createGroup = () => {
       api
@@ -268,12 +271,14 @@ export default defineComponent({
           .then((gIdC: GroupIdCreated) => {
             formState.groupId = gIdC.groupId;
             emit("addGroupSuccessful", gIdC.groupId);
-            close();
+            snackbarColor.value = "success"
+            snackbarMessage.value = "Gruppe erfolgreich erstellt.";
+            snackbarModel.value = true;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              saveAlertErrorMessage.value = errMsg;
-              saveAlertError.value = true;
+              snackbarMessage.value = errMsg;
+              snackbarModel.value = true;
             });
           });
     };
@@ -283,12 +288,14 @@ export default defineComponent({
           .updateGroup(groupTmp.value)
           .then(() => {
             emit("updateGroupSuccessful", groupTmp.value.groupId);
-            close();
+            snackbarColor.value = "success"
+            snackbarMessage.value = "Gruppe erfolgreich geupdated.";
+            snackbarModel.value = true;
           })
           .catch((e) => {
             error.errorHandling(e, (errMsg: string) => {
-              saveAlertErrorMessage.value = errMsg;
-              saveAlertError.value = true;
+              snackbarMessage.value = errMsg;
+              snackbarModel.value = true;
             });
           });
     };
@@ -317,8 +324,8 @@ export default defineComponent({
               })
               .catch((e) => {
                 error.errorHandling(e, (errMsg: string) => {
-                  saveAlertError.value = true;
-                  saveAlertErrorMessage.value = errMsg;
+                  snackbarModel.value = true;
+                  snackbarMessage.value = errMsg;
                 });
               });
           return;
@@ -399,8 +406,9 @@ export default defineComponent({
       headersVersion,
       oldVersion,
       oldVersions,
-      saveAlertError,
-      saveAlertErrorMessage,
+      snackbarColor,
+      snackbarModel,
+      snackbarMessage,
       showDialogOldVersion,
       userStore,
       v$,
@@ -478,15 +486,15 @@ export default defineComponent({
     </v-card-title>
     <v-card-text style="height:1100px;">
       <v-snackbar
-          v-model="saveAlertError"
+          v-model="snackbarModel"
           closable
           contained
           multi-line
           location="top"
           timer="true"
           timeout="5000"
-          color="error">
-        {{ saveAlertErrorMessage }}
+          :color="snackbarColor">
+        {{ snackbarMessage }}
       </v-snackbar>
       <v-dialog v-model="dialogStore.groupDeleteActivated" max-width="700px">
         <GroupDeleteDialog
