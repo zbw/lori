@@ -35,6 +35,7 @@ import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_DOI
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONBIZID
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_ISSUE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ECONSTOR_VOLUME
+import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ENUMERATION
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_HANDLE_POSTFIX
 import de.zbw.persistence.lori.server.MetadataDB.Companion.COLUMN_METADATA_ISBN
@@ -515,7 +516,7 @@ class SearchDB(
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
                 "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
-                "$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
+                "$COLUMN_METADATA_ENUMERATION,$TS_COLLECTION,$TS_COMMUNITY,$TS_TITLE,$TS_COLLECTION_HANDLE," +
                 "$TS_COMMUNITY_HANDLE,$TS_SUBCOMMUNITY_HANDLE,$TS_HANDLE,$TS_SUBCOMMUNITY_NAME," +
                 COLUMN_METADATA_HANDLE_POSTFIX
 
@@ -532,8 +533,8 @@ class SearchDB(
                 "$COLUMN_METADATA_LICENCE_URL_FILTER,$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID," +
                 "$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK,$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
-                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
-                "$COLUMN_METADATA_HANDLE_POSTFIX"
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES,$COLUMN_METADATA_ENUMERATION," +
+                COLUMN_METADATA_HANDLE_POSTFIX
 
         internal fun buildSearchQuery(
             searchExpression: SearchExpression?,

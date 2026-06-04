@@ -194,6 +194,7 @@ fun MetadataRest.toBusiness() =
         ppnBook = ppnBook,
         ppnJournal = ppnJournal,
         ppnSeries = ppnSeries,
+        enumeration = enumeration,
     )
 
 fun ItemMetadata.toRest(): MetadataRest =
@@ -230,6 +231,7 @@ fun ItemMetadata.toRest(): MetadataRest =
         isPartOfJournal = isPartOfJournal,
         ppnBook = ppnBook,
         ppnJournal = ppnJournal,
+        enumeration = enumeration,
     )
 
 fun RightRest.toBusiness(): ItemRight =
@@ -738,12 +740,11 @@ fun SortByRest.toBusiness(): SortByField =
         SortByRest.publication_type -> SortByField.PUBLICATION_TYPE
         SortByRest.publication_year -> SortByField.PUBLICATION_YEAR
         SortByRest.title -> SortByField.TITLE
-        SortByRest.doi -> SortByField.DOI
-        SortByRest.isbn -> SortByField.ISBN
-        SortByRest.issn -> SortByField.ISSN
         SortByRest.paketSigel -> SortByField.PAKET_SIGEL
-        SortByRest.ppn -> SortByField.PPN
-        SortByRest.series -> SortByField.IS_PART_OF_SERIES
+        SortByRest.is_part_of_journal -> SortByField.IS_PART_OF_JOURNAL
+        SortByRest.is_part_of_series -> SortByField.IS_PART_OF_SERIES
+        SortByRest.is_part_of_book -> SortByField.IS_PART_OF_BOOK
+        SortByRest.enumeration -> SortByField.ENUMERATION
     }
 
 fun ExportJob.toUpdateRest(

@@ -259,6 +259,7 @@ class MetadataDB(
         const val COLUMN_METADATA_ECONBIZID = "econbizid"
         const val COLUMN_METADATA_ECONSTOR_ISSUE = "econstor_issue"
         const val COLUMN_METADATA_ECONSTOR_VOLUME = "econstor_volume"
+        const val COLUMN_METADATA_ENUMERATION = "enumeration"
         const val COLUMN_METADATA_ISBN = "isbn"
         const val COLUMN_METADATA_ISBN_LOWER = "isbn_joined_lower"
         const val COLUMN_METADATA_ISSN = "issn"
@@ -311,7 +312,8 @@ class MetadataDB(
                 "$COLUMN_METADATA_DELETED,$COLUMN_METADATA_ECONBIZID,$COLUMN_METADATA_ECONSTOR_ISSUE," +
                 "$COLUMN_METADATA_ECONSTOR_VOLUME,$COLUMN_METADATA_IS_PART_OF_BOOK," +
                 "$COLUMN_METADATA_IS_PART_OF_JOURNAL," +
-                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES" +
+                "$COLUMN_METADATA_PPN_BOOK,$COLUMN_METADATA_PPN_JOURNAL,$COLUMN_METADATA_PPN_SERIES," +
+                "$COLUMN_METADATA_ENUMERATION" +
                 " FROM $TABLE_NAME_ITEM_METADATA"
 
         const val STATEMENT_GET_HANDLES_BY_OLDER_THAN_LAST_UPDATED_ON =
@@ -463,6 +465,7 @@ class MetadataDB(
                 ppnBook = rs.getString(localCounter++),
                 ppnJournal = rs.getString(localCounter++),
                 ppnSeries = rs.getString(localCounter++),
+                enumeration = rs.getString(localCounter++),
             )
         }
 

@@ -56,6 +56,7 @@ data class ItemMetadata(
     val handle: String,
     val econstorIssue: String?,
     val econstorVolume: String?,
+    val enumeration: String? = "",
     val isbn: List<String>?,
     val issn: List<String>?,
     val isPartOfBook: String?,

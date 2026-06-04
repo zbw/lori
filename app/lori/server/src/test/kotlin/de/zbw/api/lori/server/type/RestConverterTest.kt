@@ -99,6 +99,7 @@ class RestConverterTest {
                         storageDate = TEST_METADATA.storageDate,
                         title = TEST_METADATA.title,
                         zdbIds = TEST_METADATA.zdbIds,
+                        enumeration = "${TEST_METADATA.econstorVolume},${TEST_METADATA.econstorIssue}",
                     ),
                 rights =
                     listOf(
@@ -690,6 +691,7 @@ class RestConverterTest {
                 ppnJournal = "ppnJournal",
                 isPartOfBook = "part of book",
                 isPartOfJournal = "part of journal",
+                enumeration = "volume,issue",
             )
 
         val TEST_RIGHT =

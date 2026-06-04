@@ -590,30 +590,24 @@ export default {
                 return SortByRest.CollectionName;
             case "communityName":
                 return SortByRest.CommunityName;
-            case "doi":
-                return SortByRest.Doi
-            case "isbn":
-                return SortByRest.Isbn
-            case "issn":
-                return SortByRest.Issn
-            case "isPartOfSeries":
-                return SortByRest.Series;
             case "handle":
                 return SortByRest.Handle;
             case "paketSigel":
                 return SortByRest.PaketSigel;
-            case "ppn":
-                return SortByRest.Ppn;
             case "publicationType":
                 return SortByRest.PublicationType;
             case "publicationYear":
                 return SortByRest.PublicationYear;
             case "title":
                 return SortByRest.Title;
-            case "titleJournal":
-                return SortByRest.TitleJournal;
-            case "titleSeries":
-                return SortByRest.TitleSeries;
+            case "isPartOfJournal":
+                return SortByRest.IsPartOfJournal;
+            case "isPartOfSeries":
+                return SortByRest.IsPartOfSeries;
+            case "isPartOfBook":
+              return SortByRest.IsPartOfBook;
+          case "enumeration":
+            return SortByRest.Enumeration;
             default:
                 return SortByRest.Handle;
         }

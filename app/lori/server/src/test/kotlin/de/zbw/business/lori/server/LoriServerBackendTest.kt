@@ -1209,6 +1209,7 @@ class LoriServerBackendTest : DatabaseTest() {
                 ppnJournal = "ppnJournal",
                 isPartOfBook = "part of book",
                 isPartOfJournal = "part of journal",
+                enumeration = "volume,issue",
             )
 
         private val TEST_RIGHT =
