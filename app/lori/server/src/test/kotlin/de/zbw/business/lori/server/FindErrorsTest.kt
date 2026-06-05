@@ -63,6 +63,7 @@ class FindErrorsTest : DatabaseTest() {
                 ),
             item2ZDB2 to emptyList(),
             item2ZDB2.copy(handle = "11159/200") to emptyList(),
+            item2ZDB2.copy(handle = "11159/201", deleted = true) to emptyList(),
         )
 
     @BeforeClass
@@ -82,6 +83,10 @@ class FindErrorsTest : DatabaseTest() {
     @Test
     fun testFindGapErrors() =
         runBlocking {
+            assertThat(
+                backend.checkForNoRightErrors("user1"),
+                `is`(2),
+            )
             val receivedErrors = backend.checkForRightErrors("user1")
             assertThat(
                 receivedErrors,
@@ -89,10 +94,6 @@ class FindErrorsTest : DatabaseTest() {
             )
             assertThat(
                 backend.checkForGAPErrors("user1"),
-                `is`(3),
-            )
-            assertThat(
-                backend.checkForNoRightErrors("user1"),
                 `is`(2),
             )
 

@@ -944,18 +944,18 @@ class LoriServerBackend(
             )
         var errorCount = 0
         for (offsetCounter in 0..<ceil(handlesWithoutRightsCount.toDouble() / DEFAULT_CHUNK_SIZE).toInt()) {
-            val metadataWithoutRights =
+            val metadataNoRightsNoDeleted =
                 dbConnector.searchDB.searchMetadataItems(
                     searchExpression = null,
                     limit = DEFAULT_CHUNK_SIZE,
                     offset = offsetCounter * DEFAULT_CHUNK_SIZE,
-                    metadataSearchFilter = emptyList(),
+                    metadataSearchFilter = listOf(DeletionsFilter(on = false)),
                     rightSearchFilter = emptyList(),
                     noRightInformationFilter = NoRightInformationFilter(),
                     sortInformation = SortInformation.DEFAULT,
                 )
             val errors =
-                metadataWithoutRights.map { metadata ->
+                metadataNoRightsNoDeleted.map { metadata ->
                     RightError(
                         handle = metadata.handle,
                         message = "Handle ${metadata.handle} besitzt keine Rechteinformation.",

@@ -93,7 +93,7 @@ export default defineComponent({
     const searchTerm = ref("");
     const currentPage = ref(1);
     const pageSize = ref(10);
-    const pageSizes = ref<Array<number>>([5, 10, 25, 50]);
+    const pageSizes = ref<Array<number>>([5, 10, 25, 50, 100]);
     const totalPages = ref(0);
     const numberOfResults = ref(0);
 

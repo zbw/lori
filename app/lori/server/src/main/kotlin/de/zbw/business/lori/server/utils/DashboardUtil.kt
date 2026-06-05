@@ -49,7 +49,10 @@ object DashboardUtil {
                 LOG.warn("Unexpected undefined end date for RightId: ${sortedRights[index - 1].rightId} for Handle ${item.metadata.handle}")
                 continue
             }
-            if (value.startDate.toString() != sortedRights[index - 1].endDate!!.plusDays(1).toString()) {
+            if (
+                value.startDate.toString() != sortedRights[index - 1].endDate!!.plusDays(1).toString() &&
+                value.startDate > TimezoneUtil.utcOffsetDateTimeToBerlinDate(OffsetDateTime.now(ZoneOffset.UTC))
+            ) {
                 gapRightErrors +=
                     RightError(
                         handle = item.metadata.handle,

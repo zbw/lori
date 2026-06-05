@@ -6,6 +6,7 @@ import de.zbw.business.lori.server.type.Item
 import de.zbw.business.lori.server.type.RightError
 import io.mockk.every
 import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.MatcherAssert.assertThat
 import org.testng.annotations.BeforeMethod
@@ -19,7 +20,7 @@ class DashboardUtilTest {
     @BeforeMethod
     fun beforeTest() {
         mockkStatic(OffsetDateTime::class)
-        every { OffsetDateTime.now(ZoneOffset.UTC) } returns NOW
+        every { OffsetDateTime.now(ZoneOffset.UTC) } returns DATE_GAP_IN_PRESENT
     }
 
     @DataProvider(name = DATA_FOR_GAP_ERRORS)
@@ -31,6 +32,7 @@ class DashboardUtilTest {
                     rights = emptyList(),
                 ),
                 emptyList<RightError>(),
+                DATE_GAP_IN_PRESENT,
                 "No errors because no right information exist",
             ),
             arrayOf(
@@ -39,6 +41,7 @@ class DashboardUtilTest {
                     rights = listOf(RIGHT_DEC),
                 ),
                 emptyList<RightError>(),
+                DATE_GAP_IN_PRESENT,
                 "No errors, one Right information with open end",
             ),
             arrayOf(
@@ -51,7 +54,7 @@ class DashboardUtilTest {
                         conflictCausedByRightId = null,
                         conflictCausedInContext = "sigel",
                         conflictType = ConflictType.GAP,
-                        createdOn = NOW,
+                        createdOn = DATE_GAP_IN_PRESENT,
                         message = "Dem Handle hdl:example.handle.net fehlt eine Rechteinformation zwischen 2021-09-30 und 2021-12-01.",
                         handle = "hdl:example.handle.net",
                         errorId = null,
@@ -60,7 +63,8 @@ class DashboardUtilTest {
                         createdBy = "user1",
                     ),
                 ),
-                "No errors, one Right information with open end",
+                DATE_GAP_IN_PRESENT,
+                "One gap error, last right information has an open end",
             ),
             arrayOf(
                 Item(
@@ -72,7 +76,7 @@ class DashboardUtilTest {
                         conflictCausedByRightId = null,
                         conflictCausedInContext = "sigel",
                         conflictType = ConflictType.GAP,
-                        createdOn = NOW,
+                        createdOn = DATE_GAP_IN_PRESENT,
                         message = "Dem Handle hdl:example.handle.net fehlt eine Rechteinformation zwischen 2021-09-30 und 2021-11-01.",
                         handle = "hdl:example.handle.net",
                         errorId = null,
@@ -84,7 +88,7 @@ class DashboardUtilTest {
                         conflictCausedByRightId = null,
                         conflictCausedInContext = "sigel",
                         conflictType = ConflictType.GAP,
-                        createdOn = NOW,
+                        createdOn = DATE_GAP_IN_PRESENT,
                         message = "Handle hdl:example.handle.net hat nur Rechteinformationen bis zum 2021-11-30.",
                         handle = "hdl:example.handle.net",
                         errorId = null,
@@ -93,7 +97,8 @@ class DashboardUtilTest {
                         createdBy = "user1",
                     ),
                 ),
-                "Both, gap and no open end",
+                DATE_GAP_IN_PRESENT,
+                "Two errors caused by gap and no open end",
             ),
             arrayOf(
                 Item(
@@ -105,7 +110,7 @@ class DashboardUtilTest {
                         conflictCausedByRightId = null,
                         conflictCausedInContext = "sigel",
                         conflictType = ConflictType.GAP,
-                        createdOn = NOW,
+                        createdOn = DATE_GAP_IN_PRESENT,
                         message = "Dem Handle hdl:example.handle.net fehlt eine Rechteinformation zwischen 2021-09-30 und 2021-11-01.",
                         handle = "hdl:example.handle.net",
                         errorId = null,
@@ -117,7 +122,7 @@ class DashboardUtilTest {
                         conflictCausedByRightId = null,
                         conflictCausedInContext = "sigel",
                         conflictType = ConflictType.GAP,
-                        createdOn = NOW,
+                        createdOn = DATE_GAP_IN_PRESENT,
                         message = "Handle hdl:example.handle.net hat nur Rechteinformationen bis zum 2021-11-30.",
                         handle = "hdl:example.handle.net",
                         errorId = null,
@@ -126,6 +131,7 @@ class DashboardUtilTest {
                         createdBy = "user1",
                     ),
                 ),
+                DATE_GAP_IN_PRESENT,
                 "Both, gap and no open end but with reverse order (to check if sort works internally as expected)",
             ),
             arrayOf(
@@ -134,7 +140,39 @@ class DashboardUtilTest {
                     rights = listOf(RIGHT_NOV, RIGHT_SEP),
                 ),
                 emptyList<RightError>(),
+                DATE_GAP_IN_PRESENT,
                 "Deleted metadata entries do not cause GAP errors",
+            ),
+            arrayOf(
+                Item(
+                    metadata = TEST_METADATA,
+                    rights = listOf(RIGHT_SEP, RIGHT_DEC),
+                ),
+                emptyList<RightError>(),
+                DATE_GAP_IN_PAST,
+                "No errors: Gap is in past",
+            ),
+            arrayOf(
+                Item(
+                    metadata = TEST_METADATA,
+                    rights = listOf(RIGHT_SEP, RIGHT_NOV),
+                ),
+                listOf(
+                    RightError(
+                        conflictCausedByRightId = null,
+                        conflictCausedInContext = "sigel",
+                        conflictType = ConflictType.GAP,
+                        createdOn = DATE_GAP_IN_PAST,
+                        message = "Handle hdl:example.handle.net hat nur Rechteinformationen bis zum 2021-11-30.",
+                        handle = "hdl:example.handle.net",
+                        errorId = null,
+                        conflictWithExistingRightId = null,
+                        testId = null,
+                        createdBy = "user1",
+                    ),
+                ),
+                DATE_GAP_IN_PAST,
+                "One error: Gap is alreay in past but no open end",
             ),
         )
 
@@ -142,22 +180,40 @@ class DashboardUtilTest {
     fun testCheckForGapErrors(
         item: Item,
         expected: List<RightError>,
+        currentUTCDate: OffsetDateTime,
         reason: String,
     ) {
+        mockkStatic(OffsetDateTime::class)
+        every { OffsetDateTime.now(ZoneOffset.UTC) } returns currentUTCDate
+
         assertThat(
             reason,
             DashboardUtil.checkForGapErrors(item, "user1"),
             `is`(expected),
         )
+
+        unmockkAll()
     }
 
     companion object {
         const val DATA_FOR_GAP_ERRORS = "DATA_FOR_GAP_ERRORS"
         val TEST_METADATA = RestConverterTest.TEST_METADATA
-        val NOW: OffsetDateTime =
+        val DATE_GAP_IN_PRESENT: OffsetDateTime =
+            OffsetDateTime.of(
+                2021,
+                10,
+                1,
+                1,
+                1,
+                0,
+                0,
+                ZoneOffset.UTC,
+            )!!
+
+        val DATE_GAP_IN_PAST: OffsetDateTime =
             OffsetDateTime.of(
                 2022,
-                3,
+                10,
                 1,
                 1,
                 1,
