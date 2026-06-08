@@ -714,11 +714,6 @@ export default defineComponent({
       templateSearchIsActive.value = false;
       currentRightId.value = "";
       currentItem.value = {} as ItemRest;
-      if (searchStore.searchTerm != "") {
-        url.addQueryParameters(route, router, {
-          [url.QUERY_PARAMETER_SEARCH]: encodeURIComponent(searchStore.searchTerm),
-        });
-      }
       searchQuery();
     };
 
@@ -830,6 +825,13 @@ export default defineComponent({
       totalPages.value = response.totalPages;
       numberOfResults.value = response.numberOfResults;
       if(searchStore.filtersAsQuery != "" || searchStore.searchTerm.trim() != ""){
+        const combined =
+            searchStore.filtersAsQuery && searchStore.searchTerm.trim()
+                ? `(${searchStore.filtersAsQuery}) & (${searchStore.searchTerm.trim()})`
+                : searchStore.filtersAsQuery || searchStore.searchTerm.trim();
+        url.addQueryParameters(route, router, {
+          [url.QUERY_PARAMETER_SEARCH]: encodeURIComponent(combined),
+        });
         searchStore.isLastSearchNonTrivialAndSuccessful = true;
       }
     };
