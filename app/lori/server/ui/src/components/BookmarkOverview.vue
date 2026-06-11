@@ -39,6 +39,7 @@ export default defineComponent({
     /**
      * Data-Table related.
      */
+    const isLoading = ref(false);
     const renderKey = ref(0);
     const headers: ReadonlyDataTableHeader[] = [
       {
@@ -76,6 +77,7 @@ export default defineComponent({
     const confirmationDialog = ref(false);
     const editDialogActivated = ref(false);
     const getBookmarkList = () => {
+      isLoading.value = true;
       bookmarkApi
           // TODO: Load entries dynamically
           .getBookmarkList(0, 500)
@@ -87,6 +89,9 @@ export default defineComponent({
               bookmarkErrorMsg.value = errMsg;
               bookmarkError.value = true;
             });
+          })
+          .finally(() => {
+              isLoading.value = false;
           });
     };
 
@@ -214,6 +219,7 @@ export default defineComponent({
       editBookmark,
       editDialogActivated,
       headers,
+      isLoading,
       renderKey,
       searchTerm,
       templateDialogActivated,
@@ -268,7 +274,15 @@ export default defineComponent({
       >
         {{ alertSuccessfulMsg }}
       </v-snackbar>
-      <v-card-title>Gespeicherte Suchen</v-card-title>
+      <v-card-title>
+        Gespeicherte Suchen
+        <v-progress-circular
+            v-if="isLoading"
+            color="blue darken-1"
+            indeterminate
+            class="ml-5"
+        ></v-progress-circular>
+      </v-card-title>
       <v-dialog v-model="confirmationDialog" max-width="500px">
         <v-card>
           <v-card-title class="text-h5">Löschen bestätigen</v-card-title>
@@ -301,6 +315,7 @@ export default defineComponent({
           :items="bookmarkItems"
           :search="searchTerm"
           item-value="bookmarkId"
+          :loading="isLoading"
           loading-text="Daten werden geladen... Bitte warten."
       >
         <template v-slot:item.createTemplate="{ item }">

@@ -40,6 +40,7 @@ export default defineComponent({
     /**
      *  Data-Table related.
      */
+    const isLoading = ref(false);
     const renderKey = ref(0);
     const headers: ReadonlyDataTableHeader[] = [
       {
@@ -131,6 +132,7 @@ export default defineComponent({
     const currentTemplate = ref({} as RightRest);
     const templateDraft = ref({} as RightRest);
     const getTemplateList = () => {
+      isLoading.value = true;
       templateApi
           .getTemplateList(
               0,
@@ -148,6 +150,9 @@ export default defineComponent({
               errorMsg.value = errMsg;
               errorMsgIsActive.value = true;
             });
+          })
+          .finally(() => {
+            isLoading.value = false;
           });
     };
 
@@ -418,6 +423,7 @@ export default defineComponent({
       headers,
       headersValueVSelect,
       lastModifiedTemplateName,
+      isLoading,
       isNew,
       reinitCounter,
       renderKey,
@@ -580,7 +586,15 @@ export default defineComponent({
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-card-title>Templates</v-card-title>
+      <v-card-title>
+        Templates
+        <v-progress-circular
+            v-if="isLoading"
+            color="blue darken-1"
+            indeterminate
+            class="ml-5"
+        ></v-progress-circular>
+      </v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
@@ -621,6 +635,7 @@ export default defineComponent({
           :items="templateItems"
           :search="searchTerm"
           :sort-by.sync="sortBy"
+          :loading="isLoading"
           item-value="templateName"
           loading-text="Daten werden geladen... Bitte warten."
       >

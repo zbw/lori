@@ -17,6 +17,7 @@ export default defineComponent({
     "groupOverviewClosed"
   ],
   setup(props, {emit}) {
+    const isLoading = ref(false);
     const renderKey = ref(0);
     const headers: ReadonlyDataTableHeader[] = [
       {
@@ -35,6 +36,7 @@ export default defineComponent({
     const groupLoadError = ref(false);
     const groupLoadErrorMsg = ref("");
     const getGroupList = () => {
+      isLoading.value = true;
       api
           .getGroupList(0, 500 )
           .then((r: Array<GroupRest>) => {
@@ -45,6 +47,9 @@ export default defineComponent({
               groupLoadErrorMsg.value = errMsg;
               groupLoadError.value = true;
             });
+          })
+          .finally(() => {
+            isLoading.value = false;
           });
     };
 
@@ -167,14 +172,13 @@ export default defineComponent({
     };
 
     return {
-      closeDeleteDialog,
       currentGroup,
       dialogStore,
       deleteDialogActivated,
-      deletionSuccessful,
       groupLoadError,
       groupLoadErrorMsg,
       headers,
+      isLoading,
       isNew,
       items: groupItems,
       lastModifiedGroup,
@@ -186,9 +190,11 @@ export default defineComponent({
       activateGroupEditDialog,
       addGroupEntry,
       close,
+      closeDeleteDialog,
       closeGroupEditDialog,
       createNewGroup,
       deleteGroupEntry,
+      deletionSuccessful,
       editGroup,
       openDeleteDialog,
       updateGroupEntry,
@@ -230,7 +236,15 @@ export default defineComponent({
       >
         {{ groupLoadErrorMsg }}
       </v-snackbar>
-      <v-card-title>IP-Gruppen</v-card-title>
+      <v-card-title>
+        IP-Gruppen
+        <v-progress-circular
+            v-if="isLoading"
+            color="blue darken-1"
+            indeterminate
+            class="ml-5"
+        ></v-progress-circular>
+      </v-card-title>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn
@@ -244,6 +258,7 @@ export default defineComponent({
           :headers="headers"
           :items="items"
           :key="renderKey"
+          :loading="isLoading"
           loading-text="Daten werden geladen... Bitte warten."
           item-value="groupName"
       >
