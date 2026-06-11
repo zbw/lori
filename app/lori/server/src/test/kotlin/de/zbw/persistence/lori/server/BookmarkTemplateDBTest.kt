@@ -25,6 +25,7 @@ class BookmarkTemplateDBTest : DatabaseTest() {
     private val dbConnector =
         DatabaseConnector(
             connectionPool = ConnectionPool(testDataSource),
+            batchConnectionPool = ConnectionPool(testDataSource),
             tracer = OpenTelemetry.noop().getTracer("foo"),
         )
     private val bookmarkTemplateDB = dbConnector.bookmarkTemplateDB

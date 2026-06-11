@@ -41,13 +41,27 @@ import java.util.TimeZone
  */
 class RightDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
     private val groupDB: GroupDB,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM_RIGHT) {
-    suspend fun insertRight(right: ItemRight): String =
+) : AbstractDB(
+        connectionPool,
+        batchConnectionPool,
+        tracer,
+        TABLE_NAME_ITEM_RIGHT,
+    ) {
+    suspend fun insertRight(
+        right: ItemRight,
+        isBatchJob: Boolean = false,
+    ): String =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_RIGHT,
                 tracer = tracer,
                 spanName = "insertRight",
@@ -62,9 +76,17 @@ class RightDB(
                 },
             ).first()
 
-    suspend fun upsertRight(right: ItemRight): Int =
+    suspend fun upsertRight(
+        right: ItemRight,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_UPSERT_RIGHT,
             tracer = tracer,
             spanName = "upsertRight",
@@ -233,9 +255,17 @@ class RightDB(
         }
     }
 
-    suspend fun deleteRightsByIds(rightIds: List<String>): Int =
+    suspend fun deleteRightsByIds(
+        rightIds: List<String>,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_RIGHTS,
             tracer = tracer,
             spanName = "deleteRightsByIds",
@@ -244,10 +274,18 @@ class RightDB(
             },
         )
 
-    suspend fun getRightsByIds(rightsIds: List<String>): List<ItemRight> =
+    suspend fun getRightsByIds(
+        rightsIds: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<ItemRight> =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_RIGHTS,
                 tracer = tracer,
                 spanName = "getRightsByIds",
@@ -261,10 +299,18 @@ class RightDB(
                 addGroupInformationToRights(rights)
             }
 
-    suspend fun rightContainsId(rightId: String): Boolean =
+    suspend fun rightContainsId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_RIGHT_CONTAINS_ID,
                 tracer = tracer,
                 spanName = "rightContainsId",
@@ -276,9 +322,17 @@ class RightDB(
                 },
             ).first()
 
-    suspend fun getItemRowsByHandle(handle: String): List<ItemRow> =
+    suspend fun getItemRowsByHandle(
+        handle: String,
+        isBatchJob: Boolean = false,
+    ): List<ItemRow> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_RIGHTS_IDS_FOR_METADATA,
             tracer = tracer,
             spanName = "getItemRowsByHandle",
@@ -316,6 +370,7 @@ class RightDB(
         exceptionFilter: Boolean? = null,
         excludes: List<String>? = null,
         hasException: Boolean? = null,
+        isBatchJob: Boolean = false,
     ): List<ItemRight> {
         val sql =
             STATEMENT_GET_TEMPLATES
@@ -354,7 +409,12 @@ class RightDB(
                 }
         return DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = sql,
                 tracer = tracer,
                 spanName = "getTemplateList",
@@ -392,9 +452,17 @@ class RightDB(
                 },
             )
 
-    suspend fun updateAppliedOnByTemplateId(rightId: String): Int =
+    suspend fun updateAppliedOnByTemplateId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_UPDATE_TEMPLATE_APPLIED_ON,
             tracer = tracer,
             spanName = "updateTemplateById",
@@ -406,10 +474,18 @@ class RightDB(
             },
         )
 
-    suspend fun getRightsByTemplateNames(templateNames: List<String>): List<ItemRight> =
+    suspend fun getRightsByTemplateNames(
+        templateNames: List<String>,
+        isBatchJob: Boolean = false,
+    ): List<ItemRight> =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_RIGHTS_BY_TEMPLATE_NAME,
                 tracer = tracer,
                 spanName = "getRightsByTemplateNames",
@@ -426,10 +502,18 @@ class RightDB(
     /**
      * Return all Templates that are an exception for the given rightId.
      */
-    suspend fun getExceptionByRightId(rightId: String): ItemRight? =
+    suspend fun getExceptionByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): ItemRight? =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_EXCEPTIONS_BY_RIGHT_ID,
                 tracer = tracer,
                 spanName = "getExceptionByRightId",
@@ -452,10 +536,18 @@ class RightDB(
     /**
      * Checks if a given RightId is an exception.
      */
-    suspend fun isException(rightId: String): Boolean =
+    suspend fun isException(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_IS_EXCEPTION,
                 tracer = tracer,
                 spanName = "isException",
@@ -473,9 +565,15 @@ class RightDB(
     suspend fun addExceptionToTemplate(
         rightIdTemplate: String,
         rightIdException: String,
+        isBatchJob: Boolean = false,
     ): Int {
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_SET_EXCEPTION_OF_ID,
             tracer = tracer,
             spanName = "addTemplateToException",
@@ -499,9 +597,15 @@ class RightDB(
     suspend fun removeExceptionTemplateConnection(
         rightIdTemplate: String,
         rightIdException: String,
+        isBatchJob: Boolean = false,
     ): Int {
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_SET_EXCEPTION_OF_ID,
             tracer = tracer,
             spanName = "deleteExceptionTemplateConnection",
@@ -526,9 +630,15 @@ class RightDB(
     suspend fun setPredecessor(
         sourceRightId: String,
         targetRightId: String,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_SET_PREDECESSOR,
             tracer = tracer,
             spanName = "addPredecessor",
@@ -541,9 +651,15 @@ class RightDB(
     suspend fun setSuccessor(
         sourceRightId: String,
         targetRightId: String,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_SET_SUCCESSOR,
             tracer = tracer,
             spanName = "addSuccessor",
@@ -553,10 +669,14 @@ class RightDB(
             },
         )
 
-    suspend fun addGroupInformationToRights(rights: List<ItemRight>): List<ItemRight> {
+    suspend fun addGroupInformationToRights(
+        rights: List<ItemRight>,
+        isBatchJob: Boolean = false,
+    ): List<ItemRight> {
         val rightToGroups: Map<String, List<Group>> =
             groupDB.getGroupsByRightIds(
                 rights.map { it.rightId!! },
+                isBatchJob,
             )
         return rights.map { r ->
             r.copy(

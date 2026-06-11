@@ -19,14 +19,15 @@ import kotlin.collections.List
 
 class StatisticsService(
     private val connectionPool: ConnectionPool,
+    private val batchConnectionPool: ConnectionPool,
     private val tracer: Tracer,
 ) {
     /**
      * CASE 1: No filters - baseline statistics
      */
-    suspend fun getStatisticsNoFilter(): StatisticsResponse =
+    suspend fun getStatisticsNoFilter(isBatchJob: Boolean = false): StatisticsResponse =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection { conn ->
                 runInTransaction(
                     connection = conn,
                     tracer = tracer,
@@ -63,9 +64,10 @@ class StatisticsService(
     suspend fun getStatisticsWithMetadataFilter(
         searchExpression: SearchExpression?,
         metadataSearchFilters: List<MetadataSearchFilter>,
+        isBatchJob: Boolean = false,
     ): StatisticsResponse =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection { conn ->
                 conn.autoCommit = false
                 runInTransaction(
                     connection = conn,
@@ -179,9 +181,10 @@ class StatisticsService(
         searchExpression: SearchExpression?,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): StatisticsResponse =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection { conn ->
                 conn.autoCommit = false
                 runInTransaction(
                     connection = conn,
@@ -219,9 +222,10 @@ class StatisticsService(
         metadataSearchFilters: List<MetadataSearchFilter>,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): StatisticsResponse =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection { conn ->
                 conn.autoCommit = false
                 runInTransaction(
                     connection = conn,
@@ -302,9 +306,10 @@ class StatisticsService(
     suspend fun getStatisticsWithoutItems(
         searchExpression: SearchExpression?,
         metadataSearchFilters: List<MetadataSearchFilter>,
+        isBatchJob: Boolean = false,
     ): StatisticsResponse =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection { conn ->
                 conn.autoCommit = false
                 runInTransaction(
                     connection = conn,
@@ -834,9 +839,9 @@ class StatisticsService(
     /**
      * Refresh materialized views (call this periodically, e.g., hourly or daily)
      */
-    suspend fun refreshStatisticsMaterializedViews(): RefreshResult =
+    suspend fun refreshStatisticsMaterializedViews(isBatchJob: Boolean = false): RefreshResult =
         withContext(Dispatchers.IO) {
-            connectionPool.useConnection("refreshStatisticsMaterializedViews") { conn ->
+            (if (!isBatchJob) connectionPool else batchConnectionPool).useConnection("refreshStatisticsMaterializedViews") { conn ->
                 runInTransaction(
                     connection = conn,
                     tracer = tracer,

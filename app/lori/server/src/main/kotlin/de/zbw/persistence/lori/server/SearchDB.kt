@@ -89,14 +89,16 @@ import java.sql.ResultSet
  */
 class SearchDB(
     val connectionPool: ConnectionPool,
+    val batchConnectionPool: ConnectionPool,
     private val tracer: Tracer,
-    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, batchConnectionPool, tracer),
 ) {
     suspend fun searchForFacets(
         searchExpression: SearchExpression?,
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): FacetTransientSet =
         coroutineScope {
             // TODO(CB): Return error when noRightInformationFilter is set with right filters in search expression
@@ -163,6 +165,7 @@ class SearchDB(
                                 listOf(FormalRuleFilter(listOf(FormalRule.CC_LICENCE_NO_RESTRICTION))),
                         occurrenceForColumn = COLUMN_RIGHT_RESTRICTED_OPEN_CONTENT_LICENCE,
                         noRightInformationFilter = noRightInformationFilter,
+                        isBatchJob = isBatchJob,
                     ) { rs ->
                         Pair(
                             rs.getBoolean(1),
@@ -284,6 +287,7 @@ class SearchDB(
         metadataSearchFilters: List<MetadataSearchFilter>,
         rightSearchFilters: List<RightSearchFilter>,
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
         operation: (rs: ResultSet) -> Pair<K, V>,
     ): Map<K, V> {
         val sql =
@@ -299,7 +303,12 @@ class SearchDB(
             tracer = tracer,
             spanName = "searchOccurence $occurrenceForColumn",
             mapper = { rs: ResultSet -> operation(rs) },
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             params = { stmt ->
                 var counter = 1
                 val searchPairs =
@@ -338,6 +347,7 @@ class SearchDB(
         metadataSearchFilter: List<MetadataSearchFilter>,
         rightSearchFilter: List<RightSearchFilter> = emptyList(),
         noRightInformationFilter: NoRightInformationFilter?,
+        isBatchJob: Boolean = false,
     ): Int {
         val sql =
             buildCountSearchQuery(
@@ -348,7 +358,12 @@ class SearchDB(
                 hasHandlesToIgnore = false,
             )
         return DatabaseConnector.count(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             sql = sql,
             tracer = tracer,
             spanName = "countSearchMetadata",
@@ -390,6 +405,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> {
         val sql =
             buildSearchQuery(
@@ -403,7 +419,12 @@ class SearchDB(
                 sortInformation = sortInformation,
             )
         return DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (!isBatchJob) {
+                    connectionPool
+                } else {
+                    batchConnectionPool
+                },
             sql = sql,
             mapper = { rs: ResultSet ->
                 extractMetadataRS(rs)
@@ -462,6 +483,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String> = emptyList(),
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<ItemMetadata> =
         searchMetadata(
             searchExpression = searchExpression,
@@ -472,6 +494,7 @@ class SearchDB(
             noRightInformationFilter = noRightInformationFilter,
             handlesToIgnore = handlesToIgnore,
             sortInformation = sortInformation,
+            isBatchJob = isBatchJob,
         )
 
     suspend fun searchForHandles(
@@ -483,6 +506,7 @@ class SearchDB(
         noRightInformationFilter: NoRightInformationFilter?,
         handlesToIgnore: List<String>,
         sortInformation: SortInformation,
+        isBatchJob: Boolean = false,
     ): List<String> {
         val rs: List<ItemMetadata> =
             searchMetadata(
@@ -494,6 +518,7 @@ class SearchDB(
                 noRightInformationFilter = noRightInformationFilter,
                 handlesToIgnore = handlesToIgnore,
                 sortInformation = sortInformation,
+                isBatchJob = isBatchJob,
             )
         return rs.map { it.handle }
     }

@@ -22,11 +22,20 @@ import java.util.TimeZone
  */
 class RightErrorDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_RIGHT_ERROR) {
-    suspend fun deleteErrorById(errorId: Int): Int =
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, TABLE_NAME_RIGHT_ERROR) {
+    suspend fun deleteErrorById(
+        errorId: Int,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ERROR_BY_ID,
             tracer = tracer,
             spanName = "deleteErrorById",
@@ -35,9 +44,17 @@ class RightErrorDB(
             },
         )
 
-    suspend fun deleteErrorByTestId(testId: String): Int =
+    suspend fun deleteErrorByTestId(
+        testId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ERROR_BY_TEST_ID,
             tracer = tracer,
             spanName = "deleteErrorByTestId",
@@ -46,9 +63,17 @@ class RightErrorDB(
             },
         )
 
-    suspend fun deleteErrorsByAge(isOlderThan: Instant): Int =
+    suspend fun deleteErrorsByAge(
+        isOlderThan: Instant,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ERROR_BY_AGE,
             tracer = tracer,
             spanName = "deleteRightErrorByAge",
@@ -57,9 +82,17 @@ class RightErrorDB(
             },
         )
 
-    suspend fun deleteErrorsByType(conflictType: ConflictType): Int =
+    suspend fun deleteErrorsByType(
+        conflictType: ConflictType,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ERROR_BY_CONFLICT_TYPE,
             tracer = tracer,
             spanName = "deleteByConflictType",
@@ -68,9 +101,17 @@ class RightErrorDB(
             },
         )
 
-    suspend fun deleteByCausingRightId(rightId: String): Int =
+    suspend fun deleteByCausingRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ERROR_BY_CAUSING_RIGHT_ID,
             tracer = tracer,
             spanName = "deleteByCausingRightId",
@@ -84,9 +125,15 @@ class RightErrorDB(
         offset: Int,
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String? = null,
+        isBatchJob: Boolean = false,
     ): List<RightError> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = buildFilterQuery(filters, testId),
             tracer = tracer,
             spanName = "getRightErrorList",
@@ -121,9 +168,15 @@ class RightErrorDB(
         column: String,
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String?,
+        isBatchJob: Boolean = false,
     ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = buildOccurrenceQuery(column, filters, testId),
             tracer = tracer,
             spanName = "getOccurrences",
@@ -144,10 +197,16 @@ class RightErrorDB(
     suspend fun getCount(
         filters: List<DashboardSearchFilter> = emptyList(),
         testId: String?,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = buildCountFilterQuery(filters, testId),
                 tracer = tracer,
                 spanName = "getRightErrorCount",
@@ -165,10 +224,18 @@ class RightErrorDB(
                 },
             ).first()
 
-    suspend fun insertError(rightError: RightError): Int =
+    suspend fun insertError(
+        rightError: RightError,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_RIGHT_ERROR,
                 tracer = tracer,
                 spanName = "insertRightError",
@@ -180,9 +247,17 @@ class RightErrorDB(
                 },
             ).first()
 
-    suspend fun insertErrorsBatch(errors: List<RightError>): List<Int> =
+    suspend fun insertErrorsBatch(
+        errors: List<RightError>,
+        isBatchJob: Boolean = false,
+    ): List<Int> =
         DatabaseConnector.insertBatchReturningKeys(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_INSERT_RIGHT_ERROR,
             tracer = tracer,
             spanName = "insertErrorBatch",

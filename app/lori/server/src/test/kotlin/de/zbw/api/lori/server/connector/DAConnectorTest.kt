@@ -258,7 +258,7 @@ class DAConnectorTest {
                     engine = mockEngine,
                     backend =
                         mockk {
-                            coEvery { upsertMetadata(any()) } returns IntArray(1) { _ -> 1 }
+                            coEvery { upsertMetadata(any(), any()) } returns IntArray(1) { _ -> 1 }
                         },
                 )
             val expected = CollectionImport(collectionId = givenCollectionId, importsExpected = 1, importsReceived = 1)
@@ -542,10 +542,10 @@ class DAConnectorTest {
                     mockk<LoriConfiguration>(),
                 ),
             ) {
-                coEvery { insertRight(any()) } returns expectedGeneratedRightId
+                coEvery { insertRight(any(), any()) } returns expectedGeneratedRightId
                 coEvery { insertItemEntry(handle = newHandle, rightId = expectedGeneratedRightId, createdBy = any()) } returns
                     Either.Right("foobar")
-                coEvery { getExistingMetadataHandles(listOf(newHandle)) } returns existingHandles
+                coEvery { getExistingMetadataHandles(listOf(newHandle), any()) } returns existingHandles
             }
 
         val daConnector =
@@ -576,9 +576,10 @@ class DAConnectorTest {
                 handle = newHandle,
                 rightId = expectedGeneratedRightId,
                 createdBy = any(),
+                isBatchJob = any(),
             )
         }
-        coVerify(exactly = verifyInsertRights) { backend.insertRight(any()) }
+        coVerify(exactly = verifyInsertRights) { backend.insertRight(any(), any()) }
     }
 
     companion object {

@@ -49,7 +49,7 @@ class TemplateApplication(
         LOG.info("Start applying Template $rightId")
         // Get Right object
         val right: ItemRight =
-            dbConnector.rightDB.getRightsByIds(listOf(rightId)).firstOrNull()
+            dbConnector.rightDB.getRightsByIds(listOf(rightId), isBatchJob = true).firstOrNull()
                 ?: return TemplateApplicationResult(
                     rightId = rightId,
                     templateName = "",
@@ -87,7 +87,8 @@ class TemplateApplication(
             )
         }
         // Exceptions
-        val exceptionTemplate: ItemRight? = dbConnector.rightDB.getExceptionByRightId(rightId)
+        val exceptionTemplate: ItemRight? =
+            dbConnector.rightDB.getExceptionByRightId(rightId, isBatchJob = true)
         val exceptionTemplateApplicationResult: TemplateApplicationResult? =
             exceptionTemplate?.let { excTemp ->
                 excTemp.rightId?.let {
@@ -102,9 +103,13 @@ class TemplateApplication(
         val bookmarksIdsExceptions: Set<Int> =
             dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightIds(
                 exceptionTemplate?.let { listOf(it.rightId) }?.filterNotNull() ?: emptyList(),
+                isBatchJob = true,
             )
         val bookmarksExceptions: List<Bookmark> =
-            dbConnector.bookmarkDB.getBookmarksByIds(bookmarksIdsExceptions.toList())
+            dbConnector.bookmarkDB.getBookmarksByIds(
+                bookmarksIdsExceptions.toList(),
+                isBatchJob = true,
+            )
 
         val searchResultsExceptions: Set<String> =
             bookmarksExceptions
@@ -128,12 +133,13 @@ class TemplateApplication(
                         noRightInformationFilter = b.noRightInformationFilter,
                         handlesToIgnore = emptyList(),
                         sortInformation = SortInformation.DEFAULT,
+                        isBatchJob = true,
                     )
                 }.toSet()
 
         // Receive all bookmark ids
-        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId)
-        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds)
+        val bookmarkIds: List<Int> = dbConnector.bookmarkTemplateDB.getBookmarkIdsByRightId(rightId, isBatchJob = true)
+        val bookmarks: List<Bookmark> = dbConnector.bookmarkDB.getBookmarksByIds(bookmarkIds, isBatchJob = true)
 
         val testId =
             if (dryRun) {
@@ -212,7 +218,7 @@ class TemplateApplication(
 
             if (!dryRun) {
                 // Update last_applied_on field
-                dbConnector.rightDB.updateAppliedOnByTemplateId(right.rightId!!)
+                dbConnector.rightDB.updateAppliedOnByTemplateId(right.rightId!!, isBatchJob = true)
             }
 
             val deferredResults = mutableListOf<Deferred<TemplateApplicationResult>>()
@@ -301,11 +307,12 @@ class TemplateApplication(
         val searchResultsWithoutConflict: Set<Item> = searchResults.subtract(itemsWithConflictsNotFixable.keys)
 
         if (!dryRun) {
-            dbConnector.rightErrorDB.deleteByCausingRightId(rightId)
+            dbConnector.rightErrorDB.deleteByCausingRightId(rightId, isBatchJob = true)
             dbConnector.rightErrorDB.insertErrorsBatch(
                 itemsWithConflictsNotFixable
                     .values
                     .flatten(),
+                isBatchJob = true,
             )
 
             itemsWithFixableConflicts.forEach { (item, errors) ->
@@ -325,6 +332,7 @@ class TemplateApplication(
                                 "Enddatum automatisch eingefügt anlässlich initialer Anwendung" +
                                 " von https://${backend.config.url}?templateId=${template.rightId}.",
                     ),
+                    isBatchJob = true,
                 )
             }
             dbConnector.itemDB.upsertItemBatch(
@@ -336,6 +344,7 @@ class TemplateApplication(
                             rightId = rightId,
                         )
                     },
+                isBatchJob = true,
             )
             return TemplateApplicationResult(
                 rightId = rightId,
@@ -347,7 +356,10 @@ class TemplateApplication(
                 numberOfErrors = itemsWithConflictsNotFixable.values.flatten().size,
             )
         } else {
-            dbConnector.rightErrorDB.insertErrorsBatch(itemsWithConflictsNotFixable.values.flatten())
+            dbConnector.rightErrorDB.insertErrorsBatch(
+                itemsWithConflictsNotFixable.values.flatten(),
+                isBatchJob = true,
+            )
             return TemplateApplicationResult(
                 rightId = rightId,
                 // TODO(CB): Don't send back thousands of errors for now
@@ -367,7 +379,11 @@ class TemplateApplication(
     ) {
         val itemRows =
             dbConnector.itemDB
-                .getItemsByLastUpdatedBeforeAndRightId(template.rightId!!, atLeastLastUpdatedOn)
+                .getItemsByLastUpdatedBeforeAndRightId(
+                    template.rightId!!,
+                    atLeastLastUpdatedOn,
+                    isBatchJob = true,
+                )
         val deletedHandles = dbConnector.metadataDB.getDeletedMetadataByHandles(itemRows.map { it.handle }).toSet()
 
         itemRows.forEach { itemRow: ItemRow ->
@@ -381,7 +397,11 @@ class TemplateApplication(
                         firstApplicationDate = TimezoneUtil.utcOffsetDateTimeToBerlinDate(itemRow.createdOn!!),
                     ).firstOrNull()
                     ?.startDate
-            dbConnector.itemDB.deleteItem(itemRow.handle, itemRow.rightId)
+            dbConnector.itemDB.deleteItem(
+                itemRow.handle,
+                itemRow.rightId,
+                isBatchJob = true,
+            )
             if (startDateDisplayed != null) {
                 val localDateLastImport =
                     TimezoneUtil.utcOffsetDateTimeToBerlinDate(
@@ -419,10 +439,11 @@ class TemplateApplication(
                         lastUpdatedBy = Constants.AUTHOR_AUTOMATIC,
                     )
                 LOG.info("Replacing template entry ${template.rightId} of item ${itemRow.handle} with a manual right")
-                val newManualRightId = dbConnector.rightDB.insertRight(newManualRight)
+                val newManualRightId = dbConnector.rightDB.insertRight(newManualRight, isBatchJob = true)
                 dbConnector.itemDB.insertItem(
                     itemId = ItemId(handle = itemRow.handle, rightId = newManualRightId),
                     createdBy = "lori",
+                    isBatchJob = true,
                 )
             }
         }

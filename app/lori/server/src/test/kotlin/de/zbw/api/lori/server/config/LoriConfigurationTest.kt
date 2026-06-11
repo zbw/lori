@@ -27,7 +27,9 @@ class LoriConfigurationTest {
         System.setProperty("lori.sql.url", expectedConfig.sqlUrl)
         System.setProperty("lori.url", expectedConfig.url)
         System.setProperty("lori.sql.user", expectedConfig.sqlUser)
+        System.setProperty("lori.sql.user.batch", expectedConfig.sqlUserBatch)
         System.setProperty("lori.sql.password", expectedConfig.sqlPassword)
+        System.setProperty("lori.sql.password.batch", expectedConfig.sqlPasswordBatch)
         System.setProperty("lori.connection.digitalarchive.address", expectedConfig.digitalArchiveAddress)
         System.setProperty("lori.connection.digitalarchive.basicauth", expectedConfig.digitalArchiveBasicAuth)
         System.setProperty("lori.connection.digitalarchive.credentials.username", expectedConfig.digitalArchiveUsername)
@@ -96,6 +98,8 @@ class LoriConfigurationTest {
                 mailToWarning = "to@localhost",
                 url = "lori.home",
                 groupIdZBWTerminal = 1,
+                sqlUserBatch = "batch",
+                sqlPasswordBatch = "batch_password",
             )
     }
 }

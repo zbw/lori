@@ -28,12 +28,13 @@ import java.time.LocalDate
 
 class StatisticsServiceTest : DatabaseTest() {
     val connectionPool = ConnectionPool(testDataSource)
-    val statisticsService = StatisticsService(connectionPool, tracer = tracer)
+    val statisticsService = StatisticsService(connectionPool, connectionPool, tracer = tracer)
 
     private val backend =
         LoriServerBackend(
             DatabaseConnector(
                 connectionPool = connectionPool,
+                batchConnectionPool = ConnectionPool(testDataSource),
                 tracer = OpenTelemetry.noop().getTracer("de.zbw.business.lori.server.LoriServerBackendTest"),
             ),
             mockk(),

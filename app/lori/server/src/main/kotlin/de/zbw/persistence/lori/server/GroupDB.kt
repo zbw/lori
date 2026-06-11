@@ -26,16 +26,23 @@ import kotlin.collections.map
  */
 class GroupDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
     private val gson: Gson,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_RIGHT_GROUP) {
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, TABLE_NAME_RIGHT_GROUP) {
     suspend fun insertGroup(
         group: Group,
         useGivenId: Boolean = false,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql =
                     if (useGivenId) {
                         STATEMENT_INSERT_GROUP_WITH_ID
@@ -72,10 +79,18 @@ class GroupDB(
                 },
             ).first()
 
-    suspend fun getLatestVersionGroupsByIds(groupIds: List<Int>): List<Group> =
+    suspend fun getLatestVersionGroupsByIds(
+        groupIds: List<Int>,
+        isBatchJob: Boolean = false,
+    ): List<Group> =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_GROUPS_BY_IDS,
                 tracer = tracer,
                 spanName = "getLatestVersionGroupsByIds",
@@ -91,11 +106,19 @@ class GroupDB(
             }.values
             .filterNotNull()
 
-    suspend fun getGroupById(groupId: Int): Group? =
+    suspend fun getGroupById(
+        groupId: Int,
+        isBatchJob: Boolean = false,
+    ): Group? =
         DatabaseConnector
             .select(
                 sql = STATEMENT_GET_GROUP_BY_ID_WITH_LATEST_VERSION,
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 tracer = tracer,
                 spanName = "getGroupById",
                 params = { stmt ->
@@ -116,9 +139,17 @@ class GroupDB(
                 )
             }
 
-    suspend fun getAllGroupVersionsById(groupId: Int): List<GroupVersion> =
+    suspend fun getAllGroupVersionsById(
+        groupId: Int,
+        isBatchJob: Boolean = false,
+    ): List<GroupVersion> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_GROUPS_BY_ID,
             tracer = tracer,
             spanName = "getAllGroupVersionsById",
@@ -141,10 +172,16 @@ class GroupDB(
     suspend fun getGroupByIdAndVersion(
         groupId: Int,
         version: Int,
+        isBatchJob: Boolean = false,
     ): Group? =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_GROUP_BY_ID_AND_VERSION,
                 tracer = tracer,
                 spanName = "getGroupByIdAndVersion",
@@ -170,9 +207,15 @@ class GroupDB(
     suspend fun deleteGroupPair(
         groupId: Int,
         rightId: String,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_GROUP_RIGHT_PAIR,
             tracer = tracer,
             spanName = "deleteGroupPair",
@@ -182,9 +225,17 @@ class GroupDB(
             },
         )
 
-    suspend fun deleteGroupPairsByRightId(rightId: String): Int =
+    suspend fun deleteGroupPairsByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_GROUP_RIGHT_PAIR_BY_RIGHT_ID,
             tracer = tracer,
             spanName = "deleteGroupPairsByRightId",
@@ -196,9 +247,17 @@ class GroupDB(
     /**
      * Get the ids of all rights that use a given group-id.
      */
-    suspend fun getRightsByGroupId(groupId: Int): List<String> =
+    suspend fun getRightsByGroupId(
+        groupId: Int,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_RIGHTS_BY_GROUP_ID,
             tracer = tracer,
             spanName = "getRightsByGroupId",
@@ -210,10 +269,18 @@ class GroupDB(
             },
         )
 
-    suspend fun getGroupsByRightId(rightId: String): List<Group> =
+    suspend fun getGroupsByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): List<Group> =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_GROUPS_BY_RIGHT_ID,
                 tracer = tracer,
                 spanName = "getGroupsByRightId",
@@ -227,11 +294,19 @@ class GroupDB(
                 getLatestVersionGroupsByIds(it)
             }
 
-    suspend fun getGroupsByRightIds(rightIds: List<String>): Map<String, List<Group>> {
+    suspend fun getGroupsByRightIds(
+        rightIds: List<String>,
+        isBatchJob: Boolean = false,
+    ): Map<String, List<Group>> {
         val rightIdToGroupIds: Map<String, List<Int>> =
             DatabaseConnector
                 .select(
-                    connectionPool = connectionPool,
+                    connectionPool =
+                        if (isBatchJob) {
+                            batchConnectionPool
+                        } else {
+                            connectionPool
+                        },
                     sql = STATEMENT_GET_GROUPS_BY_RIGHT_IDS,
                     tracer = tracer,
                     spanName = "getGroupsByRightIds",
@@ -268,10 +343,16 @@ class GroupDB(
         rightId: String,
         groupId: Int,
         createdBy: String,
+        isBatchJob: Boolean = false,
     ): String =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_GROUP_RIGHT_PAIR,
                 tracer = tracer,
                 spanName = "insertGroupRightPair",
@@ -292,10 +373,16 @@ class GroupDB(
     suspend fun getGroupList(
         limit: Int,
         offset: Int,
+        isBatchJob: Boolean = false,
     ): List<Group> =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_GROUP_LIST,
                 tracer = tracer,
                 spanName = "getGroupList",
@@ -319,9 +406,17 @@ class GroupDB(
                 }
             }
 
-    suspend fun deleteGroupById(groupId: Int): Int =
+    suspend fun deleteGroupById(
+        groupId: Int,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_GROUP_BY_ID,
             tracer = tracer,
             spanName = "deleteGroupById",
@@ -333,9 +428,10 @@ class GroupDB(
     suspend fun updateGroup(
         group: Group,
         updateBy: String,
+        isBatchJob: Boolean = false,
     ): Int {
         // 1. Get existing group
-        val existingGroup: Group = getGroupById(group.groupId) ?: return 0
+        val existingGroup: Group = getGroupById(group.groupId, isBatchJob) ?: return 0
         // 2. Check if differences exist
         return if (group.entries == existingGroup.entries &&
             group.title == existingGroup.title &&
@@ -351,6 +447,7 @@ class GroupDB(
                     createdBy = updateBy,
                 ),
                 true,
+                isBatchJob,
             )
         }
     }

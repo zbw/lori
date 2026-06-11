@@ -30,6 +30,32 @@ CREATE EXTENSION if not exists pg_trgm;
 \q
 ```
 
+Finally, create a batch user for all batch jobs:
+```sql
+CREATE ROLE batch_role WITH
+   LOGIN
+   PASSWORD 'your_secure_password'
+   CONNECTION LIMIT 5;
+
+ALTER ROLE batch_role SET work_mem = '32MB';
+ALTER ROLE batch_role SET maintenance_work_mem = '256MB';
+ALTER ROLE batch_role SET statement_timeout = '30min';
+ALTER ROLE batch_role SET idle_in_transaction_session_timeout = '10min';
+
+CREATE SCHEMA IF NOT EXISTS batch_schema;
+GRANT USAGE ON SCHEMA batch_schema TO batch_role;
+GRANT ALL ON SCHEMA batch_schema TO batch_role;
+
+ALTER ROLE batch_role SET search_path TO batch_schema, public;
+
+-- Connect to loridb database and give batch_role permissions
+\c loridb
+
+GRANT USAGE ON SCHEMA public TO batch_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO batch_role;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO batch_role;
+```
+
 Alternatively the tool [pgadmin4](https://www.pgadmin.org/) can be used for setting up the database
 and extension.
 

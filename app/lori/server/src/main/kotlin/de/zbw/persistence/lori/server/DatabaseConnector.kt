@@ -25,43 +25,49 @@ import java.util.function.BiFunction
  */
 class DatabaseConnector(
     val connectionPool: ConnectionPool,
+    val batchConnectionPool: ConnectionPool,
     private val tracer: Tracer,
-    internal val bookmarkDB: BookmarkDB = BookmarkDB(connectionPool, tracer),
+    internal val bookmarkDB: BookmarkDB = BookmarkDB(connectionPool, batchConnectionPool, tracer),
     internal val groupDB: GroupDB =
         GroupDB(
             connectionPool,
+            batchConnectionPool,
             tracer,
             Gson().newBuilder().create(),
         ),
     internal val itemDB: ItemDB =
         ItemDB(
             connectionPool,
+            batchConnectionPool,
             tracer,
         ),
     internal val metadataDB: MetadataDB =
         MetadataDB(
             connectionPool,
+            batchConnectionPool,
             tracer,
         ),
     internal val rightDB: RightDB =
         RightDB(
             connectionPool,
+            batchConnectionPool,
             tracer,
             groupDB,
         ),
-    internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, tracer),
+    internal val bookmarkTemplateDB: BookmarkTemplateDB = BookmarkTemplateDB(connectionPool, batchConnectionPool, tracer),
     internal val userDB: UserDB = UserDB(connectionPool, tracer),
-    internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, tracer),
-    internal val exportJobDB: ExportJobDB = ExportJobDB(connectionPool, tracer),
-    internal val genericJobDB: GenericJobDB = GenericJobDB(connectionPool, tracer),
-    val statisticsService: StatisticsService = StatisticsService(connectionPool, tracer),
-    internal val searchDB: SearchDB = SearchDB(connectionPool, tracer, statisticsService),
+    internal val rightErrorDB: RightErrorDB = RightErrorDB(connectionPool, batchConnectionPool, tracer),
+    internal val exportJobDB: ExportJobDB = ExportJobDB(connectionPool, batchConnectionPool, tracer),
+    internal val genericJobDB: GenericJobDB = GenericJobDB(connectionPool, batchConnectionPool, tracer),
+    val statisticsService: StatisticsService = StatisticsService(connectionPool, batchConnectionPool, tracer),
+    internal val searchDB: SearchDB = SearchDB(connectionPool, batchConnectionPool, tracer, statisticsService),
 ) {
     constructor(
         config: LoriConfiguration,
         tracer: Tracer,
     ) : this(
-        ConnectionPool(config),
+        ConnectionPool(config, isBatch = false),
+        ConnectionPool(config, isBatch = true),
         tracer,
     )
 

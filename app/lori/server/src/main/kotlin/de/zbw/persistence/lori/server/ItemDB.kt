@@ -20,11 +20,20 @@ import java.util.TimeZone
  */
 class ItemDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
-) : AbstractDB(connectionPool, tracer, TABLE_NAME_ITEM) {
-    suspend fun getRightIdsByHandle(handle: String): List<String> =
+) : AbstractDB(connectionPool, batchConnectionPool, tracer, TABLE_NAME_ITEM) {
+    suspend fun getRightIdsByHandle(
+        handle: String,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_RIGHT_IDS_BY_HANDLE_ID,
             tracer = tracer,
             spanName = "getRightIdsByHandle",
@@ -36,9 +45,17 @@ class ItemDB(
             },
         )
 
-    suspend fun getHandlesByRightId(rightId: String): List<String> =
+    suspend fun getHandlesByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_GET_HANDLES_BY_RIGHT_ID,
             tracer = tracer,
             spanName = "getHandlesByRightId",
@@ -50,9 +67,14 @@ class ItemDB(
             },
         )
 
-    suspend fun getHandlesCount(): Int =
+    suspend fun getHandlesCount(isBatchJob: Boolean = false): Int =
         DatabaseConnector.count(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_COUNT_DISTINCT_HANDLE,
             tracer = tracer,
             spanName = "getHandlesCount",
@@ -61,9 +83,15 @@ class ItemDB(
     suspend fun getDistinctHandlesByOffset(
         limit: Int,
         offset: Int,
+        isBatchJob: Boolean = false,
     ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             sql = STATEMENT_SELECT_DISTINCT_HANDLE,
             spanName = "getDistinctHandlesByOffset",
@@ -79,10 +107,16 @@ class ItemDB(
     suspend fun itemContainsEntry(
         handle: String,
         rightId: String,
+        isBatchJob: Boolean = false,
     ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_ITEM_CONTAINS_ENTRY,
                 tracer = tracer,
                 spanName = "itemContainsEntry",
@@ -98,10 +132,18 @@ class ItemDB(
     /**
      * Check if a given rightId is still used in the table.
      */
-    suspend fun itemContainsRightId(rightId: String): Boolean =
+    suspend fun itemContainsRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Boolean =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_ITEM_CONTAINS_RIGHT,
                 tracer = tracer,
                 spanName = "itemContainsRight",
@@ -116,10 +158,16 @@ class ItemDB(
     suspend fun insertItem(
         itemId: ItemId,
         createdBy: String,
+        isBatchJob: Boolean = false,
     ): String? =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_ITEM,
                 tracer = tracer,
                 spanName = "insertItem",
@@ -141,9 +189,15 @@ class ItemDB(
     suspend fun upsertItemBatch(
         itemIds: List<ItemId>,
         createdBy: String,
+        isBatchJob: Boolean = false,
     ): IntArray =
         DatabaseConnector.insertBatch(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_INSERT_ITEM,
             tracer = tracer,
             spanName = "insertItemBatch",
@@ -169,9 +223,15 @@ class ItemDB(
     suspend fun deleteItem(
         handle: String,
         rightId: String,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ITEM,
             tracer = tracer,
             spanName = "deleteItem",
@@ -181,9 +241,17 @@ class ItemDB(
             },
         )
 
-    suspend fun countItemByRightId(rightId: String): Int =
+    suspend fun countItemByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.count(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_COUNT_ITEM_BY_RIGHTID,
             tracer = tracer,
             spanName = "countItemByRightId",
@@ -192,9 +260,17 @@ class ItemDB(
             },
         )
 
-    suspend fun deleteItemByHandle(handle: String): Int =
+    suspend fun deleteItemByHandle(
+        handle: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ITEM_BY_HANDLE,
             tracer = tracer,
             spanName = "deleteItemByHandle",
@@ -203,9 +279,17 @@ class ItemDB(
             },
         )
 
-    suspend fun deleteItemByRightId(rightId: String): Int =
+    suspend fun deleteItemByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_ITEM_BY_RIGHT,
             tracer = tracer,
             spanName = "deleteItemByRightId",
@@ -217,10 +301,16 @@ class ItemDB(
     suspend fun getItemRowByHandleAndRightId(
         handle: String,
         rightId: String,
+        isBatchJob: Boolean = false,
     ): ItemRow? =
         DatabaseConnector
             .select(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_RIGHTS_IDS_FOR_METADATA,
                 tracer = tracer,
                 spanName = "getItemRowByHandleAndRightId",
@@ -234,11 +324,17 @@ class ItemDB(
     suspend fun getItemsByLastUpdatedBeforeAndRightId(
         rightId: String,
         lastUpdatedBefore: Instant,
+        isBatchJob: Boolean = false,
     ): List<ItemRow> =
         DatabaseConnector
             .select(
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_GET_RIGHTS_UPDATED_BEFORE_BY_RIGHT_ID,
-                connectionPool = connectionPool,
                 tracer = tracer,
                 spanName = "getItemLastUpdatedBeforeByRightId",
                 mapper = { rs -> rs.toItemRow() },

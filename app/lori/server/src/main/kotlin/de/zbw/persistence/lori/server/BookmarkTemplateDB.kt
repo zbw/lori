@@ -12,18 +12,28 @@ import java.sql.ResultSet
  */
 class BookmarkTemplateDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
 ) : AbstractDB(
         connectionPool = connectionPool,
+        batchConnectionPool = batchConnectionPool,
         tracer = tracer,
         tableName = TABLE_NAME_TEMPLATE_BOOKMARK_MAP,
     ) {
     /**
      * Queries on Template-Bookmark Pairs Table.
      */
-    suspend fun deletePairsByRightId(rightId: String): Int =
+    suspend fun deletePairsByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             sql = STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR_BY_TEMP,
             tracer = tracer,
             spanName = "deletePairsByRightId",
@@ -35,10 +45,18 @@ class BookmarkTemplateDB(
     /**
      * Get all bookmark ids that are connected to a given RightId.
      */
-    suspend fun getBookmarkIdsByRightId(rightId: String): List<Int> =
+    suspend fun getBookmarkIdsByRightId(
+        rightId: String,
+        isBatchJob: Boolean = false,
+    ): List<Int> =
         DatabaseConnector.select(
             sql = STATEMENT_GET_BOOKMARKS_BY_RIGHT_ID,
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getBookmarkIdsByRightId",
             params = { stmt ->
@@ -47,11 +65,19 @@ class BookmarkTemplateDB(
             mapper = { rs: ResultSet -> rs.getInt(1) },
         )
 
-    suspend fun getBookmarkIdsByRightIds(rightIds: List<String>): Set<Int> =
+    suspend fun getBookmarkIdsByRightIds(
+        rightIds: List<String>,
+        isBatchJob: Boolean = false,
+    ): Set<Int> =
         DatabaseConnector
             .select(
                 sql = STATEMENT_GET_BOOKMARKS_BY_RIGHT_IDS,
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 tracer = tracer,
                 spanName = "getBookmarkIdsByRightIds",
                 params = { stmt ->
@@ -63,9 +89,17 @@ class BookmarkTemplateDB(
     /**
      * Get all bookmark ids that are connected to a given template-id.
      */
-    suspend fun getRightIdsByBookmarkId(bookmarkId: Int): List<String> =
+    suspend fun getRightIdsByBookmarkId(
+        bookmarkId: Int,
+        isBatchJob: Boolean = false,
+    ): List<String> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getRightIdsByBookmarkId",
             sql = STATEMENT_GET_TEMPLATES_BY_BOOKMARK_ID,
@@ -75,10 +109,18 @@ class BookmarkTemplateDB(
             mapper = { rs: ResultSet -> rs.getString(1) },
         )
 
-    suspend fun insertTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
+    suspend fun insertTemplateBookmarkPair(
+        bookmarkTemplate: BookmarkTemplate,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 tracer = tracer,
                 spanName = "insertTemplateBookmarkPair",
                 sql = STATEMENT_INSERT_TEMPLATE_BOOKMARK_PAIR,
@@ -91,9 +133,17 @@ class BookmarkTemplateDB(
                 },
             ).first()
 
-    suspend fun deleteTemplateBookmarkPair(bookmarkTemplate: BookmarkTemplate): Int =
+    suspend fun deleteTemplateBookmarkPair(
+        bookmarkTemplate: BookmarkTemplate,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "deleteTemplateBookmarkPair",
             sql = STATEMENT_DELETE_TEMPLATE_BOOKMARK_PAIR,
@@ -103,9 +153,17 @@ class BookmarkTemplateDB(
             },
         )
 
-    suspend fun upsertTemplateBookmarkBatch(bookmarkTemplates: List<BookmarkTemplate>): List<BookmarkTemplate> =
+    suspend fun upsertTemplateBookmarkBatch(
+        bookmarkTemplates: List<BookmarkTemplate>,
+        isBatchJob: Boolean = false,
+    ): List<BookmarkTemplate> =
         DatabaseConnector.insertBatchReturningKeys(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "upsertTemplateBookmarkBatch",
             sql = STATEMENT_UPSERT_TEMPLATE_BOOKMARK_PAIR,

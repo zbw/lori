@@ -38,25 +38,43 @@ import java.util.TimeZone
  */
 class BookmarkDB(
     connectionPool: ConnectionPool,
+    batchConnectionPool: ConnectionPool,
     tracer: Tracer,
 ) : AbstractDB(
         connectionPool = connectionPool,
+        batchConnectionPool = batchConnectionPool,
         tracer = tracer,
         tableName = TABLE_NAME_BOOKMARK,
     ) {
-    suspend fun deleteBookmarkById(bookmarkId: Int): Int =
+    suspend fun deleteBookmarkById(
+        bookmarkId: Int,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector.executeUpdate(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "deleteBookmarkById",
             sql = STATEMENT_DELETE_BOOKMARK_BY_ID,
             params = { stmt -> stmt.setInt(1, bookmarkId) },
         )
 
-    suspend fun insertBookmark(bookmark: Bookmark): Int =
+    suspend fun insertBookmark(
+        bookmark: Bookmark,
+        isBatchJob: Boolean = false,
+    ): Int =
         DatabaseConnector
             .insertReturningKeys(
-                connectionPool = connectionPool,
+                connectionPool =
+                    if (isBatchJob) {
+                        batchConnectionPool
+                    } else {
+                        connectionPool
+                    },
                 sql = STATEMENT_INSERT_BOOKMARK,
                 tracer = tracer,
                 spanName = "insertBookmark",
@@ -68,9 +86,17 @@ class BookmarkDB(
                 },
             ).first()
 
-    suspend fun getBookmarksByIds(bookmarkIds: List<Int>): List<Bookmark> =
+    suspend fun getBookmarksByIds(
+        bookmarkIds: List<Int>,
+        isBatchJob: Boolean = false,
+    ): List<Bookmark> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getBookmarksById",
             sql = STATEMENT_GET_BOOKMARKS,
@@ -85,10 +111,16 @@ class BookmarkDB(
     suspend fun updateBookmarkById(
         bookmarkId: Int,
         bookmark: Bookmark,
+        isBatchJob: Boolean = false,
     ): Int =
         DatabaseConnector.executeUpdate(
             sql = STATEMENT_UPDATE_BOOKMARK,
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "updateBookmarkById",
             params = { stmt ->
@@ -104,9 +136,15 @@ class BookmarkDB(
     suspend fun getBookmarkList(
         limit: Int,
         offset: Int,
+        isBatchJob: Boolean = false,
     ): List<Bookmark> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getBookmarksList",
             sql = STATEMENT_GET_BOOKMARK_LIST,
@@ -119,9 +157,17 @@ class BookmarkDB(
             },
         )
 
-    suspend fun getBookmarkIdByQuerystring(query: String): List<Int> =
+    suspend fun getBookmarkIdByQuerystring(
+        query: String,
+        isBatchJob: Boolean = false,
+    ): List<Int> =
         DatabaseConnector.select(
-            connectionPool = connectionPool,
+            connectionPool =
+                if (isBatchJob) {
+                    batchConnectionPool
+                } else {
+                    connectionPool
+                },
             tracer = tracer,
             spanName = "getBookmarkIdByQuerystring",
             sql = STATEMENT_GET_ID_BY_QUERYSTRING,

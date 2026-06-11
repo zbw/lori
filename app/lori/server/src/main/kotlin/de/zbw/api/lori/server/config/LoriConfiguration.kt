@@ -20,6 +20,8 @@ data class LoriConfiguration(
     val sqlUrl: String,
     val sqlUser: String,
     val sqlPassword: String,
+    val sqlUserBatch: String,
+    val sqlPasswordBatch: String,
     val digitalArchiveAddress: String,
     val digitalArchiveBasicAuth: String,
     val digitalArchiveUsername: String,
@@ -59,6 +61,8 @@ data class LoriConfiguration(
             val sqlUrl = string(prefix, "sql", "url").required()
             val sqlUser = string(prefix, "sql", "user").required()
             val sqlPassword = string(prefix, "sql", "password").secret().required()
+            val sqlUserBatch = string(prefix, "sql", "user", "batch").required()
+            val sqlPasswordBatch = string(prefix, "sql", "password", "batch").secret().required()
             val digitalArchiveAddress =
                 string(prefix, "connection", "digitalarchive", "address").required()
             val digitalArchiveBasicAuth =
@@ -99,7 +103,9 @@ data class LoriConfiguration(
                 grpcPort = source[grpcPort],
                 sqlUrl = source[sqlUrl],
                 sqlUser = source[sqlUser],
+                sqlUserBatch = source[sqlUserBatch],
                 sqlPassword = source[sqlPassword],
+                sqlPasswordBatch = source[sqlPasswordBatch],
                 digitalArchiveAddress = source[digitalArchiveAddress],
                 digitalArchiveUsername = source[digitalArchiveUsername],
                 digitalArchivePassword = source[digitalArchivePassword],
